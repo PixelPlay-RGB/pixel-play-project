@@ -1,9 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import NextAuth, { NextAuthOptions } from "next-auth";
 
-import Google from "next-auth/providers/google";
-import Kakao from "next-auth/providers/kakao";
 import Credentials from "next-auth/providers/credentials";
+import Google from "next-auth/providers/google";
+import GitHub from "next-auth/providers/github";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -20,9 +20,9 @@ export const authOptions: NextAuthOptions = {
       clientId: process.env.AUTH_GOOGLE_CLIENT_ID as string,
       clientSecret: process.env.AUTH_GOOGLE_CLIENT_SECRET as string,
     }),
-    Kakao({
-      clientId: process.env.AUTH_KAKAO_CLIENT_ID as string,
-      clientSecret: process.env.AUTH_KAKAO_CLIENT_SECRET as string,
+    GitHub({
+      clientId: process.env.AUTH_GITHUB_CLIENT_ID as string,
+      clientSecret: process.env.AUTH_GITHUB_CLIENT_SECRET as string,
     }),
   ],
   pages: {

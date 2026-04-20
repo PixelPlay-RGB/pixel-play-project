@@ -9,7 +9,7 @@ namespace NodeJS {
     AUTH_GOOGLE_CLIENT_ID: string;
     AUTH_GOOGLE_CLIENT_SECRET: string;
 
-    AUTH_KAKAO_CLIENT_ID: string;
-    AUTH_KAKAO_CLIENT_SECRET: string;
+    AUTH_GITHUB_CLIENT_ID: string;
+    AUTH_GITHUB_CLIENT_SECRET: string;
   }
 }

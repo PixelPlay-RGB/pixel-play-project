@@ -1,32 +1,51 @@
-# pixel-play-project
+# PixelPlay
 
-실시간 채팅 웹 애플리케이션 (Next.js 16 + Supabase 기반). 향후 실시간 스트리밍 서비스까지 확장을 고려합니다.
+실시간 채팅 플랫폼으로 시작해 향후 **라이브 스트리밍 서비스**로 확장할 계획인 웹 애플리케이션입니다.  
+Next.js 16 App Router + Supabase Realtime 기반으로 구축됩니다.
+
+---
 
 ## 기술 스택
 
-- **Framework**: Next.js 16 (App Router) · React 19 · TypeScript (strict)
-- **Styling**: Tailwind CSS 4 · shadcn · Base UI
-- **Auth / Realtime / DB**: Supabase (SSR + Realtime)
-- **State**: Zustand (클라이언트 상태) · TanStack Query (서버 상태)
-- **Form**: react-hook-form + zod
-- **Theme**: next-themes (다크모드)
-- **Formatter**: Prettier (+ Tailwind 플러그인)
+| 분류 | 기술 |
+|---|---|
+| Framework | Next.js 16 (App Router) · React 19 · TypeScript (strict) |
+| Styling | Tailwind CSS 4 · shadcn (base-nova) · Base UI · lucide-react |
+| Auth | NextAuth v4 · Supabase Auth (Credentials · Google · GitHub OAuth) |
+| Database / Realtime | Supabase (Postgres + Realtime) |
+| Server State | TanStack Query v5 |
+| Client State | Zustand v5 |
+| Form / Validation | react-hook-form v7 · Zod v4 |
+| Theme | next-themes (다크모드) |
+| Formatter | Prettier + Tailwind 플러그인 |
 
-## 요구사항
+---
 
-- Node.js 20 이상
-- npm 10 이상
-- Supabase 프로젝트 (URL, Publishable Key 발급)
+## 시작하기 전에
 
-## 초기 시작 가이드
+아래 항목이 준비되어 있어야 합니다.
 
-### 1. 의존성 설치
+- **Node.js** 20 이상
+- **npm** 10 이상
+- **Supabase** 프로젝트 ([app.supabase.com](https://app.supabase.com))
+- **Google OAuth** 앱 (Google Cloud Console)
+- **GitHub OAuth** 앱 (GitHub Developers)
+
+---
+
+## Tutorial
+
+### 1단계 — 저장소 클론 및 의존성 설치
 
 ```bash
+git clone <repository-url>
+cd pixel-play-project
 npm install
 ```
 
-### 2. 환경 변수 설정
+---
+
+### 2단계 — 환경 변수 설정
 
 루트의 `.env.example`을 복사해 `.env.local`을 만들고 값을 채웁니다.
 
@@ -34,62 +53,111 @@ npm install
 cp .env.example .env.local
 ```
 
-`.env.local` 내용:
+| 변수 | 설명 | 어디서 확인 |
+|---|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase 프로젝트 URL | Supabase → Project Settings → API |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | anon (공개) 키 | Supabase → Project Settings → API |
+| `NEXT_PUBLIC_SUPABASE_DB_PASSWORD` | DB 비밀번호 | Supabase → Project Settings → Database |
+| `AUTH_SECRET` | NextAuth 서명 비밀키 (랜덤 문자열) | `openssl rand -base64 32` |
+| `AUTH_GOOGLE_CLIENT_ID` | Google OAuth 클라이언트 ID | Google Cloud Console → API 및 서비스 → 사용자 인증 정보 |
+| `AUTH_GOOGLE_CLIENT_SECRET` | Google OAuth 클라이언트 시크릿 | 위와 동일 |
+| `AUTH_GITHUB_CLIENT_ID` | GitHub OAuth App Client ID | GitHub → Settings → Developer settings → OAuth Apps |
+| `AUTH_GITHUB_CLIENT_SECRET` | GitHub OAuth App Client Secret | 위와 동일 |
 
-```env
-NEXT_PUBLIC_SUPABASE_URL=https://<your-project>.supabase.co
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<your-publishable-key>
-NEXT_PUBLIC_SUPABASE_DB_PASSWORD=<your-db-password>
+> 환경 변수 키를 추가·변경하면 `src/env.d.ts`의 타입 선언도 함께 수정해야 합니다.
+
+---
+
+### 3단계 — OAuth 공급자 콜백 URL 등록
+
+#### Google
+
+Google Cloud Console → 사용자 인증 정보 → OAuth 2.0 클라이언트에서 아래 URI를 **승인된 리디렉션 URI**에 추가합니다.
+
+```
+http://localhost:3000/api/auth/callback/google   # 개발
+https://<your-domain>/api/auth/callback/google   # 프로덕션
 ```
 
-> 값은 Supabase 대시보드 → Project Settings → API / Database에서 확인할 수 있습니다.
-> 환경 변수 키를 추가·변경할 때는 `env.d.ts`의 타입 선언도 함께 업데이트해야 합니다.
+#### 네이버
 
-### 3. 개발 서버 실행
+GitHub Developers → 내 애플리케이션 → API 설정 → Callback URL에 추가합니다.
+
+```
+http://localhost:3000/api/auth/callback/github    # 개발
+https://<your-domain>/api/auth/callback/github    # 프로덕션
+```
+
+---
+
+### 4단계 — 개발 서버 실행
 
 ```bash
 npm run dev
 ```
 
-브라우저에서 <http://localhost:3000> 접속. 인증 미들웨어에 의해 비로그인 상태면 `/auth/login`으로 리다이렉트됩니다.
+브라우저에서 <http://localhost:3000> 접속.
 
-## 자주 쓰는 스크립트
-
-| 명령 | 설명 |
-|---|---|
-| `npm run dev` | 개발 서버 실행 |
-| `npm run build` | 프로덕션 빌드 |
-| `npm run start` | 프로덕션 서버 실행 |
-| `npm run lint` | ESLint 검사 |
-| `npm run format` | Prettier로 전체 포맷 정리 |
-| `npm run format:check` | 포맷 위반 검사 (CI용) |
+---
 
 ## 디렉토리 구조
 
 ```
 src/
-├── app/              # Next.js App Router (layout, page, api)
+├── actions/              # Server Actions
+│   └── auth.ts           # 회원가입 서버 액션
+├── app/                  # Next.js App Router
+│   ├── api/
+│   │   └── auth/[...nextauth]/  # NextAuth 핸들러
+│   ├── auth/
+│   │   ├── login/        # 로그인 페이지 (서버 컴포넌트)
+│   │   └── signup/       # 회원가입 페이지 (서버 컴포넌트)
+│   ├── layout.tsx
+│   └── page.tsx
 ├── components/
-│   ├── ui/           # shadcn/Base UI 컴포넌트
-│   └── common/       # 공용 컴포넌트
-├── hooks/            # 커스텀 훅 (useChat, useRealtime 등)
-├── stores/           # Zustand 스토어
-├── lib/              # Supabase 클라이언트, 유틸, 프로바이더
-│   ├── client.ts     # 브라우저용 Supabase 클라이언트
-│   ├── server.ts     # 서버 컴포넌트용 Supabase 클라이언트
-│   ├── middleware.ts # 세션 갱신 + 인증 가드
-│   ├── providers.tsx # QueryClient + Theme 프로바이더
-│   └── utils.ts      # cn 등 유틸
-├── types/            # 공용 TypeScript 타입
-└── middleware.ts     # Next.js 미들웨어 엔트리 (updateSession 호출)
+│   ├── auth/
+│   │   ├── login/        # LoginForm · OAuthButtons
+│   │   └── signup/       # SignupForm
+│   ├── common/           # Header · ThemeToggleButton
+│   └── ui/               # shadcn / Base UI 컴포넌트
+├── hooks/                # 커스텀 훅
+├── lib/
+│   ├── supabase/         # client.ts · server.ts
+│   ├── zod/              # 폼 유효성 스키마
+│   ├── providers.tsx     # QueryClient · Theme · Session 프로바이더
+│   └── utils.ts          # cn 유틸
+├── stores/               # Zustand 스토어
+└── types/                # 공용 TypeScript 타입
 ```
+
+---
+
+## 인증 구조
+
+```
+로그인 페이지 (서버 컴포넌트)
+├── LoginForm (클라이언트) — react-hook-form + Zod
+│   └── signIn("credentials", { email, password })  →  NextAuth
+├── OAuthButtons (클라이언트)
+│   ├── signIn("google")   →  Google OAuth
+│   └── signIn("github")    →  GitHub OAuth
+│
+회원가입 페이지 (서버 컴포넌트)
+└── SignupForm (클라이언트) — react-hook-form + Zod
+    └── signUpAction()  →  Server Action  →  Supabase Auth
+```
+
+- 세션 전략: **JWT** (30일)
+- OAuth 로그인 시 `signIn` 콜백에서 Supabase `users` 테이블에 자동 동기화
+
+---
 
 ## 실시간 통신 방침
 
-실시간 채팅은 이미 설치된 `@supabase/supabase-js`의 Realtime 기능을 사용합니다.
+채팅 실시간 기능은 `@supabase/supabase-js`의 Realtime을 활용합니다.
 
-- Postgres Changes — DB 변경 구독
-- Broadcast — 클라이언트 간 즉시 메시지
-- Presence — 온라인/타이핑 상태
+- **Postgres Changes** — DB 변경 이벤트 구독
+- **Broadcast** — 클라이언트 간 즉시 메시지 전송
+- **Presence** — 온라인 상태 · 타이핑 인디케이터
 
 Socket.IO 등 별도 WebSocket 서버는 도입하지 않습니다.

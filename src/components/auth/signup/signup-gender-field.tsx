@@ -7,9 +7,12 @@ interface Props {
   radioValue: string;
 }
 
-export default function AuthGenderField({ htmlFor, content, radioValue }: Props) {
+export default function SignUpGenderField({ htmlFor, content, radioValue }: Props) {
   return (
-    <FieldLabel htmlFor={htmlFor}>
+    <FieldLabel
+      htmlFor={htmlFor}
+      className={"cursor-pointer transition-opacity duration-200 hover:opacity-60"}
+    >
       <Field orientation={"horizontal"}>
         <FieldContent>
           <FieldTitle>{content}</FieldTitle>
