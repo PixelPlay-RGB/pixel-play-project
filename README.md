@@ -7,17 +7,17 @@ Next.js 16 App Router + Supabase Realtime 기반으로 구축됩니다.
 
 ## 기술 스택
 
-| 분류 | 기술 |
-|---|---|
-| Framework | Next.js 16 (App Router) · React 19 · TypeScript (strict) |
-| Styling | Tailwind CSS 4 · shadcn (base-nova) · Base UI · lucide-react |
-| Auth | NextAuth v4 · Supabase Auth (Credentials · Google · GitHub OAuth) |
-| Database / Realtime | Supabase (Postgres + Realtime) |
-| Server State | TanStack Query v5 |
-| Client State | Zustand v5 |
-| Form / Validation | react-hook-form v7 · Zod v4 |
-| Theme | next-themes (다크모드) |
-| Formatter | Prettier + Tailwind 플러그인 |
+| 분류                | 기술                                                              |
+| ------------------- | ----------------------------------------------------------------- |
+| Framework           | Next.js 16 (App Router) · React 19 · TypeScript (strict)          |
+| Styling             | Tailwind CSS 4 · shadcn (base-nova) · Base UI · lucide-react      |
+| Auth                | NextAuth v4 · Supabase Auth (Credentials · Google · GitHub OAuth) |
+| Database / Realtime | Supabase (Postgres + Realtime)                                    |
+| Server State        | TanStack Query v5                                                 |
+| Client State        | Zustand v5                                                        |
+| Form / Validation   | react-hook-form v7 · Zod v4                                       |
+| Theme               | next-themes (다크모드)                                            |
+| Formatter           | Prettier + Tailwind 플러그인                                      |
 
 ---
 
@@ -38,7 +38,7 @@ Next.js 16 App Router + Supabase Realtime 기반으로 구축됩니다.
 ### 1단계 — 저장소 클론 및 의존성 설치
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/PixelPlay-RGB/pixel-play-project.git
 cd pixel-play-project
 npm install
 ```
@@ -53,16 +53,16 @@ npm install
 cp .env.example .env.local
 ```
 
-| 변수 | 설명 | 어디서 확인 |
-|---|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase 프로젝트 URL | Supabase → Project Settings → API |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | anon (공개) 키 | Supabase → Project Settings → API |
-| `NEXT_PUBLIC_SUPABASE_DB_PASSWORD` | DB 비밀번호 | Supabase → Project Settings → Database |
-| `AUTH_SECRET` | NextAuth 서명 비밀키 (랜덤 문자열) | `openssl rand -base64 32` |
-| `AUTH_GOOGLE_CLIENT_ID` | Google OAuth 클라이언트 ID | Google Cloud Console → 사용자 인증 정보 |
-| `AUTH_GOOGLE_CLIENT_SECRET` | Google OAuth 클라이언트 시크릿 | 위와 동일 |
-| `AUTH_GITHUB_CLIENT_ID` | GitHub OAuth App Client ID | GitHub → Developer settings → OAuth Apps |
-| `AUTH_GITHUB_CLIENT_SECRET` | GitHub OAuth App Client Secret | 위와 동일 |
+| 변수                                   | 설명                               |
+| -------------------------------------- | ---------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`             | Supabase 프로젝트 URL              |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | anon (공개) 키                     |
+| `NEXT_PUBLIC_SUPABASE_DB_PASSWORD`     | DB 비밀번호                        |
+| `AUTH_SECRET`                          | NextAuth 서명 비밀키 (랜덤 문자열) |
+| `AUTH_GOOGLE_CLIENT_ID`                | Google OAuth 클라이언트 ID         |
+| `AUTH_GOOGLE_CLIENT_SECRET`            | Google OAuth 클라이언트 시크릿     |
+| `AUTH_GITHUB_CLIENT_ID`                | GitHub OAuth App Client ID         |
+| `AUTH_GITHUB_CLIENT_SECRET`            | GitHub OAuth App Client Secret     |
 
 > 환경 변수 키를 추가·변경하면 `src/env.d.ts`의 타입 선언도 함께 수정해야 합니다.
 
@@ -137,16 +137,16 @@ src/
 
 ### `user` 테이블
 
-| 컬럼 | 타입 | 설명 |
-|---|---|---|
-| `id` | uuid (PK) | 자동 생성 |
-| `oauth_id` | text (UNIQUE) | NextAuth 공급자 유저 ID |
-| `email` | text | 이메일 |
-| `name` | text | 이름 |
-| `birth` | text | 생년월일 |
-| `phone` | text | 휴대전화번호 |
-| `gender` | enum | `male` · `female` · `none` |
-| `created_at` | timestamptz | 생성 시각 |
+| 컬럼         | 타입          | 설명                       |
+| ------------ | ------------- | -------------------------- |
+| `id`         | uuid (PK)     | 자동 생성                  |
+| `oauth_id`   | text (UNIQUE) | NextAuth 공급자 유저 ID    |
+| `email`      | text          | 이메일                     |
+| `name`       | text          | 이름                       |
+| `birth`      | text          | 생년월일                   |
+| `phone`      | text          | 휴대전화번호               |
+| `gender`     | enum          | `male` · `female` · `none` |
+| `created_at` | timestamptz   | 생성 시각                  |
 
 > OAuth 로그인 사용자는 `oauth_id`, `email`, `name` 만 저장되고 나머지 필드는 null입니다.
 
