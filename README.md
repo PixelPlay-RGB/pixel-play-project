@@ -29,7 +29,7 @@ Next.js 16 App Router + Supabase Realtime 기반으로 구축됩니다.
 - **npm** 10 이상
 - **Supabase** 프로젝트 ([app.supabase.com](https://app.supabase.com))
 - **Google OAuth** 앱 (Google Cloud Console)
-- **GitHub OAuth** 앱 (GitHub Developers)
+- **GitHub OAuth** 앱 (GitHub → Settings → Developer settings → OAuth Apps)
 
 ---
 
@@ -59,9 +59,9 @@ cp .env.example .env.local
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | anon (공개) 키 | Supabase → Project Settings → API |
 | `NEXT_PUBLIC_SUPABASE_DB_PASSWORD` | DB 비밀번호 | Supabase → Project Settings → Database |
 | `AUTH_SECRET` | NextAuth 서명 비밀키 (랜덤 문자열) | `openssl rand -base64 32` |
-| `AUTH_GOOGLE_CLIENT_ID` | Google OAuth 클라이언트 ID | Google Cloud Console → API 및 서비스 → 사용자 인증 정보 |
+| `AUTH_GOOGLE_CLIENT_ID` | Google OAuth 클라이언트 ID | Google Cloud Console → 사용자 인증 정보 |
 | `AUTH_GOOGLE_CLIENT_SECRET` | Google OAuth 클라이언트 시크릿 | 위와 동일 |
-| `AUTH_GITHUB_CLIENT_ID` | GitHub OAuth App Client ID | GitHub → Settings → Developer settings → OAuth Apps |
+| `AUTH_GITHUB_CLIENT_ID` | GitHub OAuth App Client ID | GitHub → Developer settings → OAuth Apps |
 | `AUTH_GITHUB_CLIENT_SECRET` | GitHub OAuth App Client Secret | 위와 동일 |
 
 > 환경 변수 키를 추가·변경하면 `src/env.d.ts`의 타입 선언도 함께 수정해야 합니다.
@@ -72,20 +72,20 @@ cp .env.example .env.local
 
 #### Google
 
-Google Cloud Console → 사용자 인증 정보 → OAuth 2.0 클라이언트에서 아래 URI를 **승인된 리디렉션 URI**에 추가합니다.
+Google Cloud Console → 사용자 인증 정보 → OAuth 2.0 클라이언트 → **승인된 리디렉션 URI** 에 추가합니다.
 
 ```
 http://localhost:3000/api/auth/callback/google   # 개발
 https://<your-domain>/api/auth/callback/google   # 프로덕션
 ```
 
-#### 네이버
+#### GitHub
 
-GitHub Developers → 내 애플리케이션 → API 설정 → Callback URL에 추가합니다.
+GitHub → Developer settings → OAuth Apps → 앱 선택 → **Authorization callback URL** 에 입력합니다.
 
 ```
-http://localhost:3000/api/auth/callback/github    # 개발
-https://<your-domain>/api/auth/callback/github    # 프로덕션
+http://localhost:3000/api/auth/callback/github   # 개발
+https://<your-domain>/api/auth/callback/github   # 프로덕션
 ```
 
 ---
@@ -96,7 +96,7 @@ https://<your-domain>/api/auth/callback/github    # 프로덕션
 npm run dev
 ```
 
-브라우저에서 <http://localhost:3000> 접속.
+브라우저에서 <http://localhost:3000> 접속. 비로그인 상태면 `/auth/login`으로 자동 리다이렉트됩니다.
 
 ---
 
@@ -105,29 +105,57 @@ npm run dev
 ```
 src/
 ├── actions/              # Server Actions
-│   └── auth.ts           # 회원가입 서버 액션
+│   └── auth.ts           # 회원가입 서버 액션 (Supabase Auth 연동)
 ├── app/                  # Next.js App Router
-│   ├── api/
-│   │   └── auth/[...nextauth]/  # NextAuth 핸들러
+│   ├── api/auth/         # NextAuth 핸들러
 │   ├── auth/
 │   │   ├── login/        # 로그인 페이지 (서버 컴포넌트)
 │   │   └── signup/       # 회원가입 페이지 (서버 컴포넌트)
 │   ├── layout.tsx
-│   └── page.tsx
+│   └── page.tsx          # 인덱스 (비로그인 시 /auth/login 리다이렉트)
 ├── components/
 │   ├── auth/
 │   │   ├── login/        # LoginForm · OAuthButtons
-│   │   └── signup/       # SignupForm
+│   │   ├── signup/       # SignupForm
+│   │   └── login-button.tsx  # Header 로그인/로그아웃 버튼
 │   ├── common/           # Header · ThemeToggleButton
 │   └── ui/               # shadcn / Base UI 컴포넌트
 ├── hooks/                # 커스텀 훅
 ├── lib/
-│   ├── supabase/         # client.ts · server.ts
+│   ├── supabase/         # client.ts · server.ts · proxy.ts
 │   ├── zod/              # 폼 유효성 스키마
 │   ├── providers.tsx     # QueryClient · Theme · Session 프로바이더
 │   └── utils.ts          # cn 유틸
 ├── stores/               # Zustand 스토어
-└── types/                # 공용 TypeScript 타입
+└── types/
+    └── database.types.ts # Supabase 자동 생성 타입 (npm run types)
+```
+
+---
+
+## 데이터베이스 스키마
+
+### `user` 테이블
+
+| 컬럼 | 타입 | 설명 |
+|---|---|---|
+| `id` | uuid (PK) | 자동 생성 |
+| `oauth_id` | text (UNIQUE) | NextAuth 공급자 유저 ID |
+| `email` | text | 이메일 |
+| `name` | text | 이름 |
+| `birth` | text | 생년월일 |
+| `phone` | text | 휴대전화번호 |
+| `gender` | enum | `male` · `female` · `none` |
+| `created_at` | timestamptz | 생성 시각 |
+
+> OAuth 로그인 사용자는 `oauth_id`, `email`, `name` 만 저장되고 나머지 필드는 null입니다.
+
+### 타입 재생성
+
+스키마 변경 후 아래 명령으로 `src/types/database.types.ts`를 갱신합니다.
+
+```bash
+npm run types
 ```
 
 ---
@@ -139,8 +167,8 @@ src/
 ├── LoginForm (클라이언트) — react-hook-form + Zod
 │   └── signIn("credentials", { email, password })  →  NextAuth
 ├── OAuthButtons (클라이언트)
-│   ├── signIn("google")   →  Google OAuth
-│   └── signIn("github")    →  GitHub OAuth
+│   ├── signIn("google")  →  Google OAuth
+│   └── signIn("github")  →  GitHub OAuth
 │
 회원가입 페이지 (서버 컴포넌트)
 └── SignupForm (클라이언트) — react-hook-form + Zod
@@ -148,7 +176,7 @@ src/
 ```
 
 - 세션 전략: **JWT** (30일)
-- OAuth 로그인 시 `signIn` 콜백에서 Supabase `users` 테이블에 자동 동기화
+- OAuth 로그인 시 `signIn` 콜백에서 Supabase `user` 테이블에 자동 동기화
 
 ---
 

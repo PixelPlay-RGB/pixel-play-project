@@ -9,7 +9,9 @@ export default function LoginButton() {
 
   return (
     <Button
-      className={"py-5"}
+      variant={"outline"}
+      size={"lg"}
+      className={"cursor-pointer hover:opacity-80"}
       onClick={() => {
         if (session) {
           signOut();

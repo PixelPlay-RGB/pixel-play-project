@@ -13,6 +13,7 @@ export const authOptions: NextAuthOptions = {
         password: { label: "비밀번호", type: "password" },
       },
       async authorize(credentials) {
+        // TODO: 이메일 회원가입 기능 구현 필요
         return { id: "1", name: "전지호" };
       },
     }),
@@ -38,13 +39,13 @@ export const authOptions: NextAuthOptions = {
       const supabase = await createClient();
 
       const { data: existingUser } = await supabase
-        .from("users")
+        .from("user")
         .select("*")
         .eq("oauth_id", user.id)
         .single();
 
       if (!existingUser) {
-        await supabase.from("users").insert({
+        await supabase.from("user").insert({
           oauth_id: user.id,
           name: user.name,
           email: user.email,

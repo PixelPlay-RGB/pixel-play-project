@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "types": "npx supabase gen types typescript --project-id ftvoynnfpfzmblgrntqj --schema public > src/types/database.types.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.0",
