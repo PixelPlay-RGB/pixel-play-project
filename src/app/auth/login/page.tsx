@@ -16,9 +16,9 @@ export default function Page() {
         <div className="flex flex-col gap-5">
           <LoginForm />
           <div className="flex items-center gap-3">
-            <Separator className="bg-brand/40 flex-1" />
+            <Separator className="flex-1" />
             <span className="text-xs tracking-widest uppercase">또는</span>
-            <Separator className="bg-brand/40 flex-1" />
+            <Separator className="flex-1" />
           </div>
           <OAuthButtons />
           <Link

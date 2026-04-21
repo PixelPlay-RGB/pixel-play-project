@@ -209,7 +209,7 @@ export default function SignupForm() {
         </div>
       </div>
 
-      <Separator className="bg-brand/40 my-2" />
+      <Separator className="my-2" />
 
       <div className="flex w-full flex-col gap-3">
         <div className="flex flex-col gap-1">
@@ -274,7 +274,7 @@ export default function SignupForm() {
         </div>
       </div>
 
-      <Separator className="bg-brand/40 my-2" />
+      <Separator className="my-2" />
 
       <Button
         type="submit"
