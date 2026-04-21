@@ -57,7 +57,6 @@ cp .env.example .env.local
 | -------------------------------------- | ---------------------------------- |
 | `NEXT_PUBLIC_SUPABASE_URL`             | Supabase 프로젝트 URL              |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | anon (공개) 키                     |
-| `NEXT_PUBLIC_SUPABASE_DB_PASSWORD`     | DB 비밀번호                        |
 | `AUTH_SECRET`                          | NextAuth 서명 비밀키 (랜덤 문자열) |
 | `AUTH_GOOGLE_CLIENT_ID`                | Google OAuth 클라이언트 ID         |
 | `AUTH_GOOGLE_CLIENT_SECRET`            | Google OAuth 클라이언트 시크릿     |
@@ -157,8 +156,8 @@ src/
 
 ### DB 함수
 
-| 함수                            | 설명                                              |
-| ------------------------------- | ------------------------------------------------- |
+| 함수                             | 설명                                                    |
+| -------------------------------- | ------------------------------------------------------- |
 | `check_email_exists(email text)` | 이메일 중복 확인 (OTP 발송 전 호출, `SECURITY DEFINER`) |
 
 ### 타입 재생성
