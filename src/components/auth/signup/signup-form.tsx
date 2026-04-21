@@ -135,11 +135,11 @@ export default function SignupForm() {
             <InputGroupAddon align="inline-end">
               <InputGroupButton
                 type="button"
-                size="xs"
+                size="sm"
                 variant="outline"
                 onClick={handleSendOtp}
                 disabled={isSendingOtp || emailVerified || !!errors.email}
-                className="border-brand/40 text-brand hover:bg-brand hover:text-white"
+                className="border-brand/40 text-brand hover:bg-brand cursor-pointer hover:text-white"
               >
                 {isSendingOtp ? (
                   <Spinner />
@@ -209,7 +209,7 @@ export default function SignupForm() {
         </div>
       </div>
 
-      <Separator className="my-2" />
+      <Separator className="bg-brand/40 my-2" />
 
       <div className="flex w-full flex-col gap-3">
         <div className="flex flex-col gap-1">
@@ -274,7 +274,7 @@ export default function SignupForm() {
         </div>
       </div>
 
-      <Separator className="my-2" />
+      <Separator className="bg-brand/40 my-2" />
 
       <Button
         type="submit"
