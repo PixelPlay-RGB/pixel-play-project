@@ -12,14 +12,14 @@ interface Props {
   roomId: string
 }
 
-const currentUserId = "user-self"
+const currentUserId = "userSelf"
 
 const displayNameByUserId: Record<string, string> = {
   [currentUserId]: "나",
-  streamer_01: "스트리머",
-  viewer_kim: "김치좋아",
-  viewer_lee: "이펙트",
-  viewer_park: "박물관",
+  streamer01: "스트리머",
+  viewerKim: "김치좋아",
+  viewerLee: "이펙트",
+  viewerPark: "박물관",
 }
 
 function buildDummyRoom(roomId: string): Room {
@@ -27,7 +27,7 @@ function buildDummyRoom(roomId: string): Room {
     id: roomId,
     name: "저녁 랭크 같이 가요 🎮",
     description: "즐겜만 하시길",
-    createdBy: "streamer_01",
+    createdBy: "streamer01",
     createdAt: "2026-04-01T12:00:00.000Z",
   }
 }
@@ -36,37 +36,37 @@ function buildDummyMembers(roomId: string): RoomMember[] {
   return [
     {
       id: `${roomId}-m1`,
-      userId: "streamer_01",
+      userId: "streamer01",
       name: "스트리머",
       joinedAt: "2026-04-21T10:00:00.000Z",
     },
     {
       id: `${roomId}-m2`,
-      userId: "viewer_kim",
+      userId: "viewerKim",
       name: "김치좋아",
       joinedAt: "2026-04-21T10:05:00.000Z",
     },
     {
       id: `${roomId}-m3`,
-      userId: "viewer_lee",
+      userId: "viewerLee",
       name: "이펙트",
       joinedAt: "2026-04-21T10:06:00.000Z",
     },
     {
       id: `${roomId}-m4`,
-      userId: "viewer_park",
+      userId: "viewerPark",
       name: "박물관",
       joinedAt: "2026-04-21T10:07:00.000Z",
     },
     {
       id: `${roomId}-m5`,
-      userId: "user-self",
+      userId: "userSelf",
       name: "나",
       joinedAt: "2026-04-21T10:08:00.000Z",
     },
     {
       id: `${roomId}-m6`,
-      userId: "guest_owl",
+      userId: "guestOwl",
       name: "부엉이",
       joinedAt: "2026-04-21T10:09:00.000Z",
     },
@@ -79,21 +79,21 @@ function buildInitialMessages(roomId: string): Message[] {
     {
       id: "m1",
       roomId,
-      userId: "streamer_01",
+      userId: "streamer01",
       content: "오늘도 같이 즐겁게 놀아요 ~",
       createdAt: new Date(base - 3600000).toISOString(),
     },
     {
       id: "m2",
       roomId,
-      userId: "viewer_kim",
+      userId: "viewerKim",
       content: "방송 언제까지 해요?",
       createdAt: new Date(base - 3500000).toISOString(),
     },
     {
       id: "m3",
       roomId,
-      userId: "viewer_lee",
+      userId: "viewerLee",
       content: "오늘 컨텐츠 미쳤다 ㅋㅋ",
       createdAt: new Date(base - 3400000).toISOString(),
     },
@@ -107,7 +107,7 @@ function buildInitialMessages(roomId: string): Message[] {
     {
       id: "m5",
       roomId,
-      userId: "viewer_park",
+      userId: "viewerPark",
       content: "ㄱㄱㄱ 하이라이트 각이다",
       createdAt: new Date(base - 3200000).toISOString(),
     },
