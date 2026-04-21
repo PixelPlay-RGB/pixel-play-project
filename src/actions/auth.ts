@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { signUpBaseSchema } from "@/lib/zod/auth";
-import type { SignUpFormValues } from "@/types/auth";
+import { CompleteSignupInput } from "@/types/auth";
 
 export async function sendOtpAction(email: string) {
   const supabase = await createClient();
@@ -25,15 +25,8 @@ export async function verifyOtpAction(email: string, token: string) {
   return { success: true };
 }
 
-type CompleteSignupInput = Pick<
-  SignUpFormValues,
-  "password" | "name" | "birth" | "phone" | "gender"
->;
-
 export async function completeSignupAction(data: CompleteSignupInput) {
-  const parsed = signUpBaseSchema
-    .omit({ email: true, passwordConfirm: true })
-    .safeParse(data);
+  const parsed = signUpBaseSchema.omit({ email: true, passwordConfirm: true }).safeParse(data);
   if (!parsed.success) {
     return { success: false, message: "입력값이 올바르지 않습니다." };
   }
