@@ -13,8 +13,25 @@ export const authOptions: NextAuthOptions = {
         password: { label: "비밀번호", type: "password" },
       },
       async authorize(credentials) {
-        // TODO: 이메일 회원가입 기능 구현 필요
-        return { id: "1", name: "전지호" };
+        if (!credentials?.email || !credentials?.password) {
+          return null;
+        }
+
+        const supabase = await createClient();
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: credentials?.email,
+          password: credentials?.password,
+        });
+
+        if (error || !data.user) {
+          return null;
+        }
+
+        return {
+          id: data.user.id,
+          email: data.user.email ?? null,
+          name: data.user.user_metadata?.name ?? null,
+        };
       },
     }),
     Google({
@@ -35,9 +52,11 @@ export const authOptions: NextAuthOptions = {
   },
   secret: process.env.AUTH_SECRET,
   callbacks: {
-    async signIn({ user }) {
-      const supabase = await createClient();
+    async signIn({ user, account }) {
+      if (account?.provider === "credentials") return true;
 
+      // OAuth만 user 테이블과 동기화 시키는 코드
+      const supabase = await createClient();
       const { data: existingUser } = await supabase
         .from("user")
         .select("*")
@@ -49,7 +68,6 @@ export const authOptions: NextAuthOptions = {
           oauth_id: user.id,
           name: user.name,
           email: user.email,
-          data: { points: 10000 },
         });
       }
 

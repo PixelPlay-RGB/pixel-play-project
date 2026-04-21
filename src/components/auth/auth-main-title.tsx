@@ -3,5 +3,10 @@ interface Props {
 }
 
 export default function AuthMainTitle({ title }: Props) {
-  return <h1 className="mb-12 text-center text-4xl font-bold tracking-tight">{title}</h1>;
+  return (
+    <div className="mb-8 flex flex-col items-center gap-3">
+      <h1 className="text-brand text-3xl font-bold tracking-widest uppercase">{title}</h1>
+      <div className="h-px w-12 bg-brand/60" />
+    </div>
+  );
 }

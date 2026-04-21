@@ -1,28 +1,54 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { signIn } from "next-auth/react";
 import Image from "next/image";
+import { useState } from "react";
+
+type OAuthProvider = "google" | "github";
 
 export default function OAuthButtons() {
+  const [loading, setLoading] = useState<OAuthProvider | null>(null);
+
+  const handleSignIn = async (provider: OAuthProvider) => {
+    setLoading(provider);
+    await signIn(provider, { callbackUrl: "/" });
+    setLoading(null);
+  };
+
   return (
     <div className="flex flex-col gap-3">
       <Button
         type="button"
         variant="outline"
-        className="w-full cursor-pointer py-5"
-        onClick={() => signIn("google", { callbackUrl: "/" })}
+        disabled={loading !== null}
+        className="w-full cursor-pointer border-border/60 py-5 tracking-wide hover:border-brand/40 hover:bg-brand/5"
+        onClick={() => handleSignIn("google")}
       >
-        <Image src="/google.svg" alt="Google" width={20} height={20} />
-        Google 로그인
+        {loading === "google" ? (
+          <Spinner />
+        ) : (
+          <>
+            <Image src="/google.svg" alt="Google" width={18} height={18} />
+            Google 로그인
+          </>
+        )}
       </Button>
       <Button
         type="button"
-        className="w-full cursor-pointer border-[#24292e] bg-[#24292e] py-5 text-white hover:bg-[#3a3f47]"
-        onClick={() => signIn("github", { callbackUrl: "/" })}
+        disabled={loading !== null}
+        className="w-full cursor-pointer border border-[#30363d] bg-[#161b22] py-5 tracking-wide text-white hover:bg-[#21262d] hover:border-brand/40"
+        onClick={() => handleSignIn("github")}
       >
-        <Image src="/github.svg" alt="Github" width={20} height={20} />
-        GitHub 로그인
+        {loading === "github" ? (
+          <Spinner />
+        ) : (
+          <>
+            <Image src="/github.svg" alt="Github" width={18} height={18} className="invert" />
+            GitHub 로그인
+          </>
+        )}
       </Button>
     </div>
   );

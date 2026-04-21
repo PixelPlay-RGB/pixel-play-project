@@ -1,6 +1,5 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
@@ -21,21 +20,12 @@ export default function ThemeToggleButton() {
   const isDark = theme === "dark";
 
   return (
-    <Button
-      size="icon-lg"
-      variant={"outline"}
+    <button
       onClick={() => setTheme(isDark ? "light" : "dark")}
-      className="cursor-pointer hover:opacity-60"
+      className="cursor-pointer rounded-lg border border-brand/40 p-2 text-brand transition-all duration-200 hover:bg-brand hover:text-white"
     >
-      {isDark ? (
-        <Sun
-          className="h-7 w-7 text-[#FFB800] transition-all"
-          fill="#FFB800" // 테두리뿐만 아니라 안쪽도 고급지게 채움
-        />
-      ) : (
-        <Moon className="h-7 w-7 text-[#FFB800] transition-all" fill="#FFB800" />
-      )}
+      {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
       <span className="sr-only">Toggle theme</span>
-    </Button>
+    </button>
   );
 }

@@ -1,24 +1,33 @@
-import AuthMainTitle from "@/components/auth/auth-main-title";
+import LoginForm from "@/components/auth/login/login-form";
+import OAuthButtons from "@/components/auth/login/oauth-buttons";
+import Logo from "@/components/common/logo";
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
-import LoginForm from "../../../components/auth/login/login-form";
-import OAuthButtons from "../../../components/auth/login/oauth-buttons";
 
 export default function Page() {
   return (
     <div className="container m-auto">
-      <AuthMainTitle title="로그인" />
-      <div className="m-auto flex max-w-md flex-col gap-5">
-        <LoginForm />
-        <div className="flex items-center gap-3">
-          <Separator className="flex-1" />
-          <span className="text-muted-foreground text-sm">또는</span>
-          <Separator className="flex-1" />
+      <div className="border-brand/20 bg-card/80 m-auto max-w-md rounded-2xl border p-8 shadow-[0_0_30px_#46c6a90a] backdrop-blur-sm dark:shadow-[0_0_60px_#46c6a918]">
+        <div className="mb-6 flex flex-col items-center gap-4">
+          <Logo className="dark:text-foreground text-[#1e1d37]" />
+          <div className="bg-brand/20 h-px w-full" />
+          <p className="text-muted-foreground text-xs tracking-widest uppercase">로그인</p>
         </div>
-        <OAuthButtons />
-        <Link className="cursor-pointer self-end underline" href="/auth/signup">
-          회원 가입
-        </Link>
+        <div className="flex flex-col gap-5">
+          <LoginForm />
+          <div className="flex items-center gap-3">
+            <Separator className="flex-1" />
+            <span className="text-muted-foreground text-xs tracking-widest uppercase">또는</span>
+            <Separator className="flex-1" />
+          </div>
+          <OAuthButtons />
+          <Link
+            className="text-brand self-end text-sm underline underline-offset-4 transition-colors hover:opacity-60"
+            href="/auth/signup"
+          >
+            회원 가입
+          </Link>
+        </div>
       </div>
     </div>
   );
