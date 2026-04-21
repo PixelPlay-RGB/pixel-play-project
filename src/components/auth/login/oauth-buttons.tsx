@@ -2,11 +2,10 @@
 
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { OAuthProvider } from "@/types/auth";
 import { signIn } from "next-auth/react";
 import Image from "next/image";
 import { useState } from "react";
-
-type OAuthProvider = "google" | "github";
 
 export default function OAuthButtons() {
   const [loading, setLoading] = useState<OAuthProvider | null>(null);
@@ -23,7 +22,7 @@ export default function OAuthButtons() {
         type="button"
         variant="outline"
         disabled={loading !== null}
-        className="w-full cursor-pointer border-border/60 py-5 tracking-wide hover:border-brand/40 hover:bg-brand/5"
+        className="border-border/60 hover:border-brand/40 hover:bg-brand/5 w-full cursor-pointer py-5 tracking-wide"
         onClick={() => handleSignIn("google")}
       >
         {loading === "google" ? (
@@ -38,7 +37,7 @@ export default function OAuthButtons() {
       <Button
         type="button"
         disabled={loading !== null}
-        className="w-full cursor-pointer border border-[#30363d] bg-[#161b22] py-5 tracking-wide text-white hover:bg-[#21262d] hover:border-brand/40"
+        className="hover:border-brand/40 w-full cursor-pointer border border-[#30363d] bg-[#161b22] py-5 tracking-wide text-white hover:bg-[#21262d]"
         onClick={() => handleSignIn("github")}
       >
         {loading === "github" ? (

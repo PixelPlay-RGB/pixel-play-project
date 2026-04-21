@@ -16,6 +16,10 @@ export default function Providers({ children }: { children: ReactNode }) {
     setMounted(true);
   }, []);
 
+  if (!mounted) {
+    return <div style={{ visibility: "hidden" }}>{children}</div>;
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider

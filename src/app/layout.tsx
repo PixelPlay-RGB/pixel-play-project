@@ -1,11 +1,11 @@
+import Footer from "@/components/common/footer";
+import Header from "@/components/common/header";
+import { Toaster } from "@/components/ui/sonner";
 import Providers from "@/lib/providers";
 import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Noto_Sans } from "next/font/google";
 import "./globals.css";
-import Header from "@/components/common/header";
-import { Toaster } from "@/components/ui/sonner";
-import Footer from "@/components/common/footer";
 
 const notoSans = Noto_Sans({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -42,7 +42,7 @@ export default function RootLayout({
       )}
       suppressHydrationWarning
     >
-      <body className="flex min-h-full flex-col bg-brand/5 dark:bg-background">
+      <body className="bg-brand/5 dark:bg-background flex min-h-full flex-col">
         <Providers>
           <Toaster />
           <Header />

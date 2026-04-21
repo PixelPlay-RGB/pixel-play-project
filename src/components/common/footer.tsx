@@ -1,15 +1,10 @@
+import { members } from "@/constants/auth";
 import Image from "next/image";
 import Link from "next/link";
 
-const members = [
-  { name: "전지호", github: "wjswlgh96" },
-  { name: "이주영", github: "ele-003" },
-  { name: "안혜진", github: "Hyejinjin-An" },
-];
-
 export default function Footer() {
   return (
-    <footer className="border-t border-brand/15 bg-brand/5 px-10 py-5 text-center text-sm text-muted-foreground dark:border-border dark:bg-muted/60">
+    <footer className="border-brand/15 bg-brand/5 text-muted-foreground dark:border-border dark:bg-muted/60 border-t px-10 py-5 text-center text-sm">
       <div className="flex items-center justify-center gap-3">
         {members.map(({ name, github }) => (
           <Link
