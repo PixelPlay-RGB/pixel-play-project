@@ -17,7 +17,7 @@ export default function Providers({ children }: { children: ReactNode }) {
   }, []);
 
   if (!mounted) {
-    return <div style={{ visibility: "hidden" }}>{children}</div>;
+    return null;
   }
 
   return (
