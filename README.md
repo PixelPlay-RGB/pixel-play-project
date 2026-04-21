@@ -123,12 +123,16 @@ src/
 ├── hooks/                # 커스텀 훅
 ├── lib/
 │   ├── supabase/         # client.ts · server.ts · proxy.ts
-│   ├── zod/              # 폼 유효성 스키마
+│   ├── zod/              # 폼 유효성 스키마 + 기본값 상수
 │   ├── providers.tsx     # QueryClient · Theme · Session 프로바이더
-│   └── utils.ts          # cn 유틸
+│   └── utils/            # cn 유틸
 ├── stores/               # Zustand 스토어
-└── types/
-    └── database.types.ts # Supabase 자동 생성 타입 (npm run types)
+├── types/
+│   ├── auth/             # OtpStatus · LoginFormValues · SignUpFormValues
+│   ├── database.types.ts # Supabase 자동 생성 타입 (npm run types)
+│   └── user.ts           # User 테이블 Row 타입
+└── utils/
+    └── auth/             # formatPhone 등 auth 관련 유틸
 ```
 
 ---
@@ -137,18 +141,25 @@ src/
 
 ### `user` 테이블
 
-| 컬럼         | 타입          | 설명                       |
-| ------------ | ------------- | -------------------------- |
-| `id`         | uuid (PK)     | 자동 생성                  |
-| `oauth_id`   | text (UNIQUE) | NextAuth 공급자 유저 ID    |
-| `email`      | text          | 이메일                     |
-| `name`       | text          | 이름                       |
-| `birth`      | text          | 생년월일                   |
-| `phone`      | text          | 휴대전화번호               |
-| `gender`     | enum          | `male` · `female` · `none` |
-| `created_at` | timestamptz   | 생성 시각                  |
+| 컬럼          | 타입          | 설명                       |
+| ------------- | ------------- | -------------------------- |
+| `id`          | uuid (PK)     | 자동 생성                  |
+| `oauth_id`    | text (UNIQUE) | NextAuth 공급자 유저 ID    |
+| `email`       | text          | 이메일                     |
+| `name`        | text          | 이름                       |
+| `birth`       | text          | 생년월일                   |
+| `phone`       | text          | 휴대전화번호               |
+| `gender`      | enum          | `male` · `female` · `none` |
+| `created_at`  | timestamptz   | 생성 시각                  |
+| `modified_at` | timestamptz   | 최종 수정 시각             |
 
 > OAuth 로그인 사용자는 `oauth_id`, `email`, `name` 만 저장되고 나머지 필드는 null입니다.
+
+### DB 함수
+
+| 함수                            | 설명                                              |
+| ------------------------------- | ------------------------------------------------- |
+| `check_email_exists(email text)` | 이메일 중복 확인 (OTP 발송 전 호출, `SECURITY DEFINER`) |
 
 ### 타입 재생성
 
@@ -166,14 +177,22 @@ npm run types
 로그인 페이지 (서버 컴포넌트)
 ├── LoginForm (클라이언트) — react-hook-form + Zod
 │   └── signIn("credentials", { email, password })  →  NextAuth
-├── OAuthButtons (클라이언트)
+├── OAuthButtons (클라이언트) — 로딩 중 Spinner 표시
 │   ├── signIn("google")  →  Google OAuth
 │   └── signIn("github")  →  GitHub OAuth
 │
 회원가입 페이지 (서버 컴포넌트)
 └── SignupForm (클라이언트) — react-hook-form + Zod
-    └── signUpAction()  →  Server Action  →  Supabase Auth
+    ├── [1] sendOtpAction(email)      →  이메일 중복 확인 (RPC) → Supabase OTP 발송
+    ├── [2] verifyOtpAction(email, token)  →  OTP 검증
+    └── [3] completeSignupAction(data)     →  비밀번호 · 프로필 설정 → 자동 로그인
 ```
+
+**회원가입 OTP 플로우**
+
+1. 이메일 입력 후 인증 버튼 클릭 → `check_email_exists` RPC로 중복 확인 → 미가입 시 OTP 발송
+2. 6자리 코드 입력 후 확인 → OTP 검증 완료 시 나머지 폼 입력 가능
+3. 폼 제출 → 비밀번호·프로필 저장 → credentials 자동 로그인
 
 - 세션 전략: **JWT** (30일)
 - OAuth 로그인 시 `signIn` 콜백에서 Supabase `user` 테이블에 자동 동기화
