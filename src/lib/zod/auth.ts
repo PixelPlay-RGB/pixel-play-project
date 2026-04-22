@@ -17,6 +17,16 @@ export const signUpBaseSchema = z.object({
   password: z.string().min(6, { message: "비밀번호는 6자 이상이어야 합니다." }),
   passwordConfirm: z.string(),
   name: z.string().min(2, { message: "이름은 2자 이상이어야 합니다." }),
+  displayName: z
+    .string()
+    .min(2, { message: "닉네임은 2자 이상이어야 합니다." })
+    .max(10, { message: "닉네임은 10자 이하여야 합니다." })
+    .regex(/^[a-zA-Z0-9가-힣\s]+$/, {
+      message: "특수문자는 사용할 수 없습니다.",
+    })
+    .refine((val) => val.trim().length > 0, {
+      message: "닉네임은 공백으로 설정할 수 없습니다.",
+    }),
   birth: z.string().min(1, { message: "생년월일을 입력해주세요." }),
   phone: z
     .string()
@@ -35,11 +45,21 @@ export const signUpSchema = signUpBaseSchema.refine(
 export type LoginFormValues = z.infer<typeof loginSchema>;
 export type SignUpFormValues = z.infer<typeof signUpSchema>;
 
+export const completeOAuthProfileSchema = signUpBaseSchema.pick({
+  displayName: true,
+  birth: true,
+  phone: true,
+  gender: true,
+});
+
+export type CompleteOAuthProfileValues = z.infer<typeof completeOAuthProfileSchema>;
+
 export const SIGNUP_FORM_DEFAULTS: SignUpFormValues = {
   email: "",
   password: "",
   passwordConfirm: "",
   name: "",
+  displayName: "",
   birth: "",
   phone: "",
   gender: "male",

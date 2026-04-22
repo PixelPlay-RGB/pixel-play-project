@@ -1,18 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest } from "next/server";
+import { updateSession } from "@/lib/supabase/proxy";
 
 export async function proxy(request: NextRequest) {
-  const token =
-    request.cookies.get("next-auth.session-token")?.value ||
-    request.cookies.get("__Secure-next-auth.session-token")?.value;
-
-  if (!token) {
-    NextResponse.redirect(new URL("/auth/login", request.url));
-  }
-
-  return NextResponse.next();
+  // 방금 만든 proxy.ts의 로직을 실행하여 세션 갱신 및 리다이렉트 처리
+  return await updateSession(request);
 }
 
-// proxy 검증 path
 export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
 };

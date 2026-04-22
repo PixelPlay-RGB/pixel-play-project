@@ -1,7 +1,7 @@
 import Footer from "@/components/common/footer";
 import Header from "@/components/common/header";
 import { Toaster } from "@/components/ui/sonner";
-import Providers from "@/lib/providers";
+import Providers from "@/components/common/providers";
 import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Noto_Sans } from "next/font/google";
