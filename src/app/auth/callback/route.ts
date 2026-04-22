@@ -13,10 +13,25 @@ export async function GET(request: NextRequest) {
 
   if (code) {
     const supabase = await createClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) {
-      // 프로필 미완성 유저는 미들웨어가 /auth/complete-profile로 redirect 해줌
-      return NextResponse.redirect(`${origin}${next}`);
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.exchangeCodeForSession(code);
+
+    if (!error && user) {
+      const { data: existingUser } = await supabase
+        .from("user")
+        .select("id")
+        .eq("oauth_id", user.id)
+        .single();
+
+      if (!existingUser) {
+        // 신규 OAuth 유저라면 추가 정보 입력 페이지로 보냄
+        return NextResponse.redirect(`${origin}/auth/complete-profile`);
+      } else {
+        // 기존 유저라면 언동 성공 파라미터를 달아서 메인으로
+        return NextResponse.redirect(`${origin}${next}?linked=true`);
+      }
     }
   }
 

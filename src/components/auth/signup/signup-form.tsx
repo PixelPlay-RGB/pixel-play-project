@@ -68,7 +68,7 @@ export default function SignupForm() {
     const result = await sendOtpAction(email);
     if (result.success) {
       setOtpStatus("sent");
-      toast.success("인증 코드가 발송", { description: "이메일을 확인해주세요!" });
+      toast.success("인증 코드 발송", { description: "이메일을 확인해주세요!" });
     } else {
       setOtpStatus("idle");
       setError("email", { type: "server", message: result.message });
