@@ -1,6 +1,6 @@
 import { useState, Dispatch, SetStateAction, FormEvent, useEffect } from "react";
 import { createRoom, ChatRoom } from "@/lib/room";
-import { createClient } from "@/lib/client";
+import { createClient } from "@/lib/supabase/client";
 
 interface ChatListProps {
   chats: ChatRoom[];
@@ -26,8 +26,7 @@ export default function ChatList({ chats, setChats, maxCapacity }: ChatListProps
         setSessionUser({
           id: user.id,
           email: user.email || "",
-          // Supabase metadata에서 이름을 가져오거나 없으면 이메일 앞부분 사용
-          name: user.user_metadata?.name || user.user_metadata?.full_name || user.email?.split('@')[0] || "익명",
+          name: user.user_metadata?.name || user.email?.split('@')[0],
         });
       }
     };

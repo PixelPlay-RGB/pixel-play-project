@@ -1,4 +1,5 @@
-import { Button } from "@/components/ui/button";
+"use client";
+
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
@@ -16,17 +17,15 @@ export default function ThemeToggleButton() {
     return null;
   }
 
+  const isDark = theme === "dark";
+
   return (
-    <Button
-      variant={"ghost"}
-      size={"icon-lg"}
-      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+    <button
+      onClick={() => setTheme(isDark ? "light" : "dark")}
+      className="cursor-pointer rounded-lg border border-brand/40 p-2 text-brand transition-all duration-200 hover:bg-brand hover:text-white"
     >
-      {theme === "dark" ? (
-        <Sun className="h-[1.2rem] w-[1.2rem]" />
-      ) : (
-        <Moon className="h-[1.2rem] w-[1.2rem]" />
-      )}
-    </Button>
+      {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+      <span className="sr-only">Toggle theme</span>
+    </button>
   );
 }

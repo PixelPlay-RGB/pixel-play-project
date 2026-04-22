@@ -1,11 +1,10 @@
 import { type NextRequest } from "next/server";
-import { updateSession } from "@/lib/middleware";
+import { updateSession } from "@/lib/supabase/proxy";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   return await updateSession(request);
 }
 
-// middleware 검증 path
 export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
 };

@@ -1,5 +1,6 @@
 'use client';
 
+import LinkedToast from "@/components/auth/linked-toast";
 import { useState } from 'react';
 import ChatList from '@/components/list/ChatList';
 import LiveList from '@/components/list/LiveList';
@@ -54,5 +55,5 @@ export default function Home() {
         </section>
       </div>
     </main>
-  );
+  )
 }

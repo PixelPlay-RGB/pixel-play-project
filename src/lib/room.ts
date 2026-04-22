@@ -1,4 +1,4 @@
-import { createClient } from "./client";
+import { createClient } from "./supabase/client";
 
 export interface ChatRoom {
   id: number;
@@ -10,6 +10,7 @@ export interface ChatRoom {
   email?: string;
   description?: string;
 }
+
 const supabase = createClient();
 export const createRoom = async (title: string, capacity: number, userId: string, userName: string, userEmail: string, description: string) => {
   // 서버 측 호출 전 유효성 검사 추가
