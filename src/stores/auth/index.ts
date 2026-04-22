@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { devtools } from "zustand/middleware"; // 미들웨어 추가
 import { User } from "@supabase/supabase-js";
 
 export interface AuthState {
@@ -8,9 +9,17 @@ export interface AuthState {
   setLoading: (loading: boolean) => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  loading: true,
-  setUser: (user) => set({ user, loading: false }),
-  setLoading: (loading) => set({ loading }),
-}));
+export const useAuthStore = create<AuthState>()(
+  devtools(
+    (set) => ({
+      user: null,
+      loading: true,
+      setUser: (user) => set({ user, loading: false }, false, "auth/setUser"),
+      setLoading: (loading) => set({ loading }, false, "auth/setLoading"),
+    }),
+    {
+      name: "AuthStore",
+      enabled: process.env.NODE_ENV !== "production",
+    },
+  ),
+);
