@@ -1,5 +1,6 @@
 "use client";
 
+import AuthListener from "@/components/common/auth-listener";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { ThemeProvider } from "next-themes";
@@ -11,6 +12,7 @@ export default function Providers({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+        <AuthListener />
         {children}
         <ReactQueryDevtools initialIsOpen={false} />
       </ThemeProvider>

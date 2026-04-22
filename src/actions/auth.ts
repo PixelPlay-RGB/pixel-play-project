@@ -183,15 +183,36 @@ export async function completeOAuthProfileAction(
     };
   }
 
-  const { error: dbError } = await supabase.from("user").upsert({
-    oauth_id: user.id,
-    email: user.email!,
-    name: user.user_metadata?.full_name ?? displayName,
-    display_name: displayName,
-    birth,
-    phone,
-    gender,
+  const fallbackName =
+    user.user_metadata?.full_name ??
+    user.user_metadata?.name ??
+    user.email?.split("@")[0] ??
+    displayName;
+
+  // auth.users.user_metadata에도 display_name 반영 (어드민 대시보드 + 세션 일관성)
+  const { error: authError } = await supabase.auth.updateUser({
+    data: {
+      display_name: displayName,
+      name: fallbackName,
+    },
   });
+
+  if (authError) {
+    return { success: false, message: authError.message };
+  }
+
+  const { error: dbError } = await supabase.from("user").upsert(
+    {
+      oauth_id: user.id,
+      email: user.email!,
+      name: fallbackName,
+      display_name: displayName,
+      birth,
+      phone,
+      gender,
+    },
+    { onConflict: "oauth_id" },
+  );
 
   if (dbError) {
     return {

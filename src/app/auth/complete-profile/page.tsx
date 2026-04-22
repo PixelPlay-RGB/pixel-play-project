@@ -1,14 +1,33 @@
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import CompleteProfileForm from "@/components/auth/complete-profile/complete-profile-form";
 import Logo from "@/components/common/logo";
 import { Separator } from "@/components/ui/separator";
-import { getServerSession } from "next-auth";
+import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
 export default async function Page() {
-  const session = await getServerSession(authOptions);
-  if (!session) redirect("/auth/login");
-  if (session.profileComplete) redirect("/");
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/auth/login");
+  }
+
+  // 이미 프로필이 완성된 유저가 직접 접근한 경우 홈으로
+  const { data: profile } = await supabase
+    .from("user")
+    .select("display_name")
+    .eq("oauth_id", user.id)
+    .single();
+
+  if (profile?.display_name) {
+    redirect("/");
+  }
+
+  // OAuth provider가 제공한 이름을 닉네임 기본값으로 사용
+  const defaultDisplayName =
+    user.user_metadata?.full_name ?? user.user_metadata?.name ?? user.email?.split("@")[0] ?? "";
 
   return (
     <div className="container m-auto">
@@ -23,7 +42,7 @@ export default async function Page() {
             </p>
           </div>
         </div>
-        <CompleteProfileForm defaultDisplayName={session.user.name ?? ""} />
+        <CompleteProfileForm defaultDisplayName={defaultDisplayName} />
       </div>
     </div>
   );

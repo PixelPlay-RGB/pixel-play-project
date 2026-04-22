@@ -8,11 +8,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { FieldError } from "@/components/ui/field";
 import { RadioGroup } from "@/components/ui/radio-group";
 import { Spinner } from "@/components/ui/spinner";
+import { createClient } from "@/lib/supabase/client";
 import { completeOAuthProfileSchema, CompleteOAuthProfileValues } from "@/lib/zod/auth";
+import { useAuthStore } from "@/stores/auth";
 import { formatPhone } from "@/utils/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AtSign, CalendarDays, Smartphone } from "lucide-react";
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -23,7 +24,7 @@ interface Props {
 
 export default function CompleteProfileForm({ defaultDisplayName }: Props) {
   const router = useRouter();
-  const { update } = useSession();
+  const setUser = useAuthStore((s) => s.setUser);
 
   const {
     register,
@@ -38,13 +39,24 @@ export default function CompleteProfileForm({ defaultDisplayName }: Props) {
 
   const onSubmit = async (data: CompleteOAuthProfileValues) => {
     const result = await completeOAuthProfileAction(data);
-    if (result.success) {
-      await update({ profileComplete: true });
-      toast.success("프로필 설정 완료!");
-      router.push("/");
-    } else {
+    if (!result.success) {
       toast.error("오류", { description: result.message });
+      return;
     }
+
+    // 서버 액션에서 갱신된 user_metadata를 클라이언트 store에도 반영
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    setUser(user);
+
+    toast.success("프로필 설정 완료!", {
+      description: `🥳 ${data.displayName}님 환영합니다!`,
+    });
+
+    router.push("/");
+    router.refresh();
   };
 
   return (

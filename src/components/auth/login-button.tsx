@@ -2,39 +2,22 @@
 
 import { Spinner } from "@/components/ui/spinner";
 import { createClient } from "@/lib/supabase/client";
-import { User } from "@supabase/supabase-js";
+import { useAuthStore } from "@/stores/auth";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import { useTransition } from "react";
 
 export default function LoginButton() {
   const router = useRouter();
-  const supabase = createClient();
-  const [user, setUser] = useState<User | null>(null);
+  const user = useAuthStore((s) => s.user);
+  const loading = useAuthStore((s) => s.loading);
   const [isPending, startTransition] = useTransition();
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const getUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        return;
-      }
-
-      setUser(user);
-      setLoading(false);
-    };
-
-    getUser();
-  }, [supabase]);
 
   const handleAuth = () => {
     startTransition(async () => {
       if (user) {
+        const supabase = createClient();
         await supabase.auth.signOut();
-        setUser(null);
+        // onAuthStateChange가 store를 자동으로 null로 업데이트
         router.refresh();
       } else {
         router.push("/auth/login");

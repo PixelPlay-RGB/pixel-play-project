@@ -11,7 +11,7 @@ Next.js 16 App Router + Supabase Realtime 기반으로 구축됩니다.
 | ------------------- | ----------------------------------------------------------------- |
 | Framework           | Next.js 16 (App Router) · React 19 · TypeScript (strict)          |
 | Styling             | Tailwind CSS 4 · shadcn (base-nova) · Base UI · lucide-react      |
-| Auth                | NextAuth v4 · Supabase Auth (Credentials · Google · GitHub OAuth) |
+| Auth                | Supabase Auth (Email OTP · Google · GitHub OAuth)                 |
 | Database / Realtime | Supabase (Postgres + Realtime)                                    |
 | Server State        | TanStack Query v5                                                 |
 | Client State        | Zustand v5                                                        |
@@ -53,15 +53,14 @@ npm install
 cp .env.example .env.local
 ```
 
-| 변수                                   | 설명                               |
-| -------------------------------------- | ---------------------------------- |
-| `NEXT_PUBLIC_SUPABASE_URL`             | Supabase 프로젝트 URL              |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | anon (공개) 키                     |
-| `AUTH_SECRET`                          | NextAuth 서명 비밀키 (랜덤 문자열) |
-| `AUTH_GOOGLE_CLIENT_ID`                | Google OAuth 클라이언트 ID         |
-| `AUTH_GOOGLE_CLIENT_SECRET`            | Google OAuth 클라이언트 시크릿     |
-| `AUTH_GITHUB_CLIENT_ID`                | GitHub OAuth App Client ID         |
-| `AUTH_GITHUB_CLIENT_SECRET`            | GitHub OAuth App Client Secret     |
+| 변수                                   | 설명                          |
+| -------------------------------------- | ----------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`             | Supabase 프로젝트 URL         |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | anon (공개) 키                |
+| `AUTH_GOOGLE_CLIENT_ID`                | Google OAuth 클라이언트 ID    |
+| `AUTH_GOOGLE_CLIENT_SECRET`            | Google OAuth 클라이언트 시크릿|
+| `AUTH_GITHUB_CLIENT_ID`                | GitHub OAuth App Client ID    |
+| `AUTH_GITHUB_CLIENT_SECRET`            | GitHub OAuth App Client Secret|
 
 > 환경 변수 키를 추가·변경하면 `src/env.d.ts`의 타입 선언도 함께 수정해야 합니다.
 
@@ -69,13 +68,22 @@ cp .env.example .env.local
 
 ### 3단계 — OAuth 공급자 콜백 URL 등록
 
+Supabase Auth를 단독으로 사용합니다. OAuth callback URL은 Supabase 대시보드와 각 공급자 모두에 등록해야 합니다.
+
+#### Supabase 대시보드
+Authentication → URL Configuration → **Redirect URLs** 에 추가합니다.
+
+```
+http://localhost:3000/auth/callback
+https://<your-domain>/auth/callback
+```
+
 #### Google
 
 Google Cloud Console → 사용자 인증 정보 → OAuth 2.0 클라이언트 → **승인된 리디렉션 URI** 에 추가합니다.
 
 ```
-http://localhost:3000/api/auth/callback/google   # 개발
-https://<your-domain>/api/auth/callback/google   # 프로덕션
+https://<supabase-project-id>.supabase.co/auth/v1/callback
 ```
 
 #### GitHub
@@ -83,8 +91,7 @@ https://<your-domain>/api/auth/callback/google   # 프로덕션
 GitHub → Developer settings → OAuth Apps → 앱 선택 → **Authorization callback URL** 에 입력합니다.
 
 ```
-http://localhost:3000/api/auth/callback/github   # 개발
-https://<your-domain>/api/auth/callback/github   # 프로덕션
+https://<supabase-project-id>.supabase.co/auth/v1/callback
 ```
 
 ---
@@ -104,32 +111,37 @@ npm run dev
 ```
 src/
 ├── actions/              # Server Actions
-│   └── auth.ts           # 회원가입 서버 액션 (Supabase Auth 연동)
+│   └── auth.ts           # 로그인·회원가입·프로필 완성 서버 액션
 ├── app/                  # Next.js App Router
-│   ├── api/auth/         # NextAuth 핸들러
 │   ├── auth/
-│   │   ├── login/        # 로그인 페이지 (서버 컴포넌트)
-│   │   └── signup/       # 회원가입 페이지 (서버 컴포넌트)
+│   │   ├── callback/     # OAuth code → session 교환 핸들러
+│   │   ├── complete-profile/ # OAuth 유저 추가 정보 입력 페이지
+│   │   ├── login/        # 로그인 페이지
+│   │   └── signup/       # 회원가입 페이지
 │   ├── layout.tsx
-│   └── page.tsx          # 인덱스 (비로그인 시 /auth/login 리다이렉트)
+│   └── page.tsx
 ├── components/
 │   ├── auth/
+│   │   ├── complete-profile/ # CompleteProfileForm
 │   │   ├── login/        # LoginForm · OAuthButtons
 │   │   ├── signup/       # SignupForm
-│   │   └── login-button.tsx  # Header 로그인/로그아웃 버튼
-│   ├── common/           # Header · ThemeToggleButton
+│   │   └── login-button.tsx
+│   ├── common/
+│   │   ├── auth-listener.tsx # Supabase Auth 상태 → Zustand 동기화
+│   │   ├── header.tsx
+│   │   └── providers.tsx
 │   └── ui/               # shadcn / Base UI 컴포넌트
 ├── hooks/                # 커스텀 훅
 ├── lib/
 │   ├── supabase/         # client.ts · server.ts · proxy.ts
 │   ├── zod/              # 폼 유효성 스키마 + 기본값 상수
-│   ├── providers.tsx     # QueryClient · Theme · Session 프로바이더
-│   └── utils/            # cn 유틸
-├── stores/               # Zustand 스토어
+│   └── utils/
+├── stores/
+│   └── auth/             # Zustand Auth 스토어 (user · loading)
 ├── types/
-│   ├── auth/             # OtpStatus · LoginFormValues · SignUpFormValues
+│   ├── auth/
 │   ├── database.types.ts # Supabase 자동 생성 타입 (npm run types)
-│   └── user.ts           # User 테이블 Row 타입
+│   └── user.ts
 └── utils/
     └── auth/             # formatPhone 등 auth 관련 유틸
 ```
@@ -140,19 +152,18 @@ src/
 
 ### `user` 테이블
 
-| 컬럼          | 타입          | 설명                       |
-| ------------- | ------------- | -------------------------- |
-| `id`          | uuid (PK)     | 자동 생성                  |
-| `oauth_id`    | text (UNIQUE) | NextAuth 공급자 유저 ID    |
-| `email`       | text          | 이메일                     |
-| `name`        | text          | 이름                       |
-| `birth`       | text          | 생년월일                   |
-| `phone`       | text          | 휴대전화번호               |
-| `gender`      | enum          | `male` · `female` · `none` |
-| `created_at`  | timestamptz   | 생성 시각                  |
-| `modified_at` | timestamptz   | 최종 수정 시각             |
-
-> OAuth 로그인 사용자는 `oauth_id`, `email`, `name` 만 저장되고 나머지 필드는 null입니다.
+| 컬럼           | 타입          | 설명                                   |
+| -------------- | ------------- | -------------------------------------- |
+| `id`           | uuid (PK)     | 자동 생성                              |
+| `oauth_id`     | text (UNIQUE) | Supabase Auth 유저 ID (`auth.users.id`)|
+| `email`        | text          | 이메일                                 |
+| `name`         | text          | 실명                                   |
+| `display_name` | text          | 닉네임 (서비스 내 표시 이름)           |
+| `birth`        | text          | 생년월일                               |
+| `phone`        | text          | 휴대전화번호                           |
+| `gender`       | enum          | `male` · `female` · `none`             |
+| `created_at`   | timestamptz   | 생성 시각                              |
+| `modified_at`  | timestamptz   | 최종 수정 시각                         |
 
 ### DB 함수
 
@@ -172,29 +183,36 @@ npm run types
 
 ## 인증 구조
 
+Supabase Auth 단독으로 인증을 처리합니다. 미들웨어(`proxy.ts`)가 모든 요청에서 세션을 검증하고 인증 가드 역할을 담당합니다.
+
 ```
-로그인 페이지 (서버 컴포넌트)
-├── LoginForm (클라이언트) — react-hook-form + Zod
-│   └── signIn("credentials", { email, password })  →  NextAuth
-├── OAuthButtons (클라이언트) — 로딩 중 Spinner 표시
-│   ├── signIn("google")  →  Google OAuth
-│   └── signIn("github")  →  GitHub OAuth
-│
-회원가입 페이지 (서버 컴포넌트)
-└── SignupForm (클라이언트) — react-hook-form + Zod
-    ├── [1] sendOtpAction(email)      →  이메일 중복 확인 (RPC) → Supabase OTP 발송
-    ├── [2] verifyOtpAction(email, token)  →  OTP 검증
-    └── [3] completeSignupAction(data)     →  비밀번호 · 프로필 설정 → 자동 로그인
+[미들웨어 - proxy.ts]
+  ├── 비로그인 + 비auth 페이지 → /auth/login 리다이렉트
+  └── 로그인 + display_name 없음 + 비auth 페이지 → /auth/complete-profile 리다이렉트
+
+[로그인]
+  ├── LoginForm (이메일/비밀번호) → login() 서버 액션 → supabase.auth.signInWithPassword
+  └── OAuthButtons → supabase.auth.signInWithOAuth → /auth/callback → exchangeCodeForSession
+
+[회원가입 - 이메일 OTP]
+  ├── [1] sendOtpAction(email)          → 중복 확인(RPC) → OTP 발송
+  ├── [2] verifyOtpAction(email, token) → OTP 검증 → 임시 세션 생성
+  └── [3] completeSignupAction(data)    → 비밀번호·프로필 저장 → auth.users.user_metadata 동기화
+
+[OAuth 회원가입]
+  ├── OAuthButtons → /auth/callback → 세션 생성
+  └── display_name 없음 → /auth/complete-profile → completeOAuthProfileAction
 ```
 
-**회원가입 OTP 플로우**
+**클라이언트 Auth 상태 관리**
 
-1. 이메일 입력 후 인증 버튼 클릭 → `check_email_exists` RPC로 중복 확인 → 미가입 시 OTP 발송
-2. 6자리 코드 입력 후 확인 → OTP 검증 완료 시 나머지 폼 입력 가능
-3. 폼 제출 → 비밀번호·프로필 저장 → credentials 자동 로그인
+```
+AuthListener (providers.tsx에 마운트, 앱 전체에서 1회)
+  ├── 초기: getUser() → Zustand store 세팅
+  └── 이후: onAuthStateChange 구독 → 로그인/로그아웃/토큰갱신 시 store 자동 반영
 
-- 세션 전략: **JWT** (30일)
-- OAuth 로그인 시 `signIn` 콜백에서 Supabase `user` 테이블에 자동 동기화
+컴포넌트 → useAuthStore() → 네트워크 없이 즉시 유저 정보 접근
+```
 
 ---
 

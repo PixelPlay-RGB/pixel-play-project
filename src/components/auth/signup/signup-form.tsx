@@ -15,8 +15,10 @@ import {
 import { RadioGroup } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
+import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { SIGNUP_FORM_DEFAULTS, signUpSchema } from "@/lib/zod/auth";
+import { useAuthStore } from "@/stores/auth";
 import type { OtpStatus, SignUpFormValues } from "@/types/auth";
 import { formatPhone } from "@/utils/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -28,6 +30,7 @@ import { toast } from "sonner";
 
 export default function SignupForm() {
   const router = useRouter();
+  const setUser = useAuthStore((s) => s.setUser);
   const [otpStatus, setOtpStatus] = useState<OtpStatus>("idle");
   const [otpCode, setOtpCode] = useState("");
   const [otpError, setOtpError] = useState("");
@@ -100,16 +103,24 @@ export default function SignupForm() {
 
     const result = await completeSignupAction(data);
 
-    if (result.success) {
-      toast.success("회원가입 성공!", {
-        description: `🥳 ${data.displayName}님 환영합니다!`,
-      });
-
-      router.push("/");
-      router.refresh();
-    } else {
+    if (!result.success) {
       toast.error("회원가입 실패", { description: result.message });
+      return;
     }
+
+    // 서버 액션에서 세팅된 쿠키를 클라이언트가 읽어 store 동기화
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    setUser(user);
+
+    toast.success("회원가입 성공!", {
+      description: `🥳 ${data.displayName}님 환영합니다!`,
+    });
+
+    router.push("/");
+    router.refresh();
   };
 
   return (

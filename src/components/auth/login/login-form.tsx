@@ -5,7 +5,9 @@ import AuthInputGroup from "@/components/auth/auth-input-group";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
+import { createClient } from "@/lib/supabase/client";
 import { loginSchema } from "@/lib/zod/auth";
+import { useAuthStore } from "@/stores/auth";
 import type { LoginFormValues } from "@/types/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LockKeyhole, Mail } from "lucide-react";
@@ -15,6 +17,7 @@ import { toast } from "sonner";
 
 export default function LoginForm() {
   const router = useRouter();
+  const setUser = useAuthStore((s) => s.setUser);
 
   const {
     register,
@@ -35,6 +38,13 @@ export default function LoginForm() {
 
       return;
     }
+
+    // 서버 액션에서 세팅된 쿠키를 클라이언트가 읽어 store 동기화 (LoginButton 등 즉시 갱신)
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    setUser(user);
 
     toast.success("로그인 성공", {
       description: `🥳 ${result.data?.displayName}님 환영합니다!`,
