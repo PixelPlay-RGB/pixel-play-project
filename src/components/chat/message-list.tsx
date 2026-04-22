@@ -7,7 +7,7 @@ import type { Message } from "@/types/chat"
 
 import { MessageItem } from "./message-item"
 
-const TOP_PREFETCH_PX = 180
+const TOP_PREFETCH_PX = 50
 
 interface Props {
   messages: Message[]
@@ -31,7 +31,7 @@ export function MessageList({
   const previousHeightRef = useRef(0)
   const shouldRestorePositionRef = useRef(false)
   const previousLastMessageIdRef = useRef<string | null>(null)
-  const loadRequestLockRef = useRef(false)
+  const isFetchingRef = useRef(false)
 
   const getViewport = () => {
     return scrollAreaRef.current?.querySelector(
@@ -41,13 +41,13 @@ export function MessageList({
 
   useEffect(() => {
     if (!isLoadingPrevious) {
-      loadRequestLockRef.current = false
+      isFetchingRef.current = false
     }
   }, [isLoadingPrevious])
 
   useEffect(() => {
     if (!hasMorePrevious) {
-      loadRequestLockRef.current = false
+      isFetchingRef.current = false
     }
   }, [hasMorePrevious])
 
@@ -59,17 +59,17 @@ export function MessageList({
       const shouldPrefetch =
         viewport.scrollTop <= TOP_PREFETCH_PX &&
         hasMorePrevious &&
-        !loadRequestLockRef.current
+        !isFetchingRef.current
 
       if (shouldPrefetch) {
-        loadRequestLockRef.current = true
+        isFetchingRef.current = true
         previousHeightRef.current = viewport.scrollHeight
         const started = onReachTop()
 
         if (started) {
           shouldRestorePositionRef.current = true
         } else {
-          loadRequestLockRef.current = false
+          isFetchingRef.current = false
         }
       }
     }

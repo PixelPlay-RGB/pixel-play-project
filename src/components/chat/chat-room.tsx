@@ -2,7 +2,12 @@
 
 import { useMemo, useRef, useState } from "react"
 
+import { useQuery } from "@tanstack/react-query"
+
 import type { Message, Room, RoomMember } from "@/types/chat"
+import { CURRENT_ROOM_ID, CURRENT_USER_ID } from "@/lib/chat-constants"
+import useMessages from "@/hook/use-messages"
+import { createClient } from "@/lib/supabase/client"
 
 import { MemberList } from "./member-list"
 import { MessageInput } from "./message-input"
@@ -12,115 +17,114 @@ interface Props {
   roomId: string
 }
 
-const currentUserId = "userSelf"
-
-const displayNameByUserId: Record<string, string> = {
-  [currentUserId]: "나",
-  streamer01: "스트리머",
-  viewerKim: "김치좋아",
-  viewerLee: "이펙트",
-  viewerPark: "박물관",
+interface RoomQueryRow {
+  id: string
+  name: string
+  description: string | null
+  user_id: string
+  created_at: string
 }
 
-function buildDummyRoom(roomId: string): Room {
-  return {
-    id: roomId,
-    name: "저녁 랭크 같이 가요 🎮",
-    description: "즐겜만 하시길",
-    createdBy: "streamer01",
-    createdAt: "2026-04-01T12:00:00.000Z",
-  }
+interface RoomMemberQueryRow {
+  room_id: string
+  user_id: string
+  joined_at: string
+  user: Array<{
+    display_name: string | null
+  }> | null
 }
 
-function buildDummyMembers(roomId: string): RoomMember[] {
-  return [
-    {
-      id: `${roomId}-m1`,
-      userId: "streamer01",
-      name: "스트리머",
-      joinedAt: "2026-04-21T10:00:00.000Z",
-    },
-    {
-      id: `${roomId}-m2`,
-      userId: "viewerKim",
-      name: "김치좋아",
-      joinedAt: "2026-04-21T10:05:00.000Z",
-    },
-    {
-      id: `${roomId}-m3`,
-      userId: "viewerLee",
-      name: "이펙트",
-      joinedAt: "2026-04-21T10:06:00.000Z",
-    },
-    {
-      id: `${roomId}-m4`,
-      userId: "viewerPark",
-      name: "박물관",
-      joinedAt: "2026-04-21T10:07:00.000Z",
-    },
-    {
-      id: `${roomId}-m5`,
-      userId: "userSelf",
-      name: "나",
-      joinedAt: "2026-04-21T10:08:00.000Z",
-    },
-    {
-      id: `${roomId}-m6`,
-      userId: "guestOwl",
-      name: "부엉이",
-      joinedAt: "2026-04-21T10:09:00.000Z",
-    },
-  ]
-}
+export function ChatRoom({ roomId: _roomId }: Props) {
+  const supabase = useMemo(() => createClient(), [])
+  // 로그인 연동 전까지는 상수 사용, 이후 session.user.id/session room으로 교체 가능
+  const currentUserId = CURRENT_USER_ID
+  const activeRoomId = CURRENT_ROOM_ID
 
-function buildInitialMessages(roomId: string): Message[] {
-  const base = Date.now()
-  const users = ["streamer01", "viewerKim", "viewerLee", "viewerPark", currentUserId]
+  const {
+    messages,
+    displayNameByUserId,
+    hasMorePrevious,
+    isLoadingPrevious,
+    loadPrevious,
+    isLoadingInitial,
+  } = useMessages(activeRoomId)
 
-  return Array.from({ length: 70 }, (_, index) => ({
-    id: `m${index + 1}`,
-    roomId,
-    userId: users[index % users.length],
-    content: String(index + 1),
-    createdAt: new Date(base - (70 - index) * 60000).toISOString(),
-  }))
-}
-
-export function ChatRoom({ roomId }: Props) {
-  const room = useMemo(() => buildDummyRoom(roomId), [roomId])
-  const members = useMemo(() => buildDummyMembers(roomId), [roomId])
-  const [allMessages, setAllMessages] = useState<Message[]>(() =>
-    buildInitialMessages(roomId),
-  )
-  const [visibleCount, setVisibleCount] = useState(30)
-  const [isLoadingPrevious, setIsLoadingPrevious] = useState(false)
   const [draft, setDraft] = useState("")
   const loadPreviousLockRef = useRef(false)
+  const sendMessageLockRef = useRef(false)
 
-  const messages = useMemo(() => {
-    return allMessages.slice(Math.max(0, allMessages.length - visibleCount))
-  }, [allMessages, visibleCount])
+  const { data: room } = useQuery({
+    queryKey: ["room", activeRoomId],
+    queryFn: async (): Promise<Room> => {
+      const { data, error } = await supabase
+        .from("room")
+        .select("id, name, description, user_id, created_at")
+        .eq("id", activeRoomId)
+        .single()
+        .returns<RoomQueryRow>()
 
-  const hasMorePrevious = visibleCount < allMessages.length
+      if (error) throw error
 
-  const handleSend = () => {
+      return {
+        id: data.id,
+        name: data.name,
+        description: data.description ?? "",
+        createdBy: data.user_id,
+        createdAt: data.created_at,
+      }
+    },
+  })
+
+  const { data: members = [] } = useQuery({
+    queryKey: ["room-members", activeRoomId],
+    queryFn: async (): Promise<RoomMember[]> => {
+      const { data, error } = await supabase
+        .from("room_member")
+        .select("room_id, user_id, joined_at, user:user_id(display_name)")
+        .eq("room_id", activeRoomId)
+        .order("joined_at", { ascending: true })
+        .returns<RoomMemberQueryRow[]>()
+
+      if (error) throw error
+
+      return (data ?? []).map((member) => ({
+        id: `${member.room_id}-${member.user_id}`,
+        userId: member.user_id,
+        name: member.user?.[0]?.display_name ?? member.user_id.slice(0, 8),
+        joinedAt: member.joined_at,
+      }))
+    },
+  })
+
+  const handleSend = async () => {
     const trimmed = draft.trim()
-    if (!trimmed) return
+    if (!trimmed || sendMessageLockRef.current) return
+
+    sendMessageLockRef.current = true
 
     const next: Message = {
       id: `local-${crypto.randomUUID()}`,
-      roomId,
+      roomId: activeRoomId,
       userId: currentUserId,
       content: trimmed,
       createdAt: new Date().toISOString(),
     }
 
-    setAllMessages((prev) => {
-      const nextMessages = [...prev, next]
-      setVisibleCount((prevCount) => Math.min(prevCount + 1, nextMessages.length))
-      return nextMessages
+    const { error } = await supabase.from("message").insert({
+      room_id: next.roomId,
+      user_id: next.userId,
+      content: next.content,
+      created_at: next.createdAt,
     })
+
+    if (error) {
+      console.error(error)
+      sendMessageLockRef.current = false
+      return
+    }
+
     setDraft("")
+    sendMessageLockRef.current = false
   }
 
   const handleLoadPrevious = () => {
@@ -129,13 +133,9 @@ export function ChatRoom({ roomId }: Props) {
     }
 
     loadPreviousLockRef.current = true
-    setIsLoadingPrevious(true)
-
-    window.setTimeout(() => {
-      setVisibleCount((prevCount) => Math.min(prevCount + 20, allMessages.length))
-      setIsLoadingPrevious(false)
+    void loadPrevious().finally(() => {
       loadPreviousLockRef.current = false
-    }, 200)
+    })
 
     return true
   }
@@ -153,14 +153,14 @@ export function ChatRoom({ roomId }: Props) {
         <header className="shrink-0 border-b border-border px-3 py-2.5">
           <div className="flex items-start justify-between gap-2">
             <h1 className="line-clamp-2 text-sm font-semibold leading-tight">
-              {room.name}
+              {room?.name ?? "채팅방"}
             </h1>
             <span className="shrink-0 text-xs text-muted-foreground">
               {formattedParticipants}명
             </span>
           </div>
           <p className="mt-1 line-clamp-1 text-[11px] text-muted-foreground">
-            {room.description}
+            {room?.description ?? ""}
           </p>
         </header>
 
@@ -169,7 +169,7 @@ export function ChatRoom({ roomId }: Props) {
           displayNameByUserId={displayNameByUserId}
           currentUserId={currentUserId}
           hasMorePrevious={hasMorePrevious}
-          isLoadingPrevious={isLoadingPrevious}
+          isLoadingPrevious={isLoadingPrevious || isLoadingInitial}
           onReachTop={handleLoadPrevious}
         />
 

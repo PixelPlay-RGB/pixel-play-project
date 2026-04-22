@@ -16,7 +16,7 @@ export function MemberItem({ member }: Props) {
         <AvatarFallback>{initials}</AvatarFallback>
       </Avatar>
       <span className="min-w-0 truncate text-sm text-foreground">
-        {member.userId}
+        {member.name}
       </span>
     </div>
   )

@@ -4,6 +4,7 @@ export interface Message {
   userId: string
   content: string
   createdAt: string
+  displayName?: string
 }
 
 export interface Room {
