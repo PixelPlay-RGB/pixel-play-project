@@ -5,11 +5,13 @@ import AuthInputGroup from "@/components/auth/auth-input-group";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
+import { PROFILE_QUERY_KEY } from "@/constants/auth";
 import { createClient } from "@/lib/supabase/client";
 import { loginSchema } from "@/lib/zod/auth";
-import { useAuthStore } from "@/stores/auth";
+import { useUserStore } from "@/stores/auth";
 import type { LoginFormValues } from "@/types/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import { LockKeyhole, Mail } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -17,7 +19,8 @@ import { toast } from "sonner";
 
 export default function LoginForm() {
   const router = useRouter();
-  const setUser = useAuthStore((s) => s.setUser);
+  const setUser = useUserStore((s) => s.setUser);
+  const queryClient = useQueryClient();
 
   const {
     register,
@@ -33,24 +36,30 @@ export default function LoginForm() {
 
     if (!result.success) {
       toast.error("로그인 실패 🥲", {
-        description: result.message,
+        description: result.message || "이메일 또는 비밀번호를 확인해주세요.",
       });
-
       return;
     }
 
-    // 서버 액션에서 세팅된 쿠키를 클라이언트가 읽어 store 동기화 (LoginButton 등 즉시 갱신)
+    // 서버 액션에서 세팅된 쿠키를 클라이언트가 읽어 store 동기화
     const supabase = createClient();
     const {
-      data: { user },
+      data: { user: authUser },
+      error: authError,
     } = await supabase.auth.getUser();
-    setUser(user);
 
-    toast.success("로그인 성공", {
-      description: `🥳 ${result.data?.displayName}님 환영합니다!`,
-    });
+    if (authError || !authUser) {
+      toast.error("인증 정보를 불러올 수 없습니다.", {
+        description: "잠시 후 다시 시도해주세요.",
+      });
+      return;
+    }
+
+    setUser(authUser);
+    queryClient.invalidateQueries({ queryKey: PROFILE_QUERY_KEY });
 
     router.push("/");
+    router.refresh();
   };
 
   return (
