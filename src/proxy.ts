@@ -1,23 +1,11 @@
-import { getToken } from "next-auth/jwt";
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest } from "next/server";
+import { updateSession } from "@/lib/supabase/proxy";
 
-export async function proxy(request: NextRequest) {
-  const token = await getToken({ req: request, secret: process.env.AUTH_SECRET });
-
-  if (!token) {
-    return NextResponse.redirect(new URL("/auth/login", request.url));
-  }
-
-  if (token.profileComplete === false) {
-    return NextResponse.redirect(new URL("/auth/complete-profile", request.url));
-  }
-
-  return NextResponse.next();
+export async function middleware(request: NextRequest) {
+  // 방금 만든 proxy.ts의 로직을 실행하여 세션 갱신 및 리다이렉트 처리
+  return await updateSession(request);
 }
 
-// proxy 검증 path
 export const config = {
-  matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|auth|api/auth|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
-  ],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
 };
