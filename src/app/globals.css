@@ -128,3 +128,35 @@
     @apply font-sans;
   }
 }
+
+/*
+ * 이모지 픽커 스크롤(.epr-body만 overflow 스크롤).
+ * @layer 안에 두면 Flairup 등 비레이어 주입 스타일에 밀릴 수 있어 레이어 밖에 둠.
+ */
+.dark.emoji-picker-panel {
+  color-scheme: dark;
+}
+
+.dark.emoji-picker-panel .epr-body {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklch, var(--muted-foreground) 55%, transparent)
+    var(--muted);
+}
+
+.dark.emoji-picker-panel .epr-body::-webkit-scrollbar {
+  width: 10px;
+}
+
+.dark.emoji-picker-panel .epr-body::-webkit-scrollbar-track {
+  background: var(--muted);
+  border-radius: 9999px;
+}
+
+.dark.emoji-picker-panel .epr-body::-webkit-scrollbar-thumb {
+  background: color-mix(in oklch, var(--muted-foreground) 55%, transparent);
+  border-radius: 9999px;
+}
+
+.dark.emoji-picker-panel .epr-body::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in oklch, var(--muted-foreground) 80%, transparent);
+}

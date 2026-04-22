@@ -5,6 +5,8 @@ import { SendHorizontal } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
+import ChatEmojiPicker from "./chat-emoji-picker"
+
 interface Props {
   draft: string
   onDraftChange: (value: string) => void
@@ -14,6 +16,9 @@ interface Props {
 export function MessageInput({ draft, onDraftChange, onSend }: Props) {
   return (
     <div className="flex shrink-0 gap-2 border-t border-border bg-background/95 p-2 backdrop-blur-sm">
+      <ChatEmojiPicker
+        onEmojiSelect={(emoji) => onDraftChange(draft + emoji)}
+      />
       <Input
         value={draft}
         onChange={(e) => onDraftChange(e.target.value)}

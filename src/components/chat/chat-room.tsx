@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useRef, useState } from "react"
 
 import type { Message, Room, RoomMember } from "@/types/chat"
 
@@ -75,53 +75,33 @@ function buildDummyMembers(roomId: string): RoomMember[] {
 
 function buildInitialMessages(roomId: string): Message[] {
   const base = Date.now()
-  return [
-    {
-      id: "m1",
-      roomId,
-      userId: "streamer01",
-      content: "오늘도 같이 즐겁게 놀아요 ~",
-      createdAt: new Date(base - 3600000).toISOString(),
-    },
-    {
-      id: "m2",
-      roomId,
-      userId: "viewerKim",
-      content: "방송 언제까지 해요?",
-      createdAt: new Date(base - 3500000).toISOString(),
-    },
-    {
-      id: "m3",
-      roomId,
-      userId: "viewerLee",
-      content: "오늘 컨텐츠 미쳤다 ㅋㅋ",
-      createdAt: new Date(base - 3400000).toISOString(),
-    },
-    {
-      id: "m4",
-      roomId,
-      userId: currentUserId,
-      content: "저도 한판만 같이 할게요!",
-      createdAt: new Date(base - 3300000).toISOString(),
-    },
-    {
-      id: "m5",
-      roomId,
-      userId: "viewerPark",
-      content: "ㄱㄱㄱ 하이라이트 각이다",
-      createdAt: new Date(base - 3200000).toISOString(),
-    },
-  ]
+  const users = ["streamer01", "viewerKim", "viewerLee", "viewerPark", currentUserId]
+
+  return Array.from({ length: 70 }, (_, index) => ({
+    id: `m${index + 1}`,
+    roomId,
+    userId: users[index % users.length],
+    content: String(index + 1),
+    createdAt: new Date(base - (70 - index) * 60000).toISOString(),
+  }))
 }
 
 export function ChatRoom({ roomId }: Props) {
   const room = useMemo(() => buildDummyRoom(roomId), [roomId])
   const members = useMemo(() => buildDummyMembers(roomId), [roomId])
-  const [participantCount] = useState(12847)
-  const [messages, setMessages] = useState<Message[]>(() =>
+  const [allMessages, setAllMessages] = useState<Message[]>(() =>
     buildInitialMessages(roomId),
   )
+  const [visibleCount, setVisibleCount] = useState(30)
+  const [isLoadingPrevious, setIsLoadingPrevious] = useState(false)
   const [draft, setDraft] = useState("")
+  const loadPreviousLockRef = useRef(false)
+
+  const messages = useMemo(() => {
+    return allMessages.slice(Math.max(0, allMessages.length - visibleCount))
+  }, [allMessages, visibleCount])
+
+  const hasMorePrevious = visibleCount < allMessages.length
 
   const handleSend = () => {
     const trimmed = draft.trim()
@@ -135,13 +115,34 @@ export function ChatRoom({ roomId }: Props) {
       createdAt: new Date().toISOString(),
     }
 
-    setMessages((prev) => [...prev, next])
+    setAllMessages((prev) => {
+      const nextMessages = [...prev, next]
+      setVisibleCount((prevCount) => Math.min(prevCount + 1, nextMessages.length))
+      return nextMessages
+    })
     setDraft("")
   }
 
+  const handleLoadPrevious = () => {
+    if (loadPreviousLockRef.current || isLoadingPrevious || !hasMorePrevious) {
+      return false
+    }
+
+    loadPreviousLockRef.current = true
+    setIsLoadingPrevious(true)
+
+    window.setTimeout(() => {
+      setVisibleCount((prevCount) => Math.min(prevCount + 20, allMessages.length))
+      setIsLoadingPrevious(false)
+      loadPreviousLockRef.current = false
+    }, 200)
+
+    return true
+  }
+
   const formattedParticipants = useMemo(
-    () => participantCount.toLocaleString("ko-KR"),
-    [participantCount],
+    () => members.length.toLocaleString("ko-KR"),
+    [members.length],
   )
 
   return (
@@ -167,6 +168,9 @@ export function ChatRoom({ roomId }: Props) {
           messages={messages}
           displayNameByUserId={displayNameByUserId}
           currentUserId={currentUserId}
+          hasMorePrevious={hasMorePrevious}
+          isLoadingPrevious={isLoadingPrevious}
+          onReachTop={handleLoadPrevious}
         />
 
         <MessageInput
