@@ -10,5 +10,7 @@ namespace NodeJS {
 
     AUTH_GITHUB_CLIENT_ID: string;
     AUTH_GITHUB_CLIENT_SECRET: string;
+
+    NEXTAUTH_URL: string;
   }
 }

@@ -20,7 +20,7 @@ import { SIGNUP_FORM_DEFAULTS, signUpSchema } from "@/lib/zod/auth";
 import type { OtpStatus, SignUpFormValues } from "@/types/auth";
 import { formatPhone } from "@/utils/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CalendarDays, LockKeyhole, Mail, Smartphone, User } from "lucide-react";
+import { AtSign, CalendarDays, LockKeyhole, Mail, Smartphone, User } from "lucide-react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -85,8 +85,15 @@ export default function SignupForm() {
 
   const onSubmit = async (data: SignUpFormValues) => {
     if (!emailVerified) return;
-    const { email, password, name, birth, phone, gender } = data;
-    const result = await completeSignupAction({ password, name, birth, phone, gender });
+    const { email, password, name, displayName, birth, phone, gender } = data;
+    const result = await completeSignupAction({
+      password,
+      name,
+      displayName,
+      birth,
+      phone,
+      gender,
+    });
     if (result.success) {
       const loginResult = await signIn("credentials", {
         email,
@@ -96,7 +103,7 @@ export default function SignupForm() {
 
       if (loginResult?.ok) {
         toast.success("회원가입 성공!", {
-          description: `🥳 ${name}님 환영합니다`,
+          description: `🥳 ${displayName}님 환영합니다`,
         });
         router.push("/");
       } else {
@@ -223,6 +230,18 @@ export default function SignupForm() {
             isValid={!errors.name && !!dirtyFields.name}
           />
           <FieldError errors={[errors.name]} />
+        </div>
+        <div className="flex flex-col gap-1">
+          <AuthInputGroup
+            {...register("displayName")}
+            name="displayName"
+            type="text"
+            placeholder="닉네임"
+            icon={<AtSign />}
+            aria-invalid={!!errors.displayName}
+            isValid={!errors.displayName && !!dirtyFields.displayName}
+          />
+          <FieldError errors={[errors.displayName]} />
         </div>
         <div className="flex flex-col gap-1">
           <AuthInputGroup
