@@ -1,13 +1,56 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { completeOAuthProfileSchema, signUpBaseSchema } from "@/lib/zod/auth";
+import {
+  completeOAuthProfileSchema,
+  LoginFormValues,
+  loginSchema,
+  signUpBaseSchema,
+} from "@/lib/zod/auth";
 import { CompleteOAuthProfileInput, CompleteSignupInput } from "@/types/auth";
 import { revalidatePath } from "next/cache";
 
 export interface ActionResponse {
   success: boolean;
   message?: string;
+  data?: { displayName: string };
+}
+
+/**
+ * 로그인 서버 액션
+ */
+export async function login(data: LoginFormValues): Promise<ActionResponse> {
+  const supabase = await createClient();
+
+  const validatedFields = loginSchema.safeParse(data);
+  if (!validatedFields.success) {
+    return {
+      success: false,
+      message: "아이디와 비밀번호를 확인해주세요!",
+    };
+  }
+
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.signInWithPassword({
+    email: data.email,
+    password: data.password,
+  });
+
+  if (error) {
+    return {
+      success: false,
+      message: error.message,
+    };
+  }
+
+  return {
+    success: true,
+    data: {
+      displayName: user?.user_metadata.display_name,
+    },
+  };
 }
 
 /**

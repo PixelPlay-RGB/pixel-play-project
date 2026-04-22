@@ -21,7 +21,6 @@ import type { OtpStatus, SignUpFormValues } from "@/types/auth";
 import { formatPhone } from "@/utils/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AtSign, CalendarDays, LockKeyhole, Mail, Smartphone, User } from "lucide-react";
-import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -52,67 +51,63 @@ export default function SignupForm() {
     defaultValues: SIGNUP_FORM_DEFAULTS,
   });
 
+  // 1. OTP 발송
   const handleSendOtp = async () => {
     const email = getValues("email");
-    if (!email) return;
+    if (!email) {
+      return;
+    }
+
     setOtpStatus("sending");
     setOtpError("");
     clearErrors("email");
+
     const result = await sendOtpAction(email);
     if (result.success) {
       setOtpStatus("sent");
-      toast.success("인증 코드 발송", { description: "이메일을 확인해주세요." });
+      toast.success("인증 코드가 발송", { description: "이메일을 확인해주세요!" });
     } else {
       setOtpStatus("idle");
       setError("email", { type: "server", message: result.message });
     }
   };
 
+  // 2. OTP 검증
   const handleVerifyOtp = async () => {
     const email = getValues("email");
-    if (!email || !otpCode) return;
+    if (!email || !otpCode) {
+      return;
+    }
+
     setOtpStatus("verifying");
     setOtpError("");
+
     const result = await verifyOtpAction(email, otpCode);
     if (result.success) {
       setOtpStatus("verified");
-      toast.success("이메일 인증 완료");
+      toast.success("이메일 인증 완료", { description: "회원 가입을 계속 진행해주세요!" });
     } else {
       setOtpStatus("sent");
       setOtpError("인증 코드가 올바르지 않습니다.");
     }
   };
 
+  // 3. 최종 가입
   const onSubmit = async (data: SignUpFormValues) => {
-    if (!emailVerified) return;
-    const { email, password, name, displayName, birth, phone, gender } = data;
-    const result = await completeSignupAction({
-      password,
-      name,
-      displayName,
-      birth,
-      phone,
-      gender,
-    });
+    if (!emailVerified) {
+      return;
+    }
+
+    const result = await completeSignupAction(data);
+
     if (result.success) {
-      const loginResult = await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
+      toast.success("회원가입 성공!", {
+        description: `🥳 ${data.displayName}님 환영합니다!`,
       });
 
-      if (loginResult?.ok) {
-        toast.success("회원가입 성공!", {
-          description: `🥳 ${displayName}님 환영합니다`,
-        });
-        router.push("/");
-      } else {
-        toast.error("자동 로그인 실패", {
-          description: "로그인 페이지로 이동합니다.",
-        });
-        router.push("/auth/login");
-      }
-    } else if ("message" in result) {
+      router.push("/");
+      router.refresh();
+    } else {
       toast.error("회원가입 실패", { description: result.message });
     }
   };

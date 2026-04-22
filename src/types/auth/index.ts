@@ -1,7 +1,7 @@
 import { SignUpFormValues } from "@/lib/zod/auth";
+import { User } from "@supabase/supabase-js";
 
 export type OtpStatus = "idle" | "sending" | "sent" | "verifying" | "verified";
-
 export type OAuthProvider = "google" | "github";
 
 export type CompleteSignupInput = Pick<
