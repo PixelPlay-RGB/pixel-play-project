@@ -242,11 +242,11 @@ Socket.IO 등 별도 WebSocket 서버는 도입하지 않습니다.
 
 ## 채팅 화면 (`/chat/[room-id]`)
 
-- **동적 라우트** — URL 경로의 `room-id`가 Supabase `room.id`와 일치하는 방의 메시지·멤버·방 정보를 조회합니다.
-- **발신자 식별** — Supabase Auth 세션은 `useUserStore`, 앱 프로필 행은 `useProfile()`으로 조회합니다. 메시지 INSERT 시 `message.user_id`에는 **`public.user.id`(PK)** 를 사용합니다 (`oauth_id`는 Auth ID와 매칭용 컬럼과 이해하면 됩니다).
-- **표시 이름** — 메시지·멤버 조회 시 `public.user`의 **`nickname`** 을 조인해 표시합니다.
-- **실시간** — `use-messages.ts`에서 `room_id` 기준으로 **Postgres Changes** `INSERT` 를 구독해 새 메시지를 반영합니다.
-- **레이아웃** — `src/app/chat/layout.tsx`에서 채팅 영역만 헤더·푸터를 뺀 `calc(100dvh - …)` 높이로 잡아, 페이지 전체 스크롤과 채팅 영역 스크롤이 이중으로 생기지 않도록 합니다.
+- **동적 라우트** — URL 경로의 `room-id`가 Supabase `room.id`와 일치하는 방의 메시지·멤버·방 정보를 조회
+- **발신자 식별** — Supabase Auth 세션은 `useUserStore`, 앱 프로필 행은 `useProfile()`으로 조회 메시지 INSERT 시 `message.user_id`에는 **`public.user.id`(PK)** 를 사용합니다 `oauth_id` 사용안함
+- **표시 이름** — 메시지·멤버 조회 시 `public.user`의 **`nickname`** 을 조인해 표시
+- **실시간** — `use-messages.ts`에서 `room_id` 기준으로 **Postgres Changes** `INSERT` 를 구독해 새 메시지를 반영
+- **레이아웃** — `src/app/chat/layout.tsx`에서 채팅 영역만 높이로 잡아, 페이지 전체 스크롤과 채팅 영역 이중 스크롤 방지
 
 ### RLS 정책 요약
 
