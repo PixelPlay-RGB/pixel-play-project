@@ -13,7 +13,6 @@ import { revalidatePath } from "next/cache";
 export interface ActionResponse {
   success: boolean;
   message?: string;
-  data?: { displayName: string };
 }
 
 /**
@@ -30,10 +29,7 @@ export async function login(data: LoginFormValues): Promise<ActionResponse> {
     };
   }
 
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.signInWithPassword({
+  const { error } = await supabase.auth.signInWithPassword({
     email: data.email,
     password: data.password,
   });
@@ -47,9 +43,6 @@ export async function login(data: LoginFormValues): Promise<ActionResponse> {
 
   return {
     success: true,
-    data: {
-      displayName: user?.user_metadata.display_name,
-    },
   };
 }
 
@@ -109,7 +102,7 @@ export async function completeSignupAction(data: CompleteSignupInput): Promise<A
   }
 
   const supabase = await createClient();
-  const { password, displayName, name, birth, phone, gender } = parsed.data;
+  const { password, nickname, name, birth, phone, gender } = parsed.data;
 
   // 현재 인증된 유저 가져오기 (OTP 인증 직후의 상태)
   const {
@@ -125,7 +118,7 @@ export async function completeSignupAction(data: CompleteSignupInput): Promise<A
   const { error: authError } = await supabase.auth.updateUser({
     password,
     data: {
-      display_name: displayName,
+      display_name: nickname,
       name,
     },
   });
@@ -140,7 +133,7 @@ export async function completeSignupAction(data: CompleteSignupInput): Promise<A
       oauth_id: user.id,
       email: user.email!,
       name: name,
-      display_name: displayName,
+      nickname,
       birth: birth,
       phone: phone,
       gender: gender,
@@ -168,7 +161,7 @@ export async function completeOAuthProfileAction(
   }
 
   const supabase = await createClient();
-  const { displayName, birth, phone, gender } = parsed.data;
+  const { nickname, birth, phone, gender } = parsed.data;
 
   // 현재 세션의 유저 정보 가져오기
   const {
@@ -187,12 +180,12 @@ export async function completeOAuthProfileAction(
     user.user_metadata?.full_name ??
     user.user_metadata?.name ??
     user.email?.split("@")[0] ??
-    displayName;
+    nickname;
 
   // auth.users.user_metadata에도 display_name 반영 (어드민 대시보드 + 세션 일관성)
   const { error: authError } = await supabase.auth.updateUser({
     data: {
-      display_name: displayName,
+      display_name: nickname,
       name: fallbackName,
     },
   });
@@ -206,7 +199,7 @@ export async function completeOAuthProfileAction(
       oauth_id: user.id,
       email: user.email!,
       name: fallbackName,
-      display_name: displayName,
+      nickname,
       birth,
       phone,
       gender,

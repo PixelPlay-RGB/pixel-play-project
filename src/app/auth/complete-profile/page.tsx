@@ -17,16 +17,16 @@ export default async function Page() {
   // 이미 프로필이 완성된 유저가 직접 접근한 경우 홈으로
   const { data: profile } = await supabase
     .from("user")
-    .select("display_name")
+    .select("nickname")
     .eq("oauth_id", user.id)
     .single();
 
-  if (profile?.display_name) {
+  if (profile?.nickname) {
     redirect("/");
   }
 
   // OAuth provider가 제공한 이름을 닉네임 기본값으로 사용
-  const defaultDisplayName =
+  const defaultNickname =
     user.user_metadata?.full_name ?? user.user_metadata?.name ?? user.email?.split("@")[0] ?? "";
 
   return (
@@ -42,7 +42,7 @@ export default async function Page() {
             </p>
           </div>
         </div>
-        <CompleteProfileForm defaultDisplayName={defaultDisplayName} />
+        <CompleteProfileForm defaultNickname={defaultNickname} />
       </div>
     </div>
   );

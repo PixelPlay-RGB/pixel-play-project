@@ -5,12 +5,12 @@ export type OAuthProvider = "google" | "github";
 
 export type CompleteSignupInput = Pick<
   SignUpFormValues,
-  "password" | "name" | "displayName" | "birth" | "phone" | "gender"
+  "password" | "name" | "nickname" | "birth" | "phone" | "gender"
 >;
 
 export type CompleteOAuthProfileInput = Pick<
   SignUpFormValues,
-  "displayName" | "birth" | "phone" | "gender"
+  "nickname" | "birth" | "phone" | "gender"
 >;
 
 export type { LoginFormValues, SignUpFormValues } from "@/lib/zod/auth";
