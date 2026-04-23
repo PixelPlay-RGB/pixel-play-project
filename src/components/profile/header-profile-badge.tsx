@@ -1,11 +1,11 @@
 "use client";
 
-import ProfileMenuItem from "@/components/menu/profile-menu-item";
+import SettingMenuItem from "@/components/setting/setting-menu-item";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
-import { PROFILE_MENU } from "@/constants/menu";
+import { SETTING_MENU } from "@/constants/setting-menu";
 import { useUser } from "@/hooks/use-profile";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
@@ -64,8 +64,8 @@ export default function HeaderProfileBadge({ avatarUrl }: Props) {
         <Separator className={"my-1"} />
 
         <div className="flex flex-col">
-          {PROFILE_MENU.map((item) =>
-            ProfileMenuItem(item, {
+          {SETTING_MENU.map((item) =>
+            SettingMenuItem(item, {
               onClose: () => setOpen(false),
               onLogout: handleLogout,
               // actions: {
