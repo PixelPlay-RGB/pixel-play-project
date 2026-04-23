@@ -190,7 +190,7 @@ export async function completeOAuthProfileAction(
   }
 
   const supabase = await createClient();
-  const { nickname, birth, phone, gender } = parsed.data;
+  const { name, nickname, birth, phone, gender } = parsed.data;
 
   // 현재 세션의 유저 정보 가져오기
   const {
@@ -205,17 +205,12 @@ export async function completeOAuthProfileAction(
     };
   }
 
-  const fallbackName =
-    user.user_metadata?.full_name ??
-    user.user_metadata?.name ??
-    user.email?.split("@")[0] ??
-    nickname;
+  console.log("user: ", user);
 
   // auth.users.user_metadata에도 display_name 반영 (어드민 대시보드 + 세션 일관성)
   const { error: authError } = await supabase.auth.updateUser({
     data: {
-      display_name: nickname,
-      name: fallbackName,
+      name,
     },
   });
 
@@ -240,7 +235,7 @@ export async function completeOAuthProfileAction(
     {
       oauth_id: user.id,
       email: user.email!,
-      name: fallbackName,
+      name,
       nickname,
       birth,
       phone,

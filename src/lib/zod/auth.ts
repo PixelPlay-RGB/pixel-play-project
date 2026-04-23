@@ -46,6 +46,7 @@ export type LoginFormValues = z.infer<typeof loginSchema>;
 export type SignUpFormValues = z.infer<typeof signUpSchema>;
 
 export const completeOAuthProfileSchema = signUpBaseSchema.pick({
+  name: true,
   nickname: true,
   birth: true,
   phone: true,
