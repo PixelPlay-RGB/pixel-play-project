@@ -177,15 +177,11 @@ src/
 
 | 테이블         | 역할 |
 | -------------- | ---- |
-| `room`         | 채팅방 메타데이터 (`title` 등). URL `[room-id]`와 `room.id`(UUID)가 대응됩니다. |
-| `message`      | 채팅 메시지. `user_id`는 **`public.user.id`(PK)** 를 참조합니다. |
-| `room_member`  | 방별 참가자. `user_id`는 **`public.user.id`(PK)** 를 참조합니다. |
+| `room`         | 채팅방 데이터. URL `[room-id]`와 `room.id`(UUID)가 대응 |
+| `message`      | 채팅 메시지 `user_id`는 **`public.user.id`(PK)** 를 참조 |
+| `room_member`  | 방별 참가자 `user_id`는 **`public.user.id`(PK)** 를 참조 |
 
-### DB 함수
 
-| 함수                             | 설명                                                    |
-| -------------------------------- | ------------------------------------------------------- |
-| `check_email_exists(email text)` | 이메일 중복 확인 (OTP 발송 전 호출, `SECURITY DEFINER`) |
 
 ### 타입 재생성
 
@@ -252,21 +248,14 @@ Socket.IO 등 별도 WebSocket 서버는 도입하지 않습니다.
 - **실시간** — `use-messages.ts`에서 `room_id` 기준으로 **Postgres Changes** `INSERT` 를 구독해 새 메시지를 반영합니다.
 - **레이아웃** — `src/app/chat/layout.tsx`에서 채팅 영역만 헤더·푸터를 뺀 `calc(100dvh - …)` 높이로 잡아, 페이지 전체 스크롤과 채팅 영역 스크롤이 이중으로 생기지 않도록 합니다.
 
-### `message` INSERT RLS (운영 시 확인)
+### RLS 정책 요약
 
-`message.user_id`는 FK로 `public.user.id`를 가리키므로, INSERT 정책을 `auth.uid() = user_id`처럼 **로그인 UUID와 직접 비교**하면 실제로 넣는 PK 값과 달라 거부될 수 있습니다. 아래처럼 **해당 PK 행의 `oauth_id`가 현재 `auth.uid()`와 같은 경우**만 허용하는 형태가 스키마와 맞습니다.
-
-```sql
--- 예시: 기존 INSERT 정책 제거 후 재생성 시 참고 (대시보드에서 정책 이름은 프로젝트에 맞게 조정)
-create policy "messages_insert_as_self"
-on public.message for insert to authenticated
-with check (
-  exists (
-    select 1 from public."user" as u
-    where u.id = message.user_id
-      and u.oauth_id::text = auth.uid()::text
-  )
-);
-```
-
-(DB 컬럼 타입에 따라 `uuid` 비교만으로 충분하면 `::text` 캐스트는 생략할 수 있습니다.)
+| schema | table | policy | action | roles | using (`qual`) | with check |
+| ------ | ----- | ------ | ------ | ----- | -------------- | ---------- |
+| `public` | `room_member` | `members_insert` | `INSERT` | `{public}` | `NULL` | `(auth.uid() = user_id)` |
+| `public` | `room_member` | `members_select` | `SELECT` | `{public}` | `true` | `NULL` |
+| `public` | `message` | `messages_delete` | `DELETE` | `{public}` | `(auth.uid() = user_id)` | `NULL` |
+| `public` | `message` | `messages_insert_as_self` | `INSERT` | `{authenticated}` | `NULL` | `EXISTS (SELECT 1 FROM "user" u WHERE ((u.id = message.user_id) AND (u.oauth_id = (auth.uid())::text)))` |
+| `public` | `message` | `messages_select` | `SELECT` | `{public}` | `true` | `NULL` |
+| `public` | `room` | `rooms_insert` | `INSERT` | `{public}` | `NULL` | `(auth.uid() = user_id)` |
+| `public` | `room` | `rooms_select` | `SELECT` | `{public}` | `true` | `NULL` |
