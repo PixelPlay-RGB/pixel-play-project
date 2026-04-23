@@ -12,7 +12,7 @@ export default async function Header() {
   } = await supabase.auth.getUser();
 
   return (
-    <header className="border-brand/15 dark:border-border bg-background/95 sticky top-0 z-50 border-b backdrop-blur-sm">
+    <header className="border-brand/15 bg-brand/5 dark:border-border dark:bg-muted/60 sticky top-0 z-50 border-b backdrop-blur-sm">
       <div className="flex items-center justify-between px-5 py-2">
         <Link href={"/"} className={"h-10 w-40"}>
           <Logo className="dark:text-foreground h-full w-full text-[#1e1d37]" />

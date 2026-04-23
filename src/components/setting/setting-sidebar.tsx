@@ -23,7 +23,7 @@ export default function SettingSidebar() {
   };
 
   return (
-    <Sidebar className="top-14 h-[calc(100svh-3.5rem)]">
+    <Sidebar collapsible="none" className="h-full border-r">
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>설정</SidebarGroupLabel>

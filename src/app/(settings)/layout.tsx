@@ -4,13 +4,11 @@ import { ReactNode } from "react";
 
 export default function Layout({ children }: { children: ReactNode }) {
   return (
-    <SidebarProvider>
-      <div className="flex w-full">
-        <SettingSidebar />
-        <SidebarInset className={"flex flex-col"}>
-          <main className={"flex-1 p-6 md:p-10"}>{children}</main>
-        </SidebarInset>
-      </div>
+    <SidebarProvider className="h-[calc(100vh-64px-90px)] min-h-0">
+      <SettingSidebar />
+      <SidebarInset>
+        <div className={"p-6 md:p-10"}>{children}</div>
+      </SidebarInset>
     </SidebarProvider>
   );
 }
