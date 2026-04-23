@@ -118,6 +118,10 @@ src/
 │   │   ├── complete-profile/ # OAuth 유저 추가 정보 입력 페이지
 │   │   ├── login/        # 로그인 페이지
 │   │   └── signup/       # 회원가입 페이지
+│   ├── chat/
+│   │   ├── layout.tsx    # 채팅 영역만 헤더·푸터 높이를 제외한 뷰포트 높이 고정
+│   │   └── [room-id]/    # 동적 채팅방 (URL의 UUID = Supabase `room.id`)
+│   │       └── page.tsx
 │   ├── layout.tsx
 │   └── page.tsx
 ├── components/
@@ -130,8 +134,12 @@ src/
 │   │   ├── auth-listener.tsx # Supabase Auth 상태 → Zustand 동기화
 │   │   ├── header.tsx
 │   │   └── providers.tsx
+│   ├── chat/             # 채팅방 · 메시지 목록 · 입력 · 참가자 패널 등
 │   └── ui/               # shadcn / Base UI 컴포넌트
+├── hook/
+│   └── use-messages.ts   # 채팅 메시지 무한 스크롤 + Postgres Changes(INSERT) 구독
 ├── hooks/                # 커스텀 훅
+│   └── use-profile.ts    # 로그인 세션 기준 `public.user` 프로필 조회 (TanStack Query)
 ├── lib/
 │   ├── supabase/         # client.ts · server.ts · proxy.ts
 │   ├── zod/              # 폼 유효성 스키마 + 기본값 상수
@@ -164,6 +172,14 @@ src/
 | `gender`       | enum          | `male` · `female` · `none`             |
 | `created_at`   | timestamptz   | 생성 시각                              |
 | `modified_at`  | timestamptz   | 최종 수정 시각                         |
+
+### `room` · `message` · `room_member` 테이블 (채팅)
+
+| 테이블         | 역할 |
+| -------------- | ---- |
+| `room`         | 채팅방 메타데이터 (`title` 등). URL `[room-id]`와 `room.id`(UUID)가 대응됩니다. |
+| `message`      | 채팅 메시지. `user_id`는 **`public.user.id`(PK)** 를 참조합니다. |
+| `room_member`  | 방별 참가자. `user_id`는 **`public.user.id`(PK)** 를 참조합니다. |
 
 ### DB 함수
 
@@ -225,3 +241,32 @@ AuthListener (providers.tsx에 마운트, 앱 전체에서 1회)
 - **Presence** — 온라인 상태 · 타이핑 인디케이터
 
 Socket.IO 등 별도 WebSocket 서버는 도입하지 않습니다.
+
+---
+
+## 채팅 화면 (`/chat/[room-id]`)
+
+- **동적 라우트** — URL 경로의 `room-id`가 Supabase `room.id`와 일치하는 방의 메시지·멤버·방 정보를 조회합니다.
+- **발신자 식별** — Supabase Auth 세션은 `useUserStore`, 앱 프로필 행은 `useProfile()`으로 조회합니다. 메시지 INSERT 시 `message.user_id`에는 **`public.user.id`(PK)** 를 사용합니다 (`oauth_id`는 Auth ID와 매칭용 컬럼과 이해하면 됩니다).
+- **표시 이름** — 메시지·멤버 조회 시 `public.user`의 **`nickname`** 을 조인해 표시합니다.
+- **실시간** — `use-messages.ts`에서 `room_id` 기준으로 **Postgres Changes** `INSERT` 를 구독해 새 메시지를 반영합니다.
+- **레이아웃** — `src/app/chat/layout.tsx`에서 채팅 영역만 헤더·푸터를 뺀 `calc(100dvh - …)` 높이로 잡아, 페이지 전체 스크롤과 채팅 영역 스크롤이 이중으로 생기지 않도록 합니다.
+
+### `message` INSERT RLS (운영 시 확인)
+
+`message.user_id`는 FK로 `public.user.id`를 가리키므로, INSERT 정책을 `auth.uid() = user_id`처럼 **로그인 UUID와 직접 비교**하면 실제로 넣는 PK 값과 달라 거부될 수 있습니다. 아래처럼 **해당 PK 행의 `oauth_id`가 현재 `auth.uid()`와 같은 경우**만 허용하는 형태가 스키마와 맞습니다.
+
+```sql
+-- 예시: 기존 INSERT 정책 제거 후 재생성 시 참고 (대시보드에서 정책 이름은 프로젝트에 맞게 조정)
+create policy "messages_insert_as_self"
+on public.message for insert to authenticated
+with check (
+  exists (
+    select 1 from public."user" as u
+    where u.id = message.user_id
+      and u.oauth_id::text = auth.uid()::text
+  )
+);
+```
+
+(DB 컬럼 타입에 따라 `uuid` 비교만으로 충분하면 `::text` 캐스트는 생략할 수 있습니다.)
