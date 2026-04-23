@@ -134,6 +134,9 @@ export type Database = {
           email: string
           gender: Database["public"]["Enums"]["gender"]
           id: string
+          linked_providers:
+            | Database["public"]["Enums"]["oauth_provider"][]
+            | null
           modified_at: string
           name: string
           nickname: string
@@ -146,6 +149,9 @@ export type Database = {
           email: string
           gender: Database["public"]["Enums"]["gender"]
           id?: string
+          linked_providers?:
+            | Database["public"]["Enums"]["oauth_provider"][]
+            | null
           modified_at?: string
           name: string
           nickname: string
@@ -158,6 +164,9 @@ export type Database = {
           email?: string
           gender?: Database["public"]["Enums"]["gender"]
           id?: string
+          linked_providers?:
+            | Database["public"]["Enums"]["oauth_provider"][]
+            | null
           modified_at?: string
           name?: string
           nickname?: string
@@ -179,6 +188,7 @@ export type Database = {
     }
     Enums: {
       gender: "male" | "female" | "none"
+      oauth_provider: "google" | "github"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -307,6 +317,7 @@ export const Constants = {
   public: {
     Enums: {
       gender: ["male", "female", "none"],
+      oauth_provider: ["google", "github"],
     },
   },
 } as const
