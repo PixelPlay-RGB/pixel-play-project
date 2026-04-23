@@ -20,7 +20,7 @@ interface MessageQueryRow {
   created_at: string
   user: {
     id: string
-    display_name: string | null
+    nickname: string | null
   } | null
 }
 
@@ -38,7 +38,8 @@ function mapRowToMessage(row: MessageQueryRow): Message {
     userId: row.user_id,
     content: row.content,
     createdAt: row.created_at,
-    displayName: row.user?.display_name ?? row.user_id.slice(0, 8),
+    displayName:
+      row.user?.nickname?.trim() || row.user_id.slice(0, 8),
   }
 }
 
@@ -49,12 +50,13 @@ export default function useMessages(roomId: string) {
   const query = useInfiniteQuery({
     queryKey: queryKeyByRoomId(roomId),
     initialPageParam: undefined as string | undefined,
+    enabled: !!roomId,
     staleTime: 1000 * 60,
     queryFn: async ({ pageParam }) => {
       let request = supabase
         .from("message")
         .select(
-          "id, room_id, user_id, content, created_at, user:user_id(id, display_name)",
+          "id, room_id, user_id, content, created_at, user:user_id(id, nickname)",
         )
         .eq("room_id", roomId)
         .order("created_at", { ascending: false })
@@ -80,6 +82,8 @@ export default function useMessages(roomId: string) {
   })
 
   useEffect(() => {
+    if (!roomId) return
+
     const channel = supabase
       .channel(`room-message-${roomId}`)
       .on(
@@ -97,7 +101,7 @@ export default function useMessages(roomId: string) {
           const { data, error } = await supabase
             .from("message")
             .select(
-              "id, room_id, user_id, content, created_at, user:user_id(id, display_name)",
+              "id, room_id, user_id, content, created_at, user:user_id(id, nickname)",
             )
             .eq("id", messageId)
             .single()

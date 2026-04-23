@@ -73,18 +73,26 @@ const eprThemedStyle = {
 
 interface Props {
   onEmojiSelect: (emoji: string) => void
+  disabled?: boolean
 }
 
-export default function ChatEmojiPicker({ onEmojiSelect }: Props) {
+export default function ChatEmojiPicker({
+  onEmojiSelect,
+  disabled = false,
+}: Props) {
   const [open, setOpen] = useState(false)
 
   function handleEmojiClick(data: EmojiClickData) {
+    if (disabled) return
     onEmojiSelect(data.emoji)
     setOpen(false)
   }
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover
+      open={disabled ? false : open}
+      onOpenChange={(next) => !disabled && setOpen(next)}
+    >
       <PopoverTrigger
         render={(props) => (
           <Button
@@ -93,6 +101,7 @@ export default function ChatEmojiPicker({ onEmojiSelect }: Props) {
             size="icon-sm"
             variant="secondary"
             aria-label="이모지 선택"
+            disabled={disabled}
           >
             <Smile className="size-4" />
           </Button>

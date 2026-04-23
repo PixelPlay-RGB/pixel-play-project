@@ -9,7 +9,7 @@ export interface Message {
 
 export interface Room {
   id: string
-  name: string
+  title: string
   description: string
   createdBy: string
   createdAt: string
