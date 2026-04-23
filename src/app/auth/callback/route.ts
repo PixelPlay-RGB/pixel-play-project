@@ -1,3 +1,4 @@
+import { LINKED_PARAM, LOGIN_PARAM } from "@/constants/auth";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse, type NextRequest } from "next/server";
 
@@ -29,8 +30,16 @@ export async function GET(request: NextRequest) {
         // 신규 OAuth 유저라면 추가 정보 입력 페이지로 보냄
         return NextResponse.redirect(`${origin}/auth/complete-profile`);
       } else {
-        // 기존 유저라면 언동 성공 파라미터를 달아서 메인으로
-        return NextResponse.redirect(`${origin}${next}?linked=true`);
+        // 기존 유저는 마지막 로그인 시점을 분기로 신규 연동 혹은 일반 로그인으로
+        const recentlyLinked = user.identities?.some(
+          (identity) => Date.now() - new Date(identity.created_at!).getTime() < 10000,
+        );
+
+        if (recentlyLinked) {
+          return NextResponse.redirect(`${origin}${next}${LINKED_PARAM}`);
+        } else {
+          return NextResponse.redirect(`${origin}${next}${LOGIN_PARAM}`);
+        }
       }
     }
   }

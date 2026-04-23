@@ -70,7 +70,7 @@ export default function CompleteProfileForm({ defaultNickname }: Props) {
 
     const result = await completeOAuthProfileAction(data);
     if (!result.success) {
-      toast.error("오류", { description: result.message });
+      toast.error("프로필 생성 오류", { description: result.message });
       return;
     }
 
