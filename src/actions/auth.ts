@@ -7,7 +7,7 @@ import {
   loginSchema,
   signUpBaseSchema,
 } from "@/lib/zod/auth";
-import { CompleteOAuthProfileInput, CompleteSignupInput } from "@/types/auth";
+import { CompleteOAuthProfileInput, CompleteSignupInput, OAuthProvider } from "@/types/auth";
 import { revalidatePath } from "next/cache";
 
 export interface ActionResponse {
@@ -194,6 +194,11 @@ export async function completeOAuthProfileAction(
     return { success: false, message: authError.message };
   }
 
+  const VALID_PROVIDERS: OAuthProvider[] = ["google", "github"];
+  const linkedProviders = ((user.app_metadata?.providers ?? []) as string[]).filter(
+    (p): p is OAuthProvider => VALID_PROVIDERS.includes(p as OAuthProvider),
+  );
+
   const { error: dbError } = await supabase.from("user").upsert(
     {
       oauth_id: user.id,
@@ -203,6 +208,7 @@ export async function completeOAuthProfileAction(
       birth,
       phone,
       gender,
+      ...(linkedProviders.length > 0 ? { linked_providers: linkedProviders } : {}),
     },
     { onConflict: "oauth_id" },
   );
