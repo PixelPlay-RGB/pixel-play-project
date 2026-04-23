@@ -50,12 +50,12 @@ export async function updateSession(request: NextRequest) {
     // '프로필 완성' 체크를 위한 DB 조회
     const { data: profile } = await supabase
       .from("user")
-      .select("display_name")
+      .select("nickname")
       .eq("oauth_id", user.sub)
       .single();
 
     // 닉네임(display_name)이 없다면 프로필 설정 페이지로 강제 이동
-    if (!profile?.display_name && pathname !== "/auth/complete-profile") {
+    if (!profile?.nickname && pathname !== "/auth/complete-profile") {
       const url = request.nextUrl.clone();
       url.pathname = "/auth/complete-profile";
       const redirectResponse = NextResponse.redirect(url);

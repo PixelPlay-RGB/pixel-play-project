@@ -15,13 +15,15 @@ import {
 import { RadioGroup } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
+import { PROFILE_QUERY_KEY } from "@/constants/auth";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { SIGNUP_FORM_DEFAULTS, signUpSchema } from "@/lib/zod/auth";
-import { useAuthStore } from "@/stores/auth";
+import { useUserStore } from "@/stores/auth";
 import type { OtpStatus, SignUpFormValues } from "@/types/auth";
 import { formatPhone } from "@/utils/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import { AtSign, CalendarDays, LockKeyhole, Mail, Smartphone, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -30,7 +32,8 @@ import { toast } from "sonner";
 
 export default function SignupForm() {
   const router = useRouter();
-  const setUser = useAuthStore((s) => s.setUser);
+  const setUser = useUserStore((s) => s.setUser);
+  const queryClient = useQueryClient();
   const [otpStatus, setOtpStatus] = useState<OtpStatus>("idle");
   const [otpCode, setOtpCode] = useState("");
   const [otpError, setOtpError] = useState("");
@@ -98,6 +101,10 @@ export default function SignupForm() {
   // 3. 최종 가입
   const onSubmit = async (data: SignUpFormValues) => {
     if (!emailVerified) {
+      toast.error("이메일 인증이 필요합니다.", {
+        description: "먼저 이메일 인증을 완료해주세요! 📧",
+      });
+
       return;
     }
 
@@ -111,12 +118,24 @@ export default function SignupForm() {
     // 서버 액션에서 세팅된 쿠키를 클라이언트가 읽어 store 동기화
     const supabase = createClient();
     const {
-      data: { user },
+      data: { user: authUser },
+      error: authError,
     } = await supabase.auth.getUser();
-    setUser(user);
+
+    if (authError || !authUser) {
+      toast.error("인증 정보를 가져오지 못했습니다.", {
+        description: "로그인 페이지에서 다시 로그인을 시도해주세요.",
+      });
+      setUser(null);
+      return;
+    }
+
+    setUser(authUser);
+    // 방금 insert된 프로필 row를 React Query가 fetch하도록 트리거
+    queryClient.invalidateQueries({ queryKey: PROFILE_QUERY_KEY });
 
     toast.success("회원가입 성공!", {
-      description: `🥳 ${data.displayName}님 환영합니다!`,
+      description: `🥳 ${data.nickname}님 환영합니다!`,
     });
 
     router.push("/");
@@ -239,15 +258,15 @@ export default function SignupForm() {
         </div>
         <div className="flex flex-col gap-1">
           <AuthInputGroup
-            {...register("displayName")}
-            name="displayName"
+            {...register("nickname")}
+            name="nickname"
             type="text"
             placeholder="닉네임"
             icon={<AtSign />}
-            aria-invalid={!!errors.displayName}
-            isValid={!errors.displayName && !!dirtyFields.displayName}
+            aria-invalid={!!errors.nickname}
+            isValid={!errors.nickname && !!dirtyFields.nickname}
           />
-          <FieldError errors={[errors.displayName]} />
+          <FieldError errors={[errors.nickname]} />
         </div>
         <div className="flex flex-col gap-1">
           <AuthInputGroup

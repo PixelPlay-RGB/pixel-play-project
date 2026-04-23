@@ -17,7 +17,7 @@ export const signUpBaseSchema = z.object({
   password: z.string().min(6, { message: "비밀번호는 6자 이상이어야 합니다." }),
   passwordConfirm: z.string(),
   name: z.string().min(2, { message: "이름은 2자 이상이어야 합니다." }),
-  displayName: z
+  nickname: z
     .string()
     .min(2, { message: "닉네임은 2자 이상이어야 합니다." })
     .max(10, { message: "닉네임은 10자 이하여야 합니다." })
@@ -46,7 +46,7 @@ export type LoginFormValues = z.infer<typeof loginSchema>;
 export type SignUpFormValues = z.infer<typeof signUpSchema>;
 
 export const completeOAuthProfileSchema = signUpBaseSchema.pick({
-  displayName: true,
+  nickname: true,
   birth: true,
   phone: true,
   gender: true,
@@ -59,7 +59,7 @@ export const SIGNUP_FORM_DEFAULTS: SignUpFormValues = {
   password: "",
   passwordConfirm: "",
   name: "",
-  displayName: "",
+  nickname: "",
   birth: "",
   phone: "",
   gender: "male",

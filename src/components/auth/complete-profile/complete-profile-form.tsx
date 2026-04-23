@@ -8,23 +8,26 @@ import { Card, CardContent } from "@/components/ui/card";
 import { FieldError } from "@/components/ui/field";
 import { RadioGroup } from "@/components/ui/radio-group";
 import { Spinner } from "@/components/ui/spinner";
+import { PROFILE_QUERY_KEY } from "@/constants/auth";
 import { createClient } from "@/lib/supabase/client";
 import { completeOAuthProfileSchema, CompleteOAuthProfileValues } from "@/lib/zod/auth";
-import { useAuthStore } from "@/stores/auth";
+import { useUserStore } from "@/stores/auth";
 import { formatPhone } from "@/utils/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import { AtSign, CalendarDays, Smartphone } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 interface Props {
-  defaultDisplayName: string;
+  defaultNickname: string;
 }
 
-export default function CompleteProfileForm({ defaultDisplayName }: Props) {
+export default function CompleteProfileForm({ defaultNickname }: Props) {
   const router = useRouter();
-  const setUser = useAuthStore((s) => s.setUser);
+  const setUser = useUserStore((s) => s.setUser);
+  const queryClient = useQueryClient();
 
   const {
     register,
@@ -34,7 +37,7 @@ export default function CompleteProfileForm({ defaultDisplayName }: Props) {
   } = useForm<CompleteOAuthProfileValues>({
     resolver: zodResolver(completeOAuthProfileSchema),
     mode: "onChange",
-    defaultValues: { displayName: defaultDisplayName, birth: "", phone: "", gender: "male" },
+    defaultValues: { nickname: defaultNickname, birth: "", phone: "", gender: "male" },
   });
 
   const onSubmit = async (data: CompleteOAuthProfileValues) => {
@@ -44,15 +47,25 @@ export default function CompleteProfileForm({ defaultDisplayName }: Props) {
       return;
     }
 
-    // 서버 액션에서 갱신된 user_metadata를 클라이언트 store에도 반영
+    // 서버 액션에서 갱신된 user_metadata를 클라이언트 store에 동기화
     const supabase = createClient();
     const {
-      data: { user },
+      data: { user: authUser },
+      error: authError,
     } = await supabase.auth.getUser();
-    setUser(user);
+
+    if (authError || !authUser) {
+      toast.error("인증 오류", {
+        description: authError?.message || "유저 세션을 찾을 수 없습니다.",
+      });
+      return;
+    }
+
+    setUser(authUser);
+    queryClient.invalidateQueries({ queryKey: PROFILE_QUERY_KEY });
 
     toast.success("프로필 설정 완료!", {
-      description: `🥳 ${data.displayName}님 환영합니다!`,
+      description: `🥳 ${data.nickname}님 환영합니다!`,
     });
 
     router.push("/");
@@ -64,14 +77,14 @@ export default function CompleteProfileForm({ defaultDisplayName }: Props) {
       <div className="flex flex-col gap-3">
         <div className="flex flex-col gap-1">
           <AuthInputGroup
-            {...register("displayName")}
+            {...register("nickname")}
             type="text"
             placeholder="닉네임"
             icon={<AtSign />}
-            aria-invalid={!!errors.displayName}
-            isValid={!errors.displayName && !!dirtyFields.displayName}
+            aria-invalid={!!errors.nickname}
+            isValid={!errors.nickname && !!dirtyFields.nickname}
           />
-          <FieldError errors={[errors.displayName]} />
+          <FieldError errors={[errors.nickname]} />
         </div>
         <div className="flex flex-col gap-1">
           <AuthInputGroup
