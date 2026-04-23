@@ -15,7 +15,7 @@ import {
 import { RadioGroup } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
-import { PROFILE_QUERY_KEY } from "@/constants/auth";
+import { PROFILE_QUERY_KEY, WELCOME_PARAM } from "@/constants/auth";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { SIGNUP_FORM_DEFAULTS, signUpSchema } from "@/lib/zod/auth";
@@ -101,7 +101,7 @@ export default function SignupForm() {
   // 3. 최종 가입
   const onSubmit = async (data: SignUpFormValues) => {
     if (!emailVerified) {
-      toast.error("이메일 인증이 필요합니다.", {
+      toast.error("이메일 인증 필요", {
         description: "먼저 이메일 인증을 완료해주세요! 📧",
       });
 
@@ -131,14 +131,9 @@ export default function SignupForm() {
     }
 
     setUser(authUser);
-    // 방금 insert된 프로필 row를 React Query가 fetch하도록 트리거
     queryClient.invalidateQueries({ queryKey: PROFILE_QUERY_KEY });
 
-    toast.success("회원가입 성공!", {
-      description: `🥳 ${data.nickname}님 환영합니다!`,
-    });
-
-    router.push("/");
+    router.push(`/${WELCOME_PARAM}`);
     router.refresh();
   };
 
@@ -206,7 +201,7 @@ export default function SignupForm() {
                   variant="outline"
                   onClick={handleVerifyOtp}
                   disabled={isVerifyingOtp || otpCode.length < 6}
-                  className="border-brand/40 text-brand hover:bg-brand hover:text-white"
+                  className="border-brand/40 text-brand hover:bg-brand hover:cursor-pointer hover:text-white"
                 >
                   {isVerifyingOtp ? <Spinner /> : "확인"}
                 </InputGroupButton>

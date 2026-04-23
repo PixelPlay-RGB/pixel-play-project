@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { FieldError } from "@/components/ui/field";
 import { RadioGroup } from "@/components/ui/radio-group";
 import { Spinner } from "@/components/ui/spinner";
-import { PROFILE_QUERY_KEY } from "@/constants/auth";
+import { PROFILE_QUERY_KEY, WELCOME_PARAM } from "@/constants/auth";
 import { createClient } from "@/lib/supabase/client";
 import { completeOAuthProfileSchema, CompleteOAuthProfileValues } from "@/lib/zod/auth";
 import { useUserStore } from "@/stores/auth";
@@ -43,7 +43,7 @@ export default function CompleteProfileForm({ defaultNickname }: Props) {
   const onSubmit = async (data: CompleteOAuthProfileValues) => {
     const result = await completeOAuthProfileAction(data);
     if (!result.success) {
-      toast.error("오류", { description: result.message });
+      toast.error("프로필 생성 오류", { description: result.message });
       return;
     }
 
@@ -64,11 +64,7 @@ export default function CompleteProfileForm({ defaultNickname }: Props) {
     setUser(authUser);
     queryClient.invalidateQueries({ queryKey: PROFILE_QUERY_KEY });
 
-    toast.success("프로필 설정 완료!", {
-      description: `🥳 ${data.nickname}님 환영합니다!`,
-    });
-
-    router.push("/");
+    router.push(`/${WELCOME_PARAM}`);
     router.refresh();
   };
 
