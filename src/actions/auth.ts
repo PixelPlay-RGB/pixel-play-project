@@ -92,6 +92,27 @@ export async function verifyOtpAction(email: string, token: string): Promise<Act
 }
 
 /**
+ * 닉네임 중복 확인
+ */
+export async function checkNicknameAction(nickname: string): Promise<ActionResponse> {
+  const supabase = await createClient();
+
+  const { data: exists, error } = await supabase.rpc("check_nickname_exists", {
+    target_nickname: nickname,
+  });
+
+  if (error) {
+    return { success: false, message: "닉네임 확인 중 오류가 발생했습니다." };
+  }
+
+  if (exists) {
+    return { success: false, message: "이미 사용 중인 닉네임입니다." };
+  }
+
+  return { success: true };
+}
+
+/**
  * 3. 일반 회원가입 완료 (OTP 인증 후의 로직)
  */
 export async function completeSignupAction(data: CompleteSignupInput): Promise<ActionResponse> {
@@ -125,6 +146,14 @@ export async function completeSignupAction(data: CompleteSignupInput): Promise<A
 
   if (authError) {
     return { success: false, message: authError.message };
+  }
+
+  // 닉네임 중복 체크
+  const { data: nicknameExists } = await supabase.rpc("check_nickname_exists", {
+    target_nickname: nickname,
+  });
+  if (nicknameExists) {
+    return { success: false, message: "이미 사용 중인 닉네임입니다." };
   }
 
   // public.user 테이블에 최종적인 데이터 upsert <- update + insert
@@ -192,6 +221,14 @@ export async function completeOAuthProfileAction(
 
   if (authError) {
     return { success: false, message: authError.message };
+  }
+
+  // 닉네임 중복 체크
+  const { data: nicknameExists } = await supabase.rpc("check_nickname_exists", {
+    target_nickname: nickname,
+  });
+  if (nicknameExists) {
+    return { success: false, message: "이미 사용 중인 닉네임입니다." };
   }
 
   const { error: dbError } = await supabase.from("user").upsert(
