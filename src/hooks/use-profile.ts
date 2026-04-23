@@ -12,7 +12,7 @@ import { useQuery } from "@tanstack/react-query";
  * - 5분간 캐싱 → 여러 컴포넌트에서 호출해도 네트워크 1회
  * - 프로필 업데이트 후에는 `queryClient.invalidateQueries({ queryKey: PROFILE_QUERY_KEY })`로 갱신
  */
-export function useProfile() {
+export function useUser() {
   const user = useUserStore((s) => s.user);
 
   return useQuery<DBUser | null>({
