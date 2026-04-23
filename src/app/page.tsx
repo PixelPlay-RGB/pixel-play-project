@@ -1,13 +1,10 @@
 'use client';
 
-import LinkedToast from "@/components/auth/linked-toast";
 import { useState } from 'react';
 import ChatList from '@/components/list/ChatList';
 import LiveList from '@/components/list/LiveList';
 import { CHAT_DATA } from '@/mock/chat-list';
 import { ChatRoom } from '@/lib/room';
-
-const MAX_PARTICIPANTS = 10;
 
 export default function Home() {
   // 라이브 화면 default
@@ -48,7 +45,7 @@ export default function Home() {
         {/* 오른쪽 리스트 구역 */}
         <section className="w-[70%] min-h-[600px] bg-zinc-900/30 rounded-2xl border border-zinc-800 p-6">
           {activeTab === 'chat' ? (
-            <ChatList chats={chats} setChats={setChats} maxCapacity={MAX_PARTICIPANTS} />
+            <ChatList chats={chats} setChats={setChats} maxCapacity={100} />
           ) : (
             <LiveList />
           )}

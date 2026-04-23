@@ -14,7 +14,7 @@ export default function ChatList({ chats, setChats, maxCapacity }: ChatListProps
   const [filter, setFilter] = useState<'all' | 'available' | 'full'>('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newRoomTitle, setNewRoomTitle] = useState('');
-  const [newRoomCapacity, setNewRoomCapacity] = useState(0);
+  const [newRoomCapacity, setNewRoomCapacity] = useState(2); // 기본 최소 인원 2명 설정
   const [newRoomDescription, setNewRoomDescription] = useState('');
   const [sessionUser, setSessionUser] = useState<{ id: string; email: string; name: string } | null>(null);
 
@@ -33,21 +33,20 @@ export default function ChatList({ chats, setChats, maxCapacity }: ChatListProps
     getSession();
   }, []);
 
-  const handleJoinChat = (id: number) => {
-    setChats((prev) =>
-      prev.map((chat) =>
-        chat.id === id && chat.capacity < maxCapacity
-          ? { ...chat, capacity: chat.capacity + 1 }
-          : chat
-      )
-    );
+  const handleJoinChat = (id: number, limit: number) => {
+    // TODO: 실제 채팅방 입장 및 인원 체크 로직 연동 시 수정 필요
+    console.log(`채팅방(ID: ${id}) 참여 시도. 설정된 정원: ${limit}명`);
   };
+
+  // TODO insert할 때 username은 세션에서 가져오는거 말고 inner join 
+  // 최소인원 2명, 0명 되면 방 나가기, 채팅방 최대 정원은 30명
 
   const handleCreateChat = async (e: FormEvent) => {
     e.preventDefault();
 
     // 세션 정보가 없는 경우 실행 방지
-    if (!sessionUser) {
+    if (!sessionUser) 
+    {
       alert("로그인 세션이 만료되었거나 정보가 없습니다. 다시 로그인해 주세요.");
       return;
     }
@@ -83,15 +82,16 @@ export default function ChatList({ chats, setChats, maxCapacity }: ChatListProps
       setChats((prev) => [newRoom, ...prev]);
       setIsModalOpen(false);
       setNewRoomTitle("");
-      setNewRoomCapacity(0);
+      setNewRoomCapacity(2);
       setNewRoomDescription("");
     }
   };
 
   const filteredChats = chats.filter((chat) => {
-    const isFull = chat.capacity >= maxCapacity;
-    if (filter === 'available') return !isFull;
-    if (filter === 'full') return isFull;
+    // 현재 current_participants 정보가 없으므로 필터링 기준을 단순화합니다.
+    // 추후 실시간 참여 인원 테이블이 추가되면 해당 로직을 보강할 수 있습니다.
+    if (filter === 'available') return true;
+    if (filter === 'full') return false; 
     return true;
   });
 
@@ -126,18 +126,13 @@ export default function ChatList({ chats, setChats, maxCapacity }: ChatListProps
       {filteredChats.length > 0 ? (
         <div className="flex flex-col space-y-2 ">
           {filteredChats.map((chat) => {
-            const isFull = chat.capacity >= maxCapacity;
             const displayId = chat.email ? chat.email.split('@')[0] : 'user';
 
             return (
               <div 
                 key={chat.id} 
-                onClick={() => !isFull && handleJoinChat(chat.id)} 
-                className={`flex items-center justify-between p-4 rounded-lg border transition-all 
-                  ${isFull 
-                    ? 'bg-zinc-950 border-gray-400 grayscale opacity-50 cursor-not-allowed' 
-                    : 'bg-zinc-900 hover:bg-zinc-800 hover:border-zinc-300 cursor-pointer active:scale-[0.98]'
-                  }`}
+                onClick={() => handleJoinChat(chat.id, chat.capacity)} 
+                className="flex items-center justify-between p-4 rounded-lg border bg-zinc-900 border-zinc-800 hover:bg-zinc-800 hover:border-zinc-300 cursor-pointer transition-all active:scale-[0.98]"
               >
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center gap-2">
@@ -147,8 +142,8 @@ export default function ChatList({ chats, setChats, maxCapacity }: ChatListProps
                   <span className="text-[10px] text-zinc-400 font-mono">{chat.description}</span>
                 </div>
                 <div className="flex flex-col items-end gap-1">
-                  <span className={`text-xs font-mono font-bold ${isFull ? 'text-red-400' : 'text-blue-400'}`}>
-                    {chat.capacity?chat.capacity:0}/{maxCapacity}
+                  <span className="text-xs font-mono font-bold text-blue-400">
+                    정원 {chat.capacity}명
                   </span>
                   <span className="text-[10px] text-zinc-600">
                     {(() => {
@@ -209,7 +204,7 @@ export default function ChatList({ chats, setChats, maxCapacity }: ChatListProps
                   className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-zinc-100 focus:outline-none focus:border-zinc-500 transition-colors cursor-pointer"
                 >
                   <option value={0} disabled>인원 수를 선택하세요</option>
-                  {[2, 5, 10, 20, 50, 100].map((num) => (
+                  {[2, 5, 10, 20, 30, 50].filter(n => n <= maxCapacity).map((num) => (
                     <option key={num} value={num}>{num}명</option>
                   ))}
                 </select>
