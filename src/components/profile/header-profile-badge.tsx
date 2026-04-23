@@ -68,6 +68,9 @@ export default function HeaderProfileBadge({ avatarUrl }: Props) {
             ProfileMenuItem(item, {
               onClose: () => setOpen(false),
               onLogout: handleLogout,
+              // actions: {
+              //   settings: handleSetting
+              // }
             }),
           )}
         </div>

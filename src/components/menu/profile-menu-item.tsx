@@ -7,7 +7,6 @@ import { ReactNode } from "react";
 export type ProfileMenuHandlers = {
   onClose: () => void;
   onLogout: () => Promise<void>;
-  // { id: "share", type: "action" } 아이템 → actions: { share: handleShare }
   actions?: Record<string, () => void | Promise<void>>;
 };
 
