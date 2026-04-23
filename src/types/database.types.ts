@@ -60,9 +60,9 @@ export type Database = {
           description: string | null
           id: string
           modified_at: string | null
-          name: string
           title: string
           user_id: string | null
+          username: string
         }
         Insert: {
           capacity: number
@@ -70,9 +70,9 @@ export type Database = {
           description?: string | null
           id?: string
           modified_at?: string | null
-          name: string
           title: string
           user_id?: string | null
+          username: string
         }
         Update: {
           capacity?: number
@@ -80,9 +80,9 @@ export type Database = {
           description?: string | null
           id?: string
           modified_at?: string | null
-          name?: string
           title?: string
           user_id?: string | null
+          username?: string
         }
         Relationships: [
           {
@@ -172,6 +172,10 @@ export type Database = {
     }
     Functions: {
       check_email_exists: { Args: { target_email: string }; Returns: boolean }
+      check_nickname_exists: {
+        Args: { target_nickname: string }
+        Returns: boolean
+      }
     }
     Enums: {
       gender: "male" | "female" | "none"

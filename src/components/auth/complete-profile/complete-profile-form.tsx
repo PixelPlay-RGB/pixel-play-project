@@ -29,15 +29,12 @@ import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-interface Props {
-  defaultNickname: string;
-}
-
-export default function CompleteProfileForm({ defaultNickname }: Props) {
+export default function CompleteProfileForm() {
   const router = useRouter();
   const setUser = useUserStore((s) => s.setUser);
   const queryClient = useQueryClient();
   const [nicknameStatus, setNicknameStatus] = useState<NicknameStatus>("idle");
+  const [verifiedNickname, setVerifiedNickname] = useState("");
 
   const {
     register,
@@ -48,7 +45,7 @@ export default function CompleteProfileForm({ defaultNickname }: Props) {
   } = useForm<CompleteOAuthProfileValues>({
     resolver: zodResolver(completeOAuthProfileSchema),
     mode: "onChange",
-    defaultValues: { nickname: defaultNickname, birth: "", phone: "", gender: "male" },
+    defaultValues: { nickname: "", birth: "", phone: "", gender: "male" },
   });
 
   const handleCheckNickname = async () => {
@@ -57,7 +54,12 @@ export default function CompleteProfileForm({ defaultNickname }: Props) {
 
     setNicknameStatus("checking");
     const result = await checkNicknameAction(nickname);
-    setNicknameStatus(result.success ? "available" : "taken");
+    if (result.success) {
+      setVerifiedNickname(nickname);
+      setNicknameStatus("available");
+    } else {
+      setNicknameStatus("taken");
+    }
   };
 
   const onSubmit = async (data: CompleteOAuthProfileValues) => {
@@ -102,7 +104,8 @@ export default function CompleteProfileForm({ defaultNickname }: Props) {
           <InputGroup
             className={cn(
               "w-full py-5",
-              nicknameStatus === "available" && "border-brand ring-brand/20 dark:ring-brand/30 ring-3",
+              nicknameStatus === "available" &&
+                "border-brand ring-brand/20 dark:ring-brand/30 ring-3",
               (nicknameStatus === "taken" || errors.nickname) && "border-destructive",
             )}
           >
@@ -111,7 +114,10 @@ export default function CompleteProfileForm({ defaultNickname }: Props) {
             </InputGroupAddon>
             <InputGroupInput
               {...register("nickname", {
-                onChange: () => setNicknameStatus("idle"),
+                onChange: (e) => {
+                  const val = e.target.value;
+                  setNicknameStatus(val && val === verifiedNickname ? "available" : "idle");
+                },
               })}
               type="text"
               placeholder="닉네임"
@@ -123,10 +129,16 @@ export default function CompleteProfileForm({ defaultNickname }: Props) {
                 size="sm"
                 variant="outline"
                 onClick={handleCheckNickname}
-                disabled={nicknameStatus === "checking" || !!errors.nickname || !dirtyFields.nickname}
+                disabled={nicknameStatus === "checking" || nicknameStatus === "available" || !!errors.nickname}
                 className="border-brand/40 text-brand hover:bg-brand cursor-pointer hover:text-white"
               >
-                {nicknameStatus === "checking" ? <Spinner /> : nicknameStatus === "available" ? "사용가능" : "중복확인"}
+                {nicknameStatus === "checking" ? (
+                  <Spinner />
+                ) : nicknameStatus === "available" ? (
+                  "사용가능"
+                ) : (
+                  "중복확인"
+                )}
               </InputGroupButton>
             </InputGroupAddon>
           </InputGroup>

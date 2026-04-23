@@ -29,7 +29,7 @@ import type { NicknameStatus, OtpStatus, SignUpFormValues } from "@/types/auth";
 import { formatPhone } from "@/utils/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
-import { AtSign, CalendarDays, LockKeyhole, Mail, Smartphone, User, UserStar } from "lucide-react";
+import { CalendarDays, LockKeyhole, Mail, Smartphone, User, UserStar } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -43,6 +43,7 @@ export default function SignupForm() {
   const [otpCode, setOtpCode] = useState("");
   const [otpError, setOtpError] = useState("");
   const [nicknameStatus, setNicknameStatus] = useState<NicknameStatus>("idle");
+  const [verifiedNickname, setVerifiedNickname] = useState("");
 
   const emailVerified = otpStatus === "verified";
   const isSendingOtp = otpStatus === "sending";
@@ -69,7 +70,12 @@ export default function SignupForm() {
 
     setNicknameStatus("checking");
     const result = await checkNicknameAction(nickname);
-    setNicknameStatus(result.success ? "available" : "taken");
+    if (result.success) {
+      setVerifiedNickname(nickname);
+      setNicknameStatus("available");
+    } else {
+      setNicknameStatus("taken");
+    }
   };
 
   // 1. OTP 발송
@@ -99,6 +105,8 @@ export default function SignupForm() {
     if (!email || !otpCode) {
       return;
     }
+
+    if (otpCode.length < 6) return;
 
     setOtpStatus("verifying");
     setOtpError("");
@@ -221,7 +229,7 @@ export default function SignupForm() {
                   size="xs"
                   variant="outline"
                   onClick={handleVerifyOtp}
-                  disabled={isVerifyingOtp || otpCode.length < 6}
+                  disabled={isVerifyingOtp}
                   className="border-brand/40 text-brand hover:bg-brand hover:cursor-pointer hover:text-white"
                 >
                   {isVerifyingOtp ? <Spinner /> : "확인"}
@@ -286,7 +294,10 @@ export default function SignupForm() {
             </InputGroupAddon>
             <InputGroupInput
               {...register("nickname", {
-                onChange: () => setNicknameStatus("idle"),
+                onChange: (e) => {
+                  const val = e.target.value;
+                  setNicknameStatus(val && val === verifiedNickname ? "available" : "idle");
+                },
               })}
               type="text"
               placeholder="닉네임"
@@ -299,7 +310,9 @@ export default function SignupForm() {
                 variant="outline"
                 onClick={handleCheckNickname}
                 disabled={
-                  nicknameStatus === "checking" || !!errors.nickname || !dirtyFields.nickname
+                  nicknameStatus === "checking" ||
+                  nicknameStatus === "available" ||
+                  !!errors.nickname
                 }
                 className="border-brand/40 text-brand hover:bg-brand cursor-pointer hover:text-white"
               >
