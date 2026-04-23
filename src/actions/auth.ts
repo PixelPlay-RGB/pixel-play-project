@@ -205,8 +205,6 @@ export async function completeOAuthProfileAction(
     };
   }
 
-  console.log("user: ", user);
-
   // auth.users.user_metadata에도 display_name 반영 (어드민 대시보드 + 세션 일관성)
   const { error: authError } = await supabase.auth.updateUser({
     data: {

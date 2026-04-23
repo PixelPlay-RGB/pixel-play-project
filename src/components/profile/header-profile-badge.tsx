@@ -1,0 +1,77 @@
+"use client";
+
+import ProfileMenuItem from "@/components/menu/profile-menu-item";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Separator } from "@/components/ui/separator";
+import { Spinner } from "@/components/ui/spinner";
+import { PROFILE_MENU } from "@/constants/menu";
+import { useUser } from "@/hooks/use-profile";
+import { createClient } from "@/lib/supabase/client";
+import { cn } from "@/lib/utils";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+
+interface Props {
+  avatarUrl: string;
+}
+
+export default function HeaderProfileBadge({ avatarUrl }: Props) {
+  const supabase = createClient();
+  const router = useRouter();
+  const { data: user, isLoading } = useUser();
+
+  const [open, setOpen] = useState(false);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.refresh();
+  };
+
+  if (isLoading || !user) {
+    return <Spinner />;
+  }
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger className="cursor-pointer outline-none hover:opacity-80">
+        <Avatar className={cn("ring-brand ring-2 transition-all duration-200 hover:ring-[3px]")}>
+          <AvatarImage src={avatarUrl} />
+          <AvatarFallback>{user.nickname?.[0]}</AvatarFallback>
+        </Avatar>
+      </PopoverTrigger>
+
+      <PopoverContent className="max-w-max min-w-60 overflow-hidden" align="end">
+        <Link
+          href={"/profile"}
+          onClick={() => setOpen(false)}
+          className="hover:bg-muted flex items-center gap-4 rounded-lg p-1"
+        >
+          <Avatar className="border-brand/10 h-12 w-12 border">
+            <AvatarImage src={avatarUrl} />
+            <AvatarFallback>{user.nickname?.[0]}</AvatarFallback>
+          </Avatar>
+
+          <div className="flex flex-col gap-1">
+            <p className={"bg-muted text-brand rounded-sm px-1 py-0.5 text-xs"}>프로필 설정</p>
+            <p className="text-foreground text-lg leading-tight font-bold tracking-tight">
+              {user.nickname}
+            </p>
+          </div>
+        </Link>
+
+        <Separator className={"my-1"} />
+
+        <div className="flex flex-col">
+          {PROFILE_MENU.map((item) =>
+            ProfileMenuItem(item, {
+              onClose: () => setOpen(false),
+              onLogout: handleLogout,
+            }),
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
