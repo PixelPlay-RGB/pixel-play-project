@@ -259,3 +259,13 @@ Socket.IO 등 별도 WebSocket 서버는 도입하지 않습니다.
 | `public` | `message` | `messages_select` | `SELECT` | `{public}` | `true` | `NULL` |
 | `public` | `room` | `rooms_insert` | `INSERT` | `{public}` | `NULL` | `(auth.uid() = user_id)` |
 | `public` | `room` | `rooms_select` | `SELECT` | `{public}` | `true` | `NULL` |
+
+#### 정책 설명 (간단 요약)
+
+- 조회(`SELECT`)는 `true` 정책으로 열어두고, 생성/삭제(`INSERT`/`DELETE`)는 본인 데이터만 허용합니다.
+- `message`의 `INSERT`는 `EXISTS`로 검증합니다. (`message.user_id = public.user.id` 이고, 그 `public.user.oauth_id`가 현재 `auth.uid()`와 같은 경우만 허용)
+
+#### 중요 포인트
+
+- `auth.uid()`와 `public.user.id`는 다른 값일 수 있어 직접 비교 정책만 쓰면 거부될 수 있습니다.
+- 따라서 메시지 작성 정책은 `public.user`를 통해 Auth 사용자와 프로필 PK를 매핑하는 방식이 안전합니다.
