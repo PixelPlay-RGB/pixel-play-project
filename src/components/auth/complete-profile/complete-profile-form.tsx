@@ -129,7 +129,7 @@ export default function CompleteProfileForm() {
                 size="sm"
                 variant="outline"
                 onClick={handleCheckNickname}
-                disabled={nicknameStatus === "checking" || nicknameStatus === "available" || !!errors.nickname}
+                disabled={nicknameStatus === "checking" || !!errors.nickname}
                 className="border-brand/40 text-brand hover:bg-brand cursor-pointer hover:text-white"
               >
                 {nicknameStatus === "checking" ? (
