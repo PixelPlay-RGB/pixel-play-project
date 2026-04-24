@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 'use client';
 
 import { useState } from 'react';
@@ -11,8 +12,12 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<'live' | 'chat'>('chat');
 
   const [chats, setChats] = useState<ChatRoom[]>(CHAT_DATA as ChatRoom[]);
+=======
+import AuthToastHandler from "@/components/auth/auth-toast-handler";
+>>>>>>> dev
 
   return (
+<<<<<<< HEAD
     <main className="flex min-h-2.5 flex-col p-8 bg-transparent text-zinc-900 dark:text-zinc-100">
       <div className="mx-auto w-full flex flex-row gap-8 max-w-full">
         {/* 왼쪽 사이드바*/}
@@ -53,4 +58,11 @@ export default function Home() {
       </div>
     </main>
   )
+=======
+    <>
+      <AuthToastHandler />
+      <div>초기 인덱스 페이지 입니다.</div>
+    </>
+  );
+>>>>>>> dev
 }
