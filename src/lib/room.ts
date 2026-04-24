@@ -3,7 +3,7 @@ import { createClient } from "./supabase/client";
 export interface ChatRoom {
   id: number;
   title: string;
-  name: string;
+  username: string;
   user_id: string;
   created_at: string;
   capacity: number;
@@ -24,7 +24,7 @@ export const createRoom = async (title: string, capacity: number, userId: string
       {
         title: title,
         capacity: capacity,
-        name: userName,
+        username: userName,
         user_id: userId,
         email: userEmail,
         description: description,

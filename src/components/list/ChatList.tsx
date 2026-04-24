@@ -1,6 +1,11 @@
-import { useState, Dispatch, SetStateAction, FormEvent, useEffect } from "react";
+import { useState, Dispatch, SetStateAction, useEffect, useMemo } from "react";
 import { createRoom, ChatRoom } from "@/lib/room";
 import { createClient } from "@/lib/supabase/client";
+import { toast } from "sonner";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { FieldError } from "@/components/ui/field";
 
 interface ChatListProps {
   chats: ChatRoom[];
@@ -13,10 +18,23 @@ const supabase = createClient();
 export default function ChatList({ chats, setChats, maxCapacity }: ChatListProps) {
   const [filter, setFilter] = useState<'all' | 'available' | 'full'>('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newRoomTitle, setNewRoomTitle] = useState('');
-  const [newRoomCapacity, setNewRoomCapacity] = useState(2); // 기본 최소 인원 2명 설정
-  const [newRoomDescription, setNewRoomDescription] = useState('');
   const [sessionUser, setSessionUser] = useState<{ id: string; email: string; name: string } | null>(null);
+
+  const roomSchema = useMemo(() => z.object({
+    title: z.string().min(1, "방 제목을 입력해주세요."),
+    capacity: z.number({ error: "참가 가능 인원을 입력해주세요." })
+      .min(2, "최소 2명 이상이어야 합니다.")
+      .max(maxCapacity, `최대 ${maxCapacity}명까지 가능합니다.`),
+    description: z.string().optional(),
+  }), [maxCapacity]);
+
+  type RoomFormValues = z.infer<typeof roomSchema>;
+
+  const { register, handleSubmit, reset, formState: { errors, isValid } } = useForm<RoomFormValues>({
+    resolver: zodResolver(roomSchema),
+    mode: "onChange",
+    defaultValues: { title: "", capacity: undefined, description: "" }
+  });
 
   // 세션 정보 가져오기
   useEffect(() => {
@@ -41,28 +59,28 @@ export default function ChatList({ chats, setChats, maxCapacity }: ChatListProps
   // TODO insert할 때 username은 세션에서 가져오는거 말고 inner join 
   // 최소인원 2명, 0명 되면 방 나가기, 채팅방 최대 정원은 30명
 
-  const handleCreateChat = async (e: FormEvent) => {
-    e.preventDefault();
-
+  const handleCreateChat = async (values: RoomFormValues) => {
     // 세션 정보가 없는 경우 실행 방지
     if (!sessionUser) 
     {
-      alert("로그인 세션이 만료되었거나 정보가 없습니다. 다시 로그인해 주세요.");
+      toast.error("로그인 세션이 만료되었거나 정보가 없습니다. 다시 로그인해 주세요.");
       return;
     }
 
     const { data, error } = await createRoom(
-      newRoomTitle, 
-      Number(newRoomCapacity), 
+      values.title, 
+      values.capacity, 
       sessionUser.id, 
       sessionUser.name, 
       sessionUser.email,
-      newRoomDescription
+      values.description || ""
     );
 
-    if (error) {
-      console.error("채팅방 생성 실패:", error.message);
-      alert("채팅방 생성 중 오류가 발생했습니다.");
+    console.log(data);
+
+    if (error) 
+    {
+      toast.error("채팅방 생성 중 오류가 발생했습니다. 관리자에게 문의해주세요.");
       return;
     }
 
@@ -71,7 +89,7 @@ export default function ChatList({ chats, setChats, maxCapacity }: ChatListProps
       const newRoom: ChatRoom = {
         id: createdRoom.id,
         title: createdRoom.title,
-        name: sessionUser.name,
+        username: sessionUser.name,
         user_id: sessionUser.id,
         email: sessionUser.email,
         created_at: createdRoom.created_at,
@@ -80,10 +98,8 @@ export default function ChatList({ chats, setChats, maxCapacity }: ChatListProps
       };
 
       setChats((prev) => [newRoom, ...prev]);
+      reset();
       setIsModalOpen(false);
-      setNewRoomTitle("");
-      setNewRoomCapacity(2);
-      setNewRoomDescription("");
     }
   };
 
@@ -98,7 +114,7 @@ export default function ChatList({ chats, setChats, maxCapacity }: ChatListProps
   return (
     <div className="flex flex-col h-full">
       {/* 채팅 필터 서브 메뉴 */}
-      <div className="flex items-center justify-between mb-8 border-b border-zinc-800/50 pb-6">
+      <div className="flex items-center justify-between mb-8 border-b border-zinc-200 dark:border-zinc-800/50 pb-6">
         <div className="flex gap-3">
           {(['all', 'available', 'full'] as const).map((f) => (
             <button
@@ -106,8 +122,8 @@ export default function ChatList({ chats, setChats, maxCapacity }: ChatListProps
               onClick={() => setFilter(f)}
               className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${
                 filter === f
-                  ? 'bg-zinc-100 text-black'
-                  : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
+                  ? 'bg-brand text-white shadow-lg shadow-brand/20'
+                  : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800/50'
               }`}
             >
               {f === 'all' ? '전체' : f === 'available' ? '참여 가능' : '풀방'}
@@ -116,7 +132,7 @@ export default function ChatList({ chats, setChats, maxCapacity }: ChatListProps
         </div>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-sm font-bold transition-all active:scale-95"
+          className="px-6 py-2 bg-brand hover:opacity-90 text-white rounded-xl text-sm font-black transition-all active:scale-95 shadow-lg shadow-brand/20"
         >
           방 만들기
         </button>
@@ -124,7 +140,7 @@ export default function ChatList({ chats, setChats, maxCapacity }: ChatListProps
 
       {/* 리스트 출력 */}
       {filteredChats.length > 0 ? (
-        <div className="flex flex-col space-y-2 ">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {filteredChats.map((chat) => {
             const displayId = chat.email ? chat.email.split('@')[0] : 'user';
 
@@ -132,17 +148,17 @@ export default function ChatList({ chats, setChats, maxCapacity }: ChatListProps
               <div 
                 key={chat.id} 
                 onClick={() => handleJoinChat(chat.id, chat.capacity)} 
-                className="flex items-center justify-between p-4 rounded-lg border bg-zinc-900 border-zinc-800 hover:bg-zinc-800 hover:border-zinc-300 cursor-pointer transition-all active:scale-[0.98]"
+                className="flex items-center justify-between p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800/50 bg-white dark:bg-zinc-900/50 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 hover:border-brand/50 dark:hover:border-brand/50 cursor-pointer transition-all group active:scale-[0.99] shadow-sm dark:shadow-none"
               >
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center gap-2">
-                    <h3 className="font-bold text-zinc-100">{chat.title}</h3>
+                    <h3 className="font-bold text-zinc-900 dark:text-zinc-100">{chat.title}</h3>
                     <span className="text-xs text-zinc-500">@{displayId}</span>
                   </div>
-                  <span className="text-[10px] text-zinc-400 font-mono">{chat.description}</span>
+                  <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-mono">{chat.description}</span>
                 </div>
                 <div className="flex flex-col items-end gap-1">
-                  <span className="text-xs font-mono font-bold text-blue-400">
+                  <span className="text-xs font-mono font-bold text-brand group-hover:opacity-80">
                     정원 {chat.capacity}명
                   </span>
                   <span className="text-[10px] text-zinc-600">
@@ -171,51 +187,48 @@ export default function ChatList({ chats, setChats, maxCapacity }: ChatListProps
 
       {/* 채팅방 생성 모달 */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 text-zinc-100">
-          <div className="bg-zinc-900 border border-zinc-800 w-full max-w-md rounded-2xl p-6 shadow-2xl">
-            <h2 className="text-xl font-bold mb-4">새 채팅방 생성</h2>
-            <form onSubmit={handleCreateChat}>
-              <div className="mb-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 dark:bg-black/80 backdrop-blur-md p-4 text-zinc-900 dark:text-zinc-100">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 w-full max-w-md rounded-3xl p-8 shadow-2xl animate-in fade-in zoom-in duration-200">
+            <h2 className="text-xl font-bold mb-4 dark:text-white">새 채팅방 생성</h2>
+            <form onSubmit={handleSubmit(handleCreateChat)}>
+              <div className="mb-5">
                 <label className="block text-sm font-medium text-zinc-400 mb-2">방 제목</label>
                 <input
                   autoFocus
                   type="text"
-                  value={newRoomTitle}
-                  onChange={(e) => setNewRoomTitle(e.target.value)}
+                  {...register("title")}
                   placeholder="방 제목을 입력하세요"
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-zinc-100 focus:outline-none focus:border-zinc-500 transition-colors"
+                  className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-brand transition-colors"
                 />
+                <FieldError errors={[errors.title]} />
               </div>
-              <div className="mb-6">
+              <div className="mb-5">
                 <label className="block text-sm font-medium text-zinc-400 mb-2">방 설명</label>
                 <input 
                   type="text"
-                  value={newRoomDescription}
-                  onChange={(e) => setNewRoomDescription(e.target.value)}
+                  {...register("description")}
                   placeholder="방의 목적이나 규칙을 짧게 적어주세요"
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-zinc-100 focus:outline-none focus:border-zinc-500 transition-colors resize-none"
+                  className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-brand transition-colors resize-none"
                 />
+                <FieldError errors={[errors.description]} />
               </div>
-              <div className="mb-6">
+              <div className="mb-8">
                 <label className="block text-sm font-medium text-zinc-400 mb-2">참가 가능 인원</label>
-                <select
-                  value={newRoomCapacity}
-                  onChange={(e) => setNewRoomCapacity(Number(e.target.value))}
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-zinc-100 focus:outline-none focus:border-zinc-500 transition-colors cursor-pointer"
-                >
-                  <option value={0} disabled>인원 수를 선택하세요</option>
-                  {[2, 5, 10, 20, 30, 50].filter(n => n <= maxCapacity).map((num) => (
-                    <option key={num} value={num}>{num}명</option>
-                  ))}
-                </select>
+                <input 
+                  type="number"
+                  {...register("capacity", { valueAsNumber: true })}
+                  placeholder={`참가 가능한 인원을 적어주세요. (최대 ${maxCapacity}명)`}
+                  className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-brand transition-colors resize-none"
+                />
+                <FieldError errors={[errors.capacity]} />
               </div>
 
               <div className="flex gap-3">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 px-6 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl font-bold transition-all">취소</button>
+                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 px-6 py-3 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-xl font-bold transition-all text-zinc-600 dark:text-zinc-300">취소</button>
                 <button 
                   type="submit" 
-                  disabled={!newRoomTitle.trim() || newRoomCapacity === 0 || !sessionUser}
-                  className="flex-1 px-6 py-3 bg-zinc-100 hover:bg-zinc-200 text-black rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={!isValid || !sessionUser}
+                  className="flex-1 px-6 py-3 bg-brand hover:opacity-90 text-white rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   생성하기
                 </button>
