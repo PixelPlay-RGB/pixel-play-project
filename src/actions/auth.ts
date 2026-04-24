@@ -7,6 +7,7 @@ import {
   loginSchema,
   signUpBaseSchema,
 } from "@/lib/zod/auth";
+
 import { CompleteOAuthProfileInput, CompleteSignupInput, LoginProvider } from "@/types/auth";
 import { revalidatePath } from "next/cache";
 
@@ -167,6 +168,7 @@ export async function completeSignupAction(data: CompleteSignupInput): Promise<A
       phone: phone,
       gender: gender,
       photo_url: null,
+      linked_providers: ["email"],
     },
     { onConflict: "oauth_id" },
   );
@@ -176,6 +178,49 @@ export async function completeSignupAction(data: CompleteSignupInput): Promise<A
   }
 
   revalidatePath("/", "layout");
+  return { success: true };
+}
+
+/**
+ * 현재 비밀번호 검증
+ */
+export async function verifyCurrentPasswordAction(
+  currentPassword: string,
+): Promise<ActionResponse> {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user?.email) {
+    return { success: false, message: "인증 정보를 불러올 수 없습니다." };
+  }
+
+  const { error } = await supabase.auth.signInWithPassword({
+    email: user.email,
+    password: currentPassword,
+  });
+
+  if (error) {
+    return { success: false, message: "현재 비밀번호가 올바르지 않습니다." };
+  }
+
+  return { success: true };
+}
+
+/**
+ * 비밀번호 변경
+ */
+export async function changePasswordAction(newPassword: string): Promise<ActionResponse> {
+  const supabase = await createClient();
+
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
+
+  if (error) {
+    return { success: false, message: error.message };
+  }
+
   return { success: true };
 }
 

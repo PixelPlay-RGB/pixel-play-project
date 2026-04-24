@@ -24,7 +24,7 @@ import { PROFILE_QUERY_KEY, WELCOME_PARAM } from "@/constants/auth";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { SIGNUP_FORM_DEFAULTS, signUpSchema } from "@/lib/zod/auth";
-import { useUserStore } from "@/stores/auth";
+import { useAuthStore } from "@/stores/auth";
 import type { NicknameStatus, OtpStatus, SignUpFormValues } from "@/types/auth";
 import { formatPhone } from "@/utils/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -37,7 +37,7 @@ import { toast } from "sonner";
 
 export default function SignupForm() {
   const router = useRouter();
-  const setUser = useUserStore((s) => s.setUser);
+  const setUser = useAuthStore((s) => s.setUser);
   const queryClient = useQueryClient();
   const [otpStatus, setOtpStatus] = useState<OtpStatus>("idle");
   const [otpCode, setOtpCode] = useState("");

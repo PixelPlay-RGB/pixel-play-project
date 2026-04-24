@@ -1,6 +1,6 @@
 import { LINKED_PARAM, LOGIN_PARAM } from "@/constants/auth";
 import { createClient } from "@/lib/supabase/server";
-import { OAuthProvider } from "@/types/auth";
+import { LoginProvider } from "@/types/auth";
 import { NextResponse, type NextRequest } from "next/server";
 
 /**
@@ -32,15 +32,15 @@ export async function GET(request: NextRequest) {
         return NextResponse.redirect(`${origin}/auth/complete-profile`);
       }
 
-      const VALID_PROVIDERS: OAuthProvider[] = ["google", "github"];
+      const VALID_PROVIDERS: LoginProvider[] = ["google", "github"];
       const allProviders = ((user.app_metadata?.providers ?? []) as string[]).filter(
-        (p): p is OAuthProvider => VALID_PROVIDERS.includes(p as OAuthProvider),
+        (p): p is LoginProvider => VALID_PROVIDERS.includes(p as LoginProvider),
       );
       const knownProviders = existingUser.linked_providers ?? [];
       const newProviders = allProviders.filter((p) => !knownProviders.includes(p));
 
       // 업데이트가 필요한 필드만 payload로 구성
-      const updatePayload: { linked_providers?: OAuthProvider[]; photo_url?: string } = {};
+      const updatePayload: { linked_providers?: LoginProvider[]; photo_url?: string } = {};
 
       if (newProviders.length > 0) {
         updatePayload.linked_providers = [...knownProviders, ...newProviders];

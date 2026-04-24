@@ -12,7 +12,7 @@ const AuthInputGroup = forwardRef<HTMLInputElement, Props>(({ icon, isValid, ...
     <InputGroup
       className={cn(
         "w-full py-5",
-        isValid && "border-brand ring-3 ring-brand/20 dark:ring-brand/30",
+        isValid && "border-brand ring-brand/20 dark:ring-brand/30 ring-3",
       )}
     >
       <InputGroupInput ref={ref} {...props} />

@@ -1,8 +1,9 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
-import { useUserStore } from "@/stores/auth";
+import { useAuthStore } from "@/stores/auth";
 import { useEffect } from "react";
+import { toast } from "sonner";
 
 /**
  * 앱 루트에서 1회 마운트되어 Supabase Auth 상태를 Zustand store(AuthUser)에 동기화.
@@ -12,7 +13,9 @@ import { useEffect } from "react";
  * DB 프로필(public.user)은 여기서 다루지 않음 → React Query의 useProfile 훅 사용.
  */
 export default function AuthListener() {
-  const setUser = useUserStore((s) => s.setUser);
+  const user = useAuthStore((s) => s.user);
+  const setUser = useAuthStore((s) => s.setUser);
+  const setIsCanChangePassword = useAuthStore((s) => s.setIsCanChangePassword);
 
   useEffect(() => {
     const supabase = createClient();
@@ -34,6 +37,29 @@ export default function AuthListener() {
       subscription.unsubscribe();
     };
   }, [setUser]);
+
+  useEffect(() => {
+    const supabase = createClient();
+
+    const getProviders = async () => {
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from("user")
+        .select("linked_providers")
+        .eq("oauth_id", user?.id)
+        .single();
+
+      if (error || !data) {
+        toast.error("OAuth 정보 불러오기 실패");
+        return;
+      }
+
+      setIsCanChangePassword(data.linked_providers.includes("email"));
+    };
+
+    getProviders();
+  }, [user, setIsCanChangePassword]);
 
   return null;
 }

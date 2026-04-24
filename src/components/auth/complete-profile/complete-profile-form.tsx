@@ -18,7 +18,7 @@ import { PROFILE_QUERY_KEY, WELCOME_PARAM } from "@/constants/auth";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { completeOAuthProfileSchema, CompleteOAuthProfileValues } from "@/lib/zod/auth";
-import { useUserStore } from "@/stores/auth";
+import { useAuthStore } from "@/stores/auth";
 import type { NicknameStatus } from "@/types/auth";
 import { formatPhone } from "@/utils/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -31,7 +31,7 @@ import { toast } from "sonner";
 
 export default function CompleteProfileForm() {
   const router = useRouter();
-  const setUser = useUserStore((s) => s.setUser);
+  const setUser = useAuthStore((s) => s.setUser);
   const queryClient = useQueryClient();
   const [nicknameStatus, setNicknameStatus] = useState<NicknameStatus>("idle");
   const [verifiedNickname, setVerifiedNickname] = useState("");

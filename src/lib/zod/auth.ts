@@ -55,6 +55,23 @@ export const completeOAuthProfileSchema = signUpBaseSchema.pick({
 
 export type CompleteOAuthProfileValues = z.infer<typeof completeOAuthProfileSchema>;
 
+export const verifyPasswordSchema = z.object({
+  currentPassword: signUpBaseSchema.shape.password,
+});
+
+export const changePasswordSchema = z
+  .object({
+    newPassword: signUpBaseSchema.shape.password,
+    newPasswordConfirm: z.string(),
+  })
+  .refine((data) => data.newPassword === data.newPasswordConfirm, {
+    message: "비밀번호가 일치하지 않습니다.",
+    path: ["newPasswordConfirm"],
+  });
+
+export type VerifyPasswordValues = z.infer<typeof verifyPasswordSchema>;
+export type ChangePasswordValues = z.infer<typeof changePasswordSchema>;
+
 export const SIGNUP_FORM_DEFAULTS: SignUpFormValues = {
   email: "",
   password: "",

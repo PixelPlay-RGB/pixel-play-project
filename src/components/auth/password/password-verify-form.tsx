@@ -1,0 +1,59 @@
+"use client";
+
+import { verifyCurrentPasswordAction } from "@/actions/auth";
+import AuthInputGroup from "@/components/auth/auth-input-group";
+import { Button } from "@/components/ui/button";
+import { FieldError } from "@/components/ui/field";
+import { Spinner } from "@/components/ui/spinner";
+import { verifyPasswordSchema, VerifyPasswordValues } from "@/lib/zod/auth";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { LockKeyhole } from "lucide-react";
+import { useForm } from "react-hook-form";
+
+interface Props {
+  onVerified: (currentPassword: string) => void;
+}
+
+export default function PasswordVerifyForm({ onVerified }: Props) {
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors, dirtyFields, isSubmitting },
+  } = useForm<VerifyPasswordValues>({
+    resolver: zodResolver(verifyPasswordSchema),
+    mode: "onChange",
+  });
+
+  const onSubmit = async (data: VerifyPasswordValues) => {
+    const result = await verifyCurrentPasswordAction(data.currentPassword);
+
+    if (!result.success) {
+      setError("currentPassword", {
+        message: result.message ?? "현재 비밀번호가 올바르지 않습니다.",
+      });
+      return;
+    }
+
+    onVerified(data.currentPassword);
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3">
+      <div className="flex flex-col gap-1">
+        <AuthInputGroup
+          {...register("currentPassword")}
+          type="password"
+          placeholder="현재 비밀번호"
+          icon={<LockKeyhole />}
+          aria-invalid={!!errors.currentPassword}
+          isValid={!errors.currentPassword && !!dirtyFields.currentPassword}
+        />
+        <FieldError errors={[errors.currentPassword]} />
+      </div>
+      <Button type="submit" disabled={isSubmitting} className="w-full py-5 font-bold tracking-wide">
+        {isSubmitting ? <Spinner /> : "확인"}
+      </Button>
+    </form>
+  );
+}

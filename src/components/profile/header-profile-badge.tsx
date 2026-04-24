@@ -9,6 +9,7 @@ import { SETTING_MENU } from "@/constants/setting-menu";
 import { useUser } from "@/hooks/use-profile";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/stores/auth";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -17,6 +18,7 @@ export default function HeaderProfileBadge() {
   const supabase = createClient();
   const router = useRouter();
   const { data: user, isLoading } = useUser();
+  const isCanChangePassword = useAuthStore((state) => state.isCanChangePassword);
 
   const [open, setOpen] = useState(false);
 
@@ -61,13 +63,17 @@ export default function HeaderProfileBadge() {
 
         <div className="flex flex-col">
           {SETTING_MENU.map((item) =>
-            SettingMenuItem(item, {
-              onClose: () => setOpen(false),
-              onLogout: handleLogout,
-              // actions: {
-              //   settings: handleSetting
-              // }
-            }),
+            SettingMenuItem(
+              item,
+              {
+                onClose: () => setOpen(false),
+                onLogout: handleLogout,
+                // actions: {
+                //   settings: handleSetting
+                // }
+              },
+              isCanChangePassword,
+            ),
           )}
         </div>
       </PopoverContent>

@@ -9,4 +9,5 @@ type SettingMenuItemBase = {
 export type SettingMenuItem =
   | (SettingMenuItemBase & { type: "link"; href: string })
   | (SettingMenuItemBase & { type: "action" })
-  | (SettingMenuItemBase & { type: "logout" });
+  | (SettingMenuItemBase & { type: "logout" })
+  | (SettingMenuItemBase & { type: "changePassword" });

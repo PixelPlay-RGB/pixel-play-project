@@ -8,7 +8,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { LOGIN_PARAM, PROFILE_QUERY_KEY } from "@/constants/auth";
 import { createClient } from "@/lib/supabase/client";
 import { loginSchema } from "@/lib/zod/auth";
-import { useUserStore } from "@/stores/auth";
+import { useAuthStore } from "@/stores/auth";
 import type { LoginFormValues, LoginProvider } from "@/types/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
@@ -24,7 +24,7 @@ interface LoginFormProps {
 
 export default function LoginForm({ loading, onLoadingChange: setIsLoading }: LoginFormProps) {
   const router = useRouter();
-  const setUser = useUserStore((s) => s.setUser);
+  const setUser = useAuthStore((s) => s.setUser);
   const queryClient = useQueryClient();
 
   const {

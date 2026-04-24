@@ -2,7 +2,7 @@
 
 import { PROFILE_QUERY_KEY } from "@/constants/auth";
 import { createClient } from "@/lib/supabase/client";
-import { useUserStore } from "@/stores/auth";
+import { useAuthStore } from "@/stores/auth";
 import { DBUser } from "@/types/user";
 import { useQuery } from "@tanstack/react-query";
 
@@ -13,7 +13,7 @@ import { useQuery } from "@tanstack/react-query";
  * - 프로필 업데이트 후에는 `queryClient.invalidateQueries({ queryKey: PROFILE_QUERY_KEY })`로 갱신
  */
 export function useUser() {
-  const user = useUserStore((s) => s.user);
+  const user = useAuthStore((s) => s.user);
 
   return useQuery<DBUser | null>({
     queryKey: [...PROFILE_QUERY_KEY, user?.id],

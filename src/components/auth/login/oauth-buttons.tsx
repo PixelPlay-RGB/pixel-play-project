@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { createClient } from "@/lib/supabase/client";
-import { LoginProvider, OAuthProvider } from "@/types/auth";
+import { LoginProvider } from "@/types/auth";
 import Image from "next/image";
 
 interface OAuthButtonsProps {
@@ -14,7 +14,7 @@ interface OAuthButtonsProps {
 export default function OAuthButtons({ loading, onLoadingChange }: OAuthButtonsProps) {
   const supabase = createClient();
 
-  const handleSignIn = async (provider: OAuthProvider) => {
+  const handleSignIn = async (provider: Exclude<LoginProvider, "email">) => {
     onLoadingChange(provider);
 
     const { error } = await supabase.auth.signInWithOAuth({

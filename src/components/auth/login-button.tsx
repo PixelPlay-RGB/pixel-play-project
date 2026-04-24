@@ -2,12 +2,12 @@
 
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
-import { useUserStore } from "@/stores/auth";
+import { useAuthStore } from "@/stores/auth";
 import { useRouter } from "next/navigation";
 
 export default function LoginButton() {
   const router = useRouter();
-  const loading = useUserStore((s) => s.loading);
+  const loading = useAuthStore((s) => s.loading);
 
   const handleAuth = () => {
     router.push("/auth/login");
