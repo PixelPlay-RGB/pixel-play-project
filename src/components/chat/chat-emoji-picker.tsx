@@ -10,6 +10,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { Spinner } from "@/components/ui/spinner"
 
 import type { EmojiClickData } from "emoji-picker-react"
 import { Theme } from "emoji-picker-react"
@@ -19,8 +20,8 @@ import { Theme } from "emoji-picker-react"
 const EmojiPicker = dynamic(() => import("emoji-picker-react"), {
   ssr: false,
   loading: () => (
-    <div className="flex h-[435px] w-[350px] items-center justify-center text-sm text-muted-foreground">
-      로딩…
+    <div className="flex h-[435px] w-[350px] items-center justify-center">
+      <Spinner className="size-8 text-muted-foreground" />
     </div>
   ),
 })

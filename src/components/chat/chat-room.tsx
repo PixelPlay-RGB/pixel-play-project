@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import type { Message, Room, RoomMember } from "@/types/chat";
-import useMessages from "@/hook/use-messages";
+import useMessages from "@/hooks/use-messages";
 import { useProfile } from "@/hooks/use-profile";
 import { createClient } from "@/lib/supabase/client";
 
