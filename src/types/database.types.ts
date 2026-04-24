@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-Need to install the following packages:
-supabase@2.95.0
-Ok to proceed? (y) 
-=======
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type Database = {
@@ -321,4 +316,3 @@ export const Constants = {
     },
   },
 } as const;
->>>>>>> dev
