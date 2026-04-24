@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     if (!error && user) {
       const { data: existingUser } = await supabase
         .from("user")
-        .select("id, linked_providers")
+        .select("id, linked_providers, photo_url")
         .eq("oauth_id", user.id)
         .single();
 
@@ -39,17 +39,25 @@ export async function GET(request: NextRequest) {
       const knownProviders = existingUser.linked_providers ?? [];
       const newProviders = allProviders.filter((p) => !knownProviders.includes(p));
 
-      if (newProviders.length > 0) {
-        // 새 provider 연동 → DB 업데이트 후 LINKED
-        await supabase
-          .from("user")
-          .update({ linked_providers: [...knownProviders, ...newProviders] })
-          .eq("oauth_id", user.id);
+      // 업데이트가 필요한 필드만 payload로 구성
+      const updatePayload: { linked_providers?: OAuthProvider[]; photo_url?: string } = {};
 
-        return NextResponse.redirect(`${origin}${next}${LINKED_PARAM}`);
-      } else {
-        return NextResponse.redirect(`${origin}${next}${LOGIN_PARAM}`);
+      if (newProviders.length > 0) {
+        updatePayload.linked_providers = [...knownProviders, ...newProviders];
       }
+
+      // photo_url이 없을 때만 OAuth provider 값으로 백필 (기존 값 보호)
+      if (!existingUser.photo_url && user.user_metadata?.avatar_url) {
+        updatePayload.photo_url = user.user_metadata.avatar_url as string;
+      }
+
+      if (Object.keys(updatePayload).length > 0) {
+        await supabase.from("user").update(updatePayload).eq("oauth_id", user.id);
+      }
+
+      return NextResponse.redirect(
+        `${origin}${next}${newProviders.length > 0 ? LINKED_PARAM : LOGIN_PARAM}`,
+      );
     }
   }
 
