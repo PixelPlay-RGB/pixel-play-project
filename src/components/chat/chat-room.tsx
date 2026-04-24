@@ -8,7 +8,7 @@ import { toast } from "sonner";
 
 import type { Message, Room, RoomMember } from "@/types/chat";
 import useMessages from "@/hooks/use-messages";
-import { useProfile } from "@/hooks/use-profile";
+import { useUser } from "@/hooks/use-profile";
 import { createClient } from "@/lib/supabase/client";
 
 import { MemberList } from "./member-list";
@@ -23,20 +23,20 @@ interface RoomQueryRow {
   id: string;
   title: string;
   description: string | null;
-  user_id: string;
+  owner_id: string;
   created_at: string;
 }
 
 interface RoomMemberQueryRow {
-  room_id: string;
+  chat_room_id: string;
   user_id: string;
-  joined_at: string;
+  created_at: string;
   user: { nickname: string } | null;
 }
 
 export function ChatRoom({ roomId }: Props) {
   const supabase = useMemo(() => createClient(), []);
-  const { data: profile, isPending: profilePending } = useProfile();
+  const { data: profile, isPending: profilePending } = useUser();
   const currentUserId = profile?.id ?? "";
 
   const {
@@ -62,8 +62,8 @@ export function ChatRoom({ roomId }: Props) {
     enabled: !!roomId,
     queryFn: async (): Promise<Room> => {
       const { data, error } = await supabase
-        .from("room")
-        .select("id, title, description, user_id, created_at")
+        .from("chatroom")
+        .select("id, title, description, owner_id, created_at")
         .eq("id", roomId)
         .single()
         .returns<RoomQueryRow>();
@@ -74,7 +74,7 @@ export function ChatRoom({ roomId }: Props) {
         id: data.id,
         title: data.title,
         description: data.description ?? "",
-        createdBy: data.user_id,
+        createdBy: data.owner_id,
         createdAt: data.created_at,
       };
     },
@@ -85,21 +85,21 @@ export function ChatRoom({ roomId }: Props) {
     enabled: !!roomId,
     queryFn: async (): Promise<RoomMember[]> => {
       const { data, error } = await supabase
-        .from("room_member")
-        .select("room_id, user_id, joined_at, user:user_id(nickname)")
-        .eq("room_id", roomId)
-        .order("joined_at", { ascending: true })
+        .from("chatroommember")
+        .select("chat_room_id, user_id, created_at, user:user_id(nickname)")
+        .eq("chat_room_id", roomId)
+        .order("created_at", { ascending: true })
         .returns<RoomMemberQueryRow[]>();
 
       if (error) throw error;
 
       return (data ?? []).map((member) => ({
-        id: `${member.room_id}-${member.user_id}`,
+        id: `${member.chat_room_id}-${member.user_id}`,
         userId: member.user_id,
         name:
           member.user?.nickname?.trim() ||
           member.user_id.slice(0, 8),
-        joinedAt: member.joined_at,
+        joinedAt: member.created_at,
       }));
     },
   });
@@ -126,7 +126,7 @@ export function ChatRoom({ roomId }: Props) {
     };
 
     const { error } = await supabase.from("message").insert({
-      room_id: next.roomId,
+      chat_room_id: next.roomId,
       user_id: next.userId,
       content: next.content,
       created_at: next.createdAt,

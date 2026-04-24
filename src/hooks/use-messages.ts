@@ -14,7 +14,7 @@ import type { Message } from "@/types/chat"
 
 interface MessageQueryRow {
   id: string
-  room_id: string
+  chat_room_id: string
   user_id: string
   content: string
   created_at: string
@@ -34,7 +34,7 @@ const queryKeyByRoomId = (roomId: string) => ["messages", roomId] as const
 function mapRowToMessage(row: MessageQueryRow): Message {
   return {
     id: row.id,
-    roomId: row.room_id,
+    roomId: row.chat_room_id,
     userId: row.user_id,
     content: row.content,
     createdAt: row.created_at,
@@ -56,9 +56,9 @@ export default function useMessages(roomId: string) {
       let request = supabase
         .from("message")
         .select(
-          "id, room_id, user_id, content, created_at, user:user_id(id, nickname)",
+          "id, chat_room_id, user_id, content, created_at, user:user_id(id, nickname)",
         )
-        .eq("room_id", roomId)
+        .eq("chat_room_id", roomId)
         .order("created_at", { ascending: false })
         .limit(MESSAGE_PAGE_SIZE)
 
@@ -92,7 +92,7 @@ export default function useMessages(roomId: string) {
           event: "INSERT",
           schema: "public",
           table: "message",
-          filter: `room_id=eq.${roomId}`,
+          filter: `chat_room_id=eq.${roomId}`,
         },
         async (payload) => {
           const messageId = String(payload.new.id ?? "")
@@ -101,7 +101,7 @@ export default function useMessages(roomId: string) {
           const { data, error } = await supabase
             .from("message")
             .select(
-              "id, room_id, user_id, content, created_at, user:user_id(id, nickname)",
+              "id, chat_room_id, user_id, content, created_at, user:user_id(id, nickname)",
             )
             .eq("id", messageId)
             .single()
