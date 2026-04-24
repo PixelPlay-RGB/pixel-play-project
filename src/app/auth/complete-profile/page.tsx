@@ -26,8 +26,6 @@ export default async function Page() {
   }
 
   // OAuth provider가 제공한 이름을 닉네임 기본값으로 사용
-  const defaultNickname =
-    user.user_metadata?.full_name ?? user.user_metadata?.name ?? user.email?.split("@")[0] ?? "";
 
   return (
     <div className="container m-auto">
@@ -42,7 +40,7 @@ export default async function Page() {
             </p>
           </div>
         </div>
-        <CompleteProfileForm defaultNickname={defaultNickname} />
+        <CompleteProfileForm />
       </div>
     </div>
   );

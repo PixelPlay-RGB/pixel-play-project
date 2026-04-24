@@ -1,46 +1,75 @@
 "use client";
 
-import { completeOAuthProfileAction } from "@/actions/auth";
+import { checkNicknameAction, completeOAuthProfileAction } from "@/actions/auth";
 import AuthInputGroup from "@/components/auth/auth-input-group";
 import SignUpGenderField from "@/components/auth/signup/signup-gender-field";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { FieldError } from "@/components/ui/field";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from "@/components/ui/input-group";
 import { RadioGroup } from "@/components/ui/radio-group";
 import { Spinner } from "@/components/ui/spinner";
 import { PROFILE_QUERY_KEY, WELCOME_PARAM } from "@/constants/auth";
 import { createClient } from "@/lib/supabase/client";
+import { cn } from "@/lib/utils";
 import { completeOAuthProfileSchema, CompleteOAuthProfileValues } from "@/lib/zod/auth";
 import { useUserStore } from "@/stores/auth";
+import type { NicknameStatus } from "@/types/auth";
 import { formatPhone } from "@/utils/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { AtSign, CalendarDays, Smartphone } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-interface Props {
-  defaultNickname: string;
-}
-
-export default function CompleteProfileForm({ defaultNickname }: Props) {
+export default function CompleteProfileForm() {
   const router = useRouter();
   const setUser = useUserStore((s) => s.setUser);
   const queryClient = useQueryClient();
+  const [nicknameStatus, setNicknameStatus] = useState<NicknameStatus>("idle");
+  const [verifiedNickname, setVerifiedNickname] = useState("");
 
   const {
     register,
     handleSubmit,
     control,
+    getValues,
     formState: { errors, dirtyFields, isSubmitting, isValid },
   } = useForm<CompleteOAuthProfileValues>({
     resolver: zodResolver(completeOAuthProfileSchema),
     mode: "onChange",
-    defaultValues: { nickname: defaultNickname, birth: "", phone: "", gender: "male" },
+    defaultValues: { nickname: "", birth: "", phone: "", gender: "male" },
   });
 
+  const handleCheckNickname = async () => {
+    const nickname = getValues("nickname");
+    if (!nickname || errors.nickname) return;
+
+    setNicknameStatus("checking");
+    const result = await checkNicknameAction(nickname);
+    if (result.success) {
+      setVerifiedNickname(nickname);
+      setNicknameStatus("available");
+    } else {
+      setNicknameStatus("taken");
+    }
+  };
+
   const onSubmit = async (data: CompleteOAuthProfileValues) => {
+    if (nicknameStatus !== "available") {
+      toast.error("닉네임 중복 확인이 필요합니다.", {
+        description: "닉네임 중복 확인을 완료해주세요.",
+      });
+      return;
+    }
+
     const result = await completeOAuthProfileAction(data);
     if (!result.success) {
       toast.error("프로필 생성 오류", { description: result.message });
@@ -72,14 +101,53 @@ export default function CompleteProfileForm({ defaultNickname }: Props) {
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
       <div className="flex flex-col gap-3">
         <div className="flex flex-col gap-1">
-          <AuthInputGroup
-            {...register("nickname")}
-            type="text"
-            placeholder="닉네임"
-            icon={<AtSign />}
-            aria-invalid={!!errors.nickname}
-            isValid={!errors.nickname && !!dirtyFields.nickname}
-          />
+          <InputGroup
+            className={cn(
+              "w-full py-5",
+              nicknameStatus === "available" &&
+                "border-brand ring-brand/20 dark:ring-brand/30 ring-3",
+              (nicknameStatus === "taken" || errors.nickname) && "border-destructive",
+            )}
+          >
+            <InputGroupAddon align="inline-start">
+              <AtSign className="text-muted-foreground" />
+            </InputGroupAddon>
+            <InputGroupInput
+              {...register("nickname", {
+                onChange: (e) => {
+                  const val = e.target.value;
+                  setNicknameStatus(val && val === verifiedNickname ? "available" : "idle");
+                },
+              })}
+              type="text"
+              placeholder="닉네임"
+              aria-invalid={!!errors.nickname || nicknameStatus === "taken"}
+            />
+            <InputGroupAddon align="inline-end">
+              <InputGroupButton
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={handleCheckNickname}
+                disabled={nicknameStatus === "checking" || !!errors.nickname}
+                className="border-brand/40 text-brand hover:bg-brand cursor-pointer hover:text-white"
+              >
+                {nicknameStatus === "checking" ? (
+                  <Spinner />
+                ) : nicknameStatus === "available" ? (
+                  "사용가능"
+                ) : (
+                  "중복확인"
+                )}
+              </InputGroupButton>
+            </InputGroupAddon>
+          </InputGroup>
+          {nicknameStatus === "available" && (
+            <p className="text-brand text-xs">사용 가능한 닉네임입니다.</p>
+          )}
+          {nicknameStatus === "taken" && (
+            <p className="text-destructive text-xs">이미 사용 중인 닉네임입니다.</p>
+          )}
           <FieldError errors={[errors.nickname]} />
         </div>
         <div className="flex flex-col gap-1">
@@ -133,7 +201,7 @@ export default function CompleteProfileForm({ defaultNickname }: Props) {
 
       <Button
         type="submit"
-        disabled={isSubmitting || !isValid}
+        disabled={isSubmitting || !isValid || nicknameStatus !== "available"}
         className="bg-brand hover:bg-brand/85 w-full cursor-pointer py-5 font-bold tracking-widest text-white uppercase disabled:opacity-40"
       >
         {isSubmitting ? <Spinner /> : "완료"}
