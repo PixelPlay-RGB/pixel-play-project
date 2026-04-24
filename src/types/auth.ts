@@ -2,7 +2,8 @@ import { SignUpFormValues } from "@/lib/zod/auth";
 
 export type OtpStatus = "idle" | "sending" | "sent" | "verifying" | "verified";
 export type NicknameStatus = "idle" | "checking" | "available" | "taken";
-export type OAuthProvider = "google" | "github";
+export type LoginProvider = "google" | "github" | "credential";
+export type OAuthProvider = Exclude<LoginProvider, "credential">;
 
 export type CompleteSignupInput = Pick<
   SignUpFormValues,

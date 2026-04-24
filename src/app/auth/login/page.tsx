@@ -1,5 +1,4 @@
-import LoginForm from "@/components/auth/login/login-form";
-import OAuthButtons from "@/components/auth/login/oauth-buttons";
+import LoginSection from "@/components/auth/login/login-section";
 import Logo from "@/components/common/logo";
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
@@ -14,13 +13,7 @@ export default function Page() {
           <p className="text-xs tracking-widest uppercase">로그인</p>
         </div>
         <div className="flex flex-col gap-5">
-          <LoginForm />
-          <div className="flex items-center gap-3">
-            <Separator className="flex-1" />
-            <span className="text-xs tracking-widest uppercase">또는</span>
-            <Separator className="flex-1" />
-          </div>
-          <OAuthButtons />
+          <LoginSection />
           <Link
             className="text-brand self-end text-sm underline underline-offset-4 transition-colors hover:opacity-60"
             href="/auth/signup"

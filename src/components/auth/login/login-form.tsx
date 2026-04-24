@@ -9,7 +9,7 @@ import { LOGIN_PARAM, PROFILE_QUERY_KEY } from "@/constants/auth";
 import { createClient } from "@/lib/supabase/client";
 import { loginSchema } from "@/lib/zod/auth";
 import { useUserStore } from "@/stores/auth";
-import type { LoginFormValues } from "@/types/auth";
+import type { LoginFormValues, LoginProvider } from "@/types/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { LockKeyhole, Mail } from "lucide-react";
@@ -17,7 +17,12 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-export default function LoginForm() {
+interface LoginFormProps {
+  loading: LoginProvider | null;
+  onLoadingChange: (provider: LoginProvider | null) => void;
+}
+
+export default function LoginForm({ loading, onLoadingChange: setIsLoading }: LoginFormProps) {
   const router = useRouter();
   const setUser = useUserStore((s) => s.setUser);
   const queryClient = useQueryClient();
@@ -32,12 +37,14 @@ export default function LoginForm() {
   });
 
   const onSubmit = async (data: LoginFormValues) => {
+    setIsLoading("credential");
     const result = await login(data);
 
     if (!result.success) {
       toast.error("로그인 실패 🥲", {
         description: result.message || "이메일 또는 비밀번호를 확인해주세요.",
       });
+      setIsLoading(null);
       return;
     }
 
@@ -52,6 +59,7 @@ export default function LoginForm() {
       toast.error("인증 정보를 불러올 수 없습니다.", {
         description: "잠시 후 다시 시도해주세요.",
       });
+      setIsLoading(null);
       return;
     }
 
@@ -88,7 +96,7 @@ export default function LoginForm() {
       </div>
       <Button
         type="submit"
-        disabled={isSubmitting}
+        disabled={isSubmitting || loading != null}
         className="bg-brand hover:bg-brand/85 w-full cursor-pointer py-5 font-bold tracking-widest text-white uppercase"
       >
         {isSubmitting ? <Spinner /> : "로그인"}

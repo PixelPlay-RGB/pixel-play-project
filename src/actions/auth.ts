@@ -7,7 +7,7 @@ import {
   loginSchema,
   signUpBaseSchema,
 } from "@/lib/zod/auth";
-import { CompleteOAuthProfileInput, CompleteSignupInput, OAuthProvider } from "@/types/auth";
+import { CompleteOAuthProfileInput, CompleteSignupInput, LoginProvider } from "@/types/auth";
 import { revalidatePath } from "next/cache";
 
 export interface ActionResponse {
@@ -225,9 +225,9 @@ export async function completeOAuthProfileAction(
     return { success: false, message: "이미 사용 중인 닉네임입니다." };
   }
 
-  const VALID_PROVIDERS: OAuthProvider[] = ["google", "github"];
+  const VALID_PROVIDERS: LoginProvider[] = ["google", "github"];
   const linkedProviders = ((user.app_metadata?.providers ?? []) as string[]).filter(
-    (p): p is OAuthProvider => VALID_PROVIDERS.includes(p as OAuthProvider),
+    (p): p is LoginProvider => VALID_PROVIDERS.includes(p as LoginProvider),
   );
 
   const { error: dbError } = await supabase.from("user").upsert(

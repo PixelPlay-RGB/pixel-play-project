@@ -3,17 +3,19 @@
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { createClient } from "@/lib/supabase/client";
-import { OAuthProvider } from "@/types/auth";
+import { LoginProvider, OAuthProvider } from "@/types/auth";
 import Image from "next/image";
-import { useState } from "react";
 
-export default function OAuthButtons() {
+interface OAuthButtonsProps {
+  loading: LoginProvider | null;
+  onLoadingChange: (provider: LoginProvider | null) => void;
+}
+
+export default function OAuthButtons({ loading, onLoadingChange }: OAuthButtonsProps) {
   const supabase = createClient();
 
-  const [loading, setLoading] = useState<OAuthProvider | null>(null);
-
   const handleSignIn = async (provider: OAuthProvider) => {
-    setLoading(provider);
+    onLoadingChange(provider);
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
@@ -24,7 +26,7 @@ export default function OAuthButtons() {
 
     if (error) {
       console.error(`${provider} 로그인 에러: `, error.message);
-      setLoading(null);
+      onLoadingChange(null);
     }
   };
 
