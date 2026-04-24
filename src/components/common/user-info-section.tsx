@@ -1,11 +1,13 @@
 "use client";
 
-import { useProfile } from "@/hooks/use-profile";
+import { useUser } from "@/hooks/use-profile";
 
 export default function UserInfoSection() {
-  const { data: profile, isLoading } = useProfile();
+  const { data: user, isLoading } = useUser();
 
-  if (isLoading || !profile) return null;
+  if (isLoading || !user) {
+    return null;
+  }
 
-  return <div>{profile.nickname}님 환영합니다!</div>;
+  return <div>{user.nickname}님 환영합니다!</div>;
 }
