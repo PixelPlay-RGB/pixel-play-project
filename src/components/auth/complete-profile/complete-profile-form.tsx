@@ -23,7 +23,7 @@ import type { NicknameStatus } from "@/types/auth";
 import { formatPhone } from "@/utils/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
-import { AtSign, CalendarDays, Smartphone } from "lucide-react";
+import { CalendarDays, Smartphone, User, UserStar } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -45,7 +45,7 @@ export default function CompleteProfileForm() {
   } = useForm<CompleteOAuthProfileValues>({
     resolver: zodResolver(completeOAuthProfileSchema),
     mode: "onChange",
-    defaultValues: { nickname: "", birth: "", phone: "", gender: "male" },
+    defaultValues: { name: "", nickname: "", birth: "", phone: "", gender: "male" },
   });
 
   const handleCheckNickname = async () => {
@@ -101,6 +101,18 @@ export default function CompleteProfileForm() {
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
       <div className="flex flex-col gap-3">
         <div className="flex flex-col gap-1">
+          <AuthInputGroup
+            {...register("name")}
+            name="name"
+            type="text"
+            placeholder="이름"
+            icon={<User />}
+            aria-invalid={!!errors.name}
+            isValid={!errors.name && !!dirtyFields.name}
+          />
+          <FieldError errors={[errors.name]} />
+        </div>
+        <div className="flex flex-col gap-1">
           <InputGroup
             className={cn(
               "w-full py-5",
@@ -110,7 +122,7 @@ export default function CompleteProfileForm() {
             )}
           >
             <InputGroupAddon align="inline-start">
-              <AtSign className="text-muted-foreground" />
+              <UserStar className="text-muted-foreground" />
             </InputGroupAddon>
             <InputGroupInput
               {...register("nickname", {
@@ -150,6 +162,7 @@ export default function CompleteProfileForm() {
           )}
           <FieldError errors={[errors.nickname]} />
         </div>
+
         <div className="flex flex-col gap-1">
           <AuthInputGroup
             {...register("birth")}
