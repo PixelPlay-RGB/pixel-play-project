@@ -2,6 +2,7 @@
 
 import { checkNicknameAction, completeOAuthProfileAction } from "@/actions/auth";
 import AuthInputGroup from "@/components/auth/auth-input-group";
+import CompleteProfileAbandonAlert from "@/components/auth/complete-profile/complete-profile-abandon-alert";
 import SignUpGenderField from "@/components/auth/signup/signup-gender-field";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -35,6 +36,7 @@ export default function CompleteProfileForm() {
   const queryClient = useQueryClient();
   const [nicknameStatus, setNicknameStatus] = useState<NicknameStatus>("idle");
   const [verifiedNickname, setVerifiedNickname] = useState("");
+  const [isCancelling, setIsCancelling] = useState(false);
 
   const {
     register,
@@ -214,11 +216,16 @@ export default function CompleteProfileForm() {
 
       <Button
         type="submit"
-        disabled={isSubmitting || !isValid || nicknameStatus !== "available"}
+        disabled={isSubmitting || isCancelling || !isValid || nicknameStatus !== "available"}
         className="bg-brand hover:bg-brand/85 w-full cursor-pointer py-5 font-bold tracking-widest text-white uppercase disabled:opacity-40"
       >
         {isSubmitting ? <Spinner /> : "완료"}
       </Button>
+      <CompleteProfileAbandonAlert
+        isCancelling={isCancelling}
+        isSubmitting={isSubmitting}
+        setIsCancelling={setIsCancelling}
+      />
     </form>
   );
 }

@@ -47,11 +47,17 @@ export default function AuthListener() {
       const { data, error } = await supabase
         .from("user")
         .select("linked_providers")
-        .eq("oauth_id", user?.id)
-        .single();
+        .eq("oauth_id", user.id)
+        .maybeSingle();
 
-      if (error || !data) {
+      if (error) {
         toast.error("OAuth 정보 불러오기 실패");
+        return;
+      }
+
+      if (!data) {
+        // 프로필 미생성(complete-profile 진행 중) — 정상 케이스
+        setIsCanChangePassword(false);
         return;
       }
 

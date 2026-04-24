@@ -11,6 +11,17 @@ export default async function Header() {
     data: { user },
   } = await supabase.auth.getUser();
 
+  let hasProfile = false;
+  if (user) {
+    const { data: profile } = await supabase
+      .from("user")
+      .select("id")
+      .eq("oauth_id", user.id)
+      .single();
+
+    hasProfile = !!profile;
+  }
+
   return (
     <header className="border-brand/15 bg-brand/5 dark:border-border dark:bg-muted/60 sticky top-0 z-50 border-b backdrop-blur-sm">
       <div className="flex items-center justify-between px-5 py-2">
@@ -19,7 +30,8 @@ export default async function Header() {
         </Link>
         <div className={"flex items-center gap-5 pr-5"}>
           <ThemeToggleButton />
-          {user ? <HeaderProfileBadge /> : <LoginButton />}
+          {user && hasProfile && <HeaderProfileBadge />}
+          {!user && <LoginButton />}
         </div>
       </div>
     </header>
