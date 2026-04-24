@@ -1,20 +1,29 @@
 import LoginButton from "@/components/auth/login-button";
 import Logo from "@/components/common/logo";
 import ThemeToggleButton from "@/components/common/theme-toggle-button";
-import UserInfoSection from "@/components/common/user-info-section";
+import HeaderProfileBadge from "@/components/profile/header-profile-badge";
+import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 
-export default function Header() {
+export default async function Header() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   return (
     <header className="border-brand/15 bg-brand/5 dark:border-border dark:bg-muted/60 sticky top-0 z-50 border-b backdrop-blur-sm">
-      <div className="flex items-center justify-between px-10 py-4">
-        <Link href={"/"}>
-          <Logo className="dark:text-foreground text-[#1e1d37]" />
+      <div className="flex items-center justify-between px-5 py-2">
+        <Link href={"/"} className={"h-10 w-40"}>
+          <Logo className="dark:text-foreground h-full w-full text-[#1e1d37]" />
         </Link>
-        <div className={"flex items-center gap-5"}>
-          <UserInfoSection />
-          <LoginButton />
+        <div className={"flex items-center gap-5 pr-5"}>
           <ThemeToggleButton />
+          {user ? (
+            <HeaderProfileBadge avatarUrl={user.user_metadata.avatar_url} />
+          ) : (
+            <LoginButton />
+          )}
         </div>
       </div>
     </header>

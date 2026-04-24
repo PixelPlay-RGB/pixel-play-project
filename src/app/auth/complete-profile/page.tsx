@@ -25,8 +25,6 @@ export default async function Page() {
     redirect("/");
   }
 
-  // OAuth provider가 제공한 이름을 닉네임 기본값으로 사용
-
   return (
     <div className="container m-auto">
       <div className="border-brand/20 bg-card/80 m-auto max-w-md rounded-2xl border-2 p-8 shadow-[0_0_30px_#46c6a90a] backdrop-blur-sm dark:shadow-[0_0_60px_#46c6a918]">
