@@ -13,11 +13,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-interface Props {
-  avatarUrl: string;
-}
-
-export default function HeaderProfileBadge({ avatarUrl }: Props) {
+export default function HeaderProfileBadge() {
   const supabase = createClient();
   const router = useRouter();
   const { data: user, isLoading } = useUser();
@@ -37,8 +33,8 @@ export default function HeaderProfileBadge({ avatarUrl }: Props) {
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger className="cursor-pointer outline-none hover:opacity-80">
         <Avatar className={cn("ring-brand ring-2 transition-all duration-200 hover:ring-[3px]")}>
-          <AvatarImage src={avatarUrl} />
-          <AvatarFallback>{user.nickname?.[0]}</AvatarFallback>
+          <AvatarImage src={user.photo_url ?? undefined} />
+          <AvatarFallback>{user.nickname.slice(0, 2)}</AvatarFallback>
         </Avatar>
       </PopoverTrigger>
 
@@ -49,8 +45,8 @@ export default function HeaderProfileBadge({ avatarUrl }: Props) {
           className="hover:bg-muted flex items-center gap-4 rounded-lg p-1"
         >
           <Avatar className="border-brand/10 h-12 w-12 border">
-            <AvatarImage src={avatarUrl} />
-            <AvatarFallback>{user.nickname?.[0]}</AvatarFallback>
+            <AvatarImage src={user.photo_url ?? undefined} />
+            <AvatarFallback>{user.nickname.slice(0, 2)}</AvatarFallback>
           </Avatar>
 
           <div className="flex flex-col gap-1">

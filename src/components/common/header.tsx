@@ -19,11 +19,7 @@ export default async function Header() {
         </Link>
         <div className={"flex items-center gap-5 pr-5"}>
           <ThemeToggleButton />
-          {user ? (
-            <HeaderProfileBadge avatarUrl={user.user_metadata.avatar_url} />
-          ) : (
-            <LoginButton />
-          )}
+          {user ? <HeaderProfileBadge /> : <LoginButton />}
         </div>
       </div>
     </header>
