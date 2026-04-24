@@ -3,14 +3,18 @@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import type { Message } from "@/types/chat"
 import { cn } from "@/lib/utils"
+import { useRoomMembers } from "@/hooks/use-room-members"
 
 interface Props {
   message: Message
-  displayName: string
   isOwn: boolean
 }
 
-export function MessageItem({ message, displayName, isOwn }: Props) {
+export function MessageItem({ message, isOwn }: Props) {
+  const { data: members = [] } = useRoomMembers(message.roomId)
+  
+  const member = members.find((m) => m.user_id === message.userId)
+  const displayName = member?.user?.nickname?.trim() || message.userId.slice(0, 8)
   const initials = displayName.slice(0, 2)
 
   if (isOwn) {

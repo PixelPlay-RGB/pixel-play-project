@@ -11,7 +11,6 @@ const TOP_PREFETCH_PX = 50
 
 interface Props {
   messages: Message[]
-  displayNameByUserId: Record<string, string>
   currentUserId: string
   hasMorePrevious: boolean
   isLoadingPrevious: boolean
@@ -20,7 +19,6 @@ interface Props {
 
 export function MessageList({
   messages,
-  displayNameByUserId,
   currentUserId,
   hasMorePrevious,
   isLoadingPrevious,
@@ -117,9 +115,6 @@ export function MessageList({
             <MessageItem
               key={message.id}
               message={message}
-              displayName={
-                displayNameByUserId[message.userId] ?? message.userId.slice(0, 8)
-              }
               isOwn={message.userId === currentUserId}
             />
           ))}

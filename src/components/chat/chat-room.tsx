@@ -3,13 +3,15 @@
 import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
 
-import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import type { Message, Room, RoomMember } from "@/types/chat";
+import { ERROR_MESSAGES } from "@/constants/errors";
 import useMessages from "@/hooks/use-messages";
 import { useUser } from "@/hooks/use-profile";
+import { useRoom } from "@/hooks/use-room";
+import { useRoomMembers } from "@/hooks/use-room-members";
 import { createClient } from "@/lib/supabase/client";
+import { Spinner } from "@/components/ui/spinner";
 
 import { MemberList } from "./member-list";
 import { MessageInput } from "./message-input";
@@ -19,29 +21,12 @@ interface Props {
   roomId: string;
 }
 
-interface RoomQueryRow {
-  id: string;
-  title: string;
-  description: string | null;
-  owner_id: string;
-  created_at: string;
-}
-
-interface RoomMemberQueryRow {
-  chat_room_id: string;
-  user_id: string;
-  created_at: string;
-  user: { nickname: string } | null;
-}
-
 export function ChatRoom({ roomId }: Props) {
-  const supabase = useMemo(() => createClient(), []);
+  const supabase = createClient();
   const { data: profile, isPending: profilePending } = useUser();
-  const currentUserId = profile?.id ?? "";
 
   const {
     messages,
-    displayNameByUserId,
     hasMorePrevious,
     isLoadingPrevious,
     loadPrevious,
@@ -57,52 +42,24 @@ export function ChatRoom({ roomId }: Props) {
     error: roomError,
     isPending: roomPending,
     isFetched: roomFetched,
-  } = useQuery({
-    queryKey: ["room", roomId],
-    enabled: !!roomId,
-    queryFn: async (): Promise<Room> => {
-      const { data, error } = await supabase
-        .from("chatroom")
-        .select("id, title, description, owner_id, created_at")
-        .eq("id", roomId)
-        .single()
-        .returns<RoomQueryRow>();
+  } = useRoom(roomId);
 
-      if (error) throw error;
+  const { data: members = [] } = useRoomMembers(roomId);
 
-      return {
-        id: data.id,
-        title: data.title,
-        description: data.description ?? "",
-        createdBy: data.owner_id,
-        createdAt: data.created_at,
-      };
-    },
-  });
+  const formattedParticipants = useMemo(
+    () => members.length.toLocaleString("ko-KR"),
+    [members.length],
+  );
 
-  const { data: members = [] } = useQuery({
-    queryKey: ["room-members", roomId],
-    enabled: !!roomId,
-    queryFn: async (): Promise<RoomMember[]> => {
-      const { data, error } = await supabase
-        .from("chatroommember")
-        .select("chat_room_id, user_id, created_at, user:user_id(nickname)")
-        .eq("chat_room_id", roomId)
-        .order("created_at", { ascending: true })
-        .returns<RoomMemberQueryRow[]>();
+  if (profilePending) {
+    return (
+      <div className="flex h-full w-full items-center justify-center bg-zinc-950">
+        <Spinner className="size-8 text-muted-foreground" />
+      </div>
+    );
+  }
 
-      if (error) throw error;
-
-      return (data ?? []).map((member) => ({
-        id: `${member.chat_room_id}-${member.user_id}`,
-        userId: member.user_id,
-        name:
-          member.user?.nickname?.trim() ||
-          member.user_id.slice(0, 8),
-        joinedAt: member.created_at,
-      }));
-    },
-  });
+  const currentUserId = profile?.id ?? "";
 
   const handleSend = async () => {
     const trimmed = draft.trim();
@@ -117,31 +74,19 @@ export function ChatRoom({ roomId }: Props) {
 
     sendMessageLockRef.current = true;
 
-    const next: Message = {
-      id: `local-${crypto.randomUUID()}`,
-      roomId,
-      userId: currentUserId,
-      content: trimmed,
-      createdAt: new Date().toISOString(),
-    };
-
     const { error } = await supabase.from("message").insert({
-      chat_room_id: next.roomId,
-      user_id: next.userId,
-      content: next.content,
-      created_at: next.createdAt,
+      chat_room_id: roomId,
+      user_id: currentUserId,
+      content: trimmed,
     });
 
     if (error) {
       console.error(error);
-      if (error.code === "42501") {
-        toast.error("메시지를 보낼 권한이 없어요", {
-          description:
-            "Supabase에서 message 테이블 RLS(INSERT 정책)를 확인해줘. 레포의 supabase/migrations SQL 실행도 필요할 수 있어.",
-        });
-      } else {
-        toast.error("메시지 전송 실패", { description: error.message });
-      }
+      const errorConfig =
+        ERROR_MESSAGES[error.code] || ERROR_MESSAGES.DEFAULT;
+      toast.error(errorConfig.title, {
+        description: errorConfig.description,
+      });
       sendMessageLockRef.current = false;
       return;
     }
@@ -162,11 +107,6 @@ export function ChatRoom({ roomId }: Props) {
 
     return true;
   };
-
-  const formattedParticipants = useMemo(
-    () => members.length.toLocaleString("ko-KR"),
-    [members.length],
-  );
 
   const roomMissing =
     !!roomId && roomFetched && (roomError != null || room == null);
@@ -199,7 +139,7 @@ export function ChatRoom({ roomId }: Props) {
 
   return (
     <div className="dark flex h-full min-h-0 w-full flex-col overflow-hidden bg-zinc-950 text-foreground md:flex-row">
-      <MemberList members={members} />
+      <MemberList roomId={roomId} />
 
       <aside className="flex min-h-0 flex-1 flex-col border-white/10 bg-background md:w-[min(100%,380px)] md:shrink-0 md:border-l">
         <header className="shrink-0 border-b border-border px-3 py-2.5">
@@ -218,7 +158,6 @@ export function ChatRoom({ roomId }: Props) {
 
         <MessageList
           messages={messages}
-          displayNameByUserId={displayNameByUserId}
           currentUserId={currentUserId}
           hasMorePrevious={hasMorePrevious}
           isLoadingPrevious={isLoadingPrevious || isLoadingInitial}

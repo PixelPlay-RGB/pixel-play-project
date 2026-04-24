@@ -1,15 +1,15 @@
 "use client"
 
 import { ScrollArea } from "@/components/ui/scroll-area"
-import type { RoomMember } from "@/types/chat"
-
 import { MemberItem } from "./member-item"
+import { useRoomMembers } from "@/hooks/use-room-members"
 
 interface Props {
-  members: RoomMember[]
+  roomId: string
 }
 
-export function MemberList({ members }: Props) {
+export function MemberList({ roomId }: Props) {
+  const { data: members = [] } = useRoomMembers(roomId)
   const countLabel = members.length.toLocaleString("ko-KR")
 
   return (
@@ -23,7 +23,7 @@ export function MemberList({ members }: Props) {
       <ScrollArea className="min-h-0 flex-1">
         <ul className="py-1" role="list">
           {members.map((member) => (
-            <li key={member.id}>
+            <li key={`${member.chat_room_id}-${member.user_id}`}>
               <MemberItem member={member} />
             </li>
           ))}

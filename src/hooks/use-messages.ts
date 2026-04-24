@@ -18,10 +18,6 @@ interface MessageQueryRow {
   user_id: string
   content: string
   created_at: string
-  user: {
-    id: string
-    nickname: string | null
-  } | null
 }
 
 interface MessagesPage {
@@ -38,13 +34,11 @@ function mapRowToMessage(row: MessageQueryRow): Message {
     userId: row.user_id,
     content: row.content,
     createdAt: row.created_at,
-    displayName:
-      row.user?.nickname?.trim() || row.user_id.slice(0, 8),
   }
 }
 
 export default function useMessages(roomId: string) {
-  const supabase = useMemo(() => createClient(), [])
+  const supabase = createClient()
   const queryClient = useQueryClient()
 
   const query = useInfiniteQuery({
@@ -55,9 +49,7 @@ export default function useMessages(roomId: string) {
     queryFn: async ({ pageParam }) => {
       let request = supabase
         .from("message")
-        .select(
-          "id, chat_room_id, user_id, content, created_at, user:user_id(id, nickname)",
-        )
+        .select("id, chat_room_id, user_id, content, created_at")
         .eq("chat_room_id", roomId)
         .order("created_at", { ascending: false })
         .limit(MESSAGE_PAGE_SIZE)
@@ -66,11 +58,11 @@ export default function useMessages(roomId: string) {
         request = request.lt("created_at", pageParam)
       }
 
-      const { data, error } = await request.returns<MessageQueryRow[]>()
+      const { data, error } = await request
 
       if (error) throw error
 
-      const items = (data ?? []).map(mapRowToMessage)
+      const items = (data as MessageQueryRow[] ?? []).map(mapRowToMessage)
       const nextCursor =
         items.length === MESSAGE_PAGE_SIZE
           ? items[items.length - 1]?.createdAt
@@ -100,12 +92,9 @@ export default function useMessages(roomId: string) {
 
           const { data, error } = await supabase
             .from("message")
-            .select(
-              "id, chat_room_id, user_id, content, created_at, user:user_id(id, nickname)",
-            )
+            .select("id, chat_room_id, user_id, content, created_at")
             .eq("id", messageId)
             .single()
-            .returns<MessageQueryRow>()
 
           if (error || !data) {
             if (error) {
@@ -114,7 +103,7 @@ export default function useMessages(roomId: string) {
             return
           }
 
-          const nextMessage = mapRowToMessage(data)
+          const nextMessage = mapRowToMessage(data as MessageQueryRow)
 
           queryClient.setQueryData<InfiniteData<MessagesPage>>(
             queryKeyByRoomId(roomId),
@@ -156,13 +145,6 @@ export default function useMessages(roomId: string) {
     return [...deduplicatedDescending].reverse()
   }, [query.data])
 
-  const displayNameByUserId = useMemo(() => {
-    return messages.reduce<Record<string, string>>((acc, message) => {
-      acc[message.userId] = message.displayName ?? message.userId.slice(0, 8)
-      return acc
-    }, {})
-  }, [messages])
-
   const loadPrevious = async () => {
     if (!query.hasNextPage || query.isFetchingNextPage) return
     await query.fetchNextPage()
@@ -170,7 +152,6 @@ export default function useMessages(roomId: string) {
 
   return {
     messages,
-    displayNameByUserId,
     hasMorePrevious: query.hasNextPage ?? false,
     isLoadingPrevious: query.isFetchingNextPage,
     isLoadingInitial: query.isLoading,

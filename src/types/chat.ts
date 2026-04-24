@@ -4,7 +4,6 @@ export interface Message {
   userId: string
   content: string
   createdAt: string
-  displayName?: string
 }
 
 export interface Room {
@@ -16,8 +15,13 @@ export interface Room {
 }
 
 export interface RoomMember {
-  id: string
-  userId: string
-  name: string
-  joinedAt: string
+  chat_room_id: string
+  user_id: string
+  created_at: string
+}
+
+export interface RoomMemberQuery extends RoomMember {
+  user: {
+    nickname: string | null
+  } | null
 }
