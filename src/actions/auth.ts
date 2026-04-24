@@ -166,6 +166,7 @@ export async function completeSignupAction(data: CompleteSignupInput): Promise<A
       birth: birth,
       phone: phone,
       gender: gender,
+      photo_url: null,
     },
     { onConflict: "oauth_id" },
   );
@@ -238,6 +239,7 @@ export async function completeOAuthProfileAction(
       birth,
       phone,
       gender,
+      photo_url: (user.user_metadata?.avatar_url as string) ?? null,
       ...(linkedProviders.length > 0 ? { linked_providers: linkedProviders } : {}),
     },
     { onConflict: "oauth_id" },
