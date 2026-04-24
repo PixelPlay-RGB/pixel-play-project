@@ -4,7 +4,7 @@ export default function Logo({ className }: { className?: string }) {
       xmlns="http://www.w3.org/2000/svg"
       viewBox="20 370 1005 290"
       width="200"
-      height="58"
+      height="40"
       className={className}
     >
       <path

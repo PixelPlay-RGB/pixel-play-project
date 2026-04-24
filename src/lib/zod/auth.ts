@@ -1,12 +1,12 @@
-import z from "zod/v3";
+import { z } from "zod";
 
 export const loginSchema = z.object({
-  email: z.string().email({ message: "올바른 이메일 형식을 입력해주세요." }),
+  email: z.email({ message: "올바른 이메일 형식을 입력해주세요." }),
   password: z.string().min(1, { message: "비밀번호를 입력해주세요." }),
 });
 
 export const signUpBaseSchema = z.object({
-  email: z.string().email({ message: "올바른 이메일 형식을 입력해주세요." }),
+  email: z.email({ message: "올바른 이메일 형식을 입력해주세요." }),
   // [PROD] 영문 대문자 1개 이상, 숫자 1개 이상, 특수문자(!@#$%^&*) 1개 이상, 최소 8자
   // password: z.string()
   //   .min(8, { message: "비밀번호는 8자 이상이어야 합니다." })
@@ -46,6 +46,7 @@ export type LoginFormValues = z.infer<typeof loginSchema>;
 export type SignUpFormValues = z.infer<typeof signUpSchema>;
 
 export const completeOAuthProfileSchema = signUpBaseSchema.pick({
+  name: true,
   nickname: true,
   birth: true,
   phone: true,
