@@ -12,30 +12,12 @@ import { MESSAGE_PAGE_SIZE } from "@/lib/chat-constants"
 import { createClient } from "@/lib/supabase/client"
 import type { Message } from "@/types/chat"
 
-interface MessageQueryRow {
-  id: string
-  chat_room_id: string
-  user_id: string
-  content: string
-  created_at: string
-}
-
 interface MessagesPage {
   items: Message[]
   nextCursor?: string
 }
 
 const queryKeyByRoomId = (roomId: string) => ["messages", roomId] as const
-
-function mapRowToMessage(row: MessageQueryRow): Message {
-  return {
-    id: row.id,
-    roomId: row.chat_room_id,
-    userId: row.user_id,
-    content: row.content,
-    createdAt: row.created_at,
-  }
-}
 
 export default function useMessages(roomId: string) {
   const supabase = createClient()
@@ -46,10 +28,10 @@ export default function useMessages(roomId: string) {
     initialPageParam: undefined as string | undefined,
     enabled: !!roomId,
     staleTime: 1000 * 60,
-    queryFn: async ({ pageParam }) => {
+    queryFn: async ({ pageParam }): Promise<MessagesPage> => {
       let request = supabase
         .from("message")
-        .select("id, chat_room_id, user_id, content, created_at")
+        .select("*")
         .eq("chat_room_id", roomId)
         .order("created_at", { ascending: false })
         .limit(MESSAGE_PAGE_SIZE)
@@ -62,13 +44,13 @@ export default function useMessages(roomId: string) {
 
       if (error) throw error
 
-      const items = (data as MessageQueryRow[] ?? []).map(mapRowToMessage)
+      const items = (data ?? []) as Message[]
       const nextCursor =
         items.length === MESSAGE_PAGE_SIZE
-          ? items[items.length - 1]?.createdAt
+          ? items[items.length - 1]?.created_at
           : undefined
 
-      return { items, nextCursor } satisfies MessagesPage
+      return { items, nextCursor }
     },
     getNextPageParam: (lastPage) => lastPage.nextCursor,
   })
@@ -86,24 +68,12 @@ export default function useMessages(roomId: string) {
           table: "message",
           filter: `chat_room_id=eq.${roomId}`,
         },
-        async (payload) => {
-          const messageId = String(payload.new.id ?? "")
+        (payload) => {
+          if (!payload.new || typeof payload.new !== "object") return
+
+          const nextMessage = payload.new as Message
+          const messageId = String(nextMessage.id ?? "")
           if (!messageId) return
-
-          const { data, error } = await supabase
-            .from("message")
-            .select("id, chat_room_id, user_id, content, created_at")
-            .eq("id", messageId)
-            .single()
-
-          if (error || !data) {
-            if (error) {
-              console.error(error)
-            }
-            return
-          }
-
-          const nextMessage = mapRowToMessage(data as MessageQueryRow)
 
           queryClient.setQueryData<InfiniteData<MessagesPage>>(
             queryKeyByRoomId(roomId),

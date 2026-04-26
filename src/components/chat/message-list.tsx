@@ -115,7 +115,7 @@ export function MessageList({
             <MessageItem
               key={message.id}
               message={message}
-              isOwn={message.userId === currentUserId}
+              isOwn={message.user_id === currentUserId}
             />
           ))}
           <div ref={bottomRef} className="h-px shrink-0" aria-hidden />

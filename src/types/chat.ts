@@ -1,27 +1,26 @@
-export interface Message {
-  id: string
-  roomId: string
-  userId: string
-  content: string
-  createdAt: string
-}
+import { GenericTables } from "@/types/supabase.types";
 
-export interface Room {
-  id: string
-  title: string
-  description: string
-  createdBy: string
-  createdAt: string
-}
+/**
+ * public.message 테이블 row
+ */
+export type Message = GenericTables<"message">;
 
-export interface RoomMember {
-  chat_room_id: string
-  user_id: string
-  created_at: string
-}
+/**
+ * public.chatroom 테이블 row
+ */
+export type Room = GenericTables<"chatroom">;
 
+/**
+ * public.chatroommember 테이블 row
+ */
+export type RoomMember = GenericTables<"chatroommember">;
+
+/**
+ * 룸 멤버 정보와 유저 프로필(nickname)을 함께 가져오는 쿼리용 타입
+ * (기존 RoomMember 타입을 확장하여 사용)
+ */
 export interface RoomMemberQuery extends RoomMember {
   user: {
-    nickname: string | null
-  } | null
+    nickname: string | null;
+  } | null;
 }

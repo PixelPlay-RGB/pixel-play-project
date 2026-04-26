@@ -1,4 +1,3 @@
-"use client"
 
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { MemberItem } from "./member-item"

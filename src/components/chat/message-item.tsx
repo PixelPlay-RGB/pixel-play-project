@@ -11,10 +11,10 @@ interface Props {
 }
 
 export function MessageItem({ message, isOwn }: Props) {
-  const { data: members = [] } = useRoomMembers(message.roomId)
-  
-  const member = members.find((m) => m.user_id === message.userId)
-  const displayName = member?.user?.nickname?.trim() || message.userId.slice(0, 8)
+  const { data: members = [] } = useRoomMembers(message.chat_room_id)
+
+  const member = members.find((m) => m.user_id === message.user_id)
+  const displayName = member?.user?.nickname?.trim() || message.user_id.slice(0, 8)
   const initials = displayName.slice(0, 2)
 
   if (isOwn) {
