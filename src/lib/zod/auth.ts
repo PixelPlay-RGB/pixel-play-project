@@ -72,12 +72,12 @@ export const changePasswordSchema = z
 export type VerifyPasswordValues = z.infer<typeof verifyPasswordSchema>;
 export type ChangePasswordValues = z.infer<typeof changePasswordSchema>;
 
-export const nicknameSchema = z.object({
+export const profileSchema = z.object({
   nickname: signUpBaseSchema.shape.nickname,
   photoUrl: z.url().nullable().optional(),
 });
 
-export type NicknameFormValues = z.infer<typeof nicknameSchema>;
+export type ProfileFormValues = z.infer<typeof profileSchema>;
 
 export const SIGNUP_FORM_DEFAULTS: SignUpFormValues = {
   email: "",

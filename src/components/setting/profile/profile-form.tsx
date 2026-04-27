@@ -20,18 +20,24 @@ import {
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 
+import { checkNicknameAction, updateProfileAction } from "@/actions/auth";
+import { PROFILE_QUERY_KEY } from "@/constants/auth";
 import { useUser } from "@/hooks/use-profile";
 import { cn } from "@/lib/utils";
-import { NicknameFormValues, nicknameSchema } from "@/lib/zod/auth";
+import { ProfileFormValues, profileSchema } from "@/lib/zod/auth";
 import type { NicknameStatus } from "@/types/auth";
 import { formatDate } from "@/utils/format";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function ProfileForm() {
   const { data: user, isLoading } = useUser();
 
+  const queryClient = useQueryClient();
+
   const [nicknameStatus, setNicknameStatus] = useState<NicknameStatus>("idle");
   const [verifiedNickname, setVerifiedNickname] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
 
   const {
     control,
@@ -40,8 +46,8 @@ export default function ProfileForm() {
     reset,
     formState: { errors, isDirty, dirtyFields },
     handleSubmit,
-  } = useForm<NicknameFormValues>({
-    resolver: zodResolver(nicknameSchema),
+  } = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileSchema),
     mode: "onChange",
     values: {
       nickname: user?.nickname ?? "",
@@ -50,9 +56,10 @@ export default function ProfileForm() {
   });
 
   if (isLoading || !user) {
+    // TODO: Skeleton 예정
     return (
       <div className="flex justify-center py-10">
-        <Spinner />
+        <Spinner className={"text-brand h-10 w-10"} />
       </div>
     );
   }
@@ -78,13 +85,29 @@ export default function ProfileForm() {
 
     setNicknameStatus("checking");
     // TODO: 실제 API 연동 (checkNicknameAction)
+
+    const result = await checkNicknameAction(nickname);
+
+    if (!result.success) {
+      setNicknameStatus("taken");
+      return;
+    }
+
     setVerifiedNickname(nickname);
     setNicknameStatus("available");
   };
 
   const handleFileChange = (file: File | null) => {
-    const url = file ? URL.createObjectURL(file) : null;
-    setValue("photoUrl", url, { shouldDirty: true });
+    if (!file) {
+      setPendingFile(null);
+      setValue("photoUrl", null, { shouldDirty: true });
+      return;
+    }
+
+    // 1. 일단 서버에 저장하지 않고 로컬 미리보기용 URL만 생성
+    const previewUrl = URL.createObjectURL(file);
+    setPendingFile(file);
+    setValue("photoUrl", previewUrl, { shouldDirty: true });
   };
 
   const handleReset = () => {
@@ -92,16 +115,46 @@ export default function ProfileForm() {
     setNicknameStatus("idle");
   };
 
-  const handleSave = handleSubmit(async (values) => {
+  const handleSave = async (data: ProfileFormValues) => {
     if (!canSave) return;
     setIsSaving(true);
-    // TODO: 실제 저장 로직 (updateProfileAction)
+
+    console.log("data: ", data);
+
+    const formData = new FormData();
+    formData.append("nickname", data.nickname);
+
+    if (pendingFile) {
+      // 파일이 새로 선택된 경우에만 FormData에 추가하기
+      formData.append("file", pendingFile);
+    } else if (data.photoUrl === null) {
+      // 유저가 이미지 파일을 지운경우
+      formData.append("shouldDeleteImage", "true");
+    } else {
+      // 기존 사진 유지인 경우에는 URL 전달
+      formData.append("photoUrl", data.photoUrl || "");
+    }
+
+    const result = await updateProfileAction(formData);
+
+    if (!result.success) {
+      toast.error("프로필 업데이트 실패", {
+        description: result.message || "프로필 업데이트에 실패했습니다! 🫠",
+      });
+
+      return;
+    }
+
     setIsSaving(false);
+    setVerifiedNickname(data.nickname);
+    setPendingFile(null);
+
+    queryClient.invalidateQueries({ queryKey: PROFILE_QUERY_KEY });
     toast.success("프로필 업데이트 완료");
-  });
+  };
 
   return (
-    <form onSubmit={handleSave} className="flex flex-col gap-5">
+    <form onSubmit={handleSubmit(handleSave)} className="flex flex-col gap-5">
       <ProfileCard
         title={"공개 프로필"}
         contentStyle={"flex flex-col gap-6"}
@@ -111,7 +164,7 @@ export default function ProfileForm() {
               되돌리기
             </Button>
             <Button
-              onClick={handleSave}
+              type={"submit"}
               disabled={!isDirty || isSaving || !canSave}
               className="bg-brand text-white"
             >
@@ -180,6 +233,12 @@ export default function ProfileForm() {
               </InputGroupButton>
             </InputGroupAddon>
           </InputGroup>
+          {nicknameStatus === "available" && (
+            <p className="text-brand text-xs">사용 가능한 닉네임입니다.</p>
+          )}
+          {nicknameStatus === "taken" && (
+            <p className="text-destructive text-xs">이미 사용 중인 닉네임입니다.</p>
+          )}
           <FieldError errors={[errors.nickname]} />
         </div>
       </ProfileCard>

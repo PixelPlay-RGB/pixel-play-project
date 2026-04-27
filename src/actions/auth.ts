@@ -300,3 +300,88 @@ export async function completeOAuthProfileAction(
   revalidatePath("/", "layout");
   return { success: true };
 }
+
+/**
+ * 프로필 업데이트
+ */
+
+export async function updateProfileAction(formData: FormData): Promise<ActionResponse> {
+  const supabase = await createClient();
+
+  // Form 데이터에서 값 추출
+  const nickname = formData.get("nickname") as string;
+  const file = formData.get("file") as File | null;
+  let photoUrl = formData.get("photoUrl") as string | null;
+  const shouldDeleteImage = formData.get("shouldDeleteImage") === "true";
+
+  // 유저 세션 확인
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (!user || userError) {
+    return {
+      success: false,
+      message: "유저 인증 정보가 없습니다.",
+    };
+  }
+
+  // 이미지 처리
+  if (file) {
+    const fileExt = file.name.split(".").pop();
+    const filePath = `avatars/${user.id}/avatar.${fileExt}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("profiles")
+      .upload(filePath, file, { upsert: true, contentType: file.type });
+
+    if (uploadError) {
+      return {
+        success: false,
+        message: "이미지 저장에 실패했습니다.",
+      };
+    }
+
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from("profiles").getPublicUrl(filePath);
+    photoUrl = `${publicUrl}?t=${Date.now()}`;
+  } else if (shouldDeleteImage) {
+    // Storage에 파일이 있는 경우 삭제 로직
+    const { data: files } = await supabase.storage.from("profiles").list(`avatars/${user.id}`);
+    if (files && files.length > 0) {
+      const filesToDelete = files.map((f) => `avatars/${user.id}/${f.name}`);
+      await supabase.storage.from("profiles").remove(filesToDelete);
+    }
+
+    photoUrl = null;
+  }
+
+  // Auth & DB에 데이터 업데이트
+  // displayName은 회원가입할때도 굳이 안 건들였음
+  await supabase.auth.updateUser({
+    data: { avatar_url: photoUrl },
+  });
+
+  const { error: updateError } = await supabase
+    .from("user")
+    .update({
+      nickname,
+      photo_url: photoUrl,
+    })
+    .eq("oauth_id", user.id);
+
+  if (updateError) {
+    return {
+      success: false,
+      message: updateError.message || "유저 업데이트에 실패했습니다.",
+    };
+  }
+
+  revalidatePath("/", "layout");
+
+  return {
+    success: true,
+  };
+}
