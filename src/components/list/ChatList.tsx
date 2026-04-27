@@ -1,5 +1,5 @@
 import { useState, Dispatch, SetStateAction, useEffect, useMemo } from "react";
-import { createRoom, ChatRoom } from "@/lib/room";
+import { createRoom, getRooms, ChatRoom } from "@/lib/room";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
@@ -16,9 +16,9 @@ interface ChatListProps {
 const supabase = createClient();
 
 export default function ChatList({ chats, setChats, maxCapacity }: ChatListProps) {
-  const [filter, setFilter] = useState<'all' | 'available' | 'full'>('all');
+  const [filter, setFilter] = useState<'joined' | 'others' | 'my'>('joined');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [sessionUser, setSessionUser] = useState<{ id: string; email: string; name: string } | null>(null);
+  const [sessionUser, setSessionUser] = useState<{ id: string; email: string; nickname: string } | null>(null);
 
   const roomSchema = useMemo(() => z.object({
     title: z.string().min(1, "방 제목을 입력해주세요."),
@@ -38,26 +38,61 @@ export default function ChatList({ chats, setChats, maxCapacity }: ChatListProps
 
   // 세션 정보 가져오기
   useEffect(() => {
+    // 방 목록 초기 가져오기
+    const fetchRooms = async () => {
+      const { data, error } = await getRooms(sessionUser?.id);
+      if (error) {
+        toast.error("채팅방 목록을 불러오는데 실패했습니다.");
+        console.log("select error: ", error)
+      } else if (data) {
+        setChats(data);
+      }
+    };
+
+    fetchRooms();
+  }, [setChats, sessionUser?.id]);
+
+  useEffect(() => {
     const getSession = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setSessionUser({
-          id: user.id,
-          email: user.email || "",
-          name: user.user_metadata?.name || user.email?.split('@')[0],
-        });
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (authUser) {
+        const { data: userData, error } = await supabase
+          .from("user")
+          .select("id, email, nickname")
+          .eq("oauth_id", authUser.id)
+          .single();
+
+        if (userData && !error) {
+          setSessionUser({
+            id: userData.id,
+            email: userData.email,
+            nickname: userData.nickname,
+          });
+        }
       }
     };
     getSession();
   }, []);
 
-  const handleJoinChat = (id: number, limit: number) => {
-    // TODO: 실제 채팅방 입장 및 인원 체크 로직 연동 시 수정 필요
-    console.log(`채팅방(ID: ${id}) 참여 시도. 설정된 정원: ${limit}명`);
-  };
+  const handleJoinChat = async (roomId: string, maxCapacity: number) => {
+    const { count, error } = await supabase
+      .from("chatroommember")
+      .select("*", { count: "exact", head: true })
+      .eq("chat_room_id", roomId)
+      .eq("status", "JOINED");
 
-  // TODO insert할 때 username은 세션에서 가져오는거 말고 inner join 
-  // 최소인원 2명, 0명 되면 방 나가기, 채팅방 최대 정원은 30명
+    if (error) 
+    {
+      toast.error("방 인원 정보를 확인하는 중 오류가 발생했습니다.");
+      return;
+    }
+
+    if (count !== null && count >= maxCapacity) 
+    {
+      toast.error("정원이 가득 차서 입장할 수 없습니다.");
+      return;
+    }
+  };
 
   const handleCreateChat = async (values: RoomFormValues) => {
     // 세션 정보가 없는 경우 실행 방지
@@ -71,32 +106,34 @@ export default function ChatList({ chats, setChats, maxCapacity }: ChatListProps
       values.title, 
       values.capacity, 
       sessionUser.id, 
-      sessionUser.name, 
-      sessionUser.email,
       values.description || ""
     );
 
-    console.log(data);
-
     if (error) 
     {
-      toast.error("채팅방 생성 중 오류가 발생했습니다. 관리자에게 문의해주세요.");
+      toast.error("⚠️채팅방 생성 중 오류가 발생했습니다. 관리자에게 문의해주세요.");
+      console.log("insert error: ", error);
       return;
     }
 
-    if (data && data.length > 0) {
+    if (data && data.length > 0)
+    {
       const createdRoom = data[0];
       const newRoom: ChatRoom = {
         id: createdRoom.id,
         title: createdRoom.title,
-        username: sessionUser.name,
-        user_id: sessionUser.id,
-        email: sessionUser.email,
+        owner_id: sessionUser.id,
         created_at: createdRoom.created_at,
-        capacity: createdRoom.capacity,
+        max_capacity: createdRoom.max_capacity,
         description: createdRoom.description,
+        owner: {
+          nickname: sessionUser.nickname,
+        },
+        member_cnt: 1,
+        is_joined: true
       };
 
+      toast.success("채팅방이 생성되었습니다.");
       setChats((prev) => [newRoom, ...prev]);
       reset();
       setIsModalOpen(false);
@@ -104,10 +141,9 @@ export default function ChatList({ chats, setChats, maxCapacity }: ChatListProps
   };
 
   const filteredChats = chats.filter((chat) => {
-    // 현재 current_participants 정보가 없으므로 필터링 기준을 단순화합니다.
-    // 추후 실시간 참여 인원 테이블이 추가되면 해당 로직을 보강할 수 있습니다.
-    if (filter === 'available') return true;
-    if (filter === 'full') return false; 
+    if (filter === 'joined') return chat.is_joined;
+    if (filter === 'others') return !chat.is_joined && chat.owner_id !== sessionUser?.id;
+    if (filter === 'my') return chat.owner_id === sessionUser?.id;
     return true;
   });
 
@@ -116,7 +152,7 @@ export default function ChatList({ chats, setChats, maxCapacity }: ChatListProps
       {/* 채팅 필터 서브 메뉴 */}
       <div className="flex items-center justify-between mb-8 border-b border-zinc-200 dark:border-zinc-800/50 pb-6">
         <div className="flex gap-3">
-          {(['all', 'available', 'full'] as const).map((f) => (
+          {(['joined', 'others', 'my'] as const).map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
@@ -126,7 +162,7 @@ export default function ChatList({ chats, setChats, maxCapacity }: ChatListProps
                   : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800/50'
               }`}
             >
-              {f === 'all' ? '전체' : f === 'available' ? '참여 가능' : '풀방'}
+              {f === 'joined' ? '참여중인 채팅방' : f === 'others' ? '참여 가능 채팅방' : '내가 만든 채팅방'}
             </button>
           ))}
         </div>
@@ -142,24 +178,24 @@ export default function ChatList({ chats, setChats, maxCapacity }: ChatListProps
       {filteredChats.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {filteredChats.map((chat) => {
-            const displayId = chat.email ? chat.email.split('@')[0] : 'user';
+            const displayNickname = chat.owner?.nickname || 'Unknown';
 
             return (
               <div 
                 key={chat.id} 
-                onClick={() => handleJoinChat(chat.id, chat.capacity)} 
+                onClick={() => handleJoinChat(chat.id, chat.max_capacity)} 
                 className="flex items-center justify-between p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800/50 bg-white dark:bg-zinc-900/50 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 hover:border-brand/50 dark:hover:border-brand/50 cursor-pointer transition-all group active:scale-[0.99] shadow-sm dark:shadow-none"
               >
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center gap-2">
                     <h3 className="font-bold text-zinc-900 dark:text-zinc-100">{chat.title}</h3>
-                    <span className="text-xs text-zinc-500">@{displayId}</span>
+                    <span className="text-xs text-zinc-500">@{displayNickname}</span>
                   </div>
                   <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-mono">{chat.description}</span>
                 </div>
                 <div className="flex flex-col items-end gap-1">
                   <span className="text-xs font-mono font-bold text-brand group-hover:opacity-80">
-                    정원 {chat.capacity}명
+                    {chat.member_cnt ?? 0}/{chat.max_capacity}
                   </span>
                   <span className="text-[10px] text-zinc-600">
                     {(() => {
@@ -187,8 +223,8 @@ export default function ChatList({ chats, setChats, maxCapacity }: ChatListProps
 
       {/* 채팅방 생성 모달 */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 dark:bg-black/80 backdrop-blur-md p-4 text-zinc-900 dark:text-zinc-100">
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 w-full max-w-md rounded-3xl p-8 shadow-2xl animate-in fade-in zoom-in duration-200">
+        <div className="absolute inset-0 z-50 flex items-start justify-center bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md rounded-2xl p-4 sm:p-8 text-zinc-900 dark:text-zinc-100">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 w-full max-w-md rounded-3xl p-8 shadow-xl animate-in fade-in zoom-in duration-200 sticky top-10">
             <h2 className="text-xl font-bold mb-4 dark:text-white">새 채팅방 생성</h2>
             <form onSubmit={handleSubmit(handleCreateChat)}>
               <div className="mb-5">
@@ -217,6 +253,8 @@ export default function ChatList({ chats, setChats, maxCapacity }: ChatListProps
                 <input 
                   type="number"
                   {...register("capacity", { valueAsNumber: true })}
+                  min={2}
+                  max={maxCapacity}
                   placeholder={`참가 가능한 인원을 적어주세요. (최대 ${maxCapacity}명)`}
                   className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-brand transition-colors resize-none"
                 />
