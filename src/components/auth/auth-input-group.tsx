@@ -10,10 +10,7 @@ interface Props extends InputHTMLAttributes<HTMLInputElement> {
 const AuthInputGroup = forwardRef<HTMLInputElement, Props>(({ icon, isValid, ...props }, ref) => {
   return (
     <InputGroup
-      className={cn(
-        "w-full py-5",
-        isValid && "border-brand ring-brand/20 dark:ring-brand/30 ring-3",
-      )}
+      className={cn("w-full", isValid && "border-brand ring-brand/20 dark:ring-brand/30 ring-3")}
     >
       <InputGroupInput ref={ref} {...props} />
       <InputGroupAddon>{icon}</InputGroupAddon>

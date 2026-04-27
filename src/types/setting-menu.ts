@@ -4,6 +4,7 @@ type SettingMenuItemBase = {
   id: string;
   label: string;
   icon?: LucideIcon;
+  sidebarOnly?: boolean;
 };
 
 export type SettingMenuItem =

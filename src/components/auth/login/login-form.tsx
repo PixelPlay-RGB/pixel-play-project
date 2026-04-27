@@ -37,7 +37,7 @@ export default function LoginForm({ loading, onLoadingChange: setIsLoading }: Lo
   });
 
   const onSubmit = async (data: LoginFormValues) => {
-    setIsLoading("credential");
+    setIsLoading("email");
     const result = await login(data);
 
     if (!result.success) {

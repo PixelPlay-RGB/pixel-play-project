@@ -1,15 +1,20 @@
 import { SettingMenuItem } from "@/types/setting-menu";
-import { LogOut, UserRoundKey } from "lucide-react";
+import { Key, LogOut, User } from "lucide-react";
 
-/**
- * 추후에 메뉴가 추가될 수도 있기에 미리 빼놓음
- */
 export const SETTING_MENU: SettingMenuItem[] = [
+  {
+    id: "profile",
+    type: "link",
+    label: "프로필",
+    href: "/profile",
+    icon: User,
+    sidebarOnly: true,
+  },
   {
     id: "changePassword",
     type: "changePassword",
     label: "비밀번호 변경",
-    icon: UserRoundKey,
+    icon: Key,
   },
   {
     id: "logout",

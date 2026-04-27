@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Moon, SunMedium } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 
@@ -24,13 +24,13 @@ export default function ThemeToggleButton() {
     <button
       onClick={() => setTheme(isDark ? "light" : "dark")}
       className={cn(
-        "rounded-lg p-2",
-        "hover:bg-brand/60 dark:hover:bg-background cursor-pointer hover:opacity-80",
-        "text-yellow-400",
+        "size-10 grid place-items-center rounded-md",
+        "hover:bg-muted cursor-pointer",
+        "text-foreground",
         "transition-all duration-200",
       )}
     >
-      {isDark ? <SunMedium size={32} /> : <Moon size={32} />}
+      {isDark ? <Sun size={20} /> : <Moon size={20} />}
       <span className="sr-only">Toggle theme</span>
     </button>
   );

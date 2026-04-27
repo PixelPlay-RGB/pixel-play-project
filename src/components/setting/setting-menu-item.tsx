@@ -9,7 +9,7 @@ import { ReactNode } from "react";
 export type SettingMenuHandlers = {
   onClose?: () => void; // Popover 컨텍스트에서 사용 (있으면 Popover 스타일, 없으면 Sidebar 스타일)
   onLogout: () => Promise<void>;
-  // { id: "my-action", type: "action" } 아이템 → actions: { "my-action": handler }
+  isActive?: (href: string) => boolean;
   actions?: Record<string, () => void | Promise<void>>;
 };
 
@@ -20,11 +20,12 @@ export default function SettingMenuItemRenderer(
   handlers: SettingMenuHandlers,
   isCanChangePassword: boolean,
 ): ReactNode {
-  const { onClose, onLogout, actions } = handlers;
+  const { onClose, onLogout, actions, isActive } = handlers;
   const Icon = item.icon;
 
   if (onClose !== undefined) {
     // Popover 컨텍스트: SidebarMenuButton은 useSidebar() 필수라 사용 불가
+    if (item.sidebarOnly) return null;
     switch (item.type) {
       case "link":
         return (
@@ -73,15 +74,18 @@ export default function SettingMenuItemRenderer(
 
   // Sidebar 컨텍스트
   switch (item.type) {
-    case "link":
+    case "link": {
+      const active = isActive?.(item.href) ?? false;
       return (
         <SidebarMenuItem key={item.id}>
-          <SidebarMenuButton render={<Link href={item.href} />}>
+          <SidebarMenuButton render={<Link href={item.href} />} isActive={active}>
             {Icon && <Icon />}
             <span>{item.label}</span>
+            {active && <span className="ml-auto size-1.5 rounded-full bg-brand" />}
           </SidebarMenuButton>
         </SidebarMenuItem>
       );
+    }
     case "action":
       return (
         <SidebarMenuItem key={item.id}>

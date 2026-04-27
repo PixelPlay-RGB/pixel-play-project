@@ -26,7 +26,7 @@ import { cn } from "@/lib/utils";
 import { SIGNUP_FORM_DEFAULTS, signUpSchema } from "@/lib/zod/auth";
 import { useAuthStore } from "@/stores/auth";
 import type { NicknameStatus, OtpStatus, SignUpFormValues } from "@/types/auth";
-import { formatPhone } from "@/utils/auth";
+import { formatDate } from "@/utils/format";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { CalendarDays, LockKeyhole, Mail, Smartphone, User, UserStar } from "lucide-react";
@@ -349,7 +349,7 @@ export default function SignupForm() {
             <div className="flex flex-col gap-1">
               <AuthInputGroup
                 {...field}
-                onChange={(e) => field.onChange(formatPhone(e.target.value))}
+                onChange={(e) => field.onChange(formatDate(e.target.value))}
                 type="text"
                 placeholder="휴대전화번호"
                 icon={<Smartphone size={18} />}
