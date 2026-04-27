@@ -48,3 +48,5 @@ CLAUDE.local.md
 
 # 개인 개발 노트 (블로그 포스팅용 초안)
 docs/
+# Cursor IDE settings
+.cursor/

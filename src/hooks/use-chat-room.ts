@@ -1,17 +1,13 @@
 "use client"
 
-import { useCallback, useMemo, useRef, useState } from "react"
-import { toast } from "sonner"
+import { useCallback, useMemo, useRef } from "react"
 
-import { ERROR_MESSAGES } from "@/constants/errors"
-import { createClient } from "@/lib/supabase/client"
-import useMessages from "@/hooks/use-messages"
 import { useUser } from "@/hooks/use-profile"
 import { useRoom } from "@/hooks/use-room"
 import { useRoomMembers } from "@/hooks/use-room-members"
+import useMessages from "@/hooks/use-messages"
 
 export function useChatRoom(roomId: string) {
-  const supabase = createClient()
   const { data: profile, isPending: profilePending } = useUser()
 
   const {
@@ -22,9 +18,7 @@ export function useChatRoom(roomId: string) {
     isLoadingInitial,
   } = useMessages(roomId)
 
-  const [draft, setDraft] = useState("")
   const loadPreviousLockRef = useRef(false)
-  const sendMessageLockRef = useRef(false)
 
   const {
     data: room,
@@ -41,40 +35,6 @@ export function useChatRoom(roomId: string) {
   )
 
   const currentUserId = profile?.id ?? ""
-
-  const handleSend = useCallback(async () => {
-    const trimmed = draft.trim()
-    if (
-      !trimmed ||
-      sendMessageLockRef.current ||
-      !currentUserId ||
-      !roomId
-    ) {
-      return
-    }
-
-    sendMessageLockRef.current = true
-
-    const { error } = await supabase.from("message").insert({
-      chat_room_id: roomId,
-      user_id: currentUserId,
-      content: trimmed,
-    })
-
-    if (error) {
-      console.error(error)
-      const errorConfig =
-        ERROR_MESSAGES[error.code] || ERROR_MESSAGES.DEFAULT
-      toast.error(errorConfig.title, {
-        description: errorConfig.description,
-      })
-      sendMessageLockRef.current = false
-      return
-    }
-
-    setDraft("")
-    sendMessageLockRef.current = false
-  }, [currentUserId, draft, roomId, supabase])
 
   const handleLoadPrevious = useCallback((): boolean => {
     if (loadPreviousLockRef.current || isLoadingPrevious || !hasMorePrevious) {
@@ -106,9 +66,6 @@ export function useChatRoom(roomId: string) {
     roomPending,
     roomFetched,
     formattedParticipants,
-    draft,
-    setDraft,
-    handleSend,
     handleLoadPrevious,
     roomMissing,
     inputLocked,

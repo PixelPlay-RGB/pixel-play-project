@@ -10,7 +10,7 @@ import {
 
 import { MESSAGE_PAGE_SIZE } from "@/lib/chat-constants"
 import { createClient } from "@/lib/supabase/client"
-import type { Message } from "@/types/chat"
+import type { Message } from "@/types/message"
 
 interface MessagesPage {
   items: Message[]

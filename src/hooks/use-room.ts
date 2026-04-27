@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { createClient } from "@/lib/supabase/client";
-import type { Room } from "@/types/chat";
+import type { Room } from "@/types/chatroom";
 
 export function useRoom(roomId: string) {
   const supabase = createClient();

@@ -3,7 +3,7 @@
 import { useEffect, useLayoutEffect, useRef } from "react"
 
 import { ScrollArea } from "@/components/ui/scroll-area"
-import type { Message } from "@/types/chat"
+import type { Message } from "@/types/message"
 
 import { MessageItem } from "./message-item"
 

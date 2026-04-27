@@ -1,43 +1,83 @@
 "use client"
 
+import { useCallback, useRef, useState } from "react"
 import { SendHorizontal } from "lucide-react"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { ERROR_MESSAGES } from "@/constants/errors"
+import { createClient } from "@/lib/supabase/client"
 
 import ChatEmojiPicker from "./chat-emoji-picker"
 
 interface Props {
-  draft: string
-  onDraftChange: (value: string) => void
-  onSend: () => void
+  roomId: string
+  currentUserId: string
   disabled?: boolean
   disabledHint?: string
 }
 
 export function MessageInput({
-  draft,
-  onDraftChange,
-  onSend,
+  roomId,
+  currentUserId,
   disabled = false,
   disabledHint,
 }: Props) {
+  const supabase = createClient()
+  const [draft, setDraft] = useState("")
+  const sendMessageLockRef = useRef(false)
+
+  const handleSend = useCallback(async () => {
+    const trimmed = draft.trim()
+    if (
+      !trimmed ||
+      sendMessageLockRef.current ||
+      !currentUserId ||
+      !roomId
+    ) {
+      return
+    }
+
+    sendMessageLockRef.current = true
+
+    const { error } = await supabase.from("message").insert({
+      chat_room_id: roomId,
+      user_id: currentUserId,
+      content: trimmed,
+    })
+
+    if (error) {
+      console.error(error)
+      const errorConfig =
+        ERROR_MESSAGES[error.code] || ERROR_MESSAGES.DEFAULT
+      toast.error(errorConfig.title, {
+        description: errorConfig.description,
+      })
+      sendMessageLockRef.current = false
+      return
+    }
+
+    setDraft("")
+    sendMessageLockRef.current = false
+  }, [currentUserId, draft, roomId, supabase])
+
   return (
     <div className="flex shrink-0 gap-2 border-t border-border bg-background/95 p-2 backdrop-blur-sm">
       <ChatEmojiPicker
         disabled={disabled}
-        onEmojiSelect={(emoji) => onDraftChange(draft + emoji)}
+        onEmojiSelect={(emoji) => setDraft((prev) => prev + emoji)}
       />
       <Input
         value={draft}
         disabled={disabled}
         title={disabled ? disabledHint : undefined}
-        onChange={(e) => onDraftChange(e.target.value)}
+        onChange={(e) => setDraft(e.target.value)}
         onKeyDown={(e) => {
           if (disabled) return;
           if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault()
-            onSend()
+            void handleSend()
           }
         }}
         placeholder={
@@ -52,7 +92,7 @@ export function MessageInput({
         variant="secondary"
         disabled={disabled}
         title={disabled ? disabledHint : undefined}
-        onClick={onSend}
+        onClick={() => void handleSend()}
         aria-label="전송"
       >
         <SendHorizontal className="size-4" />

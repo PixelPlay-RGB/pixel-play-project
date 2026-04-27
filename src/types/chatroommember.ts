@@ -1,16 +1,6 @@
 import { GenericTables } from "@/types/supabase.types";
 
 /**
- * public.message 테이블 row
- */
-export type Message = GenericTables<"message">;
-
-/**
- * public.chatroom 테이블 row
- */
-export type Room = GenericTables<"chatroom">;
-
-/**
  * public.chatroommember 테이블 row
  */
 export type RoomMember = GenericTables<"chatroommember">;

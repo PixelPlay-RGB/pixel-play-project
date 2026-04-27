@@ -1,7 +1,7 @@
 "use client"
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import type { Message } from "@/types/chat"
+import type { Message } from "@/types/message"
 import { cn } from "@/lib/utils"
 import { useRoomMembers } from "@/hooks/use-room-members"
 

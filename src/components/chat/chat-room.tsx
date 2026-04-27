@@ -24,9 +24,6 @@ export function ChatRoom({ roomId }: Props) {
     room,
     roomPending,
     formattedParticipants,
-    draft,
-    setDraft,
-    handleSend,
     handleLoadPrevious,
     roomMissing,
     inputLocked,
@@ -90,9 +87,8 @@ export function ChatRoom({ roomId }: Props) {
         />
 
         <MessageInput
-          draft={draft}
-          onDraftChange={setDraft}
-          onSend={handleSend}
+          roomId={roomId}
+          currentUserId={currentUserId}
           disabled={inputLocked}
           disabledHint={
             profilePending
