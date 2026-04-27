@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Noto_Sans } from "next/font/google";
 import "./globals.css";
+import AuthToastHandler from "@/components/auth/auth-toast-handler";
 
 const notoSans = Noto_Sans({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -46,6 +47,7 @@ export default function RootLayout({
         <Providers>
           <Toaster />
           <Header />
+          <AuthToastHandler />
           <main className="flex flex-1 flex-col">{children}</main>
           <Footer />
         </Providers>

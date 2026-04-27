@@ -8,8 +8,14 @@ import {
   signUpBaseSchema,
 } from "@/lib/zod/auth";
 
-import { CompleteOAuthProfileInput, CompleteSignupInput, LoginProvider } from "@/types/auth";
+import {
+  CompleteOAuthProfileInput,
+  CompleteSignupInput,
+  LoginProvider,
+  OAuthProvider,
+} from "@/types/auth";
 import { revalidatePath } from "next/cache";
+import { success } from "zod";
 
 export interface ActionResponse {
   success: boolean;
@@ -302,9 +308,75 @@ export async function completeOAuthProfileAction(
 }
 
 /**
+ * 5. OAuth 유저 연동 해제
+ */
+export async function unLinkOAuthAction(provider: OAuthProvider): Promise<ActionResponse> {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return {
+      success: false,
+      message: "유저 인증 정보가 없습니다.",
+    };
+  }
+
+  const identity = user.identities?.find((id) => id.provider === provider);
+
+  if (!identity) {
+    return {
+      success: false,
+      message: "연동된 계정을 찾을 수 없습니다.",
+    };
+  }
+
+  const { error: unLinkError } = await supabase.auth.unlinkIdentity(identity);
+  if (unLinkError) {
+    return {
+      success: false,
+      message: "계정 연동 해제에 실패했습니다.",
+    };
+  }
+
+  const { data: dbUser, error: dbUserError } = await supabase
+    .from("user")
+    .select("linked_providers")
+    .eq("oauth_id", user.id)
+    .single();
+
+  if (!dbUser || dbUserError) {
+    return {
+      success: false,
+      message: "프로필 정보와 일치하는 유저가 없습니다.",
+    };
+  }
+
+  const currentProviders = dbUser.linked_providers || [];
+  const updatedProviders = currentProviders.filter((p: string) => p !== provider);
+
+  const { error: updateError } = await supabase
+    .from("user")
+    .update({ linked_providers: updatedProviders })
+    .eq("oauth_id", user.id);
+
+  if (updateError) {
+    return {
+      success: false,
+      message: "데이터베이스 업데이트에 실패했습니다.",
+    };
+  }
+
+  revalidatePath("/", "layout");
+  return { success: true };
+}
+
+/**
  * 프로필 업데이트
  */
-
 export async function updateProfileAction(formData: FormData): Promise<ActionResponse> {
   const supabase = await createClient();
 

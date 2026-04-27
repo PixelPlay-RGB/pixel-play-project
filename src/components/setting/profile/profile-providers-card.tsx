@@ -11,14 +11,20 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { OAUTH_PROVIDER_META, OAUTH_PROVIDERS } from "@/constants/auth";
+import { OAUTH_PROVIDER_META, OAUTH_PROVIDERS, PROFILE_QUERY_KEY } from "@/constants/auth";
 import { useUser } from "@/hooks/use-profile";
 import { cn } from "@/lib/utils";
 import { OAuthProvider } from "@/types/auth";
 import { Spinner } from "@/components/ui/spinner";
+import { createClient } from "@/lib/supabase/client";
+import { unLinkOAuthAction } from "@/actions/auth";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function ProfileProvidersCard() {
   const { data: user, isLoading } = useUser();
+
+  const queryClient = useQueryClient();
 
   if (isLoading || !user) {
     return (
@@ -36,10 +42,38 @@ export default function ProfileProvidersCard() {
   const primaryProvider = linkedOAuth[0] ?? null;
   const canUnlink = hasEmailAuth || linkedOAuth.length > 1;
 
+  const linkOAuthAction = async (provider: OAuthProvider) => {
+    const supabase = createClient();
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback?next=/profile&`,
+      },
+    });
+
+    if (error) {
+      console.error(`${provider} 로그인 에러: `, error.message);
+    }
+  };
+
   const handleToggle = async (provider: OAuthProvider) => {
     const isLinked = linkedOAuth.includes(provider);
-    // TODO: 실제 서버 액션 연동 (link/unlink)
-    console.log(`${provider} ${isLinked ? "해제" : "연동"} 시도`);
+
+    if (isLinked) {
+      // 연동 해제 로직
+      // TODO: OAuth Dialog 구현 필요
+
+      const result = await unLinkOAuthAction(provider);
+
+      if (result.success) {
+        toast.success(`${provider} 연동 해제 성공`);
+      }
+    } else {
+      await linkOAuthAction(provider);
+    }
+
+    queryClient.invalidateQueries({ queryKey: PROFILE_QUERY_KEY });
   };
 
   return (

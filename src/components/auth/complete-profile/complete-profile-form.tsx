@@ -21,7 +21,7 @@ import { cn } from "@/lib/utils";
 import { completeOAuthProfileSchema, CompleteOAuthProfileValues } from "@/lib/zod/auth";
 import { useAuthStore } from "@/stores/auth";
 import type { NicknameStatus } from "@/types/auth";
-import { formatPhone } from "@/utils/auth";
+import { formatPhone } from "@/utils/format";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { CalendarDays, Smartphone, User, UserStar } from "lucide-react";
