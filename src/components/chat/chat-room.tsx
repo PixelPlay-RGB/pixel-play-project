@@ -16,6 +16,17 @@ interface Props {
   roomId: string
 }
 
+function ChatRoomError({ message }: { message: string }) {
+  return (
+    <div className="dark flex h-full min-h-0 flex-col items-center justify-center gap-3 bg-zinc-950 px-4 text-center text-zinc-200">
+      <p className="text-sm">{message}</p>
+      <Link href="/" className="text-sm underline">
+        처음으로
+      </Link>
+    </div>
+  )
+}
+
 export function ChatRoom({ roomId }: Props) {
   const { data: profile, isPending: profilePending } = useUser()
   const {
@@ -55,26 +66,12 @@ export function ChatRoom({ roomId }: Props) {
   }
 
   if (!roomId) {
-    return (
-      <div className="dark flex h-full min-h-0 flex-col items-center justify-center gap-3 bg-zinc-950 px-4 text-center text-zinc-200">
-        <p className="text-sm">방 정보가 없습니다.</p>
-        <Link href="/" className="text-sm underline">
-          처음으로
-        </Link>
-      </div>
-    )
+    return <ChatRoomError message="방 정보가 없습니다." />
   }
 
   const roomMissing = !!roomId && roomFetched && (roomError != null || room == null)
   if (roomMissing) {
-    return (
-      <div className="dark flex h-full min-h-0 flex-col items-center justify-center gap-3 bg-zinc-950 px-4 text-center text-zinc-200">
-        <p className="text-sm">존재하지 않는 채팅방이거나 불러올 수 없습니다.</p>
-        <Link href="/" className="text-sm underline">
-          처음으로
-        </Link>
-      </div>
-    )
+    return <ChatRoomError message="존재하지 않는 채팅방이거나 불러올 수 없습니다." />
   }
 
   const inputLocked = profilePending || !currentUserId
