@@ -7,8 +7,8 @@ interface Props {
 }
 
 export function MemberItem({ member }: Props) {
-  const displayName = member.user?.nickname?.trim() || member.user_id.slice(0, 8)
-  const initials = displayName.slice(0, 2)
+  const nickname = member.user?.nickname || member.user_id.slice(0, 8)
+  const initials = nickname.slice(0, 2)
 
   return (
     <div className="flex items-center gap-2.5 px-2 py-1.5">
@@ -16,7 +16,7 @@ export function MemberItem({ member }: Props) {
         <AvatarFallback>{initials}</AvatarFallback>
       </Avatar>
       <span className="min-w-0 truncate text-sm text-foreground">
-        {displayName}
+        {nickname}
       </span>
     </div>
   )

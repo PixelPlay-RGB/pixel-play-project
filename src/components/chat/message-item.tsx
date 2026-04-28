@@ -11,11 +11,11 @@ interface Props {
 }
 
 export function MessageItem({ message, isOwn }: Props) {
-  const { data: members = [] } = useRoomMembers(message.roomId)
+  const { data: members = [] } = useRoomMembers(message.chat_room_id )
 
-  const member = members.find((m) => m.user_id === message.user_id)
-  const displayName = member?.user?.nickname?.trim() || message.user_id.slice(0, 8)
-  const initials = displayName.slice(0, 2)
+  const member = members.find((m) => m.user_id === message.user_id )
+  const nickname = member?.user?.nickname || message.user_id .slice(0, 8)
+  const initials = nickname.slice(0, 2)
 
   if (isOwn) {
     return (
@@ -38,7 +38,7 @@ export function MessageItem({ message, isOwn }: Props) {
         <AvatarFallback>{initials}</AvatarFallback>
       </Avatar>
       <div className="min-w-0 flex-1">
-        <div className="mb-0.5 text-xs font-medium text-[#94eaff]">{displayName}</div>
+        <div className="mb-0.5 text-xs font-medium text-[#94eaff]">{nickname}</div>
         <div
           className={cn(
             "inline-block max-w-full rounded-md px-2 py-1 text-sm leading-snug",
