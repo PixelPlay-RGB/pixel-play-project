@@ -21,6 +21,7 @@ import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 
 import { checkNicknameAction, updateProfileAction } from "@/actions/auth";
+import ProfileFormSkeleton from "@/components/setting/profile/profile-form-skeleton";
 import { PROFILE_QUERY_KEY } from "@/constants/auth";
 import { useUser } from "@/hooks/use-profile";
 import { cn } from "@/lib/utils";
@@ -64,12 +65,7 @@ export default function ProfileForm() {
   }, [photoUrl]);
 
   if (isLoading || !user) {
-    // TODO: Skeleton 예정
-    return (
-      <div className="flex justify-center py-10">
-        <Spinner className={"text-brand h-10 w-10"} />
-      </div>
-    );
+    return <ProfileFormSkeleton />;
   }
 
   // 파생 상태 계산
