@@ -133,6 +133,13 @@
   }
 }
 
+@layer components {
+  .keep-space {
+    white-space: pre-wrap;
+    word-break: break-all; /* 긴 영문 공백 없이 입력했을 때 박스 뚫고 나가는 거 방지 */
+  }
+}
+
 /* 자동완성시 변하는 색 수정 */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,

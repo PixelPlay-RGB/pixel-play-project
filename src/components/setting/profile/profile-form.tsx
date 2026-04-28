@@ -216,8 +216,18 @@ export default function ProfileForm() {
                   {...field}
                   id="profile-nickname"
                   onChange={(e) => {
-                    field.onChange(e);
-                    handleNicknameChange(e.target.value);
+                    const val = e.target.value.replace(/^\s+/, "");
+                    e.target.value = val;
+
+                    field.onChange(val);
+                    handleNicknameChange(val);
+                  }}
+                  onBlur={(e) => {
+                    const trim = e.target.value.trim();
+                    e.target.value = trim;
+
+                    field.onChange(trim);
+                    handleNicknameChange(trim);
                   }}
                 />
               )}

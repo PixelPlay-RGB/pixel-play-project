@@ -53,7 +53,7 @@ export default function HeaderProfileBadge() {
 
           <div className="flex flex-col gap-1">
             <p className={"bg-muted text-brand rounded-sm px-1 py-0.5 text-xs"}>프로필 설정</p>
-            <p className="text-foreground text-lg leading-tight font-bold tracking-tight">
+            <p className="text-foreground keep-space text-lg leading-tight font-bold tracking-tight">
               {user.nickname}
             </p>
           </div>

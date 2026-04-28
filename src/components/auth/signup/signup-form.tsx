@@ -307,8 +307,16 @@ export default function SignupForm() {
             <InputGroupInput
               {...register("nickname", {
                 onChange: (e) => {
-                  const val = e.target.value;
+                  const val = e.target.value.replace(/^\s+/, "");
+                  e.target.value = val;
+
                   setNicknameStatus(val && val === verifiedNickname ? "available" : "idle");
+                },
+                onBlur: (e) => {
+                  const trim = e.target.value.trim();
+                  e.target.value = trim;
+
+                  setNicknameStatus(trim && trim === verifiedNickname ? "available" : "idle");
                 },
               })}
               type="text"
