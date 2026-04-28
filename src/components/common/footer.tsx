@@ -1,4 +1,4 @@
-import { members } from "@/constants/auth";
+import { members } from "@/constants/footer";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";

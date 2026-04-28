@@ -42,9 +42,6 @@ export const signUpSchema = signUpBaseSchema.refine(
   },
 );
 
-export type LoginFormValues = z.infer<typeof loginSchema>;
-export type SignUpFormValues = z.infer<typeof signUpSchema>;
-
 export const completeOAuthProfileSchema = signUpBaseSchema.pick({
   name: true,
   nickname: true,
@@ -52,8 +49,6 @@ export const completeOAuthProfileSchema = signUpBaseSchema.pick({
   phone: true,
   gender: true,
 });
-
-export type CompleteOAuthProfileValues = z.infer<typeof completeOAuthProfileSchema>;
 
 export const verifyPasswordSchema = z.object({
   currentPassword: signUpBaseSchema.shape.password,
@@ -69,23 +64,14 @@ export const changePasswordSchema = z
     path: ["newPasswordConfirm"],
   });
 
-export type VerifyPasswordValues = z.infer<typeof verifyPasswordSchema>;
-export type ChangePasswordValues = z.infer<typeof changePasswordSchema>;
-
 export const profileSchema = z.object({
   nickname: signUpBaseSchema.shape.nickname,
   photoUrl: z.url().nullable().optional(),
 });
 
+export type LoginFormValues = z.infer<typeof loginSchema>;
+export type SignUpFormValues = z.infer<typeof signUpSchema>;
+export type CompleteOAuthProfileValues = z.infer<typeof completeOAuthProfileSchema>;
+export type VerifyPasswordValues = z.infer<typeof verifyPasswordSchema>;
+export type ChangePasswordValues = z.infer<typeof changePasswordSchema>;
 export type ProfileFormValues = z.infer<typeof profileSchema>;
-
-export const SIGNUP_FORM_DEFAULTS: SignUpFormValues = {
-  email: "",
-  password: "",
-  passwordConfirm: "",
-  name: "",
-  nickname: "",
-  birth: "",
-  phone: "",
-  gender: "male",
-};

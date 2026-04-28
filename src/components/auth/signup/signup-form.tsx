@@ -20,10 +20,10 @@ import {
 import { RadioGroup } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
-import { PROFILE_QUERY_KEY, WELCOME_PARAM } from "@/constants/auth";
+import { SIGNUP_FORM_DEFAULTS, USER_QUERY_KEY, WELCOME_PARAM } from "@/constants/auth";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
-import { SIGNUP_FORM_DEFAULTS, signUpSchema } from "@/lib/zod/auth";
+import { signUpSchema } from "@/lib/zod/auth";
 import { useAuthStore } from "@/stores/auth";
 import type { NicknameStatus, OtpStatus, SignUpFormValues } from "@/types/auth";
 import { formatPhone } from "@/utils/format";
@@ -39,6 +39,7 @@ export default function SignupForm() {
   const router = useRouter();
   const setUser = useAuthStore((s) => s.setUser);
   const queryClient = useQueryClient();
+
   const [otpStatus, setOtpStatus] = useState<OtpStatus>("idle");
   const [otpCode, setOtpCode] = useState("");
   const [otpError, setOtpError] = useState("");
@@ -160,7 +161,7 @@ export default function SignupForm() {
     }
 
     setUser(authUser);
-    queryClient.invalidateQueries({ queryKey: PROFILE_QUERY_KEY });
+    await queryClient.invalidateQueries({ queryKey: USER_QUERY_KEY.all });
 
     router.push(`/${WELCOME_PARAM}`);
     router.refresh();

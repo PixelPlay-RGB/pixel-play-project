@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { OAUTH_PROVIDER_META, PROFILE_QUERY_KEY } from "@/constants/auth";
+import { OAUTH_PROVIDER_META, USER_QUERY_KEY } from "@/constants/auth";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { OAuthProvider } from "@/types/auth";
@@ -66,23 +66,29 @@ export default function LinkedOAuthAlertDialog({
     setIsLoading(true);
     const isLinked = linkedOAuth.includes(provider);
 
-    if (isLinked) {
-      // 연동 해제 로직
-      // TODO: OAuth Dialog 구현 필요
-
-      const result = await unLinkOAuthAction(provider);
-
-      if (result.success) {
-        toast.success(`${OAUTH_PROVIDER_META[provider].name} 연동 해제 성공`);
+    try {
+      if (isLinked) {
+        // 연동 해제 로직
+        const result = await unLinkOAuthAction(provider);
+        if (result.success) {
+          toast.success(`${OAUTH_PROVIDER_META[provider].name} 연동 해제 성공`);
+          await queryClient.invalidateQueries({ queryKey: USER_QUERY_KEY.all });
+        } else {
+          toast.error(result.message || "연동 해제 실패");
+        }
+      } else {
+        // 연동 로직
+        await linkOAuthAction(provider);
+        return;
       }
-    } else {
-      await linkOAuthAction(provider);
+    } catch {
+      toast.error("작업 중 오류 발생", {
+        description: "알 수 없는 오류가 발생하였습니다.",
+      });
+    } finally {
+      setIsLoading(false);
+      setOpen(false);
     }
-
-    setIsLoading(false);
-    setOpen(false);
-
-    queryClient.invalidateQueries({ queryKey: PROFILE_QUERY_KEY });
   };
 
   const providerName = OAUTH_PROVIDER_META[provider].name;

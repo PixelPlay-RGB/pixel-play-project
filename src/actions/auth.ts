@@ -15,11 +15,11 @@ import {
   OAuthProvider,
 } from "@/types/auth";
 import { revalidatePath } from "next/cache";
-import { success } from "zod";
 
 export interface ActionResponse {
   success: boolean;
   message?: string;
+  photoUrl?: string;
 }
 
 /**
@@ -452,8 +452,8 @@ export async function updateProfileAction(formData: FormData): Promise<ActionRes
   }
 
   revalidatePath("/", "layout");
-
   return {
     success: true,
+    photoUrl: photoUrl!,
   };
 }
