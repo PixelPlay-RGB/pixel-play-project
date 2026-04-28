@@ -167,7 +167,7 @@ export default function SignupForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="m-auto flex max-w-md flex-col gap-5">
+    <form onSubmit={handleSubmit(onSubmit)} className="m-auto flex max-w-md flex-col gap-4 sm:gap-5">
       <div className="flex w-full flex-col gap-3">
         <div className="flex flex-col gap-1">
           <InputGroup
@@ -265,7 +265,7 @@ export default function SignupForm() {
         </div>
       </div>
 
-      <Separator className="my-2" />
+      <Separator className="my-1 sm:my-2" />
 
       <div className="flex w-full flex-col gap-3">
         <div className="flex flex-col gap-1">
@@ -380,7 +380,7 @@ export default function SignupForm() {
         </div>
       </div>
 
-      <Separator className="my-2" />
+      <Separator className="my-1 sm:my-2" />
 
       <Button
         type="submit"

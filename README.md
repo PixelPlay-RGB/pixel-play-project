@@ -112,7 +112,7 @@ npm run dev
 ```
 src/
 ├── actions/              # Server Actions
-│   └── auth.ts           # 로그인·회원가입·프로필 완성 서버 액션
+│   └── auth.ts           # 로그인·회원가입·프로필 업데이트·OAuth 연동해제 서버 액션
 ├── app/                  # Next.js App Router
 │   ├── (settings)/       # 설정 라우트 그룹
 │   │   ├── layout.tsx    # 설정 레이아웃 (사이드바 포함)
@@ -128,8 +128,10 @@ src/
 │   ├── auth/
 │   │   ├── complete-profile/ # CompleteProfileForm
 │   │   ├── login/        # LoginForm · OAuthButtons
+│   │   ├── password/     # VerifyPasswordForm · PasswordChangeForm · PasswordChangeDialog
 │   │   ├── signup/       # SignupForm
-│   │   ├── auth-listener.tsx # Supabase Auth 상태 → Zustand 동기화
+│   │   ├── auth-listener.tsx     # Supabase Auth 상태 → Zustand 동기화
+│   │   ├── auth-toast-handler.tsx # OAuth 콜백 후 토스트 표시 (login · welcome · linked 파라미터 처리)
 │   │   └── login-button.tsx
 │   ├── common/
 │   │   ├── header.tsx
@@ -138,28 +140,34 @@ src/
 │   ├── profile/
 │   │   └── header-profile-badge.tsx # 헤더 유저 아바타 + 드롭다운
 │   ├── setting/
-│   │   ├── setting-sidebar.tsx      # 설정 페이지 사이드바
-│   │   └── setting-menu-item.tsx    # 메뉴 아이템 렌더러
+│   │   ├── profile/
+│   │   │   ├── profile-form.tsx          # 프로필 수정 폼 (닉네임·사진)
+│   │   │   ├── profile-avatar-upload.tsx # 아바타 업로드 위젯 (드래그&드롭 지원)
+│   │   │   ├── profile-providers-card.tsx # OAuth 연동·해제 카드
+│   │   │   ├── profile-card.tsx          # 설정 섹션 Card 래퍼
+│   │   │   └── profile-form-skeleton.tsx # 프로필 폼 로딩 스켈레톤
+│   │   ├── setting-sidebar.tsx           # 설정 페이지 사이드바
+│   │   └── setting-menu-item.tsx         # 메뉴 아이템 렌더러
 │   └── ui/               # shadcn / Base UI 컴포넌트
 ├── constants/
-│   ├── auth.ts           # 팀원 정보, Query Key, URL 파라미터 상수
+│   ├── auth.ts           # OAUTH_PROVIDERS · OAUTH_PROVIDER_META · PROFILE_QUERY_KEY · URL 파라미터 상수
 │   └── setting-menu.ts   # 설정 메뉴 아이템 목록
 ├── hooks/
 │   ├── use-profile.ts    # useUser() — public.user 프로필 React Query 훅
 │   └── use-mobile.ts     # 모바일 뷰포트 감지 훅
 ├── lib/
 │   ├── supabase/         # client.ts · server.ts · proxy.ts
-│   ├── zod/              # 폼 유효성 스키마 + 기본값 상수
+│   ├── zod/              # 폼 유효성 스키마 (profileSchema 포함)
 │   └── utils/
 ├── stores/
-│   └── auth.ts           # Zustand Auth 스토어 (user · loading)
+│   └── auth.ts           # Zustand Auth 스토어 (user · isCanChangePassword)
 ├── types/
-│   ├── auth.ts
+│   ├── auth.ts           # OAuthProvider · NicknameStatus · LoginProvider 등
 │   ├── database.types.ts # Supabase 자동 생성 타입 (npm run types)
 │   ├── setting-menu.ts
-│   └── user.ts
+│   └── user.ts           # DBUser (GenericTables<"user">)
 └── utils/
-    └── auth.ts           # formatPhone 등 auth 관련 유틸
+    └── format.ts         # formatDate · formatPhone 유틸
 ```
 
 ---
@@ -225,6 +233,16 @@ src/
 | `check_email_exists(target_email text)` | 이메일 중복 확인 (OTP 발송 전 호출, `SECURITY DEFINER`) |
 | `check_nickname_exists(target_nickname text)` | 닉네임 중복 확인 (`SECURITY DEFINER`)             |
 
+### Supabase Storage
+
+| 버킷       | 경로                              | 용도                      |
+| ---------- | --------------------------------- | ------------------------- |
+| `profiles` | `avatars/{user.id}/avatar.{ext}`  | 유저 프로필 사진 (upsert) |
+
+- 업로드 시 `upsert: true` 옵션으로 기존 파일 덮어씀
+- 공개 URL 캐시 무효화: `?t={Date.now()}` 쿼리 파라미터 추가
+- 사진 삭제 시 Storage 파일도 함께 제거
+
 ### 타입 재생성
 
 스키마 변경 후 아래 명령으로 `src/types/database.types.ts`를 갱신합니다.
@@ -267,8 +285,28 @@ AuthListener (providers.tsx에 마운트, 앱 전체에서 1회)
   ├── 초기: getUser() → Zustand store 세팅
   └── 이후: onAuthStateChange 구독 → 로그인/로그아웃/토큰갱신 시 store 자동 반영
 
-컴포넌트 → useAuthStore() → 네트워크 없이 즉시 유저 정보 접근
+컴포넌트 → useAuthStore()   → AuthUser (Supabase auth.users) 즉시 접근
+컴포넌트 → useUser()        → DBUser (public.user) React Query 캐시 (5분 staleTime)
 ```
+
+---
+
+## 설정 페이지 기능
+
+### 프로필 (`/profile`)
+
+| 기능 | 설명 |
+| ---- | ---- |
+| 닉네임 변경 | 중복 확인(`checkNicknameAction`) 후 저장 가능 |
+| 프로필 사진 | 파일 선택·드래그&드롭 업로드, Supabase Storage 저장, 제거 지원 |
+| OAuth 연동 | `supabase.auth.signInWithOAuth` → callback → `linked_providers` 갱신 |
+| OAuth 연동 해제 | `unLinkOAuthAction` — identity 삭제 + `linked_providers` DB 업데이트 |
+
+**제약 조건:** OAuth 전용 가입 유저는 최소 1개의 OAuth 계정 연동 필수. 이메일 가입 유저는 자유롭게 해제 가능.
+
+### 비밀번호 변경
+
+현재 비밀번호 검증(`verifyCurrentPasswordAction`) → 새 비밀번호 설정(`changePasswordAction`). 이메일 가입 유저에게만 메뉴 노출 (`isCanChangePassword` Zustand 플래그).
 
 ---
 
