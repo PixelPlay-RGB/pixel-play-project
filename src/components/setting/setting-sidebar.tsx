@@ -34,12 +34,15 @@ export default function SettingSidebar() {
   const mainItems = SETTING_MENU.filter((item) => item.type !== "logout");
 
   return (
-    <Sidebar collapsible="none" className="sticky top-14 h-[calc(100vh-3.5rem)] self-start border-r">
+    <Sidebar
+      collapsible="none"
+      className="sticky top-14 h-[calc(100vh-3.5rem)] self-start border-r"
+    >
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>설정</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className={"gap-1.5"}>
               {mainItems.map((item) =>
                 SettingMenuItem(
                   item,

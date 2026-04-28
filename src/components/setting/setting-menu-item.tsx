@@ -81,7 +81,7 @@ export default function SettingMenuItemRenderer(
           <SidebarMenuButton render={<Link href={item.href} />} isActive={active}>
             {Icon && <Icon />}
             <span>{item.label}</span>
-            {active && <span className="ml-auto size-1.5 rounded-full bg-brand" />}
+            {active && <span className="bg-brand ml-auto size-1.5 rounded-full" />}
           </SidebarMenuButton>
         </SidebarMenuItem>
       );
