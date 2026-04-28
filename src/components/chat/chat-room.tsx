@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { useMemo } from "react"
 
 import { Spinner } from "@/components/ui/spinner"
 import { useUser } from "@/hooks/use-profile"
@@ -45,6 +46,20 @@ export function ChatRoom({ roomId }: Props) {
   } = useChatRoom(roomId)
 
   const { data: members = [] } = useRoomMembers(roomId)
+
+  const memberDisplayByUserId = useMemo(() => {
+    const map: Record<
+      string,
+      { nickname: string; photoUrl: string | null }
+    > = {}
+    for (const m of members) {
+      map[m.user_id] = {
+        nickname: m.user?.nickname || m.user_id.slice(0, 8),
+        photoUrl: m.user?.photo_url ?? null,
+      }
+    }
+    return map
+  }, [members])
 
   const currentUserId = profile?.id ?? ""
 
@@ -96,8 +111,10 @@ export function ChatRoom({ roomId }: Props) {
         </header>
 
         <MessageList
+          key={roomId}
           messages={messages}
           currentUserId={currentUserId}
+          memberDisplayByUserId={memberDisplayByUserId}
           hasMorePrevious={hasMorePrevious}
           isLoadingPrevious={isLoadingPrevious || isLoadingInitial}
           onReachTop={handleLoadPrevious}

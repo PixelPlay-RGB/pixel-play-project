@@ -1,20 +1,25 @@
 "use client"
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import type { Message } from "@/types/message"
 import { cn } from "@/lib/utils"
-import { useRoomMembers } from "@/hooks/use-room-members"
+
+import type { MemberDisplayByUserId } from "@/types/chatroommember"
 
 interface Props {
   message: Message
   isOwn: boolean
+  memberDisplayByUserId: MemberDisplayByUserId
 }
 
-export function MessageItem({ message, isOwn }: Props) {
-  const { data: members = [] } = useRoomMembers(message.chat_room_id )
-
-  const member = members.find((m) => m.user_id === message.user_id )
-  const nickname = member?.user?.nickname || message.user_id .slice(0, 8)
+export function MessageItem({
+  message,
+  isOwn,
+  memberDisplayByUserId,
+}: Props) {
+  const display = memberDisplayByUserId[message.user_id]
+  const nickname = display?.nickname ?? message.user_id.slice(0, 8)
+  const photoUrl = display?.photoUrl ?? null
   const initials = nickname.slice(0, 2)
 
   if (isOwn) {
@@ -35,6 +40,9 @@ export function MessageItem({ message, isOwn }: Props) {
   return (
     <div className="flex gap-2 px-2 py-0.5">
       <Avatar size="sm" className="mt-0.5">
+        {photoUrl ? (
+          <AvatarImage src={photoUrl} alt="" />
+        ) : null}
         <AvatarFallback>{initials}</AvatarFallback>
       </Avatar>
       <div className="min-w-0 flex-1">

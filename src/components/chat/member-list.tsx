@@ -9,13 +9,12 @@ interface Props {
 
 export function MemberList({ roomId }: Props) {
   const { data: members = [] } = useRoomMembers(roomId)
-  const countLabel = members.length.toLocaleString("ko-KR")
 
   return (
     <section className="flex max-h-[38dvh] min-h-0 shrink-0 flex-col overflow-hidden border-white/10 bg-background md:max-h-none md:h-full md:w-[min(100%,260px)] md:shrink-0 md:border-r">
       <header className="shrink-0 border-b border-border px-3 py-2.5">
         <h2 className="text-sm font-semibold leading-tight">
-          참여자 목록 {countLabel}명
+          참여자 목록 {members.length.toLocaleString("ko-KR")}명
         </h2>
       </header>
 

@@ -8,7 +8,7 @@ import {
   type InfiniteData,
 } from "@tanstack/react-query"
 
-import { MESSAGE_PAGE_SIZE } from "@/lib/chat-constants"
+import { MESSAGE_PAGE_SIZE } from "@/lib/chat"
 import { createClient } from "@/lib/supabase/client"
 import type { Message } from "@/types/message"
 

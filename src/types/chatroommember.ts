@@ -1,16 +1,22 @@
 import { GenericTables } from "@/types/supabase.types";
 
 /**
- * public.chatroommember 테이블 row
+ * public.chatroommember 테이블 
  */
 export type RoomMember = GenericTables<"chatroommember">;
 
 /**
  * 룸 멤버 정보와 유저 프로필(nickname)을 함께 가져오는 쿼리용 타입
- * (기존 RoomMember 타입을 확장하여 사용)
  */
 export interface RoomMemberQuery extends RoomMember {
   user: {
     nickname: string | null;
+    photo_url: string | null;
   } | null;
 }
+
+/** user_id → 채팅 UI용 표시 정보 (메시지 목록 등에서 O(1) 조회) */
+export type MemberDisplayByUserId = Record<
+  string,
+  { nickname: string; photoUrl: string | null }
+>;
