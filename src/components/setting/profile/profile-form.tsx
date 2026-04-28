@@ -2,8 +2,8 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Lock, Mail, UserStar } from "lucide-react";
-import { useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { useEffect, useState } from "react";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 
 import ProfileAvatarUpload from "@/components/setting/profile/profile-avatar-upload";
@@ -55,6 +55,14 @@ export default function ProfileForm() {
     },
   });
 
+  // blob URL 메모리 누수 방지: photoUrl 이 blob: 으로 바뀔 때마다 이전 blob revoke + unmount cleanup
+  const photoUrl = useWatch({ control, name: "photoUrl" });
+  useEffect(() => {
+    return () => {
+      if (photoUrl?.startsWith("blob:")) URL.revokeObjectURL(photoUrl);
+    };
+  }, [photoUrl]);
+
   if (isLoading || !user) {
     // TODO: Skeleton 예정
     return (
@@ -66,7 +74,8 @@ export default function ProfileForm() {
 
   // 파생 상태 계산
   const nicknameChanged = !!dirtyFields.nickname;
-  const canSave = !errors.nickname && (!nicknameChanged || nicknameStatus === "available");
+  const canSave =
+    Object.keys(errors).length === 0 && (!nicknameChanged || nicknameStatus === "available");
 
   // 핸들러 정의
   const handleNicknameChange = (value: string) => {
@@ -84,7 +93,6 @@ export default function ProfileForm() {
     if (!nickname || errors.nickname) return;
 
     setNicknameStatus("checking");
-    // TODO: 실제 API 연동 (checkNicknameAction)
 
     const result = await checkNicknameAction(nickname);
 
@@ -119,8 +127,6 @@ export default function ProfileForm() {
     if (!canSave) return;
     setIsSaving(true);
 
-    console.log("data: ", data);
-
     const formData = new FormData();
     formData.append("nickname", data.nickname);
 
@@ -142,6 +148,7 @@ export default function ProfileForm() {
         description: result.message || "프로필 업데이트에 실패했습니다! 🫠",
       });
 
+      setIsSaving(false);
       return;
     }
 

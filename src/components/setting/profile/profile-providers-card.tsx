@@ -48,12 +48,14 @@ export default function ProfileProvidersCard() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=/profile&`,
+        redirectTo: `${window.location.origin}/auth/callback?next=/profile`,
       },
     });
 
     if (error) {
-      console.error(`${provider} 로그인 에러: `, error.message);
+      toast.error(`${OAUTH_PROVIDER_META[provider].name} 연동 실패`, {
+        description: error.message,
+      });
     }
   };
 
@@ -67,7 +69,7 @@ export default function ProfileProvidersCard() {
       const result = await unLinkOAuthAction(provider);
 
       if (result.success) {
-        toast.success(`${provider} 연동 해제 성공`);
+        toast.success(`${OAUTH_PROVIDER_META[provider].name} 연동 해제 성공`);
       }
     } else {
       await linkOAuthAction(provider);
