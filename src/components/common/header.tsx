@@ -1,7 +1,7 @@
 import LoginButton from "@/components/auth/login-button";
 import Logo from "@/components/common/logo";
 import ThemeToggleButton from "@/components/common/theme-toggle-button";
-import HeaderProfileBadge from "@/components/profile/header-profile-badge";
+import HeaderProfileBadge from "@/components/setting/profile/header-profile-badge";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 

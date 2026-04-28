@@ -1,6 +1,6 @@
 import type { OAuthProvider } from "@/types/auth";
 
-export const OAUTH_PROVIDERS = ["google", "github"] as const;
+export const OAUTH_PROVIDERS: OAuthProvider[] = ["google", "github"] as const;
 
 export const OAUTH_PROVIDER_META: Record<OAuthProvider, { name: string; logo: string }> = {
   google: { name: "Google", logo: "/google.svg" },

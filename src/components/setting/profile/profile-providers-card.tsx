@@ -1,8 +1,6 @@
 "use client";
 
-import Image from "next/image";
-import { Plug, Unlink } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import UnLinkOAuthDialog from "@/components/setting/profile/unlink-oauth-dialog";
 import {
   Card,
   CardAction,
@@ -11,20 +9,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { OAUTH_PROVIDER_META, OAUTH_PROVIDERS, PROFILE_QUERY_KEY } from "@/constants/auth";
+import { Spinner } from "@/components/ui/spinner";
+import { OAUTH_PROVIDER_META, OAUTH_PROVIDERS } from "@/constants/auth";
 import { useUser } from "@/hooks/use-profile";
 import { cn } from "@/lib/utils";
 import { OAuthProvider } from "@/types/auth";
-import { Spinner } from "@/components/ui/spinner";
-import { createClient } from "@/lib/supabase/client";
-import { unLinkOAuthAction } from "@/actions/auth";
-import { toast } from "sonner";
-import { useQueryClient } from "@tanstack/react-query";
+import Image from "next/image";
 
 export default function ProfileProvidersCard() {
   const { data: user, isLoading } = useUser();
-
-  const queryClient = useQueryClient();
 
   if (isLoading || !user) {
     return (
@@ -41,42 +34,6 @@ export default function ProfileProvidersCard() {
 
   const primaryProvider = linkedOAuth[0] ?? null;
   const canUnlink = hasEmailAuth || linkedOAuth.length > 1;
-
-  const linkOAuthAction = async (provider: OAuthProvider) => {
-    const supabase = createClient();
-
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=/profile`,
-      },
-    });
-
-    if (error) {
-      toast.error(`${OAUTH_PROVIDER_META[provider].name} 연동 실패`, {
-        description: error.message,
-      });
-    }
-  };
-
-  const handleToggle = async (provider: OAuthProvider) => {
-    const isLinked = linkedOAuth.includes(provider);
-
-    if (isLinked) {
-      // 연동 해제 로직
-      // TODO: OAuth Dialog 구현 필요
-
-      const result = await unLinkOAuthAction(provider);
-
-      if (result.success) {
-        toast.success(`${OAUTH_PROVIDER_META[provider].name} 연동 해제 성공`);
-      }
-    } else {
-      await linkOAuthAction(provider);
-    }
-
-    queryClient.invalidateQueries({ queryKey: PROFILE_QUERY_KEY });
-  };
 
   return (
     <Card>
@@ -133,29 +90,12 @@ export default function ProfileProvidersCard() {
                 </div>
               </div>
 
-              <Button
-                size="sm"
-                variant={isLinked ? "destructive" : "outline"}
-                onClick={() => handleToggle(provider)}
-                disabled={isDisableUnlink}
-                title={isDisableUnlink ? "기본 계정은 해제할 수 없습니다" : undefined}
-                className={cn(
-                  !isLinked &&
-                    "border-brand/40 text-brand hover:bg-brand cursor-pointer hover:text-white",
-                )}
-              >
-                {isLinked ? (
-                  <>
-                    <Unlink className="size-3.5" />
-                    해제
-                  </>
-                ) : (
-                  <>
-                    <Plug className="size-3.5" />
-                    연동
-                  </>
-                )}
-              </Button>
+              <UnLinkOAuthDialog
+                isLinked={isLinked}
+                isDisableUnlink={isDisableUnlink}
+                provider={provider}
+                linkedOAuth={linkedOAuth}
+              />
             </div>
           );
         })}
