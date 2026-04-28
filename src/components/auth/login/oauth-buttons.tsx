@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { createClient } from "@/lib/supabase/client";
+import { cn } from "@/lib/utils";
 import { LoginProvider } from "@/types/auth";
 import Image from "next/image";
 
@@ -32,12 +33,16 @@ export default function OAuthButtons({ loading, onLoadingChange }: OAuthButtonsP
 
   return (
     <div className="flex flex-col gap-3">
+      {/* Google Login Button */}
       <Button
         type="button"
         variant="outline"
         disabled={loading !== null}
-        className="border-border/60 hover:border-brand/40 hover:bg-brand/5 w-full cursor-pointer gap-2 py-5 tracking-wide"
         onClick={() => handleSignIn("google")}
+        className={cn(
+          "w-full cursor-pointer gap-2 py-5 tracking-wide",
+          "border-border/60 hover:border-brand/40 hover:bg-brand/5",
+        )}
       >
         {loading === "google" ? (
           <Spinner />
@@ -48,11 +53,17 @@ export default function OAuthButtons({ loading, onLoadingChange }: OAuthButtonsP
           </>
         )}
       </Button>
+
+      {/* GitHub Login Button */}
       <Button
         type="button"
         disabled={loading !== null}
-        className="hover:border-brand/40 w-full cursor-pointer gap-2 border border-[#30363d] bg-[#161b22] py-5 tracking-wide text-white hover:bg-[#21262d]"
         onClick={() => handleSignIn("github")}
+        className={cn(
+          "w-full cursor-pointer gap-2 py-5 tracking-wide",
+          "border border-[#30363d] bg-[#161b22] text-white",
+          "hover:border-brand/40 hover:bg-[#21262d]",
+        )}
       >
         {loading === "github" ? (
           <Spinner />

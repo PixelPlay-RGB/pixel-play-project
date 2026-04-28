@@ -7,6 +7,7 @@ import { FieldError } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
 import { LOGIN_PARAM, PROFILE_QUERY_KEY } from "@/constants/auth";
 import { createClient } from "@/lib/supabase/client";
+import { cn } from "@/lib/utils";
 import { loginSchema } from "@/lib/zod/auth";
 import { useAuthStore } from "@/stores/auth";
 import type { LoginFormValues, LoginProvider } from "@/types/auth";
@@ -83,10 +84,11 @@ export default function LoginForm({ loading, onLoadingChange: setIsLoading }: Lo
         />
         <FieldError errors={[errors.email]} />
       </div>
+
       <div className="flex flex-col gap-1">
         <AuthInputGroup
           {...register("password")}
-          type="password"
+          type={"password"}
           placeholder="비밀번호"
           icon={<LockKeyhole />}
           aria-invalid={!!errors.password}
@@ -94,10 +96,15 @@ export default function LoginForm({ loading, onLoadingChange: setIsLoading }: Lo
         />
         <FieldError errors={[errors.password]} />
       </div>
+
       <Button
         type="submit"
         disabled={isSubmitting || loading != null}
-        className="bg-brand hover:bg-brand/85 w-full cursor-pointer py-5 font-bold tracking-widest text-white uppercase"
+        className={cn(
+          "w-full cursor-pointer py-5 font-bold tracking-widest uppercase",
+          "bg-brand hover:bg-brand/85 text-white",
+          "transition-all active:scale-[0.98] disabled:opacity-40",
+        )}
       >
         {isSubmitting ? <Spinner /> : "로그인"}
       </Button>
