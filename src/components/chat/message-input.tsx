@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useRef, useState } from "react"
+import { useRef, useState } from "react"
 import { SendHorizontal } from "lucide-react"
 import { toast } from "sonner"
 
@@ -28,7 +28,7 @@ export function MessageInput({
   const [draft, setDraft] = useState("")
   const sendMessageLockRef = useRef(false)
 
-  const handleSend = useCallback(async () => {
+  const handleSend = async () => {
     const trimmed = draft.trim()
     if (
       !trimmed ||
@@ -60,7 +60,7 @@ export function MessageInput({
 
     setDraft("")
     sendMessageLockRef.current = false
-  }, [currentUserId, draft, roomId, supabase])
+  }
 
   return (
     <div className="flex shrink-0 gap-2 border-t border-border bg-background/95 p-2 backdrop-blur-sm">

@@ -1,73 +1,24 @@
-"use client"
+import { useQuery } from "@tanstack/react-query";
 
-import { useCallback, useMemo, useRef } from "react"
-
-import { useUser } from "@/hooks/use-profile"
-import { useRoom } from "@/hooks/use-room"
-import { useRoomMembers } from "@/hooks/use-room-members"
-import useMessages from "@/hooks/use-messages"
+import { createClient } from "@/lib/supabase/client";
+import type { Room } from "@/types/chatroom";
 
 export function useChatRoom(roomId: string) {
-  const { data: profile, isPending: profilePending } = useUser()
+  const supabase = createClient();
 
-  const {
-    messages,
-    hasMorePrevious,
-    isLoadingPrevious,
-    loadPrevious,
-    isLoadingInitial,
-  } = useMessages(roomId)
+  return useQuery<Room>({
+    queryKey: ["room", roomId],
+    enabled: !!roomId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("chatroom")
+        .select("*")
+        .eq("id", roomId)
+        .single();
 
-  const loadPreviousLockRef = useRef(false)
+      if (error) throw error;
 
-  const {
-    data: room,
-    error: roomError,
-    isPending: roomPending,
-    isFetched: roomFetched,
-  } = useRoom(roomId)
-
-  const { data: members = [] } = useRoomMembers(roomId)
-
-  const formattedParticipants = useMemo(
-    () => members.length.toLocaleString("ko-KR"),
-    [members.length],
-  )
-
-  const currentUserId = profile?.id ?? ""
-
-  const handleLoadPrevious = useCallback((): boolean => {
-    if (loadPreviousLockRef.current || isLoadingPrevious || !hasMorePrevious) {
-      return false
-    }
-
-    loadPreviousLockRef.current = true
-    void loadPrevious().finally(() => {
-      loadPreviousLockRef.current = false
-    })
-
-    return true
-  }, [hasMorePrevious, isLoadingPrevious, loadPrevious])
-
-  const roomMissing =
-    !!roomId && roomFetched && (roomError != null || room == null)
-
-  const inputLocked = profilePending || !currentUserId
-
-  return {
-    profilePending,
-    currentUserId,
-    messages,
-    hasMorePrevious,
-    isLoadingPrevious,
-    isLoadingInitial,
-    room,
-    roomError,
-    roomPending,
-    roomFetched,
-    formattedParticipants,
-    handleLoadPrevious,
-    roomMissing,
-    inputLocked,
-  }
+      return data;
+    },
+  });
 }

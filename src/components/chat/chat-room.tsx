@@ -2,8 +2,11 @@
 
 import Link from "next/link"
 
-import { useChatRoom } from "@/hooks/use-chat-room"
 import { Spinner } from "@/components/ui/spinner"
+import { useUser } from "@/hooks/use-profile"
+import { useChatRoom } from "@/hooks/use-chat-room"
+import { useRoomMembers } from "@/hooks/use-room-members"
+import useMessages from "@/hooks/use-messages"
 
 import { MemberList } from "./member-list"
 import { MessageInput } from "./message-input"
@@ -14,20 +17,34 @@ interface Props {
 }
 
 export function ChatRoom({ roomId }: Props) {
+  const { data: profile, isPending: profilePending } = useUser()
   const {
-    profilePending,
-    currentUserId,
     messages,
     hasMorePrevious,
     isLoadingPrevious,
+    loadPrevious,
     isLoadingInitial,
-    room,
-    roomPending,
-    formattedParticipants,
-    handleLoadPrevious,
-    roomMissing,
-    inputLocked,
+  } = useMessages(roomId)
+
+  const {
+    data: room,
+    error: roomError,
+    isPending: roomPending,
+    isFetched: roomFetched,
   } = useChatRoom(roomId)
+
+  const { data: members = [] } = useRoomMembers(roomId)
+
+  const currentUserId = profile?.id ?? ""
+
+  const handleLoadPrevious = (): boolean => {
+    if (isLoadingPrevious || !hasMorePrevious) {
+      return false
+    }
+
+    void loadPrevious()
+    return true
+  }
 
   if (profilePending) {
     return (
@@ -48,6 +65,7 @@ export function ChatRoom({ roomId }: Props) {
     )
   }
 
+  const roomMissing = !!roomId && roomFetched && (roomError != null || room == null)
   if (roomMissing) {
     return (
       <div className="dark flex h-full min-h-0 flex-col items-center justify-center gap-3 bg-zinc-950 px-4 text-center text-zinc-200">
@@ -58,6 +76,8 @@ export function ChatRoom({ roomId }: Props) {
       </div>
     )
   }
+
+  const inputLocked = profilePending || !currentUserId
 
   return (
     <div className="dark flex h-full min-h-0 w-full flex-col overflow-hidden bg-zinc-950 text-foreground md:flex-row">
@@ -70,7 +90,7 @@ export function ChatRoom({ roomId }: Props) {
               {roomPending ? "불러오는 중…" : (room?.title ?? "채팅방")}
             </h1>
             <span className="shrink-0 text-xs text-muted-foreground">
-              {formattedParticipants}명
+              {members.length}명
             </span>
           </div>
           <p className="mt-1 line-clamp-1 text-[11px] text-muted-foreground">
