@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo } from "react"
+import { useEffect } from "react"
 
 import {
   useInfiniteQuery,
@@ -53,6 +53,12 @@ export default function useMessages(roomId: string) {
       return { items, nextCursor }
     },
     getNextPageParam: (lastPage) => lastPage.nextCursor,
+    select: (data) => {
+      const descending = data.pages.flatMap((page) => page.items)
+      return descending.filter((message, index, list) => {
+        return list.findIndex((item) => item.id === message.id) === index
+      })
+    },
   })
 
   useEffect(() => {
@@ -107,18 +113,7 @@ export default function useMessages(roomId: string) {
     }
   }, [queryClient, roomId, supabase])
 
-  const messages = useMemo(() => {
-    const descending = query.data?.pages.flatMap((page) => page.items) ?? []
-    const deduplicatedDescending = descending.filter((message, index, list) => {
-      return list.findIndex((item) => item.id === message.id) === index
-    })
-    return [...deduplicatedDescending].reverse()
-  }, [query.data])
-
-  const loadPrevious = async () => {
-    if (!query.hasNextPage || query.isFetchingNextPage) return
-    await query.fetchNextPage()
-  }
+  const messages = query.data ?? []
 
   return {
     messages,
@@ -126,6 +121,7 @@ export default function useMessages(roomId: string) {
     isLoadingPrevious: query.isFetchingNextPage,
     isLoadingInitial: query.isLoading,
     error: query.error,
-    loadPrevious,
+    /** 이전(더 오래된) 페이지 — TanStack의 `fetchNextPage`와 동일 */
+    fetchPreviousPage: query.fetchNextPage,
   }
 }

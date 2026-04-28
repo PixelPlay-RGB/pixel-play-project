@@ -26,8 +26,10 @@ export function MessageList({
   onReachTop,
 }: Props) {
   const viewportRef = useRef<HTMLDivElement>(null)
-  const prevFirstIdRef = useRef<string | null>(null)
-  const prevLastIdRef = useRef<string | null>(null)
+  /** messages는 최신→과거 순; 첫 요소 id = 최신 */
+  const prevNewestIdRef = useRef<string | null>(null)
+  /** 마지막 요소 id = 가장 오래된 메시지 */
+  const prevOldestIdRef = useRef<string | null>(null)
   const prevScrollHeightRef = useRef(0)
 
   const scrollViewportToBottom = useCallback(() => {
@@ -40,24 +42,24 @@ export function MessageList({
     const viewport = viewportRef.current
     if (!viewport) return
 
-    const firstId = messages[0]?.id ?? null
-    const lastId = messages.at(-1)?.id ?? null
-    const prevFirst = prevFirstIdRef.current
-    const prevLast = prevLastIdRef.current
+    const newestId = messages[0]?.id ?? null
+    const oldestId = messages.at(-1)?.id ?? null
+    const prevNewest = prevNewestIdRef.current
+    const prevOldest = prevOldestIdRef.current
 
-    if (prevLast === null) {
+    if (prevOldest === null) {
       scrollViewportToBottom()
-    } else if (lastId !== prevLast) {
+    } else if (newestId !== prevNewest && oldestId === prevOldest) {
       scrollViewportToBottom()
-    } else if (firstId !== prevFirst && lastId === prevLast) {
+    } else if (oldestId !== prevOldest && newestId === prevNewest) {
       const diff = viewport.scrollHeight - prevScrollHeightRef.current
       if (diff !== 0) {
         viewport.scrollTop += diff
       }
     }
 
-    prevFirstIdRef.current = firstId
-    prevLastIdRef.current = lastId
+    prevNewestIdRef.current = newestId
+    prevOldestIdRef.current = oldestId
     prevScrollHeightRef.current = viewport.scrollHeight
   }, [messages, scrollViewportToBottom])
 
@@ -73,9 +75,6 @@ export function MessageList({
     [hasMorePrevious, isLoadingPrevious, onReachTop],
   )
 
-  // 메시지 배열을 역순으로 뒤집어 최신 메시지가 아래에 오도록 합니다.
-  const reversedMessages = [...messages].reverse();
-
   return (
     <div className="min-h-0 flex-1 overflow-hidden">
       <ScrollArea
@@ -84,8 +83,7 @@ export function MessageList({
         onScroll={handleScroll}
       >
         <div className="flex flex-col-reverse gap-0.5 py-2">
-          {/* 하단(배열의 끝)부터 렌더링됨 */}
-          {reversedMessages.map((message) => (
+          {messages.map((message) => (
             <MessageItem
               key={message.id}
               message={message}
@@ -94,7 +92,6 @@ export function MessageList({
             />
           ))}
 
-          {/* 로딩 표시가 목록 최상단(reverse 기준 하단)에 위치하게 됨 */}
           {isLoadingPrevious && (
             <div className="px-2 py-1 text-center text-xs text-muted-foreground">
               이전 메시지 불러오는 중...

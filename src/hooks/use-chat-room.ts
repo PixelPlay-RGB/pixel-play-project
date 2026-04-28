@@ -1,10 +1,12 @@
-import { useQuery } from "@tanstack/react-query";
+"use client"
 
-import { createClient } from "@/lib/supabase/client";
-import type { Room } from "@/types/chatroom";
+import { useQuery } from "@tanstack/react-query"
 
-export function useChatRoom(roomId: string) {
-  const supabase = createClient();
+import { createClient } from "@/lib/supabase/client"
+import type { Room } from "@/types/chatroom"
+
+export function useRoom(roomId: string) {
+  const supabase = createClient()
 
   return useQuery<Room>({
     queryKey: ["room", roomId],
@@ -14,11 +16,11 @@ export function useChatRoom(roomId: string) {
         .from("chatroom")
         .select("*")
         .eq("id", roomId)
-        .single();
+        .single()
 
-      if (error) throw error;
+      if (error) throw error
 
-      return data;
+      return data
     },
-  });
+  })
 }
