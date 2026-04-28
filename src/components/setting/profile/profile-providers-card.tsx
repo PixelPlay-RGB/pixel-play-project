@@ -1,6 +1,6 @@
 "use client";
 
-import UnLinkOAuthDialog from "@/components/setting/profile/unlink-oauth-dialog";
+import LinkedOAuthAlertDialog from "@/components/setting/profile/linked-oauth-alert-dialog";
 import {
   Card,
   CardAction,
@@ -90,7 +90,7 @@ export default function ProfileProvidersCard() {
                 </div>
               </div>
 
-              <UnLinkOAuthDialog
+              <LinkedOAuthAlertDialog
                 isLinked={isLinked}
                 isDisableUnlink={isDisableUnlink}
                 provider={provider}

@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { OAUTH_PROVIDER_META, OAUTH_PROVIDERS, PROFILE_QUERY_KEY } from "@/constants/auth";
+import { OAUTH_PROVIDER_META, PROFILE_QUERY_KEY } from "@/constants/auth";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { OAuthProvider } from "@/types/auth";
@@ -31,7 +31,7 @@ interface Props {
   linkedOAuth: OAuthProvider[];
 }
 
-export default function UnLinkOAuthDialog({
+export default function LinkedOAuthAlertDialog({
   isLinked,
   isDisableUnlink,
   provider,
