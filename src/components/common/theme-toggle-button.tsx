@@ -24,13 +24,13 @@ export default function ThemeToggleButton() {
     <button
       onClick={() => setTheme(isDark ? "light" : "dark")}
       className={cn(
-        "size-10 grid place-items-center rounded-md",
+        "grid size-10 place-items-center rounded-md",
         "hover:bg-muted cursor-pointer",
         "text-foreground",
         "transition-all duration-200",
       )}
     >
-      {isDark ? <Sun size={20} /> : <Moon size={20} />}
+      {isDark ? <Sun size={24} /> : <Moon size={24} />}
       <span className="sr-only">Toggle theme</span>
     </button>
   );
