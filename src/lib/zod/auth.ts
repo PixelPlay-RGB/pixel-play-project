@@ -1,43 +1,43 @@
 import { z } from "zod";
 
 export const loginSchema = z.object({
-  email: z.email({ message: "올바른 이메일 형식을 입력해주세요." }),
-  password: z.string().min(1, { message: "비밀번호를 입력해주세요." }),
+  email: z.email({ error: "올바른 이메일 형식을 입력해주세요." }),
+  password: z.string().min(1, { error: "비밀번호를 입력해주세요." }),
 });
 
 export const signUpBaseSchema = z.object({
-  email: z.email({ message: "올바른 이메일 형식을 입력해주세요." }),
+  email: z.email({ error: "올바른 이메일 형식을 입력해주세요." }),
   // [PROD] 영문 대문자 1개 이상, 숫자 1개 이상, 특수문자(!@#$%^&*) 1개 이상, 최소 8자
   // password: z.string()
-  //   .min(8, { message: "비밀번호는 8자 이상이어야 합니다." })
-  //   .regex(/[A-Z]/, { message: "영문 대문자를 1개 이상 포함해야 합니다." })
-  //   .regex(/[0-9]/, { message: "숫자를 1개 이상 포함해야 합니다." })
-  //   .regex(/[!@#$%^&*]/, { message: "특수문자(!@#$%^&*)를 1개 이상 포함해야 합니다." }),
+  //   .min(8, { error: "비밀번호는 8자 이상이어야 합니다." })
+  //   .regex(/[A-Z]/, { error: "영문 대문자를 1개 이상 포함해야 합니다." })
+  //   .regex(/[0-9]/, { error: "숫자를 1개 이상 포함해야 합니다." })
+  //   .regex(/[!@#$%^&*]/, { error: "특수문자(!@#$%^&*)를 1개 이상 포함해야 합니다." }),
   // [TEST]
-  password: z.string().min(6, { message: "비밀번호는 6자 이상이어야 합니다." }),
+  password: z.string().min(6, { error: "비밀번호는 6자 이상이어야 합니다." }),
   passwordConfirm: z.string(),
-  name: z.string().min(2, { message: "이름은 2자 이상이어야 합니다." }),
+  name: z.string().min(2, { error: "이름은 2자 이상이어야 합니다." }),
   nickname: z
     .string()
-    .min(2, { message: "닉네임은 2자 이상이어야 합니다." })
-    .max(10, { message: "닉네임은 10자 이하여야 합니다." })
+    .min(2, { error: "닉네임은 2자 이상이어야 합니다." })
+    .max(10, { error: "닉네임은 10자 이하여야 합니다." })
     .regex(/^[a-zA-Z0-9가-힣\s]+$/, {
-      message: "특수문자는 사용할 수 없습니다.",
+      error: "특수문자는 사용할 수 없습니다.",
     })
     .refine((val) => val.trim().length > 0, {
-      message: "닉네임은 공백으로 설정할 수 없습니다.",
+      error: "닉네임은 공백으로 설정할 수 없습니다.",
     }),
-  birth: z.string().min(1, { message: "생년월일을 입력해주세요." }),
+  birth: z.string().min(1, { error: "생년월일을 입력해주세요." }),
   phone: z
     .string()
-    .regex(/^010-?\d{4}-?\d{4}$/, { message: "올바른 휴대전화번호 형식을 입력해주세요." }),
-  gender: z.enum(["male", "female", "none"], { message: "성별을 선택해주세요." }),
+    .regex(/^010-?\d{4}-?\d{4}$/, { error: "올바른 휴대전화번호 형식을 입력해주세요." }),
+  gender: z.enum(["male", "female", "none"], { error: "성별을 선택해주세요." }),
 });
 
 export const signUpSchema = signUpBaseSchema.refine(
   (data) => data.password === data.passwordConfirm,
   {
-    message: "비밀번호가 일치하지 않습니다.",
+    error: "비밀번호가 일치하지 않습니다.",
     path: ["passwordConfirm"],
   },
 );
@@ -60,7 +60,7 @@ export const changePasswordSchema = z
     newPasswordConfirm: z.string(),
   })
   .refine((data) => data.newPassword === data.newPasswordConfirm, {
-    message: "비밀번호가 일치하지 않습니다.",
+    error: "비밀번호가 일치하지 않습니다.",
     path: ["newPasswordConfirm"],
   });
 
