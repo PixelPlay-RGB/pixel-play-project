@@ -38,18 +38,20 @@ export default function ProfileProvidersCard() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>연동된 계정</CardTitle>
+        <CardTitle>계정 연동</CardTitle>
         {!hasEmailAuth && (
-          <CardDescription>OAuth로 가입한 경우 최소 1개의 계정이 필요합니다.</CardDescription>
+          <CardDescription>
+            소셜 연동 계정은 최소 1개의 연결 상태를 유지해야 합니다.
+          </CardDescription>
         )}
         <CardAction>
           <span
             className={cn(
-              "bg-muted rounded border px-2 py-1 font-mono text-[11px]",
-              hasEmailAuth ? "border-brand/30 text-brand" : "border-border text-muted-foreground",
+              "bg-muted rounded border px-2 py-1 font-mono text-[12px]",
+              "border-brand/30 text-brand",
             )}
           >
-            {hasEmailAuth ? "이메일 가입" : "OAuth 가입"}
+            {hasEmailAuth ? "이메일 계정" : "소셜 연동 계정"}
           </span>
         </CardAction>
       </CardHeader>
