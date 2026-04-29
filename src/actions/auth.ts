@@ -400,34 +400,43 @@ export async function updateProfileAction(formData: FormData): Promise<ActionRes
   }
 
   // 이미지 처리
-  if (file) {
-    const fileExt = file.name.split(".").pop();
-    const filePath = `avatars/${user.id}/avatar.${fileExt}`;
-
-    const { error: uploadError } = await supabase.storage
+  if (file || shouldDeleteImage) {
+    const { data: existingFiles } = await supabase.storage
       .from("profiles")
-      .upload(filePath, file, { upsert: true, contentType: file.type });
+      .list(`avatars/${user.id}`);
+    const existingPaths = (existingFiles ?? []).map((f) => `avatars/${user.id}/${f.name}`);
 
-    if (uploadError) {
-      return {
-        success: false,
-        message: "이미지 저장에 실패했습니다.",
-      };
+    if (file) {
+      const fileExt = file.name.split(".").pop();
+      const filePath = `avatars/${user.id}/avatar.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("profiles")
+        .upload(filePath, file, { upsert: true, contentType: file.type });
+
+      if (uploadError) {
+        return {
+          success: false,
+          message: "이미지 저장에 실패했습니다.",
+        };
+      }
+
+      // 업로드 성공 후 다른 확장자의 잔재 파일 정리
+      const orphans = existingPaths.filter((p) => p !== filePath);
+      if (orphans.length > 0) {
+        await supabase.storage.from("profiles").remove(orphans);
+      }
+
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("profiles").getPublicUrl(filePath);
+      photoUrl = `${publicUrl}?t=${Date.now()}`;
+    } else {
+      if (existingPaths.length > 0) {
+        await supabase.storage.from("profiles").remove(existingPaths);
+      }
+      photoUrl = null;
     }
-
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from("profiles").getPublicUrl(filePath);
-    photoUrl = `${publicUrl}?t=${Date.now()}`;
-  } else if (shouldDeleteImage) {
-    // Storage에 파일이 있는 경우 삭제 로직
-    const { data: files } = await supabase.storage.from("profiles").list(`avatars/${user.id}`);
-    if (files && files.length > 0) {
-      const filesToDelete = files.map((f) => `avatars/${user.id}/${f.name}`);
-      await supabase.storage.from("profiles").remove(filesToDelete);
-    }
-
-    photoUrl = null;
   }
 
   // Auth & DB에 데이터 업데이트
