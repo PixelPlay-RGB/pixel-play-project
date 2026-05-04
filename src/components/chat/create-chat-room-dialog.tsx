@@ -56,7 +56,7 @@ export default function CreateChatRoomDialog() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
         className={cn(
-          "bg-brand shadow-brand/20 rounded-xl px-6 py-2 text-sm font-black text-white shadow-lg",
+          "bg-brand shadow-brand/20 max-w-max self-end rounded-xl px-6 py-2 text-sm font-black text-white shadow-lg",
           "transition-all hover:opacity-90 active:scale-95",
           "cursor-pointer",
         )}

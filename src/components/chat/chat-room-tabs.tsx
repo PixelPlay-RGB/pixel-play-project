@@ -9,7 +9,7 @@ export default function ChatRoomTabs() {
 
   return (
     <Tabs value={tabType} onValueChange={(nextValue) => setTabType(nextValue)}>
-      <TabsList className="flex w-full flex-wrap gap-2 bg-transparent p-0 sm:w-auto sm:gap-3">
+      <TabsList className="flex w-full gap-1 bg-transparent p-0 sm:w-auto sm:gap-2">
         {CHAT_ROOM_TABS.map((tabType) => (
           <TabsTrigger
             key={tabType}
