@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { formatCapacity, formatRoomDate } from "@/utils/room";
@@ -27,6 +28,7 @@ interface ChatListProps
 }
 
 export default function ChatList({ maxCapacity }: ChatListProps) {
+  const router = useRouter();
   const [filter, setFilter] = useState<"joined" | "others" | "my">("joined");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { data: currentUser } = useUser();
@@ -208,6 +210,7 @@ export default function ChatList({ maxCapacity }: ChatListProps) {
             return (
               <div
                 key={room.id}
+                onClick={() => router.push(`/chat/${room.id}`)}
                 className="flex items-center justify-between p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800/50 bg-white dark:bg-zinc-900/50 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 hover:border-brand/50 dark:hover:border-brand/50 cursor-pointer transition-all group active:scale-[0.99] shadow-sm dark:shadow-none"
               >
                 <div className="flex flex-col gap-1">
