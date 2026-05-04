@@ -3,6 +3,8 @@
 import { createClient } from "@/lib/supabase/client";
 import { useUserStore } from "@/stores/auth";
 import { useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { QUERY_KEYS } from "@/constants/query-keys";
 
 /**
  * 앱 루트에서 1회 마운트되어 Supabase Auth 상태를 Zustand store(AuthUser)에 동기화.
@@ -13,28 +15,35 @@ import { useEffect } from "react";
  */
 export default function AuthListener() {
   const setUser = useUserStore((s) => s.setUser);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const supabase = createClient();
 
-    // 👉 여기에 'const {' 가 빠져 있었습니다.
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth.all });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.all });
     });
 
     // 서버에서 세션 실제 유효성 검증 (스테일 JWT 방어)
-    supabase.auth.getUser().then(({ error }) => {
+    supabase.auth.getUser().then(({ data, error }) => {
       if (error) {
         supabase.auth.signOut({ scope: "local" });
+        setUser(null);
+      } else {
+        setUser(data.user ?? null);
       }
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth.all });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.all });
     });
 
     return () => {
       subscription.unsubscribe();
     };
-  }, [setUser]);
+  }, [setUser, queryClient]);
 
   return null;
 }
