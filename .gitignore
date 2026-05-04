@@ -49,7 +49,7 @@ next-env.d.ts
 # Claude Code (팀장 개인 작업용 - 공유 안 함)
 .claude/
 CLAUDE.md
-AGENT.md
+AGENTS.md
 CLAUDE.local.md
 /.mcp.json
 
