@@ -1,10 +1,11 @@
 import AuthToastHandler from "@/components/auth/auth-toast-handler";
+import MenuTab from "@/components/list/menu-tab";
 
-export default async function Home() {
+export default function Home() {
   return (
     <>
       <AuthToastHandler />
-      <div>초기 인덱스 페이지 입니다.</div>
+      <MenuTab />
     </>
   );
 }
