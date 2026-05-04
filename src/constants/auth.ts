@@ -6,11 +6,6 @@ export const OAUTH_PROVIDER_META: Record<OAuthProvider, { name: string; logo: st
   github: { name: "GitHub", logo: "/github.svg" },
 };
 
-export const USER_QUERY_KEY = {
-  all: ["user"] as const,
-  db: () => [...USER_QUERY_KEY.all, "db"] as const,
-};
-
 export const WELCOME_PARAM = "?welcome=true";
 export const LOGIN_PARAM = "?login=true";
 export const LINKED_PARAM = "?linked=true";

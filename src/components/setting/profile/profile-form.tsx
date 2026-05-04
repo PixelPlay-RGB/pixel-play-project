@@ -22,7 +22,7 @@ import { Spinner } from "@/components/ui/spinner";
 
 import { checkNicknameAction, updateProfileAction } from "@/actions/auth";
 import ProfileFormSkeleton from "@/components/setting/profile/profile-form-skeleton";
-import { USER_QUERY_KEY } from "@/constants/auth";
+import { QUERY_KEYS } from "@/constants/query-keys";
 import { useUser } from "@/hooks/use-profile";
 import { cn } from "@/lib/utils";
 import { ProfileFormValues, profileSchema } from "@/lib/zod/auth";
@@ -153,7 +153,7 @@ export default function ProfileForm() {
       photoUrl: result.photoUrl,
     });
 
-    queryClient.invalidateQueries({ queryKey: USER_QUERY_KEY.db() });
+    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth.profile() });
 
     setIsSaving(false);
     setVerifiedNickname(data.nickname);

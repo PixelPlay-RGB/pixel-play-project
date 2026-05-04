@@ -15,7 +15,8 @@ import {
 } from "@/components/ui/input-group";
 import { RadioGroup } from "@/components/ui/radio-group";
 import { Spinner } from "@/components/ui/spinner";
-import { USER_QUERY_KEY, WELCOME_PARAM } from "@/constants/auth";
+import { WELCOME_PARAM } from "@/constants/auth";
+import { QUERY_KEYS } from "@/constants/query-keys";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { completeOAuthProfileSchema, CompleteOAuthProfileValues } from "@/lib/zod/auth";
@@ -93,7 +94,7 @@ export default function CompleteProfileForm() {
     }
 
     setUser(authUser);
-    await queryClient.invalidateQueries({ queryKey: USER_QUERY_KEY.all });
+    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth.all });
 
     router.push(`/${WELCOME_PARAM}`);
     router.refresh();

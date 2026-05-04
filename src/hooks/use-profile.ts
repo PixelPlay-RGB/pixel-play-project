@@ -1,10 +1,10 @@
 "use client";
 
-import { USER_QUERY_KEY } from "@/constants/auth";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth";
 import { DBUser } from "@/types/user";
 import { useQuery } from "@tanstack/react-query";
+import { QUERY_KEYS } from "@/constants/query-keys";
 
 /**
  * 현재 로그인된 유저의 public.user 프로필을 조회.
@@ -15,7 +15,7 @@ export function useUser() {
   const user = useAuthStore((s) => s.user);
 
   return useQuery<DBUser | null>({
-    queryKey: USER_QUERY_KEY.db(),
+    queryKey: QUERY_KEYS.auth.profile(user?.id),
     queryFn: async () => {
       if (!user) return null;
       const supabase = createClient();

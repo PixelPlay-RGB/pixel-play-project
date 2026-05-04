@@ -150,7 +150,8 @@ src/
 │   │   └── setting-menu-item.tsx         # 메뉴 아이템 렌더러
 │   └── ui/               # shadcn / Base UI 컴포넌트
 ├── constants/
-│   ├── auth.ts           # OAUTH_PROVIDERS · OAUTH_PROVIDER_META · PROFILE_QUERY_KEY · URL 파라미터 상수
+│   ├── auth.ts           # OAUTH_PROVIDERS · OAUTH_PROVIDER_META · URL 파라미터 상수
+│   ├── query-keys.ts     # 중앙 집중식 Query Key Factory (QUERY_KEYS)
 │   └── setting-menu.ts   # 설정 메뉴 아이템 목록
 ├── hooks/
 │   ├── use-profile.ts    # useUser() — public.user 프로필 React Query 훅

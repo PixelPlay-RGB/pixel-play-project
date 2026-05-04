@@ -14,7 +14,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { OAUTH_PROVIDER_META, USER_QUERY_KEY } from "@/constants/auth";
+import { OAUTH_PROVIDER_META } from "@/constants/auth";
+import { QUERY_KEYS } from "@/constants/query-keys";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { OAuthProvider } from "@/types/auth";
@@ -72,7 +73,7 @@ export default function LinkedOAuthAlertDialog({
         const result = await unLinkOAuthAction(provider);
         if (result.success) {
           toast.success(`${OAUTH_PROVIDER_META[provider].name} 연동 해제 성공`);
-          await queryClient.invalidateQueries({ queryKey: USER_QUERY_KEY.all });
+          await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth.all });
         } else {
           toast.error(result.message || "연동 해제 실패");
         }
