@@ -386,6 +386,15 @@ export async function updateProfileAction(formData: FormData): Promise<ActionRes
   let photoUrl = formData.get("photoUrl") as string | null;
   const shouldDeleteImage = formData.get("shouldDeleteImage") === "true";
 
+  // 🚨 [추가된 로직] 파일 크기 검증 (5MB 제한)
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+  if (file && file.size > MAX_FILE_SIZE) {
+    return {
+      success: false,
+      message: "이미지 파일 크기는 5MB를 초과할 수 없습니다.",
+    };
+  }
+
   // 유저 세션 확인
   const {
     data: { user },
