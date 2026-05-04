@@ -30,5 +30,6 @@ export function useChatRooms(tabType: ChatRoomTab) {
     queryFn: () => fetchRooms(currentUser!.id, tabType),
     enabled: !!currentUser?.id,
     placeholderData: keepPreviousData,
+    refetchOnMount: "always",
   });
 }

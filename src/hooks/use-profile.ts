@@ -14,21 +14,31 @@ import { useQuery } from "@tanstack/react-query";
  */
 export function useUser() {
   const user = useUserStore((s) => s.user);
+  const setUser = useUserStore((s) => s.setUser);
 
   return useQuery<DBUser | null>({
-    queryKey: [...PROFILE_QUERY_KEY, user?.id],
+    queryKey: [...PROFILE_QUERY_KEY, user?.id ?? "session"],
     queryFn: async () => {
-      if (!user) return null;
       const supabase = createClient();
+      const authUser = user ?? (await supabase.auth.getUser()).data.user;
+
+      if (!authUser) {
+        return null;
+      }
+
+      if (!user) {
+        setUser(authUser);
+      }
+
       const { data, error } = await supabase
         .from("user")
         .select("*")
-        .eq("oauth_id", user.id)
+        .eq("oauth_id", authUser.id)
         .maybeSingle();
       if (error) throw error;
       return data;
     },
-    enabled: !!user,
-    staleTime: 1000 * 60 * 5,
+    staleTime: user ? 1000 * 60 * 5 : 0,
+    refetchOnMount: "always",
   });
 }
