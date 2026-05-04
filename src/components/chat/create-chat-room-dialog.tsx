@@ -15,10 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { CHAT_ROOM_MAX_CAPACITY, CHAT_ROOM_MIN_CAPACITY } from "@/constants/chat-room";
 import { CHAT_ROOMS_QUERY_KEY } from "@/hooks/use-chat-rooms";
 import { cn } from "@/lib/utils";
-import {
-  CREATE_CHAT_ROOM_DEFAULT_VALUES,
-  createChatRoomSchema,
-} from "@/lib/zod/chat-room";
+import { CREATE_CHAT_ROOM_DEFAULT_VALUES, createChatRoomSchema } from "@/lib/zod/chat-room";
 import type { CreateChatRoomInput } from "@/lib/zod/chat-room";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
@@ -59,11 +56,12 @@ export default function CreateChatRoomDialog() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
         className={cn(
-          "rounded-xl bg-brand px-6 py-2 text-sm font-black text-white shadow-lg shadow-brand/20",
+          "bg-brand shadow-brand/20 rounded-xl px-6 py-2 text-sm font-black text-white shadow-lg",
           "transition-all hover:opacity-90 active:scale-95",
+          "cursor-pointer",
         )}
       >
-        방 만들기
+        채팅방 만들기
       </DialogTrigger>
       <DialogContent className="max-w-md rounded-3xl">
         <DialogHeader>
@@ -122,10 +120,7 @@ export default function CreateChatRoomDialog() {
             <Button
               type="submit"
               disabled={!isValid || isSubmitting}
-              className={cn(
-                "h-auto flex-1 bg-brand py-3 font-bold text-white",
-                "hover:opacity-90",
-              )}
+              className={cn("bg-brand h-auto flex-1 py-3 font-bold text-white", "hover:opacity-90")}
             >
               {isSubmitting ? "생성 중..." : "생성하기"}
             </Button>

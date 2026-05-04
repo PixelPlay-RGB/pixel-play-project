@@ -3,12 +3,13 @@ import { cn } from "@/lib/utils";
 
 export default function ChatRoomListSkeleton() {
   return (
-    <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
       {Array.from({ length: 4 }).map((_, index) => (
         <div
           key={index}
           className={cn(
-            "flex items-center justify-between rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm",
+            "flex min-h-24 items-center justify-between rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm",
+            "sm:p-5",
             "dark:border-zinc-800/50 dark:bg-zinc-900/50",
           )}
         >

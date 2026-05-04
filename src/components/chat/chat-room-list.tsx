@@ -22,7 +22,8 @@ export default function ChatRoomList() {
     <div className="flex h-full flex-col">
       <div
         className={cn(
-          "mb-8 flex items-center justify-between gap-4 border-b border-zinc-200 pb-6",
+          "mb-6 flex flex-col gap-4 border-b border-zinc-200 pb-5",
+          "sm:mb-8 sm:flex-row sm:items-center sm:justify-between sm:pb-6",
           "dark:border-zinc-800/50",
         )}
       >
@@ -33,7 +34,7 @@ export default function ChatRoomList() {
       {isLoading ? (
         <ChatRoomListSkeleton />
       ) : (
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {rooms.map((room) => (
             <ChatRoomCard key={room.id} chatRoom={room} />
           ))}

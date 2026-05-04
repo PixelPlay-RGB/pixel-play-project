@@ -24,10 +24,14 @@ export default function AuthListener() {
     });
 
     // 서버에서 세션 실제 유효성 검증 (스테일 JWT 방어)
-    supabase.auth.getUser().then(({ error }) => {
+    supabase.auth.getUser().then(({ data, error }) => {
       if (error) {
         supabase.auth.signOut({ scope: "local" });
+        setUser(null);
+        return;
       }
+
+      setUser(data.user ?? null);
     });
 
     return () => {

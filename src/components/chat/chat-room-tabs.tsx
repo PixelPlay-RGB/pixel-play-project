@@ -11,7 +11,7 @@ interface Props {
 export default function ChatRoomTabs({ tabType, setTabType }: Props) {
   return (
     <Tabs value={tabType} onValueChange={(nextValue) => setTabType(nextValue as ChatRoomTab)}>
-      <TabsList className="flex flex-wrap gap-3 bg-transparent p-0">
+      <TabsList className="flex w-full flex-wrap gap-2 bg-transparent p-0 sm:w-auto sm:gap-3">
         {CHAT_ROOM_TABS.map((tabType) => (
           <TabsTrigger
             key={tabType}
