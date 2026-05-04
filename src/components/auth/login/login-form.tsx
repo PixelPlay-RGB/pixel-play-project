@@ -5,7 +5,8 @@ import AuthInputGroup from "@/components/auth/auth-input-group";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
-import { LOGIN_PARAM, PROFILE_QUERY_KEY } from "@/constants/auth";
+import { LOGIN_PARAM } from "@/constants/auth";
+import { QUERY_KEYS } from "@/constants/query-keys";
 import { createClient } from "@/lib/supabase/client";
 import { loginSchema } from "@/lib/zod/auth";
 import { useUserStore } from "@/stores/auth";
@@ -56,7 +57,7 @@ export default function LoginForm() {
     }
 
     setUser(authUser);
-    queryClient.invalidateQueries({ queryKey: PROFILE_QUERY_KEY });
+    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth.profile(authUser.id) });
 
     router.push(`/${LOGIN_PARAM}`);
     router.refresh();

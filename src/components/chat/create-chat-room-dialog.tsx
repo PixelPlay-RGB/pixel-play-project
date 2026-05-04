@@ -13,7 +13,7 @@ import { FieldError } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { CHAT_ROOM_MAX_CAPACITY, CHAT_ROOM_MIN_CAPACITY } from "@/constants/chat-room";
-import { CHAT_ROOMS_QUERY_KEY } from "@/hooks/use-chat-rooms";
+import { QUERY_KEYS } from "@/constants/query-keys";
 import { cn } from "@/lib/utils";
 import { CREATE_CHAT_ROOM_DEFAULT_VALUES, createChatRoomSchema } from "@/lib/zod/chat-room";
 import type { CreateChatRoomInput } from "@/lib/zod/chat-room";
@@ -49,7 +49,7 @@ export default function CreateChatRoomDialog() {
     toast.success("채팅방 생성 완료");
     setOpen(false);
     reset(CREATE_CHAT_ROOM_DEFAULT_VALUES);
-    queryClient.invalidateQueries({ queryKey: CHAT_ROOMS_QUERY_KEY });
+    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.all });
   };
 
   return (
