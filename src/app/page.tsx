@@ -1,11 +1,5 @@
-import AuthToastHandler from "@/components/auth/auth-toast-handler";
-import MenuTab from "@/components/list/menu-tab";
+import MenuSidebar from "@/components/common/menu-sidebar";
 
 export default function Home() {
-  return (
-    <>
-      <AuthToastHandler />
-      <MenuTab />
-    </>
-  );
+  return <MenuSidebar />;
 }
