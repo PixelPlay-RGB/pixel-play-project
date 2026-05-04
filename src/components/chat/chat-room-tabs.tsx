@@ -1,16 +1,14 @@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CHAT_ROOM_TABS, ROOM_TAB_LABELS } from "@/constants/chat-room";
 import { cn } from "@/lib/utils";
-import type { ChatRoomTab } from "@/types/chat-room";
+import { useChatRoomStore } from "@/stores/chat-room";
 
-interface Props {
-  tabType: ChatRoomTab;
-  setTabType: (value: ChatRoomTab) => void;
-}
+export default function ChatRoomTabs() {
+  const tabType = useChatRoomStore((state) => state.tabType);
+  const setTabType = useChatRoomStore((state) => state.setTabType);
 
-export default function ChatRoomTabs({ tabType, setTabType }: Props) {
   return (
-    <Tabs value={tabType} onValueChange={(nextValue) => setTabType(nextValue as ChatRoomTab)}>
+    <Tabs value={tabType} onValueChange={(nextValue) => setTabType(nextValue)}>
       <TabsList className="flex w-full flex-wrap gap-2 bg-transparent p-0 sm:w-auto sm:gap-3">
         {CHAT_ROOM_TABS.map((tabType) => (
           <TabsTrigger

@@ -7,11 +7,10 @@ import ChatRoomTabs from "@/components/chat/chat-room-tabs";
 import CreateChatRoomDialog from "@/components/chat/create-chat-room-dialog";
 import { useChatRooms } from "@/hooks/use-chat-rooms";
 import { cn } from "@/lib/utils";
-import type { ChatRoomTab } from "@/types/chat-room";
-import { useState } from "react";
+import { useChatRoomStore } from "@/stores/chat-room";
 
 export default function ChatRoomList() {
-  const [tabType, setTabType] = useState<ChatRoomTab>("JOINED");
+  const tabType = useChatRoomStore((state) => state.tabType);
   const { data: rooms = [], isError, isLoading } = useChatRooms(tabType);
 
   if (isError) {
@@ -27,7 +26,7 @@ export default function ChatRoomList() {
           "dark:border-zinc-800/50",
         )}
       >
-        <ChatRoomTabs tabType={tabType} setTabType={setTabType} />
+        <ChatRoomTabs />
         <CreateChatRoomDialog />
       </div>
 
