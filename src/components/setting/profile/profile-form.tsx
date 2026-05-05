@@ -153,7 +153,7 @@ export default function ProfileForm() {
       photoUrl: result.photoUrl,
     });
 
-    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth.profile() });
+    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth.all });
 
     setIsSaving(false);
     setVerifiedNickname(data.nickname);
