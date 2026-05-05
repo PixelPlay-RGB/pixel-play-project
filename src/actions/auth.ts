@@ -19,7 +19,7 @@ import { revalidatePath } from "next/cache";
 export interface ActionResponse {
   success: boolean;
   message?: string;
-  photoUrl?: string;
+  photoUrl?: string | null;
 }
 
 /**
@@ -383,7 +383,7 @@ export async function updateProfileAction(formData: FormData): Promise<ActionRes
   // Form 데이터에서 값 추출
   const nickname = formData.get("nickname") as string;
   const file = formData.get("file") as File | null;
-  let photoUrl = formData.get("photoUrl") as string | null;
+  let photoUrl = (formData.get("photoUrl") as string | null) || null;
   const shouldDeleteImage = formData.get("shouldDeleteImage") === "true";
 
   // 🚨 [추가된 로직] 파일 크기 검증 (5MB 제한)
@@ -472,6 +472,6 @@ export async function updateProfileAction(formData: FormData): Promise<ActionRes
   revalidatePath("/", "layout");
   return {
     success: true,
-    photoUrl: photoUrl!,
+    photoUrl,
   };
 }

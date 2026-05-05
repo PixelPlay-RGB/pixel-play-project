@@ -52,7 +52,7 @@ export default function ProfileForm() {
     mode: "onChange",
     values: {
       nickname: user?.nickname ?? "",
-      photoUrl: user?.photo_url ?? "",
+      photoUrl: user?.photo_url ?? null,
     },
   });
 
@@ -115,8 +115,12 @@ export default function ProfileForm() {
   };
 
   const handleReset = () => {
-    reset();
+    reset({
+      nickname: user.nickname,
+      photoUrl: user.photo_url ?? null,
+    });
     setNicknameStatus("idle");
+    setPendingFile(null);
   };
 
   const handleSave = async (data: ProfileFormValues) => {
@@ -129,7 +133,7 @@ export default function ProfileForm() {
     if (pendingFile) {
       // 파일이 새로 선택된 경우에만 FormData에 추가하기
       formData.append("file", pendingFile);
-    } else if (data.photoUrl === null) {
+    } else if (dirtyFields.photoUrl && data.photoUrl === null) {
       // 유저가 이미지 파일을 지운경우
       formData.append("shouldDeleteImage", "true");
     } else {
