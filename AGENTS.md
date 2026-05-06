@@ -12,6 +12,7 @@
 
 ## 참고 문서
 
+- [중요] 사용자의 작업 환경 OS는 Windows 입니다.
 - 프로젝트 실행, 환경 변수, 디렉토리 구조, DB 스키마: [README.md](./README.md)
 - 코드 네이밍/파일 컨벤션: [.agents/code-convention/SKILLS.md](./.agents/code-convention/SKILLS.md)
 - 커밋 메시지/브랜치 컨벤션: [.agents/git-convention/SKILLS.md](./.agents/git-convention/SKILLS.md)
