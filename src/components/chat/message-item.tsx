@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import type { Message } from "@/types/message"
 import { cn } from "@/lib/utils"
 
-import type { MemberDisplayByUserId } from "@/types/chatroommember"
+import type { MemberDisplayByUserId } from "@/types/chat-room-member"
 
 interface Props {
   message: Message

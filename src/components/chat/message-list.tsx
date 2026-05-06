@@ -2,7 +2,7 @@
 
 import { useCallback, useLayoutEffect, useRef } from "react"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import type { MemberDisplayByUserId } from "@/types/chatroommember"
+import type { MemberDisplayByUserId } from "@/types/chat-room-member"
 import type { Message } from "@/types/message"
 import { MessageItem } from "./message-item"
 

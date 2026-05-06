@@ -1,6 +1,6 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import type { RoomMemberQuery } from "@/types/chatroommember"
+import type { RoomMemberQuery } from "@/types/chat-room-member"
 
 interface Props {
   member: RoomMemberQuery
