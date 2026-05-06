@@ -5,9 +5,13 @@ import Link from "next/link";
 
 interface Props {
   chatRoom: ChatRoom;
+  unreadMessageCount?: number;
 }
 
-export default function ChatRoomCard({ chatRoom }: Props) {
+export default function ChatRoomCard({ chatRoom, unreadMessageCount = 0 }: Props) {
+  const hasUnreadMessages = unreadMessageCount > 0;
+  const unreadLabel = unreadMessageCount > 99 ? "99+" : String(unreadMessageCount);
+
   return (
     <Link
       href={`/chat/${chatRoom.id}`}
@@ -30,7 +34,12 @@ export default function ChatRoomCard({ chatRoom }: Props) {
           </span>
         )}
       </div>
-      <div className="ml-3 flex shrink-0 flex-col items-end gap-1 sm:ml-4">
+      <div className="ml-3 flex shrink-0 flex-col items-end gap-1.5 sm:ml-4">
+        {hasUnreadMessages && (
+          <span className="bg-brand text-primary-foreground ring-brand/25 dark:text-zinc-950 flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 font-mono text-[11px] font-black leading-none shadow-sm ring-2">
+            {unreadLabel}
+          </span>
+        )}
         <span className="text-brand font-mono text-xs font-bold group-hover:opacity-80">
           {formatCapacity(chatRoom.current_member, chatRoom.max_capacity)}
         </span>

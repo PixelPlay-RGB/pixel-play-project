@@ -8,6 +8,8 @@ import { useChatRooms } from "@/hooks/use-chat-rooms";
 import { cn } from "@/lib/utils";
 import { useChatRoomStore } from "@/stores/chat-room";
 
+const MOCK_UNREAD_MESSAGE_COUNTS = [8, 0, 23, 3, 105, 0, 12, 1];
+
 export default function ChatRoomList() {
   const tabType = useChatRoomStore((state) => state.tabType);
   const { data: rooms = [], isError, isLoading } = useChatRooms(tabType);
@@ -37,8 +39,12 @@ export default function ChatRoomList() {
         <ChatRoomListSkeleton />
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-          {rooms.map((room) => (
-            <ChatRoomCard key={room.id} chatRoom={room} />
+          {rooms.map((room, index) => (
+            <ChatRoomCard
+              key={room.id}
+              chatRoom={room}
+              unreadMessageCount={MOCK_UNREAD_MESSAGE_COUNTS[index % MOCK_UNREAD_MESSAGE_COUNTS.length]}
+            />
           ))}
         </div>
       )}
