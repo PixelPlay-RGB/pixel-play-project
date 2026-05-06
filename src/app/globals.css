@@ -6,6 +6,14 @@
 
 @theme inline {
   --color-brand: #46c6a9;
+  --color-live: #ff4458;
+  --color-stream: #8b5cf6;
+
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-info: #3b82f6;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
