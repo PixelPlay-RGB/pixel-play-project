@@ -14,9 +14,10 @@ export type Database = {
   }
   public: {
     Tables: {
-      chatroom: {
+      chat_room: {
         Row: {
           created_at: string
+          current_member: number
           description: string | null
           id: string
           max_capacity: number
@@ -26,6 +27,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          current_member?: number
           description?: string | null
           id?: string
           max_capacity: number
@@ -35,6 +37,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          current_member?: number
           description?: string | null
           id?: string
           max_capacity?: number
@@ -44,32 +47,32 @@ export type Database = {
         }
         Relationships: []
       }
-      chatroommember: {
+      chat_room_member: {
         Row: {
           chat_room_id: string
           created_at: string
           id: string
+          is_banned: boolean
           last_joined_at: string | null
           last_read_at: string | null
-          status: Database["public"]["Enums"]["membership_status"]
           user_id: string
         }
         Insert: {
           chat_room_id: string
           created_at?: string
           id?: string
+          is_banned?: boolean
           last_joined_at?: string | null
           last_read_at?: string | null
-          status?: Database["public"]["Enums"]["membership_status"]
           user_id: string
         }
         Update: {
           chat_room_id?: string
           created_at?: string
           id?: string
+          is_banned?: boolean
           last_joined_at?: string | null
           last_read_at?: string | null
-          status?: Database["public"]["Enums"]["membership_status"]
           user_id?: string
         }
         Relationships: [
@@ -77,7 +80,7 @@ export type Database = {
             foreignKeyName: "chatroommember_chat_room_id_fkey"
             columns: ["chat_room_id"]
             isOneToOne: false
-            referencedRelation: "chatroom"
+            referencedRelation: "chat_room"
             referencedColumns: ["id"]
           },
           {
@@ -119,7 +122,7 @@ export type Database = {
             foreignKeyName: "message_chat_room_id_fkey"
             columns: ["chat_room_id"]
             isOneToOne: false
-            referencedRelation: "chatroom"
+            referencedRelation: "chat_room"
             referencedColumns: ["id"]
           },
           {
@@ -186,10 +189,22 @@ export type Database = {
         Args: { target_nickname: string }
         Returns: boolean
       }
+      get_rooms_by_tab: {
+        Args: { p_tab_type: string; p_user_id: string }
+        Returns: {
+          created_at: string
+          current_member: number
+          description: string
+          id: string
+          max_capacity: number
+          owner_id: string
+          owner_nickname: string
+          title: string
+        }[]
+      }
     }
     Enums: {
       gender: "male" | "female" | "none"
-      membership_status: "JOINED" | "EXITED" | "BANNED"
       oauth_provider: "google" | "github" | "email"
     }
     CompositeTypes: {
@@ -319,7 +334,6 @@ export const Constants = {
   public: {
     Enums: {
       gender: ["male", "female", "none"],
-      membership_status: ["JOINED", "EXITED", "BANNED"],
       oauth_provider: ["google", "github", "email"],
     },
   },
