@@ -14,7 +14,7 @@ export default function ChatRoomTabs({ counts }: Props) {
 
   return (
     <Tabs value={tabType} onValueChange={(nextValue) => setTabType(nextValue)}>
-      <TabsList className="grid h-auto w-full min-w-0 grid-cols-3 items-center gap-1 rounded-xl bg-muted/50 p-1 dark:bg-zinc-800/40 lg:w-150">
+      <TabsList className={cn("grid h-auto w-full min-w-0 grid-cols-3 items-center gap-1 rounded-xl bg-muted/50 p-1 dark:bg-zinc-800/40 lg:w-150")}>
         {CHAT_ROOM_TABS.map((tab) => {
           const count = counts?.[tab];
 
