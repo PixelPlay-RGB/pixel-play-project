@@ -1,11 +1,13 @@
+"use client";
+
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CHAT_ROOM_TABS, ROOM_TAB_LABELS } from "@/constants/chat-room";
-import { cn } from "@/lib/utils";
 import { useChatRoomStore } from "@/stores/chat-room";
-import type { ChatRoomTab } from "@/types/chat-room";
+import type { ChatRoomTabType } from "@/types/chat-room";
+import { cn } from "@/lib/utils";
 
 interface Props {
-  counts?: Partial<Record<ChatRoomTab, number>>;
+  counts?: Partial<Record<ChatRoomTabType, number>>;
 }
 
 export default function ChatRoomTabs({ counts }: Props) {
@@ -13,8 +15,14 @@ export default function ChatRoomTabs({ counts }: Props) {
   const setTabType = useChatRoomStore((state) => state.setTabType);
 
   return (
-    <Tabs value={tabType} onValueChange={(nextValue) => setTabType(nextValue)}>
-      <TabsList className={cn("grid h-auto w-full min-w-0 grid-cols-3 items-center gap-1 rounded-xl bg-muted/50 p-1 dark:bg-zinc-800/40 lg:w-150")}>
+    <Tabs value={tabType} onValueChange={(nextValue) => setTabType(nextValue as ChatRoomTabType)}>
+      <TabsList
+        className={cn(
+          "grid h-auto w-full min-w-0 grid-cols-3 items-center gap-1 p-1",
+          "rounded-xl bg-muted/50 dark:bg-zinc-800/40",
+          "lg:w-150",
+        )}
+      >
         {CHAT_ROOM_TABS.map((tab) => {
           const count = counts?.[tab];
 

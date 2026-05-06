@@ -61,24 +61,21 @@ export default function CreateChatRoomDialog() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
         className={cn(
-          "flex items-center gap-1.5 self-end rounded-xl px-5 py-2 text-sm font-bold text-white",
-          "bg-brand shadow-sm shadow-brand/25",
+          "flex items-center gap-1.5 self-end px-5 py-2",
+          "rounded-xl bg-brand text-sm font-bold text-white shadow-sm shadow-brand/25",
           "cursor-pointer transition-all hover:opacity-90 active:scale-95",
         )}
       >
-        <Plus className={cn("h-4 w-4")} />
+        <Plus className="h-4 w-4" />
         채팅방 만들기
       </DialogTrigger>
-      <DialogContent className={cn("max-w-md gap-0 overflow-hidden rounded-3xl p-0")}>
-        <DialogHeader className={cn("border-b border-border/50 px-6 pt-6 pb-4")}>
-          <DialogTitle className={cn("text-base font-bold")}>채팅방 생성</DialogTitle>
+      <DialogContent className={cn("max-w-md gap-0 overflow-hidden p-0", "rounded-3xl")}>
+        <DialogHeader className={cn("border-b border-border/50 px-6 pb-4 pt-6")}>
+          <DialogTitle className="text-base font-bold">채팅방 생성</DialogTitle>
         </DialogHeader>
-        <form
-          onSubmit={handleSubmit(handleCreateRoom)}
-          className={cn("flex flex-col gap-5 px-6 py-5")}
-        >
-          <div className={cn("flex flex-col gap-1.5")}>
-            <label className={cn("text-xs font-semibold text-muted-foreground")}>방 제목</label>
+        <form onSubmit={handleSubmit(handleCreateRoom)} className="flex flex-col gap-5 px-6 py-5">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-muted-foreground text-xs font-semibold">방 제목</label>
             <Input
               autoFocus
               type="text"
@@ -86,60 +83,63 @@ export default function CreateChatRoomDialog() {
               placeholder="방 제목을 입력하세요"
               maxLength={50}
               className={cn(
-                "h-auto rounded-xl border-border bg-muted/30 px-4 py-2.5 text-sm transition-all placeholder:text-muted-foreground/60",
+                "h-auto rounded-xl px-4 py-2.5 text-sm transition-all",
+                "border-border bg-muted/30 placeholder:text-muted-foreground/60",
                 "focus-visible:border-brand/50 focus-visible:ring-brand/30",
                 "dark:border-zinc-700/50 dark:bg-zinc-800/50",
               )}
             />
             <FieldError errors={[errors.title]} />
-            <p className={cn("text-right text-xs text-muted-foreground")}>{title.length} / 50</p>
+            <p className="text-muted-foreground text-right text-xs">{title.length} / 50</p>
           </div>
-          <div className={cn("flex flex-col gap-1.5")}>
-            <label className={cn("text-xs font-semibold text-muted-foreground")}>
-              방 설명 <span className={cn("font-normal opacity-60")}>(선택)</span>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-muted-foreground text-xs font-semibold">
+              방 설명 <span className="font-normal opacity-60">(선택)</span>
             </label>
             <Textarea
               {...register("description")}
               placeholder="방의 목적이나 규칙을 적어주세요"
               maxLength={200}
               className={cn(
-                "h-auto min-h-20 resize-none rounded-xl border-border bg-muted/30 px-4 py-2.5 text-sm transition-all placeholder:text-muted-foreground/60",
+                "h-auto min-h-20 resize-none rounded-xl px-4 py-2.5 text-sm transition-all",
+                "border-border bg-muted/30 placeholder:text-muted-foreground/60",
                 "focus-visible:border-brand/50 focus-visible:ring-brand/30",
                 "dark:border-zinc-700/50 dark:bg-zinc-800/50",
               )}
             />
             <FieldError errors={[errors.description]} />
-            <p className={cn("text-right text-xs text-muted-foreground")}>
+            <p className="text-muted-foreground text-right text-xs">
               {description?.length ?? 0} / 200
             </p>
           </div>
-          <div className={cn("flex flex-col gap-1.5")}>
-            <label className={cn("text-xs font-semibold text-muted-foreground")}>
-              참여 가능 인원
-            </label>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-muted-foreground text-xs font-semibold">참여 가능 인원</label>
             <Input
               type="number"
               {...register("capacity", { valueAsNumber: true })}
               min={CHAT_ROOM_MIN_CAPACITY}
               max={CHAT_ROOM_MAX_CAPACITY}
               className={cn(
-                "h-auto rounded-xl border-border bg-muted/30 px-4 py-2.5 text-sm transition-all",
+                "h-auto rounded-xl px-4 py-2.5 text-sm transition-all",
+                "border-border bg-muted/30",
                 "focus-visible:border-brand/50 focus-visible:ring-brand/30",
                 "dark:border-zinc-700/50 dark:bg-zinc-800/50",
               )}
             />
             <FieldError errors={[errors.capacity]} />
-            <p className={cn("text-xs text-muted-foreground")}>
+            <p className="text-muted-foreground text-xs">
               최소 {CHAT_ROOM_MIN_CAPACITY}명 · 최대 {CHAT_ROOM_MAX_CAPACITY}명
             </p>
           </div>
-          <div className={cn("mt-1 flex gap-2.5")}>
+          <div className="mt-1 flex gap-2.5">
             <Button
               type="button"
               variant="secondary"
               onClick={() => setOpen(false)}
               className={cn(
-                "h-auto flex-1 rounded-xl border border-border py-2.5 text-sm font-semibold text-muted-foreground hover:bg-muted/50 hover:text-foreground",
+                "h-auto flex-1 rounded-xl border border-border py-2.5 transition-all",
+                "text-sm font-semibold text-muted-foreground",
+                "hover:bg-muted/50 hover:text-foreground",
               )}
             >
               취소
@@ -148,8 +148,9 @@ export default function CreateChatRoomDialog() {
               type="submit"
               disabled={!isValid || isSubmitting}
               className={cn(
-                "h-auto flex-1 rounded-xl bg-brand py-2.5 text-sm font-bold text-white shadow-sm shadow-brand/20",
-                "transition-all hover:opacity-90 active:scale-95",
+                "h-auto flex-1 rounded-xl bg-brand py-2.5 transition-all",
+                "text-sm font-bold text-white shadow-sm shadow-brand/20",
+                "hover:opacity-90 active:scale-95",
               )}
             >
               {isSubmitting ? "생성 중..." : "생성하기"}

@@ -1,13 +1,8 @@
-import { cn } from "@/lib/utils";
-import type { ChatRoom } from "@/types/chat-room";
-import {
-  formatCapacity,
-  formatRoomDate,
-  getCapacityColorClass,
-  getCapacityPercent,
-} from "@/utils/chat-room";
+import { formatCapacity, formatRoomDate } from "@/utils/chat-room";
 import { Clock, MessageCircle, Users } from "lucide-react";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
+import type { ChatRoom } from "@/types/chat-room";
 
 interface Props {
   chatRoom: ChatRoom;
@@ -15,11 +10,16 @@ interface Props {
 }
 
 export default function ChatRoomCard({ chatRoom, unreadMessageCount = 0 }: Props) {
-  const hasUnreadMessages = unreadMessageCount > 0;
-  const unreadLabel = unreadMessageCount > 99 ? "99+" : String(unreadMessageCount);
-  const capacityPercent = getCapacityPercent(chatRoom.current_member, chatRoom.max_capacity);
-  const capacityColorClass = getCapacityColorClass(capacityPercent);
+  const capacityPercent = (chatRoom.current_member / chatRoom.max_capacity) * 100;
   const isFull = chatRoom.current_member >= chatRoom.max_capacity;
+  const hasUnreadMessages = unreadMessageCount > 0;
+  const unreadLabel = unreadMessageCount > 99 ? "99+" : unreadMessageCount;
+
+  const capacityColorClass = isFull
+    ? "bg-live"
+    : capacityPercent > 80
+      ? "bg-warning"
+      : "bg-brand";
 
   return (
     <Link
@@ -36,34 +36,50 @@ export default function ChatRoomCard({ chatRoom, unreadMessageCount = 0 }: Props
       <span
         aria-hidden
         className={cn(
-          "bg-brand absolute top-3 bottom-3 left-0 w-0.75 rounded-full opacity-0 transition-opacity duration-200 group-hover:opacity-100",
+          "bg-brand absolute top-3 bottom-3 left-0 w-0.75 rounded-full",
+          "opacity-0 transition-opacity duration-200 group-hover:opacity-100",
         )}
       />
 
-      <div className={cn("flex min-w-0 flex-1 flex-col gap-1.5 pl-1")}>
-        <div className={cn("flex min-w-0 flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-2")}>
-          <h3 className={cn("text-foreground truncate text-sm leading-snug font-bold")}>
+      <div className="flex min-w-0 flex-1 flex-col gap-1.5 pl-1">
+        <div className="flex min-w-0 flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-2">
+          <h3 className="text-foreground truncate text-sm leading-snug font-bold">
             {chatRoom.title}
           </h3>
-          <span className={cn("text-muted-foreground shrink-0 text-[11px] font-medium tracking-tight")}>
+          <span
+            className={cn(
+              "text-muted-foreground shrink-0 font-medium tracking-tight",
+              "text-[11px]",
+            )}
+          >
             @{chatRoom.owner_nickname}
           </span>
         </div>
         {chatRoom.description && (
-          <p className={cn("text-muted-foreground line-clamp-1 text-[11px] leading-relaxed")}>
+          <p
+            className={cn(
+              "text-muted-foreground line-clamp-1 leading-relaxed",
+              "text-[11px]",
+            )}
+          >
             {chatRoom.description}
           </p>
         )}
 
-        <div className={cn("mt-auto flex items-center gap-2 pt-2")}>
-          <div className={cn("bg-border/60 relative h-1.5 w-20 overflow-hidden rounded-full dark:bg-zinc-700/50")}>
+        <div className="mt-auto flex items-center gap-2 pt-2">
+          <div
+            className={cn(
+              "relative h-1.5 w-20 overflow-hidden rounded-full",
+              "bg-border/60 dark:bg-zinc-700/50",
+            )}
+          >
             <div
               className={cn("h-full rounded-full transition-all duration-300", capacityColorClass)}
               style={{ width: `${capacityPercent}%` }}
             />
           </div>
-          <div className={cn("flex items-center gap-1")}>
-            <Users className={cn("text-muted-foreground h-3 w-3")} />
+          <div className="flex items-center gap-1">
+            <Users className="text-muted-foreground h-3 w-3" />
             <span
               className={cn(
                 "font-mono text-[11px] font-semibold",
@@ -76,18 +92,24 @@ export default function ChatRoomCard({ chatRoom, unreadMessageCount = 0 }: Props
         </div>
       </div>
 
-      <div className={cn("flex shrink-0 flex-col items-end justify-between")}>
-        <div className={cn("h-5")}>
+      <div className="flex shrink-0 flex-col items-end justify-between">
+        <div className="h-5">
           {hasUnreadMessages && (
-            <span className={cn("bg-brand shadow-brand/30 inline-flex h-5 items-center gap-1 rounded-full px-2 text-[10px] leading-none font-black text-white shadow-sm")}>
-              <MessageCircle className={cn("h-2.5 w-2.5 shrink-0")} />
+            <span
+              className={cn(
+                "bg-brand inline-flex h-5 items-center gap-1 rounded-full px-2 shadow-sm",
+                "text-[10px] font-black text-white leading-none",
+                "shadow-brand/30",
+              )}
+            >
+              <MessageCircle className="h-2.5 w-2.5 shrink-0" />
               {unreadLabel}
             </span>
           )}
         </div>
-        <div className={cn("flex items-center gap-1")}>
-          <Clock className={cn("text-muted-foreground/50 h-2.5 w-2.5")} />
-          <span className={cn("text-muted-foreground/70 text-[11px] whitespace-nowrap")}>
+        <div className="flex items-center gap-1">
+          <Clock className="text-muted-foreground/50 h-2.5 w-2.5" />
+          <span className="text-muted-foreground/70 text-[11px] whitespace-nowrap">
             개설 {formatRoomDate(chatRoom.created_at)}
           </span>
         </div>

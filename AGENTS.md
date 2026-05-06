@@ -33,8 +33,20 @@
 - shadcn/Base UI 컴포넌트는 `src/components/ui`의 로컬 래퍼를 우선 사용합니다. 직접 primitive를 추가할 때도 기존 UI 컴포넌트의 스타일과 접근성 패턴을 맞춥니다.
 - Tailwind 색상은 하드코딩보다 `bg-brand`, `text-brand`, `bg-background`, `text-foreground`, `text-muted-foreground`, `border-border` 같은 프로젝트 토큰을 우선 사용합니다.
 - **모바일 우선 반응형(Mobile-First)** 디자인을 지향합니다. 기본 스타일은 모바일 기준으로 작성하고, `sm:`, `md:`, `lg:` 등의 Tailwind 접두사를 사용하여 점진적으로 데스크톱 레이아웃을 확장합니다.
-- **`cn` 유틸리티 사용**: 가독성 높은 클래스 네임 관리를 위해 `@/lib/utils`의 `cn` 함수를 적극 활용합니다. 복잡한 조건부 스타일링이나 클래스 병합 시 반드시 `cn`을 사용합니다.
-- `cn` 유틸은 `@/lib/utils` 또는 기존 파일의 import 스타일을 따릅니다. 현재 유틸 실제 위치는 `src/lib/utils/index.ts`입니다.
+- **`cn` 유틸리티 사용**: 가독성을 최우선으로 하며, 인간이 읽기 편한 구조를 지향합니다.
+  - **단순 단일 라인**: 클래스 명이 짧고(약 40자 미만) 조건부가 없다면 `className="..."` 문자열을 직접 사용합니다.
+  - **가독성을 위한 그룹화 (필수)**: 클래스 명이 길거나(약 40자 이상) 복잡할 경우, 반드시 `cn()`을 사용하고 **논리적 단위(Layout, Sizing, Interactive 등)로 묶어 줄바꿈**을 적용합니다. (주석은 달지 않습니다.)
+  ```tsx
+  // GOOD: 인간이 읽기 편한 그룹화 (40자 이상일 때 권장)
+  <div
+    className={cn(
+      "flex items-center gap-2",
+      "w-full max-w-50 h-10",
+      "bg-brand transition-all duration-200"
+    )}
+  />
+  ```
+- `cn` 유틸 실제 위치는 `src/lib/utils/index.ts`입니다.
 - 환경 변수를 추가하거나 변경하면 `.env.example`과 `src/env.d.ts`를 함께 확인합니다.
 - Supabase 스키마 변경이 있을 때만 `npm run types`로 `src/types/database.types.ts`를 갱신합니다. UI만 수정하는 작업에서는 타입 재생성을 피합니다.
 - 사용자가 만든 변경사항을 되돌리지 않습니다. 작업 전후로 `git status --short`를 확인하고, 관련 없는 변경은 건드리지 않습니다.
