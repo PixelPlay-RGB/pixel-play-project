@@ -24,6 +24,7 @@
 - 컴포넌트 파일과 폴더명은 kebab-case, 컴포넌트/타입 이름은 PascalCase, 변수/함수/훅 이름은 camelCase를 사용합니다.
 - shadcn/Base UI 컴포넌트는 `src/components/ui`의 로컬 래퍼를 우선 사용합니다. 직접 primitive를 추가할 때도 기존 UI 컴포넌트의 스타일과 접근성 패턴을 맞춥니다.
 - Tailwind 색상은 하드코딩보다 `bg-brand`, `text-brand`, `bg-background`, `text-foreground`, `text-muted-foreground`, `border-border` 같은 프로젝트 토큰을 우선 사용합니다.
+- **모바일 우선 반응형(Mobile-First)** 디자인을 지향합니다. 기본 스타일은 모바일 기준으로 작성하고, `sm:`, `md:`, `lg:` 등의 Tailwind 접두사를 사용하여 점진적으로 데스크톱 레이아웃을 확장합니다.
 - `cn` 유틸은 `@/lib/utils` 또는 기존 파일의 import 스타일을 따릅니다. 현재 유틸 실제 위치는 `src/lib/utils/index.ts`입니다.
 - 환경 변수를 추가하거나 변경하면 `.env.example`과 `src/env.d.ts`를 함께 확인합니다.
 - Supabase 스키마 변경이 있을 때만 `npm run types`로 `src/types/database.types.ts`를 갱신합니다. UI만 수정하는 작업에서는 타입 재생성을 피합니다.
