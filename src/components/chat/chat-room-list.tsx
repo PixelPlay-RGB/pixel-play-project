@@ -16,7 +16,7 @@ export default function ChatRoomList() {
 
   if (isError) {
     return (
-      <div className="flex flex-1 items-center justify-center text-zinc-500">
+      <div className="flex flex-1 items-center justify-center text-muted-foreground">
         채팅방 목록을 불러오지 못했습니다.
       </div>
     );
@@ -26,9 +26,8 @@ export default function ChatRoomList() {
     <div className="flex flex-col">
       <div
         className={cn(
-          "mb-6 flex flex-col gap-4 border-b border-zinc-200 pb-5",
+          "mb-6 flex flex-col gap-4 border-b border-border pb-5",
           "sm:mb-8 sm:flex-row sm:items-center sm:justify-between sm:pb-6",
-          "dark:border-zinc-800/50",
         )}
       >
         <ChatRoomTabs />

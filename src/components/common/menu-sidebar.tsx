@@ -78,7 +78,7 @@ export default function MenuSidebar() {
 
       <SidebarInset>
         {isMobile && (
-          <div className="border-b border-zinc-200 p-4 dark:border-zinc-800/50">
+          <div className="border-border border-b p-4">
             <SidebarTrigger className="cursor-pointer" />
           </div>
         )}
