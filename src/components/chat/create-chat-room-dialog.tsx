@@ -21,7 +21,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 
 export default function CreateChatRoomDialog() {
@@ -30,18 +30,18 @@ export default function CreateChatRoomDialog() {
 
   const {
     register,
+    control,
     handleSubmit,
     reset,
     formState: { errors, isSubmitting, isValid },
-    watch,
   } = useForm<CreateChatRoomInput>({
     resolver: zodResolver(createChatRoomSchema),
     mode: "onChange",
     defaultValues: CREATE_CHAT_ROOM_DEFAULT_VALUES,
   });
 
-  const title = watch("title") ?? "";
-  const description = watch("description") ?? "";
+  const title = useWatch({ control, name: "title" }) ?? "";
+  const description = useWatch({ control, name: "description" }) ?? "";
 
   const handleCreateRoom = async (values: CreateChatRoomInput) => {
     const result = await createChatRoomAction(values);
