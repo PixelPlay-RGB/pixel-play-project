@@ -26,9 +26,7 @@ export function MessageList({
   onReachTop,
 }: Props) {
   const viewportRef = useRef<HTMLDivElement>(null)
-  /** messages는 최신→과거 순; 첫 요소 id = 최신 */
   const prevNewestIdRef = useRef<string | null>(null)
-  /** 마지막 요소 id = 가장 오래된 메시지 */
   const prevOldestIdRef = useRef<string | null>(null)
   const prevScrollHeightRef = useRef(0)
 

@@ -17,22 +17,23 @@ interface MessagesPage {
   nextCursor?: string
 }
 
-const queryKeyByRoomId = (roomId: string) => ["messages", roomId] as const
+const queryKeyByChatRoomId = (chatRoomId: string) =>
+  ["messages", chatRoomId] as const
 
-export default function useMessages(roomId: string) {
+export default function useMessages(chatRoomId: string) {
   const supabase = createClient()
   const queryClient = useQueryClient()
 
   const query = useInfiniteQuery({
-    queryKey: queryKeyByRoomId(roomId),
+    queryKey: queryKeyByChatRoomId(chatRoomId),
     initialPageParam: undefined as string | undefined,
-    enabled: !!roomId,
+    enabled: !!chatRoomId,
     staleTime: 1000 * 60,
     queryFn: async ({ pageParam }): Promise<MessagesPage> => {
       let request = supabase
         .from("message")
         .select("*")
-        .eq("chat_room_id", roomId)
+        .eq("chat_room_id", chatRoomId)
         .order("created_at", { ascending: false })
         .limit(MESSAGE_PAGE_SIZE)
 
@@ -62,17 +63,17 @@ export default function useMessages(roomId: string) {
   })
 
   useEffect(() => {
-    if (!roomId) return
+    if (!chatRoomId) return
 
     const channel = supabase
-      .channel(`room-message-${roomId}`)
+      .channel(`room-message-${chatRoomId}`)
       .on(
         "postgres_changes",
         {
           event: "INSERT",
           schema: "public",
           table: "message",
-          filter: `chat_room_id=eq.${roomId}`,
+          filter: `chat_room_id=eq.${chatRoomId}`,
         },
         (payload) => {
           if (!payload.new || typeof payload.new !== "object") return
@@ -82,7 +83,7 @@ export default function useMessages(roomId: string) {
           if (!messageId) return
 
           queryClient.setQueryData<InfiniteData<MessagesPage>>(
-            queryKeyByRoomId(roomId),
+            queryKeyByChatRoomId(chatRoomId),
             (previous) => {
               if (!previous) return previous
 
@@ -111,7 +112,7 @@ export default function useMessages(roomId: string) {
     return () => {
       void channel.unsubscribe()
     }
-  }, [queryClient, roomId, supabase])
+  }, [queryClient, chatRoomId, supabase])
 
   const messages = query.data ?? []
 
@@ -121,7 +122,6 @@ export default function useMessages(roomId: string) {
     isLoadingPrevious: query.isFetchingNextPage,
     isLoadingInitial: query.isLoading,
     error: query.error,
-    /** 이전(더 오래된) 페이지 — TanStack의 `fetchNextPage`와 동일 */
     fetchPreviousPage: query.fetchNextPage,
   }
 }

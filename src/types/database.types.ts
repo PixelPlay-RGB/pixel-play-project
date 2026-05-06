@@ -8,7 +8,7 @@ export type Database = {
   };
   public: {
     Tables: {
-      chatroom: {
+      chat_room: {
         Row: {
           created_at: string;
           description: string | null;
@@ -38,7 +38,7 @@ export type Database = {
         };
         Relationships: [];
       };
-      chatroommember: {
+      chat_room_member: {
         Row: {
           chat_room_id: string;
           created_at: string;
@@ -68,14 +68,14 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: "chatroommember_chat_room_id_fkey";
+            foreignKeyName: "chat_room_member_chat_room_id_fkey";
             columns: ["chat_room_id"];
             isOneToOne: false;
-            referencedRelation: "chatroom";
+            referencedRelation: "chat_room";
             referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "chatroommember_user_id_fkey";
+            foreignKeyName: "chat_room_member_user_id_fkey";
             columns: ["user_id"];
             isOneToOne: false;
             referencedRelation: "user";
@@ -113,7 +113,7 @@ export type Database = {
             foreignKeyName: "message_chat_room_id_fkey";
             columns: ["chat_room_id"];
             isOneToOne: false;
-            referencedRelation: "chatroom";
+            referencedRelation: "chat_room";
             referencedColumns: ["id"];
           },
           {

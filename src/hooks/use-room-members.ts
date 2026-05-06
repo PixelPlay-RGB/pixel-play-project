@@ -11,7 +11,7 @@ export function useRoomMembers(roomId: string) {
     enabled: !!roomId,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("chatroommember")
+        .from("chat_room_member")
         .select(
           "chat_room_id, user_id, created_at, user:user_id(nickname, photo_url)",
         )

@@ -13,7 +13,7 @@ export function useRoom(roomId: string) {
     enabled: !!roomId,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("chatroom")
+        .from("chat_room")
         .select("*")
         .eq("id", roomId)
         .single()
