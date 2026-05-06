@@ -1,5 +1,5 @@
-import MenuSidebar from "@/components/common/menu-sidebar";
+import MainMenuSidebar from "@/components/common/main-menu-sidebar";
 
 export default function Home() {
-  return <MenuSidebar />;
+  return <MainMenuSidebar />;
 }

@@ -4,25 +4,29 @@ import { cn } from "@/lib/utils";
 export default function ChatRoomListSkeleton() {
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-      {Array.from({ length: 4 }).map((_, index) => (
+      {Array.from({ length: 6 }).map((_, index) => (
         <div
           key={index}
           className={cn(
-            "flex min-h-24 items-center justify-between rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm",
-            "sm:p-5",
-            "dark:border-zinc-800/50 dark:bg-zinc-900/50",
+            "group relative flex min-h-25 w-full items-start justify-between gap-3 overflow-hidden rounded-2xl border border-border/60 bg-card p-4 shadow-sm",
+            "animate-pulse sm:p-5",
+            "dark:bg-zinc-900/50",
           )}
         >
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-1 flex-col gap-2 pl-1">
             <div className="flex items-center gap-2">
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-3 w-16" />
+              <Skeleton className="h-4 w-2/3 rounded-md" />
+              <Skeleton className="h-3 w-1/4 rounded-md" />
             </div>
-            <Skeleton className="h-3 w-32" />
+            <Skeleton className="h-3 w-4/5 rounded-md" />
+            <div className="mt-1 flex items-center gap-2">
+              <Skeleton className="h-1.5 w-20 rounded-full" />
+              <Skeleton className="h-3 w-10 rounded-md" />
+            </div>
           </div>
-          <div className="flex flex-col items-end gap-1">
-            <Skeleton className="h-3 w-8" />
-            <Skeleton className="h-3 w-12" />
+          <div className="flex shrink-0 flex-col items-end gap-2">
+            <Skeleton className="h-5 w-5 rounded-full" />
+            <Skeleton className="h-3 w-10 rounded-md" />
           </div>
         </div>
       ))}

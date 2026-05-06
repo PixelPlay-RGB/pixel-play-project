@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import ChatRoomList from "@/components/chat/chat-room-list";
+import MainMenuSidebarItemRenderer from "@/components/common/main-menu-sidebar-item";
 import LiveList from "@/components/live/live-list";
 import { MAIN_MENU_SIDEBAR_ITEMS } from "@/constants/main-menu-sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { cn } from "@/lib/utils";
 import type { MainMenuSidebarKey } from "@/types/main-menu-sidebar";
 import {
   Sidebar,
@@ -15,8 +15,6 @@ import {
   SidebarGroupLabel,
   SidebarInset,
   SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
   useSidebar,
@@ -39,20 +37,13 @@ function Items({ activeMenu, setActiveMenu }: Props) {
   };
 
   return (
-    <SidebarMenu className={"flex-col gap-1.5"}>
-      {MAIN_MENU_SIDEBAR_ITEMS.map(({ key, label, icon: Icon }) => (
-        <SidebarMenuItem key={key}>
-          <SidebarMenuButton
-            isActive={activeMenu === key}
-            onClick={() => handleMenuChange(key)}
-            size="lg"
-            className="cursor-pointer"
-          >
-            <Icon />
-            <span>{label}</span>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      ))}
+    <SidebarMenu className="flex-col gap-1">
+      {MAIN_MENU_SIDEBAR_ITEMS.map((item) =>
+        MainMenuSidebarItemRenderer(item, {
+          activeMenu,
+          onMenuChange: handleMenuChange,
+        }),
+      )}
     </SidebarMenu>
   );
 }
@@ -62,13 +53,16 @@ export default function MainMenuSidebar() {
   const isMobile = useIsMobile();
 
   return (
-    <SidebarProvider
-      className={cn("h-[calc(100vh-64px-90px)] min-h-0", "**:data-[slot=sidebar-container]:h-full")}
-    >
-      <Sidebar collapsible={isMobile ? "offcanvas" : "none"} className="h-full border-r">
+    <SidebarProvider className="h-app-content min-h-0 overflow-hidden">
+      <Sidebar
+        collapsible={isMobile ? "offcanvas" : "none"}
+        className="h-full shrink-0 border-r border-zinc-200 bg-background dark:border-zinc-800/50"
+      >
         <SidebarContent>
-          <SidebarGroup>
-            <SidebarGroupLabel>메뉴</SidebarGroupLabel>
+          <SidebarGroup className="p-4 pt-5">
+            <SidebarGroupLabel className="mb-3 px-2 text-xs font-semibold tracking-wider text-zinc-400 uppercase dark:text-zinc-500">
+              메뉴
+            </SidebarGroupLabel>
             <SidebarGroupContent>
               <Items activeMenu={activeMenu} setActiveMenu={setActiveMenu} />
             </SidebarGroupContent>
@@ -78,8 +72,11 @@ export default function MainMenuSidebar() {
 
       <SidebarInset>
         {isMobile && (
-          <div className="border-b border-zinc-200 p-4 dark:border-zinc-800/50">
+          <div className="flex shrink-0 items-center gap-3 border-b border-zinc-200 p-4 dark:border-zinc-800/50">
             <SidebarTrigger className="cursor-pointer" />
+            <span className="text-sm font-semibold text-foreground">
+              {MAIN_MENU_SIDEBAR_ITEMS.find((item) => item.key === activeMenu)?.label}
+            </span>
           </div>
         )}
         <div className="h-full overflow-auto p-4 md:p-6">

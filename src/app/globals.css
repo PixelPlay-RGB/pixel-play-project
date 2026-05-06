@@ -62,6 +62,8 @@
 }
 
 :root {
+  --app-content-height: calc(100vh - 154px);
+
   --brand: #46c6a9;
   --brand-foreground: #ffffff;
   --live: #ff6057;
@@ -169,6 +171,12 @@
   button:not(:disabled),
   [role="button"]:not(:disabled) {
     cursor: pointer;
+  }
+}
+
+@layer utilities {
+  .h-app-content {
+    height: var(--app-content-height);
   }
 }
 

@@ -1,14 +1,12 @@
 "use client";
 
+import ChatRoomEmptyState from "@/components/chat/chat-room-empty-state";
+import ChatRoomListHeader from "@/components/chat/chat-room-list-header";
 import ChatRoomListSkeleton from "@/components/chat/chat-room-list-skeleton";
 import ChatRoomCard from "@/components/chat/chat-room-card";
-import ChatRoomTabs from "@/components/chat/chat-room-tabs";
-import CreateChatRoomDialog from "@/components/chat/create-chat-room-dialog";
 import { useChatRooms } from "@/hooks/use-chat-rooms";
-import { cn } from "@/lib/utils";
+import { MOCK_UNREAD_MESSAGE_COUNTS } from "@/mock/chat-room";
 import { useChatRoomStore } from "@/stores/chat-room";
-
-const MOCK_UNREAD_MESSAGE_COUNTS = [8, 0, 23, 3, 105, 0, 12, 1];
 
 export default function ChatRoomList() {
   const tabType = useChatRoomStore((state) => state.tabType);
@@ -23,20 +21,13 @@ export default function ChatRoomList() {
   }
 
   return (
-    <div className="flex flex-col">
-      <div
-        className={cn(
-          "mb-6 flex flex-col gap-4 border-b border-zinc-200 pb-5",
-          "sm:mb-8 sm:flex-row sm:items-center sm:justify-between sm:pb-6",
-          "dark:border-zinc-800/50",
-        )}
-      >
-        <ChatRoomTabs />
-        <CreateChatRoomDialog />
-      </div>
+    <div className="flex flex-col gap-5">
+      <ChatRoomListHeader roomCount={rooms.length} tabType={tabType} />
 
       {isLoading ? (
         <ChatRoomListSkeleton />
+      ) : rooms.length === 0 ? (
+        <ChatRoomEmptyState tabType={tabType} />
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {rooms.map((room, index) => (

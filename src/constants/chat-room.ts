@@ -10,3 +10,9 @@ export const ROOM_TAB_LABELS: Record<ChatRoomTab, string> = {
   NOT_JOINED: "참여 가능한 채팅방",
   OWNED: "내가 만든 채팅방",
 };
+
+export const CHAT_ROOM_EMPTY_MESSAGES: Record<ChatRoomTab, string> = {
+  JOINED: "아직 참여한 채팅방이 없어요.",
+  NOT_JOINED: "참여 가능한 채팅방이 없어요.",
+  OWNED: "아직 만든 채팅방이 없어요.",
+};
