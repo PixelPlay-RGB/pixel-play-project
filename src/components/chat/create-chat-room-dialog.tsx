@@ -66,16 +66,19 @@ export default function CreateChatRoomDialog() {
           "cursor-pointer transition-all hover:opacity-90 active:scale-95",
         )}
       >
-        <Plus className="h-4 w-4" />
+        <Plus className={cn("h-4 w-4")} />
         채팅방 만들기
       </DialogTrigger>
-      <DialogContent className="max-w-md gap-0 overflow-hidden rounded-3xl p-0">
-        <DialogHeader className="border-b border-border/50 px-6 pt-6 pb-4">
-          <DialogTitle className="text-base font-bold">채팅방 생성</DialogTitle>
+      <DialogContent className={cn("max-w-md gap-0 overflow-hidden rounded-3xl p-0")}>
+        <DialogHeader className={cn("border-b border-border/50 px-6 pt-6 pb-4")}>
+          <DialogTitle className={cn("text-base font-bold")}>채팅방 생성</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit(handleCreateRoom)} className="flex flex-col gap-5 px-6 py-5">
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-muted-foreground">방 제목</label>
+        <form
+          onSubmit={handleSubmit(handleCreateRoom)}
+          className={cn("flex flex-col gap-5 px-6 py-5")}
+        >
+          <div className={cn("flex flex-col gap-1.5")}>
+            <label className={cn("text-xs font-semibold text-muted-foreground")}>방 제목</label>
             <Input
               autoFocus
               type="text"
@@ -89,11 +92,11 @@ export default function CreateChatRoomDialog() {
               )}
             />
             <FieldError errors={[errors.title]} />
-            <p className="text-right text-xs text-muted-foreground">{title.length} / 50</p>
+            <p className={cn("text-right text-xs text-muted-foreground")}>{title.length} / 50</p>
           </div>
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-muted-foreground">
-              방 설명 <span className="font-normal opacity-60">(선택)</span>
+          <div className={cn("flex flex-col gap-1.5")}>
+            <label className={cn("text-xs font-semibold text-muted-foreground")}>
+              방 설명 <span className={cn("font-normal opacity-60")}>(선택)</span>
             </label>
             <Textarea
               {...register("description")}
@@ -106,12 +109,14 @@ export default function CreateChatRoomDialog() {
               )}
             />
             <FieldError errors={[errors.description]} />
-            <p className="text-right text-xs text-muted-foreground">
+            <p className={cn("text-right text-xs text-muted-foreground")}>
               {description?.length ?? 0} / 200
             </p>
           </div>
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-muted-foreground">참여 가능 인원</label>
+          <div className={cn("flex flex-col gap-1.5")}>
+            <label className={cn("text-xs font-semibold text-muted-foreground")}>
+              참여 가능 인원
+            </label>
             <Input
               type="number"
               {...register("capacity", { valueAsNumber: true })}
@@ -124,16 +129,18 @@ export default function CreateChatRoomDialog() {
               )}
             />
             <FieldError errors={[errors.capacity]} />
-            <p className="text-xs text-muted-foreground">
+            <p className={cn("text-xs text-muted-foreground")}>
               최소 {CHAT_ROOM_MIN_CAPACITY}명 · 최대 {CHAT_ROOM_MAX_CAPACITY}명
             </p>
           </div>
-          <div className="mt-1 flex gap-2.5">
+          <div className={cn("mt-1 flex gap-2.5")}>
             <Button
               type="button"
               variant="secondary"
               onClick={() => setOpen(false)}
-              className="h-auto flex-1 rounded-xl border border-border py-2.5 text-sm font-semibold text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+              className={cn(
+                "h-auto flex-1 rounded-xl border border-border py-2.5 text-sm font-semibold text-muted-foreground hover:bg-muted/50 hover:text-foreground",
+              )}
             >
               취소
             </Button>
