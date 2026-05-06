@@ -3,11 +3,11 @@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CHAT_ROOM_TABS, ROOM_TAB_LABELS } from "@/constants/chat-room";
 import { useChatRoomStore } from "@/stores/chat-room";
-import type { ChatRoomTabType } from "@/types/chat-room";
+import type { ChatRoomTab } from "@/types/chat-room";
 import { cn } from "@/lib/utils";
 
 interface Props {
-  counts?: Partial<Record<ChatRoomTabType, number>>;
+  counts?: Partial<Record<ChatRoomTab, number>>;
 }
 
 export default function ChatRoomTabs({ counts }: Props) {
@@ -15,11 +15,11 @@ export default function ChatRoomTabs({ counts }: Props) {
   const setTabType = useChatRoomStore((state) => state.setTabType);
 
   return (
-    <Tabs value={tabType} onValueChange={(nextValue) => setTabType(nextValue as ChatRoomTabType)}>
+    <Tabs value={tabType} onValueChange={(nextValue) => setTabType(nextValue as ChatRoomTab)}>
       <TabsList
         className={cn(
           "grid h-auto w-full min-w-0 grid-cols-3 items-center gap-1 p-1",
-          "rounded-xl bg-muted/50 dark:bg-zinc-800/40",
+          "bg-muted/50 rounded-xl dark:bg-zinc-800/40",
           "lg:w-150",
         )}
       >
@@ -34,8 +34,8 @@ export default function ChatRoomTabs({ counts }: Props) {
                 cn(
                   "relative flex h-auto min-w-0 cursor-pointer items-center justify-center gap-1 rounded-lg px-3 py-2 text-sm font-semibold transition-all duration-200 lg:gap-1.5 lg:px-4",
                   active
-                    ? "bg-white text-brand shadow-sm shadow-brand/10 dark:bg-zinc-900 dark:shadow-none"
-                    : "text-muted-foreground hover:bg-white/50 hover:text-foreground dark:hover:bg-zinc-700/40",
+                    ? "text-brand shadow-brand/10 bg-white shadow-sm dark:bg-zinc-900 dark:shadow-none"
+                    : "text-muted-foreground hover:text-foreground hover:bg-white/50 dark:hover:bg-zinc-700/40",
                 )
               }
             >

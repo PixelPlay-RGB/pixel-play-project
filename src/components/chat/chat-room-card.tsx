@@ -15,12 +15,6 @@ export default function ChatRoomCard({ chatRoom, unreadMessageCount = 0 }: Props
   const hasUnreadMessages = unreadMessageCount > 0;
   const unreadLabel = unreadMessageCount > 99 ? "99+" : unreadMessageCount;
 
-  const capacityColorClass = isFull
-    ? "bg-live"
-    : capacityPercent > 80
-      ? "bg-warning"
-      : "bg-brand";
-
   return (
     <Link
       href={`/chat/${chatRoom.id}`}
@@ -56,12 +50,7 @@ export default function ChatRoomCard({ chatRoom, unreadMessageCount = 0 }: Props
           </span>
         </div>
         {chatRoom.description && (
-          <p
-            className={cn(
-              "text-muted-foreground line-clamp-1 leading-relaxed",
-              "text-[11px]",
-            )}
-          >
+          <p className={cn("text-muted-foreground line-clamp-1 leading-relaxed", "text-[11px]")}>
             {chatRoom.description}
           </p>
         )}
@@ -74,7 +63,10 @@ export default function ChatRoomCard({ chatRoom, unreadMessageCount = 0 }: Props
             )}
           >
             <div
-              className={cn("h-full rounded-full transition-all duration-300", capacityColorClass)}
+              className={cn(
+                "h-full rounded-full transition-all duration-300",
+                isFull ? "bg-live" : capacityPercent > 80 ? "bg-warning" : "bg-brand",
+              )}
               style={{ width: `${capacityPercent}%` }}
             />
           </div>
@@ -98,7 +90,7 @@ export default function ChatRoomCard({ chatRoom, unreadMessageCount = 0 }: Props
             <span
               className={cn(
                 "bg-brand inline-flex h-5 items-center gap-1 rounded-full px-2 shadow-sm",
-                "text-[10px] font-black text-white leading-none",
+                "text-[10px] leading-none font-black text-white",
                 "shadow-brand/30",
               )}
             >
