@@ -33,7 +33,7 @@ export function useUser() {
       const { data, error } = await supabase
         .from("user")
         .select("*")
-        .eq("oauth_id", authUser.id)
+        .eq("id", authUser.id)
         .maybeSingle();
       if (error) throw error;
       return data;

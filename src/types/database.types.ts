@@ -94,21 +94,6 @@ export type Database = {
           },
         ];
       };
-      kv_store_55ce40ce: {
-        Row: {
-          key: string;
-          value: Json;
-        };
-        Insert: {
-          key: string;
-          value: Json;
-        };
-        Update: {
-          key?: string;
-          value?: Json;
-        };
-        Relationships: [];
-      };
       message: {
         Row: {
           chat_room_id: string;
@@ -162,7 +147,6 @@ export type Database = {
           modified_at: string;
           name: string;
           nickname: string;
-          oauth_id: string;
           phone: string;
           photo_url: string | null;
         };
@@ -171,12 +155,11 @@ export type Database = {
           created_at?: string;
           email: string;
           gender: Database["public"]["Enums"]["gender"];
-          id?: string;
+          id: string;
           linked_providers?: Database["public"]["Enums"]["oauth_provider"][];
           modified_at?: string;
           name: string;
           nickname: string;
-          oauth_id: string;
           phone: string;
           photo_url?: string | null;
         };
@@ -190,7 +173,6 @@ export type Database = {
           modified_at?: string;
           name?: string;
           nickname?: string;
-          oauth_id?: string;
           phone?: string;
           photo_url?: string | null;
         };

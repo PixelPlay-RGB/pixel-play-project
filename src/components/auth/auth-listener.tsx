@@ -57,7 +57,7 @@ export default function AuthListener() {
       const { data, error } = await supabase
         .from("user")
         .select("linked_providers")
-        .eq("oauth_id", user.id)
+        .eq("id", user.id)
         .maybeSingle();
 
       if (error) {
