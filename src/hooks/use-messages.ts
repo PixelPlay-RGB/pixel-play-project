@@ -1,28 +1,23 @@
-"use client"
+"use client";
 
-import { useEffect } from "react"
+import { useEffect } from "react";
 
-import {
-  useInfiniteQuery,
-  useQueryClient,
-  type InfiniteData,
-} from "@tanstack/react-query"
+import { useInfiniteQuery, useQueryClient, type InfiniteData } from "@tanstack/react-query";
 
-import { MESSAGE_PAGE_SIZE } from "@/lib/chat"
-import { createClient } from "@/lib/supabase/client"
-import type { Message } from "@/types/message"
+import { createClient } from "@/lib/supabase/client";
+import type { Message } from "@/types/message";
+import { MESSAGE_PAGE_SIZE } from "@/constants/message";
 
 interface MessagesPage {
-  items: Message[]
-  nextCursor?: string
+  items: Message[];
+  nextCursor?: string;
 }
 
-const queryKeyByChatRoomId = (chatRoomId: string) =>
-  ["messages", chatRoomId] as const
+const queryKeyByChatRoomId = (chatRoomId: string) => ["messages", chatRoomId] as const;
 
 export default function useMessages(chatRoomId: string) {
-  const supabase = createClient()
-  const queryClient = useQueryClient()
+  const supabase = createClient();
+  const queryClient = useQueryClient();
 
   const query = useInfiniteQuery({
     queryKey: queryKeyByChatRoomId(chatRoomId),
@@ -35,35 +30,33 @@ export default function useMessages(chatRoomId: string) {
         .select("*")
         .eq("chat_room_id", chatRoomId)
         .order("created_at", { ascending: false })
-        .limit(MESSAGE_PAGE_SIZE)
+        .limit(MESSAGE_PAGE_SIZE);
 
       if (pageParam) {
-        request = request.lt("created_at", pageParam)
+        request = request.lt("created_at", pageParam);
       }
 
-      const { data, error } = await request
+      const { data, error } = await request;
 
-      if (error) throw error
+      if (error) throw error;
 
-      const items = (data ?? []) as Message[]
+      const items = (data ?? []) as Message[];
       const nextCursor =
-        items.length === MESSAGE_PAGE_SIZE
-          ? items[items.length - 1]?.created_at
-          : undefined
+        items.length === MESSAGE_PAGE_SIZE ? items[items.length - 1]?.created_at : undefined;
 
-      return { items, nextCursor }
+      return { items, nextCursor };
     },
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     select: (data) => {
-      const descending = data.pages.flatMap((page) => page.items)
+      const descending = data.pages.flatMap((page) => page.items);
       return descending.filter((message, index, list) => {
-        return list.findIndex((item) => item.id === message.id) === index
-      })
+        return list.findIndex((item) => item.id === message.id) === index;
+      });
     },
-  })
+  });
 
   useEffect(() => {
-    if (!chatRoomId) return
+    if (!chatRoomId) return;
 
     const channel = supabase
       .channel(`room-message-${chatRoomId}`)
@@ -76,45 +69,42 @@ export default function useMessages(chatRoomId: string) {
           filter: `chat_room_id=eq.${chatRoomId}`,
         },
         (payload) => {
-          if (!payload.new || typeof payload.new !== "object") return
+          if (!payload.new || typeof payload.new !== "object") return;
 
-          const nextMessage = payload.new as Message
-          const messageId = String(nextMessage.id ?? "")
-          if (!messageId) return
+          const nextMessage = payload.new as Message;
+          const messageId = String(nextMessage.id ?? "");
+          if (!messageId) return;
 
           queryClient.setQueryData<InfiniteData<MessagesPage>>(
             queryKeyByChatRoomId(chatRoomId),
             (previous) => {
-              if (!previous) return previous
+              if (!previous) return previous;
 
               const alreadyExists = previous.pages.some((page) =>
                 page.items.some((item) => item.id === nextMessage.id),
-              )
+              );
 
-              if (alreadyExists) return previous
+              if (alreadyExists) return previous;
 
-              const [firstPage, ...restPages] = previous.pages
-              if (!firstPage) return previous
+              const [firstPage, ...restPages] = previous.pages;
+              if (!firstPage) return previous;
 
               return {
                 ...previous,
-                pages: [
-                  { ...firstPage, items: [nextMessage, ...firstPage.items] },
-                  ...restPages,
-                ],
-              }
+                pages: [{ ...firstPage, items: [nextMessage, ...firstPage.items] }, ...restPages],
+              };
             },
-          )
+          );
         },
       )
-      .subscribe()
+      .subscribe();
 
     return () => {
-      void channel.unsubscribe()
-    }
-  }, [queryClient, chatRoomId, supabase])
+      void channel.unsubscribe();
+    };
+  }, [queryClient, chatRoomId, supabase]);
 
-  const messages = query.data ?? []
+  const messages = query.data ?? [];
 
   return {
     messages,
@@ -123,5 +113,5 @@ export default function useMessages(chatRoomId: string) {
     isLoadingInitial: query.isLoading,
     error: query.error,
     fetchPreviousPage: query.fetchNextPage,
-  }
+  };
 }

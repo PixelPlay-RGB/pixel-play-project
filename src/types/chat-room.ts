@@ -1,6 +1,7 @@
+import type { Database } from "@/types/database.types";
 import { GenericTables } from "@/types/supabase.types";
 
-/**
- * public.chat_room 테이블 row
- */
-export type Room = GenericTables<"chat_room">;
+export type ChatRoomByTab = Database["public"]["Functions"]["get_rooms_by_tab"]["Returns"][number];
+export type ChatRoomTab = "JOINED" | "NOT_JOINED" | "OWNED";
+
+export type ChatRoom = GenericTables<"chat_room">;

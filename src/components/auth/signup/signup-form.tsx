@@ -20,7 +20,8 @@ import {
 import { RadioGroup } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
-import { PROFILE_QUERY_KEY, WELCOME_PARAM } from "@/constants/auth";
+import { WELCOME_PARAM } from "@/constants/auth";
+import { QUERY_KEYS } from "@/constants/query-keys";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { SIGNUP_FORM_DEFAULTS, signUpSchema } from "@/lib/zod/auth";
@@ -160,7 +161,7 @@ export default function SignupForm() {
     }
 
     setUser(authUser);
-    queryClient.invalidateQueries({ queryKey: PROFILE_QUERY_KEY });
+    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth.profile(authUser.id) });
 
     router.push(`/${WELCOME_PARAM}`);
     router.refresh();

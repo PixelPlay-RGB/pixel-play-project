@@ -4,14 +4,14 @@ import { Toaster } from "@/components/ui/sonner";
 import Providers from "@/components/common/providers";
 import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Noto_Sans } from "next/font/google";
+import { Geist_Mono, Noto_Sans_KR } from "next/font/google";
 import "./globals.css";
+import AuthToastHandler from "@/components/auth/auth-toast-handler";
 
-const notoSans = Noto_Sans({ subsets: ["latin"], variable: "--font-sans" });
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+const notoSans = Noto_Sans_KR({
+  variable: "--font-noto-sans",
+  weight: "variable",
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
@@ -35,10 +35,9 @@ export default function RootLayout({
       className={cn(
         "h-full",
         "antialiased",
-        geistSans.variable,
+        notoSans.variable,
         geistMono.variable,
         "font-sans",
-        notoSans.variable,
       )}
       suppressHydrationWarning
     >
@@ -46,6 +45,7 @@ export default function RootLayout({
         <Providers>
           <Toaster />
           <Header />
+          <AuthToastHandler />
           <main className="flex flex-1 flex-col">{children}</main>
           <Footer />
         </Providers>

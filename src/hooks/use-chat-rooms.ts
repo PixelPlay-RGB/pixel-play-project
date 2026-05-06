@@ -1,64 +1,45 @@
 "use client";
 
-import { createClient } from "@/lib/supabase/client";
-import { ChatRoom } from "@/lib/room";
 import { useUser } from "@/hooks/use-profile";
-import { useQuery } from "@tanstack/react-query";
+import { createClient } from "@/lib/supabase/client";
+import type { ChatRoomByTab, ChatRoomTab } from "@/types/chat-room";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { QUERY_KEYS } from "@/constants/query-keys";
 
-export const CHAT_ROOMS_QUERY_KEY = ["chatrooms"] as const;
-
-const fetchRooms = async (currentUserId: string): Promise<ChatRoom[]> => {
+/**
+ * 탭 타입별 채팅방 목록을 가져오는 함수
+ */
+const fetchRooms = async (
+  currentUserId: string,
+  tabType: ChatRoomTab,
+): Promise<ChatRoomByTab[]> => {
   const supabase = createClient();
 
-  // 1. chatroom → member count만 조회
-  const { data: rooms, error } = await supabase
-    .from("chatroom")
-    .select(`
-      id, title, description, max_capacity, owner_id, created_at,
-      members:chatroommember(count)
-    `)
-    .eq("chatroommember.status", "JOINED");
+  const { data, error } = await supabase.rpc("get_rooms_by_tab", {
+    p_user_id: currentUserId,
+    p_tab_type: tabType,
+  });
 
   if (error) {
-    console.error("채팅방 목록 조회 실패:", error);
-    return [];
+    throw error;
   }
-  if (!rooms || rooms.length === 0) return [];
 
-  // 2. owner_id 목록으로 닉네임 일괄 조회
-  const ownerIds = [...new Set(rooms.map((r) => r.owner_id))];
-  const { data: owners, error: ownerError } = await supabase
-    .from("user")
-    .select("id, nickname")
-    .in("id", ownerIds);
-
-  if (ownerError) console.error("owner 조회 실패:", ownerError);
-
-  const ownerMap = new Map(owners?.map((o) => [o.id, o.nickname]) ?? []);
-
-  // 현재 유저가 참여 중인 방 ID 목록 조회
-  const { data: myMemberships } = await supabase
-    .from("chatroommember")
-    .select("chat_room_id")
-    .eq("user_id", currentUserId)
-    .eq("status", "JOINED");
-
-  const joinedRoomIds = new Set(myMemberships?.map((m) => m.chat_room_id) ?? []);
-
-  return rooms.map((room) => ({
-    ...room,
-    owner: { nickname: ownerMap.get(room.owner_id) ?? "Unknown" },
-    member_cnt: (room.members as { count: number }[])[0]?.count ?? 0,
-    is_joined: joinedRoomIds.has(room.id),
-  }));
+  return data ?? [];
 };
 
-export function useChatRooms() {
-  const { data: currentUser } = useUser();
+/**
+ * 채팅방 목록 조회 커스텀 훅
+ * - 유저 프로필 정보가 로드된 후에만 목록을 페칭하도록 안전장치를 추가했습니다.
+ */
+export function useChatRooms(tabType: ChatRoomTab) {
+  const { data: currentUser, isFetched: isUserFetched } = useUser();
 
-  return useQuery<ChatRoom[]>({
-    queryKey: [...CHAT_ROOMS_QUERY_KEY, currentUser?.id],
-    queryFn: () => fetchRooms(currentUser!.id),
-    enabled: !!currentUser?.id,
+  return useQuery<ChatRoomByTab[]>({
+    queryKey: QUERY_KEYS.chat.rooms(currentUser?.id, tabType),
+    queryFn: () => fetchRooms(currentUser!.id, tabType),
+    // 유저 정보가 확실히 로드된 후에만 채팅방 페칭 시작
+    enabled: !!currentUser?.id && isUserFetched,
+    placeholderData: keepPreviousData,
+    refetchOnMount: "always",
   });
 }

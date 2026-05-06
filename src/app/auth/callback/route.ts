@@ -36,7 +36,9 @@ export async function GET(request: NextRequest) {
       const allProviders = ((user.app_metadata?.providers ?? []) as string[]).filter(
         (p): p is OAuthProvider => VALID_PROVIDERS.includes(p as OAuthProvider),
       );
-      const knownProviders = existingUser.linked_providers ?? [];
+      const knownProviders = (existingUser.linked_providers ?? []).filter(
+        (p): p is OAuthProvider => VALID_PROVIDERS.includes(p as OAuthProvider),
+      );
       const newProviders = allProviders.filter((p) => !knownProviders.includes(p));
 
       // 업데이트가 필요한 필드만 payload로 구성
