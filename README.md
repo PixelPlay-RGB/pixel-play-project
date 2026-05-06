@@ -5,6 +5,16 @@ Next.js 16 App Router + Supabase Realtime 기반으로 구축됩니다.
 
 ---
 
+## 프로젝트 개요
+
+- PixelPlay는 실시간 채팅 플랫폼으로 시작해 향후 라이브 스트리밍 서비스로 확장할 Next.js 웹 애플리케이션입니다.
+- 주요 스택은 Next.js 16 App Router, React 19, TypeScript strict, Tailwind CSS 4, shadcn `base-nova`, Base UI, Supabase Auth/Postgres/Realtime, TanStack Query v5, Zustand v5입니다.
+- 인증은 Supabase Auth 단독으로 처리하며, `src/lib/supabase/proxy.ts`가 세션 검증과 라우트 가드를 담당합니다.
+- 데이터 타입은 Supabase 스키마에서 생성된 `src/types/database.types.ts`를 기준으로 사용합니다.
+- 채팅 실시간 기능은 Supabase Realtime의 Postgres Changes, Broadcast, Presence를 사용하는 방향입니다. 별도 Socket.IO 서버는 도입하지 않습니다.
+
+---
+
 ## 기술 스택
 
 | 분류                | 기술                                                              |
@@ -104,6 +114,14 @@ npm run dev
 ```
 
 브라우저에서 <http://localhost:3000> 접속. 비로그인 상태면 `/auth/login`으로 자동 리다이렉트됩니다.
+
+---
+
+## 검증 명령
+
+- 개발 서버: `npm run dev`
+- 프로덕션 빌드/타입 확인: `npm run build`
+- Supabase 타입 재생성: `npm run types`
 
 ---
 
@@ -217,7 +235,7 @@ src/
 ### `chatroommember` 테이블
 
 | 컬럼           | 타입                    | 설명                                      |
-| -------------- | ----------------------- | ----------------------------------------- |
+| -------------- | ----------- | ----------------------------------------- |
 | `id`           | uuid (PK)               | 자동 생성                                 |
 | `chat_room_id` | uuid (FK)               | chatroom.id                               |
 | `user_id`      | uuid (FK)               | user.id                                   |

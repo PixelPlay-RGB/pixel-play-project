@@ -1,68 +1,89 @@
-# PixelPlay Agent Guide
+# PixelPlay Agent Guide (Karpathy Guidelines)
 
-이 문서는 Codex/AI 에이전트가 PixelPlay 프로젝트에서 작업할 때 먼저 확인해야 하는 운영 규칙입니다. 자세한 제품/환경 설명은 [README.md](./README.md)를 기준으로 삼고, 팀 컨벤션은 `.agents` 하위 문서를 함께 참고합니다.
+이 문서는 Codex/AI 에이전트가 PixelPlay 프로젝트에서 작업할 때 준수해야 하는 운영 및 행동 지침입니다. Karpathy의 관찰을 기반으로 한 일반적인 가이드라인과 프로젝트 전용 규칙을 통합하여 작성되었습니다.
 
-## 프로젝트 개요
+**핵심 원칙:** 이 가이드라인은 속도보다 **신중함**과 **정확성**을 우선합니다.
 
-- PixelPlay는 실시간 채팅 플랫폼으로 시작해 향후 라이브 스트리밍 서비스로 확장할 Next.js 웹 애플리케이션입니다.
-- 주요 스택은 Next.js 16 App Router, React 19, TypeScript strict, Tailwind CSS 4, shadcn `base-nova`, Base UI, Supabase Auth/Postgres/Realtime, TanStack Query v5, Zustand v5입니다.
-- 인증은 Supabase Auth 단독으로 처리하며, `src/lib/supabase/proxy.ts`가 세션 검증과 라우트 가드를 담당합니다.
-- 데이터 타입은 Supabase 스키마에서 생성된 `src/types/database.types.ts`를 기준으로 사용합니다.
-- 채팅 실시간 기능은 Supabase Realtime의 Postgres Changes, Broadcast, Presence를 사용하는 방향입니다. 별도 Socket.IO 서버는 도입하지 않습니다.
+---
 
-## 참고 문서
+## 1. 참고 문서
 
-- [중요] 사용자의 작업 환경 OS는 Windows 입니다.
-- 프로젝트 실행, 환경 변수, 디렉토리 구조, DB 스키마: [README.md](./README.md)
+- 사용자의 작업 환경 OS: Windows
+- 프로젝트 개요 및 실행 방법: [README.md](./README.md)
 - 코드 네이밍/파일 컨벤션: [.agents/code-convention/SKILLS.md](./.agents/code-convention/SKILLS.md)
-- 커밋 메시지/브랜치 컨벤션: [.agents/git-convention/SKILLS.md](./.agents/git-convention/SKILLS.md)
-- 디자인 컨벤션/컬러 시스템: [.agents/design-convention/SKILLS.md](./.agents/design-convention/SKILLS.md)
 - 아키텍처/SRP 컨벤션: [.agents/code-convention/SRP_CONVENTION.md](./.agents/code-convention/SRP_CONVENTION.md)
+- 디자인 컨벤션: [.agents/design-convention/SKILLS.md](./.agents/design-convention/SKILLS.md)
+- 커밋/브랜치 컨벤션: [.agents/git-convention/SKILLS.md](./.agents/git-convention/SKILLS.md)
 
-## 작업 규칙
+---
 
-- **[절대 금지] 지시 사항 외 작업 금지**: 사용자의 명시적인 지시(Directive)가 있는 작업만 수행합니다. 제안이나 분석을 넘어서 실제 파일을 수정하거나 새로운 구현을 진행하는 행위는 **어떠한 경우에도** 허용되지 않습니다. 모든 구현 작업은 사용자의 개별 승인 후 명확한 지시가 있을 때만 시작합니다.
-- **[필수] 오류 발생 시 즉시 중단**: 지시 사항 이행 중 정상적인 작업 진행이 불가능하거나 오류가 발생할 경우, 임의로 추론하여 작업을 계속하지 말고 즉시 중단한 뒤 사용자에게 보고합니다.
-- **[절대 금지] 임의 추론 및 할루시네이션 금지**: 명확한 사실과 코드 근거에 기반하여 작업합니다. 불확실한 정보에 기반한 추론은 금지하며, 확인이 필요한 경우 반드시 `codebase_investigator` 등의 조사 도구(context7 mcp)를 활용하여 철저히 분석 후 작업합니다.
-- **[필수] 작업 전 연관 파일 검토**: 사용자, Gemini, Codex 등 여러 작업자가 동시에 참여하므로 파일 상태가 유동적일 수 있습니다. 특정 파일에 대한 작업 지시가 내려지면, 반드시 해당 파일과 연관된 파일들을 모두 검토하여 최신 상태를 파악한 뒤 작업을 시작합니다.
-- **[필수] 작업 결과 요약 보고**: 모든 코드 변경 작업을 마친 후에는 변경 사항에 대한 핵심 내용을 반드시 요약하여 사용자에게 보고합니다.
-- **단일 책임 원칙 (SRP)**: 모든 컴포넌트, 함수, 클래스는 하나의 역할만 수행해야 합니다. 상세 내용은 [.agents/code-convention/SRP_CONVENTION.md](./.agents/code-convention/SRP_CONVENTION.md)를 따릅니다.
-- **작업 완료 후 즉시 정지**: 요청받은 특정 지시사항이 완료되면 추가적인 제안이나 추측 없이 즉시 응답을 마무리하고 사용자의 다음 지시를 기다립니다.
-- 기존 구조와 스타일을 우선합니다. 새 패턴을 만들기 전에 `src/components`, `src/hooks`, `src/actions`, `src/lib`, `src/stores`, `src/utils`의 기존 구현을 확인합니다.
-- 컴포넌트 파일과 폴더명은 kebab-case, 컴포넌트/타입 이름은 PascalCase, 변수/함수/훅 이름은 camelCase를 사용합니다.
-- shadcn/Base UI 컴포넌트는 `src/components/ui`의 로컬 래퍼를 우선 사용합니다. 직접 primitive를 추가할 때도 기존 UI 컴포넌트의 스타일과 접근성 패턴을 맞춥니다.
-- Tailwind 색상은 하드코딩보다 `bg-brand`, `text-brand`, `bg-background`, `text-foreground`, `text-muted-foreground`, `border-border` 같은 프로젝트 토큰을 우선 사용합니다.
-- **모바일 우선 반응형(Mobile-First)** 디자인을 지향합니다. 기본 스타일은 모바일 기준으로 작성하고, `sm:`, `md:`, `lg:` 등의 Tailwind 접두사를 사용하여 점진적으로 데스크톱 레이아웃을 확장합니다.
-- **`cn` 유틸리티 사용**: 가독성을 최우선으로 하며, 인간이 읽기 편한 구조를 지향합니다.
-  - **단순 단일 라인**: 클래스 명이 짧고(약 40자 미만) 조건부가 없다면 `className="..."` 문자열을 직접 사용합니다.
-  - **가독성을 위한 그룹화 (필수)**: 클래스 명이 길거나(약 40자 이상) 복잡할 경우, 반드시 `cn()`을 사용하고 **논리적 단위(Layout, Sizing, Interactive 등)로 묶어 줄바꿈**을 적용합니다. (주석은 달지 않습니다.)
-  ```tsx
-  // GOOD: 인간이 읽기 편한 그룹화 (40자 이상일 때 권장)
-  <div
-    className={cn(
-      "flex items-center gap-2",
-      "w-full max-w-50 h-10",
-      "bg-brand transition-all duration-200"
-    )}
-  />
-  ```
-- `cn` 유틸 실제 위치는 `src/lib/utils/index.ts`입니다.
-- 환경 변수를 추가하거나 변경하면 `.env.example`과 `src/env.d.ts`를 함께 확인합니다.
-- Supabase 스키마 변경이 있을 때만 `npm run types`로 `src/types/database.types.ts`를 갱신합니다. UI만 수정하는 작업에서는 타입 재생성을 피합니다.
-- 사용자가 만든 변경사항을 되돌리지 않습니다. 작업 전후로 `git status --short`를 확인하고, 관련 없는 변경은 건드리지 않습니다.
+## 2. 행동 지침 (Karpathy Guidelines)
 
-## 검증 명령
+### 2.1 코드 작성 전 생각하기 (Think Before Coding)
+**추측하지 말고, 혼란을 숨기지 마십시오. 트레이드오프를 명시하십시오.**
+- 가정을 명확히 기술하십시오. 불확실하다면 질문하십시오.
+- 여러 해석이 가능하다면 마음대로 고르지 말고 사용자에게 제시하십시오.
+- 더 간단한 방법이 있다면 제안하십시오. 지시가 무리하다고 판단되면 근거와 함께 반대 의견을 내십시오.
 
-- 개발 서버: `npm run dev`
-- 프로덕션 빌드/타입 확인: `npm run build`
-- Supabase 타입 재생성: `npm run types`
+### 2.2 단순함 우선 (Simplicity First)
+**문제를 해결하는 최소한의 코드만 작성하십시오. 추측에 기반한 구현은 금지합니다.**
+- 요청하지 않은 기능은 추가하지 마십시오.
+- 단일 용도 코드를 위해 복잡한 추상화를 도입하지 마십시오.
+- "유연성"이나 "설정 가능성"을 임의로 확장하지 마십시오.
+- 발생 불가능한 시나리오에 대한 과도한 에러 핸들링을 피하십시오.
 
-작업 범위가 작아도 UI/컴포넌트 변경은 가능하면 `npm run build`로 확인합니다.
+### 2.3 외과수술식 수정 (Surgical Changes)
+**필요한 부분만 건드리십시오. 본인이 만든 코드만 정리하십시오.**
+- 인접한 코드의 스타일이나 포맷을 임의로 "개선"하지 마십시오.
+- 고장 나지 않은 것을 리팩토링하지 마십시오.
+- 기존 코드의 스타일을 엄격히 따르십시오.
+- 작업 결과로 발생한 미사용 import/변수/함수는 즉시 제거하십시오. (기존의 유휴 코드는 질문 후 처리)
 
-## Git 규칙
+### 2.4 목표 중심 실행 (Goal-Driven Execution)
+**성공 기준을 정의하고 검증될 때까지 반복하십시오.**
+- "검증 추가" → "잘못된 입력에 대한 테스트 작성 후 통과시키기"와 같이 구체적인 목표를 세우십시오.
+- 멀티스텝 작업 시 간략한 단계별 계획을 먼저 제시하고 하나씩 검증하며 진행하십시오.
 
-- 커밋 메시지는 한글로 작성합니다.
-- 커밋 타입은 `feat`, `fix`, `refactor`, `style`, `test`, `chore` 중에서 고릅니다.
-- 형식 예시: `feat(#25): 유저의 로그인 기능 추가`
-- 브랜치 예시: `feat/auth/25`
+### 2.5 실재하는 코드 확인 (Workspace Evidence)
+**실제 파일을 직접 읽고 확인하십시오. 기억이나 요약에 의존하지 마십시오.**
+- 수정 전 반드시 연관 파일을 모두 읽어 최신 상태와 호출 부를 확인하십시오.
+- 로컬 코드가 본인의 가정과 다를 경우 코드를 신뢰하고 계획을 수정하십시오.
+
+### 2.6 한국어 출력 및 콜론 사용 금지 (No Closing Colons)
+**한국어 문장은 반드시 마침표(.), 물음표(?), 느낌표(!)로 끝내십시오.**
+- 영어권 LLM의 습관인 문장 끝 콜론(:) 사용을 절대 금지합니다. (예: "다음과 같습니다:" (X) → "다음과 같습니다." (O))
+- 코드 내부나 라벨링 용도 외에 일반적인 한국어 문장 끝에는 콜론을 쓰지 않습니다.
+
+### 2.7 한국어 파일 헤더 주석 (File Header Comments)
+**새로운 소스 파일을 생성할 때, 첫 번째 줄에 해당 파일의 역할을 설명하는 한 줄 주석을 작성하십시오.**
+- 형식: `// 사용자 인증 상태를 관리하는 Context Provider` (TypeScript/JS 기준)
+- `use client`, `use server` 바로 아래 또는 파일 맨 위에 위치시킵니다.
+- 설정 파일이나 자동 생성 파일은 제외합니다.
+
+### 2.8 계획 + 체크리스트 + 컨텍스트 노트 (Plan + Checklist + Notes)
+**복잡한 작업 시작 전 반드시 세 가지 결과물을 생성하십시오.**
+- **Plan**: 무엇을 왜 만드는지 기술.
+- **Checklist (`checklist.md`)**: 체크박스 형태의 구체적 할 일 목록.
+- **Context Notes (`context-notes.md`)**: 작업 중 내린 결정과 그 이유를 기록. (지속적으로 업데이트)
+
+### 2.9 완료 전 테스트 실행 (Run Tests)
+**코드를 수정했다면 "완료"라고 말하기 전에 반드시 테스트를 실행하십시오.**
+- `npm run build` 등으로 빌드 및 타입 체크를 수행하십시오.
+- 테스트 도구가 있다면 관련 테스트를 실행하고 결과를 보고하십시오.
+- 검증이 불가능한 환경이라면 그 이유를 명확히 밝히십시오.
+
+### 2.10 의미 있는 커밋 (Semantic Commits)
+**하나의 논리적 변화가 완료되면 즉시 커밋하십시오. 사용자 지시를 기다리지 마십시오.**
+- 커밋 메시지 한 줄로 설명 가능한 단위로 쪼개십시오. (예: "auth 미들웨어 추가"와 "UI 수정"은 분리)
 - 자세한 규칙은 [.agents/git-convention/SKILLS.md](./.agents/git-convention/SKILLS.md)를 따릅니다.
+
+---
+
+## 3. 프로젝트 전용 규칙
+
+- **`cn` 유틸리티 사용**: 
+  - 40자 미만 단순 문자열: `className="..."` 직접 사용.
+  - 40자 이상 또는 조건부: `cn()` 사용 및 논리적 단위로 줄바꿈. (주석은 달지 않음)
+- **모바일 우선(Mobile-First)**: 기본 스타일은 모바일 기준, `sm:` 등으로 데스크톱 확장.
+- **표준 단위 사용**: 임의 값(`[...]`) 지양, Tailwind 4px 단위(`w-25` 등) 우선 사용.
+- **SRP 준수**: 모든 컴포넌트와 함수는 하나의 역할만 수행.
