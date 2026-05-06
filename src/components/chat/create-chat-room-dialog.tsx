@@ -56,7 +56,7 @@ export default function CreateChatRoomDialog() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
         className={cn(
-          "bg-brand shadow-brand/20 max-w-max self-end rounded-xl px-6 py-2 text-sm font-black text-primary-foreground shadow-lg",
+          "bg-brand shadow-brand/20 max-w-max self-end rounded-xl px-6 py-2 text-sm font-black text-white shadow-lg",
           "transition-all hover:opacity-90 active:scale-95",
           "cursor-pointer",
         )}
@@ -69,33 +69,42 @@ export default function CreateChatRoomDialog() {
         </DialogHeader>
         <form onSubmit={handleSubmit(handleCreateRoom)} className="mt-2">
           <div className="mb-5">
-            <label className="mb-2 block text-sm font-medium text-muted-foreground">방 제목</label>
+            <label className="mb-2 block text-sm font-medium text-zinc-400">방 제목</label>
             <Input
               autoFocus
               type="text"
               {...register("title")}
               placeholder="방 제목을 입력하세요"
-              className="focus-visible:ring-brand h-auto bg-muted/30 px-4 py-3 transition-colors"
+              className={cn(
+                "focus-visible:border-brand h-auto bg-zinc-50 px-4 py-3 transition-colors",
+                "dark:bg-zinc-950",
+              )}
             />
             <FieldError errors={[errors.title]} />
           </div>
           <div className="mb-5">
-            <label className="mb-2 block text-sm font-medium text-muted-foreground">방 설명</label>
+            <label className="mb-2 block text-sm font-medium text-zinc-400">방 설명</label>
             <Textarea
               {...register("description")}
               placeholder="방의 목적이나 규칙을 적어주세요"
-              className="focus-visible:ring-brand h-auto min-h-20 bg-muted/30 px-4 py-3 transition-colors"
+              className={cn(
+                "focus-visible:border-brand h-auto min-h-20 bg-zinc-50 px-4 py-3 transition-colors",
+                "dark:bg-zinc-950",
+              )}
             />
             <FieldError errors={[errors.description]} />
           </div>
           <div className="mb-8">
-            <label className="mb-2 block text-sm font-medium text-muted-foreground">참여 가능 인원</label>
+            <label className="mb-2 block text-sm font-medium text-zinc-400">참여 가능 인원</label>
             <Input
               type="number"
               {...register("capacity", { valueAsNumber: true })}
               min={CHAT_ROOM_MIN_CAPACITY}
               max={CHAT_ROOM_MAX_CAPACITY}
-              className="focus-visible:ring-brand h-auto bg-muted/30 px-4 py-3 transition-colors"
+              className={cn(
+                "focus-visible:border-brand h-auto bg-zinc-50 px-4 py-3 transition-colors",
+                "dark:bg-zinc-950",
+              )}
             />
             <FieldError errors={[errors.capacity]} />
           </div>
@@ -111,7 +120,7 @@ export default function CreateChatRoomDialog() {
             <Button
               type="submit"
               disabled={!isValid || isSubmitting}
-              className={cn("bg-brand text-primary-foreground h-auto flex-1 py-3 font-bold", "hover:opacity-90")}
+              className={cn("bg-brand h-auto flex-1 py-3 font-bold text-white", "hover:opacity-90")}
             >
               {isSubmitting ? "생성 중..." : "생성하기"}
             </Button>

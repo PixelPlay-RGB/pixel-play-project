@@ -18,8 +18,8 @@ export default function ChatRoomTabs() {
               cn(
                 "h-auto cursor-pointer rounded-xl px-6 py-2 text-sm font-bold transition-all",
                 active
-                  ? "bg-brand shadow-brand/20 text-primary-foreground shadow-lg"
-                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                  ? "bg-brand shadow-brand/20 text-white shadow-lg"
+                  : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800/50 dark:hover:text-zinc-100",
               )
             }
           >
