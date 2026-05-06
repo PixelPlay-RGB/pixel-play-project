@@ -36,10 +36,10 @@ export default function RootLayout({
       className={cn(
         "h-full",
         "antialiased",
+        notoSans.variable,
         geistSans.variable,
         geistMono.variable,
         "font-sans",
-        notoSans.variable,
       )}
       suppressHydrationWarning
     >
