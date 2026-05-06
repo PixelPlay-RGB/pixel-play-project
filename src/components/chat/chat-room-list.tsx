@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 export default function ChatRoomList() {
   const tabType = useChatRoomStore((state) => state.tabType);
   const authLoading = useUserStore((state) => state.loading);
-  const { data: currentUser, isFetched: isUserFetched } = useUser();
+  const { isFetched: isUserFetched } = useUser();
   const {
     data: rooms = [],
     isError,
@@ -24,8 +24,7 @@ export default function ChatRoomList() {
   } = useChatRooms(tabType);
 
   // 유저 정보 로딩 중이거나 채팅방 데이터 초기 로딩 중일 때 스켈레톤 표시
-  const isInitialLoading =
-    authLoading || !isUserFetched || (isLoading && rooms.length === 0);
+  const isInitialLoading = authLoading || !isUserFetched || (isLoading && rooms.length === 0);
   const isEmpty =
     !authLoading && isUserFetched && !isFetching && !isPlaceholderData && rooms.length === 0;
 
