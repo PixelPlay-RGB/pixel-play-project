@@ -1,8 +1,9 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
-import { useUserStore } from "@/stores/auth";
+import { useAuthStore } from "@/stores/auth";
 import { useEffect } from "react";
+import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/constants/query-keys";
 
@@ -14,7 +15,9 @@ import { QUERY_KEYS } from "@/constants/query-keys";
  * DB 프로필(public.user)은 여기서 다루지 않음 → React Query의 useProfile 훅 사용.
  */
 export default function AuthListener() {
-  const setUser = useUserStore((s) => s.setUser);
+  const user = useAuthStore((s) => s.user);
+  const setUser = useAuthStore((s) => s.setUser);
+  const setIsCanChangePassword = useAuthStore((s) => s.setIsCanChangePassword);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -44,6 +47,35 @@ export default function AuthListener() {
       subscription.unsubscribe();
     };
   }, [setUser, queryClient]);
+
+  useEffect(() => {
+    const supabase = createClient();
+
+    const getProviders = async () => {
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from("user")
+        .select("linked_providers")
+        .eq("oauth_id", user.id)
+        .maybeSingle();
+
+      if (error) {
+        toast.error("OAuth 정보 불러오기 실패");
+        return;
+      }
+
+      if (!data) {
+        // 프로필 미생성(complete-profile 진행 중) — 정상 케이스
+        setIsCanChangePassword(false);
+        return;
+      }
+
+      setIsCanChangePassword(data.linked_providers.includes("email"));
+    };
+
+    getProviders();
+  }, [user, setIsCanChangePassword]);
 
   return null;
 }

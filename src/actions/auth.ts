@@ -7,12 +7,19 @@ import {
   loginSchema,
   signUpBaseSchema,
 } from "@/lib/zod/auth";
-import { CompleteOAuthProfileInput, CompleteSignupInput, OAuthProvider } from "@/types/auth";
+
+import {
+  CompleteOAuthProfileInput,
+  CompleteSignupInput,
+  LoginProvider,
+  OAuthProvider,
+} from "@/types/auth";
 import { revalidatePath } from "next/cache";
 
 export interface ActionResponse {
   success: boolean;
   message?: string;
+  photoUrl?: string | null;
 }
 
 /**
@@ -167,6 +174,7 @@ export async function completeSignupAction(data: CompleteSignupInput): Promise<A
       phone: phone,
       gender: gender,
       photo_url: null,
+      linked_providers: ["email"],
     },
     { onConflict: "oauth_id" },
   );
@@ -176,6 +184,49 @@ export async function completeSignupAction(data: CompleteSignupInput): Promise<A
   }
 
   revalidatePath("/", "layout");
+  return { success: true };
+}
+
+/**
+ * 현재 비밀번호 검증
+ */
+export async function verifyCurrentPasswordAction(
+  currentPassword: string,
+): Promise<ActionResponse> {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user?.email) {
+    return { success: false, message: "인증 정보를 불러올 수 없습니다." };
+  }
+
+  const { error } = await supabase.auth.signInWithPassword({
+    email: user.email,
+    password: currentPassword,
+  });
+
+  if (error) {
+    return { success: false, message: "현재 비밀번호가 올바르지 않습니다." };
+  }
+
+  return { success: true };
+}
+
+/**
+ * 비밀번호 변경
+ */
+export async function changePasswordAction(newPassword: string): Promise<ActionResponse> {
+  const supabase = await createClient();
+
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
+
+  if (error) {
+    return { success: false, message: error.message };
+  }
+
   return { success: true };
 }
 
@@ -225,9 +276,9 @@ export async function completeOAuthProfileAction(
     return { success: false, message: "이미 사용 중인 닉네임입니다." };
   }
 
-  const VALID_PROVIDERS: OAuthProvider[] = ["google", "github"];
+  const VALID_PROVIDERS: LoginProvider[] = ["google", "github"];
   const linkedProviders = ((user.app_metadata?.providers ?? []) as string[]).filter(
-    (p): p is OAuthProvider => VALID_PROVIDERS.includes(p as OAuthProvider),
+    (p): p is LoginProvider => VALID_PROVIDERS.includes(p as LoginProvider),
   );
 
   const { error: dbError } = await supabase.from("user").upsert(
@@ -254,4 +305,173 @@ export async function completeOAuthProfileAction(
 
   revalidatePath("/", "layout");
   return { success: true };
+}
+
+/**
+ * 5. OAuth 유저 연동 해제
+ */
+export async function unLinkOAuthAction(provider: OAuthProvider): Promise<ActionResponse> {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return {
+      success: false,
+      message: "유저 인증 정보가 없습니다.",
+    };
+  }
+
+  const identity = user.identities?.find((id) => id.provider === provider);
+
+  if (!identity) {
+    return {
+      success: false,
+      message: "연동된 계정을 찾을 수 없습니다.",
+    };
+  }
+
+  const { error: unLinkError } = await supabase.auth.unlinkIdentity(identity);
+  if (unLinkError) {
+    return {
+      success: false,
+      message: "계정 연동 해제에 실패했습니다.",
+    };
+  }
+
+  const { data: dbUser, error: dbUserError } = await supabase
+    .from("user")
+    .select("linked_providers")
+    .eq("oauth_id", user.id)
+    .single();
+
+  if (!dbUser || dbUserError) {
+    return {
+      success: false,
+      message: "프로필 정보와 일치하는 유저가 없습니다.",
+    };
+  }
+
+  const currentProviders = dbUser.linked_providers || [];
+  const updatedProviders = currentProviders.filter((p: string) => p !== provider);
+
+  const { error: updateError } = await supabase
+    .from("user")
+    .update({ linked_providers: updatedProviders })
+    .eq("oauth_id", user.id);
+
+  if (updateError) {
+    return {
+      success: false,
+      message: "데이터베이스 업데이트에 실패했습니다.",
+    };
+  }
+
+  revalidatePath("/", "layout");
+  return { success: true };
+}
+
+/**
+ * 프로필 업데이트
+ */
+export async function updateProfileAction(formData: FormData): Promise<ActionResponse> {
+  const supabase = await createClient();
+
+  // Form 데이터에서 값 추출
+  const nickname = formData.get("nickname") as string;
+  const file = formData.get("file") as File | null;
+  let photoUrl = (formData.get("photoUrl") as string | null) || null;
+  const shouldDeleteImage = formData.get("shouldDeleteImage") === "true";
+
+  // 🚨 [추가된 로직] 파일 크기 검증 (5MB 제한)
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+  if (file && file.size > MAX_FILE_SIZE) {
+    return {
+      success: false,
+      message: "이미지 파일 크기는 5MB를 초과할 수 없습니다.",
+    };
+  }
+
+  // 유저 세션 확인
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (!user || userError) {
+    return {
+      success: false,
+      message: "유저 인증 정보가 없습니다.",
+    };
+  }
+
+  // 이미지 처리
+  if (file || shouldDeleteImage) {
+    const { data: existingFiles } = await supabase.storage
+      .from("profiles")
+      .list(`avatars/${user.id}`);
+    const existingPaths = (existingFiles ?? []).map((f) => `avatars/${user.id}/${f.name}`);
+
+    if (file) {
+      const fileExt = file.name.split(".").pop();
+      const filePath = `avatars/${user.id}/avatar.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("profiles")
+        .upload(filePath, file, { upsert: true, contentType: file.type });
+
+      if (uploadError) {
+        return {
+          success: false,
+          message: "이미지 저장에 실패했습니다.",
+        };
+      }
+
+      // 업로드 성공 후 다른 확장자의 잔재 파일 정리
+      const orphans = existingPaths.filter((p) => p !== filePath);
+      if (orphans.length > 0) {
+        await supabase.storage.from("profiles").remove(orphans);
+      }
+
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("profiles").getPublicUrl(filePath);
+      photoUrl = `${publicUrl}?t=${Date.now()}`;
+    } else {
+      if (existingPaths.length > 0) {
+        await supabase.storage.from("profiles").remove(existingPaths);
+      }
+      photoUrl = null;
+    }
+  }
+
+  // Auth & DB에 데이터 업데이트
+  // displayName은 회원가입할때도 굳이 안 건들였음
+  await supabase.auth.updateUser({
+    data: { avatar_url: photoUrl },
+  });
+
+  const { error: updateError } = await supabase
+    .from("user")
+    .update({
+      nickname,
+      photo_url: photoUrl,
+    })
+    .eq("oauth_id", user.id);
+
+  if (updateError) {
+    return {
+      success: false,
+      message: updateError.message || "유저 업데이트에 실패했습니다.",
+    };
+  }
+
+  revalidatePath("/", "layout");
+  return {
+    success: true,
+    photoUrl,
+  };
 }

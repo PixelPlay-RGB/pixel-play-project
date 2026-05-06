@@ -1,6 +1,6 @@
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative flex flex-1 items-center justify-center overflow-hidden py-12 dark:bg-transparent">
+    <div className="relative flex flex-1 items-center justify-center py-6 sm:py-12 dark:bg-transparent">
       <div
         className="absolute inset-0 opacity-[0.15] dark:opacity-[0.07]"
         style={{

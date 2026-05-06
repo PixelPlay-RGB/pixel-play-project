@@ -9,18 +9,16 @@ import { SETTING_MENU } from "@/constants/setting-menu";
 import { useUser } from "@/hooks/use-profile";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/stores/auth";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-interface Props {
-  avatarUrl: string;
-}
-
-export default function HeaderProfileBadge({ avatarUrl }: Props) {
+export default function HeaderProfileBadge() {
   const supabase = createClient();
   const router = useRouter();
   const { data: user, isLoading } = useUser();
+  const isCanChangePassword = useAuthStore((state) => state.isCanChangePassword);
 
   const [open, setOpen] = useState(false);
 
@@ -37,8 +35,8 @@ export default function HeaderProfileBadge({ avatarUrl }: Props) {
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger className="cursor-pointer outline-none hover:opacity-80">
         <Avatar className={cn("ring-brand ring-2 transition-all duration-200 hover:ring-[3px]")}>
-          <AvatarImage src={avatarUrl} />
-          <AvatarFallback>{user.nickname?.[0]}</AvatarFallback>
+          <AvatarImage src={user.photo_url ?? undefined} />
+          <AvatarFallback>{user.nickname.slice(0, 2)}</AvatarFallback>
         </Avatar>
       </PopoverTrigger>
 
@@ -49,13 +47,13 @@ export default function HeaderProfileBadge({ avatarUrl }: Props) {
           className="hover:bg-muted flex items-center gap-4 rounded-lg p-1"
         >
           <Avatar className="border-brand/10 h-12 w-12 border">
-            <AvatarImage src={avatarUrl} />
-            <AvatarFallback>{user.nickname?.[0]}</AvatarFallback>
+            <AvatarImage src={user.photo_url ?? undefined} />
+            <AvatarFallback>{user.nickname.slice(0, 2)}</AvatarFallback>
           </Avatar>
 
           <div className="flex flex-col gap-1">
             <p className={"bg-muted text-brand rounded-sm px-1 py-0.5 text-xs"}>프로필 설정</p>
-            <p className="text-foreground text-lg leading-tight font-bold tracking-tight">
+            <p className="text-foreground keep-space text-lg leading-tight font-bold tracking-tight">
               {user.nickname}
             </p>
           </div>
@@ -65,13 +63,17 @@ export default function HeaderProfileBadge({ avatarUrl }: Props) {
 
         <div className="flex flex-col">
           {SETTING_MENU.map((item) =>
-            SettingMenuItem(item, {
-              onClose: () => setOpen(false),
-              onLogout: handleLogout,
-              // actions: {
-              //   settings: handleSetting
-              // }
-            }),
+            SettingMenuItem(
+              item,
+              {
+                onClose: () => setOpen(false),
+                onLogout: handleLogout,
+                // actions: {
+                //   settings: handleSetting
+                // }
+              },
+              isCanChangePassword,
+            ),
           )}
         </div>
       </PopoverContent>

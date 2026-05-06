@@ -20,14 +20,14 @@ import {
 import { RadioGroup } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
-import { WELCOME_PARAM } from "@/constants/auth";
+import { SIGNUP_FORM_DEFAULTS, WELCOME_PARAM } from "@/constants/auth";
 import { QUERY_KEYS } from "@/constants/query-keys";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
-import { SIGNUP_FORM_DEFAULTS, signUpSchema } from "@/lib/zod/auth";
-import { useUserStore } from "@/stores/auth";
+import { signUpSchema } from "@/lib/zod/auth";
+import { useAuthStore } from "@/stores/auth";
 import type { NicknameStatus, OtpStatus, SignUpFormValues } from "@/types/auth";
-import { formatPhone } from "@/utils/auth";
+import { formatPhone } from "@/utils/format";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { CalendarDays, LockKeyhole, Mail, Smartphone, User, UserStar } from "lucide-react";
@@ -38,8 +38,9 @@ import { toast } from "sonner";
 
 export default function SignupForm() {
   const router = useRouter();
-  const setUser = useUserStore((s) => s.setUser);
+  const setUser = useAuthStore((s) => s.setUser);
   const queryClient = useQueryClient();
+
   const [otpStatus, setOtpStatus] = useState<OtpStatus>("idle");
   const [otpCode, setOtpCode] = useState("");
   const [otpError, setOtpError] = useState("");
@@ -168,12 +169,16 @@ export default function SignupForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="m-auto flex max-w-md flex-col gap-5">
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="m-auto flex max-w-md flex-col gap-4 sm:gap-5"
+    >
       <div className="flex w-full flex-col gap-3">
+        {/* 이메일 인증 섹션 */}
         <div className="flex flex-col gap-1">
           <InputGroup
             className={cn(
-              "w-full py-5",
+              "w-full py-5 transition-all",
               (emailVerified || (!errors.email && dirtyFields.email)) &&
                 "border-brand ring-brand/20 dark:ring-brand/30 ring-3",
               errors.email && "border-destructive",
@@ -213,6 +218,7 @@ export default function SignupForm() {
           <FieldError errors={[errors.email]} />
         </div>
 
+        {/* OTP 입력 섹션 */}
         {otpSent && !emailVerified && (
           <div className="flex flex-col gap-1">
             <InputGroup className={cn("w-full py-5", otpError && "border-destructive")}>
@@ -240,6 +246,8 @@ export default function SignupForm() {
             {otpError && <p className="text-destructive text-xs">{otpError}</p>}
           </div>
         )}
+
+        {/* 비밀번호 섹션 */}
         <div className="flex flex-col gap-1">
           <AuthInputGroup
             {...register("password")}
@@ -252,6 +260,7 @@ export default function SignupForm() {
           />
           <FieldError errors={[errors.password]} />
         </div>
+
         <div className="flex flex-col gap-1">
           <AuthInputGroup
             {...register("passwordConfirm")}
@@ -266,8 +275,9 @@ export default function SignupForm() {
         </div>
       </div>
 
-      <Separator className="my-2" />
+      <Separator className="my-1 sm:my-2" />
 
+      {/* 사용자 정보 섹션 */}
       <div className="flex w-full flex-col gap-3">
         <div className="flex flex-col gap-1">
           <AuthInputGroup
@@ -281,10 +291,12 @@ export default function SignupForm() {
           />
           <FieldError errors={[errors.name]} />
         </div>
+
+        {/* 닉네임 중복 확인 섹션 */}
         <div className="flex flex-col gap-1">
           <InputGroup
             className={cn(
-              "w-full py-5",
+              "w-full py-5 transition-all",
               nicknameStatus === "available" &&
                 "border-brand ring-brand/20 dark:ring-brand/30 ring-3",
               (nicknameStatus === "taken" || errors.nickname) && "border-destructive",
@@ -296,8 +308,16 @@ export default function SignupForm() {
             <InputGroupInput
               {...register("nickname", {
                 onChange: (e) => {
-                  const val = e.target.value;
+                  const val = e.target.value.replace(/^\s+/, "");
+                  e.target.value = val;
+
                   setNicknameStatus(val && val === verifiedNickname ? "available" : "idle");
+                },
+                onBlur: (e) => {
+                  const trim = e.target.value.trim();
+                  e.target.value = trim;
+
+                  setNicknameStatus(trim && trim === verifiedNickname ? "available" : "idle");
                 },
               })}
               type="text"
@@ -324,13 +344,14 @@ export default function SignupForm() {
             </InputGroupAddon>
           </InputGroup>
           {nicknameStatus === "available" && (
-            <p className="text-brand text-xs">사용 가능한 닉네임입니다.</p>
+            <p className="text-brand px-1 text-xs">사용 가능한 닉네임입니다.</p>
           )}
           {nicknameStatus === "taken" && (
-            <p className="text-destructive text-xs">이미 사용 중인 닉네임입니다.</p>
+            <p className="text-destructive px-1 text-xs">이미 사용 중인 닉네임입니다.</p>
           )}
           <FieldError errors={[errors.nickname]} />
         </div>
+
         <div className="flex flex-col gap-1">
           <AuthInputGroup
             {...register("birth")}
@@ -343,6 +364,8 @@ export default function SignupForm() {
           />
           <FieldError errors={[errors.birth]} />
         </div>
+
+        {/* 휴대전화 섹션 */}
         <Controller
           name="phone"
           control={control}
@@ -361,6 +384,8 @@ export default function SignupForm() {
             </div>
           )}
         />
+
+        {/* 성별 선택 섹션 */}
         <div className="flex flex-col gap-1">
           <Card className="w-full shadow-none">
             <CardContent>
@@ -368,7 +393,7 @@ export default function SignupForm() {
                 name="gender"
                 control={control}
                 render={({ field }) => (
-                  <RadioGroup onValueChange={field.onChange} className="flex">
+                  <RadioGroup onValueChange={field.onChange} className="grid grid-cols-3">
                     <SignUpGenderField htmlFor="male" content="남성" radioValue="male" />
                     <SignUpGenderField htmlFor="female" content="여성" radioValue="female" />
                     <SignUpGenderField htmlFor="none" content="선택안함" radioValue="none" />
@@ -381,12 +406,16 @@ export default function SignupForm() {
         </div>
       </div>
 
-      <Separator className="my-2" />
+      <Separator className="my-1 sm:my-2" />
 
+      {/* 제출 버튼 */}
       <Button
         type="submit"
         disabled={isSubmitting || !emailVerified}
-        className="bg-brand hover:bg-brand/85 w-full cursor-pointer py-5 font-bold tracking-widest text-white uppercase disabled:opacity-40"
+        className={cn(
+          "bg-brand hover:bg-brand/85 w-full cursor-pointer py-5 font-bold tracking-widest text-white uppercase",
+          "transition-all active:scale-[0.98] disabled:opacity-40",
+        )}
       >
         {isSubmitting ? <Spinner /> : "회원가입"}
       </Button>

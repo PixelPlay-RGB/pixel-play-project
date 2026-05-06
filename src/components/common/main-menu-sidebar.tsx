@@ -56,7 +56,7 @@ export default function MainMenuSidebar() {
     <SidebarProvider className="h-app-content min-h-0 overflow-hidden">
       <Sidebar
         collapsible={isMobile ? "offcanvas" : "none"}
-        className="h-full shrink-0 border-r border-zinc-200 bg-background dark:border-zinc-800/50"
+        className="bg-background h-full shrink-0 border-r border-zinc-200 dark:border-zinc-800/50"
       >
         <SidebarContent>
           <SidebarGroup className="p-4 pt-5">
@@ -74,7 +74,7 @@ export default function MainMenuSidebar() {
         {isMobile && (
           <div className="flex shrink-0 items-center gap-3 border-b border-zinc-200 p-4 dark:border-zinc-800/50">
             <SidebarTrigger className="cursor-pointer" />
-            <span className="text-sm font-semibold text-foreground">
+            <span className="text-foreground text-sm font-semibold">
               {MAIN_MENU_SIDEBAR_ITEMS.find((item) => item.key === activeMenu)?.label}
             </span>
           </div>

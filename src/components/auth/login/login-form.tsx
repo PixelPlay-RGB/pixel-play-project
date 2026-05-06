@@ -8,9 +8,10 @@ import { Spinner } from "@/components/ui/spinner";
 import { LOGIN_PARAM } from "@/constants/auth";
 import { QUERY_KEYS } from "@/constants/query-keys";
 import { createClient } from "@/lib/supabase/client";
+import { cn } from "@/lib/utils";
 import { loginSchema } from "@/lib/zod/auth";
-import { useUserStore } from "@/stores/auth";
-import type { LoginFormValues } from "@/types/auth";
+import { useAuthStore } from "@/stores/auth";
+import type { LoginFormValues, LoginProvider } from "@/types/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { LockKeyhole, Mail } from "lucide-react";
@@ -18,9 +19,14 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-export default function LoginForm() {
+interface LoginFormProps {
+  loading: LoginProvider | null;
+  onLoadingChange: (provider: LoginProvider | null) => void;
+}
+
+export default function LoginForm({ loading, onLoadingChange: setIsLoading }: LoginFormProps) {
   const router = useRouter();
-  const setUser = useUserStore((s) => s.setUser);
+  const setUser = useAuthStore((s) => s.setUser);
   const queryClient = useQueryClient();
 
   const {
@@ -33,12 +39,14 @@ export default function LoginForm() {
   });
 
   const onSubmit = async (data: LoginFormValues) => {
+    setIsLoading("email");
     const result = await login(data);
 
     if (!result.success) {
       toast.error("로그인 실패 🥲", {
         description: result.message || "이메일 또는 비밀번호를 확인해주세요.",
       });
+      setIsLoading(null);
       return;
     }
 
@@ -53,12 +61,14 @@ export default function LoginForm() {
       toast.error("인증 정보를 불러올 수 없습니다.", {
         description: "잠시 후 다시 시도해주세요.",
       });
+      setIsLoading(null);
       return;
     }
 
     setUser(authUser);
     queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth.profile(authUser.id) });
 
+    setIsLoading(null);
     router.push(`/${LOGIN_PARAM}`);
     router.refresh();
   };
@@ -76,10 +86,11 @@ export default function LoginForm() {
         />
         <FieldError errors={[errors.email]} />
       </div>
+
       <div className="flex flex-col gap-1">
         <AuthInputGroup
           {...register("password")}
-          type="password"
+          type={"password"}
           placeholder="비밀번호"
           icon={<LockKeyhole />}
           aria-invalid={!!errors.password}
@@ -87,10 +98,15 @@ export default function LoginForm() {
         />
         <FieldError errors={[errors.password]} />
       </div>
+
       <Button
         type="submit"
-        disabled={isSubmitting}
-        className="bg-brand hover:bg-brand/85 w-full cursor-pointer py-5 font-bold tracking-widest text-white uppercase"
+        disabled={isSubmitting || loading != null}
+        className={cn(
+          "w-full cursor-pointer py-5 font-bold tracking-widest uppercase",
+          "bg-brand hover:bg-brand/85 text-white",
+          "transition-all active:scale-[0.98] disabled:opacity-40",
+        )}
       >
         {isSubmitting ? <Spinner /> : "로그인"}
       </Button>

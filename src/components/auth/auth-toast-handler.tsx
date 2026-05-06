@@ -37,6 +37,12 @@ function AuthToastInner({ nickname }: { nickname: string }) {
       params.delete("welcome");
     }
 
+    const currentPath = window.location.pathname;
+    if (currentPath.includes("profile")) {
+      router.replace("/profile");
+      return;
+    }
+
     // 토스트 표시 후 URL에서 파라미터 제거 (새로고침 시 재표시 방지)
     const newUrl = params.size > 0 ? `?${params.toString()}` : "/";
     router.replace(newUrl, { scroll: false });

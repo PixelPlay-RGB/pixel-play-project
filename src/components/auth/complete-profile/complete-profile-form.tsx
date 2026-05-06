@@ -2,6 +2,7 @@
 
 import { checkNicknameAction, completeOAuthProfileAction } from "@/actions/auth";
 import AuthInputGroup from "@/components/auth/auth-input-group";
+import CompleteProfileAbandonAlert from "@/components/auth/complete-profile/complete-profile-abandon-alert";
 import SignUpGenderField from "@/components/auth/signup/signup-gender-field";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,9 +20,9 @@ import { QUERY_KEYS } from "@/constants/query-keys";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { completeOAuthProfileSchema, CompleteOAuthProfileValues } from "@/lib/zod/auth";
-import { useUserStore } from "@/stores/auth";
+import { useAuthStore } from "@/stores/auth";
 import type { NicknameStatus } from "@/types/auth";
-import { formatPhone } from "@/utils/auth";
+import { formatPhone } from "@/utils/format";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { CalendarDays, Smartphone, User, UserStar } from "lucide-react";
@@ -32,10 +33,11 @@ import { toast } from "sonner";
 
 export default function CompleteProfileForm() {
   const router = useRouter();
-  const setUser = useUserStore((s) => s.setUser);
+  const setUser = useAuthStore((s) => s.setUser);
   const queryClient = useQueryClient();
   const [nicknameStatus, setNicknameStatus] = useState<NicknameStatus>("idle");
   const [verifiedNickname, setVerifiedNickname] = useState("");
+  const [isCancelling, setIsCancelling] = useState(false);
 
   const {
     register,
@@ -215,11 +217,16 @@ export default function CompleteProfileForm() {
 
       <Button
         type="submit"
-        disabled={isSubmitting || !isValid || nicknameStatus !== "available"}
+        disabled={isSubmitting || isCancelling || !isValid || nicknameStatus !== "available"}
         className="bg-brand hover:bg-brand/85 w-full cursor-pointer py-5 font-bold tracking-widest text-white uppercase disabled:opacity-40"
       >
         {isSubmitting ? <Spinner /> : "완료"}
       </Button>
+      <CompleteProfileAbandonAlert
+        isCancelling={isCancelling}
+        isSubmitting={isSubmitting}
+        setIsCancelling={setIsCancelling}
+      />
     </form>
   );
 }

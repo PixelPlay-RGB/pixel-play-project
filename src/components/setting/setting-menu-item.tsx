@@ -1,8 +1,6 @@
+import PasswordDialog from "@/components/auth/password/password-dialog";
 import { Button, buttonVariants } from "@/components/ui/button";
-import {
-  SidebarMenuButton,
-  SidebarMenuItem,
-} from "@/components/ui/sidebar";
+import { SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import type { SettingMenuItem } from "@/types/setting-menu";
 import Link from "next/link";
@@ -11,7 +9,7 @@ import { ReactNode } from "react";
 export type SettingMenuHandlers = {
   onClose?: () => void; // Popover 컨텍스트에서 사용 (있으면 Popover 스타일, 없으면 Sidebar 스타일)
   onLogout: () => Promise<void>;
-  // { id: "my-action", type: "action" } 아이템 → actions: { "my-action": handler }
+  isActive?: (href: string) => boolean;
   actions?: Record<string, () => void | Promise<void>>;
 };
 
@@ -20,12 +18,14 @@ const POPOVER_ITEM_CLASS = "cursor-pointer w-full flex-row justify-start gap-5";
 export default function SettingMenuItemRenderer(
   item: SettingMenuItem,
   handlers: SettingMenuHandlers,
+  isCanChangePassword: boolean,
 ): ReactNode {
-  const { onClose, onLogout, actions } = handlers;
+  const { onClose, onLogout, actions, isActive } = handlers;
   const Icon = item.icon;
 
   if (onClose !== undefined) {
     // Popover 컨텍스트: SidebarMenuButton은 useSidebar() 필수라 사용 불가
+    if (item.sidebarOnly) return null;
     switch (item.type) {
       case "link":
         return (
@@ -58,20 +58,34 @@ export default function SettingMenuItemRenderer(
             {item.label}
           </Button>
         );
+      case "changePassword":
+        return (
+          isCanChangePassword && (
+            <PasswordDialog
+              key={item.id}
+              className={POPOVER_ITEM_CLASS}
+              label={item.label}
+              icon={Icon}
+            />
+          )
+        );
     }
   }
 
   // Sidebar 컨텍스트
   switch (item.type) {
-    case "link":
+    case "link": {
+      const active = isActive?.(item.href) ?? false;
       return (
         <SidebarMenuItem key={item.id}>
-          <SidebarMenuButton render={<Link href={item.href} />}>
+          <SidebarMenuButton render={<Link href={item.href} />} isActive={active}>
             {Icon && <Icon />}
             <span>{item.label}</span>
+            {active && <span className="bg-brand ml-auto size-1.5 rounded-full" />}
           </SidebarMenuButton>
         </SidebarMenuItem>
       );
+    }
     case "action":
       return (
         <SidebarMenuItem key={item.id}>
@@ -89,6 +103,21 @@ export default function SettingMenuItemRenderer(
             <span>{item.label}</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
+      );
+    case "changePassword":
+      return (
+        isCanChangePassword && (
+          <SidebarMenuItem key={item.id}>
+            <PasswordDialog
+              trigger={
+                <SidebarMenuButton>
+                  {Icon && <Icon />}
+                  <span>{item.label}</span>
+                </SidebarMenuButton>
+              }
+            />
+          </SidebarMenuItem>
+        )
       );
   }
 }
