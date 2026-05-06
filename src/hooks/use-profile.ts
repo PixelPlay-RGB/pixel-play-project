@@ -14,6 +14,7 @@ import { QUERY_KEYS } from "@/constants/query-keys";
  */
 export function useUser() {
   const user = useUserStore((s) => s.user);
+  const loading = useUserStore((s) => s.loading);
   const setUser = useUserStore((s) => s.setUser);
 
   return useQuery<DBUser | null>({
@@ -38,6 +39,7 @@ export function useUser() {
       if (error) throw error;
       return data;
     },
+    enabled: !loading,
     staleTime: user ? 1000 * 60 * 5 : 0,
     refetchOnMount: "always",
   });

@@ -8,10 +8,12 @@ import ChatRoomCard from "@/components/chat/chat-room-card";
 import { useChatRooms } from "@/hooks/use-chat-rooms";
 import { MOCK_UNREAD_MESSAGE_COUNTS } from "@/mock/chat-room";
 import { useChatRoomStore } from "@/stores/chat-room";
+import { useUserStore } from "@/stores/auth";
 import { cn } from "@/lib/utils";
 
 export default function ChatRoomList() {
   const tabType = useChatRoomStore((state) => state.tabType);
+  const authLoading = useUserStore((state) => state.loading);
   const { data: currentUser, isFetched: isUserFetched } = useUser();
   const {
     data: rooms = [],
@@ -22,8 +24,10 @@ export default function ChatRoomList() {
   } = useChatRooms(tabType);
 
   // 유저 정보 로딩 중이거나 채팅방 데이터 초기 로딩 중일 때 스켈레톤 표시
-  const isInitialLoading = !isUserFetched || (isLoading && rooms.length === 0);
-  const isEmpty = isUserFetched && !isFetching && !isPlaceholderData && rooms.length === 0;
+  const isInitialLoading =
+    authLoading || !isUserFetched || (isLoading && rooms.length === 0);
+  const isEmpty =
+    !authLoading && isUserFetched && !isFetching && !isPlaceholderData && rooms.length === 0;
 
   if (isError) {
     return (
