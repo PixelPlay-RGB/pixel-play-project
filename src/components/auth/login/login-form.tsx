@@ -66,7 +66,7 @@ export default function LoginForm({ loading, onLoadingChange: setIsLoading }: Lo
     }
 
     setUser(authUser);
-    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth.all });
+    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth.profile(authUser.id) });
 
     setIsLoading(null);
     router.push(`/${LOGIN_PARAM}`);

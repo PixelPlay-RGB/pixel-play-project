@@ -39,7 +39,15 @@ export type Database = {
           owner_id?: string;
           title?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "chat_room_owner_id_fkey";
+            columns: ["owner_id"];
+            isOneToOne: false;
+            referencedRelation: "user";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       chat_room_member: {
         Row: {
@@ -71,20 +79,35 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: "chatroommember_chat_room_id_fkey";
+            foreignKeyName: "chat_room_member_chat_room_id_fkey";
             columns: ["chat_room_id"];
             isOneToOne: false;
             referencedRelation: "chat_room";
             referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "chatroommember_user_id_fkey";
+            foreignKeyName: "chat_room_member_user_id_fkey";
             columns: ["user_id"];
             isOneToOne: false;
             referencedRelation: "user";
             referencedColumns: ["id"];
           },
         ];
+      };
+      kv_store_55ce40ce: {
+        Row: {
+          key: string;
+          value: Json;
+        };
+        Insert: {
+          key: string;
+          value: Json;
+        };
+        Update: {
+          key?: string;
+          value?: Json;
+        };
+        Relationships: [];
       };
       message: {
         Row: {

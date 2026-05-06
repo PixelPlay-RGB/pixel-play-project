@@ -162,7 +162,7 @@ export default function SignupForm() {
     }
 
     setUser(authUser);
-    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth.all });
+    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth.profile(authUser.id) });
 
     router.push(`/${WELCOME_PARAM}`);
     router.refresh();

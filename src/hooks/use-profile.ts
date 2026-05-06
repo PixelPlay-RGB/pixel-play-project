@@ -10,24 +10,35 @@ import { QUERY_KEYS } from "@/constants/query-keys";
  * 현재 로그인된 유저의 public.user 프로필을 조회.
  * - AuthUser(Zustand)가 준비되면 자동 실행
  * - 5분간 캐싱 → 여러 컴포넌트에서 호출해도 네트워크 1회
+ * - 프로필 업데이트 후에는 `queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth.profile() })`로 갱신
  */
 export function useUser() {
   const user = useAuthStore((s) => s.user);
+  const setUser = useAuthStore((s) => s.setUser);
 
   return useQuery<DBUser | null>({
     queryKey: QUERY_KEYS.auth.profile(user?.id),
     queryFn: async () => {
-      if (!user) return null;
       const supabase = createClient();
+      const authUser = user ?? (await supabase.auth.getUser()).data.user;
+
+      if (!authUser) {
+        return null;
+      }
+
+      if (!user) {
+        setUser(authUser);
+      }
+
       const { data, error } = await supabase
         .from("user")
         .select("*")
-        .eq("oauth_id", user.id)
+        .eq("oauth_id", authUser.id)
         .maybeSingle();
       if (error) throw error;
       return data;
     },
-    enabled: !!user,
-    staleTime: 1000 * 60 * 5,
+    staleTime: user ? 1000 * 60 * 5 : 0,
+    refetchOnMount: "always",
   });
 }

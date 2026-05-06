@@ -5,19 +5,29 @@ Next.js 16 App Router + Supabase Realtime 기반으로 구축됩니다.
 
 ---
 
+## 프로젝트 개요
+
+- PixelPlay는 실시간 채팅 플랫폼으로 시작해 향후 라이브 스트리밍 서비스로 확장할 Next.js 웹 애플리케이션입니다.
+- 주요 스택은 Next.js 16 App Router, React 19, TypeScript strict, Tailwind CSS 4, shadcn `base-nova`, Base UI, Supabase Auth/Postgres/Realtime, TanStack Query v5, Zustand v5입니다.
+- 인증은 Supabase Auth 단독으로 처리하며, `src/lib/supabase/proxy.ts`가 세션 검증과 라우트 가드를 담당합니다.
+- 데이터 타입은 Supabase 스키마에서 생성된 `src/types/database.types.ts`를 기준으로 사용합니다.
+- 채팅 실시간 기능은 Supabase Realtime의 Postgres Changes, Broadcast, Presence를 사용하는 방향입니다. 별도 Socket.IO 서버는 도입하지 않습니다.
+
+---
+
 ## 기술 스택
 
-| 분류                | 기술                                                              |
-| ------------------- | ----------------------------------------------------------------- |
-| Framework           | Next.js 16 (App Router) · React 19 · TypeScript (strict)          |
-| Styling             | Tailwind CSS 4 · shadcn (base-nova) · Base UI · lucide-react      |
-| Auth                | Supabase Auth (Email OTP · Google · GitHub OAuth)                 |
-| Database / Realtime | Supabase (Postgres + Realtime)                                    |
-| Server State        | TanStack Query v5                                                 |
-| Client State        | Zustand v5                                                        |
-| Form / Validation   | react-hook-form v7 · Zod v4                                       |
-| Theme               | next-themes (다크모드)                                            |
-| Formatter           | Prettier + Tailwind 플러그인                                      |
+| 분류                | 기술                                                         |
+| ------------------- | ------------------------------------------------------------ |
+| Framework           | Next.js 16 (App Router) · React 19 · TypeScript (strict)     |
+| Styling             | Tailwind CSS 4 · shadcn (base-nova) · Base UI · lucide-react |
+| Auth                | Supabase Auth (Email OTP · Google · GitHub OAuth)            |
+| Database / Realtime | Supabase (Postgres + Realtime)                               |
+| Server State        | TanStack Query v5                                            |
+| Client State        | Zustand v5                                                   |
+| Form / Validation   | react-hook-form v7 · Zod v4                                  |
+| Theme               | next-themes (다크모드)                                       |
+| Formatter           | Prettier + Tailwind 플러그인                                 |
 
 ---
 
@@ -53,15 +63,15 @@ npm install
 cp .env.example .env.local
 ```
 
-| 변수                                   | 설명                          |
-| -------------------------------------- | ----------------------------- |
-| `NEXT_PUBLIC_SUPABASE_URL`             | Supabase 프로젝트 URL         |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | anon (공개) 키                |
+| 변수                                   | 설명                             |
+| -------------------------------------- | -------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`             | Supabase 프로젝트 URL            |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | anon (공개) 키                   |
 | `AUTH_SECRET`                          | 세션 암호화 시크릿 (임의 문자열) |
-| `AUTH_GOOGLE_CLIENT_ID`                | Google OAuth 클라이언트 ID    |
-| `AUTH_GOOGLE_CLIENT_SECRET`            | Google OAuth 클라이언트 시크릿|
-| `AUTH_GITHUB_CLIENT_ID`                | GitHub OAuth App Client ID    |
-| `AUTH_GITHUB_CLIENT_SECRET`            | GitHub OAuth App Client Secret|
+| `AUTH_GOOGLE_CLIENT_ID`                | Google OAuth 클라이언트 ID       |
+| `AUTH_GOOGLE_CLIENT_SECRET`            | Google OAuth 클라이언트 시크릿   |
+| `AUTH_GITHUB_CLIENT_ID`                | GitHub OAuth App Client ID       |
+| `AUTH_GITHUB_CLIENT_SECRET`            | GitHub OAuth App Client Secret   |
 
 > 환경 변수 키를 추가·변경하면 `src/env.d.ts`의 타입 선언도 함께 수정해야 합니다.
 
@@ -72,6 +82,7 @@ cp .env.example .env.local
 Supabase Auth를 단독으로 사용합니다. OAuth callback URL은 Supabase 대시보드와 각 공급자 모두에 등록해야 합니다.
 
 #### Supabase 대시보드
+
 Authentication → URL Configuration → **Redirect URLs** 에 추가합니다.
 
 ```
@@ -107,6 +118,14 @@ npm run dev
 
 ---
 
+## 검증 명령
+
+- 개발 서버: `npm run dev`
+- 프로덕션 빌드/타입 확인: `npm run build`
+- Supabase 타입 재생성: `npm run types`
+
+---
+
 ## 디렉토리 구조
 
 ```
@@ -133,6 +152,14 @@ src/
 │   │   ├── auth-listener.tsx     # Supabase Auth 상태 → Zustand 동기화
 │   │   ├── auth-toast-handler.tsx # OAuth 콜백 후 토스트 표시 (login · welcome · linked 파라미터 처리)
 │   │   └── login-button.tsx
+│   ├── chat/
+│   │   ├── chat-room.tsx           # 채팅방 컨테이너·패널 구성
+│   │   ├── message-list.tsx        # 메시지 목록·스크롤
+│   │   ├── message-item.tsx        # 단일 메시지 행
+│   │   ├── message-input.tsx       # 메시지 입력·전송
+│   │   ├── member-list.tsx         # 참여자 목록
+│   │   ├── member-item.tsx         # 참여자 한 행
+│   │   └── chat-emoji-picker.tsx   # 이모지 피커
 │   ├── common/
 │   │   ├── header.tsx
 │   │   ├── footer.tsx
@@ -150,23 +177,33 @@ src/
 │   │   └── setting-menu-item.tsx         # 메뉴 아이템 렌더러
 │   └── ui/               # shadcn / Base UI 컴포넌트
 ├── constants/
-│   ├── auth.ts           # OAUTH_PROVIDERS · OAUTH_PROVIDER_META · URL 파라미터 상수
 │   ├── query-keys.ts     # 중앙 집중식 Query Key Factory (QUERY_KEYS)
+│   ├── chat-emoji-picker.ts # 이모지 피커 분류·목록
+│   ├── errors.ts         # 에러 코드·사용자용 메시지
 │   └── setting-menu.ts   # 설정 메뉴 아이템 목록
 ├── hooks/
 │   ├── use-profile.ts    # useUser() — public.user 프로필 React Query 훅
-│   └── use-mobile.ts     # 모바일 뷰포트 감지 훅
+│   ├── use-mobile.ts     # 모바일 뷰포트 감지 훅
+│   ├── use-chat-room.ts  # 채팅방 단일 조회·Realtime 구독
+│   ├── use-messages.ts   # 메시지 목록·Realtime 구독
+│   └── use-room-members.ts # 채팅방 멤버 목록
 ├── lib/
+│   ├── chat.ts           # 채팅방·메시지 Supabase 헬퍼
+│   ├── supabase.ts       # 브라우저 클라이언트 생성·공통
 │   ├── supabase/         # client.ts · server.ts · proxy.ts
 │   ├── zod/              # 폼 유효성 스키마 (profileSchema 포함)
 │   └── utils/
 ├── stores/
 │   └── auth.ts           # Zustand Auth 스토어 (user · isCanChangePassword)
 ├── types/
-│   ├── auth.ts           # OAuthProvider · NicknameStatus · LoginProvider 등
+│   ├── auth.ts
+│   ├── chatroom.ts       # chatroom 테이블 타입
+│   ├── chatroommember.ts # chatroommember 테이블 타입
 │   ├── database.types.ts # Supabase 자동 생성 타입 (npm run types)
+│   ├── message.ts        # message 테이블 타입
 │   ├── setting-menu.ts
-│   └── user.ts           # DBUser (GenericTables<"user">)
+│   ├── supabase.types.ts # Supabase 보조·확장 타입
+│   └── user.ts
 └── utils/
     └── format.ts         # formatDate · formatPhone 유틸
 ```
@@ -177,68 +214,68 @@ src/
 
 ### `user` 테이블
 
-| 컬럼               | 타입                    | 설명                                    |
-| ------------------ | ----------------------- | --------------------------------------- |
-| `id`               | uuid (PK)               | 자동 생성                               |
-| `oauth_id`         | text (UNIQUE)           | Supabase Auth 유저 ID (`auth.users.id`) |
-| `email`            | text                    | 이메일                                  |
-| `name`             | text                    | 실명                                    |
-| `nickname`         | text                    | 닉네임 (서비스 내 표시 이름)            |
-| `birth`            | text                    | 생년월일                                |
-| `phone`            | text                    | 휴대전화번호                            |
-| `gender`           | enum                    | `male` · `female` · `none`              |
-| `photo_url`        | text (nullable)         | 프로필 사진 URL (이메일 유저는 null)     |
-| `linked_providers` | oauth_provider[] (nullable) | 연동된 OAuth 공급자 목록            |
-| `created_at`       | timestamptz             | 생성 시각                               |
-| `modified_at`      | timestamptz             | 최종 수정 시각                          |
+| 컬럼               | 타입                        | 설명                                    |
+| ------------------ | --------------------------- | --------------------------------------- |
+| `id`               | uuid (PK)                   | 자동 생성                               |
+| `oauth_id`         | text (UNIQUE)               | Supabase Auth 유저 ID (`auth.users.id`) |
+| `email`            | text                        | 이메일                                  |
+| `name`             | text                        | 실명                                    |
+| `nickname`         | text                        | 닉네임 (서비스 내 표시 이름)            |
+| `birth`            | text                        | 생년월일                                |
+| `phone`            | text                        | 휴대전화번호                            |
+| `gender`           | enum                        | `male` · `female` · `none`              |
+| `photo_url`        | text (nullable)             | 프로필 사진 URL (이메일 유저는 null)    |
+| `linked_providers` | oauth_provider[] (nullable) | 연동된 OAuth 공급자 목록                |
+| `created_at`       | timestamptz                 | 생성 시각                               |
+| `modified_at`      | timestamptz                 | 최종 수정 시각                          |
 
 ### `chatroom` 테이블
 
-| 컬럼           | 타입        | 설명              |
-| -------------- | ----------- | ----------------- |
-| `id`           | uuid (PK)   | 자동 생성         |
-| `title`        | text        | 채팅방 제목       |
-| `description`  | text (nullable) | 채팅방 설명   |
-| `max_capacity` | int         | 최대 입장 인원    |
-| `owner_id`     | uuid (FK)   | 생성자 (user.id)  |
-| `created_at`   | timestamptz | 생성 시각         |
-| `modified_at`  | timestamptz | 최종 수정 시각    |
+| 컬럼           | 타입            | 설명             |
+| -------------- | --------------- | ---------------- |
+| `id`           | uuid (PK)       | 자동 생성        |
+| `title`        | text            | 채팅방 제목      |
+| `description`  | text (nullable) | 채팅방 설명      |
+| `max_capacity` | int             | 최대 입장 인원   |
+| `owner_id`     | uuid (FK)       | 생성자 (user.id) |
+| `created_at`   | timestamptz     | 생성 시각        |
+| `modified_at`  | timestamptz     | 최종 수정 시각   |
 
 ### `chatroommember` 테이블
 
-| 컬럼           | 타입                    | 설명                                      |
-| -------------- | ----------------------- | ----------------------------------------- |
-| `id`           | uuid (PK)               | 자동 생성                                 |
-| `chat_room_id` | uuid (FK)               | chatroom.id                               |
-| `user_id`      | uuid (FK)               | user.id                                   |
-| `status`       | enum                    | `JOINED` · `EXITED` · `BANNED`            |
-| `last_joined_at` | timestamptz (nullable) | 마지막 입장 시각                         |
-| `last_read_at` | timestamptz (nullable)  | 마지막 읽음 시각 (안읽은 메시지 계산용)  |
-| `created_at`   | timestamptz             | 최초 참여 시각                            |
+| 컬럼             | 타입                   | 설명                                    |
+| ---------------- | ---------------------- | --------------------------------------- |
+| `id`             | uuid (PK)              | 자동 생성                               |
+| `chat_room_id`   | uuid (FK)              | chatroom.id                             |
+| `user_id`        | uuid (FK)              | user.id                                 |
+| `status`         | enum                   | `JOINED` · `EXITED` · `BANNED`          |
+| `last_joined_at` | timestamptz (nullable) | 마지막 입장 시각                        |
+| `last_read_at`   | timestamptz (nullable) | 마지막 읽음 시각 (안읽은 메시지 계산용) |
+| `created_at`     | timestamptz            | 최초 참여 시각                          |
 
 ### `message` 테이블
 
-| 컬럼           | 타입        | 설명           |
-| -------------- | ----------- | -------------- |
-| `id`           | uuid (PK)   | 자동 생성      |
-| `chat_room_id` | uuid (FK)   | chatroom.id    |
-| `user_id`      | uuid (FK)   | user.id        |
-| `content`      | text        | 메시지 내용    |
-| `created_at`   | timestamptz | 전송 시각      |
-| `modified_at`  | timestamptz | 수정 시각      |
+| 컬럼           | 타입        | 설명        |
+| -------------- | ----------- | ----------- |
+| `id`           | uuid (PK)   | 자동 생성   |
+| `chat_room_id` | uuid (FK)   | chatroom.id |
+| `user_id`      | uuid (FK)   | user.id     |
+| `content`      | text        | 메시지 내용 |
+| `created_at`   | timestamptz | 전송 시각   |
+| `modified_at`  | timestamptz | 수정 시각   |
 
 ### DB 함수
 
-| 함수                                    | 설명                                                    |
-| --------------------------------------- | ------------------------------------------------------- |
-| `check_email_exists(target_email text)` | 이메일 중복 확인 (OTP 발송 전 호출, `SECURITY DEFINER`) |
-| `check_nickname_exists(target_nickname text)` | 닉네임 중복 확인 (`SECURITY DEFINER`)             |
+| 함수                                          | 설명                                                    |
+| --------------------------------------------- | ------------------------------------------------------- |
+| `check_email_exists(target_email text)`       | 이메일 중복 확인 (OTP 발송 전 호출, `SECURITY DEFINER`) |
+| `check_nickname_exists(target_nickname text)` | 닉네임 중복 확인 (`SECURITY DEFINER`)                   |
 
 ### Supabase Storage
 
-| 버킷       | 경로                              | 용도                      |
-| ---------- | --------------------------------- | ------------------------- |
-| `profiles` | `avatars/{user.id}/avatar.{ext}`  | 유저 프로필 사진 (upsert) |
+| 버킷       | 경로                             | 용도                      |
+| ---------- | -------------------------------- | ------------------------- |
+| `profiles` | `avatars/{user.id}/avatar.{ext}` | 유저 프로필 사진 (upsert) |
 
 - 업로드 시 `upsert: true` 옵션으로 기존 파일 덮어씀
 - 공개 URL 캐시 무효화: `?t={Date.now()}` 쿼리 파라미터 추가
@@ -296,11 +333,11 @@ AuthListener (providers.tsx에 마운트, 앱 전체에서 1회)
 
 ### 프로필 (`/profile`)
 
-| 기능 | 설명 |
-| ---- | ---- |
-| 닉네임 변경 | 중복 확인(`checkNicknameAction`) 후 저장 가능 |
-| 프로필 사진 | 파일 선택·드래그&드롭 업로드, Supabase Storage 저장, 제거 지원 |
-| OAuth 연동 | `supabase.auth.signInWithOAuth` → callback → `linked_providers` 갱신 |
+| 기능            | 설명                                                                 |
+| --------------- | -------------------------------------------------------------------- |
+| 닉네임 변경     | 중복 확인(`checkNicknameAction`) 후 저장 가능                        |
+| 프로필 사진     | 파일 선택·드래그&드롭 업로드, Supabase Storage 저장, 제거 지원       |
+| OAuth 연동      | `supabase.auth.signInWithOAuth` → callback → `linked_providers` 갱신 |
 | OAuth 연동 해제 | `unLinkOAuthAction` — identity 삭제 + `linked_providers` DB 업데이트 |
 
 **제약 조건:** OAuth 전용 가입 유저는 최소 1개의 OAuth 계정 연동 필수. 이메일 가입 유저는 자유롭게 해제 가능.

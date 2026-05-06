@@ -4,10 +4,10 @@ import { ReactNode } from "react";
 
 export default function Layout({ children }: { children: ReactNode }) {
   return (
-    <SidebarProvider className="min-h-0">
+    <SidebarProvider className="h-app-content min-h-0">
       <SettingSidebar />
       <SidebarInset>
-        <div className="p-6 md:p-10">{children}</div>
+        <div className={"p-6 md:p-10"}>{children}</div>
       </SidebarInset>
     </SidebarProvider>
   );
