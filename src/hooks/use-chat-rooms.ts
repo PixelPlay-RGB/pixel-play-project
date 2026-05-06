@@ -2,14 +2,17 @@
 
 import { useUser } from "@/hooks/use-profile";
 import { createClient } from "@/lib/supabase/client";
-import type { ChatRoom, ChatRoomTab } from "@/types/chat-room";
+import type { ChatRoomByTab, ChatRoomTab } from "@/types/chat-room";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/constants/query-keys";
 
 /**
  * 탭 타입별 채팅방 목록을 가져오는 함수
  */
-const fetchRooms = async (currentUserId: string, tabType: ChatRoomTab): Promise<ChatRoom[]> => {
+const fetchRooms = async (
+  currentUserId: string,
+  tabType: ChatRoomTab,
+): Promise<ChatRoomByTab[]> => {
   const supabase = createClient();
 
   const { data, error } = await supabase.rpc("get_rooms_by_tab", {
@@ -31,7 +34,7 @@ const fetchRooms = async (currentUserId: string, tabType: ChatRoomTab): Promise<
 export function useChatRooms(tabType: ChatRoomTab) {
   const { data: currentUser, isFetched: isUserFetched } = useUser();
 
-  return useQuery<ChatRoom[]>({
+  return useQuery<ChatRoomByTab[]>({
     queryKey: QUERY_KEYS.chat.rooms(currentUser?.id, tabType),
     queryFn: () => fetchRooms(currentUser!.id, tabType),
     // 유저 정보가 확실히 로드된 후에만 채팅방 페칭 시작

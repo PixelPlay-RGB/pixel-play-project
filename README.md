@@ -131,6 +131,14 @@ src/
 │   │   ├── signup/       # SignupForm
 │   │   ├── auth-listener.tsx # Supabase Auth 상태 → Zustand 동기화
 │   │   └── login-button.tsx
+│   ├── chat/
+│   │   ├── chat-room.tsx           # 채팅방 컨테이너·패널 구성
+│   │   ├── message-list.tsx        # 메시지 목록·스크롤
+│   │   ├── message-item.tsx        # 단일 메시지 행
+│   │   ├── message-input.tsx       # 메시지 입력·전송
+│   │   ├── member-list.tsx         # 참여자 목록
+│   │   ├── member-item.tsx         # 참여자 한 행
+│   │   └── chat-emoji-picker.tsx   # 이모지 피커
 │   ├── common/
 │   │   ├── header.tsx
 │   │   ├── footer.tsx
@@ -143,11 +151,18 @@ src/
 │   └── ui/               # shadcn / Base UI 컴포넌트
 ├── constants/
 │   ├── auth.ts           # 팀원 정보, Query Key, URL 파라미터 상수
+│   ├── chat-emoji-picker.ts # 이모지 피커 분류·목록
+│   ├── errors.ts         # 에러 코드·사용자용 메시지
 │   └── setting-menu.ts   # 설정 메뉴 아이템 목록
 ├── hooks/
 │   ├── use-profile.ts    # useUser() — public.user 프로필 React Query 훅
-│   └── use-mobile.ts     # 모바일 뷰포트 감지 훅
+│   ├── use-mobile.ts     # 모바일 뷰포트 감지 훅
+│   ├── use-chat-room.ts  # 채팅방 단일 조회·Realtime 구독
+│   ├── use-messages.ts   # 메시지 목록·Realtime 구독
+│   └── use-room-members.ts # 채팅방 멤버 목록
 ├── lib/
+│   ├── chat.ts           # 채팅방·메시지 Supabase 헬퍼
+│   ├── supabase.ts       # 브라우저 클라이언트 생성·공통
 │   ├── supabase/         # client.ts · server.ts · proxy.ts
 │   ├── zod/              # 폼 유효성 스키마 + 기본값 상수
 │   └── utils/
@@ -155,8 +170,12 @@ src/
 │   └── auth.ts           # Zustand Auth 스토어 (user · loading)
 ├── types/
 │   ├── auth.ts
+│   ├── chatroom.ts       # chatroom 테이블 타입
+│   ├── chatroommember.ts # chatroommember 테이블 타입
 │   ├── database.types.ts # Supabase 자동 생성 타입 (npm run types)
+│   ├── message.ts        # message 테이블 타입
 │   ├── setting-menu.ts
+│   ├── supabase.types.ts # Supabase 보조·확장 타입
 │   └── user.ts
 └── utils/
     └── auth.ts           # formatPhone 등 auth 관련 유틸

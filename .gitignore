@@ -45,3 +45,6 @@ design_handoff_profile_settings/*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Cursor IDE settings
+.cursor/
