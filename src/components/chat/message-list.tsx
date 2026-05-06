@@ -74,7 +74,7 @@ export function MessageList({
   )
 
   return (
-    <div className="min-h-0 flex-1 overflow-hidden">
+    <div className="relative min-h-0 flex-1 overflow-hidden">
       <ScrollArea
         ref={viewportRef}
         className="size-full"
@@ -89,14 +89,16 @@ export function MessageList({
               memberDisplayByUserId={memberDisplayByUserId}
             />
           ))}
-
-          {isLoadingPrevious && (
-            <div className="px-2 py-1 text-center text-xs text-muted-foreground">
-              이전 메시지 불러오는 중...
-            </div>
-          )}
         </div>
       </ScrollArea>
+
+      {isLoadingPrevious ? (
+        <div className="pointer-events-none absolute inset-x-0 top-2 z-10 flex justify-center">
+          <div className="rounded-md bg-background/90 px-2 py-1 text-center text-xs text-muted-foreground shadow-sm backdrop-blur-sm">
+            이전 메시지 불러오는 중...
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }
