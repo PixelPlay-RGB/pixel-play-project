@@ -45,14 +45,3 @@ design_handoff_profile_settings/*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-
-# Claude Code (팀장 개인 작업용 - 공유 안 함)
-.claude/
-CLAUDE.md
-AGENTS.md
-CLAUDE.local.md
-/.mcp.json
-
-# 개인 개발 노트 (블로그 포스팅용 초안)
-docs/
-
