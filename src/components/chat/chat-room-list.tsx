@@ -10,7 +10,15 @@ import { useChatRoomStore } from "@/stores/chat-room";
 
 export default function ChatRoomList() {
   const tabType = useChatRoomStore((state) => state.tabType);
-  const { data: rooms = [], isError, isLoading } = useChatRooms(tabType);
+  const {
+    data: rooms = [],
+    isError,
+    isFetching,
+    isLoading,
+    isPlaceholderData,
+  } = useChatRooms(tabType);
+  const isInitialLoading = isLoading && rooms.length === 0;
+  const isEmpty = !isFetching && !isPlaceholderData && rooms.length === 0;
 
   if (isError) {
     return (
@@ -24,9 +32,9 @@ export default function ChatRoomList() {
     <div className="flex flex-col gap-5">
       <ChatRoomListHeader roomCount={rooms.length} tabType={tabType} />
 
-      {isLoading ? (
+      {isInitialLoading ? (
         <ChatRoomListSkeleton />
-      ) : rooms.length === 0 ? (
+      ) : isEmpty ? (
         <ChatRoomEmptyState tabType={tabType} />
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
