@@ -36,8 +36,8 @@ export async function GET(request: NextRequest) {
       const allProviders = ((user.app_metadata?.providers ?? []) as string[]).filter(
         (p): p is LoginProvider => VALID_PROVIDERS.includes(p as LoginProvider),
       );
-      const knownProviders = (existingUser.linked_providers ?? []).filter(
-        (p): p is OAuthProvider => VALID_PROVIDERS.includes(p as OAuthProvider),
+      const knownProviders = (existingUser.linked_providers ?? []).filter((p): p is LoginProvider =>
+        VALID_PROVIDERS.includes(p as LoginProvider),
       );
       const newProviders = allProviders.filter((p) => !knownProviders.includes(p));
 

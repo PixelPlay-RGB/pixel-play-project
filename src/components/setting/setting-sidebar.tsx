@@ -36,7 +36,7 @@ export default function SettingSidebar() {
   return (
     <Sidebar
       collapsible="none"
-      className="sticky top-14 h-[calc(100vh-3.5rem)] self-start border-r"
+      className="bg-background h-full shrink-0 border-r"
     >
       <SidebarContent>
         <SidebarGroup>
