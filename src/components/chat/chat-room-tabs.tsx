@@ -2,12 +2,13 @@
 
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CHAT_ROOM_TABS, ROOM_TAB_LABELS } from "@/constants/chat-room";
+import type { RoomCounts } from "@/hooks/use-room-counts";
 import { useChatRoomStore } from "@/stores/chat-room";
 import type { ChatRoomTab } from "@/types/chat-room";
 import { cn } from "@/lib/utils";
 
 interface Props {
-  counts?: Partial<Record<ChatRoomTab, number>>;
+  counts?: RoomCounts;
 }
 
 export default function ChatRoomTabs({ counts }: Props) {
@@ -43,14 +44,14 @@ export default function ChatRoomTabs({ counts }: Props) {
               <span
                 className={cn(
                   "flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-xs leading-none font-black",
-                  count !== undefined && count > 0
-                    ? tabType === tab
+                  count === undefined
+                    ? "invisible"
+                    : tabType === tab
                       ? "bg-brand text-white"
-                      : "bg-muted-foreground/20 text-muted-foreground"
-                    : "invisible",
+                      : "bg-muted-foreground/20 text-muted-foreground",
                 )}
               >
-                {count !== undefined && count > 0 ? (count > 99 ? "99+" : count) : 0}
+                {count === undefined ? null : count > 99 ? "99+" : count}
               </span>
             </TabsTrigger>
           );
