@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
       const { data: existingUser } = await supabase
         .from("user")
         .select("id, linked_providers, photo_url")
-        .eq("oauth_id", user.id)
+        .eq("id", user.id)
         .single();
 
       if (!existingUser) {
@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
       }
 
       if (Object.keys(updatePayload).length > 0) {
-        await supabase.from("user").update(updatePayload).eq("oauth_id", user.id);
+        await supabase.from("user").update(updatePayload).eq("id", user.id);
       }
 
       return NextResponse.redirect(

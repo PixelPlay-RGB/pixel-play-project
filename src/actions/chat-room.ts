@@ -15,22 +15,12 @@ export const createChatRoomAction = async (formData: CreateChatRoomInput) => {
     return { error: "인증 정보가 없습니다." };
   }
 
-  const { data: dbUser, error: userError } = await supabase
-    .from("user")
-    .select("id")
-    .eq("oauth_id", user.id)
-    .single();
-
-  if (userError || !dbUser) {
-    return { error: "사용자 정보를 찾을 수 없습니다." };
-  }
-
   const { data: room, error: roomError } = await supabase
     .from("chat_room")
     .insert({
       title: formData.title,
       max_capacity: formData.capacity,
-      owner_id: dbUser.id,
+      owner_id: user.id,
       description: formData.description ?? null,
     })
     .select("id")
@@ -42,7 +32,7 @@ export const createChatRoomAction = async (formData: CreateChatRoomInput) => {
 
   const { error: memberError } = await supabase.from("chat_room_member").insert({
     chat_room_id: room.id,
-    user_id: dbUser.id,
+    user_id: user.id,
   });
 
   if (memberError) {

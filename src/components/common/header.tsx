@@ -14,11 +14,7 @@ export default async function Header() {
 
   let hasProfile = false;
   if (user) {
-    const { data: profile } = await supabase
-      .from("user")
-      .select("id")
-      .eq("oauth_id", user.id)
-      .single();
+    const { data: profile } = await supabase.from("user").select("id").eq("id", user.id).single();
 
     hasProfile = !!profile;
   }

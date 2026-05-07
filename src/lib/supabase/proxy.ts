@@ -51,7 +51,7 @@ export async function updateSession(request: NextRequest) {
     const { data: profile } = await supabase
       .from("user")
       .select("nickname")
-      .eq("oauth_id", user.sub)
+      .eq("id", user.sub)
       .single();
 
     // 닉네임(display_name)이 없다면 프로필 설정 페이지로 강제 이동
