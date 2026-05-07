@@ -48,4 +48,6 @@ next-env.d.ts
 
 # Cursor IDE settings
 .cursor/
+
+# Claude Code
 .claude/
