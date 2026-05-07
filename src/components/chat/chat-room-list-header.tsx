@@ -1,6 +1,6 @@
 import CreateChatRoomDialog from "@/components/chat/create-chat-room-dialog";
 import ChatRoomTabs from "@/components/chat/chat-room-tabs";
-import type { ChatRoomCounts } from "@/types/chat-room-counts";
+import type { ChatRoomCounts } from "@/hooks/use-chat-room-counts";
 import { cn } from "@/lib/utils";
 
 interface Props {

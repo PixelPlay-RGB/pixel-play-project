@@ -6,7 +6,7 @@ import ChatRoomListHeader from "@/components/chat/chat-room-list-header";
 import ChatRoomListSkeleton from "@/components/chat/chat-room-list-skeleton";
 import { useChatRooms } from "@/hooks/use-chat-rooms";
 import { useUser } from "@/hooks/use-profile";
-import { useChatRoomCounts } from "@/types/chat-room-counts";
+import { useChatRoomCounts } from "@/hooks/use-chat-room-counts";
 import { MOCK_UNREAD_MESSAGE_COUNTS } from "@/mock/chat-room";
 import { useChatRoomStore } from "@/stores/chat-room";
 

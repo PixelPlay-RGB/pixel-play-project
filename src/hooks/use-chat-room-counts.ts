@@ -3,11 +3,8 @@
 import { QUERY_KEYS } from "@/constants/query-keys";
 import { useUser } from "@/hooks/use-profile";
 import { createClient } from "@/lib/supabase/client";
-import type { ChatRoomTab } from "@/types/chat-room";
+import type { ChatRoomCounts } from "@/types/chat-room";
 import { useQuery } from "@tanstack/react-query";
-
-// 모든 탭 키가 항상 존재하는 타입 (로딩 중 여부는 쿼리 반환값 자체가 undefined인지로 판단)
-export type ChatRoomCounts = Record<ChatRoomTab, number>;
 
 export function useChatRoomCounts() {
   const { data: currentUser } = useUser();
@@ -16,22 +13,23 @@ export function useChatRoomCounts() {
     queryKey: QUERY_KEYS.chat.counts(currentUser?.id),
     queryFn: async () => {
       const supabase = createClient();
+      
+      // maybeSingle(): 결과가 0행이면 null, 1행이면 객체 반환 (@supabase/supabase-js v2+)
       const { data, error } = await supabase.rpc("get_room_counts_by_user", {
         p_user_id: currentUser!.id,
-      });
-      if (error) throw error;
+      }).maybeSingle();
 
-      const row = data?.[0];
-      if (!row) return { JOINED: 0, NOT_JOINED: 0, OWNED: 0 };
+      if (error) throw error;
+      if (!data) return { JOINED: 0, NOT_JOINED: 0, OWNED: 0 };
 
       // 각 탭의 count 기준은 get_rooms_by_tab RPC와 동일해야 한다.
       // - JOINED:     내가 멤버로 참여 중인 방
       // - NOT_JOINED: 내가 참여하지 않은 방
       // - OWNED:      내가 개설한 방
       return {
-        JOINED: row.joined,
-        NOT_JOINED: row.not_joined,
-        OWNED: row.owned,
+        JOINED: data.joined,
+        NOT_JOINED: data.not_joined,
+        OWNED: data.owned,
       };
     },
     enabled: !!currentUser?.id,
