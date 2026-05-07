@@ -166,7 +166,7 @@ export async function completeSignupAction(data: CompleteSignupInput): Promise<A
   // public.user 테이블에 최종적인 데이터 upsert <- update + insert
   const { error: dbError } = await supabase.from("user").upsert(
     {
-      oauth_id: user.id,
+      id: user.id,
       email: user.email!,
       name: name,
       nickname,
@@ -176,7 +176,7 @@ export async function completeSignupAction(data: CompleteSignupInput): Promise<A
       photo_url: null,
       linked_providers: ["email"],
     },
-    { onConflict: "oauth_id" },
+    { onConflict: "id" },
   );
 
   if (dbError) {
@@ -283,7 +283,7 @@ export async function completeOAuthProfileAction(
 
   const { error: dbError } = await supabase.from("user").upsert(
     {
-      oauth_id: user.id,
+      id: user.id,
       email: user.email!,
       name,
       nickname,
@@ -293,7 +293,7 @@ export async function completeOAuthProfileAction(
       photo_url: (user.user_metadata?.avatar_url as string) ?? null,
       ...(linkedProviders.length > 0 ? { linked_providers: linkedProviders } : {}),
     },
-    { onConflict: "oauth_id" },
+    { onConflict: "id" },
   );
 
   if (dbError) {
@@ -345,7 +345,7 @@ export async function unLinkOAuthAction(provider: OAuthProvider): Promise<Action
   const { data: dbUser, error: dbUserError } = await supabase
     .from("user")
     .select("linked_providers")
-    .eq("oauth_id", user.id)
+    .eq("id", user.id)
     .single();
 
   if (!dbUser || dbUserError) {
@@ -361,7 +361,7 @@ export async function unLinkOAuthAction(provider: OAuthProvider): Promise<Action
   const { error: updateError } = await supabase
     .from("user")
     .update({ linked_providers: updatedProviders })
-    .eq("oauth_id", user.id);
+    .eq("id", user.id);
 
   if (updateError) {
     return {
@@ -460,7 +460,7 @@ export async function updateProfileAction(formData: FormData): Promise<ActionRes
       nickname,
       photo_url: photoUrl,
     })
-    .eq("oauth_id", user.id);
+    .eq("id", user.id);
 
   if (updateError) {
     return {

@@ -4,6 +4,7 @@ import { useEffect } from "react";
 
 import { useInfiniteQuery, useQueryClient, type InfiniteData } from "@tanstack/react-query";
 
+import { QUERY_KEYS } from "@/constants/query-keys";
 import { createClient } from "@/lib/supabase/client";
 import type { Message } from "@/types/message";
 import { MESSAGE_PAGE_SIZE } from "@/constants/message";
@@ -13,14 +14,12 @@ interface MessagesPage {
   nextCursor?: string;
 }
 
-const queryKeyByChatRoomId = (chatRoomId: string) => ["messages", chatRoomId] as const;
-
 export default function useMessages(chatRoomId: string) {
   const supabase = createClient();
   const queryClient = useQueryClient();
 
   const query = useInfiniteQuery({
-    queryKey: queryKeyByChatRoomId(chatRoomId),
+    queryKey: QUERY_KEYS.chat.messages(chatRoomId),
     initialPageParam: undefined as string | undefined,
     enabled: !!chatRoomId,
     staleTime: 1000 * 60,
@@ -76,7 +75,7 @@ export default function useMessages(chatRoomId: string) {
           if (!messageId) return;
 
           queryClient.setQueryData<InfiniteData<MessagesPage>>(
-            queryKeyByChatRoomId(chatRoomId),
+            QUERY_KEYS.chat.messages(chatRoomId),
             (previous) => {
               if (!previous) return previous;
 
