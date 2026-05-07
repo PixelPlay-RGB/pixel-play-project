@@ -188,6 +188,10 @@ export type Database = {
         Args: { target_nickname: string };
         Returns: boolean;
       };
+      leave_chat_room: {
+        Args: { p_room_id: string };
+        Returns: undefined;
+      };
       get_rooms_by_tab: {
         Args: { p_tab_type: string; p_user_id: string };
         Returns: {
