@@ -4,7 +4,8 @@ import ChatRoomCard from "@/components/chat/chat-room-card";
 import ChatRoomEmptyState from "@/components/chat/chat-room-empty-state";
 import ChatRoomListHeader from "@/components/chat/chat-room-list-header";
 import ChatRoomListSkeleton from "@/components/chat/chat-room-list-skeleton";
-import { useChatRooms } from "@/hooks/use-chat-rooms";
+import { useChatRoomInfiniteScroll } from "@/hooks/use-chat-room-infinite-scroll";
+import { CHAT_ROOM_PAGE_SIZE, useChatRooms } from "@/hooks/use-chat-rooms";
 import { useUser } from "@/hooks/use-profile";
 import { MOCK_UNREAD_MESSAGE_COUNTS } from "@/mock/chat-room";
 import { useChatRoomStore } from "@/stores/chat-room";
@@ -12,16 +13,14 @@ import { useChatRoomStore } from "@/stores/chat-room";
 export default function ChatRoomList() {
   const tabType = useChatRoomStore((state) => state.tabType);
   const { isFetched: isUserFetched } = useUser();
-  const {
-    data: rooms = [],
-    isError,
-    isFetching,
-    isLoading,
-    isPlaceholderData,
-  } = useChatRooms(tabType);
+  const { data, isError, isFetching, isLoading } = useChatRooms(tabType);
+  const { visibleChatrooms, hasMore, totalCount, sentinelRef } = useChatRoomInfiniteScroll(
+    data ?? [],
+    tabType,
+  );
 
-  const isInitialLoading = !isUserFetched || (isLoading && rooms.length === 0);
-  const isEmpty = isUserFetched && !isFetching && !isPlaceholderData && rooms.length === 0;
+  const isInitialLoading = !isUserFetched || (isLoading && totalCount === 0);
+  const isEmpty = isUserFetched && !isFetching && totalCount === 0;
 
   if (isError) {
     return (
@@ -33,24 +32,32 @@ export default function ChatRoomList() {
 
   return (
     <div className="flex flex-col gap-5">
-      <ChatRoomListHeader roomCount={rooms.length} tabType={tabType} />
+      <ChatRoomListHeader totalCount={totalCount} tabType={tabType} />
 
       {isInitialLoading ? (
         <ChatRoomListSkeleton />
       ) : isEmpty ? (
         <ChatRoomEmptyState tabType={tabType} />
       ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-          {rooms.map((room, index) => (
-            <ChatRoomCard
-              key={room.id}
-              chatRoom={room}
-              unreadMessageCount={
-                MOCK_UNREAD_MESSAGE_COUNTS[index % MOCK_UNREAD_MESSAGE_COUNTS.length]
-              }
-            />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+            {visibleChatrooms.map((chatroom, index) => (
+              <ChatRoomCard
+                key={chatroom.id}
+                chatRoom={chatroom}
+                unreadMessageCount={
+                  MOCK_UNREAD_MESSAGE_COUNTS[index % MOCK_UNREAD_MESSAGE_COUNTS.length]
+                }
+              />
+            ))}
+          </div>
+          <div ref={sentinelRef} aria-hidden="true" />
+          {!hasMore && totalCount > CHAT_ROOM_PAGE_SIZE && (
+            <p className="text-muted-foreground text-center text-sm">
+              모든 채팅방을 불러왔습니다.
+            </p>
+          )}
+        </>
       )}
     </div>
   );
