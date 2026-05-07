@@ -1,11 +1,11 @@
 import CreateChatRoomDialog from "@/components/chat/create-chat-room-dialog";
 import ChatRoomTabs from "@/components/chat/chat-room-tabs";
-import type { RoomCounts } from "@/hooks/use-room-counts";
+import type { ChatRoomCounts } from "@/types/chat-room-counts";
 import { cn } from "@/lib/utils";
 
 interface Props {
   roomCount: number;
-  counts?: RoomCounts;
+  counts?: ChatRoomCounts;
 }
 
 export default function ChatRoomListHeader({ roomCount, counts }: Props) {

@@ -6,7 +6,7 @@ import ChatRoomListHeader from "@/components/chat/chat-room-list-header";
 import ChatRoomListSkeleton from "@/components/chat/chat-room-list-skeleton";
 import { useChatRooms } from "@/hooks/use-chat-rooms";
 import { useUser } from "@/hooks/use-profile";
-import { useRoomCounts } from "@/hooks/use-room-counts";
+import { useChatRoomCounts } from "@/types/chat-room-counts";
 import { MOCK_UNREAD_MESSAGE_COUNTS } from "@/mock/chat-room";
 import { useChatRoomStore } from "@/stores/chat-room";
 
@@ -20,7 +20,7 @@ export default function ChatRoomList() {
     isLoading,
     isPlaceholderData,
   } = useChatRooms(tabType);
-  const { data: counts } = useRoomCounts();
+  const { data: counts } = useChatRoomCounts();
 
   const isInitialLoading = !isUserFetched || (isLoading && rooms.length === 0);
   const isEmpty = isUserFetched && !isFetching && !isPlaceholderData && rooms.length === 0;
