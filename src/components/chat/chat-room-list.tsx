@@ -7,6 +7,7 @@ import ChatRoomListSkeleton from "@/components/chat/chat-room-list-skeleton";
 import { useChatRoomInfiniteScroll } from "@/hooks/use-chat-room-infinite-scroll";
 import { CHAT_ROOM_PAGE_SIZE, useChatRooms } from "@/hooks/use-chat-rooms";
 import { useUser } from "@/hooks/use-profile";
+import { useChatRoomCounts } from "@/hooks/use-chat-room-counts";
 import { MOCK_UNREAD_MESSAGE_COUNTS } from "@/mock/chat-room";
 import { useChatRoomStore } from "@/stores/chat-room";
 
@@ -18,6 +19,7 @@ export default function ChatRoomList() {
     data ?? [],
     tabType,
   );
+  const { data: counts } = useChatRoomCounts();
 
   const isInitialLoading = !isUserFetched || (isLoading && totalCount === 0);
   const isEmpty = isUserFetched && !isFetching && totalCount === 0;
@@ -32,7 +34,7 @@ export default function ChatRoomList() {
 
   return (
     <div className="flex flex-col gap-5">
-      <ChatRoomListHeader totalCount={totalCount} tabType={tabType} />
+      <ChatRoomListHeader totalCount={totalCount} counts={counts} />
 
       {isInitialLoading ? (
         <ChatRoomListSkeleton />
