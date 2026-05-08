@@ -215,6 +215,28 @@ export type Database = {
           title: string
         }[]
       }
+      leave_chat_room: { Args: { p_room_id: string }; Returns: undefined }
+      mark_room_read: { Args: { p_room_id: string }; Returns: undefined }
+      search_chat_rooms: {
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_query: string
+          p_section?: string
+        }
+        Returns: {
+          created_at: string
+          current_member: number
+          description: string
+          has_more: boolean
+          id: string
+          max_capacity: number
+          owner_id: string
+          owner_nickname: string
+          section: string
+          title: string
+        }[]
+      }
     }
     Enums: {
       gender: "male" | "female" | "none"
