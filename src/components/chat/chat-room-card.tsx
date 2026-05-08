@@ -1,17 +1,8 @@
 import { cn } from "@/lib/utils";
+import type { ChatRoomCardData } from "@/types/chat-room";
 import { formatCapacity, formatRoomDate } from "@/utils/chat-room";
 import { Clock, MessageCircle, Users } from "lucide-react";
 import Link from "next/link";
-
-interface ChatRoomCardData {
-  id: string;
-  title: string;
-  description: string | null;
-  owner_nickname: string;
-  current_member: number;
-  max_capacity: number;
-  created_at: string;
-}
 
 interface Props {
   chatRoom: ChatRoomCardData;
