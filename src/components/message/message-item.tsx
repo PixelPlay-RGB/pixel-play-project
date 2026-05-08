@@ -3,6 +3,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import type { Message } from "@/types/message";
+import { SystemMessageItem } from "@/components/message/system-message-item";
 
 import type { MemberDisplayByUserId } from "@/types/chat-room-member";
 
@@ -13,6 +14,10 @@ interface Props {
 }
 
 export function MessageItem({ message, isOwn, memberDisplayByUserId }: Props) {
+  if (message.message_type === "system") {
+    return <SystemMessageItem message={message} />;
+  }
+
   const display = memberDisplayByUserId[message.user_id];
   const nickname = display?.nickname ?? message.user_id.slice(0, 8);
   const photoUrl = display?.photoUrl ?? null;

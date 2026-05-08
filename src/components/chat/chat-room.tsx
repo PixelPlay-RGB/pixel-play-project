@@ -4,10 +4,12 @@ import Link from "next/link";
 import { useMemo } from "react";
 
 import { MemberList } from "@/components/member/member-list";
+import { KickedRoomAlertDialog } from "@/components/member/kicked-room-alert-dialog";
 import { MessageInput } from "@/components/message/message-input";
 import { MessageList } from "@/components/message/message-list";
 import { Spinner } from "@/components/ui/spinner";
 import { useRoom } from "@/hooks/use-chat-room";
+import { useChatRoomMemberRealtime } from "@/hooks/use-chat-room-member-realtime";
 import useMessages from "@/hooks/use-messages";
 import { useUser } from "@/hooks/use-profile";
 import { useRoomMembers } from "@/hooks/use-room-members";
@@ -48,6 +50,7 @@ export function ChatRoom({ roomId }: Props) {
   }, [members]);
 
   const currentUserId = profile?.id ?? "";
+  const { isKicked } = useChatRoomMemberRealtime({ roomId, currentUserId });
 
   const handleLoadPrevious = (): boolean => {
     if (isLoadingPrevious || !hasMorePrevious) {
@@ -80,7 +83,11 @@ export function ChatRoom({ roomId }: Props) {
 
   return (
     <div className="dark text-foreground flex h-full min-h-0 w-full flex-col overflow-hidden bg-zinc-950 md:flex-row">
-      <MemberList roomId={roomId} />
+      <MemberList
+        roomId={roomId}
+        currentUserId={currentUserId}
+        ownerId={roomQuery.data?.owner_id}
+      />
 
       <aside className="bg-background flex min-h-0 flex-1 flex-col border-white/10 md:w-[min(100%,380px)] md:shrink-0 md:border-l">
         <header className="border-border shrink-0 border-b px-3 py-2.5">
@@ -108,10 +115,12 @@ export function ChatRoom({ roomId }: Props) {
         <MessageInput
           roomId={roomId}
           currentUserId={currentUserId}
-          disabled={inputLocked}
-          disabledHint={profilePending ? "???? ???? ????." : "??? ???? ??? ? ????."}
+          disabled={inputLocked || isKicked}
+          disabledHint={isKicked ? "강퇴당한 방입니다." : "메시지를 보낼 수 없습니다."}
         />
       </aside>
+
+      <KickedRoomAlertDialog open={isKicked} />
     </div>
   );
 }

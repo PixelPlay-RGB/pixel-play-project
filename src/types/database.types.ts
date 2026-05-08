@@ -106,6 +106,7 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          message_type: Database["public"]["Enums"]["message_type"]
           modified_at: string
           user_id: string
         }
@@ -114,6 +115,7 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          message_type?: Database["public"]["Enums"]["message_type"]
           modified_at?: string
           user_id: string
         }
@@ -122,6 +124,7 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          message_type?: Database["public"]["Enums"]["message_type"]
           modified_at?: string
           user_id?: string
         }
@@ -215,9 +218,40 @@ export type Database = {
           title: string
         }[]
       }
+      kick_chat_room_member: {
+        Args: { p_room_id: string; p_target_user_id: string }
+        Returns: undefined
+      }
+      leave_chat_room: { Args: { p_room_id: string }; Returns: undefined }
+      mark_room_read: { Args: { p_room_id: string }; Returns: undefined }
+      search_chat_rooms: {
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_query: string
+          p_section?: string
+        }
+        Returns: {
+          created_at: string
+          current_member: number
+          description: string
+          has_more: boolean
+          id: string
+          max_capacity: number
+          owner_id: string
+          owner_nickname: string
+          section: string
+          title: string
+        }[]
+      }
+      transfer_chat_room_owner: {
+        Args: { p_room_id: string; p_target_user_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       gender: "male" | "female" | "none"
+      message_type: "text" | "system"
       oauth_provider: "google" | "github" | "email"
     }
     CompositeTypes: {
@@ -347,6 +381,7 @@ export const Constants = {
   public: {
     Enums: {
       gender: ["male", "female", "none"],
+      message_type: ["text", "system"],
       oauth_provider: ["google", "github", "email"],
     },
   },
