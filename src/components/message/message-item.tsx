@@ -15,8 +15,7 @@ export function MessageItem({ message, isOwn }: Props) {
     return <SystemMessageItem message={message} />;
   }
 
-  const nickname = message.user.nickname;
-  const photoUrl = message.user.photo_url;
+  const { nickname, photo_url: photoUrl } = message.user;
   const fallbackText = getAvatarFallbackText(nickname);
 
   if (isOwn) {
