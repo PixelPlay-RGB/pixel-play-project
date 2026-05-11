@@ -201,6 +201,21 @@ export type Database = {
           title: string;
         }[];
       };
+      get_rooms_by_tab_count: {
+        Args: { p_tab_type: string; p_user_id: string };
+        Returns: {
+          created_at: string;
+          current_member: number;
+          description: string;
+          id: string;
+          max_capacity: number;
+          owner_id: string;
+          owner_nickname: string;
+          title: string;
+          unread_count: number;
+        }[];
+      };
+      mark_room_read: { Args: { p_room_id: string }; Returns: undefined };
     };
     Enums: {
       gender: "male" | "female" | "none";

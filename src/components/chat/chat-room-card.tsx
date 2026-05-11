@@ -1,11 +1,11 @@
 import { cn } from "@/lib/utils";
-import type { ChatRoomByTab } from "@/types/chat-room";
+import type { ChatRoomByTabWithUnreadCount } from "@/types/chat-room";
 import { formatCapacity, formatRoomDate } from "@/utils/chat-room";
 import { Clock, MessageCircle, Users } from "lucide-react";
 import Link from "next/link";
 
 interface Props {
-  chatRoom: ChatRoomByTab;
+  chatRoom: ChatRoomByTabWithUnreadCount;
   unreadMessageCount?: number;
 }
 
