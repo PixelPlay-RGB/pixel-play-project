@@ -215,7 +215,7 @@ export default function SignupForm() {
                 ) : otpSent ? (
                   "재발송"
                 ) : (
-                  "인증"
+                  "인증하기"
                 )}
               </InputGroupButton>
             </InputGroupAddon>
