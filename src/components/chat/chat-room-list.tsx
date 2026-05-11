@@ -4,6 +4,7 @@ import ChatRoomCard from "@/components/chat/chat-room-card";
 import ChatRoomEmptyState from "@/components/chat/chat-room-empty-state";
 import ChatRoomListHeader from "@/components/chat/chat-room-list-header";
 import ChatRoomListSkeleton from "@/components/chat/chat-room-list-skeleton";
+import { APP_MESSAGE_CODE } from "@/constants/app-message";
 import { useChatRooms } from "@/hooks/use-chat-rooms";
 import { useUser } from "@/hooks/use-profile";
 import { useChatRoomCounts } from "@/hooks/use-chat-room-counts";
@@ -27,7 +28,7 @@ export default function ChatRoomList() {
   const isEmpty = isUserFetched && !isFetching && !isPlaceholderData && rooms.length === 0;
 
   if (isError) {
-    const message = getAppMessage("error.chatRoomList.loadFailed");
+    const message = getAppMessage(APP_MESSAGE_CODE.error.chatRoomList.loadFailed);
 
     return (
       <div className="flex flex-1 items-center justify-center text-zinc-500">{message.title}</div>

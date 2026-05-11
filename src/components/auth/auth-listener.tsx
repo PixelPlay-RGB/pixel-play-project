@@ -5,6 +5,7 @@ import { useAuthStore } from "@/stores/auth";
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/constants/query-keys";
+import { APP_MESSAGE_CODE } from "@/constants/app-message";
 import { toastAppError } from "@/utils/toast-message";
 
 /**
@@ -61,7 +62,7 @@ export default function AuthListener() {
         .maybeSingle();
 
       if (error) {
-        toastAppError("error.auth.oauthInfoLoadFailed");
+        toastAppError(APP_MESSAGE_CODE.error.auth.oauthInfoLoadFailed);
         return;
       }
 

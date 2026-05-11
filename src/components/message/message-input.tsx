@@ -6,6 +6,7 @@ import { useRef, useState } from "react";
 import ChatEmojiPicker from "@/components/chat/chat-emoji-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { APP_MESSAGE_CODE } from "@/constants/app-message";
 import { createClient } from "@/lib/supabase/client";
 import { getAppMessageTitle, resolveSupabaseErrorCode } from "@/utils/app-message";
 import { toastAppError } from "@/utils/toast-message";
@@ -38,7 +39,7 @@ export function MessageInput({ roomId, currentUserId, disabled = false, disabled
 
     if (error) {
       console.error(error);
-      toastAppError(resolveSupabaseErrorCode(error, "error.message.sendFailed"));
+      toastAppError(resolveSupabaseErrorCode(error, APP_MESSAGE_CODE.error.message.sendFailed));
       sendMessageLockRef.current = false;
       return;
     }
@@ -66,7 +67,9 @@ export function MessageInput({ roomId, currentUserId, disabled = false, disabled
           }
         }}
         placeholder={
-          disabled ? (disabledHint ?? getAppMessageTitle("error.chatRoom.inputLocked")) : "채팅하기"
+          disabled
+            ? (disabledHint ?? getAppMessageTitle(APP_MESSAGE_CODE.error.chatRoom.inputLocked))
+            : "채팅하기"
         }
         className="border-border/80 bg-muted/40 flex-1 text-sm"
         aria-label="메시지 입력"

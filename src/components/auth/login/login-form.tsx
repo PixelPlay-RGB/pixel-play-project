@@ -5,6 +5,7 @@ import AuthInputGroup from "@/components/auth/auth-input-group";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
+import { APP_MESSAGE_CODE } from "@/constants/app-message";
 import { LOGIN_PARAM } from "@/constants/auth";
 import { QUERY_KEYS } from "@/constants/query-keys";
 import { createClient } from "@/lib/supabase/client";
@@ -43,7 +44,7 @@ export default function LoginForm({ loading, onLoadingChange: setIsLoading }: Lo
     const result = await login(data);
 
     if (!result.success) {
-      toastAppError(result.code ?? "error.auth.invalidCredentials");
+      toastAppError(result.code ?? APP_MESSAGE_CODE.error.auth.invalidCredentials);
       setIsLoading(null);
       return;
     }
@@ -56,7 +57,7 @@ export default function LoginForm({ loading, onLoadingChange: setIsLoading }: Lo
     } = await supabase.auth.getUser();
 
     if (authError || !authUser) {
-      toastAppError("error.auth.authInfoLoadFailed");
+      toastAppError(APP_MESSAGE_CODE.error.auth.authInfoLoadFailed);
       setIsLoading(null);
       return;
     }

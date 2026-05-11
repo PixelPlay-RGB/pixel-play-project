@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/input-group";
 import { RadioGroup } from "@/components/ui/radio-group";
 import { Spinner } from "@/components/ui/spinner";
+import { APP_MESSAGE_CODE } from "@/constants/app-message";
 import { WELCOME_PARAM } from "@/constants/auth";
 import { QUERY_KEYS } from "@/constants/query-keys";
 import { createClient } from "@/lib/supabase/client";
@@ -67,13 +68,13 @@ export default function CompleteProfileForm() {
 
   const onSubmit = async (data: CompleteOAuthProfileValues) => {
     if (nicknameStatus !== "available") {
-      toastAppError("error.auth.nicknameCheckRequired");
+      toastAppError(APP_MESSAGE_CODE.error.auth.nicknameCheckRequired);
       return;
     }
 
     const result = await completeOAuthProfileAction(data);
     if (!result.success) {
-      toastAppError(result.code ?? "error.auth.profileCreateFailed");
+      toastAppError(result.code ?? APP_MESSAGE_CODE.error.auth.profileCreateFailed);
       return;
     }
 
@@ -85,7 +86,7 @@ export default function CompleteProfileForm() {
     } = await supabase.auth.getUser();
 
     if (authError || !authUser) {
-      toastAppError("error.auth.sessionNotFound");
+      toastAppError(APP_MESSAGE_CODE.error.auth.sessionNotFound);
       return;
     }
 

@@ -1,10 +1,11 @@
 import { buttonVariants } from "@/components/ui/button";
+import { APP_MESSAGE_CODE } from "@/constants/app-message";
 import { cn } from "@/lib/utils";
 import { getAppMessage } from "@/utils/app-message";
 import Link from "next/link";
 
 export default function NotFound() {
-  const message = getAppMessage("error.common.notFoundPage");
+  const message = getAppMessage(APP_MESSAGE_CODE.error.common.notFoundPage);
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">

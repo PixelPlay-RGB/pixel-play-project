@@ -2,7 +2,8 @@
 
 import { createClient } from "@/lib/supabase/server";
 import type { CreateChatRoomInput } from "@/lib/zod/chat-room";
-import type { AppActionResult } from "@/types/app-message";
+import { APP_MESSAGE_CODE } from "@/constants/app-message";
+import type { AppActionResult } from "@/types/action";
 import { revalidatePath } from "next/cache";
 
 export const createChatRoomAction = async (
@@ -15,7 +16,7 @@ export const createChatRoomAction = async (
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return { success: false, code: "error.chatRoom.createAuthRequired" };
+    return { success: false, code: APP_MESSAGE_CODE.error.chatRoom.createAuthRequired };
   }
 
   const { data: room, error: roomError } = await supabase
@@ -30,7 +31,8 @@ export const createChatRoomAction = async (
     .single();
 
   if (roomError || !room) {
-    return { success: false, code: "error.chatRoom.createFailed" };
+    if (roomError) console.error("createChatRoomAction room insert error", roomError);
+    return { success: false, code: APP_MESSAGE_CODE.error.chatRoom.createFailed };
   }
 
   const { error: memberError } = await supabase.from("chat_room_member").insert({
@@ -39,9 +41,10 @@ export const createChatRoomAction = async (
   });
 
   if (memberError) {
-    return { success: false, code: "error.chatRoom.createMemberFailed" };
+    console.error("createChatRoomAction member insert error", memberError);
+    return { success: false, code: APP_MESSAGE_CODE.error.chatRoom.createMemberFailed };
   }
 
   revalidatePath("/");
-  return { success: true, code: "success.chatRoom.created" };
+  return { success: true, code: APP_MESSAGE_CODE.success.chatRoom.created };
 };

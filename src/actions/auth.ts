@@ -7,6 +7,8 @@ import {
   loginSchema,
   signUpBaseSchema,
 } from "@/lib/zod/auth";
+import { APP_MESSAGE_CODE } from "@/constants/app-message";
+import type { AppActionResult } from "@/types/action";
 
 import {
   CompleteOAuthProfileInput,
@@ -14,7 +16,6 @@ import {
   LoginProvider,
   OAuthProvider,
 } from "@/types/auth";
-import type { AppActionResult } from "@/types/app-message";
 import { revalidatePath } from "next/cache";
 
 export interface ActionResponse extends AppActionResult {
@@ -31,7 +32,7 @@ export async function login(data: LoginFormValues): Promise<ActionResponse> {
   if (!validatedFields.success) {
     return {
       success: false,
-      code: "error.auth.invalidCredentials",
+      code: APP_MESSAGE_CODE.error.auth.invalidCredentials,
     };
   }
 
@@ -41,9 +42,10 @@ export async function login(data: LoginFormValues): Promise<ActionResponse> {
   });
 
   if (error) {
+    console.error("login signInWithPassword error", error);
     return {
       success: false,
-      code: "error.auth.invalidCredentials",
+      code: APP_MESSAGE_CODE.error.auth.invalidCredentials,
     };
   }
 
@@ -67,16 +69,18 @@ export async function sendOtpAction(email: string): Promise<ActionResponse> {
   });
 
   if (rpcError) {
-    return { success: false, code: "error.auth.emailCheckFailed" };
+    console.error("sendOtpAction check_email_exists error", rpcError);
+    return { success: false, code: APP_MESSAGE_CODE.error.auth.emailCheckFailed };
   }
   if (exists) {
-    return { success: false, code: "error.auth.emailAlreadyExists" };
+    return { success: false, code: APP_MESSAGE_CODE.error.auth.emailAlreadyExists };
   }
 
   // OTP 발송
   const { error } = await supabase.auth.signInWithOtp({ email });
   if (error) {
-    return { success: false, code: "error.auth.emailCheckFailed" };
+    console.error("sendOtpAction signInWithOtp error", error);
+    return { success: false, code: APP_MESSAGE_CODE.error.auth.emailCheckFailed };
   }
 
   return { success: true };
@@ -91,7 +95,8 @@ export async function verifyOtpAction(email: string, token: string): Promise<Act
   // 해당 작업 성공시 임시 세션이 생성됨
   const { error } = await supabase.auth.verifyOtp({ email, token, type: "email" });
   if (error) {
-    return { success: false, code: "error.auth.otpInvalid" };
+    console.error("verifyOtpAction verifyOtp error", error);
+    return { success: false, code: APP_MESSAGE_CODE.error.auth.otpInvalid };
   }
 
   return { success: true };
@@ -108,11 +113,12 @@ export async function checkNicknameAction(nickname: string): Promise<ActionRespo
   });
 
   if (error) {
-    return { success: false, code: "error.auth.nicknameCheckFailed" };
+    console.error("checkNicknameAction check_nickname_exists error", error);
+    return { success: false, code: APP_MESSAGE_CODE.error.auth.nicknameCheckFailed };
   }
 
   if (exists) {
-    return { success: false, code: "error.auth.nicknameAlreadyUsed" };
+    return { success: false, code: APP_MESSAGE_CODE.error.auth.nicknameAlreadyUsed };
   }
 
   return { success: true };
@@ -125,7 +131,7 @@ export async function completeSignupAction(data: CompleteSignupInput): Promise<A
   // 스키마 검증
   const parsed = signUpBaseSchema.omit({ email: true, passwordConfirm: true }).safeParse(data);
   if (!parsed.success) {
-    return { success: false, code: "error.auth.invalidInput" };
+    return { success: false, code: APP_MESSAGE_CODE.error.auth.invalidInput };
   }
 
   const supabase = await createClient();
@@ -138,7 +144,8 @@ export async function completeSignupAction(data: CompleteSignupInput): Promise<A
   } = await supabase.auth.getUser();
 
   if (getUserError || !user) {
-    return { success: false, code: "error.auth.authInfoNotFound" };
+    if (getUserError) console.error("completeSignupAction getUser error", getUserError);
+    return { success: false, code: APP_MESSAGE_CODE.error.auth.authInfoNotFound };
   }
 
   // 비밀번호 및 기본 메타데이터 업데이트
@@ -151,7 +158,8 @@ export async function completeSignupAction(data: CompleteSignupInput): Promise<A
   });
 
   if (authError) {
-    return { success: false, code: "error.auth.authInfoLoadFailed" };
+    console.error("completeSignupAction updateUser error", authError);
+    return { success: false, code: APP_MESSAGE_CODE.error.auth.authInfoLoadFailed };
   }
 
   // 닉네임 중복 체크
@@ -159,7 +167,7 @@ export async function completeSignupAction(data: CompleteSignupInput): Promise<A
     target_nickname: nickname,
   });
   if (nicknameExists) {
-    return { success: false, code: "error.auth.nicknameAlreadyUsed" };
+    return { success: false, code: APP_MESSAGE_CODE.error.auth.nicknameAlreadyUsed };
   }
 
   // public.user 테이블에 최종적인 데이터 upsert <- update + insert
@@ -179,7 +187,8 @@ export async function completeSignupAction(data: CompleteSignupInput): Promise<A
   );
 
   if (dbError) {
-    return { success: false, code: "error.auth.signupFailed" };
+    console.error("completeSignupAction user upsert error", dbError);
+    return { success: false, code: APP_MESSAGE_CODE.error.auth.signupFailed };
   }
 
   revalidatePath("/", "layout");
@@ -199,7 +208,7 @@ export async function verifyCurrentPasswordAction(
   } = await supabase.auth.getUser();
 
   if (!user?.email) {
-    return { success: false, code: "error.auth.authInfoLoadFailed" };
+    return { success: false, code: APP_MESSAGE_CODE.error.auth.authInfoLoadFailed };
   }
 
   const { error } = await supabase.auth.signInWithPassword({
@@ -208,7 +217,8 @@ export async function verifyCurrentPasswordAction(
   });
 
   if (error) {
-    return { success: false, code: "error.auth.currentPasswordInvalid" };
+    console.error("verifyCurrentPasswordAction signInWithPassword error", error);
+    return { success: false, code: APP_MESSAGE_CODE.error.auth.currentPasswordInvalid };
   }
 
   return { success: true };
@@ -223,7 +233,8 @@ export async function changePasswordAction(newPassword: string): Promise<ActionR
   const { error } = await supabase.auth.updateUser({ password: newPassword });
 
   if (error) {
-    return { success: false, code: "error.auth.passwordChangeFailed" };
+    console.error("changePasswordAction updateUser error", error);
+    return { success: false, code: APP_MESSAGE_CODE.error.auth.passwordChangeFailed };
   }
 
   return { success: true };
@@ -237,7 +248,7 @@ export async function completeOAuthProfileAction(
 ): Promise<ActionResponse> {
   const parsed = completeOAuthProfileSchema.safeParse(data);
   if (!parsed.success) {
-    return { success: false, code: "error.auth.invalidInput" };
+    return { success: false, code: APP_MESSAGE_CODE.error.auth.invalidInput };
   }
 
   const supabase = await createClient();
@@ -250,9 +261,10 @@ export async function completeOAuthProfileAction(
   } = await supabase.auth.getUser();
 
   if (!user || userError) {
+    if (userError) console.error("completeOAuthProfileAction getUser error", userError);
     return {
       success: false,
-      code: "error.auth.authInfoNotFound",
+      code: APP_MESSAGE_CODE.error.auth.authInfoNotFound,
     };
   }
 
@@ -264,7 +276,8 @@ export async function completeOAuthProfileAction(
   });
 
   if (authError) {
-    return { success: false, code: "error.auth.authInfoLoadFailed" };
+    console.error("completeOAuthProfileAction updateUser error", authError);
+    return { success: false, code: APP_MESSAGE_CODE.error.auth.authInfoLoadFailed };
   }
 
   // 닉네임 중복 체크
@@ -272,7 +285,7 @@ export async function completeOAuthProfileAction(
     target_nickname: nickname,
   });
   if (nicknameExists) {
-    return { success: false, code: "error.auth.nicknameAlreadyUsed" };
+    return { success: false, code: APP_MESSAGE_CODE.error.auth.nicknameAlreadyUsed };
   }
 
   const VALID_PROVIDERS: LoginProvider[] = ["google", "github"];
@@ -296,9 +309,10 @@ export async function completeOAuthProfileAction(
   );
 
   if (dbError) {
+    console.error("completeOAuthProfileAction user upsert error", dbError);
     return {
       success: false,
-      code: "error.auth.profileCreateFailed",
+      code: APP_MESSAGE_CODE.error.auth.profileCreateFailed,
     };
   }
 
@@ -318,9 +332,10 @@ export async function unLinkOAuthAction(provider: OAuthProvider): Promise<Action
   } = await supabase.auth.getUser();
 
   if (authError || !user) {
+    if (authError) console.error("unLinkOAuthAction getUser error", authError);
     return {
       success: false,
-      code: "error.profile.authMissing",
+      code: APP_MESSAGE_CODE.error.profile.authMissing,
     };
   }
 
@@ -329,15 +344,16 @@ export async function unLinkOAuthAction(provider: OAuthProvider): Promise<Action
   if (!identity) {
     return {
       success: false,
-      code: "error.oauth.identityNotFound",
+      code: APP_MESSAGE_CODE.error.oauth.identityNotFound,
     };
   }
 
   const { error: unLinkError } = await supabase.auth.unlinkIdentity(identity);
   if (unLinkError) {
+    console.error("unLinkOAuthAction unlinkIdentity error", unLinkError);
     return {
       success: false,
-      code: "error.oauth.unlinkFailed",
+      code: APP_MESSAGE_CODE.error.oauth.unlinkFailed,
     };
   }
 
@@ -348,9 +364,10 @@ export async function unLinkOAuthAction(provider: OAuthProvider): Promise<Action
     .single();
 
   if (!dbUser || dbUserError) {
+    if (dbUserError) console.error("unLinkOAuthAction user select error", dbUserError);
     return {
       success: false,
-      code: "error.oauth.userProfileNotFound",
+      code: APP_MESSAGE_CODE.error.oauth.userProfileNotFound,
     };
   }
 
@@ -363,9 +380,10 @@ export async function unLinkOAuthAction(provider: OAuthProvider): Promise<Action
     .eq("id", user.id);
 
   if (updateError) {
+    console.error("unLinkOAuthAction user update error", updateError);
     return {
       success: false,
-      code: "error.oauth.dbUpdateFailed",
+      code: APP_MESSAGE_CODE.error.oauth.dbUpdateFailed,
     };
   }
 
@@ -390,7 +408,7 @@ export async function updateProfileAction(formData: FormData): Promise<ActionRes
   if (file && file.size > MAX_FILE_SIZE) {
     return {
       success: false,
-      code: "error.profile.imageTooLarge",
+      code: APP_MESSAGE_CODE.error.profile.imageTooLarge,
     };
   }
 
@@ -401,9 +419,10 @@ export async function updateProfileAction(formData: FormData): Promise<ActionRes
   } = await supabase.auth.getUser();
 
   if (!user || userError) {
+    if (userError) console.error("updateProfileAction getUser error", userError);
     return {
       success: false,
-      code: "error.profile.authMissing",
+      code: APP_MESSAGE_CODE.error.profile.authMissing,
     };
   }
 
@@ -423,9 +442,10 @@ export async function updateProfileAction(formData: FormData): Promise<ActionRes
         .upload(filePath, file, { upsert: true, contentType: file.type });
 
       if (uploadError) {
+        console.error("updateProfileAction profile image upload error", uploadError);
         return {
           success: false,
-          code: "error.profile.imageUploadFailed",
+          code: APP_MESSAGE_CODE.error.profile.imageUploadFailed,
         };
       }
 
@@ -462,9 +482,10 @@ export async function updateProfileAction(formData: FormData): Promise<ActionRes
     .eq("id", user.id);
 
   if (updateError) {
+    console.error("updateProfileAction user update error", updateError);
     return {
       success: false,
-      code: "error.profile.userUpdateFailed",
+      code: APP_MESSAGE_CODE.error.profile.userUpdateFailed,
     };
   }
 

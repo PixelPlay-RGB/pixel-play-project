@@ -12,6 +12,7 @@ import {
 import { FieldError } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { APP_MESSAGE_CODE } from "@/constants/app-message";
 import { CHAT_ROOM_MAX_CAPACITY, CHAT_ROOM_MIN_CAPACITY } from "@/constants/chat-room";
 import { QUERY_KEYS } from "@/constants/query-keys";
 import { cn } from "@/lib/utils";
@@ -47,11 +48,11 @@ export default function CreateChatRoomDialog() {
     const result = await createChatRoomAction(values);
 
     if (!result.success) {
-      toastAppError(result.code ?? "error.chatRoom.createFailed");
+      toastAppError(result.code ?? APP_MESSAGE_CODE.error.chatRoom.createFailed);
       return;
     }
 
-    toastAppSuccess(result.code ?? "success.chatRoom.created");
+    toastAppSuccess(result.code ?? APP_MESSAGE_CODE.success.chatRoom.created);
     setOpen(false);
     reset(CREATE_CHAT_ROOM_DEFAULT_VALUES);
     queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.all });

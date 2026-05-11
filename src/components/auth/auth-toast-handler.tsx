@@ -1,6 +1,7 @@
 "use client";
 
 import { useUser } from "@/hooks/use-profile";
+import { APP_MESSAGE_CODE } from "@/constants/app-message";
 import { toastAppSuccess } from "@/utils/toast-message";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect } from "react";
@@ -21,13 +22,13 @@ function AuthToastInner({ nickname }: { nickname: string }) {
     const params = new URLSearchParams(searchParams.toString());
 
     if (isLinked) {
-      toastAppSuccess("success.auth.linked");
+      toastAppSuccess(APP_MESSAGE_CODE.success.auth.linked);
       params.delete("linked");
     } else if (isLogin) {
-      toastAppSuccess("success.auth.login", `${nickname}님 환영합니다!`);
+      toastAppSuccess(APP_MESSAGE_CODE.success.auth.login, `${nickname}님 환영합니다!`);
       params.delete("login");
     } else if (isWelcome) {
-      toastAppSuccess("success.auth.signup", `${nickname}님 환영합니다!`);
+      toastAppSuccess(APP_MESSAGE_CODE.success.auth.signup, `${nickname}님 환영합니다!`);
       params.delete("welcome");
     }
 

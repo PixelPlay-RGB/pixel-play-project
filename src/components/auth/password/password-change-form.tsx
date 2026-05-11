@@ -5,6 +5,7 @@ import AuthInputGroup from "@/components/auth/auth-input-group";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
+import { APP_MESSAGE_CODE } from "@/constants/app-message";
 import { createClient } from "@/lib/supabase/client";
 import { changePasswordSchema, ChangePasswordValues } from "@/lib/zod/auth";
 import { getAppMessageTitle } from "@/utils/app-message";
@@ -37,7 +38,7 @@ export default function PasswordChangeForm({ currentPassword, onOpenChange }: Pr
     if (data.newPassword === currentPassword) {
       setError("newPassword", {
         type: "manual",
-        message: getAppMessageTitle("error.auth.samePassword"),
+        message: getAppMessageTitle(APP_MESSAGE_CODE.error.auth.samePassword),
       });
       return;
     }
@@ -45,11 +46,11 @@ export default function PasswordChangeForm({ currentPassword, onOpenChange }: Pr
     const result = await changePasswordAction(data.newPassword);
 
     if (!result.success) {
-      toastAppError(result.code ?? "error.auth.passwordChangeFailed");
+      toastAppError(result.code ?? APP_MESSAGE_CODE.error.auth.passwordChangeFailed);
       return;
     }
 
-    toastAppSuccess("success.auth.passwordChanged");
+    toastAppSuccess(APP_MESSAGE_CODE.success.auth.passwordChanged);
 
     onOpenChange();
 

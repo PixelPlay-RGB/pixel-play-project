@@ -20,6 +20,7 @@ import {
 import { RadioGroup } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
+import { APP_MESSAGE_CODE } from "@/constants/app-message";
 import { SIGNUP_FORM_DEFAULTS, WELCOME_PARAM } from "@/constants/auth";
 import { QUERY_KEYS } from "@/constants/query-keys";
 import { createClient } from "@/lib/supabase/client";
@@ -95,7 +96,7 @@ export default function SignupForm() {
     const result = await sendOtpAction(email);
     if (result.success) {
       setOtpStatus("sent");
-      toastAppSuccess("success.auth.emailOtpSent");
+      toastAppSuccess(APP_MESSAGE_CODE.success.auth.emailOtpSent);
     } else {
       setOtpStatus("idle");
       setError("email", { type: "server", message: getAppMessageTitle(result.code) });
@@ -117,7 +118,7 @@ export default function SignupForm() {
     const result = await verifyOtpAction(email, otpCode);
     if (result.success) {
       setOtpStatus("verified");
-      toastAppSuccess("success.auth.emailVerified");
+      toastAppSuccess(APP_MESSAGE_CODE.success.auth.emailVerified);
     } else {
       setOtpStatus("sent");
       setOtpError(getAppMessageTitle(result.code));
@@ -127,19 +128,19 @@ export default function SignupForm() {
   // 3. 최종 가입
   const onSubmit = async (data: SignUpFormValues) => {
     if (!emailVerified) {
-      toastAppError("error.auth.emailVerificationRequired");
+      toastAppError(APP_MESSAGE_CODE.error.auth.emailVerificationRequired);
       return;
     }
 
     if (nicknameStatus !== "available") {
-      toastAppError("error.auth.nicknameCheckRequired");
+      toastAppError(APP_MESSAGE_CODE.error.auth.nicknameCheckRequired);
       return;
     }
 
     const result = await completeSignupAction(data);
 
     if (!result.success) {
-      toastAppError(result.code ?? "error.auth.signupFailed");
+      toastAppError(result.code ?? APP_MESSAGE_CODE.error.auth.signupFailed);
       return;
     }
 
@@ -152,7 +153,7 @@ export default function SignupForm() {
 
     if (authError || !authUser) {
       toastAppError(
-        "error.auth.authInfoLoadFailed",
+        APP_MESSAGE_CODE.error.auth.authInfoLoadFailed,
         "로그인 페이지에서 다시 로그인을 시도해주세요.",
       );
       setUser(null);

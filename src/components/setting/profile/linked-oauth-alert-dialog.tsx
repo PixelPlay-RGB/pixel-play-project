@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { APP_MESSAGE_CODE } from "@/constants/app-message";
 import { OAUTH_PROVIDER_META } from "@/constants/auth";
 import { QUERY_KEYS } from "@/constants/query-keys";
 import { createClient } from "@/lib/supabase/client";
@@ -55,7 +56,8 @@ export default function LinkedOAuthAlertDialog({
     });
 
     if (error) {
-      toastAppError("error.oauth.linkFailed", error.message);
+      console.error("linkOAuthAction signInWithOAuth error", error);
+      toastAppError(APP_MESSAGE_CODE.error.oauth.linkFailed);
     }
 
     setIsLoading(false);
@@ -71,12 +73,12 @@ export default function LinkedOAuthAlertDialog({
         const result = await unLinkOAuthAction(provider);
         if (result.success) {
           toastAppSuccess(
-            "success.oauth.unlinked",
+            APP_MESSAGE_CODE.success.oauth.unlinked,
             `${OAUTH_PROVIDER_META[provider].name} 연동이 해제되었습니다.`,
           );
           await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth.all });
         } else {
-          toastAppError(result.code ?? "error.oauth.unlinkFailed");
+          toastAppError(result.code ?? APP_MESSAGE_CODE.error.oauth.unlinkFailed);
         }
       } else {
         // 연동 로직
@@ -84,7 +86,7 @@ export default function LinkedOAuthAlertDialog({
         return;
       }
     } catch {
-      toastAppError("error.oauth.actionFailed");
+      toastAppError(APP_MESSAGE_CODE.error.oauth.actionFailed);
     } finally {
       setIsLoading(false);
       setOpen(false);

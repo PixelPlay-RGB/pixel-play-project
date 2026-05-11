@@ -21,6 +21,7 @@ import { Spinner } from "@/components/ui/spinner";
 
 import { checkNicknameAction, updateProfileAction } from "@/actions/auth";
 import ProfileFormSkeleton from "@/components/setting/profile/profile-form-skeleton";
+import { APP_MESSAGE_CODE } from "@/constants/app-message";
 import { QUERY_KEYS } from "@/constants/query-keys";
 import { useUser } from "@/hooks/use-profile";
 import { cn } from "@/lib/utils";
@@ -144,7 +145,7 @@ export default function ProfileForm() {
     const result = await updateProfileAction(formData);
 
     if (!result.success) {
-      toastAppError(result.code ?? "error.profile.updateFailed");
+      toastAppError(result.code ?? APP_MESSAGE_CODE.error.profile.updateFailed);
 
       setIsSaving(false);
       return;
@@ -161,7 +162,7 @@ export default function ProfileForm() {
     setVerifiedNickname(data.nickname);
     setPendingFile(null);
 
-    toastAppSuccess("success.profile.updated");
+    toastAppSuccess(APP_MESSAGE_CODE.success.profile.updated);
   };
 
   return (

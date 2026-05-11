@@ -13,8 +13,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { APP_MESSAGE_CODE } from "@/constants/app-message";
+import type { AppMessageCode } from "@/constants/app-message";
 import { useAuthStore } from "@/stores/auth";
-import { getAppMessageTitle } from "@/utils/app-message";
 import { toastAppError, toastAppSuccess } from "@/utils/toast-message";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
@@ -43,20 +44,22 @@ export default function CompleteProfileAbandonAlert({
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || getAppMessageTitle("error.auth.accountDeleteFailed"));
+        const errorData = (await response.json()) as { code?: AppMessageCode };
+        toastAppError(errorData.code ?? APP_MESSAGE_CODE.error.auth.signupCancelFailed);
+        setIsCancelling(false);
+        return;
       }
 
       setUser(null);
       queryClient.clear();
 
-      toastAppSuccess("success.auth.signupCanceled");
+      toastAppSuccess(APP_MESSAGE_CODE.success.auth.signupCanceled);
 
       router.replace("/auth/login");
       router.refresh();
     } catch (error) {
-      const message = error instanceof Error ? error.message : undefined;
-      toastAppError("error.auth.signupCancelFailed", message);
+      console.error("CompleteProfileAbandonAlert cancel error", error);
+      toastAppError(APP_MESSAGE_CODE.error.auth.signupCancelFailed);
       setIsCancelling(false);
     }
   };

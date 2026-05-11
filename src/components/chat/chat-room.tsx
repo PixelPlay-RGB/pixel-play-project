@@ -11,8 +11,9 @@ import { useRoom } from "@/hooks/use-chat-room";
 import useMessages from "@/hooks/use-messages";
 import { useUser } from "@/hooks/use-profile";
 import { useRoomMembers } from "@/hooks/use-room-members";
+import { APP_MESSAGE_CODE } from "@/constants/app-message";
 import { getAppMessage } from "@/utils/app-message";
-import type { AppMessageCode } from "@/types/app-message";
+import type { AppMessageCode } from "@/constants/app-message";
 
 interface Props {
   roomId: string;
@@ -71,13 +72,13 @@ export function ChatRoom({ roomId }: Props) {
   }
 
   if (!roomId) {
-    return <ChatRoomError code="error.chatRoom.missingRoomId" />;
+    return <ChatRoomError code={APP_MESSAGE_CODE.error.chatRoom.missingRoomId} />;
   }
 
   const roomMissing =
     !!roomId && roomQuery.isFetched && (roomQuery.error != null || roomQuery.data == null);
   if (roomMissing) {
-    return <ChatRoomError code="error.chatRoom.notFoundOrLoadFailed" />;
+    return <ChatRoomError code={APP_MESSAGE_CODE.error.chatRoom.notFoundOrLoadFailed} />;
   }
 
   const inputLocked = profilePending || !currentUserId;
@@ -113,7 +114,7 @@ export function ChatRoom({ roomId }: Props) {
           roomId={roomId}
           currentUserId={currentUserId}
           disabled={inputLocked}
-          disabledHint={getAppMessage("error.chatRoom.inputLocked").title}
+          disabledHint={getAppMessage(APP_MESSAGE_CODE.error.chatRoom.inputLocked).title}
         />
       </aside>
     </div>
