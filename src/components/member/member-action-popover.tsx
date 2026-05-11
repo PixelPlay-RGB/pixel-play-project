@@ -15,7 +15,7 @@ interface Props {
 }
 
 export function MemberActionPopover({ roomId, member, children }: Props) {
-  const nickname = member.user.nickname;
+  const { nickname } = member.user;
 
   return (
     <Popover>
