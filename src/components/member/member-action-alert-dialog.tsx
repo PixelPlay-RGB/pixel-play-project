@@ -20,10 +20,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Spinner } from "@/components/ui/spinner";
 import { kickChatRoomMemberAction, transferChatRoomOwnerAction } from "@/actions/chat-room-member";
+import { MEMBER_ACTION_COPY, type MemberAction } from "@/constants/chat-room-member";
 import { QUERY_KEYS } from "@/constants/query-keys";
 import { cn } from "@/lib/utils";
-
-type MemberAction = "kick" | "transfer";
 
 interface Props {
   action: MemberAction;
@@ -32,21 +31,6 @@ interface Props {
   targetNickname: string;
   trigger: ReactElement;
 }
-
-const ACTION_COPY = {
-  kick: {
-    title: "강퇴하기",
-    description: "님을 채팅방에서 강퇴하시겠습니까?",
-    confirm: "강퇴하기",
-    success: "참여자를 강퇴했습니다.",
-  },
-  transfer: {
-    title: "방장 위임",
-    description: "님에게 방장 권한을 위임하시겠습니까?",
-    confirm: "위임하기",
-    success: "방장 권한을 위임했습니다.",
-  },
-} as const;
 
 export function MemberActionAlertDialog({
   action,
@@ -58,7 +42,7 @@ export function MemberActionAlertDialog({
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [isPending, setIsPending] = useState(false);
-  const copy = ACTION_COPY[action];
+  const copy = MEMBER_ACTION_COPY[action];
   const isKick = action === "kick";
 
   const handleConfirm = async () => {
