@@ -131,17 +131,21 @@ npm run dev
 ```
 src/
 ├── actions/              # Server Actions
-│   └── auth.ts           # 로그인·회원가입·프로필 업데이트·OAuth 연동해제 서버 액션
+│   ├── auth.ts           # 로그인·회원가입·프로필 업데이트·OAuth 연동해제 서버 액션
+│   └── chat-room.ts      # 채팅방 생성 서버 액션
 ├── app/                  # Next.js App Router
 │   ├── (settings)/       # 설정 라우트 그룹
 │   │   ├── layout.tsx    # 설정 레이아웃 (사이드바 포함)
 │   │   └── profile/      # 프로필 설정 페이지
+│   ├── api/auth/withdraw/route.ts # 회원가입 취소 계정 삭제 API
 │   ├── auth/
 │   │   ├── callback/     # OAuth code → session 교환 핸들러
 │   │   ├── complete-profile/ # OAuth 유저 추가 정보 입력 페이지
 │   │   ├── login/        # 로그인 페이지
 │   │   └── signup/       # 회원가입 페이지
+│   ├── chat/[room-id]/   # 채팅방 상세 페이지
 │   ├── layout.tsx
+│   ├── not-found.tsx
 │   └── page.tsx
 ├── components/
 │   ├── auth/
@@ -153,21 +157,34 @@ src/
 │   │   ├── auth-toast-handler.tsx # OAuth 콜백 후 토스트 표시 (login · welcome · linked 파라미터 처리)
 │   │   └── login-button.tsx
 │   ├── chat/
-│   │   ├── chat-room.tsx           # 채팅방 컨테이너·패널 구성
-│   │   ├── message-list.tsx        # 메시지 목록·스크롤
-│   │   ├── message-item.tsx        # 단일 메시지 행
-│   │   ├── message-input.tsx       # 메시지 입력·전송
-│   │   ├── member-list.tsx         # 참여자 목록
-│   │   ├── member-item.tsx         # 참여자 한 행
-│   │   └── chat-emoji-picker.tsx   # 이모지 피커
+│   │   ├── chat-room.tsx              # 채팅방 컨테이너·패널 구성
+│   │   ├── chat-room-card.tsx         # 채팅방 목록 카드
+│   │   ├── chat-room-empty-state.tsx  # 채팅방 목록 빈 상태
+│   │   ├── chat-room-list.tsx         # 채팅방 목록
+│   │   ├── chat-room-list-header.tsx  # 채팅방 목록 헤더
+│   │   ├── chat-room-list-skeleton.tsx # 채팅방 목록 로딩 UI
+│   │   ├── chat-room-tabs.tsx         # 채팅·라이브 탭
+│   │   ├── create-chat-room-dialog.tsx # 채팅방 생성 다이얼로그
+│   │   └── chat-emoji-picker.tsx      # 이모지 피커
 │   ├── common/
 │   │   ├── header.tsx
 │   │   ├── footer.tsx
+│   │   ├── logo.tsx
+│   │   ├── main-menu-sidebar.tsx
+│   │   ├── main-menu-sidebar-item.tsx
 │   │   └── providers.tsx
-│   ├── profile/
-│   │   └── header-profile-badge.tsx # 헤더 유저 아바타 + 드롭다운
+│   ├── live/
+│   │   └── live-list.tsx
+│   ├── member/
+│   │   ├── member-list.tsx         # 참여자 목록
+│   │   └── member-item.tsx         # 참여자 한 행
+│   ├── message/
+│   │   ├── message-list.tsx        # 메시지 목록·스크롤
+│   │   ├── message-item.tsx        # 단일 메시지 행
+│   │   └── message-input.tsx       # 메시지 입력·전송
 │   ├── setting/
 │   │   ├── profile/
+│   │   │   ├── header-profile-badge.tsx # 헤더 유저 아바타 + 드롭다운
 │   │   │   ├── profile-form.tsx          # 프로필 수정 폼 (닉네임·사진)
 │   │   │   ├── profile-avatar-upload.tsx # 아바타 업로드 위젯 (드래그&드롭 지원)
 │   │   │   ├── profile-providers-card.tsx # OAuth 연동·해제 카드
@@ -177,36 +194,66 @@ src/
 │   │   └── setting-menu-item.tsx         # 메뉴 아이템 렌더러
 │   └── ui/               # shadcn / Base UI 컴포넌트
 ├── constants/
-│   ├── query-keys.ts     # 중앙 집중식 Query Key Factory (QUERY_KEYS)
+│   ├── app-message.ts    # 사용자 노출 메시지(APP_MESSAGE)
+│   ├── app-message-code.ts # 메시지 코드(APP_MESSAGE_CODE)와 AppMessageCode 타입
+│   ├── auth.ts
 │   ├── chat-emoji-picker.ts # 이모지 피커 분류·목록
-│   ├── errors.ts         # 에러 코드·사용자용 메시지
+│   ├── chat-room.ts
+│   ├── footer.ts
+│   ├── main-menu-sidebar.ts
+│   ├── message.ts
+│   ├── query-keys.ts     # 중앙 집중식 Query Key Factory (QUERY_KEYS)
 │   └── setting-menu.ts   # 설정 메뉴 아이템 목록
 ├── hooks/
-│   ├── use-profile.ts    # useUser() — public.user 프로필 React Query 훅
-│   ├── use-mobile.ts     # 모바일 뷰포트 감지 훅
 │   ├── use-chat-room.ts  # 채팅방 단일 조회·Realtime 구독
+│   ├── use-chat-room-counts.ts
+│   ├── use-chat-rooms.ts # 채팅방 목록 조회
 │   ├── use-messages.ts   # 메시지 목록·Realtime 구독
+│   ├── use-mobile.ts     # 모바일 뷰포트 감지 훅
+│   ├── use-profile.ts    # useUser() — public.user 프로필 React Query 훅
 │   └── use-room-members.ts # 채팅방 멤버 목록
 ├── lib/
-│   ├── chat.ts           # 채팅방·메시지 Supabase 헬퍼
-│   ├── supabase.ts       # 브라우저 클라이언트 생성·공통
-│   ├── supabase/         # client.ts · server.ts · proxy.ts
-│   ├── zod/              # 폼 유효성 스키마 (profileSchema 포함)
+│   ├── supabase/         # admin-client.ts · client.ts · server.ts · proxy.ts
+│   ├── zod/              # auth.ts · chat-room.ts
 │   └── utils/
+├── mock/
+│   └── chat-room.ts
 ├── stores/
-│   └── auth.ts           # Zustand Auth 스토어 (user · isCanChangePassword)
+│   ├── auth.ts           # Zustand Auth 스토어
+│   └── chat-room.ts      # 채팅방 선택 상태
 ├── types/
+│   ├── action.ts         # Server Action 공통 결과 타입
+│   ├── app-message.ts    # 사용자 노출 메시지 타입
 │   ├── auth.ts
-│   ├── chatroom.ts       # chatroom 테이블 타입
-│   ├── chatroommember.ts # chatroommember 테이블 타입
+│   ├── chat-room.ts
+│   ├── chat-room-member.ts
 │   ├── database.types.ts # Supabase 자동 생성 타입 (npm run types)
+│   ├── main-menu-sidebar.ts
 │   ├── message.ts        # message 테이블 타입
 │   ├── setting-menu.ts
 │   ├── supabase.types.ts # Supabase 보조·확장 타입
 │   └── user.ts
 └── utils/
-    └── format.ts         # formatDate · formatPhone 유틸
+    ├── app-message.ts    # 메시지 코드 → 사용자 메시지 변환
+    ├── chat-room.ts
+    ├── format.ts         # formatDate · formatPhone 유틸
+    └── toast-message.ts  # APP_MESSAGE 기반 toast 헬퍼
 ```
+
+---
+
+## 앱 메시지 관리
+
+사용자에게 노출되는 toast, alert, error UI 문구는 `src/constants/app-message.ts`의 `APP_MESSAGE`에서 관리합니다. 호출부에서는 문자열을 직접 작성하지 않고 `src/constants/app-message-code.ts`의 `APP_MESSAGE_CODE`를 사용합니다.
+
+- `APP_MESSAGE_CODE`는 자동완성과 타입 검사를 위해 별도 파일에서 관리합니다.
+- `AppMessageCode` 타입은 `APP_MESSAGE_CODE`에서 파생합니다.
+- `APP_MESSAGE`와 `APP_MESSAGE_CODE`의 도메인과 key는 반드시 일치해야 합니다.
+- 원본 Supabase/Auth/DB 에러 메시지는 사용자에게 직접 노출하지 않고 `console.error`로만 남깁니다.
+- Zod, React Hook Form의 `FieldError`로 필드 아래에 표시하는 검증 메시지는 toast로 중복 노출하지 않습니다.
+- title은 짧은 명사형 또는 상태형으로 작성하고, 자세한 안내는 description에 작성합니다.
+
+세부 문구 규칙은 `.agents/app-message-convention/SKILLS.md`를 따릅니다.
 
 ---
 

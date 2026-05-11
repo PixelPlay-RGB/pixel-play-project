@@ -28,8 +28,14 @@
 
 - title만으로 부족한 안내를 문장 형태로 작성합니다.
 - 사용자가 다음에 해야 할 행동이 있으면 description에 작성합니다.
+- 호출부에서 사용자 이름, provider, 닉네임처럼 동적 description을 직접 전달하는 메시지는 description을 생략할 수 있습니다.
 - 개발자 디버깅용 원본 에러 메시지는 description에 넣지 않습니다.
 - Supabase, Auth, DB 원본 에러는 `console.error`로 남기고 사용자에게는 고정 메시지만 노출합니다.
+
+## Field Error
+
+- Zod, React Hook Form의 `FieldError`로 필드 아래에 표시하는 검증 메시지는 toast로 중복 노출하지 않습니다.
+- 필드 단위 오류는 `setError`와 `FieldError`를 사용하고, 폼 제출 실패나 서버 처리 실패처럼 화면 전체에 알려야 하는 오류만 toast를 사용합니다.
 
 ## code
 

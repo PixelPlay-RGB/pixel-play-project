@@ -15,6 +15,7 @@
 - 코드 네이밍/파일 컨벤션: [.agents/code-convention/SKILLS.md](./.agents/code-convention/SKILLS.md)
 - 아키텍처/SRP 컨벤션: [.agents/code-convention/SRP_CONVENTION.md](./.agents/code-convention/SRP_CONVENTION.md)
 - 디자인/CSS/cn 규칙: [.agents/design-convention/SKILLS.md](./.agents/design-convention/SKILLS.md)
+- 앱 메시지/toast 컨벤션: [.agents/app-message-convention/SKILLS.md](./.agents/app-message-convention/SKILLS.md)
 - 커밋/브랜치 컨벤션: [.agents/git-convention/SKILLS.md](./.agents/git-convention/SKILLS.md)
 
 ---
@@ -109,3 +110,5 @@
 - **모바일 우선(Mobile-First)**: 모든 스타일은 모바일 뷰를 기본으로 작성합니다.
 - **표준 단위 사용**: Tailwind 4px 단위(`w-25` 등)를 우선하며, 임의 값(`[...]`)을 지양합니다.
 - **SRP 준수**: 모든 컴포넌트와 함수는 하나의 책임만 가집니다. 상세 내용은 [.agents/code-convention/SRP_CONVENTION.md](./.agents/code-convention/SRP_CONVENTION.md)를 따릅니다.
+- **앱 메시지 중앙 관리**: 사용자에게 노출되는 toast, alert, error UI 문구는 `APP_MESSAGE`와 `APP_MESSAGE_CODE`를 사용합니다. 원본 Supabase/Auth/DB 에러는 사용자에게 직접 노출하지 않고 `console.error`로만 남깁니다.
+- **필드 검증 메시지 분리**: Zod, React Hook Form의 `FieldError`로 필드 아래에 표시하는 검증 메시지는 toast로 중복 노출하지 않습니다.
