@@ -1,27 +1,23 @@
 // 채팅방 메시지 단일 항목을 표시하는 컴포넌트
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
-import type { Message } from "@/types/message";
+import type { MessageQuery } from "@/types/message";
 import { SystemMessageItem } from "@/components/message/system-message-item";
 import { getAvatarFallbackText } from "@/utils/avatar";
 
-import type { MemberDisplayByUserId } from "@/types/chat-room-member";
-
 interface Props {
-  message: Message;
+  message: MessageQuery;
   isOwn: boolean;
-  memberDisplayByUserId: MemberDisplayByUserId;
 }
 
-export function MessageItem({ message, isOwn, memberDisplayByUserId }: Props) {
+export function MessageItem({ message, isOwn }: Props) {
   if (message.message_type === "system") {
     return <SystemMessageItem message={message} />;
   }
 
-  const display = memberDisplayByUserId[message.user_id];
-  const displayName = display?.nickname ?? message.user_id.slice(0, 8);
-  const photoUrl = display?.photoUrl ?? null;
-  const fallbackText = getAvatarFallbackText(displayName);
+  const nickname = message.user.nickname;
+  const photoUrl = message.user.photo_url;
+  const fallbackText = getAvatarFallbackText(nickname);
 
   if (isOwn) {
     return (
@@ -41,11 +37,11 @@ export function MessageItem({ message, isOwn, memberDisplayByUserId }: Props) {
   return (
     <div className="flex gap-2 px-2 py-0.5">
       <Avatar size="sm" className="mt-0.5">
-        {photoUrl ? <AvatarImage src={photoUrl} alt="" /> : null}
+        {photoUrl && <AvatarImage src={photoUrl} alt="" />}
         <AvatarFallback>{fallbackText}</AvatarFallback>
       </Avatar>
       <div className="min-w-0 flex-1">
-        <div className="mb-0.5 text-xs font-medium text-[#94eaff]">{displayName}</div>
+        <div className="mb-0.5 text-xs font-medium text-[#94eaff]">{nickname}</div>
         <div
           className={cn(
             "inline-block max-w-full rounded-md px-2 py-1 text-sm leading-snug",

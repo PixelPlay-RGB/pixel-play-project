@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
 
 import { MemberList } from "@/components/member/member-list";
 import { KickedRoomAlertDialog } from "@/components/member/kicked-room-alert-dialog";
@@ -37,20 +36,6 @@ export function ChatRoom({ roomId }: Props) {
   const roomQuery = useRoom(roomId);
 
   const { data: members = [] } = useRoomMembers(roomId);
-  const activeMemberCount = members.filter(
-    (member) => !member.is_banned && member.last_joined_at,
-  ).length;
-
-  const memberDisplayByUserId = useMemo(() => {
-    const map: Record<string, { nickname: string; photoUrl: string | null }> = {};
-    for (const m of members) {
-      map[m.user_id] = {
-        nickname: m.user.nickname,
-        photoUrl: m.user.photo_url,
-      };
-    }
-    return map;
-  }, [members]);
 
   const currentUserId = profile?.id ?? "";
   const { isKicked } = useChatRoomMemberRealtime({ roomId, currentUserId });
@@ -98,7 +83,7 @@ export function ChatRoom({ roomId }: Props) {
             <h1 className="line-clamp-2 text-sm leading-tight font-semibold">
               {roomQuery.isPending ? "불러오는 중…" : (roomQuery.data?.title ?? "채팅방")}
             </h1>
-            <span className="text-muted-foreground shrink-0 text-xs">{activeMemberCount}명</span>
+            <span className="text-muted-foreground shrink-0 text-xs">{members.length}명</span>
           </div>
           <p className="text-muted-foreground mt-1 line-clamp-1 text-[11px]">
             {roomQuery.data?.description ?? ""}
@@ -109,7 +94,6 @@ export function ChatRoom({ roomId }: Props) {
           key={roomId}
           messages={messages}
           currentUserId={currentUserId}
-          memberDisplayByUserId={memberDisplayByUserId}
           hasMorePrevious={hasMorePrevious}
           isLoadingPrevious={isLoadingPrevious || isLoadingInitial}
           onReachTop={handleLoadPrevious}
