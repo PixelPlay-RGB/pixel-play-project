@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import type { CreateChatRoomInput } from "@/lib/zod/chat-room";
-import { APP_MESSAGE_CODE } from "@/constants/app-message";
+import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import type { AppActionResult } from "@/types/action";
 import { revalidatePath } from "next/cache";
 

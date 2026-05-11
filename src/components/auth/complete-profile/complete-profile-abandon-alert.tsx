@@ -13,8 +13,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { APP_MESSAGE_CODE } from "@/constants/app-message";
-import type { AppMessageCode } from "@/constants/app-message";
+import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
+import type { AppMessageCode } from "@/constants/app-message-code";
 import { useAuthStore } from "@/stores/auth";
 import { toastAppError, toastAppSuccess } from "@/utils/toast-message";
 import { useQueryClient } from "@tanstack/react-query";

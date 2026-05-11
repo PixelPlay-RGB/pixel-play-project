@@ -2,100 +2,6 @@
 
 import type { AppMessage } from "@/types/app-message";
 
-export const APP_MESSAGE_CODE = {
-  success: {
-    auth: {
-      emailOtpSent: "success.auth.emailOtpSent",
-      emailVerified: "success.auth.emailVerified",
-      linked: "success.auth.linked",
-      login: "success.auth.login",
-      signup: "success.auth.signup",
-      signupCanceled: "success.auth.signupCanceled",
-      passwordChanged: "success.auth.passwordChanged",
-    },
-    chatRoom: {
-      created: "success.chatRoom.created",
-    },
-    profile: {
-      updated: "success.profile.updated",
-    },
-    oauth: {
-      unlinked: "success.oauth.unlinked",
-    },
-  },
-  error: {
-    common: {
-      unknown: "error.common.unknown",
-      notFoundPage: "error.common.notFoundPage",
-    },
-    auth: {
-      invalidCredentials: "error.auth.invalidCredentials",
-      emailCheckFailed: "error.auth.emailCheckFailed",
-      emailAlreadyExists: "error.auth.emailAlreadyExists",
-      otpInvalid: "error.auth.otpInvalid",
-      emailVerificationRequired: "error.auth.emailVerificationRequired",
-      nicknameCheckRequired: "error.auth.nicknameCheckRequired",
-      nicknameCheckFailed: "error.auth.nicknameCheckFailed",
-      nicknameAlreadyUsed: "error.auth.nicknameAlreadyUsed",
-      invalidInput: "error.auth.invalidInput",
-      authInfoNotFound: "error.auth.authInfoNotFound",
-      authInfoLoadFailed: "error.auth.authInfoLoadFailed",
-      sessionNotFound: "error.auth.sessionNotFound",
-      currentPasswordInvalid: "error.auth.currentPasswordInvalid",
-      samePassword: "error.auth.samePassword",
-      passwordChangeFailed: "error.auth.passwordChangeFailed",
-      signupFailed: "error.auth.signupFailed",
-      profileCreateFailed: "error.auth.profileCreateFailed",
-      signupCancelFailed: "error.auth.signupCancelFailed",
-      accountDeleteFailed: "error.auth.accountDeleteFailed",
-      oauthInfoLoadFailed: "error.auth.oauthInfoLoadFailed",
-    },
-    chatRoom: {
-      createAuthRequired: "error.chatRoom.createAuthRequired",
-      createFailed: "error.chatRoom.createFailed",
-      createMemberFailed: "error.chatRoom.createMemberFailed",
-      missingRoomId: "error.chatRoom.missingRoomId",
-      notFoundOrLoadFailed: "error.chatRoom.notFoundOrLoadFailed",
-      inputLocked: "error.chatRoom.inputLocked",
-    },
-    chatRoomList: {
-      loadFailed: "error.chatRoomList.loadFailed",
-    },
-    message: {
-      sendForbidden: "error.message.sendForbidden",
-      sendFailed: "error.message.sendFailed",
-    },
-    profile: {
-      updateFailed: "error.profile.updateFailed",
-      imageTooLarge: "error.profile.imageTooLarge",
-      authMissing: "error.profile.authMissing",
-      imageUploadFailed: "error.profile.imageUploadFailed",
-      userUpdateFailed: "error.profile.userUpdateFailed",
-    },
-    oauth: {
-      linkFailed: "error.oauth.linkFailed",
-      unlinkFailed: "error.oauth.unlinkFailed",
-      identityNotFound: "error.oauth.identityNotFound",
-      userProfileNotFound: "error.oauth.userProfileNotFound",
-      dbUpdateFailed: "error.oauth.dbUpdateFailed",
-      actionFailed: "error.oauth.actionFailed",
-      defaultAccountCannotUnlink: "error.oauth.defaultAccountCannotUnlink",
-    },
-    supabase: {
-      permissionDenied: "error.supabase.42501",
-      dataNotFound: "error.supabase.PGRST116",
-    },
-  },
-} as const;
-
-type NestedValue<T> = T extends string
-  ? T
-  : {
-      [K in keyof T]: NestedValue<T[K]>;
-    }[keyof T];
-
-export type AppMessageCode = NestedValue<typeof APP_MESSAGE_CODE>;
-
 export const APP_MESSAGE = {
   success: {
     auth: {
@@ -112,10 +18,10 @@ export const APP_MESSAGE = {
         description: "기존 계정과 소셜 로그인이 연동되었습니다.",
       },
       login: {
-        title: "로그인 성공",
+        title: "로그인 완료",
       },
       signup: {
-        title: "회원가입 성공",
+        title: "회원가입 완료",
       },
       signupCanceled: {
         title: "가입 취소 완료",
@@ -138,18 +44,18 @@ export const APP_MESSAGE = {
     },
     oauth: {
       unlinked: {
-        title: "연동 해제 성공",
+        title: "연동 해제 완료",
       },
     },
   },
   error: {
     common: {
       unknown: {
-        title: "오류가 발생했습니다.",
+        title: "오류 발생",
         description: "잠시 후 다시 시도해주세요.",
       },
       notFoundPage: {
-        title: "페이지를 찾을 수 없습니다.",
+        title: "페이지 없음",
         description: "아직 준비되지 않은 페이지이거나 이동할 수 없는 주소입니다.",
       },
     },
@@ -163,17 +69,17 @@ export const APP_MESSAGE = {
         description: "이메일 확인 중 오류가 발생했습니다.",
       },
       emailAlreadyExists: {
-        title: "이미 가입된 이메일입니다.",
+        title: "이미 가입된 이메일",
       },
       otpInvalid: {
-        title: "인증 코드가 올바르지 않습니다.",
+        title: "인증 코드 오류",
       },
       emailVerificationRequired: {
         title: "이메일 인증 필요",
         description: "먼저 이메일 인증을 완료해주세요.",
       },
       nicknameCheckRequired: {
-        title: "닉네임 중복 확인이 필요합니다.",
+        title: "닉네임 확인 필요",
         description: "닉네임 중복 확인을 완료해주세요.",
       },
       nicknameCheckFailed: {
@@ -181,16 +87,16 @@ export const APP_MESSAGE = {
         description: "닉네임 확인 중 오류가 발생했습니다.",
       },
       nicknameAlreadyUsed: {
-        title: "이미 사용 중인 닉네임입니다.",
+        title: "이미 사용 중인 닉네임",
       },
       invalidInput: {
-        title: "입력값이 올바르지 않습니다.",
+        title: "입력값 오류",
       },
       authInfoNotFound: {
-        title: "인증 정보를 찾을 수 없습니다.",
+        title: "인증 정보 없음",
       },
       authInfoLoadFailed: {
-        title: "인증 정보를 불러올 수 없습니다.",
+        title: "인증 정보 조회 실패",
         description: "잠시 후 다시 시도해주세요.",
       },
       sessionNotFound: {
@@ -198,13 +104,13 @@ export const APP_MESSAGE = {
         description: "유저 세션을 찾을 수 없습니다.",
       },
       currentPasswordInvalid: {
-        title: "현재 비밀번호가 올바르지 않습니다.",
+        title: "현재 비밀번호 오류",
       },
       samePassword: {
-        title: "현재 비밀번호와 동일한 비밀번호는 사용할 수 없습니다.",
+        title: "동일한 비밀번호",
       },
       passwordChangeFailed: {
-        title: "비밀번호 변경에 실패했습니다.",
+        title: "비밀번호 변경 실패",
       },
       signupFailed: {
         title: "회원가입 실패",
@@ -216,35 +122,35 @@ export const APP_MESSAGE = {
         title: "취소 실패",
       },
       accountDeleteFailed: {
-        title: "계정 삭제 중 오류가 발생했습니다.",
+        title: "계정 삭제 실패",
       },
       oauthInfoLoadFailed: {
-        title: "OAuth 정보 불러오기 실패",
+        title: "OAuth 정보 조회 실패",
       },
     },
     chatRoom: {
       createAuthRequired: {
-        title: "인증 정보가 없습니다.",
+        title: "인증 정보 없음",
       },
       createFailed: {
-        title: "채팅방 생성에 실패했습니다.",
+        title: "채팅방 생성 실패",
       },
       createMemberFailed: {
-        title: "채팅방 참여 정보 생성에 실패했습니다.",
+        title: "참여 정보 생성 실패",
       },
       missingRoomId: {
-        title: "방 정보가 없습니다.",
+        title: "방 정보 없음",
       },
       notFoundOrLoadFailed: {
-        title: "존재하지 않는 채팅방이거나 불러올 수 없습니다.",
+        title: "채팅방 조회 실패",
       },
       inputLocked: {
-        title: "메시지를 보낼 수 없습니다.",
+        title: "메시지 전송 불가",
       },
     },
     chatRoomList: {
       loadFailed: {
-        title: "채팅방 목록을 불러오지 못했습니다.",
+        title: "채팅방 목록 조회 실패",
       },
     },
     chatRoomMember: {},
@@ -264,16 +170,16 @@ export const APP_MESSAGE = {
         description: "프로필 업데이트에 실패했습니다.",
       },
       imageTooLarge: {
-        title: "이미지 파일 크기는 5MB를 초과할 수 없습니다.",
+        title: "이미지 용량 초과",
       },
       authMissing: {
-        title: "유저 인증 정보가 없습니다.",
+        title: "유저 인증 정보 없음",
       },
       imageUploadFailed: {
-        title: "이미지 저장에 실패했습니다.",
+        title: "이미지 저장 실패",
       },
       userUpdateFailed: {
-        title: "유저 업데이트에 실패했습니다.",
+        title: "유저 업데이트 실패",
       },
     },
     oauth: {
@@ -284,20 +190,20 @@ export const APP_MESSAGE = {
         title: "연동 해제 실패",
       },
       identityNotFound: {
-        title: "연동된 계정을 찾을 수 없습니다.",
+        title: "연동 계정 없음",
       },
       userProfileNotFound: {
-        title: "프로필 정보와 일치하는 유저가 없습니다.",
+        title: "유저 프로필 없음",
       },
       dbUpdateFailed: {
-        title: "데이터베이스 업데이트에 실패했습니다.",
+        title: "데이터베이스 업데이트 실패",
       },
       actionFailed: {
-        title: "작업 중 오류 발생",
+        title: "작업 오류",
         description: "알 수 없는 오류가 발생하였습니다.",
       },
       defaultAccountCannotUnlink: {
-        title: "기본 계정은 해제할 수 없습니다.",
+        title: "기본 계정 해제 불가",
       },
     },
     supabase: {

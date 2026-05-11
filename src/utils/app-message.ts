@@ -1,7 +1,8 @@
 // 앱 메시지 코드를 실제 사용자 표시 메시지로 변환하는 유틸리티
 
-import { APP_MESSAGE, APP_MESSAGE_CODE } from "@/constants/app-message";
-import type { AppMessageCode } from "@/constants/app-message";
+import { APP_MESSAGE } from "@/constants/app-message";
+import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
+import type { AppMessageCode } from "@/constants/app-message-code";
 import type { AppMessage } from "@/types/app-message";
 
 type AppMessageDomainMap = Record<string, AppMessage>;

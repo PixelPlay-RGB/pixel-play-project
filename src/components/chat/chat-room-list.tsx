@@ -4,7 +4,7 @@ import ChatRoomCard from "@/components/chat/chat-room-card";
 import ChatRoomEmptyState from "@/components/chat/chat-room-empty-state";
 import ChatRoomListHeader from "@/components/chat/chat-room-list-header";
 import ChatRoomListSkeleton from "@/components/chat/chat-room-list-skeleton";
-import { APP_MESSAGE_CODE } from "@/constants/app-message";
+import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import { useChatRooms } from "@/hooks/use-chat-rooms";
 import { useUser } from "@/hooks/use-profile";
 import { useChatRoomCounts } from "@/hooks/use-chat-room-counts";

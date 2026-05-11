@@ -21,7 +21,7 @@ import { Spinner } from "@/components/ui/spinner";
 
 import { checkNicknameAction, updateProfileAction } from "@/actions/auth";
 import ProfileFormSkeleton from "@/components/setting/profile/profile-form-skeleton";
-import { APP_MESSAGE_CODE } from "@/constants/app-message";
+import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import { QUERY_KEYS } from "@/constants/query-keys";
 import { useUser } from "@/hooks/use-profile";
 import { cn } from "@/lib/utils";

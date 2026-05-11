@@ -5,7 +5,7 @@ import AuthInputGroup from "@/components/auth/auth-input-group";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
-import { APP_MESSAGE_CODE } from "@/constants/app-message";
+import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import { LOGIN_PARAM } from "@/constants/auth";
 import { QUERY_KEYS } from "@/constants/query-keys";
 import { createClient } from "@/lib/supabase/client";

@@ -5,7 +5,7 @@ import { useAuthStore } from "@/stores/auth";
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/constants/query-keys";
-import { APP_MESSAGE_CODE } from "@/constants/app-message";
+import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import { toastAppError } from "@/utils/toast-message";
 
 /**

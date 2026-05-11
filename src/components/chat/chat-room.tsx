@@ -7,13 +7,13 @@ import { MemberList } from "@/components/member/member-list";
 import { MessageInput } from "@/components/message/message-input";
 import { MessageList } from "@/components/message/message-list";
 import { Spinner } from "@/components/ui/spinner";
+import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
+import type { AppMessageCode } from "@/constants/app-message-code";
 import { useRoom } from "@/hooks/use-chat-room";
 import useMessages from "@/hooks/use-messages";
 import { useUser } from "@/hooks/use-profile";
 import { useRoomMembers } from "@/hooks/use-room-members";
-import { APP_MESSAGE_CODE } from "@/constants/app-message";
 import { getAppMessage } from "@/utils/app-message";
-import type { AppMessageCode } from "@/constants/app-message";
 
 interface Props {
   roomId: string;

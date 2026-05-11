@@ -5,7 +5,7 @@ import AuthInputGroup from "@/components/auth/auth-input-group";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
-import { APP_MESSAGE_CODE } from "@/constants/app-message";
+import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import { verifyPasswordSchema, VerifyPasswordValues } from "@/lib/zod/auth";
 import { getAppMessageTitle } from "@/utils/app-message";
 import { zodResolver } from "@hookform/resolvers/zod";

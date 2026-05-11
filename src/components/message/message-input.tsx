@@ -6,7 +6,7 @@ import { useRef, useState } from "react";
 import ChatEmojiPicker from "@/components/chat/chat-emoji-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { APP_MESSAGE_CODE } from "@/constants/app-message";
+import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import { createClient } from "@/lib/supabase/client";
 import { getAppMessageTitle, resolveSupabaseErrorCode } from "@/utils/app-message";
 import { toastAppError } from "@/utils/toast-message";

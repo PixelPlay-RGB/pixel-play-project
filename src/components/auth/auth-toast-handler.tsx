@@ -1,7 +1,7 @@
 "use client";
 
 import { useUser } from "@/hooks/use-profile";
-import { APP_MESSAGE_CODE } from "@/constants/app-message";
+import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import { toastAppSuccess } from "@/utils/toast-message";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect } from "react";

@@ -7,7 +7,7 @@ import {
   loginSchema,
   signUpBaseSchema,
 } from "@/lib/zod/auth";
-import { APP_MESSAGE_CODE } from "@/constants/app-message";
+import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import type { AppActionResult } from "@/types/action";
 
 import {

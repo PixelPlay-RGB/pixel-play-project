@@ -4,8 +4,8 @@
 
 import { toast } from "sonner";
 
+import type { AppMessageCode } from "@/constants/app-message-code";
 import { getAppMessage } from "@/utils/app-message";
-import type { AppMessageCode } from "@/constants/app-message";
 
 export function toastAppSuccess(code: AppMessageCode, description?: string) {
   const message = getAppMessage(code);

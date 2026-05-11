@@ -1,5 +1,5 @@
 import { buttonVariants } from "@/components/ui/button";
-import { APP_MESSAGE_CODE } from "@/constants/app-message";
+import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import { cn } from "@/lib/utils";
 import { getAppMessage } from "@/utils/app-message";
 import Link from "next/link";

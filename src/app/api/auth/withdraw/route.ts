@@ -1,6 +1,6 @@
 // 회원가입 취소 시 인증 계정을 삭제하는 API 라우트
 
-import { APP_MESSAGE_CODE } from "@/constants/app-message";
+import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import { createAdminClient } from "@/lib/supabase/admin-client";
 import { createClient } from "@/lib/supabase/server";
 import { AuthError } from "@supabase/supabase-js";
