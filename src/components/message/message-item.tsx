@@ -1,5 +1,4 @@
-"use client";
-
+// 채팅방 메시지 단일 항목을 표시하는 컴포넌트
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import type { Message } from "@/types/message";
