@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import type { ChatRoomByTab } from "@/types/chat-room";
-import { formatCapacity, formatRoomDate } from "@/utils/chat-room";
+import { formatCapacity, formatRoomDate, getCapacityColorClass, getCapacityPercent } from "@/utils/chat-room";
 import { Clock, MessageCircle, Users } from "lucide-react";
 import Link from "next/link";
 
@@ -10,8 +10,8 @@ interface Props {
 }
 
 export default function ChatRoomCard({ chatRoom, unreadMessageCount = 0 }: Props) {
-  const capacityPercent = (chatRoom.current_member / chatRoom.max_capacity) * 100;
-  const isFull = chatRoom.current_member >= chatRoom.max_capacity;
+  const capacityPercent = getCapacityPercent(chatRoom.current_member, chatRoom.max_capacity);
+  const isFull = capacityPercent >= 100;
   const hasUnreadMessages = unreadMessageCount > 0;
   const unreadLabel = unreadMessageCount > 99 ? "99+" : unreadMessageCount;
 
@@ -65,7 +65,7 @@ export default function ChatRoomCard({ chatRoom, unreadMessageCount = 0 }: Props
             <div
               className={cn(
                 "h-full rounded-full transition-all duration-300",
-                isFull ? "bg-live" : capacityPercent > 80 ? "bg-warning" : "bg-brand",
+                getCapacityColorClass(capacityPercent),
               )}
               style={{ width: `${capacityPercent}%` }}
             />

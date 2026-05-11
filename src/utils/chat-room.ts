@@ -11,15 +11,9 @@ export const getCapacityPercent = (memberCnt: number, maxCapacity: number) => {
 };
 
 export const getCapacityColorClass = (capacityPercent: number) => {
-  if (capacityPercent >= 90) {
-    return "bg-live";
-  }
-
-  if (capacityPercent >= 60) {
-    return "bg-brand";
-  }
-
-  return "bg-brand/60";
+  if (capacityPercent >= 100) return "bg-live";
+  if (capacityPercent > 80) return "bg-warning";
+  return "bg-brand";
 };
 
 const TIME_FORMATTER = new Intl.DateTimeFormat("ko-KR", {
