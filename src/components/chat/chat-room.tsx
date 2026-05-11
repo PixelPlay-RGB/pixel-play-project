@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useMemo } from "react";
 
-import { ChatRoomLeaveButton } from "@/components/chat/chat-room-leave-button";
+import { ChatRoomMenu } from "@/components/chat/chat-room-menu";
 import { MemberList } from "@/components/member/member-list";
 import { MessageInput } from "@/components/message/message-input";
 import { MessageList } from "@/components/message/message-list";
@@ -92,7 +92,7 @@ export function ChatRoom({ roomId }: Props) {
             <div className="flex shrink-0 items-center gap-2">
               <span className="text-muted-foreground text-xs">{members.length}명</span>
               {roomQuery.data ? (
-                <ChatRoomLeaveButton
+                <ChatRoomMenu
                   roomId={roomId}
                   ownerId={roomQuery.data.owner_id}
                   currentUserId={currentUserId}
