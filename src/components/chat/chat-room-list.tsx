@@ -9,6 +9,7 @@ import { useUser } from "@/hooks/use-profile";
 import { useChatRoomCounts } from "@/hooks/use-chat-room-counts";
 import { MOCK_UNREAD_MESSAGE_COUNTS } from "@/mock/chat-room";
 import { useChatRoomStore } from "@/stores/chat-room";
+import { getAppMessage } from "@/utils/app-message";
 
 export default function ChatRoomList() {
   const tabType = useChatRoomStore((state) => state.tabType);
@@ -26,10 +27,10 @@ export default function ChatRoomList() {
   const isEmpty = isUserFetched && !isFetching && !isPlaceholderData && rooms.length === 0;
 
   if (isError) {
+    const message = getAppMessage("error.chatRoomList.loadFailed");
+
     return (
-      <div className="flex flex-1 items-center justify-center text-zinc-500">
-        채팅방 목록을 불러오지 못했습니다.
-      </div>
+      <div className="flex flex-1 items-center justify-center text-zinc-500">{message.title}</div>
     );
   }
 

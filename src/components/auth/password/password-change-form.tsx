@@ -7,11 +7,12 @@ import { FieldError } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
 import { createClient } from "@/lib/supabase/client";
 import { changePasswordSchema, ChangePasswordValues } from "@/lib/zod/auth";
+import { getAppMessageTitle } from "@/utils/app-message";
+import { toastAppError, toastAppSuccess } from "@/utils/toast-message";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LockKeyhole } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
 
 interface Props {
   currentPassword: string;
@@ -36,7 +37,7 @@ export default function PasswordChangeForm({ currentPassword, onOpenChange }: Pr
     if (data.newPassword === currentPassword) {
       setError("newPassword", {
         type: "manual",
-        message: "현재 비밀번호와 동일한 비밀번호는 사용할 수 없습니다.",
+        message: getAppMessageTitle("error.auth.samePassword"),
       });
       return;
     }
@@ -44,13 +45,11 @@ export default function PasswordChangeForm({ currentPassword, onOpenChange }: Pr
     const result = await changePasswordAction(data.newPassword);
 
     if (!result.success) {
-      toast.error(result.message ?? "비밀번호 변경에 실패했습니다.");
+      toastAppError(result.code ?? "error.auth.passwordChangeFailed");
       return;
     }
 
-    toast.success("비밀번호 변경 완료", {
-      description: "새로운 비밀번호로 다시 로그인해 주세요 😊",
-    });
+    toastAppSuccess("success.auth.passwordChanged");
 
     onOpenChange();
 

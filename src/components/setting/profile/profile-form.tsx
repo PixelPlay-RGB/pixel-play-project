@@ -4,7 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Lock, Mail, UserStar } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
-import { toast } from "sonner";
 
 import ProfileAvatarUpload from "@/components/setting/profile/profile-avatar-upload";
 import ProfileCard from "@/components/setting/profile/profile-card";
@@ -28,6 +27,7 @@ import { cn } from "@/lib/utils";
 import { ProfileFormValues, profileSchema } from "@/lib/zod/auth";
 import type { NicknameStatus } from "@/types/auth";
 import { formatDate } from "@/utils/format";
+import { toastAppError, toastAppSuccess } from "@/utils/toast-message";
 import { useQueryClient } from "@tanstack/react-query";
 
 export default function ProfileForm() {
@@ -144,9 +144,7 @@ export default function ProfileForm() {
     const result = await updateProfileAction(formData);
 
     if (!result.success) {
-      toast.error("프로필 업데이트 실패", {
-        description: result.message || "프로필 업데이트에 실패했습니다! 🫠",
-      });
+      toastAppError(result.code ?? "error.profile.updateFailed");
 
       setIsSaving(false);
       return;
@@ -163,7 +161,7 @@ export default function ProfileForm() {
     setVerifiedNickname(data.nickname);
     setPendingFile(null);
 
-    toast.success("프로필 업데이트 완료");
+    toastAppSuccess("success.profile.updated");
   };
 
   return (

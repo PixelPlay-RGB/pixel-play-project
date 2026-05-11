@@ -3,9 +3,9 @@
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth";
 import { useEffect } from "react";
-import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/constants/query-keys";
+import { toastAppError } from "@/utils/toast-message";
 
 /**
  * 앱 루트에서 1회 마운트되어 Supabase Auth 상태를 Zustand store(AuthUser)에 동기화.
@@ -61,7 +61,7 @@ export default function AuthListener() {
         .maybeSingle();
 
       if (error) {
-        toast.error("OAuth 정보 불러오기 실패");
+        toastAppError("error.auth.oauthInfoLoadFailed");
         return;
       }
 

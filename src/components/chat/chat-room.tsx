@@ -11,15 +11,19 @@ import { useRoom } from "@/hooks/use-chat-room";
 import useMessages from "@/hooks/use-messages";
 import { useUser } from "@/hooks/use-profile";
 import { useRoomMembers } from "@/hooks/use-room-members";
+import { getAppMessage } from "@/utils/app-message";
+import type { AppMessageCode } from "@/types/app-message";
 
 interface Props {
   roomId: string;
 }
 
-function ChatRoomError({ message }: { message: string }) {
+function ChatRoomError({ code }: { code: AppMessageCode }) {
+  const message = getAppMessage(code);
+
   return (
     <div className="dark flex h-full min-h-0 flex-col items-center justify-center gap-3 bg-zinc-950 px-4 text-center text-zinc-200">
-      <p className="text-sm">{message}</p>
+      <p className="text-sm">{message.title}</p>
       <Link href="/" className="text-sm underline">
         처음으로
       </Link>
@@ -67,13 +71,13 @@ export function ChatRoom({ roomId }: Props) {
   }
 
   if (!roomId) {
-    return <ChatRoomError message=" 방 정보가 없습니다." />;
+    return <ChatRoomError code="error.chatRoom.missingRoomId" />;
   }
 
   const roomMissing =
     !!roomId && roomQuery.isFetched && (roomQuery.error != null || roomQuery.data == null);
   if (roomMissing) {
-    return <ChatRoomError message="존재하지 않는 채팅방이거나 불러올 수 없습니다." />;
+    return <ChatRoomError code="error.chatRoom.notFoundOrLoadFailed" />;
   }
 
   const inputLocked = profilePending || !currentUserId;
@@ -109,7 +113,7 @@ export function ChatRoom({ roomId }: Props) {
           roomId={roomId}
           currentUserId={currentUserId}
           disabled={inputLocked}
-          disabledHint={profilePending ? "???? ???? ????." : "??? ???? ??? ? ????."}
+          disabledHint={getAppMessage("error.chatRoom.inputLocked").title}
         />
       </aside>
     </div>

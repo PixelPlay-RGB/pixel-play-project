@@ -14,10 +14,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { useAuthStore } from "@/stores/auth";
+import { getAppMessageTitle } from "@/utils/app-message";
+import { toastAppError, toastAppSuccess } from "@/utils/toast-message";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { Dispatch, SetStateAction } from "react";
-import { toast } from "sonner";
 
 interface Props {
   isCancelling: boolean;
@@ -43,23 +44,19 @@ export default function CompleteProfileAbandonAlert({
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "계정 삭제 중 오류가 발생했습니다.");
+        throw new Error(errorData.error || getAppMessageTitle("error.auth.accountDeleteFailed"));
       }
 
       setUser(null);
       queryClient.clear();
 
-      toast.success("가입 취소 완료", {
-        description: "로그인 페이지로 돌아갑니다.",
-      });
+      toastAppSuccess("success.auth.signupCanceled");
 
       router.replace("/auth/login");
       router.refresh();
     } catch (error) {
-      const message = error instanceof Error ? error.message : "취소 실패";
-      toast.error("취소 실패", {
-        description: message,
-      });
+      const message = error instanceof Error ? error.message : undefined;
+      toastAppError("error.auth.signupCancelFailed", message);
       setIsCancelling(false);
     }
   };

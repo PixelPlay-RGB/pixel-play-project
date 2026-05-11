@@ -1,9 +1,9 @@
 "use client";
 
 import { useUser } from "@/hooks/use-profile";
+import { toastAppSuccess } from "@/utils/toast-message";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect } from "react";
-import { toast } from "sonner";
 
 function AuthToastInner({ nickname }: { nickname: string }) {
   const searchParams = useSearchParams();
@@ -21,19 +21,13 @@ function AuthToastInner({ nickname }: { nickname: string }) {
     const params = new URLSearchParams(searchParams.toString());
 
     if (isLinked) {
-      toast.success("계정 연동 완료", {
-        description: "기존 계정과 소셜 로그인이 연동되었습니다.",
-      });
+      toastAppSuccess("success.auth.linked");
       params.delete("linked");
     } else if (isLogin) {
-      toast.success("로그인 성공", {
-        description: `🥳 ${nickname}님 환영합니다!`,
-      });
+      toastAppSuccess("success.auth.login", `${nickname}님 환영합니다!`);
       params.delete("login");
     } else if (isWelcome) {
-      toast.success("회원가입 성공!", {
-        description: `🥳 ${nickname}님 환영합니다!`,
-      });
+      toastAppSuccess("success.auth.signup", `${nickname}님 환영합니다!`);
       params.delete("welcome");
     }
 

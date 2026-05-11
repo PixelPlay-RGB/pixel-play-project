@@ -2,9 +2,12 @@
 
 import { createClient } from "@/lib/supabase/server";
 import type { CreateChatRoomInput } from "@/lib/zod/chat-room";
+import type { AppActionResult } from "@/types/app-message";
 import { revalidatePath } from "next/cache";
 
-export const createChatRoomAction = async (formData: CreateChatRoomInput) => {
+export const createChatRoomAction = async (
+  formData: CreateChatRoomInput,
+): Promise<AppActionResult> => {
   const supabase = await createClient();
 
   const {
@@ -12,7 +15,7 @@ export const createChatRoomAction = async (formData: CreateChatRoomInput) => {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return { error: "인증 정보가 없습니다." };
+    return { success: false, code: "error.chatRoom.createAuthRequired" };
   }
 
   const { data: room, error: roomError } = await supabase
@@ -27,7 +30,7 @@ export const createChatRoomAction = async (formData: CreateChatRoomInput) => {
     .single();
 
   if (roomError || !room) {
-    return { error: "채팅방 생성에 실패했습니다." };
+    return { success: false, code: "error.chatRoom.createFailed" };
   }
 
   const { error: memberError } = await supabase.from("chat_room_member").insert({
@@ -36,9 +39,9 @@ export const createChatRoomAction = async (formData: CreateChatRoomInput) => {
   });
 
   if (memberError) {
-    return { error: "채팅방 참여 정보 생성에 실패했습니다." };
+    return { success: false, code: "error.chatRoom.createMemberFailed" };
   }
 
   revalidatePath("/");
-  return { error: null };
+  return { success: true, code: "success.chatRoom.created" };
 };

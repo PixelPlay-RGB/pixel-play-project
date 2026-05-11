@@ -17,12 +17,12 @@ import { QUERY_KEYS } from "@/constants/query-keys";
 import { cn } from "@/lib/utils";
 import { CREATE_CHAT_ROOM_DEFAULT_VALUES, createChatRoomSchema } from "@/lib/zod/chat-room";
 import type { CreateChatRoomInput } from "@/lib/zod/chat-room";
+import { toastAppError, toastAppSuccess } from "@/utils/toast-message";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
-import { toast } from "sonner";
 
 export default function CreateChatRoomDialog() {
   const [open, setOpen] = useState(false);
@@ -46,12 +46,12 @@ export default function CreateChatRoomDialog() {
   const handleCreateRoom = async (values: CreateChatRoomInput) => {
     const result = await createChatRoomAction(values);
 
-    if (result.error) {
-      toast.error(result.error);
+    if (!result.success) {
+      toastAppError(result.code ?? "error.chatRoom.createFailed");
       return;
     }
 
-    toast.success("채팅방 생성 완료");
+    toastAppSuccess(result.code ?? "success.chatRoom.created");
     setOpen(false);
     reset(CREATE_CHAT_ROOM_DEFAULT_VALUES);
     queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.all });
@@ -62,7 +62,7 @@ export default function CreateChatRoomDialog() {
       <DialogTrigger
         className={cn(
           "flex items-center gap-1.5 self-end px-5 py-2",
-          "rounded-xl bg-brand text-sm font-bold text-white shadow-sm shadow-brand/25",
+          "bg-brand shadow-brand/25 rounded-xl text-sm font-bold text-white shadow-sm",
           "cursor-pointer transition-all hover:opacity-90 active:scale-95",
         )}
       >
@@ -70,7 +70,7 @@ export default function CreateChatRoomDialog() {
         채팅방 만들기
       </DialogTrigger>
       <DialogContent className={cn("max-w-md gap-0 overflow-hidden p-0", "rounded-3xl")}>
-        <DialogHeader className={cn("border-b border-border/50 px-6 pb-4 pt-6")}>
+        <DialogHeader className={cn("border-border/50 border-b px-6 pt-6 pb-4")}>
           <DialogTitle className="text-base font-bold">채팅방 생성</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(handleCreateRoom)} className="flex flex-col gap-5 px-6 py-5">
@@ -137,8 +137,8 @@ export default function CreateChatRoomDialog() {
               variant="secondary"
               onClick={() => setOpen(false)}
               className={cn(
-                "h-auto flex-1 rounded-xl border border-border py-2.5 transition-all",
-                "text-sm font-semibold text-muted-foreground",
+                "border-border h-auto flex-1 rounded-xl border py-2.5 transition-all",
+                "text-muted-foreground text-sm font-semibold",
                 "hover:bg-muted/50 hover:text-foreground",
               )}
             >
@@ -148,8 +148,8 @@ export default function CreateChatRoomDialog() {
               type="submit"
               disabled={!isValid || isSubmitting}
               className={cn(
-                "h-auto flex-1 rounded-xl bg-brand py-2.5 transition-all",
-                "text-sm font-bold text-white shadow-sm shadow-brand/20",
+                "bg-brand h-auto flex-1 rounded-xl py-2.5 transition-all",
+                "shadow-brand/20 text-sm font-bold text-white shadow-sm",
                 "hover:opacity-90 active:scale-95",
               )}
             >

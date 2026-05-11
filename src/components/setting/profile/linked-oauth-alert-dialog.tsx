@@ -19,10 +19,10 @@ import { QUERY_KEYS } from "@/constants/query-keys";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { OAuthProvider } from "@/types/auth";
+import { toastAppError, toastAppSuccess } from "@/utils/toast-message";
 import { useQueryClient } from "@tanstack/react-query";
 import { Plug, Unlink } from "lucide-react";
 import { useState } from "react";
-import { toast } from "sonner";
 
 interface Props {
   isLinked: boolean;
@@ -55,9 +55,7 @@ export default function LinkedOAuthAlertDialog({
     });
 
     if (error) {
-      toast.error(`${OAUTH_PROVIDER_META[provider].name} 연동 실패`, {
-        description: error.message,
-      });
+      toastAppError("error.oauth.linkFailed", error.message);
     }
 
     setIsLoading(false);
@@ -72,10 +70,13 @@ export default function LinkedOAuthAlertDialog({
         // 연동 해제 로직
         const result = await unLinkOAuthAction(provider);
         if (result.success) {
-          toast.success(`${OAUTH_PROVIDER_META[provider].name} 연동 해제 성공`);
+          toastAppSuccess(
+            "success.oauth.unlinked",
+            `${OAUTH_PROVIDER_META[provider].name} 연동이 해제되었습니다.`,
+          );
           await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth.all });
         } else {
-          toast.error(result.message || "연동 해제 실패");
+          toastAppError(result.code ?? "error.oauth.unlinkFailed");
         }
       } else {
         // 연동 로직
@@ -83,9 +84,7 @@ export default function LinkedOAuthAlertDialog({
         return;
       }
     } catch {
-      toast.error("작업 중 오류 발생", {
-        description: "알 수 없는 오류가 발생하였습니다.",
-      });
+      toastAppError("error.oauth.actionFailed");
     } finally {
       setIsLoading(false);
       setOpen(false);
@@ -102,7 +101,7 @@ export default function LinkedOAuthAlertDialog({
             size="sm"
             variant={isLinked ? "destructive" : "default"}
             disabled={isDisableUnlink}
-            title={isDisableUnlink ? "기본 계정은 해제할 수 없습니다" : undefined}
+            title={isDisableUnlink ? "기본 계정은 해제할 수 없습니다." : undefined}
             className={cn(
               "font-semibold",
               !isLinked && "bg-brand/40 text-brand hover:bg-brand cursor-pointer hover:text-white",

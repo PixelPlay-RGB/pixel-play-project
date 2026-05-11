@@ -23,13 +23,13 @@ import { completeOAuthProfileSchema, CompleteOAuthProfileValues } from "@/lib/zo
 import { useAuthStore } from "@/stores/auth";
 import type { NicknameStatus } from "@/types/auth";
 import { formatPhone } from "@/utils/format";
+import { toastAppError } from "@/utils/toast-message";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { CalendarDays, Smartphone, User, UserStar } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { toast } from "sonner";
 
 export default function CompleteProfileForm() {
   const router = useRouter();
@@ -67,15 +67,13 @@ export default function CompleteProfileForm() {
 
   const onSubmit = async (data: CompleteOAuthProfileValues) => {
     if (nicknameStatus !== "available") {
-      toast.error("닉네임 중복 확인이 필요합니다.", {
-        description: "닉네임 중복 확인을 완료해주세요.",
-      });
+      toastAppError("error.auth.nicknameCheckRequired");
       return;
     }
 
     const result = await completeOAuthProfileAction(data);
     if (!result.success) {
-      toast.error("프로필 생성 오류", { description: result.message });
+      toastAppError(result.code ?? "error.auth.profileCreateFailed");
       return;
     }
 
@@ -87,9 +85,7 @@ export default function CompleteProfileForm() {
     } = await supabase.auth.getUser();
 
     if (authError || !authUser) {
-      toast.error("인증 오류", {
-        description: authError?.message || "유저 세션을 찾을 수 없습니다.",
-      });
+      toastAppError("error.auth.sessionNotFound");
       return;
     }
 

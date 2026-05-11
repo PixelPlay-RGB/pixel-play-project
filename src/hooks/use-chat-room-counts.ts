@@ -6,6 +6,8 @@ import { createClient } from "@/lib/supabase/client";
 import type { ChatRoomCounts } from "@/types/chat-room";
 import { useQuery } from "@tanstack/react-query";
 
+export type { ChatRoomCounts };
+
 export function useChatRoomCounts() {
   const { data: currentUser } = useUser();
 
@@ -13,11 +15,13 @@ export function useChatRoomCounts() {
     queryKey: QUERY_KEYS.chat.counts(currentUser?.id),
     queryFn: async () => {
       const supabase = createClient();
-      
+
       // maybeSingle(): 결과가 0행이면 null, 1행이면 객체 반환 (@supabase/supabase-js v2+)
-      const { data, error } = await supabase.rpc("get_room_counts_by_user", {
-        p_user_id: currentUser!.id,
-      }).maybeSingle();
+      const { data, error } = await supabase
+        .rpc("get_room_counts_by_user", {
+          p_user_id: currentUser!.id,
+        })
+        .maybeSingle();
 
       if (error) throw error;
       if (!data) return { JOINED: 0, NOT_JOINED: 0, OWNED: 0 };
