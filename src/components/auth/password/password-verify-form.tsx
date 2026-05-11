@@ -5,9 +5,8 @@ import AuthInputGroup from "@/components/auth/auth-input-group";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
-import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
+import { FORM_MESSAGE } from "@/constants/form-message";
 import { verifyPasswordSchema, VerifyPasswordValues } from "@/lib/zod/auth";
-import { getAppMessageTitle } from "@/utils/app-message";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LockKeyhole } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -32,9 +31,7 @@ export default function PasswordVerifyForm({ onVerified }: Props) {
 
     if (!result.success) {
       setError("currentPassword", {
-        message: getAppMessageTitle(
-          result.code ?? APP_MESSAGE_CODE.error.auth.currentPasswordInvalid,
-        ),
+        message: FORM_MESSAGE.auth.currentPasswordInvalid,
       });
       return;
     }

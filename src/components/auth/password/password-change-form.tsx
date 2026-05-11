@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
+import { FORM_MESSAGE } from "@/constants/form-message";
 import { createClient } from "@/lib/supabase/client";
 import { changePasswordSchema, ChangePasswordValues } from "@/lib/zod/auth";
-import { getAppMessageTitle } from "@/utils/app-message";
 import { toastAppError, toastAppSuccess } from "@/utils/toast-message";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LockKeyhole } from "lucide-react";
@@ -38,7 +38,7 @@ export default function PasswordChangeForm({ currentPassword, onOpenChange }: Pr
     if (data.newPassword === currentPassword) {
       setError("newPassword", {
         type: "manual",
-        message: getAppMessageTitle(APP_MESSAGE_CODE.error.auth.samePassword),
+        message: FORM_MESSAGE.auth.samePassword,
       });
       return;
     }

@@ -111,4 +111,4 @@
 - **표준 단위 사용**: Tailwind 4px 단위(`w-25` 등)를 우선하며, 임의 값(`[...]`)을 지양합니다.
 - **SRP 준수**: 모든 컴포넌트와 함수는 하나의 책임만 가집니다. 상세 내용은 [.agents/code-convention/SRP_CONVENTION.md](./.agents/code-convention/SRP_CONVENTION.md)를 따릅니다.
 - **앱 메시지 중앙 관리**: 사용자에게 노출되는 toast, alert, error UI 문구는 `APP_MESSAGE`와 `APP_MESSAGE_CODE`를 사용합니다. 원본 Supabase/Auth/DB 에러는 사용자에게 직접 노출하지 않고 `console.error`로만 남깁니다.
-- **필드 검증 메시지 분리**: Zod, React Hook Form의 `FieldError`로 필드 아래에 표시하는 검증 메시지는 toast로 중복 노출하지 않습니다.
+- **폼 메시지 분리**: Zod, React Hook Form의 `FieldError`로 필드 아래에 표시하는 문장형 검증 메시지는 `FORM_MESSAGE`를 사용합니다. 필드 검증 메시지는 toast로 중복 노출하지 않습니다.

@@ -200,6 +200,7 @@ src/
 │   ├── chat-emoji-picker.ts # 이모지 피커 분류·목록
 │   ├── chat-room.ts
 │   ├── footer.ts
+│   ├── form-message.ts   # Zod·FieldError용 폼 검증 메시지
 │   ├── main-menu-sidebar.ts
 │   ├── message.ts
 │   ├── query-keys.ts     # 중앙 집중식 Query Key Factory (QUERY_KEYS)
@@ -250,7 +251,8 @@ src/
 - `AppMessageCode` 타입은 `APP_MESSAGE_CODE`에서 파생합니다.
 - `APP_MESSAGE`와 `APP_MESSAGE_CODE`의 도메인과 key는 반드시 일치해야 합니다.
 - 원본 Supabase/Auth/DB 에러 메시지는 사용자에게 직접 노출하지 않고 `console.error`로만 남깁니다.
-- Zod, React Hook Form의 `FieldError`로 필드 아래에 표시하는 검증 메시지는 toast로 중복 노출하지 않습니다.
+- Zod, React Hook Form의 `FieldError`로 필드 아래에 표시하는 검증 메시지는 `src/constants/form-message.ts`의 `FORM_MESSAGE`에서 관리합니다.
+- FieldError 메시지는 사용자가 입력값을 수정할 수 있도록 문장형으로 작성하고, toast로 중복 노출하지 않습니다.
 - title은 짧은 명사형 또는 상태형으로 작성하고, 자세한 안내는 description에 작성합니다.
 
 세부 문구 규칙은 `.agents/app-message-convention/SKILLS.md`를 따릅니다.

@@ -22,13 +22,13 @@ import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import { SIGNUP_FORM_DEFAULTS, WELCOME_PARAM } from "@/constants/auth";
+import { FORM_MESSAGE } from "@/constants/form-message";
 import { QUERY_KEYS } from "@/constants/query-keys";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { signUpSchema } from "@/lib/zod/auth";
 import { useAuthStore } from "@/stores/auth";
 import type { NicknameStatus, OtpStatus, SignUpFormValues } from "@/types/auth";
-import { getAppMessageTitle } from "@/utils/app-message";
 import { formatPhone } from "@/utils/format";
 import { toastAppError, toastAppSuccess } from "@/utils/toast-message";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -99,7 +99,13 @@ export default function SignupForm() {
       toastAppSuccess(APP_MESSAGE_CODE.success.auth.emailOtpSent);
     } else {
       setOtpStatus("idle");
-      setError("email", { type: "server", message: getAppMessageTitle(result.code) });
+      setError("email", {
+        type: "server",
+        message:
+          result.code === APP_MESSAGE_CODE.error.auth.emailAlreadyExists
+            ? FORM_MESSAGE.auth.emailAlreadyExists
+            : FORM_MESSAGE.auth.emailCheckFailed,
+      });
     }
   };
 
@@ -121,7 +127,7 @@ export default function SignupForm() {
       toastAppSuccess(APP_MESSAGE_CODE.success.auth.emailVerified);
     } else {
       setOtpStatus("sent");
-      setOtpError(getAppMessageTitle(result.code));
+      setOtpError(FORM_MESSAGE.auth.otpInvalid);
     }
   };
 

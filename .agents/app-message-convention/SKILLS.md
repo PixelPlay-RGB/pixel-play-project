@@ -34,7 +34,9 @@
 
 ## Field Error
 
-- Zod, React Hook Form의 `FieldError`로 필드 아래에 표시하는 검증 메시지는 toast로 중복 노출하지 않습니다.
+- Zod, React Hook Form의 `FieldError`로 필드 아래에 표시하는 검증 메시지는 `FORM_MESSAGE`에서 관리합니다.
+- FieldError 메시지는 사용자가 입력값을 수정할 수 있도록 문장형으로 작성합니다.
+- FieldError 메시지는 `APP_MESSAGE`에 섞지 않고 toast로 중복 노출하지 않습니다.
 - 필드 단위 오류는 `setError`와 `FieldError`를 사용하고, 폼 제출 실패나 서버 처리 실패처럼 화면 전체에 알려야 하는 오류만 toast를 사용합니다.
 
 ## code
