@@ -83,7 +83,7 @@ export function ChatRoom({ roomId }: Props) {
     <div className="dark text-foreground flex h-full min-h-0 w-full flex-col overflow-hidden bg-zinc-950 md:flex-row">
       <MemberList roomId={roomId} />
 
-      <aside className="bg-background flex min-h-0 flex-1 flex-col border-white/10 md:w-[min(100%,380px)] md:shrink-0 md:border-l">
+      <aside className="bg-background flex min-h-0 flex-1 flex-col border-white/10 md:w-full md:max-w-95 md:flex-none md:border-l">
         <header className="border-border shrink-0 border-b px-3 py-2.5">
           <div className="flex items-start justify-between gap-2">
             <h1 className="line-clamp-2 flex-1 text-sm leading-tight font-semibold">
@@ -119,7 +119,7 @@ export function ChatRoom({ roomId }: Props) {
           roomId={roomId}
           currentUserId={currentUserId}
           disabled={inputLocked}
-          disabledHint={profilePending ? "???? ???? ????." : "??? ???? ??? ? ????."}
+          disabledHint={profilePending ? "프로필을 불러오는 중입니다." : "로그인 후 이용할 수 있습니다."}
         />
       </aside>
     </div>

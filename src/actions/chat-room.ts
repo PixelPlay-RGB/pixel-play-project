@@ -4,12 +4,10 @@ import { createClient } from "@/lib/supabase/server";
 import type { CreateChatRoomInput } from "@/lib/zod/chat-room";
 import { revalidatePath } from "next/cache";
 
+// 채팅방 생성
 export const createChatRoomAction = async (formData: CreateChatRoomInput) => {
   const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
     return { error: "인증 정보가 없습니다." };
@@ -40,5 +38,37 @@ export const createChatRoomAction = async (formData: CreateChatRoomInput) => {
   }
 
   revalidatePath("/");
+  return { error: null };
+};
+
+// 현재 로그인 유저를 지정한 채팅방의 멤버로 등록
+export const joinChatRoomAction = async (chatRoomId: string) => {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "인증 정보가 없습니다." };
+  }
+
+  // join_chat_room RPC: chat_room 행 잠금 → 정원 확인 → insert를 단일 트랜잭션으로 처리
+  const { data: result, error: rpcError } = await supabase.rpc("join_chat_room", {
+    p_chat_room_id: chatRoomId,
+    p_user_id: user.id,
+  });
+
+  if (rpcError) {
+    return { error: "채팅방 입장에 실패했습니다." };
+  }
+
+  if (result === "not_found") {
+    return { error: "채팅방 정보를 불러올 수 없습니다." };
+  }
+
+  if (result === "full") {
+    return { error: "정원이 가득 찬 채팅방입니다." };
+  }
+
+  // 클라이언트의 router.refresh() 호출 시 서버 컴포넌트가 최신 멤버십을 다시 조회하도록 캐시 무효화
+  revalidatePath(`/chat/${chatRoomId}`);
   return { error: null };
 };

@@ -232,7 +232,10 @@ export type Database = {
           unread_count: number
         }[]
       }
-      join_chat_room: { Args: { p_chat_room_id: string }; Returns: string }
+      join_chat_room: {
+        Args: { p_chat_room_id: string; p_user_id: string }
+        Returns: string
+      }
       kick_chat_room_member: {
         Args: { p_room_id: string; p_target_user_id: string }
         Returns: undefined
