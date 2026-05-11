@@ -28,6 +28,7 @@ interface Props {
 function mapLeaveRoomError(message: string): string {
   const lower = message.toLowerCase();
   if (lower.includes("owner cannot leave")) return "방장은 채팅방을 나갈 수 없습니다.";
+  if (lower.includes("not an active member")) return "참여 중이 아니거나 이미 나간 상태입니다.";
   if (lower.includes("not a member")) return "참여 중인 채팅방이 아닙니다.";
   if (lower.includes("room not found")) return "채팅방을 찾을 수 없습니다.";
   return "채팅방 나가기에 실패했습니다.";
