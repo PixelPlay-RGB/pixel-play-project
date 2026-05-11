@@ -15,14 +15,14 @@ interface Props {
 }
 
 export function MemberActionPopover({ roomId, member, children }: Props) {
-  const displayName = member.user?.nickname ?? member.user_id.slice(0, 8);
+  const nickname = member.user.nickname;
 
   return (
     <Popover>
       <PopoverTrigger render={children} />
       <PopoverContent className="w-56 gap-1 p-1.5" align="start" side="right">
         <div className="px-2 py-1.5">
-          <p className="truncate text-sm font-semibold">{displayName}</p>
+          <p className="truncate text-sm font-semibold">{nickname}</p>
           <p className="text-muted-foreground text-xs">참여자 관리</p>
         </div>
 
@@ -32,7 +32,7 @@ export function MemberActionPopover({ roomId, member, children }: Props) {
           action="transfer"
           roomId={roomId}
           targetUserId={member.user_id}
-          targetNickname={displayName}
+          targetNickname={nickname}
           trigger={
             <Button variant="ghost" className="w-full justify-start">
               <Crown className="size-4" />
@@ -45,9 +45,12 @@ export function MemberActionPopover({ roomId, member, children }: Props) {
           action="kick"
           roomId={roomId}
           targetUserId={member.user_id}
-          targetNickname={displayName}
+          targetNickname={nickname}
           trigger={
-            <Button variant="ghost" className="text-destructive hover:text-destructive w-full justify-start">
+            <Button
+              variant="ghost"
+              className="text-destructive hover:text-destructive w-full justify-start"
+            >
               <UserX className="size-4" />
               강퇴하기
             </Button>

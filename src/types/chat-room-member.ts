@@ -12,7 +12,7 @@ export interface RoomMemberQuery extends RoomMember {
   user: {
     nickname: string;
     photo_url: string | null;
-  } | null;
+  };
 }
 
 /** user_id → 채팅 UI용 표시 정보 (메시지 목록 등에서 O(1) 조회) */

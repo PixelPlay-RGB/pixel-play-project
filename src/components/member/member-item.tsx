@@ -12,9 +12,9 @@ interface Props {
 }
 
 export function MemberItem({ roomId, member, canManage }: Props) {
-  const displayName = member.user?.nickname ?? member.user_id.slice(0, 8);
-  const photoUrl = member.user?.photo_url ?? null;
-  const fallbackText = getAvatarFallbackText(displayName);
+  const nickname = member.user.nickname;
+  const photoUrl = member.user.photo_url;
+  const fallbackText = getAvatarFallbackText(nickname);
 
   if (!canManage) {
     return (
@@ -24,7 +24,7 @@ export function MemberItem({ roomId, member, canManage }: Props) {
           <AvatarFallback>{fallbackText}</AvatarFallback>
         </Avatar>
         <span className="min-w-0 truncate text-sm text-foreground">
-          {displayName}
+          {nickname}
         </span>
       </div>
     );
@@ -41,7 +41,7 @@ export function MemberItem({ roomId, member, canManage }: Props) {
           <AvatarFallback>{fallbackText}</AvatarFallback>
         </Avatar>
         <span className="min-w-0 truncate text-sm text-foreground">
-          {displayName}
+          {nickname}
         </span>
       </Button>
     </MemberActionPopover>

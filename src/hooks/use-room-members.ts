@@ -14,14 +14,14 @@ export function useRoomMembers(roomId: string) {
       const { data, error } = await supabase
         .from("chat_room_member")
         .select(
-          "chat_room_id, user_id, created_at, is_banned, last_joined_at, user:user_id(nickname, photo_url)",
+          "chat_room_id, user_id, created_at, is_banned, last_joined_at, user:user_id!inner(nickname, photo_url)",
         )
         .eq("chat_room_id", roomId)
         .order("created_at", { ascending: true });
 
       if (error) throw error;
 
-      return data as unknown as RoomMemberQuery[];
+      return (data ?? []) as unknown as RoomMemberQuery[];
     },
   });
 }

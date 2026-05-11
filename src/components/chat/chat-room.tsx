@@ -45,8 +45,8 @@ export function ChatRoom({ roomId }: Props) {
     const map: Record<string, { nickname: string; photoUrl: string | null }> = {};
     for (const m of members) {
       map[m.user_id] = {
-        nickname: m.user?.nickname ?? m.user_id.slice(0, 8),
-        photoUrl: m.user?.photo_url ?? null,
+        nickname: m.user.nickname,
+        photoUrl: m.user.photo_url,
       };
     }
     return map;
