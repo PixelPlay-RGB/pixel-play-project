@@ -10,8 +10,6 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -54,34 +52,42 @@ export function ChatRoomJoinDialog({ roomId, roomTitle }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent showCloseButton={false}>
-        <DialogHeader>
-          <DialogTitle>채팅방 입장</DialogTitle>
-          {roomTitle && (
-            <DialogDescription>
-              &ldquo;{roomTitle}&rdquo;에 입장하시겠습니까?
-            </DialogDescription>
-          )}
+      <DialogContent showCloseButton={false} className={cn("max-w-md gap-0 overflow-hidden p-0", "rounded-3xl")}>
+        <DialogHeader className={cn("border-b border-border/50 px-6 pb-4 pt-6")}>
+          <DialogTitle className="text-base font-bold">채팅방 입장</DialogTitle>
         </DialogHeader>
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => handleOpenChange(false)}
-            disabled={isJoining}
-          >
-            취소
-          </Button>
-          <Button
-            onClick={handleJoin}
-            disabled={isJoining}
-            className={cn(
-              "bg-brand font-bold text-white",
-              "transition-all hover:opacity-90 active:scale-95",
-            )}
-          >
-            {isJoining ? "입장 중..." : "입장"}
-          </Button>
-        </DialogFooter>
+        <div className="flex flex-col gap-5 px-6 py-5">
+          {roomTitle && (
+            <p className="text-sm text-muted-foreground">
+              &ldquo;{roomTitle}&rdquo;에 입장하시겠습니까?
+            </p>
+          )}
+          <div className="flex gap-2.5">
+            <Button
+              type="button"
+              onClick={() => handleOpenChange(false)}
+              disabled={isJoining}
+              className={cn(
+                "h-auto flex-1 rounded-xl border border-border py-2.5 transition-all",
+                "text-sm font-semibold text-muted-foreground",
+                "hover:bg-muted/50 hover:text-foreground",
+              )}
+            >
+              취소
+            </Button>
+            <Button
+              onClick={handleJoin}
+              disabled={isJoining}
+              className={cn(
+                "h-auto flex-1 rounded-xl bg-brand py-2.5 transition-all",
+                "text-sm font-bold text-white shadow-sm shadow-brand/20",
+                "hover:opacity-90 active:scale-95",
+              )}
+            >
+              {isJoining ? "입장 중..." : "입장"}
+            </Button>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );
