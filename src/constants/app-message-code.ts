@@ -28,9 +28,6 @@ export const APP_MESSAGE_CODE = {
     },
     auth: {
       invalidCredentials: "error.auth.invalidCredentials",
-      emailCheckFailed: "error.auth.emailCheckFailed",
-      emailAlreadyExists: "error.auth.emailAlreadyExists",
-      otpInvalid: "error.auth.otpInvalid",
       emailVerificationRequired: "error.auth.emailVerificationRequired",
       nicknameCheckRequired: "error.auth.nicknameCheckRequired",
       nicknameCheckFailed: "error.auth.nicknameCheckFailed",
@@ -39,8 +36,6 @@ export const APP_MESSAGE_CODE = {
       authInfoNotFound: "error.auth.authInfoNotFound",
       authInfoLoadFailed: "error.auth.authInfoLoadFailed",
       sessionNotFound: "error.auth.sessionNotFound",
-      currentPasswordInvalid: "error.auth.currentPasswordInvalid",
-      samePassword: "error.auth.samePassword",
       passwordChangeFailed: "error.auth.passwordChangeFailed",
       signupFailed: "error.auth.signupFailed",
       profileCreateFailed: "error.auth.profileCreateFailed",

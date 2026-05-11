@@ -31,7 +31,7 @@ export default function PasswordVerifyForm({ onVerified }: Props) {
 
     if (!result.success) {
       setError("currentPassword", {
-        message: FORM_MESSAGE.auth.currentPasswordInvalid,
+        message: result.message ?? FORM_MESSAGE.auth.currentPasswordInvalid,
       });
       return;
     }

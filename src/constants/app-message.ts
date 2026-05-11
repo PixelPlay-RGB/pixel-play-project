@@ -66,15 +66,6 @@ export const APP_MESSAGE = {
         title: "로그인 실패",
         description: "이메일 또는 비밀번호를 확인해주세요.",
       },
-      emailCheckFailed: {
-        title: "이메일 확인 실패",
-      },
-      emailAlreadyExists: {
-        title: "이미 가입된 이메일",
-      },
-      otpInvalid: {
-        title: "인증 코드 오류",
-      },
       emailVerificationRequired: {
         title: "이메일 인증 필요",
         description: "먼저 이메일 인증을 완료해주세요.",
@@ -105,12 +96,6 @@ export const APP_MESSAGE = {
       sessionNotFound: {
         title: "인증 오류",
         description: "유저 세션을 찾을 수 없습니다.",
-      },
-      currentPasswordInvalid: {
-        title: "현재 비밀번호 오류",
-      },
-      samePassword: {
-        title: "동일한 비밀번호",
       },
       passwordChangeFailed: {
         title: "비밀번호 변경 실패",
