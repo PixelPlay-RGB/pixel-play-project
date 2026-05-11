@@ -37,6 +37,9 @@ export function ChatRoom({ roomId }: Props) {
   const roomQuery = useRoom(roomId);
 
   const { data: members = [] } = useRoomMembers(roomId);
+  const activeMemberCount = members.filter(
+    (member) => !member.is_banned && member.last_joined_at,
+  ).length;
 
   const memberDisplayByUserId = useMemo(() => {
     const map: Record<string, { nickname: string; photoUrl: string | null }> = {};
@@ -95,7 +98,7 @@ export function ChatRoom({ roomId }: Props) {
             <h1 className="line-clamp-2 text-sm leading-tight font-semibold">
               {roomQuery.isPending ? "불러오는 중…" : (roomQuery.data?.title ?? "채팅방")}
             </h1>
-            <span className="text-muted-foreground shrink-0 text-xs">{members.length}명</span>
+            <span className="text-muted-foreground shrink-0 text-xs">{activeMemberCount}명</span>
           </div>
           <p className="text-muted-foreground mt-1 line-clamp-1 text-[11px]">
             {roomQuery.data?.description ?? ""}

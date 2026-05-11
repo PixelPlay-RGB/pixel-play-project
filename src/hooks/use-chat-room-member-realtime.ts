@@ -22,7 +22,12 @@ export function useChatRoomMemberRealtime({
   const [isKicked, setIsKicked] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsKicked(false);
+
     if (!roomId || !currentUserId) return;
+
+    let ignore = false;
 
     const supabase = createClient();
 
@@ -34,7 +39,7 @@ export function useChatRoomMemberRealtime({
         .eq("user_id", currentUserId)
         .maybeSingle();
 
-      if (!error && data?.is_banned) {
+      if (!ignore && !error && data?.is_banned) {
         setIsKicked(true);
       }
     };
@@ -90,6 +95,7 @@ export function useChatRoomMemberRealtime({
       .subscribe();
 
     return () => {
+      ignore = true;
       void channel.unsubscribe();
     };
   }, [currentUserId, queryClient, roomId]);
