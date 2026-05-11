@@ -1,5 +1,3 @@
-"use client";
-
 // 채팅방 참여자 관리 액션 메뉴를 표시하는 Popover
 import { Crown, UserX } from "lucide-react";
 
