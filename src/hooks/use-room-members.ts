@@ -4,6 +4,7 @@ import { QUERY_KEYS } from "@/constants/query-keys";
 import { createClient } from "@/lib/supabase/client";
 import type { RoomMemberQuery } from "@/types/chat-room-member";
 
+// 채팅방의 활성 참여자 목록을 조회
 export function useRoomMembers(roomId: string) {
   const supabase = createClient();
 

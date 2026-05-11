@@ -31,6 +31,7 @@ export const createChatRoomAction = async (formData: CreateChatRoomInput) => {
   const { error: memberError } = await supabase.from("chat_room_member").insert({
     chat_room_id: room.id,
     user_id: user.id,
+    last_joined_at: new Date().toISOString(),
   });
 
   if (memberError) {
@@ -50,14 +51,17 @@ export const joinChatRoomAction = async (chatRoomId: string) => {
     return { error: "인증 정보가 없습니다." };
   }
 
-  // join_chat_room RPC: chat_room 행 잠금 → 정원 확인 → insert를 단일 트랜잭션으로 처리
+  // join_chat_room RPC: auth.uid() 내부 사용 → 밴/재입장/정원 확인 → insert/update 원자 처리
   const { data: result, error: rpcError } = await supabase.rpc("join_chat_room", {
     p_chat_room_id: chatRoomId,
-    p_user_id: user.id,
   });
 
   if (rpcError) {
     return { error: "채팅방 입장에 실패했습니다." };
+  }
+
+  if (result === "banned") {
+    return { error: "입장이 제한된 채팅방입니다." };
   }
 
   if (result === "not_found") {

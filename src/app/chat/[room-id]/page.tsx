@@ -15,10 +15,10 @@ export default async function Page(props: PageProps<"/chat/[room-id]">) {
 
   // 멤버십 조회와 방 정보 조회를 병렬로 실행해 waterfall을 방지
   const [{ data: membership, error: membershipError }, { data: room }] = await Promise.all([
-    // 현재 유저가 해당 채팅방의 멤버인지 확인 — 결과에 따라 dialog 노출 여부를 결정
+    // is_banned, last_joined_at으로 활성 멤버 여부를 판별 — row 존재만으로는 활성 상태를 알 수 없음
     supabase
       .from("chat_room_member")
-      .select("id")
+      .select("is_banned, last_joined_at")
       .eq("chat_room_id", roomId)
       .eq("user_id", user.id)
       .maybeSingle(),
@@ -26,17 +26,18 @@ export default async function Page(props: PageProps<"/chat/[room-id]">) {
     supabase.from("chat_room").select("title").eq("id", roomId).maybeSingle(),
   ]);
 
-  // 조회 실패 시 멤버 여부를 확인할 수 없으므로 홈으로 이동
-  if (membershipError) {
+  // 조회 실패 또는 밴 유저: 홈으로 이동
+  if (membershipError || membership?.is_banned) {
     redirect("/");
   }
 
   // !room: 존재하지 않는 방 — ChatRoom이 자체적으로 에러 처리
-  // membership: 이미 멤버 — dialog 없이 바로 진입
-  if (!room || membership) {
+  // 활성 멤버(is_banned=false, last_joined_at IS NOT NULL): dialog 없이 바로 진입
+  const isActiveMember = !!membership && membership.last_joined_at !== null;
+  if (!room || isActiveMember) {
     return <ChatRoom roomId={roomId} />;
   }
 
-  // 입장 확인 dialog를 먼저 표시
+  // 신규 또는 나간 유저 — 입장 확인 dialog 표시
   return <ChatRoomJoinDialog roomId={roomId} roomTitle={room.title} />;
 }
