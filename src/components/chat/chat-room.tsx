@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo } from "react";
 
+import { ChatRoomMenu } from "@/components/chat/chat-room-menu";
 import { MemberList } from "@/components/member/member-list";
 import { MessageInput } from "@/components/message/message-input";
 import { MessageList } from "@/components/message/message-list";
@@ -85,10 +86,19 @@ export function ChatRoom({ roomId }: Props) {
       <aside className="bg-background flex min-h-0 flex-1 flex-col border-white/10 md:w-[min(100%,380px)] md:shrink-0 md:border-l">
         <header className="border-border shrink-0 border-b px-3 py-2.5">
           <div className="flex items-start justify-between gap-2">
-            <h1 className="line-clamp-2 text-sm leading-tight font-semibold">
+            <h1 className="line-clamp-2 flex-1 text-sm leading-tight font-semibold">
               {roomQuery.isPending ? "불러오는 중…" : (roomQuery.data?.title ?? "채팅방")}
             </h1>
-            <span className="text-muted-foreground shrink-0 text-xs">{members.length}명</span>
+            <div className="flex shrink-0 items-center gap-2">
+              <span className="text-muted-foreground text-xs">{members.length}명</span>
+              {roomQuery.data ? (
+                <ChatRoomMenu
+                  roomId={roomId}
+                  ownerId={roomQuery.data.owner_id}
+                  currentUserId={currentUserId}
+                />
+              ) : null}
+            </div>
           </div>
           <p className="text-muted-foreground mt-1 line-clamp-1 text-[11px]">
             {roomQuery.data?.description ?? ""}
