@@ -3,6 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import type { Message } from "@/types/message";
 import { SystemMessageItem } from "@/components/message/system-message-item";
+import { getAvatarFallbackText } from "@/utils/avatar";
 
 import type { MemberDisplayByUserId } from "@/types/chat-room-member";
 
@@ -18,9 +19,9 @@ export function MessageItem({ message, isOwn, memberDisplayByUserId }: Props) {
   }
 
   const display = memberDisplayByUserId[message.user_id];
-  const nickname = display?.nickname ?? message.user_id.slice(0, 8);
+  const displayName = display?.nickname ?? message.user_id.slice(0, 8);
   const photoUrl = display?.photoUrl ?? null;
-  const initials = nickname.slice(0, 2);
+  const fallbackText = getAvatarFallbackText(displayName);
 
   if (isOwn) {
     return (
@@ -41,10 +42,10 @@ export function MessageItem({ message, isOwn, memberDisplayByUserId }: Props) {
     <div className="flex gap-2 px-2 py-0.5">
       <Avatar size="sm" className="mt-0.5">
         {photoUrl ? <AvatarImage src={photoUrl} alt="" /> : null}
-        <AvatarFallback>{initials}</AvatarFallback>
+        <AvatarFallback>{fallbackText}</AvatarFallback>
       </Avatar>
       <div className="min-w-0 flex-1">
-        <div className="mb-0.5 text-xs font-medium text-[#94eaff]">{nickname}</div>
+        <div className="mb-0.5 text-xs font-medium text-[#94eaff]">{displayName}</div>
         <div
           className={cn(
             "inline-block max-w-full rounded-md px-2 py-1 text-sm leading-snug",

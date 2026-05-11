@@ -10,7 +10,7 @@ export type RoomMember = GenericTables<"chat_room_member">;
  */
 export interface RoomMemberQuery extends RoomMember {
   user: {
-    nickname: string | null;
+    nickname: string;
     photo_url: string | null;
   } | null;
 }
