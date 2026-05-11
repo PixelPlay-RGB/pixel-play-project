@@ -82,8 +82,8 @@ export function ChatRoomMenu({ roomId, ownerId, currentUserId }: Props) {
           )}
         />
         <DropdownMenuContent align="end" side="bottom" sideOffset={4} className="min-w-40">
-          <DropdownMenuLabel>채팅방</DropdownMenuLabel>
           <DropdownMenuGroup>
+            <DropdownMenuLabel>채팅방</DropdownMenuLabel>
             <DropdownMenuItem disabled className="text-muted-foreground">
               알림 설정
               <DropdownMenuShortcut>예정</DropdownMenuShortcut>
