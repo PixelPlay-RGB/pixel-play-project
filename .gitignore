@@ -49,3 +49,6 @@ next-env.d.ts
 # Cursor IDE settings
 .cursor/
 .claude/
+
+# local docs (not pushed to remote)
+/docs/
