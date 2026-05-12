@@ -1,6 +1,6 @@
 "use client";
 
-// 채팅방 멤버 상태 변경 Realtime 이벤트를 관리하는 훅
+// 채팅방 멤버 상태 변경 Realtime 이벤트를 관리하는 훅.
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import type { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
