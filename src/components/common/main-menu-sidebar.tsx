@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import ChatRoomList from "@/components/chat/chat-room-list";
 import MainMenuSidebarItemRenderer from "@/components/common/main-menu-sidebar-item";
 import LiveList from "@/components/live/live-list";
 import { MAIN_MENU_SIDEBAR_ITEMS } from "@/constants/main-menu-sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useMainMenuStore } from "@/stores/main-menu";
 import type { MainMenuSidebarKey } from "@/types/main-menu-sidebar";
 import {
   Sidebar,
@@ -49,7 +49,8 @@ function Items({ activeMenu, setActiveMenu }: Props) {
 }
 
 export default function MainMenuSidebar() {
-  const [activeMenu, setActiveMenu] = useState<MainMenuSidebarKey>("chat");
+  const activeMenu = useMainMenuStore((state) => state.activeMenu);
+  const setActiveMenu = useMainMenuStore((state) => state.setActiveMenu);
   const isMobile = useIsMobile();
 
   return (

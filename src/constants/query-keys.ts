@@ -15,5 +15,7 @@ export const QUERY_KEYS = {
     room: (roomId?: string) => [...QUERY_KEYS.chat.all, "room", roomId].filter(Boolean),
     messages: (roomId?: string) => [...QUERY_KEYS.chat.all, "messages", roomId].filter(Boolean),
     members: (roomId?: string) => [...QUERY_KEYS.chat.all, "members", roomId].filter(Boolean),
+    search: (query?: string, section?: string) =>
+      [...QUERY_KEYS.chat.all, "search", query, section].filter(Boolean),
   },
 } as const;

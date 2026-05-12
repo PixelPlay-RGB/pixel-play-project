@@ -10,6 +10,7 @@ import { useUser } from "@/hooks/use-profile";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth";
+import { getAvatarFallbackText } from "@/utils/avatar";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -36,7 +37,7 @@ export default function HeaderProfileBadge() {
       <PopoverTrigger className="cursor-pointer outline-none hover:opacity-80">
         <Avatar className={cn("ring-brand ring-2 transition-all duration-200 hover:ring-[3px]")}>
           <AvatarImage src={user.photo_url ?? undefined} />
-          <AvatarFallback>{user.nickname.slice(0, 2)}</AvatarFallback>
+          <AvatarFallback>{getAvatarFallbackText(user.nickname)}</AvatarFallback>
         </Avatar>
       </PopoverTrigger>
 
@@ -48,7 +49,7 @@ export default function HeaderProfileBadge() {
         >
           <Avatar className="border-brand/10 h-12 w-12 border">
             <AvatarImage src={user.photo_url ?? undefined} />
-            <AvatarFallback>{user.nickname.slice(0, 2)}</AvatarFallback>
+            <AvatarFallback>{getAvatarFallbackText(user.nickname)}</AvatarFallback>
           </Avatar>
 
           <div className="flex flex-col gap-1">

@@ -16,6 +16,7 @@
 - 아키텍처/SRP 컨벤션: [.agents/code-convention/SRP_CONVENTION.md](./.agents/code-convention/SRP_CONVENTION.md)
 - 디자인/CSS/cn 규칙: [.agents/design-convention/SKILLS.md](./.agents/design-convention/SKILLS.md)
 - 커밋/브랜치 컨벤션: [.agents/git-convention/SKILLS.md](./.agents/git-convention/SKILLS.md)
+- Supabase/DB 컨벤션: [.agents/supabase-convention/SKILLS.md](./.agents/supabase-convention/SKILLS.md)
 
 ---
 
@@ -62,6 +63,12 @@
 
 - 수정 전 반드시 연관 파일을 모두 읽어 최신 상태와 호출 부를 확인하십시오.
 - 로컬 코드가 본인의 가정과 다를 경우 코드를 신뢰하고 계획을 수정하십시오.
+- 파일 하나만 보고 땜질식으로 수정하지 마십시오. 데이터 조회 지점, 타입 정의, hooks, 호출 컴포넌트, 렌더링 컴포넌트까지 하나의 흐름으로 확인하십시오.
+- DB에서 명확히 필터링할 수 있는 조건은 클라이언트에서 다시 `filter` 하지 말고 쿼리 단계에서 처리하십시오.
+- 타입을 맞추기 위해 `as unknown as` 같은 이중 단언을 사용하지 마십시오. Supabase select 결과, 타입 정의, 실제 선택 필드를 일치시키십시오.
+- DB 타입상 nullable이 아닌 값에 불필요한 fallback을 추가하지 마십시오. nullable 여부는 `database.types.ts`와 실제 쿼리 관계를 먼저 확인하십시오.
+- 불필요한 `use client`, 임의 `Map`/`Record` 변환, 중복 display type 등 구조적 냄새가 보이면 구현을 계속하지 말고 먼저 사용자에게 문제와 대안을 보고하십시오.
+- 사용자가 좁은 수정을 요청하더라도, 그 수정을 정확히 하기 위해 필요한 연관 코드는 반드시 함께 확인하십시오.
 
 ### 2.6 한국어 출력 시 콜론 사용 금지 (No Closing Colons)
 
