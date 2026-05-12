@@ -9,7 +9,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { LucideIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { KeyRound, LucideIcon } from "lucide-react";
 import { ReactElement, useState } from "react";
 import PasswordChangeForm from "./password-change-form";
 import PasswordVerifyForm from "./password-verify-form";
@@ -50,24 +51,52 @@ export default function PasswordDialog({ className, icon, label, trigger }: Prop
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger render={trigger ?? defaultTrigger} />
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>비밀번호 변경</DialogTitle>
-          <DialogDescription>
-            {step === "verify"
-              ? "비밀번호 변경을 위해 현재 비밀번호를 입력해주세요."
-              : "새로운 비밀번호를 입력해주세요."}
-          </DialogDescription>
+      <DialogContent className="border-brand/20 shadow-brand/10 dark:border-brand/10 overflow-hidden rounded-2xl p-0 shadow-xl sm:max-w-md">
+        <DialogHeader className="bg-brand/5 border-brand/10 border-b px-5 pt-5 pb-4">
+          <div className="flex items-center gap-3">
+            <span className="bg-brand/10 text-brand ring-brand/20 flex size-10 shrink-0 items-center justify-center rounded-xl ring-1">
+              <KeyRound className="size-5" />
+            </span>
+            <div className="min-w-0">
+              <DialogTitle className="text-lg font-bold">비밀번호 변경</DialogTitle>
+              <DialogDescription className="mt-1 leading-relaxed">
+                {step === "verify"
+                  ? "현재 비밀번호를 확인한 뒤 새 비밀번호를 설정합니다."
+                  : "다른 서비스에서 사용하지 않는 새 비밀번호를 입력해 주세요."}
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
-        {step === "verify" ? (
-          <PasswordVerifyForm onVerified={handleVerified} />
-        ) : (
-          <PasswordChangeForm
-            currentPassword={currentPassword}
-            onOpenChange={() => handleOpenChange(false)}
-          />
-        )}
+        <div className="flex flex-col gap-5 px-5 pb-5">
+          <div className="grid grid-cols-2 gap-2 pt-1">
+            <StepBadge active={step === "verify"} label="본인 확인" />
+            <StepBadge active={step === "change"} label="새 비밀번호" />
+          </div>
+          {step === "verify" ? (
+            <PasswordVerifyForm onVerified={handleVerified} />
+          ) : (
+            <PasswordChangeForm
+              currentPassword={currentPassword}
+              onOpenChange={() => handleOpenChange(false)}
+            />
+          )}
+        </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function StepBadge({ active, label }: { active: boolean; label: string }) {
+  return (
+    <span
+      className={cn(
+        "flex h-8 items-center justify-center rounded-lg border text-xs font-bold",
+        active
+          ? "border-brand/30 bg-brand/10 text-brand"
+          : "border-border bg-muted/40 text-muted-foreground",
+      )}
+    >
+      {label}
+    </span>
   );
 }

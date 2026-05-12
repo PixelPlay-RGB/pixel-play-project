@@ -59,8 +59,8 @@ export default function PasswordChangeForm({ currentPassword, onOpenChange }: Pr
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3">
-      <div className="flex flex-col gap-1">
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+      <div className="flex flex-col gap-1.5">
         <AuthInputGroup
           {...register("newPassword")}
           type="password"
@@ -71,7 +71,7 @@ export default function PasswordChangeForm({ currentPassword, onOpenChange }: Pr
         />
         <FieldError errors={[errors.newPassword]} />
       </div>
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1.5">
         <AuthInputGroup
           {...register("newPasswordConfirm")}
           type="password"
@@ -82,7 +82,11 @@ export default function PasswordChangeForm({ currentPassword, onOpenChange }: Pr
         />
         <FieldError errors={[errors.newPasswordConfirm]} />
       </div>
-      <Button type="submit" disabled={isSubmitting} className="w-full py-5 font-bold tracking-wide">
+      <Button
+        type="submit"
+        disabled={isSubmitting}
+        className="bg-brand shadow-brand/20 hover:bg-brand/90 h-11 w-full rounded-xl font-bold text-white shadow-sm"
+      >
         {isSubmitting ? <Spinner /> : "변경하기"}
       </Button>
     </form>

@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { useAuthStore } from "@/stores/auth";
 import { useQueryClient } from "@tanstack/react-query";
+import { LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Dispatch, SetStateAction } from "react";
 import { toast } from "sonner";
@@ -77,18 +78,30 @@ export default function CompleteProfileAbandonAlert({
           </Button>
         }
       />
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>가입 취소</AlertDialogTitle>
-          <AlertDialogDescription>정말로 회원가입을 취소하시겠습니까?</AlertDialogDescription>
+      <AlertDialogContent className="border-destructive/20 shadow-destructive/10 overflow-hidden rounded-2xl p-0 shadow-xl sm:max-w-md">
+        <AlertDialogHeader className="bg-destructive/5 border-destructive/10 border-b px-5 pt-5 pb-4 text-left">
+          <div className="flex items-center gap-3">
+            <span className="bg-destructive/10 text-destructive ring-destructive/20 flex size-10 shrink-0 items-center justify-center rounded-xl ring-1">
+              <LogOut className="size-5" />
+            </span>
+            <div className="min-w-0">
+              <AlertDialogTitle className="text-lg font-bold">가입 취소</AlertDialogTitle>
+              <AlertDialogDescription className="mt-1 leading-relaxed text-pretty">
+                입력 중인 프로필과 생성된 인증 계정을 삭제하고 로그인 페이지로 돌아갑니다.
+              </AlertDialogDescription>
+            </div>
+          </div>
         </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel className={"w-20"} disabled={isCancelling}>
+        <AlertDialogFooter className="m-0 flex-row justify-end gap-2 border-0 bg-transparent px-5 pt-4 pb-5">
+          <AlertDialogCancel
+            className="border-border bg-background text-foreground hover:bg-muted h-10 min-w-24 rounded-xl px-4 font-semibold"
+            disabled={isCancelling}
+          >
             돌아가기
           </AlertDialogCancel>
           <AlertDialogAction
-            className={"w-20"}
-            variant={"destructive"}
+            className="shadow-destructive/10 h-10 min-w-24 rounded-xl px-4 font-bold shadow-sm"
+            variant="destructive"
             disabled={isCancelling}
             onClick={handleCancel}
           >
