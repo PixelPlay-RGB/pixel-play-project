@@ -10,7 +10,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { KeyRound, LucideIcon } from "lucide-react";
+import { Check, KeyRound, LucideIcon } from "lucide-react";
 import { ReactElement, useState } from "react";
 import PasswordChangeForm from "./password-change-form";
 import PasswordVerifyForm from "./password-verify-form";
@@ -68,8 +68,9 @@ export default function PasswordDialog({ className, icon, label, trigger }: Prop
           </div>
         </DialogHeader>
         <div className="flex flex-col gap-5 px-5 pb-5">
-          <div className="grid grid-cols-2 gap-2 pt-1">
-            <StepBadge active={step === "verify"} label="본인 확인" />
+          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 pt-1">
+            <StepBadge active={step === "verify"} completed={step === "change"} label="본인 확인" />
+            <span className="bg-border h-px w-4" aria-hidden />
             <StepBadge active={step === "change"} label="새 비밀번호" />
           </div>
           {step === "verify" ? (
@@ -86,17 +87,30 @@ export default function PasswordDialog({ className, icon, label, trigger }: Prop
   );
 }
 
-function StepBadge({ active, label }: { active: boolean; label: string }) {
+function StepBadge({
+  active,
+  completed = false,
+  label,
+}: {
+  active: boolean;
+  completed?: boolean;
+  label: string;
+}) {
   return (
     <span
       className={cn(
-        "flex h-8 items-center justify-center rounded-lg border text-xs font-bold",
-        active
+        "flex h-8 items-center justify-center gap-1.5 rounded-lg border text-xs font-bold",
+        active || completed
           ? "border-brand/30 bg-brand/10 text-brand"
           : "border-border bg-muted/40 text-muted-foreground",
       )}
     >
       {label}
+      {completed && (
+        <span className="bg-brand text-brand-foreground flex size-4 items-center justify-center rounded-full">
+          <Check className="size-3" />
+        </span>
+      )}
     </span>
   );
 }
