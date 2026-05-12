@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
@@ -34,6 +35,7 @@ export default function ChatRoomSortMenu() {
 
   useEffect(() => {
     if (!sortOptions.includes(sortOption)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSortOption(DEFAULT_CHAT_ROOM_SORT_OPTION);
     }
   }, [sortOption, sortOptions]);
@@ -60,18 +62,20 @@ export default function ChatRoomSortMenu() {
         )}
       />
       <DropdownMenuContent align="end" sideOffset={6} className="w-40">
-        <DropdownMenuLabel>정렬 기준</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuRadioGroup
-          value={selectedSortOption}
-          onValueChange={(value) => setSortOption(value as ChatRoomSortOption)}
-        >
-          {sortOptions.map((option) => (
-            <DropdownMenuRadioItem key={option} value={option} closeOnClick className="py-2">
-              {CHAT_ROOM_SORT_LABELS[option]}
-            </DropdownMenuRadioItem>
-          ))}
-        </DropdownMenuRadioGroup>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>정렬 기준</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuRadioGroup
+            value={selectedSortOption}
+            onValueChange={(value) => setSortOption(value as ChatRoomSortOption)}
+          >
+            {sortOptions.map((option) => (
+              <DropdownMenuRadioItem key={option} value={option} closeOnClick className="py-2">
+                {CHAT_ROOM_SORT_LABELS[option]}
+              </DropdownMenuRadioItem>
+            ))}
+          </DropdownMenuRadioGroup>
+        </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   );
