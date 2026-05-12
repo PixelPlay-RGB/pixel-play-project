@@ -4,6 +4,7 @@ import ChatRoomCard from "@/components/chat/chat-room-card";
 import ChatRoomEmptyState from "@/components/chat/chat-room-empty-state";
 import ChatRoomListHeader from "@/components/chat/chat-room-list-header";
 import ChatRoomListSkeleton from "@/components/chat/chat-room-list-skeleton";
+import { useChatRoomCounts } from "@/hooks/use-chat-room-counts";
 import { useChatRooms } from "@/hooks/use-chat-rooms";
 import { useUser } from "@/hooks/use-profile";
 import { useChatRoomStore } from "@/stores/chat-room";
@@ -18,6 +19,7 @@ export default function ChatRoomList() {
     isLoading,
     isPlaceholderData,
   } = useChatRooms(tabType);
+  const { data: counts } = useChatRoomCounts();
 
   const isInitialLoading = !isUserFetched || (isLoading && rooms.length === 0);
   const isEmpty = isUserFetched && !isFetching && !isPlaceholderData && rooms.length === 0;
@@ -32,7 +34,7 @@ export default function ChatRoomList() {
 
   return (
     <div className="flex flex-col gap-5">
-      <ChatRoomListHeader roomCount={rooms.length} tabType={tabType} />
+      <ChatRoomListHeader roomCount={rooms.length} counts={counts} />
 
       {isInitialLoading ? (
         <ChatRoomListSkeleton />

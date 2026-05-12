@@ -10,13 +10,7 @@ export type RoomMember = GenericTables<"chat_room_member">;
  */
 export interface RoomMemberQuery extends RoomMember {
   user: {
-    nickname: string | null;
+    nickname: string;
     photo_url: string | null;
-  } | null;
+  };
 }
-
-/** user_id → 채팅 UI용 표시 정보 (메시지 목록 등에서 O(1) 조회) */
-export type MemberDisplayByUserId = Record<
-  string,
-  { nickname: string; photoUrl: string | null }
->;

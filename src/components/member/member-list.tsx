@@ -4,10 +4,13 @@ import { useRoomMembers } from "@/hooks/use-room-members";
 
 interface Props {
   roomId: string;
+  currentUserId: string;
+  ownerId?: string;
 }
 
-export function MemberList({ roomId }: Props) {
+export function MemberList({ roomId, currentUserId, ownerId }: Props) {
   const { data: members = [] } = useRoomMembers(roomId);
+  const canManageMembers = !!currentUserId && currentUserId === ownerId;
 
   return (
     <section className="bg-background flex max-h-[38dvh] min-h-0 shrink-0 flex-col overflow-hidden border-white/10 md:h-full md:max-h-none md:w-[min(100%,260px)] md:shrink-0 md:border-r">
@@ -21,7 +24,11 @@ export function MemberList({ roomId }: Props) {
         <ul className="py-1" role="list">
           {members.map((member) => (
             <li key={`${member.chat_room_id}-${member.user_id}`}>
-              <MemberItem member={member} />
+              <MemberItem
+                roomId={roomId}
+                member={member}
+                canManage={canManageMembers && member.user_id !== currentUserId}
+              />
             </li>
           ))}
         </ul>
