@@ -6,7 +6,7 @@ import { ChatRoomJoinDialog } from "@/components/chat/chat-room-join-dialog";
 import { Spinner } from "@/components/ui/spinner";
 import { useChatRoomCardJoin } from "@/hooks/use-chat-room-card-join";
 import { cn } from "@/lib/utils";
-import type { ChatRoomByTab, ChatRoomTab } from "@/types/chat-room";
+import type { ChatRoomCardData, ChatRoomTab } from "@/types/chat-room";
 import {
   formatCapacity,
   formatRoomDate,
@@ -15,7 +15,7 @@ import {
 } from "@/utils/chat-room";
 
 interface Props {
-  chatRoom: ChatRoomByTab;
+  chatRoom: ChatRoomCardData;
   tabType: ChatRoomTab;
   currentUserId?: string;
   unreadMessageCount?: number;
