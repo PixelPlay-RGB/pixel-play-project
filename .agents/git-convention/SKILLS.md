@@ -18,3 +18,5 @@
 2. Branch name
 
 - ex) git switch -c feat/auth/#이슈 번호
+- 도메인 하위 기능은 `feat/도메인/기능/#이슈 번호` 형식으로 작성한다.
+  - ex) git switch -c feat/chat-room/sort/#47
