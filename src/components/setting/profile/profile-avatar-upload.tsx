@@ -5,6 +5,7 @@ import { Camera, Trash2, Upload } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { getAvatarFallbackText } from "@/utils/avatar";
 
 interface ProfileAvatarUploadProps {
   photoUrl: string | null;
@@ -67,7 +68,7 @@ export default function ProfileAvatarUpload({
         <Avatar className="ring-brand size-24 cursor-pointer ring-2 transition-all hover:ring-[3px] sm:size-28">
           <AvatarImage src={photoUrl ?? undefined} alt="profile" className="object-cover" />
           <AvatarFallback className="text-muted-foreground bg-muted text-3xl font-semibold">
-            {(nickname || "P").slice(0, 1).toUpperCase()}
+            {getAvatarFallbackText(nickname, 1)}
           </AvatarFallback>
         </Avatar>
 

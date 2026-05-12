@@ -2,16 +2,14 @@
 
 import { MessageItem } from "@/components/message/message-item";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import type { MemberDisplayByUserId } from "@/types/chat-room-member";
-import type { Message } from "@/types/message";
+import type { MessageQuery } from "@/types/message";
 import { useCallback, useLayoutEffect, useRef } from "react";
 
 const TOP_PREFETCH_PX = 50;
 
 interface Props {
-  messages: Message[];
+  messages: MessageQuery[];
   currentUserId: string;
-  memberDisplayByUserId: MemberDisplayByUserId;
   hasMorePrevious: boolean;
   isLoadingPrevious: boolean;
   onReachTop: () => boolean;
@@ -20,7 +18,6 @@ interface Props {
 export function MessageList({
   messages,
   currentUserId,
-  memberDisplayByUserId,
   hasMorePrevious,
   isLoadingPrevious,
   onReachTop,
@@ -82,7 +79,6 @@ export function MessageList({
               key={message.id}
               message={message}
               isOwn={message.user_id === currentUserId}
-              memberDisplayByUserId={memberDisplayByUserId}
             />
           ))}
         </div>
