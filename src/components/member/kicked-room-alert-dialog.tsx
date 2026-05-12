@@ -28,7 +28,10 @@ export function KickedRoomAlertDialog({ open }: Props) {
 
   return (
     <AlertDialog open={open}>
-      <AlertDialogContent className="border-destructive/20 shadow-destructive/10 overflow-hidden rounded-2xl p-0 shadow-xl sm:max-w-md">
+      <AlertDialogContent
+        showCloseButton={false}
+        className="border-destructive/20 shadow-destructive/10 overflow-hidden rounded-2xl p-0 shadow-xl sm:max-w-md"
+      >
         <AlertDialogHeader className="bg-destructive/5 border-destructive/10 border-b px-5 pt-5 pb-4 text-left">
           <AlertDialogMedia className="bg-destructive/10 text-destructive ring-destructive/20 mb-0 rounded-xl ring-1">
             <UserX />
