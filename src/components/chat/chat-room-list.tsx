@@ -34,7 +34,7 @@ export default function ChatRoomList() {
 
   return (
     <div className="flex flex-col gap-5">
-      <ChatRoomListHeader totalCount={totalCount} counts={counts} />
+      <ChatRoomListHeader roomCount={totalCount} counts={counts} />
 
       {isInitialLoading ? (
         <ChatRoomListSkeleton />

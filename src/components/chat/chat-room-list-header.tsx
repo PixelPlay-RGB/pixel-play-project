@@ -1,14 +1,14 @@
 import CreateChatRoomDialog from "@/components/chat/create-chat-room-dialog";
 import ChatRoomTabs from "@/components/chat/chat-room-tabs";
-import type { ChatRoomCounts } from "@/types/chat-room";
 import { cn } from "@/lib/utils";
+import type { ChatRoomCounts } from "@/types/chat-room";
 
 interface Props {
-  totalCount: number;
+  roomCount: number;
   counts?: ChatRoomCounts;
 }
 
-export default function ChatRoomListHeader({ totalCount, counts }: Props) {
+export default function ChatRoomListHeader({ roomCount, counts }: Props) {
   return (
     <div
       className={cn(
@@ -21,7 +21,7 @@ export default function ChatRoomListHeader({ totalCount, counts }: Props) {
         className={cn("flex w-full items-center justify-between gap-3", "lg:w-auto lg:justify-end")}
       >
         <p className={cn("text-muted-foreground shrink-0 pl-1 text-xs", "lg:pl-0")}>
-          채팅방 <span className="text-brand font-bold">{totalCount}</span>개
+          채팅방 <span className="text-brand font-bold">{roomCount}</span>개
         </p>
         <CreateChatRoomDialog />
       </div>
