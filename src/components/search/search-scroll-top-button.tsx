@@ -39,10 +39,10 @@ export default function SearchScrollTopButton() {
       aria-label="검색 결과 상단으로 이동"
       onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
       className={cn(
-        "fixed right-4 bottom-6 z-40 rounded-full",
+        "fixed right-16 bottom-20 z-40 rounded-full",
         "border-brand/30 bg-background/90 text-brand shadow-lg shadow-black/10 backdrop-blur",
         "hover:border-brand/50 hover:bg-brand/10 hover:text-brand",
-        "sm:right-6 sm:bottom-8",
+        "sm:right-18 sm:bottom-22",
       )}
     >
       <ArrowUp className="h-4 w-4" />
