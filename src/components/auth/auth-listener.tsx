@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/constants/query-keys";
+import type { LoginProvider } from "@/types/auth";
 
 /**
  * 앱 루트에서 1회 마운트되어 Supabase Auth 상태를 Zustand store(AuthUser)에 동기화.
@@ -71,11 +72,32 @@ export default function AuthListener() {
         return;
       }
 
-      setIsCanChangePassword(data.linked_providers.includes("email"));
+      const linkedProviders = data.linked_providers;
+      const hasEmailIdentity = user.identities?.some((identity) => identity.provider === "email");
+
+      if (hasEmailIdentity && !linkedProviders.includes("email")) {
+        const nextProviders: LoginProvider[] = ["email", ...linkedProviders];
+        const { error: updateError } = await supabase
+          .from("user")
+          .update({ linked_providers: nextProviders })
+          .eq("id", user.id);
+
+        if (updateError) {
+          toast.error("OAuth 정보 동기화 실패");
+          setIsCanChangePassword(false);
+          return;
+        }
+
+        await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth.all });
+        setIsCanChangePassword(true);
+        return;
+      }
+
+      setIsCanChangePassword(linkedProviders.includes("email"));
     };
 
     getProviders();
-  }, [user, setIsCanChangePassword]);
+  }, [user, setIsCanChangePassword, queryClient]);
 
   return null;
 }
