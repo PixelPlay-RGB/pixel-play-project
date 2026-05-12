@@ -3,7 +3,6 @@
 // 채팅방 검색 결과를 조회하고 제목/방장 섹션으로 나눠 표시합니다.
 import ChatRoomListSkeleton from "@/components/chat/chat-room-list-skeleton";
 import ChatSearchSection from "@/components/search/chat-search-section";
-import SearchScrollTopButton from "@/components/search/search-scroll-top-button";
 import { useChatRoomSearch } from "@/hooks/use-chat-room-search";
 import type { ChatSearchResult } from "@/types/search";
 import { Search } from "lucide-react";
@@ -37,34 +36,31 @@ export default function ChatSearchResults({ query }: Props) {
   const ownerResults = flattenPages(ownerSearch.data?.pages);
 
   return (
-    <>
-      <div className="flex flex-col gap-8 md:gap-10">
-        {titleResults.length > 0 && (
-          <ChatSearchSection
-            title="제목"
-            description="채팅방 제목 검색 결과입니다."
-            results={titleResults}
-            hasMore={titleSearch.hasNextPage}
-            isFetchingMore={titleSearch.isFetchingNextPage}
-            onLoadMore={() => titleSearch.fetchNextPage()}
-          />
-        )}
-        {ownerResults.length > 0 && (
-          <ChatSearchSection
-            title="닉네임"
-            description="방을 생성한 사용자의 닉네임 검색 결과입니다."
-            results={ownerResults}
-            hasMore={ownerSearch.hasNextPage}
-            isFetchingMore={ownerSearch.isFetchingNextPage}
-            onLoadMore={() => ownerSearch.fetchNextPage()}
-          />
-        )}
-        {titleResults.length === 0 && ownerResults.length === 0 && (
-          <EmptySearchResult message="검색 결과가 없습니다." />
-        )}
-      </div>
-      <SearchScrollTopButton />
-    </>
+    <div className="flex flex-col gap-8 md:gap-10">
+      {titleResults.length > 0 && (
+        <ChatSearchSection
+          title="제목"
+          description="채팅방 제목 검색 결과입니다."
+          results={titleResults}
+          hasMore={titleSearch.hasNextPage}
+          isFetchingMore={titleSearch.isFetchingNextPage}
+          onLoadMore={() => titleSearch.fetchNextPage()}
+        />
+      )}
+      {ownerResults.length > 0 && (
+        <ChatSearchSection
+          title="닉네임"
+          description="방을 생성한 사용자의 닉네임 검색 결과입니다."
+          results={ownerResults}
+          hasMore={ownerSearch.hasNextPage}
+          isFetchingMore={ownerSearch.isFetchingNextPage}
+          onLoadMore={() => ownerSearch.fetchNextPage()}
+        />
+      )}
+      {titleResults.length === 0 && ownerResults.length === 0 && (
+        <EmptySearchResult message="검색 결과가 없습니다." />
+      )}
+    </div>
   );
 }
 
