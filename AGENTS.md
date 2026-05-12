@@ -16,6 +16,7 @@
 - 아키텍처/SRP 컨벤션: [.agents/code-convention/SRP_CONVENTION.md](./.agents/code-convention/SRP_CONVENTION.md)
 - 디자인/CSS/cn 규칙: [.agents/design-convention/SKILLS.md](./.agents/design-convention/SKILLS.md)
 - 커밋/브랜치 컨벤션: [.agents/git-convention/SKILLS.md](./.agents/git-convention/SKILLS.md)
+- Supabase/DB 컨벤션: [.agents/supabase-convention/SKILLS.md](./.agents/supabase-convention/SKILLS.md)
 
 ---
 

@@ -206,7 +206,7 @@ export type Database = {
         }[]
       }
       get_rooms_by_tab: {
-        Args: { p_tab_type: string; p_user_id: string }
+        Args: { p_sort_option?: string; p_tab_type: string; p_user_id: string }
         Returns: {
           created_at: string
           current_member: number
@@ -218,6 +218,21 @@ export type Database = {
           title: string
         }[]
       }
+      get_rooms_by_tab_count: {
+        Args: { p_tab_type: string; p_user_id: string }
+        Returns: {
+          created_at: string
+          current_member: number
+          description: string
+          id: string
+          max_capacity: number
+          owner_id: string
+          owner_nickname: string
+          title: string
+          unread_count: number
+        }[]
+      }
+      join_chat_room: { Args: { p_chat_room_id: string }; Returns: string }
       kick_chat_room_member: {
         Args: { p_room_id: string; p_target_user_id: string }
         Returns: undefined
