@@ -147,6 +147,10 @@ export const APP_MESSAGE = {
         title: "메시지 전송 불가",
         description: "채팅방 참여 상태를 확인해주세요.",
       },
+      isKicked: {
+        title: "강퇴당한 방입니다.",
+        description: "이 방에서는 메시지를 보낼 수 없습니다.",
+      },
     },
     chatRoomList: {
       loadFailed: {

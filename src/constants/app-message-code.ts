@@ -50,6 +50,7 @@ export const APP_MESSAGE_CODE = {
       missingRoomId: "error.chatRoom.missingRoomId",
       notFoundOrLoadFailed: "error.chatRoom.notFoundOrLoadFailed",
       inputLocked: "error.chatRoom.inputLocked",
+      isKicked: "error.chatRoom.isKicked",
     },
     chatRoomList: {
       loadFailed: "error.chatRoomList.loadFailed",
