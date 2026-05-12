@@ -72,7 +72,5 @@ export const joinChatRoomAction = async (chatRoomId: string) => {
     return { error: "정원이 가득 찬 채팅방입니다." };
   }
 
-  // 클라이언트의 router.refresh() 호출 시 서버 컴포넌트가 최신 멤버십을 다시 조회하도록 캐시 무효화
-  revalidatePath(`/chat/${chatRoomId}`);
   return { error: null };
 };
