@@ -6,11 +6,11 @@ import { useInfiniteQuery, useQueryClient, type InfiniteData } from "@tanstack/r
 
 import { QUERY_KEYS } from "@/constants/query-keys";
 import { createClient } from "@/lib/supabase/client";
-import type { Message } from "@/types/message";
+import type { MessageQuery } from "@/types/message";
 import { MESSAGE_PAGE_SIZE } from "@/constants/message";
 
 interface MessagesPage {
-  items: Message[];
+  items: MessageQuery[];
   nextCursor?: string;
 }
 
@@ -26,7 +26,7 @@ export default function useMessages(chatRoomId: string) {
     queryFn: async ({ pageParam }): Promise<MessagesPage> => {
       let request = supabase
         .from("message")
-        .select("*")
+        .select("*, user:user_id!inner(nickname, photo_url)")
         .eq("chat_room_id", chatRoomId)
         .order("created_at", { ascending: false })
         .limit(MESSAGE_PAGE_SIZE);
@@ -39,7 +39,7 @@ export default function useMessages(chatRoomId: string) {
 
       if (error) throw error;
 
-      const items = (data ?? []) as Message[];
+      const items: MessageQuery[] = data ?? [];
       const nextCursor =
         items.length === MESSAGE_PAGE_SIZE ? items[items.length - 1]?.created_at : undefined;
 
@@ -67,12 +67,19 @@ export default function useMessages(chatRoomId: string) {
           table: "message",
           filter: `chat_room_id=eq.${chatRoomId}`,
         },
-        (payload) => {
+        async (payload) => {
           if (!payload.new || typeof payload.new !== "object") return;
 
-          const nextMessage = payload.new as Message;
-          const messageId = String(nextMessage.id ?? "");
+          const messageId = String(payload.new.id ?? "");
           if (!messageId) return;
+
+          const { data: nextMessage, error } = await supabase
+            .from("message")
+            .select("*, user:user_id!inner(nickname, photo_url)")
+            .eq("id", messageId)
+            .single();
+
+          if (error || !nextMessage) return;
 
           queryClient.setQueryData<InfiniteData<MessagesPage>>(
             QUERY_KEYS.chat.messages(chatRoomId),
