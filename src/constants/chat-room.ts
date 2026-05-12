@@ -20,7 +20,7 @@ export const CHAT_ROOM_EMPTY_MESSAGES: Record<ChatRoomTab, string> = {
 export const DEFAULT_CHAT_ROOM_SORT_OPTION: ChatRoomSortOption = "CREATED_AT_DESC";
 
 export const CHAT_ROOM_SORT_LABELS: Record<ChatRoomSortOption, string> = {
-  CREATED_AT_DESC: "개설일 최신순",
+  CREATED_AT_DESC: "생성일 최신순",
   LAST_MESSAGE_DESC: "최신 메시지순",
   CURRENT_MEMBER_DESC: "참여자 많은순",
 };

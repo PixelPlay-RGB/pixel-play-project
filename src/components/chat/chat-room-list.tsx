@@ -4,6 +4,10 @@ import ChatRoomCard from "@/components/chat/chat-room-card";
 import ChatRoomEmptyState from "@/components/chat/chat-room-empty-state";
 import ChatRoomListHeader from "@/components/chat/chat-room-list-header";
 import ChatRoomListSkeleton from "@/components/chat/chat-room-list-skeleton";
+import {
+  CHAT_ROOM_SORT_OPTIONS_BY_TAB,
+  DEFAULT_CHAT_ROOM_SORT_OPTION,
+} from "@/constants/chat-room";
 import { useChatRooms } from "@/hooks/use-chat-rooms";
 import { useUser } from "@/hooks/use-profile";
 import { useChatRoomCounts } from "@/hooks/use-chat-room-counts";
@@ -12,14 +16,18 @@ import { useChatRoomStore } from "@/stores/chat-room";
 
 export default function ChatRoomList() {
   const tabType = useChatRoomStore((state) => state.tabType);
+  const sortOption = useChatRoomStore((state) => state.sortOption);
   const { isFetched: isUserFetched } = useUser();
+  const selectedSortOption = CHAT_ROOM_SORT_OPTIONS_BY_TAB[tabType].includes(sortOption)
+    ? sortOption
+    : DEFAULT_CHAT_ROOM_SORT_OPTION;
   const {
     data: rooms = [],
     isError,
     isFetching,
     isLoading,
     isPlaceholderData,
-  } = useChatRooms(tabType);
+  } = useChatRooms(tabType, selectedSortOption);
   const { data: counts } = useChatRoomCounts();
 
   const isInitialLoading = !isUserFetched || (isLoading && rooms.length === 0);

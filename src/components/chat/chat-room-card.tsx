@@ -102,7 +102,7 @@ export default function ChatRoomCard({ chatRoom, unreadMessageCount = 0 }: Props
         <div className="flex items-center gap-1">
           <Clock className="text-muted-foreground/50 h-2.5 w-2.5" />
           <span className="text-muted-foreground/70 text-[11px] whitespace-nowrap">
-            개설 {formatRoomDate(chatRoom.created_at)}
+            생성일 {formatRoomDate(chatRoom.created_at)}
           </span>
         </div>
       </div>

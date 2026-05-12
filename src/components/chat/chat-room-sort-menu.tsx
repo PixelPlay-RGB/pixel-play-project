@@ -1,8 +1,6 @@
 // 채팅방 목록 정렬 기준 선택 UI
 "use client";
 
-import { useEffect, useState } from "react";
-
 import { ArrowUpDown } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -27,18 +25,12 @@ import type { ChatRoomSortOption } from "@/types/chat-room";
 
 export default function ChatRoomSortMenu() {
   const tabType = useChatRoomStore((state) => state.tabType);
-  const [sortOption, setSortOption] = useState<ChatRoomSortOption>(DEFAULT_CHAT_ROOM_SORT_OPTION);
+  const sortOption = useChatRoomStore((state) => state.sortOption);
+  const setSortOption = useChatRoomStore((state) => state.setSortOption);
   const sortOptions = CHAT_ROOM_SORT_OPTIONS_BY_TAB[tabType];
   const selectedSortOption = sortOptions.includes(sortOption)
     ? sortOption
     : DEFAULT_CHAT_ROOM_SORT_OPTION;
-
-  useEffect(() => {
-    if (!sortOptions.includes(sortOption)) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setSortOption(DEFAULT_CHAT_ROOM_SORT_OPTION);
-    }
-  }, [sortOption, sortOptions]);
 
   return (
     <DropdownMenu>
