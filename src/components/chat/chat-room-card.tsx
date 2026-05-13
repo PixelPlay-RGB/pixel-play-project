@@ -10,7 +10,6 @@ import {
   formatCapacity,
   formatRoomDate,
   getCapacityColorClass,
-  getCapacityPercent,
 } from "@/utils/chat-room";
 
 interface Props {
@@ -21,7 +20,10 @@ interface Props {
 export default function ChatRoomCard({ chatRoom, unreadMessageCount = 0 }: Props) {
   const router = useRouter();
 
-  const capacityPercent = getCapacityPercent(chatRoom.current_member, chatRoom.max_capacity);
+  const capacityPercent =
+    chatRoom.max_capacity <= 0
+      ? 0
+      : Math.min((chatRoom.current_member / chatRoom.max_capacity) * 100, 100);
   const isFull = capacityPercent >= 100;
   const hasUnreadMessages = unreadMessageCount > 0;
   const unreadLabel = unreadMessageCount > 99 ? "99+" : unreadMessageCount;

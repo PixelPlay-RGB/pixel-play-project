@@ -35,6 +35,7 @@ export const createChatRoomAction = async (formData: CreateChatRoomInput) => {
   });
 
   if (memberError) {
+    await supabase.from("chat_room").delete().eq("id", room.id);
     return { error: "채팅방 참여 정보 생성에 실패했습니다." };
   }
 
@@ -57,14 +58,6 @@ export const joinChatRoomAction = async (chatRoomId: string) => {
 
   if (rpcError) {
     return { error: "채팅방 입장에 실패했습니다." };
-  }
-
-  if (result === "banned") {
-    return { error: "입장이 제한된 채팅방입니다." };
-  }
-
-  if (result === "not_found") {
-    return { error: "채팅방 정보를 불러올 수 없습니다." };
   }
 
   if (result === "full") {

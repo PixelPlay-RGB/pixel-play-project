@@ -2,14 +2,6 @@
 export const formatCapacity = (memberCnt: number, maxCapacity: number) =>
   `${memberCnt}/${maxCapacity}`;
 
-export const getCapacityPercent = (memberCnt: number, maxCapacity: number) => {
-  if (maxCapacity <= 0) {
-    return 0;
-  }
-
-  return Math.min((memberCnt / maxCapacity) * 100, 100);
-};
-
 export const getCapacityColorClass = (capacityPercent: number) => {
   if (capacityPercent >= 100) return "bg-live";
   if (capacityPercent > 80) return "bg-warning";

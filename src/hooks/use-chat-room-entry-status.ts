@@ -15,9 +15,7 @@ export type EntryStatus =
   | "banned"
   | "error";
 
-export type DialogEntryStatus =
-  | Exclude<EntryStatus, "loading" | "active">
-  | "room_not_found";
+export type DialogEntryStatus = "new" | "full";
 
 interface MembershipRow {
   is_banned: boolean;
