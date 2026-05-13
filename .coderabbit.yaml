@@ -18,12 +18,15 @@ reviews:
     - path: "src/components/**/*.tsx"
       instructions: "UI 렌더링에 집중해야 합니다. 복잡한 폼 로직이나 상태 전환은 hooks로 위임했는지, shadcn 기반 ui 컴포넌트는 src/components/ui를 사용하는지 확인하세요."
     - path: "src/hooks/**/*.ts"
+      instructions: "TanStack Query 사용 시 쿼리 키에 필요한 상태가 모두 포함되었는지, enabled 조건과 queryFn 내부 null 가드가 일치하는지 확인하세요. 로직이 길어지면 커스텀 훅 또는 utils로 적절히 분리되었는지 검토하세요."
     - path: "src/hooks/**/*.tsx"
-      instructions: "TanStack Query 사용 시 use-query-xxx.ts 형태를 준수하는지 확인하세요. 로직이 3줄 이상 길어지면 커스텀 훅으로 적절히 분리되었는지 검토하세요."
+      instructions: "TanStack Query 사용 시 쿼리 키에 필요한 상태가 모두 포함되었는지, enabled 조건과 queryFn 내부 null 가드가 일치하는지 확인하세요. 로직이 길어지면 커스텀 훅 또는 utils로 적절히 분리되었는지 검토하세요."
     - path: "src/lib/**/*.ts"
       instructions: "외부 라이브러리(Supabase, Zod 등)의 설정 및 초기화 로직이 위치해야 합니다."
     - path: "src/utils/**/*.ts"
       instructions: "특정 도메인에 특화된 순수 함수 및 비즈니스 로직 유틸리티인지 확인하세요."
+    - path: "supabase/migrations/**/*.sql"
+      instructions: "Postgres 함수, RLS, 트리거, 인덱스 변경을 중점적으로 검토하세요. SECURITY DEFINER 함수의 search_path 고정, RLS 정책 누락, 불필요한 client-side filter로 대체 가능한 DB 필터링 누락, FK/인덱스/동시성 문제가 없는지 확인하세요."
 
   # 리뷰 제외 대상 (노이즈 방지)
   path_filters:
@@ -31,15 +34,18 @@ reviews:
     - "!package-lock.json"
     - "!.next/**"
     - "!public/**"
-    - "!supabase/migrations/**"
 
 # 프로젝트 내 커스텀 컨벤션 파일 학습
 knowledge_base:
   code_guidelines:
     enabled: true
     file_patterns:
+      - "AGENTS.md"
       - ".agents/code-convention/*.md"
+      - ".agents/design-convention/*.md"
       - ".agents/git-convention/*.md"
+      - ".agents/supabase-convention/*.md"
+      - ".agents/app-message-convention/*.md"
       - "README.md"
 
 chat:
