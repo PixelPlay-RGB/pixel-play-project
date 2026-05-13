@@ -1,7 +1,7 @@
 "use client";
+// 입장 상태에 따라 로딩·참가 모달·채팅 UI를 분기 렌더링하는 채팅방 컴포넌트
 
 import Link from "next/link";
-import { useQueryClient } from "@tanstack/react-query";
 
 import { ChatRoomMenu } from "@/components/chat/chat-room-menu";
 import { ChatRoomJoinDialog } from "@/components/chat/chat-room-join-dialog";
@@ -10,14 +10,8 @@ import { KickedRoomAlertDialog } from "@/components/member/kicked-room-alert-dia
 import { MessageInput } from "@/components/message/message-input";
 import { MessageList } from "@/components/message/message-list";
 import { Spinner } from "@/components/ui/spinner";
-import { QUERY_KEYS } from "@/constants/query-keys";
-import { useRoom } from "@/hooks/use-chat-room";
-import { useChatRoomMemberRealtime } from "@/hooks/use-chat-room-member-realtime";
-import { useChatRoomEntryStatus, type DialogEntryStatus } from "@/hooks/use-chat-room-entry-status";
-import useMessages from "@/hooks/use-messages";
-import { useUser } from "@/hooks/use-profile";
-import { useRoomMembers } from "@/hooks/use-room-members";
-import { useAuthStore } from "@/stores/auth";
+import type { DialogEntryStatus } from "@/hooks/use-chat-room-entry-status";
+import { useChatRoomView } from "@/hooks/use-chat-room-view";
 
 interface Props {
   roomId: string;
@@ -35,41 +29,24 @@ function ChatRoomError({ message }: { message: string }) {
 }
 
 export function ChatRoom({ roomId }: Props) {
-  const queryClient = useQueryClient();
-  const authUser = useAuthStore((s) => s.user);
-  const authLoading = useAuthStore((s) => s.loading);
-  const { data: profile, isPending: profilePending } = useUser();
-  const { status: entryStatus } = useChatRoomEntryStatus(roomId);
-  const roomQuery = useRoom(roomId);
+  const {
+    entryStatus,
+    isActive,
+    roomQuery,
+    messages,
+    members,
+    hasMorePrevious,
+    isLoadingPrevious,
+    isLoadingInitial,
+    currentUserId,
+    profilePending,
+    isKicked,
+    handleLoadPrevious,
+    handleJoinSuccess,
+  } = useChatRoomView(roomId);
 
-  const isActive = entryStatus === "active";
-
-  const { messages, hasMorePrevious, isLoadingPrevious, fetchPreviousPage, isLoadingInitial } =
-    useMessages(roomId, isActive);
-  const { data: members = [] } = useRoomMembers(roomId, isActive);
-
-  const currentUserId = profile?.id ?? "";
-  const { isKicked } = useChatRoomMemberRealtime({ roomId, currentUserId });
-
-  const handleLoadPrevious = (): boolean => {
-    if (isLoadingPrevious || !hasMorePrevious) return false;
-    void fetchPreviousPage();
-    return true;
-  };
-
-  const handleJoinSuccess = () => {
-    queryClient.setQueryData(QUERY_KEYS.chat.entryStatus(roomId, authUser?.id), {
-      is_banned: false,
-      last_joined_at: new Date().toISOString(),
-    });
-    void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.members(roomId) });
-    void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.room(roomId) });
-    void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.rooms() });
-    void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.counts() });
-  };
-
-  // auth 로딩 중, entry status 조회 중, 또는 비활성 멤버인데 방 정보 조회 중
-  if (authLoading || entryStatus === "loading" || (!isActive && roomQuery.isPending)) {
+  // 비활성 멤버의 경우 다이얼로그에 방 제목을 표시하기 위해 roomQuery 완료 대기
+  if (entryStatus === "loading" || (!isActive && roomQuery.isPending)) {
     return (
       <div className="flex h-full w-full items-center justify-center bg-zinc-950">
         <Spinner className="text-muted-foreground size-8" />
@@ -77,12 +54,6 @@ export function ChatRoom({ roomId }: Props) {
     );
   }
 
-  // auth 미인증 (page.tsx의 서버 redirect로 정상 흐름에선 도달 안 함)
-  if (entryStatus === "unauthenticated") {
-    return <ChatRoomError message="로그인이 필요합니다." />;
-  }
-
-  // 비활성 멤버 → dialog 표시
   if (!isActive) {
     const roomNotFound = roomQuery.isFetched && (roomQuery.error != null || roomQuery.data == null);
     const dialogStatus: DialogEntryStatus = roomNotFound
@@ -99,7 +70,6 @@ export function ChatRoom({ roomId }: Props) {
     );
   }
 
-  // 활성 멤버인데 방이 없는 경우
   const roomMissing = roomQuery.isFetched && (roomQuery.error != null || roomQuery.data == null);
   if (roomMissing) {
     return <ChatRoomError message="존재하지 않는 채팅방이거나 불러올 수 없습니다." />;

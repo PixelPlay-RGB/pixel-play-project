@@ -45,11 +45,6 @@ export const createChatRoomAction = async (formData: CreateChatRoomInput) => {
 // 현재 로그인 유저를 지정한 채팅방의 멤버로 등록
 export const joinChatRoomAction = async (chatRoomId: string) => {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { error: "인증 정보가 없습니다." };
-  }
 
   // join_chat_room RPC: auth.uid() 내부 사용 → 밴/재입장/정원 확인 → insert/update 원자 처리
   const { data: result, error: rpcError } = await supabase.rpc("join_chat_room", {

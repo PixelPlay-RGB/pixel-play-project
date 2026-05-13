@@ -5,25 +5,23 @@ import ChatRoomEmptyState from "@/components/chat/chat-room-empty-state";
 import ChatRoomListHeader from "@/components/chat/chat-room-list-header";
 import ChatRoomListSkeleton from "@/components/chat/chat-room-list-skeleton";
 import { useChatRooms } from "@/hooks/use-chat-rooms";
-import { useUser } from "@/hooks/use-profile";
 import { useChatRoomCounts } from "@/hooks/use-chat-room-counts";
 import { MOCK_UNREAD_MESSAGE_COUNTS } from "@/mock/chat-room";
 import { useChatRoomStore } from "@/stores/chat-room";
 
 export default function ChatRoomList() {
   const tabType = useChatRoomStore((state) => state.tabType);
-  const { data: currentUser, isFetched: isUserFetched } = useUser();
   const {
     data: rooms = [],
     isError,
     isFetching,
-    isLoading,
+    isPending,
     isPlaceholderData,
   } = useChatRooms(tabType);
   const { data: counts } = useChatRoomCounts();
 
-  const isInitialLoading = !isUserFetched || (isLoading && rooms.length === 0);
-  const isEmpty = isUserFetched && !isFetching && !isPlaceholderData && rooms.length === 0;
+  const isInitialLoading = isPending && rooms.length === 0;
+  const isEmpty = !isFetching && !isPlaceholderData && rooms.length === 0;
 
   if (isError) {
     return (
@@ -47,8 +45,6 @@ export default function ChatRoomList() {
             <ChatRoomCard
               key={room.id}
               chatRoom={room}
-              tabType={tabType}
-              currentUserId={currentUser?.id}
               unreadMessageCount={
                 MOCK_UNREAD_MESSAGE_COUNTS[index % MOCK_UNREAD_MESSAGE_COUNTS.length]
               }

@@ -9,7 +9,6 @@ import { useAuthStore } from "@/stores/auth";
 
 export type EntryStatus =
   | "loading"
-  | "unauthenticated"
   | "active"
   | "new"
   | "left"
@@ -17,7 +16,7 @@ export type EntryStatus =
   | "error";
 
 export type DialogEntryStatus =
-  | Exclude<EntryStatus, "loading" | "unauthenticated" | "active">
+  | Exclude<EntryStatus, "loading" | "active">
   | "room_not_found";
 
 interface MembershipRow {
@@ -47,8 +46,6 @@ export function useChatRoomEntryStatus(roomId: string, options?: { enabled?: boo
   });
 
   const status: EntryStatus = (() => {
-    if (authLoading) return "loading";
-    if (!authUser) return "unauthenticated";
     if (query.isPending) return "loading";
     if (query.isError) return "error";
     const membership = query.data;

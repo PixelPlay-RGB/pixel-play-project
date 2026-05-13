@@ -50,14 +50,20 @@ export function ChatRoomJoinDialog({ roomId, roomTitle, status, onJoinSuccess, o
   };
 
   const handleJoin = async () => {
+    if (isJoining) return;
     setIsJoining(true);
-    const result = await joinChatRoomAction(roomId);
-    if (result.error) {
-      toast.error(result.error);
+    try {
+      const result = await joinChatRoomAction(roomId);
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+      onJoinSuccess();
+    } catch {
+      toast.error("채팅방 입장 중 오류가 발생했습니다.");
+    } finally {
       setIsJoining(false);
-      return;
     }
-    onJoinSuccess();
   };
 
   return (
