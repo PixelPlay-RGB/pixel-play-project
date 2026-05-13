@@ -1,0 +1,55 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+
+language: "ko-KR"
+enable_beta_features: false
+
+reviews:
+  profile: "assertive"
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  
+  # 폴더별 SRP(단일 책임 원칙) 컨벤션 적용
+  path_instructions:
+    - path: "src/actions/**/*.ts"
+      instructions: "Server Actions는 데이터 변경(Mutation), DB 접근, 보안 로직만 담당해야 합니다. 성공/실패 시 일관된 포맷을 반환하는지 확인하세요."
+    - path: "src/app/**/*.tsx"
+      instructions: "라우팅 entry point이자 Server Components로서 데이터 페칭에 집중해야 합니다. 복잡한 비즈니스 로직이 포함되어 있다면 hooks나 utils로 분리할 것을 권장하세요."
+    - path: "src/components/**/*.tsx"
+      instructions: "UI 렌더링에 집중해야 합니다. 복잡한 폼 로직이나 상태 전환은 hooks로 위임했는지, shadcn 기반 ui 컴포넌트는 src/components/ui를 사용하는지 확인하세요."
+    - path: "src/hooks/**/*.ts"
+    - path: "src/hooks/**/*.tsx"
+      instructions: "TanStack Query 사용 시 use-query-xxx.ts 형태를 준수하는지 확인하세요. 로직이 3줄 이상 길어지면 커스텀 훅으로 적절히 분리되었는지 검토하세요."
+    - path: "src/lib/**/*.ts"
+      instructions: "외부 라이브러리(Supabase, Zod 등)의 설정 및 초기화 로직이 위치해야 합니다."
+    - path: "src/utils/**/*.ts"
+      instructions: "특정 도메인에 특화된 순수 함수 및 비즈니스 로직 유틸리티인지 확인하세요."
+
+  # 리뷰 제외 대상 (노이즈 방지)
+  path_filters:
+    - "!node_modules/**"
+    - "!package-lock.json"
+    - "!.next/**"
+    - "!public/**"
+    - "!supabase/migrations/**"
+
+# 프로젝트 내 커스텀 컨벤션 파일 학습
+knowledge_base:
+  code_guidelines:
+    enabled: true
+    file_patterns:
+      - ".agents/code-convention/*.md"
+      - ".agents/git-convention/*.md"
+      - "README.md"
+
+chat:
+  auto_reply: true
+
+tools:
+  shellcheck:
+    enabled: true
+  ast-grep:
+    enabled: true
+
+issue_enrichment:
+  enabled: true
