@@ -36,7 +36,7 @@ export default function ChatSearchSection({
 
       <div className={cn("grid grid-cols-1 gap-3", "sm:grid-cols-2 xl:grid-cols-4")}>
         {results.map((room) => (
-          <ChatRoomCard key={`${room.section}-${room.id}`} chatRoom={room} />
+          <ChatRoomCard key={`${room.section}-${room.id}`} chatRoom={room} tabType="NOT_JOINED" />
         ))}
       </div>
 

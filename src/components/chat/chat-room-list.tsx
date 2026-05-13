@@ -12,7 +12,7 @@ import { useChatRoomStore } from "@/stores/chat-room";
 
 export default function ChatRoomList() {
   const tabType = useChatRoomStore((state) => state.tabType);
-  const { isFetched: isUserFetched } = useUser();
+  const { data: currentUser, isFetched: isUserFetched } = useUser();
   const {
     data: rooms = [],
     isError,
@@ -47,6 +47,8 @@ export default function ChatRoomList() {
             <ChatRoomCard
               key={room.id}
               chatRoom={room}
+              tabType={tabType}
+              currentUserId={currentUser?.id}
               unreadMessageCount={
                 MOCK_UNREAD_MESSAGE_COUNTS[index % MOCK_UNREAD_MESSAGE_COUNTS.length]
               }
