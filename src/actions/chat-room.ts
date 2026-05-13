@@ -42,6 +42,12 @@ export const createChatRoomAction = async (
 
   if (memberError) {
     console.error("createChatRoomAction member insert error", memberError);
+    const { error: rollbackError } = await supabase.from("chat_room").delete().eq("id", room.id);
+
+    if (rollbackError) {
+      console.error("createChatRoomAction rollback room delete error", rollbackError);
+    }
+
     return { success: false, code: APP_MESSAGE_CODE.error.chatRoom.createMemberFailed };
   }
 

@@ -62,6 +62,7 @@ export default function AuthListener() {
         .maybeSingle();
 
       if (error) {
+        console.error("AuthListener linked providers select error", error);
         toastAppError(APP_MESSAGE_CODE.error.auth.oauthInfoLoadFailed);
         return;
       }

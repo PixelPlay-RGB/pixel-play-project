@@ -57,6 +57,9 @@ export default function LoginForm({ loading, onLoadingChange: setIsLoading }: Lo
     } = await supabase.auth.getUser();
 
     if (authError || !authUser) {
+      if (authError) {
+        console.error("LoginForm getUser error", authError);
+      }
       toastAppError(APP_MESSAGE_CODE.error.auth.authInfoLoadFailed);
       setIsLoading(null);
       return;

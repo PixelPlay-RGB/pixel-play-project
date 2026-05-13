@@ -148,7 +148,7 @@ export const APP_MESSAGE = {
         description: "채팅방 참여 상태를 확인해주세요.",
       },
       isKicked: {
-        title: "강퇴당한 방입니다.",
+        title: "강퇴된 방",
         description: "이 방에서는 메시지를 보낼 수 없습니다.",
       },
     },

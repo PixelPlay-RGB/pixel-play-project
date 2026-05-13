@@ -124,7 +124,7 @@ export default function SignupForm() {
       toastAppSuccess(APP_MESSAGE_CODE.success.auth.emailVerified);
     } else {
       setOtpStatus("sent");
-      setOtpError(result.message ?? "");
+      setOtpError(result.message ?? FORM_MESSAGE.auth.otpInvalid);
     }
   };
 
@@ -155,10 +155,10 @@ export default function SignupForm() {
     } = await supabase.auth.getUser();
 
     if (authError || !authUser) {
-      toastAppError(
-        APP_MESSAGE_CODE.error.auth.authInfoLoadFailed,
-        "로그인 페이지에서 다시 로그인을 시도해주세요.",
-      );
+      if (authError) {
+        console.error("SignupForm getUser error", authError);
+      }
+      toastAppError(APP_MESSAGE_CODE.error.auth.authInfoLoadFailed);
       setUser(null);
       return;
     }

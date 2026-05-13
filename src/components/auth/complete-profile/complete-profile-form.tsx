@@ -86,6 +86,9 @@ export default function CompleteProfileForm() {
     } = await supabase.auth.getUser();
 
     if (authError || !authUser) {
+      if (authError) {
+        console.error("CompleteProfileForm getUser error", authError);
+      }
       toastAppError(APP_MESSAGE_CODE.error.auth.sessionNotFound);
       return;
     }

@@ -470,9 +470,17 @@ export async function updateProfileAction(formData: FormData): Promise<ActionRes
 
   // Auth & DB에 데이터 업데이트
   // displayName은 회원가입할때도 굳이 안 건들였음
-  await supabase.auth.updateUser({
+  const { error: authUpdateError } = await supabase.auth.updateUser({
     data: { avatar_url: photoUrl },
   });
+
+  if (authUpdateError) {
+    console.error("updateProfileAction updateUser error", authUpdateError);
+    return {
+      success: false,
+      code: APP_MESSAGE_CODE.error.profile.userUpdateFailed,
+    };
+  }
 
   const { error: updateError } = await supabase
     .from("user")

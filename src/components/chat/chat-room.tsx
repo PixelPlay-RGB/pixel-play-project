@@ -121,8 +121,8 @@ export function ChatRoom({ roomId }: Props) {
           disabledHint={
             getAppMessage(
               isKicked
-                ? APP_MESSAGE_CODE.error.chatRoom.inputLocked
-                : APP_MESSAGE_CODE.error.chatRoom.isKicked,
+                ? APP_MESSAGE_CODE.error.chatRoom.isKicked
+                : APP_MESSAGE_CODE.error.chatRoom.inputLocked,
             ).title
           }
         />

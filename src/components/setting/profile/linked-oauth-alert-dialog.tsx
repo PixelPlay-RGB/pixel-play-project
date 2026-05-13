@@ -85,7 +85,8 @@ export default function LinkedOAuthAlertDialog({
         await linkOAuthAction(provider);
         return;
       }
-    } catch {
+    } catch (error) {
+      console.error("LinkedOAuthAlertDialog toggle error", error);
       toastAppError(APP_MESSAGE_CODE.error.oauth.actionFailed);
     } finally {
       setIsLoading(false);
