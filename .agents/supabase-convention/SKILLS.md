@@ -19,6 +19,7 @@
 - **파일명**: `YYYYMMDDHHMMSS_작업_내용.sql` 형식으로 작성합니다.
 - **대상**: 테이블 추가, 컬럼 수정, 함수(RPC) 생성/수정, 트리거 변경 등 DB 스키마 또는 DB 로직 변화가 모두 포함됩니다.
 - **주의**: migration 파일은 실제 적용된 SQL과 동등해야 하며, 이후 `npm run types`로 타입을 갱신합니다.
+- **검증 단계**: PR 제출 전 로컬 스키마와 `supabase/migrations` SQL 파일이 동등한지 diff/검증 명령으로 확인하고, 문제가 없으면 `npm run types`를 실행합니다.
 
 ## 3. RPC 및 로직 위치
 

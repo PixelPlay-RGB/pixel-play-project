@@ -1,5 +1,8 @@
 drop function if exists public.get_rooms_by_tab(uuid, text);
 
+create index if not exists message_chat_room_id_created_at_idx
+on public.message using btree (chat_room_id, created_at desc);
+
 create or replace function public.get_rooms_by_tab(
   p_user_id uuid,
   p_tab_type text,

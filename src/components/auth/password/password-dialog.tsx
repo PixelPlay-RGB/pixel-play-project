@@ -68,10 +68,15 @@ export default function PasswordDialog({ className, icon, label, trigger }: Prop
           </div>
         </DialogHeader>
         <div className="flex flex-col gap-5 px-5 pb-5">
-          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 pt-1">
-            <StepBadge active={step === "verify"} completed={step === "change"} label="본인 확인" />
-            <span className="bg-border h-px w-4" aria-hidden />
-            <StepBadge active={step === "change"} label="새 비밀번호" />
+          <div className="grid grid-cols-3 items-center gap-2 pt-1">
+            <StepBadge
+              active={step === "verify"}
+              completed={step === "change"}
+              label="본인 확인"
+              className="w-full"
+            />
+            <span className="bg-border h-px w-4 justify-self-center" aria-hidden />
+            <StepBadge active={step === "change"} label="새 비밀번호" className="w-full" />
           </div>
           {step === "verify" ? (
             <PasswordVerifyForm onVerified={handleVerified} />
@@ -91,10 +96,12 @@ function StepBadge({
   active,
   completed = false,
   label,
+  className,
 }: {
   active: boolean;
   completed?: boolean;
   label: string;
+  className?: string;
 }) {
   return (
     <span
@@ -103,6 +110,7 @@ function StepBadge({
         active || completed
           ? "border-brand/30 bg-brand/10 text-brand"
           : "border-border bg-muted/40 text-muted-foreground",
+        className,
       )}
     >
       {label}

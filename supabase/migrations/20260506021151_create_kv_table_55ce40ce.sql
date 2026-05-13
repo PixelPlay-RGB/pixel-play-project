@@ -39,7 +39,7 @@ create table if not exists public."user" (
 
 create table if not exists public.chat_room (
   id uuid primary key default gen_random_uuid(),
-  owner_id uuid not null default gen_random_uuid(),
+  owner_id uuid not null,
   title text not null,
   description text,
   max_capacity smallint not null,
@@ -77,6 +77,7 @@ create table if not exists public.message (
 
 create index if not exists chat_room_member_user_id_idx on public.chat_room_member using btree (user_id);
 create index if not exists message_chat_room_id_idx on public.message using btree (chat_room_id);
+create index if not exists message_chat_room_id_created_at_idx on public.message using btree (chat_room_id, created_at desc);
 create index if not exists message_user_id_idx on public.message using btree (user_id);
 
 alter table public."user" enable row level security;
@@ -179,17 +180,22 @@ set search_path to 'public', 'storage'
 as $function$
 declare
   anon_key text := current_setting('app.settings.supabase_anon_key', true);
+  functions_url text := current_setting('app.settings.supabase_functions_url', true);
 begin
+  if functions_url is null or functions_url = '' then
+    return old;
+  end if;
+
   perform net.http_post(
-    url := 'https://ftvoynnfpfzmblgrntqj.supabase.co/functions/v1/delete-user-storage',
+    url := functions_url || '/delete-user-storage',
     body := json_build_object(
       'old_record',
       json_build_object('id', old.id)
     )::jsonb,
-    headers := json_build_object(
+    headers := jsonb_strip_nulls(json_build_object(
       'Content-Type', 'application/json',
       'Authorization', case when anon_key is null or anon_key = '' then null else 'Bearer ' || anon_key end
-    )::jsonb
+    )::jsonb)
   );
 
   return old;
@@ -216,11 +222,21 @@ language plpgsql
 security definer
 set search_path to 'net', 'extensions', 'public'
 as $function$
+declare
+  anon_key text := current_setting('app.settings.supabase_anon_key', true);
+  functions_url text := current_setting('app.settings.supabase_functions_url', true);
 begin
+  if functions_url is null or functions_url = '' then
+    return old;
+  end if;
+
   perform net.http_post(
-    url := 'https://ftvoynnfpfzmblgrntqj.supabase.co/functions/v1/delete-user-storage',
+    url := functions_url || '/delete-user-storage',
     body := json_build_object('old_record', json_build_object('id', old.id))::jsonb,
-    headers := '{"Content-Type": "application/json"}'::jsonb
+    headers := jsonb_strip_nulls(json_build_object(
+      'Content-Type', 'application/json',
+      'Authorization', case when anon_key is null or anon_key = '' then null else 'Bearer ' || anon_key end
+    )::jsonb)
   );
 
   return old;
@@ -533,6 +549,7 @@ declare
   v_max_capacity integer;
   v_active_count integer;
   v_member record;
+  v_has_member boolean := false;
 begin
   v_user_id := auth.uid();
 
@@ -544,16 +561,20 @@ begin
   from public.chat_room_member
   where chat_room_id = p_chat_room_id and user_id = v_user_id;
 
+  v_has_member := found;
+
   if found then
     if v_member.is_banned then
       return 'banned';
     end if;
 
-    update public.chat_room_member
-    set last_joined_at = now()
-    where chat_room_id = p_chat_room_id and user_id = v_user_id;
+    if v_member.last_joined_at is not null then
+      update public.chat_room_member
+      set last_joined_at = now()
+      where chat_room_id = p_chat_room_id and user_id = v_user_id;
 
-    return '';
+      return '';
+    end if;
   end if;
 
   select max_capacity into v_max_capacity
@@ -575,8 +596,14 @@ begin
     return 'full';
   end if;
 
-  insert into public.chat_room_member (chat_room_id, user_id, last_joined_at)
-  values (p_chat_room_id, v_user_id, now());
+  if v_has_member then
+    update public.chat_room_member
+    set last_joined_at = now()
+    where chat_room_id = p_chat_room_id and user_id = v_user_id;
+  else
+    insert into public.chat_room_member (chat_room_id, user_id, last_joined_at)
+    values (p_chat_room_id, v_user_id, now());
+  end if;
 
   return '';
 end;

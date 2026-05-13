@@ -72,7 +72,7 @@ export default function AuthListener() {
         return;
       }
 
-      const linkedProviders = data.linked_providers;
+      const linkedProviders = data.linked_providers ?? [];
       const hasEmailIdentity = user.identities?.some((identity) => identity.provider === "email");
 
       if (hasEmailIdentity && !linkedProviders.includes("email")) {

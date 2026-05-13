@@ -48,23 +48,28 @@ export function MemberActionAlertDialog({
   const handleConfirm = async () => {
     setIsPending(true);
 
-    const result = isKick
-      ? await kickChatRoomMemberAction({ roomId, targetUserId })
-      : await transferChatRoomOwnerAction({ roomId, targetUserId });
+    try {
+      const result = isKick
+        ? await kickChatRoomMemberAction({ roomId, targetUserId })
+        : await transferChatRoomOwnerAction({ roomId, targetUserId });
 
-    setIsPending(false);
+      if (!result.success) {
+        toast.error(result.message ?? "작업에 실패했습니다.");
+        return;
+      }
 
-    if (!result.success) {
-      toast.error(result.message ?? "작업에 실패했습니다.");
-      return;
+      toast.success(copy.success);
+      setOpen(false);
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.members(roomId) });
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.room(roomId) });
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.rooms() });
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.counts() });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "작업 중 오류가 발생했습니다.";
+      toast.error(message);
+    } finally {
+      setIsPending(false);
     }
-
-    toast.success(copy.success);
-    setOpen(false);
-    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.members(roomId) });
-    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.room(roomId) });
-    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.rooms() });
-    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.counts() });
   };
 
   return (
