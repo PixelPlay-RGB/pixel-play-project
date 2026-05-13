@@ -6,16 +6,7 @@ import { useState } from "react";
 
 import { MoreVertical } from "lucide-react";
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ChatRoomLeaveAlertDialog } from "@/components/chat/chat-room-leave-alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -104,33 +95,12 @@ export function ChatRoomMenu({ roomId, ownerId, currentUserId }: Props) {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <AlertDialog
+      <ChatRoomLeaveAlertDialog
         open={leaveOpen}
-        onOpenChange={(open) => {
-          if (!isPending) setLeaveOpen(open);
-        }}
-      >
-        <AlertDialogContent size="sm">
-          <AlertDialogHeader>
-            <AlertDialogTitle>채팅방 나가기</AlertDialogTitle>
-            <AlertDialogDescription>
-              이 채팅방에서 나가면 참여 목록에서 제거됩니다. 다시 들어오려면 해당 채팅방에 다시
-              참여해야 합니다.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isPending}>취소</AlertDialogCancel>
-            <AlertDialogAction
-              variant="destructive"
-              disabled={isPending}
-              type="button"
-              onClick={handleLeave}
-            >
-              {isPending ? "나가는 중…" : "나가기"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        onOpenChange={setLeaveOpen}
+        isPending={isPending}
+        onConfirmLeave={handleLeave}
+      />
     </>
   );
 }
