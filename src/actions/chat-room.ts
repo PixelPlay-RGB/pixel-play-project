@@ -67,5 +67,9 @@ export const joinChatRoomAction = async (chatRoomId: string) => {
     return { error: "정원이 가득 찬 채팅방입니다." };
   }
 
-  return { error: null };
+  if (result === "ok") {
+    return { error: null };
+  }
+
+  return { error: "채팅방 입장에 실패했습니다." };
 };

@@ -55,10 +55,12 @@ export function ChatRoom({ roomId }: Props) {
   }
 
   if (!isActive) {
-    const roomNotFound = roomQuery.isFetched && (roomQuery.error != null || roomQuery.data == null);
-    const dialogStatus: DialogEntryStatus = roomNotFound
-      ? "room_not_found"
-      : (entryStatus as DialogEntryStatus);
+    const roomNotFound = roomQuery.isFetched && roomQuery.error == null && roomQuery.data == null;
+    const dialogStatus: DialogEntryStatus = roomQuery.error
+      ? "error"
+      : roomNotFound
+        ? "room_not_found"
+        : (entryStatus as DialogEntryStatus);
 
     return (
       <ChatRoomJoinDialog
