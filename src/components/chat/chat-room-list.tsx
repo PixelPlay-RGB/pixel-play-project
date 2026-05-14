@@ -5,17 +5,33 @@ import ChatRoomEmptyState from "@/components/chat/chat-room-empty-state";
 import ChatRoomListHeader from "@/components/chat/chat-room-list-header";
 import ChatRoomListSkeleton from "@/components/chat/chat-room-list-skeleton";
 import { Spinner } from "@/components/ui/spinner";
+import { useChatRoomCounts } from "@/hooks/use-chat-room-counts";
+import {
+  CHAT_ROOM_SORT_OPTIONS_BY_TAB,
+  DEFAULT_CHAT_ROOM_SORT_OPTION,
+} from "@/constants/chat-room";
 import { useChatRooms } from "@/hooks/use-chat-rooms";
 import { useIntersectionObserver } from "@/hooks/use-intersection-observer";
 import { useUser } from "@/hooks/use-profile";
-import { useChatRoomCounts } from "@/hooks/use-chat-room-counts";
-import { MOCK_UNREAD_MESSAGE_COUNTS } from "@/mock/chat-room";
 import { useChatRoomStore } from "@/stores/chat-room";
 
 export default function ChatRoomList() {
   const tabType = useChatRoomStore((state) => state.tabType);
+  const sortOption = useChatRoomStore((state) => state.sortOption);
   const { isFetched: isUserFetched } = useUser();
-  const query = useChatRooms(tabType);
+
+  const selectedSortOption = CHAT_ROOM_SORT_OPTIONS_BY_TAB[tabType].includes(sortOption)
+    ? sortOption
+    : DEFAULT_CHAT_ROOM_SORT_OPTION;
+  const {
+    data: rooms = [],
+    isError,
+    isFetching,
+    isFetchingNextPage,
+    hasNextPage,
+    isLoading,
+    isPlaceholderData,
+  } = useChatRooms(tabType, selectedSortOption);
   const { data: counts } = useChatRoomCounts();
 
   const chatrooms = query.data?.pages.flatMap((page) => page) ?? [];
@@ -40,7 +56,8 @@ export default function ChatRoomList() {
 
   return (
     <div className="flex flex-col gap-5">
-      <ChatRoomListHeader roomCount={totalCount} counts={counts} />
+
+      <ChatRoomListHeader counts={counts} />
 
       {isInitialLoading ? (
         <ChatRoomListSkeleton />

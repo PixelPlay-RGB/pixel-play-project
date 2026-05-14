@@ -16,14 +16,9 @@ export const QUERY_KEYS = {
   },
   chat: {
     all: ["chat"] as const,
-    /**
-     * 탭별 채팅방 목록 키.
-     * - tabType이 달라지면 별도 캐시로 관리된다.
-     * - 전체 목록을 한 번에 패칭하고 클라이언트에서 무한스크롤로 보여주므로 page는 키에 포함하지 않는다.
-     */
-    rooms: (userId?: string, tabType?: string) =>
-      [...QUERY_KEYS.chat.all, "rooms", userId, tabType].filter((v) => v !== undefined),
-    counts: (userId?: string) => [...QUERY_KEYS.chat.all, "counts", userId].filter((v) => v !== undefined),
+    rooms: (userId?: string, tabType?: string, sortOption?: string) =>
+      [...QUERY_KEYS.chat.all, "rooms", userId, tabType, sortOption].filter(Boolean),
+    counts: (userId?: string) => [...QUERY_KEYS.chat.all, "counts", userId].filter(Boolean),
     room: (roomId?: string) => [...QUERY_KEYS.chat.all, "room", roomId].filter(Boolean),
     messages: (roomId?: string) => [...QUERY_KEYS.chat.all, "messages", roomId].filter(Boolean),
     members: (roomId?: string) => [...QUERY_KEYS.chat.all, "members", roomId].filter(Boolean),
