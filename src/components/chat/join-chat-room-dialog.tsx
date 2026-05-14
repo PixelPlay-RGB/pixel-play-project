@@ -69,7 +69,7 @@ export function JoinChatRoomDialog({ open, roomId, roomTitle, isFull }: Props) {
         </AlertDialogHeader>
         <AlertDialogFooter className="m-0 flex-row justify-end gap-2 border-0 bg-transparent px-5 pt-4 pb-5">
           <AlertDialogCancel
-            onClick={() => router.replace("/")}
+            onClick={() => router.back()}
             className="border-border bg-background text-foreground hover:bg-muted h-10 min-w-24 rounded-xl px-4 font-semibold"
           >
             돌아가기

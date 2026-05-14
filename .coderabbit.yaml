@@ -1,14 +1,13 @@
 # yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
 
 language: "ko-KR"
-enable_beta_features: false
 
 reviews:
   profile: "assertive"
   request_changes_workflow: false
   high_level_summary: true
   poem: false
-  
+
   # 폴더별 SRP(단일 책임 원칙) 컨벤션 적용
   path_instructions:
     - path: "src/actions/**/*.ts"
@@ -50,12 +49,6 @@ knowledge_base:
 
 chat:
   auto_reply: true
-
-tools:
-  shellcheck:
-    enabled: true
-  ast-grep:
-    enabled: true
 
 issue_enrichment:
   enabled: true
