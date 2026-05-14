@@ -6,7 +6,7 @@ import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/s
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ReactNode } from "react";
 
-export function SettingsShell({ children }: { children: ReactNode }) {
+export function SettingShell({ children }: { children: ReactNode }) {
   const isMobile = useIsMobile();
 
   return (
@@ -14,7 +14,7 @@ export function SettingsShell({ children }: { children: ReactNode }) {
       <SettingSidebar isMobile={isMobile} />
       <SidebarInset className="min-w-0 overflow-hidden">
         {isMobile && (
-          <div className="flex shrink-0 items-center gap-3 border-b border-border p-4">
+          <div className="border-border flex shrink-0 items-center gap-3 border-b p-4">
             <SidebarTrigger className="cursor-pointer" />
             <span className="text-foreground text-sm font-semibold">설정</span>
           </div>
