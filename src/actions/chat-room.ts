@@ -7,11 +7,12 @@ import { revalidatePath } from "next/cache";
 // 채팅방 생성
 export const createChatRoomAction = async (formData: CreateChatRoomInput) => {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data, error: authError } = await supabase.auth.getUser();
 
-  if (!user) {
+  if (authError || !data.user) {
     return { error: "인증 정보가 없습니다." };
   }
+  const user = data.user;
 
   const { data: room, error: roomError } = await supabase
     .from("chat_room")
@@ -48,7 +49,7 @@ export const joinChatRoomAction = async (chatRoomId: string) => {
   if (!chatRoomId) {
     return { error: "잘못된 요청입니다." };
   }
-  
+
   const supabase = await createClient();
 
   // join_chat_room RPC: auth.uid() 내부 사용 → 밴/재입장/정원 확인 → insert/update 원자 처리

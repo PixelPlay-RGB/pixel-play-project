@@ -63,7 +63,12 @@ export function useChatRoomView(roomId: string, options?: UseChatRoomViewOptions
     void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.counts() });
   }, [entryStatusUserId, queryClient, roomId]);
 
-  const rejoinMutation = useMutation({
+  const {
+    mutate: rejoinRoom,
+    variables: rejoinRoomId,
+    isPending: isRejoiningPending,
+    isError: isRejoiningError,
+  } = useMutation({
     mutationFn: async (targetRoomId: string) => {
       const result = await joinChatRoomAction(targetRoomId);
       if (result.error) throw new Error(result.error);
@@ -81,10 +86,10 @@ export function useChatRoomView(roomId: string, options?: UseChatRoomViewOptions
     if (entryStatus !== "left" || !roomId || rejoinAttemptedRoomRef.current === roomId) return;
 
     rejoinAttemptedRoomRef.current = roomId;
-    rejoinMutation.mutate(roomId);
-  }, [entryStatus, rejoinMutation, roomId]);
+    rejoinRoom(roomId);
+  }, [entryStatus, rejoinRoom, roomId]);
 
-  const isCurrentRoomRejoin = rejoinMutation.variables === roomId;
+  const isCurrentRoomRejoin = rejoinRoomId === roomId;
 
   return {
     entryStatus,
@@ -98,8 +103,8 @@ export function useChatRoomView(roomId: string, options?: UseChatRoomViewOptions
     currentUserId,
     profilePending,
     isKicked,
-    isRejoining: isCurrentRoomRejoin && rejoinMutation.isPending,
-    rejoinError: isCurrentRoomRejoin && rejoinMutation.isError,
+    isRejoining: isCurrentRoomRejoin && isRejoiningPending,
+    rejoinError: isCurrentRoomRejoin && isRejoiningError,
     handleLoadPrevious,
     handleJoinSuccess,
   };
