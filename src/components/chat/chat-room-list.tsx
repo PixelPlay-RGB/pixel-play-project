@@ -5,23 +5,25 @@ import ChatRoomEmptyState from "@/components/chat/chat-room-empty-state";
 import ChatRoomListHeader from "@/components/chat/chat-room-list-header";
 import ChatRoomListSkeleton from "@/components/chat/chat-room-list-skeleton";
 import { useChatRooms } from "@/hooks/use-chat-rooms";
+import { useUser } from "@/hooks/use-profile";
 import { useChatRoomCounts } from "@/hooks/use-chat-room-counts";
 import { MOCK_UNREAD_MESSAGE_COUNTS } from "@/mock/chat-room";
 import { useChatRoomStore } from "@/stores/chat-room";
 
 export default function ChatRoomList() {
   const tabType = useChatRoomStore((state) => state.tabType);
+  const { isFetched: isUserFetched } = useUser();
   const {
     data: rooms = [],
     isError,
     isFetching,
-    isPending,
+    isLoading,
     isPlaceholderData,
   } = useChatRooms(tabType);
   const { data: counts } = useChatRoomCounts();
 
-  const isInitialLoading = isPending && rooms.length === 0;
-  const isEmpty = !isFetching && !isPlaceholderData && rooms.length === 0;
+  const isInitialLoading = !isUserFetched || (isLoading && rooms.length === 0);
+  const isEmpty = isUserFetched && !isFetching && !isPlaceholderData && rooms.length === 0;
 
   if (isError) {
     return (
