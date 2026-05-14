@@ -35,19 +35,19 @@ export function MessageItem({ message, isOwn }: Props) {
 
   return (
     <div className="flex gap-2 px-3 py-0.5">
-      <Avatar size="sm" className="mt-0.5 shrink-0">
+      <Avatar size={"lg"} className="mt-0.5 shrink-0">
         {photoUrl && <AvatarImage src={photoUrl} alt="" />}
         <AvatarFallback>{fallbackText}</AvatarFallback>
       </Avatar>
       <div className="min-w-0 flex-1">
-        <div className="mb-0.5 text-xs font-medium text-info">{nickname}</div>
+        <div className="mb-1.5 text-xs font-medium">{nickname}</div>
         <div
           className={cn(
             "inline-block max-w-full rounded-2xl rounded-tl-sm px-3 py-1.5 text-sm leading-snug",
             "bg-muted/60 text-foreground",
           )}
         >
-          <span className="wrap-break-word">{message.content}</span>
+          <span>{message.content}</span>
         </div>
       </div>
     </div>

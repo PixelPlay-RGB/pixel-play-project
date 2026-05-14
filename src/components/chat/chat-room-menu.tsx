@@ -4,7 +4,7 @@
 
 import { useState } from "react";
 
-import { DoorOpen, MoreVertical } from "lucide-react";
+import { Ellipsis } from "lucide-react";
 
 import { ChatRoomLeaveAlertDialog } from "@/components/chat/chat-room-leave-alert-dialog";
 import { Button } from "@/components/ui/button";
@@ -69,11 +69,11 @@ export function ChatRoomMenu({ roomId, ownerId, currentMember, currentUserId }: 
               {...props}
               type="button"
               variant="ghost"
-              size="icon-sm"
-              className="text-muted-foreground hover:text-foreground shrink-0"
+              size="icon-lg"
+              className="hover:text-foreground shrink-0"
               aria-label="채팅방 메뉴"
             >
-              <MoreVertical data-icon="inline-start" />
+              <Ellipsis data-icon="inline-start" />
             </Button>
           )}
         />
@@ -108,7 +108,6 @@ export function ChatRoomMenu({ roomId, ownerId, currentMember, currentUserId }: 
         isPending={isPending}
         onConfirmLeave={handleLeave}
       />
-      
     </>
   );
 }

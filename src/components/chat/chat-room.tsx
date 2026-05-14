@@ -30,7 +30,7 @@ function ChatRoomError({ code }: { code: AppMessageCode }) {
   const message = getAppMessage(code);
 
   return (
-    <div className="flex h-full min-h-0 flex-col items-center justify-center gap-3 bg-background px-4 text-center text-foreground">
+    <div className="bg-background text-foreground flex h-full min-h-0 flex-col items-center justify-center gap-3 px-4 text-center">
       <p className="text-sm">{message.title}</p>
       <Link href="/" className="text-sm underline">
         처음으로
@@ -74,7 +74,7 @@ export function ChatRoom({ roomId }: Props) {
 
   if (profilePending) {
     return (
-      <div className="flex h-full w-full items-center justify-center bg-background">
+      <div className="bg-background flex h-full w-full items-center justify-center">
         <Spinner className="text-muted-foreground size-8" />
       </div>
     );
@@ -93,7 +93,7 @@ export function ChatRoom({ roomId }: Props) {
   const inputLocked = profilePending || !currentUserId;
 
   return (
-    <div className="flex h-full min-h-0 w-full overflow-hidden bg-background text-foreground md:flex-row">
+    <div className="bg-background text-foreground flex h-full min-h-0 w-full overflow-hidden md:flex-row">
       {/* PC: 좌측 고정 사이드바 */}
       <div className="hidden shrink-0 md:flex">
         <MemberList
@@ -103,18 +103,17 @@ export function ChatRoom({ roomId }: Props) {
         />
       </div>
 
-      <section className="flex min-h-0 min-w-0 flex-1 flex-col bg-background">
-        {/* 헤더 — py-3으로 MemberList 헤더와 높이 맞춤 */}
-        <div className="flex shrink-0 items-center gap-2 border-b border-border/50 bg-muted/20 px-4 py-3">
+      <section className="bg-background flex min-h-0 min-w-0 flex-1 flex-col">
+        <div className="border-border/50 bg-muted/20 flex h-14 shrink-0 items-center gap-2 border-b px-4">
           <h1 className="min-w-0 flex-1 truncate text-sm font-semibold">
             {roomQuery.isPending ? "불러오는 중…" : (roomQuery.data?.title ?? "채팅방")}
           </h1>
-          <div className="flex shrink-0 items-center gap-1">
+          <div className="flex shrink-0 items-center gap-1.5">
             {/* 모바일: Sheet 열기 / PC: 시각적 표시 */}
             <Button
               variant="ghost"
-              size="sm"
-              className="h-9 gap-1.5 px-2.5 text-muted-foreground hover:text-foreground md:pointer-events-none md:cursor-default"
+              size={"icon-lg"}
+              className="gap-1.5 md:pointer-events-none md:cursor-default"
               onClick={() => setMembersSheetOpen(true)}
               aria-label="참여자 목록"
             >

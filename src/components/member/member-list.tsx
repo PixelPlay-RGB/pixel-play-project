@@ -17,16 +17,13 @@ export function MemberList({ roomId, currentUserId, ownerId, className }: Props)
   return (
     <section
       className={cn(
-        "flex min-h-0 shrink-0 flex-col overflow-hidden bg-background",
-        "md:h-full md:w-80 md:shrink-0 md:border-r md:border-border",
+        "bg-background flex min-h-0 shrink-0 flex-col overflow-hidden",
+        "md:border-border md:h-full md:w-80 md:shrink-0 md:border-r",
         className,
       )}
     >
-      {/* py-3 + text-sm → 채팅 섹션 헤더와 동일 높이 */}
-      <div className="flex shrink-0 items-center border-b border-border/50 bg-muted/20 px-4 py-3">
-        <span className="text-sm font-medium text-muted-foreground">
-          참여자 {members.length.toLocaleString("ko-KR")}명
-        </span>
+      <div className="border-border/50 bg-muted/20 flex h-14 shrink-0 items-center border-b px-4">
+        <span className="text-sm font-medium">채팅방 참여 인원</span>
       </div>
 
       <ScrollArea className="min-h-0 flex-1">
