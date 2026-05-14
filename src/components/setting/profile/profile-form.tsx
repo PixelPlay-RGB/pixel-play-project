@@ -4,7 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Lock, Mail, UserStar } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
-import { toast } from "sonner";
 
 import ProfileAvatarUpload from "@/components/setting/profile/profile-avatar-upload";
 import ProfileCard from "@/components/setting/profile/profile-card";
@@ -22,12 +21,14 @@ import { Spinner } from "@/components/ui/spinner";
 
 import { checkNicknameAction, updateProfileAction } from "@/actions/auth";
 import ProfileFormSkeleton from "@/components/setting/profile/profile-form-skeleton";
+import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import { QUERY_KEYS } from "@/constants/query-keys";
 import { useUser } from "@/hooks/use-profile";
 import { cn } from "@/lib/utils";
 import { ProfileFormValues, profileSchema } from "@/lib/zod/auth";
 import type { NicknameStatus } from "@/types/auth";
 import { formatDate } from "@/utils/format";
+import { toastAppError, toastAppSuccess } from "@/utils/toast-message";
 import { useQueryClient } from "@tanstack/react-query";
 
 export default function ProfileForm() {
@@ -144,9 +145,7 @@ export default function ProfileForm() {
     const result = await updateProfileAction(formData);
 
     if (!result.success) {
-      toast.error("프로필 업데이트 실패", {
-        description: result.message || "프로필 업데이트에 실패했습니다! 🫠",
-      });
+      toastAppError(result.code ?? APP_MESSAGE_CODE.error.profile.updateFailed);
 
       setIsSaving(false);
       return;
@@ -163,7 +162,7 @@ export default function ProfileForm() {
     setVerifiedNickname(data.nickname);
     setPendingFile(null);
 
-    toast.success("프로필 업데이트 완료");
+    toastAppSuccess(APP_MESSAGE_CODE.success.profile.updated);
   };
 
   return (

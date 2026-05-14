@@ -1,15 +1,16 @@
 import { z } from "zod";
 import { CHAT_ROOM_MAX_CAPACITY, CHAT_ROOM_MIN_CAPACITY } from "@/constants/chat-room";
+import { FORM_MESSAGE } from "@/constants/form-message";
 
 export const createChatRoomSchema = z.object({
-  title: z.string().trim().min(1, "방 제목을 입력해주세요."),
+  title: z.string().trim().min(1, FORM_MESSAGE.chatRoom.titleRequired),
   capacity: z
     .number({
-      error: "참여 가능 인원을 입력해주세요.",
+      error: FORM_MESSAGE.chatRoom.capacityRequired,
     })
-    .int("참여 가능 인원은 정수로 입력해주세요.")
-    .min(CHAT_ROOM_MIN_CAPACITY, `최소 ${CHAT_ROOM_MIN_CAPACITY}명 이상이어야 합니다.`)
-    .max(CHAT_ROOM_MAX_CAPACITY, `최대 ${CHAT_ROOM_MAX_CAPACITY}명까지 가능합니다.`),
+    .int(FORM_MESSAGE.chatRoom.capacityInteger)
+    .min(CHAT_ROOM_MIN_CAPACITY, FORM_MESSAGE.chatRoom.capacityMin(CHAT_ROOM_MIN_CAPACITY))
+    .max(CHAT_ROOM_MAX_CAPACITY, FORM_MESSAGE.chatRoom.capacityMax(CHAT_ROOM_MAX_CAPACITY)),
   description: z.string().trim().optional(),
 });
 

@@ -13,17 +13,18 @@ import {
 import { FieldError } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import { CHAT_ROOM_MAX_CAPACITY, CHAT_ROOM_MIN_CAPACITY } from "@/constants/chat-room";
 import { QUERY_KEYS } from "@/constants/query-keys";
 import { cn } from "@/lib/utils";
 import { CREATE_CHAT_ROOM_DEFAULT_VALUES, createChatRoomSchema } from "@/lib/zod/chat-room";
 import type { CreateChatRoomInput } from "@/lib/zod/chat-room";
+import { toastAppError, toastAppSuccess } from "@/utils/toast-message";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { MessageSquarePlus, Plus } from "lucide-react";
 import { useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
-import { toast } from "sonner";
 
 export default function CreateChatRoomDialog() {
   const [open, setOpen] = useState(false);
@@ -47,12 +48,12 @@ export default function CreateChatRoomDialog() {
   const handleCreateRoom = async (values: CreateChatRoomInput) => {
     const result = await createChatRoomAction(values);
 
-    if (result.error) {
-      toast.error(result.error);
+    if (!result.success) {
+      toastAppError(result.code ?? APP_MESSAGE_CODE.error.chatRoom.createFailed);
       return;
     }
 
-    toast.success("채팅방 생성 완료");
+    toastAppSuccess(result.code ?? APP_MESSAGE_CODE.success.chatRoom.created);
     setOpen(false);
     reset(CREATE_CHAT_ROOM_DEFAULT_VALUES);
     queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.all });

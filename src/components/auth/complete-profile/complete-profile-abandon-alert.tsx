@@ -13,12 +13,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
+import type { AppMessageCode } from "@/constants/app-message-code";
 import { useAuthStore } from "@/stores/auth";
+import { toastAppError, toastAppSuccess } from "@/utils/toast-message";
 import { useQueryClient } from "@tanstack/react-query";
-import { LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Dispatch, SetStateAction } from "react";
-import { toast } from "sonner";
 
 interface Props {
   isCancelling: boolean;
@@ -43,24 +44,22 @@ export default function CompleteProfileAbandonAlert({
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "계정 삭제 중 오류가 발생했습니다.");
+        const errorData = (await response.json()) as { code?: AppMessageCode };
+        toastAppError(errorData.code ?? APP_MESSAGE_CODE.error.auth.signupCancelFailed);
+        setIsCancelling(false);
+        return;
       }
 
       setUser(null);
       queryClient.clear();
 
-      toast.success("가입 취소 완료", {
-        description: "로그인 페이지로 돌아갑니다.",
-      });
+      toastAppSuccess(APP_MESSAGE_CODE.success.auth.signupCanceled);
 
       router.replace("/auth/login");
       router.refresh();
     } catch (error) {
-      const message = error instanceof Error ? error.message : "취소 실패";
-      toast.error("취소 실패", {
-        description: message,
-      });
+      console.error("CompleteProfileAbandonAlert cancel error", error);
+      toastAppError(APP_MESSAGE_CODE.error.auth.signupCancelFailed);
       setIsCancelling(false);
     }
   };
