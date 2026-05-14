@@ -19,7 +19,7 @@ import { useAuthStore } from "@/stores/auth";
 import { LogOut } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 
-export default function SettingSidebar() {
+export default function SettingSidebar({ isMobile }: { isMobile?: boolean }) {
   const router = useRouter();
   const pathname = usePathname();
   const supabase = createClient();
@@ -35,7 +35,7 @@ export default function SettingSidebar() {
 
   return (
     <Sidebar
-      collapsible="none"
+      collapsible={isMobile ? "offcanvas" : "none"}
       className="bg-background h-full shrink-0 border-r"
     >
       <SidebarContent>

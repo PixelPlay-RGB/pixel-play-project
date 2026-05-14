@@ -88,35 +88,32 @@ export function ChatRoom({ roomId }: Props) {
   const inputLocked = profilePending || !currentUserId;
 
   return (
-    <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-background text-foreground md:flex-row">
-      <MemberList
-        roomId={roomId}
-        currentUserId={currentUserId}
-        ownerId={roomQuery.data?.owner_id}
-      />
+    <div className="flex h-full min-h-0 w-full overflow-hidden bg-background text-foreground md:flex-row">
+      <div className="hidden md:flex">
+        <MemberList
+          roomId={roomId}
+          currentUserId={currentUserId}
+          ownerId={roomQuery.data?.owner_id}
+        />
+      </div>
 
-      <aside className="flex min-h-0 flex-1 flex-col border-border bg-background md:w-[min(100%,380px)] md:shrink-0 md:border-l">
-        <header className="border-border shrink-0 border-b px-3 py-2.5">
-          <div className="flex items-start justify-between gap-2">
-            <h1 className="line-clamp-2 flex-1 text-sm leading-tight font-semibold">
-              {roomQuery.isPending ? "불러오는 중…" : (roomQuery.data?.title ?? "채팅방")}
-            </h1>
-            <div className="flex shrink-0 items-center gap-2">
-              <span className="text-muted-foreground text-xs">{members.length}명</span>
-              {roomQuery.data ? (
-                <ChatRoomMenu
-                  roomId={roomId}
-                  ownerId={roomQuery.data.owner_id}
-                  currentMember={roomQuery.data.current_member}
-                  currentUserId={currentUserId}
-                />
-              ) : null}
-            </div>
+      <section className="flex min-h-0 w-full flex-1 flex-col bg-background md:border-l md:border-border">
+        <div className="border-border flex shrink-0 items-center gap-2 border-b px-3 py-2.5">
+          <h1 className="min-w-0 flex-1 truncate text-sm font-semibold">
+            {roomQuery.isPending ? "불러오는 중…" : (roomQuery.data?.title ?? "채팅방")}
+          </h1>
+          <div className="flex shrink-0 items-center gap-1.5">
+            <span className="text-muted-foreground text-xs">{members.length}명</span>
+            {roomQuery.data ? (
+              <ChatRoomMenu
+                roomId={roomId}
+                ownerId={roomQuery.data.owner_id}
+                currentMember={roomQuery.data.current_member}
+                currentUserId={currentUserId}
+              />
+            ) : null}
           </div>
-          <p className="text-muted-foreground mt-1 line-clamp-1 text-xs">
-            {roomQuery.data?.description ?? ""}
-          </p>
-        </header>
+        </div>
 
         <MessageList
           key={roomId}
@@ -139,7 +136,7 @@ export function ChatRoom({ roomId }: Props) {
             ).title
           }
         />
-      </aside>
+      </section>
 
       <KickedRoomAlertDialog open={isKicked} />
     </div>
