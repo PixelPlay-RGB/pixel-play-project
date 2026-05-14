@@ -5,6 +5,7 @@ import AuthInputGroup from "@/components/auth/auth-input-group";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
+import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import { LOGIN_PARAM } from "@/constants/auth";
 import { QUERY_KEYS } from "@/constants/query-keys";
 import { createClient } from "@/lib/supabase/client";
@@ -12,12 +13,12 @@ import { cn } from "@/lib/utils";
 import { loginSchema } from "@/lib/zod/auth";
 import { useAuthStore } from "@/stores/auth";
 import type { LoginFormValues, LoginProvider } from "@/types/auth";
+import { toastAppError } from "@/utils/toast-message";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { LockKeyhole, Mail } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
 
 interface LoginFormProps {
   loading: LoginProvider | null;
@@ -43,9 +44,7 @@ export default function LoginForm({ loading, onLoadingChange: setIsLoading }: Lo
     const result = await login(data);
 
     if (!result.success) {
-      toast.error("로그인 실패 🥲", {
-        description: result.message || "이메일 또는 비밀번호를 확인해주세요.",
-      });
+      toastAppError(result.code ?? APP_MESSAGE_CODE.error.auth.invalidCredentials);
       setIsLoading(null);
       return;
     }
@@ -58,9 +57,10 @@ export default function LoginForm({ loading, onLoadingChange: setIsLoading }: Lo
     } = await supabase.auth.getUser();
 
     if (authError || !authUser) {
-      toast.error("인증 정보를 불러올 수 없습니다.", {
-        description: "잠시 후 다시 시도해주세요.",
-      });
+      if (authError) {
+        console.error("LoginForm getUser error", authError);
+      }
+      toastAppError(APP_MESSAGE_CODE.error.auth.authInfoLoadFailed);
       setIsLoading(null);
       return;
     }

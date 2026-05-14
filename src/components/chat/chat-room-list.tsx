@@ -4,6 +4,7 @@ import ChatRoomCard from "@/components/chat/chat-room-card";
 import ChatRoomEmptyState from "@/components/chat/chat-room-empty-state";
 import ChatRoomListHeader from "@/components/chat/chat-room-list-header";
 import ChatRoomListSkeleton from "@/components/chat/chat-room-list-skeleton";
+import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import { Spinner } from "@/components/ui/spinner";
 import { useChatRoomCounts } from "@/hooks/use-chat-room-counts";
 import {
@@ -14,6 +15,7 @@ import { useChatRooms } from "@/hooks/use-chat-rooms";
 import { useIntersectionObserver } from "@/hooks/use-intersection-observer";
 import { useUser } from "@/hooks/use-profile";
 import { useChatRoomStore } from "@/stores/chat-room";
+import { getAppMessage } from "@/utils/app-message";
 
 export default function ChatRoomList() {
   const tabType = useChatRoomStore((state) => state.tabType);
@@ -38,10 +40,9 @@ export default function ChatRoomList() {
   const isEmpty = isUserFetched && !query.isLoading && chatRooms.length === 0;
 
   if (query.isError) {
+    const message = getAppMessage(APP_MESSAGE_CODE.error.chatRoomList.loadFailed);
     return (
-      <div className="flex flex-1 items-center justify-center text-zinc-500">
-        채팅방 목록을 불러오지 못했습니다.
-      </div>
+      <div className="flex flex-1 items-center justify-center text-zinc-500">{message.title}</div>
     );
   }
 

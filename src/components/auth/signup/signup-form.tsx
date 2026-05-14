@@ -20,7 +20,9 @@ import {
 import { RadioGroup } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
+import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import { SIGNUP_FORM_DEFAULTS, WELCOME_PARAM } from "@/constants/auth";
+import { FORM_MESSAGE } from "@/constants/form-message";
 import { QUERY_KEYS } from "@/constants/query-keys";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
@@ -28,13 +30,13 @@ import { signUpSchema } from "@/lib/zod/auth";
 import { useAuthStore } from "@/stores/auth";
 import type { NicknameStatus, OtpStatus, SignUpFormValues } from "@/types/auth";
 import { formatPhone } from "@/utils/format";
+import { toastAppError, toastAppSuccess } from "@/utils/toast-message";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { CalendarDays, LockKeyhole, Mail, Smartphone, User, UserStar } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { toast } from "sonner";
 
 export default function SignupForm() {
   const router = useRouter();
@@ -94,10 +96,13 @@ export default function SignupForm() {
     const result = await sendOtpAction(email);
     if (result.success) {
       setOtpStatus("sent");
-      toast.success("인증 코드 발송", { description: "이메일을 확인해주세요!" });
+      toastAppSuccess(APP_MESSAGE_CODE.success.auth.emailOtpSent);
     } else {
       setOtpStatus("idle");
-      setError("email", { type: "server", message: result.message });
+      setError("email", {
+        type: "server",
+        message: result.message ?? FORM_MESSAGE.auth.emailCheckFailed,
+      });
     }
   };
 
@@ -116,33 +121,29 @@ export default function SignupForm() {
     const result = await verifyOtpAction(email, otpCode);
     if (result.success) {
       setOtpStatus("verified");
-      toast.success("이메일 인증 완료", { description: "회원 가입을 계속 진행해주세요!" });
+      toastAppSuccess(APP_MESSAGE_CODE.success.auth.emailVerified);
     } else {
       setOtpStatus("sent");
-      setOtpError("인증 코드가 올바르지 않습니다.");
+      setOtpError(result.message ?? FORM_MESSAGE.auth.otpInvalid);
     }
   };
 
   // 3. 최종 가입
   const onSubmit = async (data: SignUpFormValues) => {
     if (!emailVerified) {
-      toast.error("이메일 인증 필요", {
-        description: "먼저 이메일 인증을 완료해주세요! 📧",
-      });
+      toastAppError(APP_MESSAGE_CODE.error.auth.emailVerificationRequired);
       return;
     }
 
     if (nicknameStatus !== "available") {
-      toast.error("닉네임 중복 확인이 필요합니다.", {
-        description: "닉네임 중복 확인을 완료해주세요.",
-      });
+      toastAppError(APP_MESSAGE_CODE.error.auth.nicknameCheckRequired);
       return;
     }
 
     const result = await completeSignupAction(data);
 
     if (!result.success) {
-      toast.error("회원가입 실패", { description: result.message });
+      toastAppError(result.code ?? APP_MESSAGE_CODE.error.auth.signupFailed);
       return;
     }
 
@@ -154,9 +155,10 @@ export default function SignupForm() {
     } = await supabase.auth.getUser();
 
     if (authError || !authUser) {
-      toast.error("인증 정보를 가져오지 못했습니다.", {
-        description: "로그인 페이지에서 다시 로그인을 시도해주세요.",
-      });
+      if (authError) {
+        console.error("SignupForm getUser error", authError);
+      }
+      toastAppError(APP_MESSAGE_CODE.error.auth.authInfoLoadFailed);
       setUser(null);
       return;
     }
@@ -210,7 +212,7 @@ export default function SignupForm() {
                 ) : otpSent ? (
                   "재발송"
                 ) : (
-                  "인증"
+                  "인증하기"
                 )}
               </InputGroupButton>
             </InputGroupAddon>

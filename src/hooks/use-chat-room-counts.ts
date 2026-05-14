@@ -6,18 +6,25 @@ import { createClient } from "@/lib/supabase/client";
 import type { ChatRoomCounts } from "@/types/chat-room";
 import { useQuery } from "@tanstack/react-query";
 
+export type { ChatRoomCounts };
+
 export function useChatRoomCounts() {
   const { data: currentUser } = useUser();
+  const userId = currentUser?.id;
 
   return useQuery<ChatRoomCounts>({
-    queryKey: QUERY_KEYS.chat.counts(currentUser?.id),
+    queryKey: QUERY_KEYS.chat.counts(userId),
     queryFn: async () => {
+      if (!userId) return { JOINED: 0, NOT_JOINED: 0, OWNED: 0 };
+
       const supabase = createClient();
-      
+
       // maybeSingle(): 결과가 0행이면 null, 1행이면 객체 반환 (@supabase/supabase-js v2+)
-      const { data, error } = await supabase.rpc("get_room_counts_by_user", {
-        p_user_id: currentUser!.id,
-      }).maybeSingle();
+      const { data, error } = await supabase
+        .rpc("get_room_counts_by_user", {
+          p_user_id: userId,
+        })
+        .maybeSingle();
 
       if (error) throw error;
       if (!data) return { JOINED: 0, NOT_JOINED: 0, OWNED: 0 };
@@ -32,7 +39,7 @@ export function useChatRoomCounts() {
         OWNED: data.owned,
       };
     },
-    enabled: !!currentUser?.id,
+    enabled: !!userId,
     staleTime: 1000 * 30, // 탭 이동 시 자주 갱신되므로 30초 유지
   });
 }

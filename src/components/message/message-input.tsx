@@ -2,15 +2,17 @@
 
 import { SendHorizontal } from "lucide-react";
 import { useRef, useState } from "react";
-import { toast } from "sonner";
 
 import ChatEmojiPicker from "@/components/chat/chat-emoji-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MESSAGE_CONTENT_MAX_LENGTH } from "@/constants/message";
-import { ERROR_MESSAGES } from "@/constants/errors";
+import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import { createClient } from "@/lib/supabase/client";
+import { getAppMessageTitle, resolveSupabaseErrorCode } from "@/utils/app-message";
+import { toastAppError } from "@/utils/toast-message";
+import { MESSAGE_CONTENT_MAX_LENGTH } from "@/constants/message";
 import { messageContentSchema } from "@/lib/zod/message";
+import { toast } from "sonner";
 
 interface Props {
   roomId: string;
@@ -48,10 +50,7 @@ export function MessageInput({ roomId, currentUserId, disabled = false, disabled
 
     if (error) {
       console.error(error);
-      const errorConfig = ERROR_MESSAGES[error.code] || ERROR_MESSAGES.DEFAULT;
-      toast.error(errorConfig.title, {
-        description: errorConfig.description,
-      });
+      toastAppError(resolveSupabaseErrorCode(error, APP_MESSAGE_CODE.error.message.sendFailed));
       sendMessageLockRef.current = false;
       return;
     }
@@ -73,9 +72,7 @@ export function MessageInput({ roomId, currentUserId, disabled = false, disabled
         disabled={disabled}
         maxLength={MESSAGE_CONTENT_MAX_LENGTH}
         title={disabled ? disabledHint : undefined}
-        onChange={(e) =>
-          setDraft(e.target.value.slice(0, MESSAGE_CONTENT_MAX_LENGTH))
-        }
+        onChange={(e) => setDraft(e.target.value.slice(0, MESSAGE_CONTENT_MAX_LENGTH))}
         onKeyDown={(e) => {
           if (disabled) return;
           if (e.key === "Enter" && !e.shiftKey) {
@@ -83,7 +80,11 @@ export function MessageInput({ roomId, currentUserId, disabled = false, disabled
             void handleSend();
           }
         }}
-        placeholder={disabled ? (disabledHint ?? "메시지를 보낼 수 없습니다") : "채팅하기"}
+        placeholder={
+          disabled
+            ? (disabledHint ?? getAppMessageTitle(APP_MESSAGE_CODE.error.chatRoom.inputLocked))
+            : "채팅하기"
+        }
         className="border-border/80 bg-muted/40 flex-1 text-sm"
         aria-label="메시지 입력"
       />

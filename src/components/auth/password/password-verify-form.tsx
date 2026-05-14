@@ -5,6 +5,7 @@ import AuthInputGroup from "@/components/auth/auth-input-group";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
+import { FORM_MESSAGE } from "@/constants/form-message";
 import { verifyPasswordSchema, VerifyPasswordValues } from "@/lib/zod/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LockKeyhole } from "lucide-react";
@@ -30,7 +31,7 @@ export default function PasswordVerifyForm({ onVerified }: Props) {
 
     if (!result.success) {
       setError("currentPassword", {
-        message: result.message ?? "현재 비밀번호가 올바르지 않습니다.",
+        message: result.message ?? FORM_MESSAGE.auth.currentPasswordInvalid,
       });
       return;
     }

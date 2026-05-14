@@ -2,9 +2,13 @@
 
 import { createClient } from "@/lib/supabase/server";
 import type { CreateChatRoomInput } from "@/lib/zod/chat-room";
+import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
+import type { AppActionResult } from "@/types/action";
 import { revalidatePath } from "next/cache";
 
-export const createChatRoomAction = async (formData: CreateChatRoomInput) => {
+export const createChatRoomAction = async (
+  formData: CreateChatRoomInput,
+): Promise<AppActionResult> => {
   const supabase = await createClient();
 
   const {
@@ -12,7 +16,7 @@ export const createChatRoomAction = async (formData: CreateChatRoomInput) => {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return { error: "인증 정보가 없습니다." };
+    return { success: false, code: APP_MESSAGE_CODE.error.chatRoom.createAuthRequired };
   }
 
   const { data: room, error: roomError } = await supabase
@@ -27,7 +31,8 @@ export const createChatRoomAction = async (formData: CreateChatRoomInput) => {
     .single();
 
   if (roomError || !room) {
-    return { error: "채팅방 생성에 실패했습니다." };
+    if (roomError) console.error("createChatRoomAction room insert error", roomError);
+    return { success: false, code: APP_MESSAGE_CODE.error.chatRoom.createFailed };
   }
 
   const { error: memberError } = await supabase.from("chat_room_member").insert({
@@ -36,9 +41,16 @@ export const createChatRoomAction = async (formData: CreateChatRoomInput) => {
   });
 
   if (memberError) {
-    return { error: "채팅방 참여 정보 생성에 실패했습니다." };
+    console.error("createChatRoomAction member insert error", memberError);
+    const { error: rollbackError } = await supabase.from("chat_room").delete().eq("id", room.id);
+
+    if (rollbackError) {
+      console.error("createChatRoomAction rollback room delete error", rollbackError);
+    }
+
+    return { success: false, code: APP_MESSAGE_CODE.error.chatRoom.createMemberFailed };
   }
 
   revalidatePath("/");
-  return { error: null };
+  return { success: true, code: APP_MESSAGE_CODE.success.chatRoom.created };
 };

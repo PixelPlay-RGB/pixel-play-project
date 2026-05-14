@@ -3,9 +3,10 @@
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth";
 import { useEffect } from "react";
-import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/constants/query-keys";
+import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
+import { toastAppError } from "@/utils/toast-message";
 import type { LoginProvider } from "@/types/auth";
 
 /**
@@ -62,7 +63,8 @@ export default function AuthListener() {
         .maybeSingle();
 
       if (error) {
-        toast.error("OAuth 정보 불러오기 실패");
+        console.error("AuthListener linked providers select error", error);
+        toastAppError(APP_MESSAGE_CODE.error.auth.oauthInfoLoadFailed);
         return;
       }
 

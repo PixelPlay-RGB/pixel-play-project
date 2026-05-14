@@ -1,3 +1,6 @@
+// 회원가입 취소 시 인증 계정을 삭제하는 API 라우트
+
+import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import { createAdminClient } from "@/lib/supabase/admin-client";
 import { createClient } from "@/lib/supabase/server";
 import { AuthError } from "@supabase/supabase-js";
@@ -10,7 +13,10 @@ export async function POST() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ error: "인증된 유저가 아닙니다." }, { status: 401 });
+    return NextResponse.json(
+      { code: APP_MESSAGE_CODE.error.auth.authInfoNotFound },
+      { status: 401 },
+    );
   }
 
   try {
@@ -25,13 +31,25 @@ export async function POST() {
     return NextResponse.json({ message: "success" });
   } catch (error: unknown) {
     if (error instanceof AuthError) {
-      return NextResponse.json({ error: error.message }, { status: error.status || 500 });
+      console.error("withdraw deleteUser auth error", error);
+      return NextResponse.json(
+        { code: APP_MESSAGE_CODE.error.auth.accountDeleteFailed },
+        { status: error.status || 500 },
+      );
     }
 
     if (error instanceof Error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error("withdraw deleteUser error", error);
+      return NextResponse.json(
+        { code: APP_MESSAGE_CODE.error.auth.accountDeleteFailed },
+        { status: 500 },
+      );
     }
 
-    return NextResponse.json({ error: "An unexpected error occurred" }, { status: 500 });
+    console.error("withdraw deleteUser unknown error", error);
+    return NextResponse.json(
+      { code: APP_MESSAGE_CODE.error.auth.accountDeleteFailed },
+      { status: 500 },
+    );
   }
 }

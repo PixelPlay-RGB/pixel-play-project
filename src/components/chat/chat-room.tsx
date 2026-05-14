@@ -8,21 +8,26 @@ import { KickedRoomAlertDialog } from "@/components/member/kicked-room-alert-dia
 import { MessageInput } from "@/components/message/message-input";
 import { MessageList } from "@/components/message/message-list";
 import { Spinner } from "@/components/ui/spinner";
+import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
+import type { AppMessageCode } from "@/constants/app-message-code";
 import { useRoom } from "@/hooks/use-chat-room";
 import { useChatRoomMemberRealtime } from "@/hooks/use-chat-room-member-realtime";
 import { useMarkRoomReadLifecycle } from "@/hooks/use-mark-room-read-lifecycle";
 import useMessages from "@/hooks/use-messages";
 import { useUser } from "@/hooks/use-profile";
 import { useRoomMembers } from "@/hooks/use-room-members";
+import { getAppMessage } from "@/utils/app-message";
 
 interface Props {
   roomId: string;
 }
 
-function ChatRoomError({ message }: { message: string }) {
+function ChatRoomError({ code }: { code: AppMessageCode }) {
+  const message = getAppMessage(code);
+
   return (
     <div className="dark flex h-full min-h-0 flex-col items-center justify-center gap-3 bg-zinc-950 px-4 text-center text-zinc-200">
-      <p className="text-sm">{message}</p>
+      <p className="text-sm">{message.title}</p>
       <Link href="/" className="text-sm underline">
         처음으로
       </Link>
@@ -71,13 +76,13 @@ export function ChatRoom({ roomId }: Props) {
   }
 
   if (!roomId) {
-    return <ChatRoomError message=" 방 정보가 없습니다." />;
+    return <ChatRoomError code={APP_MESSAGE_CODE.error.chatRoom.missingRoomId} />;
   }
 
   const roomMissing =
     !!roomId && roomQuery.isFetched && (roomQuery.error != null || roomQuery.data == null);
   if (roomMissing) {
-    return <ChatRoomError message="존재하지 않는 채팅방이거나 불러올 수 없습니다." />;
+    return <ChatRoomError code={APP_MESSAGE_CODE.error.chatRoom.notFoundOrLoadFailed} />;
   }
 
   const inputLocked = profilePending || !currentUserId;
@@ -126,7 +131,13 @@ export function ChatRoom({ roomId }: Props) {
           roomId={roomId}
           currentUserId={currentUserId}
           disabled={inputLocked || isKicked}
-          disabledHint={isKicked ? "강퇴당한 방입니다." : "메시지를 보낼 수 없습니다."}
+          disabledHint={
+            getAppMessage(
+              isKicked
+                ? APP_MESSAGE_CODE.error.chatRoom.isKicked
+                : APP_MESSAGE_CODE.error.chatRoom.inputLocked,
+            ).title
+          }
         />
       </aside>
 
