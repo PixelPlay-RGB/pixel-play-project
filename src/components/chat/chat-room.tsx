@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Users } from "lucide-react";
 
 import { ChatRoomMenu } from "@/components/chat/chat-room-menu";
+import { JoinChatRoomDialog } from "@/components/chat/join-chat-room-dialog";
 import { MemberList } from "@/components/member/member-list";
 import { KickedRoomAlertDialog } from "@/components/member/kicked-room-alert-dialog";
 import { MessageInput } from "@/components/message/message-input";
@@ -41,16 +42,22 @@ function ChatRoomError({ code }: { code: AppMessageCode }) {
 
 export function ChatRoom({ roomId }: Props) {
   const { data: profile, isPending: profilePending } = useUser();
-  const { messages, hasMorePrevious, isLoadingPrevious, fetchPreviousPage, isLoadingInitial } =
-    useMessages(roomId);
+  const currentUserId = profile?.id ?? "";
 
   const roomQuery = useRoom(roomId);
-  const { data: members = [] } = useRoomMembers(roomId);
+  const { isKicked, isJoined } = useChatRoomMemberRealtime({ roomId, currentUserId });
 
-  const currentUserId = profile?.id ?? "";
-  const { isKicked } = useChatRoomMemberRealtime({ roomId, currentUserId });
+  const { messages, hasMorePrevious, isLoadingPrevious, fetchPreviousPage, isLoadingInitial } =
+    useMessages(roomId, isJoined);
+  const { data: members = [] } = useRoomMembers(roomId, isJoined);
 
   const [membersSheetOpen, setMembersSheetOpen] = useState(false);
+
+  const isFull =
+    (roomQuery.data?.current_member ?? 0) >= (roomQuery.data?.max_capacity ?? 0);
+
+  const shouldShowJoinDialog =
+    roomQuery.isFetched && roomQuery.data != null && !isJoined && !isKicked;
 
   const markRoomReadEnabled =
     !!roomId &&
@@ -59,7 +66,8 @@ export function ChatRoom({ roomId }: Props) {
     roomQuery.isFetched &&
     roomQuery.data != null &&
     roomQuery.error == null &&
-    !isKicked;
+    !isKicked &&
+    isJoined;
 
   useMarkRoomReadLifecycle({ roomId, enabled: markRoomReadEnabled });
 
@@ -90,7 +98,7 @@ export function ChatRoom({ roomId }: Props) {
     return <ChatRoomError code={APP_MESSAGE_CODE.error.chatRoom.notFoundOrLoadFailed} />;
   }
 
-  const inputLocked = profilePending || !currentUserId;
+  const inputLocked = profilePending || !currentUserId || !isJoined;
 
   return (
     <div className="bg-background text-foreground flex h-full min-h-0 w-full overflow-hidden md:flex-row">
@@ -168,6 +176,13 @@ export function ChatRoom({ roomId }: Props) {
       </Sheet>
 
       <KickedRoomAlertDialog open={isKicked} />
+
+      <JoinChatRoomDialog
+        open={shouldShowJoinDialog}
+        roomId={roomId}
+        roomTitle={roomQuery.data?.title ?? ""}
+        isFull={isFull}
+      />
     </div>
   );
 }
