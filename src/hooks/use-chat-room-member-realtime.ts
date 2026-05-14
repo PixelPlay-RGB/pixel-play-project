@@ -19,6 +19,8 @@ export function useChatRoomMemberRealtime({
   currentUserId,
 }: UseChatRoomMemberRealtimeParams) {
   const queryClient = useQueryClient();
+
+  // supabase는 공식문서에도 나와있음 이렇게 사용하면 싱글톤 패턴으로 등록됨 전혀 고려할 문제없음
   const supabase = createClient();
 
   const { data: membership, isFetched: membershipFetched } = useQuery({
