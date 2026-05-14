@@ -4,7 +4,7 @@
 
 import { useState } from "react";
 
-import { MoreVertical } from "lucide-react";
+import { DoorOpen, MoreVertical } from "lucide-react";
 
 import {
   AlertDialog,
@@ -33,23 +33,28 @@ import { toast } from "sonner";
 interface Props {
   roomId: string;
   ownerId: string;
+  currentMember: number;
   currentUserId: string;
 }
 
 function mapLeaveRoomError(message: string): string {
   const lower = message.toLowerCase();
-  if (lower.includes("owner cannot leave")) return "방장은 채팅방을 나갈 수 없습니다.";
+  if (lower.includes("owner cannot leave")) {
+    return "방장은 다른 참여자에게 방장 권한을 위임한 뒤 나갈 수 있습니다.";
+  }
   if (lower.includes("not an active member")) return "참여 중이 아니거나 이미 나간 상태입니다.";
   if (lower.includes("not a member")) return "참여 중인 채팅방이 아닙니다.";
   if (lower.includes("room not found")) return "채팅방을 찾을 수 없습니다.";
   return "채팅방 나가기에 실패했습니다.";
 }
 
-export function ChatRoomMenu({ roomId, ownerId, currentUserId }: Props) {
+export function ChatRoomMenu({ roomId, ownerId, currentMember, currentUserId }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [leaveOpen, setLeaveOpen] = useState(false);
   const { mutate, isPending } = useLeaveChatRoom();
+
   const isOwner = currentUserId === ownerId;
+  const isOwnerLeaveBlocked = isOwner && currentMember > 1;
 
   const handleLeave = () => {
     mutate(roomId, {
@@ -92,9 +97,11 @@ export function ChatRoomMenu({ roomId, ownerId, currentUserId }: Props) {
           <DropdownMenuSeparator />
           <DropdownMenuItem
             variant="destructive"
-            disabled={isOwner}
             onClick={() => {
-              if (isOwner) return;
+              if (isOwnerLeaveBlocked) {
+                toast.info("방장은 다른 참여자에게 방장 권한을 위임한 뒤 나갈 수 있습니다.");
+                return;
+              }
               setMenuOpen(false);
               setLeaveOpen(true);
             }}
@@ -114,14 +121,21 @@ export function ChatRoomMenu({ roomId, ownerId, currentUserId }: Props) {
           <AlertDialogHeader>
             <AlertDialogTitle>채팅방 나가기</AlertDialogTitle>
             <AlertDialogDescription>
-              이 채팅방에서 나가면 참여 목록에서 제거됩니다. 다시 들어오려면 해당 채팅방에 다시
-              참여해야 합니다.
+              {isOwner
+                ? "마지막 참여자인 방장이 나가면 채팅방과 대화 기록이 함께 삭제됩니다."
+                : "이 채팅방에서 나가면 참여 목록에서 제거됩니다. 다시 들어오려면 해당 채팅방에 다시 참여해야 합니다."}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isPending}>취소</AlertDialogCancel>
+          <AlertDialogFooter className="m-0 flex-row justify-end gap-2 border-0 bg-transparent px-5 pt-4 pb-5">
+            <AlertDialogCancel
+              className="border-border bg-background text-foreground hover:bg-muted h-10 min-w-24 rounded-xl px-4 font-semibold"
+              disabled={isPending}
+            >
+              취소
+            </AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
+              className="shadow-destructive/10 h-10 min-w-24 rounded-xl px-4 font-bold shadow-sm"
               disabled={isPending}
               type="button"
               onClick={handleLeave}

@@ -102,6 +102,7 @@ export function ChatRoom({ roomId }: Props) {
                 <ChatRoomMenu
                   roomId={roomId}
                   ownerId={roomQuery.data.owner_id}
+                  currentMember={roomQuery.data.current_member}
                   currentUserId={currentUserId}
                 />
               ) : null}

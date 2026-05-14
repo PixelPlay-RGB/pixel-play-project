@@ -1,6 +1,8 @@
 # [중요]
 
 - 커밋 메시지는 무조건 한글로 작성한다.
+- 커밋은 하나의 논리적 변화가 완료되면 즉시 수행한다. 세부 기준은 `AGENTS.md` 2.10을 따른다.
+- 푸쉬는 사용자가 명시적으로 요청하거나 허락한 경우에만 수행한다.
 
 ## Commit Template
 
@@ -20,6 +22,8 @@
 ### Branch name
 
 - ex) git switch -c feat/auth/#이슈 번호
+- 도메인 하위 기능은 `feat/도메인/기능/#이슈 번호` 형식으로 작성한다.
+  - ex) git switch -c feat/chat-room/sort/#47
 
 ### PR 작성 참고
 
