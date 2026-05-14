@@ -1,3 +1,5 @@
+// 애플리케이션 헤더 - 로고, 검색, 테마 전환, 프로필 배지 표시
+
 import LoginButton from "@/components/auth/login-button";
 import Logo from "@/components/common/logo";
 import ThemeToggleButton from "@/components/common/theme-toggle-button";
@@ -30,7 +32,7 @@ export default async function Header() {
     >
       <div className="flex h-14 items-center justify-between px-3 sm:px-5">
         <Link href="/" className="h-9 w-28 shrink-0 sm:w-36">
-          <Logo className="h-full w-full text-foreground" />
+          <Logo className="text-foreground h-full w-full" />
         </Link>
 
         <div className="flex items-center gap-2 sm:gap-3">
