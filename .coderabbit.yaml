@@ -38,7 +38,7 @@ reviews:
 knowledge_base:
   code_guidelines:
     enabled: true
-    file_patterns:
+    filePatterns:
       - "AGENTS.md"
       - ".agents/code-convention/*.md"
       - ".agents/design-convention/*.md"
@@ -51,4 +51,5 @@ chat:
   auto_reply: true
 
 issue_enrichment:
-  enabled: true
+  auto_enrich:
+    enabled: true
