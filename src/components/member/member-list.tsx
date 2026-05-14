@@ -22,14 +22,15 @@ export function MemberList({ roomId, currentUserId, ownerId, className }: Props)
         className,
       )}
     >
-      <div className="flex shrink-0 items-center border-b border-border/50 bg-muted/20 px-4 py-2.5">
-        <span className="text-xs font-medium text-muted-foreground">
+      {/* py-3 + text-sm → 채팅 섹션 헤더와 동일 높이 */}
+      <div className="flex shrink-0 items-center border-b border-border/50 bg-muted/20 px-4 py-3">
+        <span className="text-sm font-medium text-muted-foreground">
           참여자 {members.length.toLocaleString("ko-KR")}명
         </span>
       </div>
 
       <ScrollArea className="min-h-0 flex-1">
-        <ul className="py-1" role="list">
+        <ul className="py-1.5" role="list">
           {members.map((member) => (
             <li key={`${member.chat_room_id}-${member.user_id}`}>
               <MemberItem

@@ -10,11 +10,7 @@ import { KickedRoomAlertDialog } from "@/components/member/kicked-room-alert-dia
 import { MessageInput } from "@/components/message/message-input";
 import { MessageList } from "@/components/message/message-list";
 import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Spinner } from "@/components/ui/spinner";
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import type { AppMessageCode } from "@/constants/app-message-code";
@@ -98,6 +94,7 @@ export function ChatRoom({ roomId }: Props) {
 
   return (
     <div className="flex h-full min-h-0 w-full overflow-hidden bg-background text-foreground md:flex-row">
+      {/* PC: 좌측 고정 사이드바 */}
       <div className="hidden shrink-0 md:flex">
         <MemberList
           roomId={roomId}
@@ -107,20 +104,22 @@ export function ChatRoom({ roomId }: Props) {
       </div>
 
       <section className="flex min-h-0 min-w-0 flex-1 flex-col bg-background">
-        <div className="flex shrink-0 items-center gap-2 border-b border-border/50 bg-muted/20 px-4 py-2.5">
+        {/* 헤더 — py-3으로 MemberList 헤더와 높이 맞춤 */}
+        <div className="flex shrink-0 items-center gap-2 border-b border-border/50 bg-muted/20 px-4 py-3">
           <h1 className="min-w-0 flex-1 truncate text-sm font-semibold">
             {roomQuery.isPending ? "불러오는 중…" : (roomQuery.data?.title ?? "채팅방")}
           </h1>
-          <div className="flex shrink-0 items-center gap-0.5">
+          <div className="flex shrink-0 items-center gap-1">
+            {/* 모바일: Sheet 열기 / PC: 시각적 표시 */}
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 gap-1.5 px-2 text-muted-foreground hover:text-foreground"
+              className="h-9 gap-1.5 px-2.5 text-muted-foreground hover:text-foreground md:pointer-events-none md:cursor-default"
               onClick={() => setMembersSheetOpen(true)}
               aria-label="참여자 목록"
             >
-              <Users className="size-3.5" />
-              <span className="text-xs font-medium">{members.length}</span>
+              <Users className="size-4" />
+              <span className="text-sm font-medium">{members.length}</span>
             </Button>
             {roomQuery.data ? (
               <ChatRoomMenu
@@ -156,6 +155,7 @@ export function ChatRoom({ roomId }: Props) {
         />
       </section>
 
+      {/* 모바일 전용 Sheet */}
       <Sheet open={membersSheetOpen} onOpenChange={setMembersSheetOpen}>
         <SheetContent side="right" className="flex w-80 flex-col gap-0 p-0">
           <SheetTitle className="sr-only">참여자 목록</SheetTitle>
@@ -163,7 +163,7 @@ export function ChatRoom({ roomId }: Props) {
             roomId={roomId}
             currentUserId={currentUserId}
             ownerId={roomQuery.data?.owner_id}
-            className="h-full max-h-none w-full border-r-0 md:h-full md:w-full md:border-r-0"
+            className="h-full max-h-none w-full border-r-0 md:w-full md:border-r-0"
           />
         </SheetContent>
       </Sheet>
