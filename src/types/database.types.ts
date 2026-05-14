@@ -206,7 +206,13 @@ export type Database = {
         }[]
       }
       get_rooms_by_tab: {
-        Args: { p_sort_option?: string; p_tab_type: string; p_user_id: string }
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_sort_option?: string
+          p_tab_type: string
+          p_user_id: string
+        }
         Returns: {
           created_at: string
           current_member: number
@@ -401,3 +407,4 @@ export const Constants = {
     },
   },
 } as const
+<claude-code-hint v="1" type="plugin" value="supabase@claude-plugins-official" />
