@@ -263,7 +263,7 @@ export type Database = {
         Args: { p_room_id: string; p_target_user_id: string }
         Returns: undefined
       }
-    }
+    },
     Enums: {
       gender: "male" | "female" | "none"
       message_type: "text" | "system"

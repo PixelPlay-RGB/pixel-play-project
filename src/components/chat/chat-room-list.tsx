@@ -4,14 +4,13 @@ import ChatRoomCard from "@/components/chat/chat-room-card";
 import ChatRoomEmptyState from "@/components/chat/chat-room-empty-state";
 import ChatRoomListHeader from "@/components/chat/chat-room-list-header";
 import ChatRoomListSkeleton from "@/components/chat/chat-room-list-skeleton";
+import { useChatRoomCounts } from "@/hooks/use-chat-room-counts";
 import {
   CHAT_ROOM_SORT_OPTIONS_BY_TAB,
   DEFAULT_CHAT_ROOM_SORT_OPTION,
 } from "@/constants/chat-room";
 import { useChatRooms } from "@/hooks/use-chat-rooms";
 import { useUser } from "@/hooks/use-profile";
-import { useChatRoomCounts } from "@/hooks/use-chat-room-counts";
-import { MOCK_UNREAD_MESSAGE_COUNTS } from "@/mock/chat-room";
 import { useChatRoomStore } from "@/stores/chat-room";
 
 export default function ChatRoomList() {
@@ -51,13 +50,11 @@ export default function ChatRoomList() {
         <ChatRoomEmptyState tabType={tabType} />
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-          {rooms.map((room, index) => (
+          {rooms.map((room) => (
             <ChatRoomCard
               key={room.id}
               chatRoom={room}
-              unreadMessageCount={
-                MOCK_UNREAD_MESSAGE_COUNTS[index % MOCK_UNREAD_MESSAGE_COUNTS.length]
-              }
+              unreadMessageCount={room.unread_count}
             />
           ))}
         </div>
