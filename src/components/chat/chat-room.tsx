@@ -45,7 +45,7 @@ export function ChatRoom({ roomId }: Props) {
   const currentUserId = profile?.id ?? "";
 
   const roomQuery = useRoom(roomId);
-  const { isKicked, isJoined } = useChatRoomMemberRealtime({ roomId, currentUserId });
+  const { isKicked, isJoined, membershipFetched } = useChatRoomMemberRealtime({ roomId, currentUserId });
 
   const { messages, hasMorePrevious, isLoadingPrevious, fetchPreviousPage, isLoadingInitial } =
     useMessages(roomId, isJoined);
@@ -57,7 +57,7 @@ export function ChatRoom({ roomId }: Props) {
     (roomQuery.data?.current_member ?? 0) >= (roomQuery.data?.max_capacity ?? 0);
 
   const shouldShowJoinDialog =
-    roomQuery.isFetched && roomQuery.data != null && !isJoined && !isKicked;
+    membershipFetched && roomQuery.isFetched && roomQuery.data != null && !isJoined && !isKicked;
 
   const markRoomReadEnabled =
     !!roomId &&

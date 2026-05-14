@@ -21,7 +21,7 @@ export function useChatRoomMemberRealtime({
   const queryClient = useQueryClient();
   const supabase = createClient();
 
-  const { data: membership } = useQuery({
+  const { data: membership, isFetched: membershipFetched } = useQuery({
     queryKey: [...QUERY_KEYS.chat.members(roomId), currentUserId],
     enabled: !!roomId && !!currentUserId,
     queryFn: async () => {
@@ -83,5 +83,5 @@ export function useChatRoomMemberRealtime({
     };
   }, [supabase, queryClient, roomId, currentUserId]);
 
-  return { isKicked, isJoined };
+  return { isKicked, isJoined, membershipFetched };
 }
