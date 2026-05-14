@@ -2,7 +2,11 @@
 
 import { useUser } from "@/hooks/use-profile";
 import { createClient } from "@/lib/supabase/client";
-import type { ChatRoomByTabWithUnreadCount, ChatRoomByTab, ChatRoomSortOption, ChatRoomTab } from "@/types/chat-room";
+import type {
+  ChatRoomByTabWithUnreadCount,
+  ChatRoomSortOption,
+  ChatRoomTab,
+} from "@/types/chat-room";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/constants/query-keys";
 
