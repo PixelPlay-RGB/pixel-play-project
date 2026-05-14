@@ -48,48 +48,66 @@ export function MemberActionAlertDialog({
   const handleConfirm = async () => {
     setIsPending(true);
 
-    const result = isKick
-      ? await kickChatRoomMemberAction({ roomId, targetUserId })
-      : await transferChatRoomOwnerAction({ roomId, targetUserId });
+    try {
+      const result = isKick
+        ? await kickChatRoomMemberAction({ roomId, targetUserId })
+        : await transferChatRoomOwnerAction({ roomId, targetUserId });
 
-    setIsPending(false);
+      if (!result.success) {
+        toast.error(result.message ?? "작업에 실패했습니다.");
+        return;
+      }
 
-    if (!result.success) {
-      toast.error(result.message ?? "작업에 실패했습니다.");
-      return;
+      toast.success(copy.success);
+      setOpen(false);
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.members(roomId) });
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.room(roomId) });
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.rooms() });
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.counts() });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "작업 중 오류가 발생했습니다.";
+      toast.error(message);
+    } finally {
+      setIsPending(false);
     }
-
-    toast.success(copy.success);
-    setOpen(false);
-    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.members(roomId) });
-    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.room(roomId) });
-    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.rooms() });
-    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.counts() });
   };
 
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger render={trigger} />
-      <AlertDialogContent>
-        <AlertDialogHeader>
+      <AlertDialogContent className="border-brand/20 shadow-brand/10 dark:border-brand/10 overflow-hidden rounded-2xl p-0 shadow-xl sm:max-w-md">
+        <AlertDialogHeader className="bg-brand/5 border-brand/10 border-b px-5 pt-5 pb-4 text-left">
           <AlertDialogMedia
-            className={isKick ? "bg-destructive/10 text-destructive" : "bg-brand/10 text-brand"}
+            className={cn(
+              "mb-0 rounded-xl ring-1",
+              isKick
+                ? "bg-destructive/10 text-destructive ring-destructive/20"
+                : "bg-brand/10 text-brand ring-brand/20",
+            )}
           >
             {isKick ? <UserX /> : <Crown />}
           </AlertDialogMedia>
-          <AlertDialogTitle>{copy.title}</AlertDialogTitle>
-          <AlertDialogDescription>
+          <AlertDialogTitle className="text-lg font-bold">{copy.title}</AlertDialogTitle>
+          <AlertDialogDescription className="leading-relaxed text-pretty">
             {targetNickname}
             {copy.description}
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel className="w-25" disabled={isPending}>
+        <AlertDialogFooter className="m-0 flex-row justify-end gap-2 border-0 bg-transparent px-5 pt-4 pb-5">
+          <AlertDialogCancel
+            className="border-border bg-background text-foreground hover:bg-muted h-10 min-w-24 rounded-xl px-4 font-semibold"
+            disabled={isPending}
+          >
             돌아가기
           </AlertDialogCancel>
           <AlertDialogAction
-            variant={isKick ? "destructive" : "outline"}
-            className={cn("w-25", !isKick && "border-brand! text-brand")}
+            variant={isKick ? "destructive" : "default"}
+            className={cn(
+              "h-10 min-w-24 rounded-xl px-4 font-bold shadow-sm",
+              isKick
+                ? "shadow-destructive/10"
+                : "bg-brand shadow-brand/20 hover:bg-brand/90 text-white",
+            )}
             disabled={isPending}
             onClick={() => void handleConfirm()}
           >

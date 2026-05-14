@@ -1,0 +1,2 @@
+-- Remote migration history placeholder.
+-- The current Supabase schema is captured in 20260506021151_create_kv_table_55ce40ce.sql.
