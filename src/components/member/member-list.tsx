@@ -14,7 +14,7 @@ export function MemberList({ roomId, currentUserId, ownerId }: Props) {
 
   return (
     <section className="flex max-h-[38dvh] min-h-0 shrink-0 flex-col overflow-hidden border-border bg-background md:h-full md:max-h-none md:w-[min(100%,260px)] md:shrink-0 md:border-r">
-      <div className="border-border flex shrink-0 items-center border-b px-3 py-2.5">
+      <div className="flex shrink-0 items-center border-b border-border/50 bg-muted/20 px-4 py-2.5">
         <span className="text-muted-foreground text-xs font-medium">
           참여자 {members.length.toLocaleString("ko-KR")}명
         </span>

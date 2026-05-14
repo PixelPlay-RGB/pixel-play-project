@@ -45,12 +45,13 @@ export default function ChatEmojiPicker({ onEmojiSelect, disabled = false }: Pro
           <Button
             {...props}
             type="button"
-            size="icon-sm"
-            variant="secondary"
+            size="icon-lg"
+            variant="ghost"
             aria-label="이모지 선택"
             disabled={disabled}
+            className="shrink-0 text-muted-foreground hover:text-foreground"
           >
-            <Smile className="size-4" />
+            <Smile className="size-5" />
           </Button>
         )}
       />

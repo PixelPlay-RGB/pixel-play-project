@@ -98,7 +98,7 @@ export function ChatRoom({ roomId }: Props) {
       </div>
 
       <section className="flex min-h-0 w-full flex-1 flex-col bg-background md:border-l md:border-border">
-        <div className="border-border flex shrink-0 items-center gap-2 border-b px-3 py-2.5">
+        <div className="flex shrink-0 items-center gap-2 border-b border-border/50 bg-muted/20 px-4 py-2.5">
           <h1 className="min-w-0 flex-1 truncate text-sm font-semibold">
             {roomQuery.isPending ? "불러오는 중…" : (roomQuery.data?.title ?? "채팅방")}
           </h1>

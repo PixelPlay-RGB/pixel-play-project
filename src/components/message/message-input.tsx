@@ -60,7 +60,7 @@ export function MessageInput({ roomId, currentUserId, disabled = false, disabled
   };
 
   return (
-    <div className="border-border bg-background/95 flex shrink-0 gap-2 border-t p-2 backdrop-blur-sm">
+    <div className="border-border bg-background/95 flex shrink-0 items-center gap-2 border-t px-3 py-2 backdrop-blur-sm">
       <ChatEmojiPicker
         disabled={disabled}
         onEmojiSelect={(emoji) =>
@@ -85,19 +85,20 @@ export function MessageInput({ roomId, currentUserId, disabled = false, disabled
             ? (disabledHint ?? getAppMessageTitle(APP_MESSAGE_CODE.error.chatRoom.inputLocked))
             : "채팅하기"
         }
-        className="border-border/80 bg-muted/40 flex-1 text-sm"
+        className="h-9 flex-1 rounded-xl border-border/60 bg-muted/30 py-0 text-sm placeholder:text-muted-foreground/60"
         aria-label="메시지 입력"
       />
       <Button
         type="button"
-        size="icon-sm"
-        variant="secondary"
+        size="icon-lg"
+        variant="ghost"
         disabled={disabled}
         title={disabled ? disabledHint : undefined}
         onClick={() => void handleSend()}
         aria-label="전송"
+        className="shrink-0 text-brand hover:bg-brand/10 hover:text-brand"
       >
-        <SendHorizontal className="size-4" />
+        <SendHorizontal className="size-5" />
       </Button>
     </div>
   );
