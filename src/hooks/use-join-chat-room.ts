@@ -1,6 +1,5 @@
-"use client";
-
 // join_chat_room RPC 호출 후 채팅방 멤버·룸 관련 쿼리를 무효화하는 mutation 훅
+"use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 

@@ -1,6 +1,5 @@
-"use client";
-
 // 미참여 유저에게 채팅방 참여 여부를 묻는 Dialog (정원 마감 시 안내만 표시)
+"use client";
 
 import { useRouter } from "next/navigation";
 import { DoorOpen, Users } from "lucide-react";
