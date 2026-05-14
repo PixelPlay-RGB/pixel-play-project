@@ -94,6 +94,8 @@
 - **Plan**: 무엇을 왜 만드는지 기술.
 - **Checklist (`checklist.md`)**: 체크박스 형태의 구체적 작업 목록.
 - **Context Notes (`context-notes.md`)**: 작업 중 내린 결정과 그 이유를 기록.
+- `checklist.md`와 `context-notes.md`는 에이전트 전용 작업 기록 파일입니다.
+- `checklist.md`와 `context-notes.md`는 커밋 대상에 포함하지 말고, PR 작성 전 반드시 삭제하십시오.
 - 사용자가 계획만 주고 코딩을 지시하면 멈추고 산출물 생성 여부를 물으십시오.
 
 ### 2.9 완료 전 테스트 실행 (Run Tests)
@@ -102,6 +104,9 @@
 
 - `npm run build` 등으로 빌드 및 타입 체크를 수행하십시오.
 - 테스트 결과(통과/실패/불가능 사유)를 구체적으로 보고하십시오.
+- 단, 단일 파일 내부의 단순 문구, 위치, 색상, 여백, className 조정처럼 타입·데이터 흐름·빌드 결과에 영향을 주지 않는 변경은 전체 `npm run build` 또는 `npm run lint`를 생략할 수 있습니다.
+- 새 파일 생성, import/export 변경, 타입 변경, hook 로직 변경, Supabase 타입/RPC 변경, query key 변경, 라우트 변경, 공용 컴포넌트 변경은 간단해 보여도 `npm run build` 또는 관련 검증을 실행하십시오.
+- 검증을 생략한 경우에는 완료 보고에 "단순 UI/CSS 조정이라 빌드와 lint는 생략"처럼 이유를 명시하십시오.
 
 ### 2.10 의미 있는 커밋 (Semantic Commits)
 

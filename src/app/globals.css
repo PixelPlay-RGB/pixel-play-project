@@ -62,7 +62,7 @@
 }
 
 :root {
-  --app-content-height: calc(100vh - 146px);
+  --app-content-height: calc(100vh - 148px);
 
   --brand: #46c6a9;
   --brand-foreground: #ffffff;

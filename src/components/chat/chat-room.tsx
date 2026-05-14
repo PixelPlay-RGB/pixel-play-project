@@ -12,6 +12,7 @@ import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import type { AppMessageCode } from "@/constants/app-message-code";
 import { useRoom } from "@/hooks/use-chat-room";
 import { useChatRoomMemberRealtime } from "@/hooks/use-chat-room-member-realtime";
+import { useMarkRoomReadLifecycle } from "@/hooks/use-mark-room-read-lifecycle";
 import useMessages from "@/hooks/use-messages";
 import { useUser } from "@/hooks/use-profile";
 import { useRoomMembers } from "@/hooks/use-room-members";
@@ -45,6 +46,17 @@ export function ChatRoom({ roomId }: Props) {
 
   const currentUserId = profile?.id ?? "";
   const { isKicked } = useChatRoomMemberRealtime({ roomId, currentUserId });
+
+  const markRoomReadEnabled =
+    !!roomId &&
+    !profilePending &&
+    !!currentUserId &&
+    roomQuery.isFetched &&
+    roomQuery.data != null &&
+    roomQuery.error == null &&
+    !isKicked;
+
+  useMarkRoomReadLifecycle({ roomId, enabled: markRoomReadEnabled });
 
   const handleLoadPrevious = (): boolean => {
     if (isLoadingPrevious || !hasMorePrevious) {
@@ -95,6 +107,7 @@ export function ChatRoom({ roomId }: Props) {
                 <ChatRoomMenu
                   roomId={roomId}
                   ownerId={roomQuery.data.owner_id}
+                  currentMember={roomQuery.data.current_member}
                   currentUserId={currentUserId}
                 />
               ) : null}

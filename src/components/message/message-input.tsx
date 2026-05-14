@@ -10,6 +10,10 @@ import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import { createClient } from "@/lib/supabase/client";
 import { getAppMessageTitle, resolveSupabaseErrorCode } from "@/utils/app-message";
 import { toastAppError } from "@/utils/toast-message";
+import { MESSAGE_CONTENT_MAX_LENGTH } from "@/constants/message";
+import { ERROR_MESSAGES } from "@/constants/errors";
+import { createClient } from "@/lib/supabase/client";
+import { messageContentSchema } from "@/lib/zod/message";
 
 interface Props {
   roomId: string;
@@ -24,17 +28,25 @@ export function MessageInput({ roomId, currentUserId, disabled = false, disabled
   const sendMessageLockRef = useRef(false);
 
   const handleSend = async () => {
-    const trimmed = draft.trim();
-    if (!trimmed || sendMessageLockRef.current || !currentUserId || !roomId) {
+    if (sendMessageLockRef.current || !currentUserId || !roomId) {
       return;
     }
+
+    const parsed = messageContentSchema.safeParse(draft);
+    if (!parsed.success) {
+      const first = parsed.error.issues[0];
+      toast.error(first?.message ?? "입력값을 확인해주세요.");
+      return;
+    }
+
+    const content = parsed.data;
 
     sendMessageLockRef.current = true;
 
     const { error } = await supabase.from("message").insert({
       chat_room_id: roomId,
       user_id: currentUserId,
-      content: trimmed,
+      content,
     });
 
     if (error) {
@@ -52,13 +64,18 @@ export function MessageInput({ roomId, currentUserId, disabled = false, disabled
     <div className="border-border bg-background/95 flex shrink-0 gap-2 border-t p-2 backdrop-blur-sm">
       <ChatEmojiPicker
         disabled={disabled}
-        onEmojiSelect={(emoji) => setDraft((prev) => prev + emoji)}
+        onEmojiSelect={(emoji) =>
+          setDraft((prev) => (prev + emoji).slice(0, MESSAGE_CONTENT_MAX_LENGTH))
+        }
       />
       <Input
         value={draft}
         disabled={disabled}
+        maxLength={MESSAGE_CONTENT_MAX_LENGTH}
         title={disabled ? disabledHint : undefined}
-        onChange={(e) => setDraft(e.target.value)}
+        onChange={(e) =>
+          setDraft(e.target.value.slice(0, MESSAGE_CONTENT_MAX_LENGTH))
+        }
         onKeyDown={(e) => {
           if (disabled) return;
           if (e.key === "Enter" && !e.shiftKey) {

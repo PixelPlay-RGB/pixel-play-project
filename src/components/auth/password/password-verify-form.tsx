@@ -40,8 +40,8 @@ export default function PasswordVerifyForm({ onVerified }: Props) {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3">
-      <div className="flex flex-col gap-1">
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+      <div className="flex flex-col gap-1.5">
         <AuthInputGroup
           {...register("currentPassword")}
           type="password"
@@ -52,7 +52,11 @@ export default function PasswordVerifyForm({ onVerified }: Props) {
         />
         <FieldError errors={[errors.currentPassword]} />
       </div>
-      <Button type="submit" disabled={isSubmitting} className="w-full py-5 font-bold tracking-wide">
+      <Button
+        type="submit"
+        disabled={isSubmitting}
+        className="bg-brand shadow-brand/20 hover:bg-brand/90 h-11 w-full rounded-xl font-bold text-white shadow-sm"
+      >
         {isSubmitting ? <Spinner /> : "확인"}
       </Button>
     </form>

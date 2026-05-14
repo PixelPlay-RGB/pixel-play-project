@@ -6,6 +6,7 @@ import {
   Dialog,
   DialogContent,
   DialogHeader,
+  DialogDescription,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
@@ -21,7 +22,7 @@ import type { CreateChatRoomInput } from "@/lib/zod/chat-room";
 import { toastAppError, toastAppSuccess } from "@/utils/toast-message";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus } from "lucide-react";
+import { MessageSquarePlus, Plus } from "lucide-react";
 import { useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 
@@ -70,11 +71,21 @@ export default function CreateChatRoomDialog() {
         <Plus className="h-4 w-4" />
         채팅방 만들기
       </DialogTrigger>
-      <DialogContent className={cn("max-w-md gap-0 overflow-hidden p-0", "rounded-3xl")}>
-        <DialogHeader className={cn("border-border/50 border-b px-6 pt-6 pb-4")}>
-          <DialogTitle className="text-base font-bold">채팅방 생성</DialogTitle>
+      <DialogContent className="border-brand/20 shadow-brand/10 dark:border-brand/10 max-w-md gap-0 overflow-hidden rounded-2xl p-0 shadow-xl">
+        <DialogHeader className="bg-brand/5 border-brand/10 border-b px-5 pt-5 pb-4">
+          <div className="flex items-center gap-3">
+            <span className="bg-brand/10 text-brand ring-brand/20 flex size-10 shrink-0 items-center justify-center rounded-xl ring-1">
+              <MessageSquarePlus className="size-5" />
+            </span>
+            <div className="min-w-0">
+              <DialogTitle className="text-lg font-bold">채팅방 생성</DialogTitle>
+              <DialogDescription className="mt-1 leading-relaxed">
+                함께 대화할 주제와 참여 가능 인원을 설정합니다.
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
-        <form onSubmit={handleSubmit(handleCreateRoom)} className="flex flex-col gap-5 px-6 py-5">
+        <form onSubmit={handleSubmit(handleCreateRoom)} className="flex flex-col gap-5 px-5 py-5">
           <div className="flex flex-col gap-1.5">
             <label className="text-muted-foreground text-xs font-semibold">방 제목</label>
             <Input
@@ -135,11 +146,11 @@ export default function CreateChatRoomDialog() {
           <div className="mt-1 flex gap-2.5">
             <Button
               type="button"
-              variant="secondary"
+              variant="outline"
               onClick={() => setOpen(false)}
               className={cn(
-                "border-border h-auto flex-1 rounded-xl border py-2.5 transition-all",
-                "text-muted-foreground text-sm font-semibold",
+                "bg-background h-10 flex-1 rounded-xl transition-all",
+                "text-foreground text-sm font-semibold",
                 "hover:bg-muted/50 hover:text-foreground",
               )}
             >
@@ -149,7 +160,7 @@ export default function CreateChatRoomDialog() {
               type="submit"
               disabled={!isValid || isSubmitting}
               className={cn(
-                "bg-brand h-auto flex-1 rounded-xl py-2.5 transition-all",
+                "bg-brand h-10 flex-1 rounded-xl transition-all",
                 "shadow-brand/20 text-sm font-bold text-white shadow-sm",
                 "hover:opacity-90 active:scale-95",
               )}

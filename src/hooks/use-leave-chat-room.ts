@@ -21,8 +21,12 @@ export function useLeaveChatRoom() {
     },
     onSuccess: async () => {
       toast.success("채팅방을 나갔습니다.");
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.all });
       router.push("/");
+      queryClient.removeQueries({ queryKey: QUERY_KEYS.chat.room() });
+      queryClient.removeQueries({ queryKey: QUERY_KEYS.chat.messages() });
+      queryClient.removeQueries({ queryKey: QUERY_KEYS.chat.members() });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.rooms() });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.counts() });
     },
   });
 }

@@ -34,7 +34,7 @@ export default async function Header() {
         </Link>
 
         <div className="flex items-center gap-3 sm:gap-5">
-          <HeaderSearchForm />
+          {user && hasProfile && <HeaderSearchForm />}
           <ThemeToggleButton />
           {user && hasProfile && <HeaderProfileBadge />}
           {!user && <LoginButton />}

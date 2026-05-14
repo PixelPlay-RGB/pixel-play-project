@@ -1,51 +1,39 @@
 # PixelPlay
 
-실시간 채팅 플랫폼으로 시작해 향후 **라이브 스트리밍 서비스**로 확장할 계획인 웹 애플리케이션입니다.  
-Next.js 16 App Router + Supabase Realtime 기반으로 구축됩니다.
+실시간 채팅 플랫폼으로 시작해 향후 라이브 스트리밍 서비스로 확장할 계획인 웹 애플리케이션입니다.
 
----
-
-## 프로젝트 개요
-
-- PixelPlay는 실시간 채팅 플랫폼으로 시작해 향후 라이브 스트리밍 서비스로 확장할 Next.js 웹 애플리케이션입니다.
-- 주요 스택은 Next.js 16 App Router, React 19, TypeScript strict, Tailwind CSS 4, shadcn `base-nova`, Base UI, Supabase Auth/Postgres/Realtime, TanStack Query v5, Zustand v5입니다.
-- 인증은 Supabase Auth 단독으로 처리하며, `src/lib/supabase/proxy.ts`가 세션 검증과 라우트 가드를 담당합니다.
-- 데이터 타입은 Supabase 스키마에서 생성된 `src/types/database.types.ts`를 기준으로 사용합니다.
-- 채팅 실시간 기능은 Supabase Realtime의 Postgres Changes, Broadcast, Presence를 사용하는 방향입니다. 별도 Socket.IO 서버는 도입하지 않습니다.
+Next.js 16 App Router, React 19, Supabase Auth/Postgres/Realtime, TanStack Query, Zustand를 중심으로 인증, 채팅방 목록, 채팅방 상세, 메시지, 참여자 관리, 채팅방 검색 기능을 제공합니다.
 
 ---
 
 ## 기술 스택
 
-| 분류                | 기술                                                         |
-| ------------------- | ------------------------------------------------------------ |
-| Framework           | Next.js 16 (App Router) · React 19 · TypeScript (strict)     |
-| Styling             | Tailwind CSS 4 · shadcn (base-nova) · Base UI · lucide-react |
-| Auth                | Supabase Auth (Email OTP · Google · GitHub OAuth)            |
-| Database / Realtime | Supabase (Postgres + Realtime)                               |
-| Server State        | TanStack Query v5                                            |
-| Client State        | Zustand v5                                                   |
-| Form / Validation   | react-hook-form v7 · Zod v4                                  |
-| Theme               | next-themes (다크모드)                                       |
-| Formatter           | Prettier + Tailwind 플러그인                                 |
+| 분류 | 기술 |
+| --- | --- |
+| Framework | Next.js 16 App Router, React 19, TypeScript strict |
+| Styling | Tailwind CSS 4, shadcn, Base UI, lucide-react |
+| Auth | Supabase Auth, Email OTP, Google OAuth, GitHub OAuth |
+| Database | Supabase Postgres |
+| Realtime | Supabase Realtime Postgres Changes |
+| Server State | TanStack Query v5 |
+| Client State | Zustand v5 |
+| Form / Validation | react-hook-form v7, Zod v4 |
+| Theme | next-themes |
+| Formatter | Prettier, prettier-plugin-tailwindcss |
 
 ---
 
-## 시작하기 전에
+## 시작하기
 
-아래 항목이 준비되어 있어야 합니다.
+### 요구 사항
 
-- **Node.js** 20 이상
-- **npm** 10 이상
-- **Supabase** 프로젝트 ([app.supabase.com](https://app.supabase.com))
-- **Google OAuth** 앱 (Google Cloud Console)
-- **GitHub OAuth** 앱 (GitHub → Settings → Developer settings → OAuth Apps)
+- Node.js 20 이상
+- npm 10 이상
+- Supabase 프로젝트
+- Google OAuth 앱
+- GitHub OAuth 앱
 
----
-
-## Tutorial
-
-### 1단계 — 저장소 클론 및 의존성 설치
+### 설치
 
 ```bash
 git clone https://github.com/PixelPlay-RGB/pixel-play-project.git
@@ -53,9 +41,7 @@ cd pixel-play-project
 npm install
 ```
 
----
-
-### 2단계 — 환경 변수 설정
+### 환경 변수
 
 루트의 `.env.example`을 복사해 `.env.local`을 만들고 값을 채웁니다.
 
@@ -63,346 +49,274 @@ npm install
 cp .env.example .env.local
 ```
 
-| 변수                                   | 설명                             |
-| -------------------------------------- | -------------------------------- |
-| `NEXT_PUBLIC_SUPABASE_URL`             | Supabase 프로젝트 URL            |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | anon (공개) 키                   |
-| `AUTH_SECRET`                          | 세션 암호화 시크릿 (임의 문자열) |
-| `AUTH_GOOGLE_CLIENT_ID`                | Google OAuth 클라이언트 ID       |
-| `AUTH_GOOGLE_CLIENT_SECRET`            | Google OAuth 클라이언트 시크릿   |
-| `AUTH_GITHUB_CLIENT_ID`                | GitHub OAuth App Client ID       |
-| `AUTH_GITHUB_CLIENT_SECRET`            | GitHub OAuth App Client Secret   |
+| 변수 | 설명 |
+| --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase 프로젝트 URL |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase publishable key |
+| `SUPABASE_SERVICE_ROLE_KEY` | 회원 탈퇴 등 관리자 작업에 사용하는 service role key |
 
-> 환경 변수 키를 추가·변경하면 `src/env.d.ts`의 타입 선언도 함께 수정해야 합니다.
+환경 변수 키를 추가하거나 변경하면 루트의 `env.d.ts` 타입 선언도 함께 갱신합니다.
 
----
+### OAuth 콜백 URL
 
-### 3단계 — OAuth 공급자 콜백 URL 등록
+Supabase Auth를 단독으로 사용하므로 Supabase 대시보드와 각 OAuth 공급자에 콜백 URL을 등록합니다.
 
-Supabase Auth를 단독으로 사용합니다. OAuth callback URL은 Supabase 대시보드와 각 공급자 모두에 등록해야 합니다.
+Supabase Authentication Redirect URLs.
 
-#### Supabase 대시보드
-
-Authentication → URL Configuration → **Redirect URLs** 에 추가합니다.
-
-```
+```text
 http://localhost:3000/auth/callback
 https://<your-domain>/auth/callback
 ```
 
-#### Google
+Google, GitHub OAuth callback URL.
 
-Google Cloud Console → 사용자 인증 정보 → OAuth 2.0 클라이언트 → **승인된 리디렉션 URI** 에 추가합니다.
-
-```
+```text
 https://<supabase-project-id>.supabase.co/auth/v1/callback
 ```
 
-#### GitHub
-
-GitHub → Developer settings → OAuth Apps → 앱 선택 → **Authorization callback URL** 에 입력합니다.
-
-```
-https://<supabase-project-id>.supabase.co/auth/v1/callback
-```
-
----
-
-### 4단계 — 개발 서버 실행
+### 개발 서버
 
 ```bash
 npm run dev
 ```
 
-브라우저에서 <http://localhost:3000> 접속. 비로그인 상태면 `/auth/login`으로 자동 리다이렉트됩니다.
+브라우저에서 <http://localhost:3000>에 접속합니다. 비로그인 상태에서는 `/auth/login`으로 이동합니다.
 
 ---
 
-## 검증 명령
+## 명령어
 
-- 개발 서버: `npm run dev`
-- 프로덕션 빌드/타입 확인: `npm run build`
-- Supabase 타입 재생성: `npm run types`
+| 명령어 | 설명 |
+| --- | --- |
+| `npm run dev` | 개발 서버 실행 |
+| `npm run build` | 프로덕션 빌드와 타입 확인 |
+| `npm run start` | 프로덕션 서버 실행 |
+| `npm run lint` | ESLint 검사 |
+| `npm run format` | Prettier 포맷 적용 |
+| `npm run format:check` | Prettier 포맷 검사 |
+| `npm run types` | Supabase 타입을 `src/types/database.types.ts`로 재생성 |
+
+---
+
+## 주요 기능
+
+### 인증
+
+- 이메일 OTP 인증 후 비밀번호와 프로필을 완성하는 회원가입 흐름을 제공합니다.
+- 이메일과 비밀번호 기반 로그인을 제공합니다.
+- Google, GitHub OAuth 로그인과 추가 프로필 입력 흐름을 제공합니다.
+- OAuth 연동 계정 목록을 `linked_providers`로 관리합니다.
+- 로그인 상태는 Supabase 세션을 기준으로 검증하고 `AuthListener`가 Zustand store에 동기화합니다.
+- 프로필이 없는 로그인 유저는 `/auth/complete-profile`로 이동합니다.
+- 비로그인 유저는 보호 라우트 접근 시 `/auth/login`으로 이동합니다.
+- 비밀번호 변경, 프로필 수정, 프로필 이미지 업로드와 삭제, 회원 탈퇴 API를 제공합니다.
+
+### 메인 화면
+
+- 좌측 사이드바에서 채팅과 라이브 메뉴를 전환합니다.
+- 현재 라이브 메뉴는 준비 상태 화면을 제공합니다.
+- 모바일에서는 사이드바가 offcanvas 형태로 동작합니다.
+- 헤더 검색 입력은 채팅 메뉴에서 채팅방 검색 페이지로 이동합니다.
+
+### 채팅방 목록
+
+- `JOINED`, `NOT_JOINED`, `OWNED` 탭으로 채팅방 목록을 분리합니다.
+- 탭별 개수는 `get_room_counts_by_user` RPC로 조회합니다.
+- 목록 데이터는 `get_rooms_by_tab` RPC로 조회합니다.
+- 정렬 옵션은 생성일 최신순, 최신 메시지순, 참여자 많은순을 제공합니다.
+- 참여 가능한 채팅방 탭에서는 최신 메시지순을 노출하지 않습니다.
+- 탭 변경 시 정렬값은 기본값인 생성일 최신순으로 초기화합니다.
+- 채팅방 카드에는 제목, 설명, 방장 닉네임, 현재 인원, 최대 인원, 생성일을 표시합니다.
+- 채팅방 생성 Dialog에서 제목, 설명, 정원을 입력해 방을 만들 수 있습니다.
+- 현재 목록의 unread badge는 mock 데이터를 사용합니다.
+
+### 채팅방 상세
+
+- `/chat/[room-id]` 라우트에서 채팅방 상세 화면을 제공합니다.
+- 방 정보, 참여자 목록, 메시지 목록, 메시지 입력 영역을 렌더링합니다.
+- 참여자 목록은 활성 멤버만 표시합니다.
+- 방장은 참여자 Popover에서 강퇴와 방장 권한 위임을 실행할 수 있습니다.
+- 강퇴된 유저는 Realtime 이벤트로 감지되어 입력이 잠기고 안내 Dialog가 표시됩니다.
+- 일반 참여자는 채팅방 메뉴에서 나가기를 실행할 수 있습니다.
+- 방장은 현재 정책상 채팅방 나가기가 제한됩니다.
+
+### 메시지
+
+- 메시지 목록은 `useInfiniteQuery`로 최신 메시지부터 조회합니다.
+- 상단 근접 시 이전 메시지를 추가로 가져옵니다.
+- 새 메시지는 Supabase Realtime `postgres_changes` INSERT 이벤트를 받아 React Query cache에 반영합니다.
+- 텍스트 메시지 전송과 이모지 입력을 제공합니다.
+- 시스템 메시지는 별도 컴포넌트로 렌더링합니다.
+
+### 채팅방 검색
+
+- `/search/chat?query=검색어` 라우트에서 채팅방 검색 결과를 제공합니다.
+- 제목 검색과 방장 닉네임 검색을 섹션으로 나누어 표시합니다.
+- 검색 결과는 `search_chat_rooms` RPC와 `useInfiniteQuery`로 페이지 단위 조회합니다.
+- 각 섹션은 더보기 버튼으로 다음 페이지를 불러옵니다.
 
 ---
 
 ## 디렉토리 구조
 
-```
+```text
 src/
 ├── actions/              # Server Actions
-│   ├── auth.ts           # 로그인·회원가입·프로필 업데이트·OAuth 연동해제 서버 액션
-│   └── chat-room.ts      # 채팅방 생성 서버 액션
 ├── app/                  # Next.js App Router
 │   ├── (settings)/       # 설정 라우트 그룹
-│   │   ├── layout.tsx    # 설정 레이아웃 (사이드바 포함)
-│   │   └── profile/      # 프로필 설정 페이지
-│   ├── api/auth/withdraw/route.ts # 회원가입 취소 계정 삭제 API
-│   ├── auth/
-│   │   ├── callback/     # OAuth code → session 교환 핸들러
-│   │   ├── complete-profile/ # OAuth 유저 추가 정보 입력 페이지
-│   │   ├── login/        # 로그인 페이지
-│   │   └── signup/       # 회원가입 페이지
-│   ├── chat/[room-id]/   # 채팅방 상세 페이지
-│   ├── layout.tsx
-│   ├── not-found.tsx
-│   └── page.tsx
+│   ├── api/              # Route Handler
+│   ├── auth/             # 인증 라우트
+│   ├── chat/[room-id]/   # 채팅방 상세
+│   └── search/chat/      # 채팅방 검색
 ├── components/
-│   ├── auth/
-│   │   ├── complete-profile/ # CompleteProfileForm
-│   │   ├── login/        # LoginForm · OAuthButtons
-│   │   ├── password/     # VerifyPasswordForm · PasswordChangeForm · PasswordChangeDialog
-│   │   ├── signup/       # SignupForm
-│   │   ├── auth-listener.tsx     # Supabase Auth 상태 → Zustand 동기화
-│   │   ├── auth-toast-handler.tsx # OAuth 콜백 후 토스트 표시 (login · welcome · linked 파라미터 처리)
-│   │   └── login-button.tsx
-│   ├── chat/
-│   │   ├── chat-room.tsx              # 채팅방 컨테이너·패널 구성
-│   │   ├── chat-room-card.tsx         # 채팅방 목록 카드
-│   │   ├── chat-room-empty-state.tsx  # 채팅방 목록 빈 상태
-│   │   ├── chat-room-list.tsx         # 채팅방 목록
-│   │   ├── chat-room-list-header.tsx  # 채팅방 목록 헤더
-│   │   ├── chat-room-list-skeleton.tsx # 채팅방 목록 로딩 UI
-│   │   ├── chat-room-tabs.tsx         # 채팅·라이브 탭
-│   │   ├── create-chat-room-dialog.tsx # 채팅방 생성 다이얼로그
-│   │   └── chat-emoji-picker.tsx      # 이모지 피커
-│   ├── common/
-│   │   ├── header.tsx
-│   │   ├── footer.tsx
-│   │   ├── logo.tsx
-│   │   ├── main-menu-sidebar.tsx
-│   │   ├── main-menu-sidebar-item.tsx
-│   │   └── providers.tsx
-│   ├── live/
-│   │   └── live-list.tsx
-│   ├── member/
-│   │   ├── member-list.tsx         # 참여자 목록
-│   │   └── member-item.tsx         # 참여자 한 행
-│   ├── message/
-│   │   ├── message-list.tsx        # 메시지 목록·스크롤
-│   │   ├── message-item.tsx        # 단일 메시지 행
-│   │   └── message-input.tsx       # 메시지 입력·전송
-│   ├── setting/
-│   │   ├── profile/
-│   │   │   ├── header-profile-badge.tsx # 헤더 유저 아바타 + 드롭다운
-│   │   │   ├── profile-form.tsx          # 프로필 수정 폼 (닉네임·사진)
-│   │   │   ├── profile-avatar-upload.tsx # 아바타 업로드 위젯 (드래그&드롭 지원)
-│   │   │   ├── profile-providers-card.tsx # OAuth 연동·해제 카드
-│   │   │   ├── profile-card.tsx          # 설정 섹션 Card 래퍼
-│   │   │   └── profile-form-skeleton.tsx # 프로필 폼 로딩 스켈레톤
-│   │   ├── setting-sidebar.tsx           # 설정 페이지 사이드바
-│   │   └── setting-menu-item.tsx         # 메뉴 아이템 렌더러
-│   └── ui/               # shadcn / Base UI 컴포넌트
-├── constants/
-│   ├── app-message.ts    # 사용자 노출 메시지(APP_MESSAGE)
-│   ├── app-message-code.ts # 메시지 코드(APP_MESSAGE_CODE)와 AppMessageCode 타입
-│   ├── auth.ts
-│   ├── chat-emoji-picker.ts # 이모지 피커 분류·목록
-│   ├── chat-room.ts
-│   ├── footer.ts
-│   ├── form-message.ts   # Zod·FieldError용 폼 검증 메시지
-│   ├── main-menu-sidebar.ts
-│   ├── message.ts
-│   ├── query-keys.ts     # 중앙 집중식 Query Key Factory (QUERY_KEYS)
-│   └── setting-menu.ts   # 설정 메뉴 아이템 목록
-├── hooks/
-│   ├── use-chat-room.ts  # 채팅방 단일 조회·Realtime 구독
-│   ├── use-chat-room-counts.ts
-│   ├── use-chat-rooms.ts # 채팅방 목록 조회
-│   ├── use-messages.ts   # 메시지 목록·Realtime 구독
-│   ├── use-mobile.ts     # 모바일 뷰포트 감지 훅
-│   ├── use-profile.ts    # useUser() — public.user 프로필 React Query 훅
-│   └── use-room-members.ts # 채팅방 멤버 목록
+│   ├── auth/             # 로그인, 회원가입, OAuth, 비밀번호 UI
+│   ├── chat/             # 채팅방 목록, 카드, 생성 Dialog, 방 메뉴
+│   ├── common/           # Header, Footer, Providers, Sidebar
+│   ├── member/           # 참여자 목록, 강퇴, 권한 위임 UI
+│   ├── message/          # 메시지 목록, 입력, 메시지 item
+│   ├── search/           # 검색 입력과 검색 결과
+│   ├── setting/          # 프로필 설정
+│   └── ui/               # shadcn / Base UI 기반 공통 컴포넌트
+├── constants/            # 상수와 Query Key Factory
+├── hooks/                # React Query, Realtime, 반응형 훅
 ├── lib/
-│   ├── supabase/         # admin-client.ts · client.ts · server.ts · proxy.ts
-│   ├── zod/              # auth.ts · chat-room.ts
-│   └── utils/
-├── mock/
-│   └── chat-room.ts
-├── stores/
-│   ├── auth.ts           # Zustand Auth 스토어
-│   └── chat-room.ts      # 채팅방 선택 상태
-├── types/
-│   ├── action.ts         # Server Action 공통 결과 타입
-│   ├── app-message.ts    # 사용자 노출 메시지 타입
-│   ├── auth.ts
-│   ├── chat-room.ts
-│   ├── chat-room-member.ts
-│   ├── database.types.ts # Supabase 자동 생성 타입 (npm run types)
-│   ├── main-menu-sidebar.ts
-│   ├── message.ts        # message 테이블 타입
-│   ├── setting-menu.ts
-│   ├── supabase.types.ts # Supabase 보조·확장 타입
-│   └── user.ts
-└── utils/
-    ├── app-message.ts    # 메시지 코드 → 사용자 메시지 변환
-    ├── chat-room.ts
-    ├── format.ts         # formatDate · formatPhone 유틸
-    └── toast-message.ts  # APP_MESSAGE 기반 toast 헬퍼
+│   ├── supabase/         # browser, server, admin client
+│   ├── utils/            # 공통 유틸
+│   └── zod/              # Zod schema
+├── stores/               # Zustand stores
+├── types/                # 도메인 타입과 Supabase 생성 타입
+└── utils/                # 표시용 유틸
 ```
 
 ---
 
-## 앱 메시지 관리
+## 데이터베이스
 
-사용자에게 노출되는 toast, alert, error UI 문구는 `src/constants/app-message.ts`의 `APP_MESSAGE`에서 관리합니다. 호출부에서는 문자열을 직접 작성하지 않고 `src/constants/app-message-code.ts`의 `APP_MESSAGE_CODE`를 사용합니다.
+### 주요 테이블
 
-- `APP_MESSAGE_CODE`는 자동완성과 타입 검사를 위해 별도 파일에서 관리합니다.
-- `AppMessageCode` 타입은 `APP_MESSAGE_CODE`에서 파생합니다.
-- `APP_MESSAGE`와 `APP_MESSAGE_CODE`의 도메인과 key는 반드시 일치해야 합니다.
-- 원본 Supabase/Auth/DB 에러 메시지는 사용자에게 직접 노출하지 않고 `console.error`로만 남깁니다.
-- Zod, React Hook Form의 `FieldError`로 필드 아래에 표시하는 검증 메시지는 `src/constants/form-message.ts`의 `FORM_MESSAGE`에서 관리합니다.
-- FieldError 메시지는 사용자가 입력값을 수정할 수 있도록 문장형으로 작성하고, toast로 중복 노출하지 않습니다.
-- title은 짧은 명사형 또는 상태형으로 작성하고, 자세한 안내는 description에 작성합니다.
+| 테이블 | 설명 |
+| --- | --- |
+| `user` | 서비스 유저 프로필. Supabase Auth user id와 동일한 `id`를 사용합니다. |
+| `chat_room` | 채팅방 메타데이터와 정원, 현재 참여자 수를 저장합니다. |
+| `chat_room_member` | 채팅방 참여 상태, 강퇴 여부, 마지막 입장 시각, 마지막 읽음 시각을 저장합니다. |
+| `message` | 채팅 메시지와 시스템 메시지를 저장합니다. |
 
-세부 문구 규칙은 `.agents/app-message-convention/SKILLS.md`를 따릅니다.
+### 주요 컬럼
 
----
+`user`.
 
-## 데이터베이스 스키마
+| 컬럼 | 설명 |
+| --- | --- |
+| `id` | Auth user id와 동일한 uuid |
+| `email` | 이메일 |
+| `name` | 실명 |
+| `nickname` | 서비스 표시 이름 |
+| `birth` | 생년월일 |
+| `phone` | 휴대전화번호 |
+| `gender` | `male`, `female`, `none` |
+| `photo_url` | 프로필 이미지 URL |
+| `linked_providers` | `google`, `github`, `email` 배열 |
+| `created_at`, `modified_at` | 생성, 수정 시각 |
 
-### `user` 테이블
+`chat_room`.
 
-| 컬럼               | 타입                        | 설명                                    |
-| ------------------ | --------------------------- | --------------------------------------- |
-| `id`               | uuid (PK)                   | 자동 생성                               |
-| `oauth_id`         | text (UNIQUE)               | Supabase Auth 유저 ID (`auth.users.id`) |
-| `email`            | text                        | 이메일                                  |
-| `name`             | text                        | 실명                                    |
-| `nickname`         | text                        | 닉네임 (서비스 내 표시 이름)            |
-| `birth`            | text                        | 생년월일                                |
-| `phone`            | text                        | 휴대전화번호                            |
-| `gender`           | enum                        | `male` · `female` · `none`              |
-| `photo_url`        | text (nullable)             | 프로필 사진 URL (이메일 유저는 null)    |
-| `linked_providers` | oauth_provider[] (nullable) | 연동된 OAuth 공급자 목록                |
-| `created_at`       | timestamptz                 | 생성 시각                               |
-| `modified_at`      | timestamptz                 | 최종 수정 시각                          |
+| 컬럼 | 설명 |
+| --- | --- |
+| `id` | 채팅방 uuid |
+| `owner_id` | 방장 `user.id` |
+| `title` | 제목 |
+| `description` | 설명 |
+| `max_capacity` | 최대 인원 |
+| `current_member` | 현재 활성 참여자 수 |
+| `created_at`, `modified_at` | 생성, 수정 시각 |
 
-### `chatroom` 테이블
+`chat_room_member`.
 
-| 컬럼           | 타입            | 설명             |
-| -------------- | --------------- | ---------------- |
-| `id`           | uuid (PK)       | 자동 생성        |
-| `title`        | text            | 채팅방 제목      |
-| `description`  | text (nullable) | 채팅방 설명      |
-| `max_capacity` | int             | 최대 입장 인원   |
-| `owner_id`     | uuid (FK)       | 생성자 (user.id) |
-| `created_at`   | timestamptz     | 생성 시각        |
-| `modified_at`  | timestamptz     | 최종 수정 시각   |
+| 컬럼 | 설명 |
+| --- | --- |
+| `id` | 멤버 row uuid |
+| `chat_room_id` | 채팅방 id |
+| `user_id` | 유저 id |
+| `last_joined_at` | 마지막 입장 시각 |
+| `last_read_at` | 마지막 읽음 시각 |
+| `is_banned` | 강퇴 여부 |
+| `created_at` | 생성 시각 |
 
-### `chatroommember` 테이블
+`message`.
 
-| 컬럼             | 타입                   | 설명                                    |
-| ---------------- | ---------------------- | --------------------------------------- |
-| `id`             | uuid (PK)              | 자동 생성                               |
-| `chat_room_id`   | uuid (FK)              | chatroom.id                             |
-| `user_id`        | uuid (FK)              | user.id                                 |
-| `status`         | enum                   | `JOINED` · `EXITED` · `BANNED`          |
-| `last_joined_at` | timestamptz (nullable) | 마지막 입장 시각                        |
-| `last_read_at`   | timestamptz (nullable) | 마지막 읽음 시각 (안읽은 메시지 계산용) |
-| `created_at`     | timestamptz            | 최초 참여 시각                          |
+| 컬럼 | 설명 |
+| --- | --- |
+| `id` | 메시지 uuid |
+| `chat_room_id` | 채팅방 id |
+| `user_id` | 작성자 id |
+| `content` | 메시지 내용 |
+| `message_type` | `text`, `system` |
+| `created_at`, `modified_at` | 생성, 수정 시각 |
 
-### `message` 테이블
+### RPC
 
-| 컬럼           | 타입        | 설명        |
-| -------------- | ----------- | ----------- |
-| `id`           | uuid (PK)   | 자동 생성   |
-| `chat_room_id` | uuid (FK)   | chatroom.id |
-| `user_id`      | uuid (FK)   | user.id     |
-| `content`      | text        | 메시지 내용 |
-| `created_at`   | timestamptz | 전송 시각   |
-| `modified_at`  | timestamptz | 수정 시각   |
-
-### DB 함수
-
-| 함수                                          | 설명                                                    |
-| --------------------------------------------- | ------------------------------------------------------- |
-| `check_email_exists(target_email text)`       | 이메일 중복 확인 (OTP 발송 전 호출, `SECURITY DEFINER`) |
-| `check_nickname_exists(target_nickname text)` | 닉네임 중복 확인 (`SECURITY DEFINER`)                   |
+| 함수 | 용도 |
+| --- | --- |
+| `check_email_exists` | 이메일 중복 확인 |
+| `check_nickname_exists` | 닉네임 중복 확인 |
+| `get_room_counts_by_user` | 채팅방 목록 탭별 개수 조회 |
+| `get_rooms_by_tab` | 탭과 정렬 기준별 채팅방 목록 조회 |
+| `get_rooms_by_tab_count` | unread count 포함 채팅방 목록 조회용 함수 |
+| `join_chat_room` | 채팅방 참여 |
+| `leave_chat_room` | 채팅방 나가기 |
+| `mark_room_read` | 방 읽음 처리 |
+| `search_chat_rooms` | 채팅방 제목, 방장 닉네임 검색 |
+| `kick_chat_room_member` | 방장의 참여자 강퇴 |
+| `transfer_chat_room_owner` | 방장 권한 위임 |
 
 ### Supabase Storage
 
-| 버킷       | 경로                             | 용도                      |
-| ---------- | -------------------------------- | ------------------------- |
-| `profiles` | `avatars/{user.id}/avatar.{ext}` | 유저 프로필 사진 (upsert) |
+| 버킷 | 경로 | 용도 |
+| --- | --- | --- |
+| `profiles` | `avatars/{user.id}/avatar.{ext}` | 유저 프로필 사진 |
 
-- 업로드 시 `upsert: true` 옵션으로 기존 파일 덮어씀
-- 공개 URL 캐시 무효화: `?t={Date.now()}` 쿼리 파라미터 추가
-- 사진 삭제 시 Storage 파일도 함께 제거
+프로필 이미지 업로드는 `upsert`로 처리하고, 확장자가 달라져 남은 파일은 정리합니다. 공개 URL에는 캐시 갱신을 위해 `?t={Date.now()}` 쿼리를 붙입니다.
 
-### 타입 재생성
+### 스키마 변경 절차
 
-스키마 변경 후 아래 명령으로 `src/types/database.types.ts`를 갱신합니다.
+Supabase 스키마나 RPC를 수정한 뒤에는 migration 파일을 추가하고 타입을 갱신합니다.
 
 ```bash
 npm run types
 ```
 
----
-
-## 인증 구조
-
-Supabase Auth 단독으로 인증을 처리합니다. 미들웨어(`proxy.ts`)가 모든 요청에서 세션을 검증하고 인증 가드 역할을 담당합니다.
-
-```
-[미들웨어 - proxy.ts]
-  ├── 비로그인 + 비auth 페이지 → /auth/login 리다이렉트
-  └── 로그인 + nickname 없음 + 비auth 페이지 → /auth/complete-profile 리다이렉트
-
-[로그인]
-  ├── LoginForm (이메일/비밀번호) → login() 서버 액션 → supabase.auth.signInWithPassword
-  └── OAuthButtons → supabase.auth.signInWithOAuth → /auth/callback → exchangeCodeForSession
-
-[회원가입 - 이메일 OTP]
-  ├── [1] sendOtpAction(email)          → 중복 확인(RPC) → OTP 발송
-  ├── [2] verifyOtpAction(email, token) → OTP 검증 → 임시 세션 생성
-  └── [3] completeSignupAction(data)    → 비밀번호·프로필 저장 → auth.users.user_metadata 동기화
-
-[OAuth 회원가입]
-  ├── OAuthButtons → /auth/callback → 세션 생성
-  ├── 신규 유저 (nickname 없음) → /auth/complete-profile → completeOAuthProfileAction
-  │     └── user.user_metadata.avatar_url → photo_url DB 저장
-  └── 기존 유저 + 신규 provider 연동 → linked_providers·photo_url(없을 경우) DB 업데이트
-```
-
-**클라이언트 Auth 상태 관리**
-
-```
-AuthListener (providers.tsx에 마운트, 앱 전체에서 1회)
-  ├── 초기: getUser() → Zustand store 세팅
-  └── 이후: onAuthStateChange 구독 → 로그인/로그아웃/토큰갱신 시 store 자동 반영
-
-컴포넌트 → useAuthStore()   → AuthUser (Supabase auth.users) 즉시 접근
-컴포넌트 → useUser()        → DBUser (public.user) React Query 캐시 (5분 staleTime)
-```
+현재 저장소에는 채팅방 정렬 RPC 변경을 반영한 `supabase/migrations/20260512123000_update_get_rooms_by_tab_sort.sql` 파일이 포함되어 있습니다.
 
 ---
 
-## 설정 페이지 기능
+## 상태 관리와 캐싱
 
-### 프로필 (`/profile`)
-
-| 기능            | 설명                                                                 |
-| --------------- | -------------------------------------------------------------------- |
-| 닉네임 변경     | 중복 확인(`checkNicknameAction`) 후 저장 가능                        |
-| 프로필 사진     | 파일 선택·드래그&드롭 업로드, Supabase Storage 저장, 제거 지원       |
-| OAuth 연동      | `supabase.auth.signInWithOAuth` → callback → `linked_providers` 갱신 |
-| OAuth 연동 해제 | `unLinkOAuthAction` — identity 삭제 + `linked_providers` DB 업데이트 |
-
-**제약 조건:** OAuth 전용 가입 유저는 최소 1개의 OAuth 계정 연동 필수. 이메일 가입 유저는 자유롭게 해제 가능.
-
-### 비밀번호 변경
-
-현재 비밀번호 검증(`verifyCurrentPasswordAction`) → 새 비밀번호 설정(`changePasswordAction`). 이메일 가입 유저에게만 메뉴 노출 (`isCanChangePassword` Zustand 플래그).
+- 인증 세션은 `useAuthStore`가 관리합니다.
+- 메인 메뉴 선택 상태는 `useMainMenuStore`가 관리합니다.
+- 채팅방 목록 탭과 정렬값은 `useChatRoomStore`가 관리합니다.
+- 서버 데이터는 TanStack Query로 관리합니다.
+- Query Key는 `src/constants/query-keys.ts`의 `QUERY_KEYS`를 기준으로 생성합니다.
+- Supabase 스키마 타입은 `src/types/database.types.ts`를 기준으로 사용합니다.
 
 ---
 
-## 실시간 통신 방침
+## 실시간 처리
 
-채팅 실시간 기능은 `@supabase/supabase-js`의 Realtime을 활용합니다.
+현재 앱은 Supabase Realtime의 Postgres Changes를 사용합니다.
 
-- **Postgres Changes** — DB 변경 이벤트 구독
-- **Broadcast** — 클라이언트 간 즉시 메시지 전송
-- **Presence** — 온라인 상태 · 타이핑 인디케이터
+- `message` INSERT 이벤트로 새 메시지를 목록에 반영합니다.
+- `chat_room_member` 변경 이벤트로 참여자 목록, 방 정보, 목록 count를 갱신합니다.
+- 강퇴 상태는 현재 유저의 `chat_room_member.is_banned` 변경을 감지해 UI에 반영합니다.
 
-Socket.IO 등 별도 WebSocket 서버는 도입하지 않습니다.
+Broadcast와 Presence는 아직 제품 기능으로 사용하지 않습니다.
+
+---
+
+## 남은 작업
+
+- 목록 unread mock 데이터를 실제 `last_read_at` 기반 count로 교체해야 합니다.
+- 채팅방 참여 UI와 `join_chat_room` RPC 연결이 필요합니다.
+- `mark_room_read`를 상세 진입 또는 이탈 시점에 연결해야 합니다.
+- 메시지 길이 제한과 사용자 친화적인 에러 메시지 고도화가 필요합니다.
+- 라이브 스트리밍 메뉴는 아직 준비 상태입니다.
+- 모바일과 데스크톱 반응형 QA는 주요 기능 변경 후 반복 확인이 필요합니다.

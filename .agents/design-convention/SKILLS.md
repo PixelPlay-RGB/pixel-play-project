@@ -89,3 +89,9 @@
 2.  **다크모드 필수**: 모든 컴포넌트는 다크모드를 반드시 고려하여 설계
 3.  **일관성 유지**: `src/components/ui`의 기존 스타일 패턴 계승
 4.  **LIVE 단일 개념**: `--stream`(퍼플) 변수는 제거됨. 라이브 관련 UI는 모두 `--live` 사용
+
+## 8. shadcn 컴포넌트 계층 규칙
+
+1.  **공식 컴포지션 확인**: shadcn/Base UI 컴포넌트를 새로 조합할 때는 Context7 문서와 `src/components/ui`의 기존 래퍼 구현을 함께 확인한다.
+2.  **그룹 기반 컴포넌트**: `DropdownMenuLabel`, `DropdownMenuItem`, `DropdownMenuRadioGroup` 등은 `DropdownMenuContent` 바로 아래에 두지 않고 `DropdownMenuGroup` 내부에 배치한다.
+3.  **런타임 확인 필수**: Dropdown, Dialog, Popover처럼 클릭 후 렌더링되는 컴포넌트는 빌드 통과만으로 완료하지 않고 실제 트리거 클릭까지 확인한다.
