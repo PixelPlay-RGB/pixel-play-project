@@ -6,16 +6,7 @@ import { useState } from "react";
 
 import { DoorOpen, MoreVertical } from "lucide-react";
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ChatRoomLeaveAlertDialog } from "@/components/chat/chat-room-leave-alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -111,40 +102,13 @@ export function ChatRoomMenu({ roomId, ownerId, currentMember, currentUserId }: 
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <AlertDialog
+      <ChatRoomLeaveAlertDialog
         open={leaveOpen}
-        onOpenChange={(open) => {
-          if (!isPending) setLeaveOpen(open);
-        }}
-      >
-        <AlertDialogContent size="sm">
-          <AlertDialogHeader>
-            <AlertDialogTitle>채팅방 나가기</AlertDialogTitle>
-            <AlertDialogDescription>
-              {isOwner
-                ? "마지막 참여자인 방장이 나가면 채팅방과 대화 기록이 함께 삭제됩니다."
-                : "이 채팅방에서 나가면 참여 목록에서 제거됩니다. 다시 들어오려면 해당 채팅방에 다시 참여해야 합니다."}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="m-0 flex-row justify-end gap-2 border-0 bg-transparent px-5 pt-4 pb-5">
-            <AlertDialogCancel
-              className="border-border bg-background text-foreground hover:bg-muted h-10 min-w-24 rounded-xl px-4 font-semibold"
-              disabled={isPending}
-            >
-              취소
-            </AlertDialogCancel>
-            <AlertDialogAction
-              variant="destructive"
-              className="shadow-destructive/10 h-10 min-w-24 rounded-xl px-4 font-bold shadow-sm"
-              disabled={isPending}
-              type="button"
-              onClick={handleLeave}
-            >
-              {isPending ? "나가는 중…" : "나가기"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        onOpenChange={setLeaveOpen}
+        isPending={isPending}
+        onConfirmLeave={handleLeave}
+      />
+      
     </>
   );
 }
