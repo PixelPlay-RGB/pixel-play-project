@@ -10,11 +10,12 @@ import { KickedRoomAlertDialog } from "@/components/member/kicked-room-alert-dia
 import { MessageInput } from "@/components/message/message-input";
 import { MessageList } from "@/components/message/message-list";
 import { Spinner } from "@/components/ui/spinner";
-import type { DialogEntryStatus } from "@/hooks/use-chat-room-entry-status";
 import { useChatRoomView } from "@/hooks/use-chat-room-view";
+import type { ChatRoomInitialView, DialogEntryStatus } from "@/types/chat-room-entry";
 
 interface Props {
   roomId: string;
+  initialView?: ChatRoomInitialView;
 }
 
 function ChatRoomError({ message }: { message: string }) {
@@ -28,7 +29,7 @@ function ChatRoomError({ message }: { message: string }) {
   );
 }
 
-export function ChatRoom({ roomId }: Props) {
+export function ChatRoom({ roomId, initialView }: Props) {
   const {
     entryStatus,
     isActive,
@@ -45,7 +46,9 @@ export function ChatRoom({ roomId }: Props) {
     rejoinError,
     handleLoadPrevious,
     handleJoinSuccess,
-  } = useChatRoomView(roomId);
+  } = useChatRoomView(roomId, {
+    initialView,
+  });
 
   if (
     entryStatus === "loading" ||

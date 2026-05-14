@@ -14,14 +14,28 @@ import useMessages from "@/hooks/use-messages";
 import { useUser } from "@/hooks/use-profile";
 import { useRoomMembers } from "@/hooks/use-room-members";
 import { useAuthStore } from "@/stores/auth";
+import type { ChatRoomInitialView } from "@/types/chat-room-entry";
 
-export function useChatRoomView(roomId: string) {
+interface UseChatRoomViewOptions {
+  initialView?: ChatRoomInitialView;
+}
+
+export function useChatRoomView(roomId: string, options?: UseChatRoomViewOptions) {
   const queryClient = useQueryClient();
   const authUser = useAuthStore((s) => s.user);
+  const initialView = options?.initialView;
+  const entryStatusUserId = authUser?.id ?? initialView?.userId;
   const rejoinAttemptedRoomRef = useRef<string | null>(null);
   const { data: profile, isPending: profilePending } = useUser();
-  const { status: entryStatus } = useChatRoomEntryStatus(roomId);
-  const roomQuery = useRoom(roomId);
+  const { status: queriedEntryStatus } = useChatRoomEntryStatus(roomId, {
+    initialData: initialView?.entryMembership,
+    initialUserId: initialView?.userId,
+  });
+  const roomQuery = useRoom(roomId, { initialData: initialView?.room });
+  const entryStatus =
+    queriedEntryStatus === "loading" && initialView?.entryStatus
+      ? initialView.entryStatus
+      : queriedEntryStatus;
 
   const isActive = entryStatus === "active";
 
@@ -39,7 +53,7 @@ export function useChatRoomView(roomId: string) {
   };
 
   const handleJoinSuccess = useCallback(() => {
-    queryClient.setQueryData(QUERY_KEYS.chat.entryStatus(roomId, authUser?.id), {
+    queryClient.setQueryData(QUERY_KEYS.chat.entryStatus(roomId, entryStatusUserId), {
       is_banned: false,
       last_joined_at: new Date().toISOString(),
     });
@@ -47,7 +61,7 @@ export function useChatRoomView(roomId: string) {
     void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.room(roomId) });
     void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.rooms() });
     void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.counts() });
-  }, [authUser?.id, queryClient, roomId]);
+  }, [entryStatusUserId, queryClient, roomId]);
 
   const rejoinMutation = useMutation({
     mutationFn: async (targetRoomId: string) => {

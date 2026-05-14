@@ -16,7 +16,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import type { DialogEntryStatus } from "@/hooks/use-chat-room-entry-status";
+import type { DialogEntryStatus } from "@/types/chat-room-entry";
 
 interface Props {
   roomId: string;
