@@ -18,7 +18,7 @@ export function MemberItem({ roomId, member, canManage }: Props) {
 
   if (!canManage) {
     return (
-      <div className="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-muted/40">
+      <div className="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5">
         <Avatar size="sm" className="shrink-0">
           {photoUrl ? <AvatarImage src={photoUrl} alt="" /> : null}
           <AvatarFallback>{fallbackText}</AvatarFallback>
