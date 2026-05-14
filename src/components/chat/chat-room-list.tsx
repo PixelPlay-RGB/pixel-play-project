@@ -23,19 +23,10 @@ export default function ChatRoomList() {
   const selectedSortOption = CHAT_ROOM_SORT_OPTIONS_BY_TAB[tabType].includes(sortOption)
     ? sortOption
     : DEFAULT_CHAT_ROOM_SORT_OPTION;
-  const {
-    data: rooms = [],
-    isError,
-    isFetching,
-    isFetchingNextPage,
-    hasNextPage,
-    isLoading,
-    isPlaceholderData,
-  } = useChatRooms(tabType, selectedSortOption);
+  const query = useChatRooms(tabType, selectedSortOption);
   const { data: counts } = useChatRoomCounts();
 
-  const chatrooms = query.data?.pages.flatMap((page) => page) ?? [];
-  const totalCount = counts?.[tabType] ?? chatrooms.length;
+  const chatRooms = query.data?.pages.flatMap((page) => page) ?? [];
 
   const sentinelRef = useIntersectionObserver(() => {
     if (query.hasNextPage && !query.isFetchingNextPage) {
@@ -44,7 +35,7 @@ export default function ChatRoomList() {
   });
 
   const isInitialLoading = !isUserFetched || query.isLoading;
-  const isEmpty = isUserFetched && !query.isLoading && chatrooms.length === 0;
+  const isEmpty = isUserFetched && !query.isLoading && chatRooms.length === 0;
 
   if (query.isError) {
     return (
@@ -56,7 +47,6 @@ export default function ChatRoomList() {
 
   return (
     <div className="flex flex-col gap-5">
-
       <ChatRoomListHeader counts={counts} />
 
       {isInitialLoading ? (
@@ -66,13 +56,11 @@ export default function ChatRoomList() {
       ) : (
         <>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-            {chatrooms.map((chatroom, index) => (
+            {chatRooms.map((chatRoom) => (
               <ChatRoomCard
-                key={chatroom.id}
-                chatRoom={chatroom}
-                unreadMessageCount={
-                  MOCK_UNREAD_MESSAGE_COUNTS[index % MOCK_UNREAD_MESSAGE_COUNTS.length]
-                }
+                key={chatRoom.id}
+                chatRoom={chatRoom}
+                unreadMessageCount={chatRoom.unread_count}
               />
             ))}
           </div>
@@ -82,10 +70,8 @@ export default function ChatRoomList() {
             </div>
           )}
           <div ref={sentinelRef} aria-hidden="true" />
-          {!query.hasNextPage && !query.isLoading && chatrooms.length > 0 && (
-            <p className="text-muted-foreground text-center text-sm">
-              모든 채팅방을 불러왔습니다.
-            </p>
+          {!query.hasNextPage && !query.isLoading && chatRooms.length > 0 && (
+            <p className="text-muted-foreground text-center text-sm">모든 채팅방을 불러왔습니다.</p>
           )}
         </>
       )}
