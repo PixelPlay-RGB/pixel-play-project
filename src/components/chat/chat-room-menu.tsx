@@ -69,7 +69,7 @@ export function ChatRoomMenu({ roomId, ownerId, currentMember, currentUserId }: 
               {...props}
               type="button"
               variant="ghost"
-              size="icon-xs"
+              size="icon-sm"
               className="text-muted-foreground hover:text-foreground shrink-0"
               aria-label="채팅방 메뉴"
             >

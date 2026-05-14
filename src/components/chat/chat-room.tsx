@@ -1,12 +1,20 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
+import { Users } from "lucide-react";
 
 import { ChatRoomMenu } from "@/components/chat/chat-room-menu";
 import { MemberList } from "@/components/member/member-list";
 import { KickedRoomAlertDialog } from "@/components/member/kicked-room-alert-dialog";
 import { MessageInput } from "@/components/message/message-input";
 import { MessageList } from "@/components/message/message-list";
+import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Spinner } from "@/components/ui/spinner";
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import type { AppMessageCode } from "@/constants/app-message-code";
@@ -41,11 +49,12 @@ export function ChatRoom({ roomId }: Props) {
     useMessages(roomId);
 
   const roomQuery = useRoom(roomId);
-
   const { data: members = [] } = useRoomMembers(roomId);
 
   const currentUserId = profile?.id ?? "";
   const { isKicked } = useChatRoomMemberRealtime({ roomId, currentUserId });
+
+  const [membersSheetOpen, setMembersSheetOpen] = useState(false);
 
   const markRoomReadEnabled =
     !!roomId &&
@@ -89,7 +98,7 @@ export function ChatRoom({ roomId }: Props) {
 
   return (
     <div className="flex h-full min-h-0 w-full overflow-hidden bg-background text-foreground md:flex-row">
-      <div className="hidden md:flex">
+      <div className="hidden shrink-0 md:flex">
         <MemberList
           roomId={roomId}
           currentUserId={currentUserId}
@@ -102,8 +111,17 @@ export function ChatRoom({ roomId }: Props) {
           <h1 className="min-w-0 flex-1 truncate text-sm font-semibold">
             {roomQuery.isPending ? "불러오는 중…" : (roomQuery.data?.title ?? "채팅방")}
           </h1>
-          <div className="flex shrink-0 items-center gap-1.5">
-            <span className="text-muted-foreground text-xs">{members.length}명</span>
+          <div className="flex shrink-0 items-center gap-0.5">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 gap-1.5 px-2 text-muted-foreground hover:text-foreground"
+              onClick={() => setMembersSheetOpen(true)}
+              aria-label="참여자 목록"
+            >
+              <Users className="size-3.5" />
+              <span className="text-xs font-medium">{members.length}</span>
+            </Button>
             {roomQuery.data ? (
               <ChatRoomMenu
                 roomId={roomId}
@@ -137,6 +155,18 @@ export function ChatRoom({ roomId }: Props) {
           }
         />
       </section>
+
+      <Sheet open={membersSheetOpen} onOpenChange={setMembersSheetOpen}>
+        <SheetContent side="right" className="flex w-80 flex-col gap-0 p-0">
+          <SheetTitle className="sr-only">참여자 목록</SheetTitle>
+          <MemberList
+            roomId={roomId}
+            currentUserId={currentUserId}
+            ownerId={roomQuery.data?.owner_id}
+            className="h-full max-h-none w-full border-r-0 md:h-full md:w-full md:border-r-0"
+          />
+        </SheetContent>
+      </Sheet>
 
       <KickedRoomAlertDialog open={isKicked} />
     </div>
