@@ -2,6 +2,7 @@
 
 // Header에서 검색어를 입력받아 검색 페이지로 이동합니다.
 import SearchInput from "@/components/search/search-input";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useMainMenuStore } from "@/stores/main-menu";
 import type { MainMenuSidebarKey } from "@/types/main-menu-sidebar";
@@ -49,26 +50,30 @@ export default function HeaderSearchForm() {
               disabled={isLiveSearchDisabled}
               className="w-44"
             />
-            <button
-              className="text-muted-foreground hover:text-foreground p-1 transition-colors"
+            <Button
+              variant="ghost"
+              size="icon-sm"
               onClick={handleClose}
               aria-label="검색 닫기"
+              className="text-muted-foreground hover:text-foreground shrink-0"
             >
               <X className="size-4" />
-            </button>
+            </Button>
           </div>
         ) : (
-          <button
-            className={cn(
-              "text-muted-foreground hover:text-foreground p-1 transition-colors",
-              isLiveSearchDisabled && "cursor-not-allowed opacity-50",
-            )}
+          <Button
+            variant="ghost"
+            size="icon-sm"
             onClick={() => !isLiveSearchDisabled && setMobileOpen(true)}
             disabled={isLiveSearchDisabled}
             aria-label="채팅방 검색"
+            className={cn(
+              "text-muted-foreground hover:text-foreground",
+              isLiveSearchDisabled && "cursor-not-allowed",
+            )}
           >
             <Search className="size-5" />
-          </button>
+          </Button>
         )}
       </div>
 
