@@ -32,15 +32,18 @@ export function KickedRoomAlertDialog({ open }: Props) {
         showCloseButton={false}
         className="border-destructive/20 shadow-destructive/10 overflow-hidden rounded-2xl p-0 shadow-xl sm:max-w-md"
       >
-        <AlertDialogHeader className="bg-destructive/5 border-destructive/10 border-b px-5 pt-5 pb-4 text-left">
-          <AlertDialogMedia className="bg-destructive/10 text-destructive ring-destructive/20 mb-0 rounded-xl ring-1">
+        <AlertDialogHeader className="bg-destructive/5 border-destructive/10 flex items-center gap-4 border-b px-5 pt-5 pb-4 text-left">
+          <AlertDialogMedia className="bg-destructive/10 text-destructive ring-destructive/20 mb-0 shrink-0 rounded-xl ring-1">
             <UserX />
           </AlertDialogMedia>
-          <AlertDialogTitle className="text-lg font-bold">채팅방 강퇴</AlertDialogTitle>
-          <AlertDialogDescription className="leading-relaxed text-pretty">
-            방장에 의해 채팅방에서 제외되었습니다.
-            <br />더 이상 이 방에서 대화를 나눌 수 없습니다.
-          </AlertDialogDescription>
+          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+            <AlertDialogTitle className="text-lg leading-tight font-bold">
+              채팅방 강퇴
+            </AlertDialogTitle>
+            <AlertDialogDescription className="leading-snug whitespace-pre-line text-pretty">
+              {"방장에 의해 채팅방에서 제외되었습니다.\n더 이상 대화에 참여할 수 없습니다."}
+            </AlertDialogDescription>
+          </div>
         </AlertDialogHeader>
         <AlertDialogFooter className="m-0 flex-row justify-end border-0 bg-transparent px-5 pt-4 pb-5">
           <AlertDialogAction
