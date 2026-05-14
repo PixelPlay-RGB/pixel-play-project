@@ -21,14 +21,10 @@ import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { OAuthProvider } from "@/types/auth";
 import { toastAppError, toastAppSuccess } from "@/utils/toast-message";
-import { useQueryClient } from "@tanstack/react-query";
-import { Plug, Unlink } from "lucide-react";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Plug, Unlink } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
-import { toast } from "sonner";
 
 interface Props {
   isLinked: boolean;
