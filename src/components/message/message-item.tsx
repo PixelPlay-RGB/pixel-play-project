@@ -40,7 +40,7 @@ export function MessageItem({ message, isOwn }: Props) {
         <AvatarFallback>{fallbackText}</AvatarFallback>
       </Avatar>
       <div className="min-w-0 flex-1">
-        <div className="mb-0.5 text-xs font-medium text-[#94eaff]">{nickname}</div>
+        <div className="mb-0.5 text-xs font-medium text-info">{nickname}</div>
         <div
           className={cn(
             "inline-block max-w-full rounded-md px-2 py-1 text-sm leading-snug",

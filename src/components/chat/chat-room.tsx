@@ -26,7 +26,7 @@ function ChatRoomError({ code }: { code: AppMessageCode }) {
   const message = getAppMessage(code);
 
   return (
-    <div className="dark flex h-full min-h-0 flex-col items-center justify-center gap-3 bg-zinc-950 px-4 text-center text-zinc-200">
+    <div className="flex h-full min-h-0 flex-col items-center justify-center gap-3 bg-background px-4 text-center text-foreground">
       <p className="text-sm">{message.title}</p>
       <Link href="/" className="text-sm underline">
         처음으로
@@ -69,7 +69,7 @@ export function ChatRoom({ roomId }: Props) {
 
   if (profilePending) {
     return (
-      <div className="flex h-full w-full items-center justify-center bg-zinc-950">
+      <div className="flex h-full w-full items-center justify-center bg-background">
         <Spinner className="text-muted-foreground size-8" />
       </div>
     );
@@ -88,14 +88,14 @@ export function ChatRoom({ roomId }: Props) {
   const inputLocked = profilePending || !currentUserId;
 
   return (
-    <div className="dark text-foreground flex h-full min-h-0 w-full flex-col overflow-hidden bg-zinc-950 md:flex-row">
+    <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-background text-foreground md:flex-row">
       <MemberList
         roomId={roomId}
         currentUserId={currentUserId}
         ownerId={roomQuery.data?.owner_id}
       />
 
-      <aside className="bg-background flex min-h-0 flex-1 flex-col border-white/10 md:w-[min(100%,380px)] md:shrink-0 md:border-l">
+      <aside className="flex min-h-0 flex-1 flex-col border-border bg-background md:w-[min(100%,380px)] md:shrink-0 md:border-l">
         <header className="border-border shrink-0 border-b px-3 py-2.5">
           <div className="flex items-start justify-between gap-2">
             <h1 className="line-clamp-2 flex-1 text-sm leading-tight font-semibold">
@@ -113,7 +113,7 @@ export function ChatRoom({ roomId }: Props) {
               ) : null}
             </div>
           </div>
-          <p className="text-muted-foreground mt-1 line-clamp-1 text-[11px]">
+          <p className="text-muted-foreground mt-1 line-clamp-1 text-xs">
             {roomQuery.data?.description ?? ""}
           </p>
         </header>

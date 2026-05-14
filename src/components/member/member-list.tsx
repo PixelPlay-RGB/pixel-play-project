@@ -13,7 +13,7 @@ export function MemberList({ roomId, currentUserId, ownerId }: Props) {
   const canManageMembers = !!currentUserId && currentUserId === ownerId;
 
   return (
-    <section className="bg-background flex max-h-[38dvh] min-h-0 shrink-0 flex-col overflow-hidden border-white/10 md:h-full md:max-h-none md:w-[min(100%,260px)] md:shrink-0 md:border-r">
+    <section className="flex max-h-[38dvh] min-h-0 shrink-0 flex-col overflow-hidden border-border bg-background md:h-full md:max-h-none md:w-[min(100%,260px)] md:shrink-0 md:border-r">
       <header className="border-border shrink-0 border-b px-3 py-2.5">
         <h2 className="text-sm leading-tight font-semibold">
           참여자 목록 {members.length.toLocaleString("ko-KR")}명

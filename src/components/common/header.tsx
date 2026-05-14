@@ -30,7 +30,7 @@ export default async function Header() {
     >
       <div className="flex flex-wrap items-center justify-between px-3 py-2 sm:flex-nowrap sm:px-5">
         <Link href="/" className="h-10 w-32 sm:w-40">
-          <Logo className="dark:text-foreground h-full w-full text-[#1e1d37]" />
+          <Logo className="h-full w-full text-foreground" />
         </Link>
 
         <div className="flex items-center gap-3 sm:gap-5">

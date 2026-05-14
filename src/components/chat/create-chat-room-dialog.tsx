@@ -71,7 +71,13 @@ export default function CreateChatRoomDialog() {
         <Plus className="h-4 w-4" />
         채팅방 만들기
       </DialogTrigger>
-      <DialogContent className="border-brand/20 shadow-brand/10 dark:border-brand/10 max-w-md gap-0 overflow-hidden rounded-2xl p-0 shadow-xl">
+      <DialogContent
+        className={cn(
+          "max-w-md gap-0 overflow-hidden rounded-2xl p-0 shadow-xl",
+          "border-brand/20 shadow-brand/10",
+          "dark:border-brand/10",
+        )}
+      >
         <DialogHeader className="bg-brand/5 border-brand/10 border-b px-5 pt-5 pb-4">
           <div className="flex items-center gap-3">
             <span className="bg-brand/10 text-brand ring-brand/20 flex size-10 shrink-0 items-center justify-center rounded-xl ring-1">
