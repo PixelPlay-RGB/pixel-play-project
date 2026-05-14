@@ -4,6 +4,7 @@
 import SearchInput from "@/components/search/search-input";
 import { useMainMenuStore } from "@/stores/main-menu";
 import type { MainMenuSidebarKey } from "@/types/main-menu-sidebar";
+import { Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -25,23 +26,32 @@ export default function HeaderSearchForm() {
 
   const handleSearch = () => {
     const trimmedQuery = query.trim();
-
-    if (!trimmedQuery || isLiveSearchDisabled) {
-      return;
-    }
-
+    if (!trimmedQuery || isLiveSearchDisabled) return;
     router.push(resolveSearchPath(activeMenu, trimmedQuery));
     setQuery("");
   };
 
   return (
-    <SearchInput
-      value={query}
-      onChange={setQuery}
-      onSubmit={handleSearch}
-      placeholder={isLiveSearchDisabled ? "라이브 검색 준비 중" : "채팅방 검색"}
-      disabled={isLiveSearchDisabled}
-      className="order-3 mt-2 w-full basis-full sm:order-0 sm:mt-0 sm:w-48 sm:basis-auto md:w-64"
-    />
+    <>
+      {/* 모바일: 검색 아이콘 버튼으로 검색 페이지 이동 */}
+      <button
+        className="text-muted-foreground hover:text-foreground p-1 transition-colors sm:hidden"
+        onClick={() => !isLiveSearchDisabled && router.push("/search/chat")}
+        disabled={isLiveSearchDisabled}
+        aria-label="채팅방 검색"
+      >
+        <Search className="size-5" />
+      </button>
+
+      {/* sm 이상: 검색 인풋 */}
+      <SearchInput
+        value={query}
+        onChange={setQuery}
+        onSubmit={handleSearch}
+        placeholder={isLiveSearchDisabled ? "라이브 검색 준비 중" : "채팅방 검색"}
+        disabled={isLiveSearchDisabled}
+        className="hidden sm:block sm:w-48 md:w-64"
+      />
+    </>
   );
 }
