@@ -1,3 +1,4 @@
+// 채팅방 참여자 목록을 표시하는 컴포넌트
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { MemberItem } from "./member-item";
 import { useRoomMembers } from "@/hooks/use-room-members";

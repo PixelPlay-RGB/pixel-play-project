@@ -1,8 +1,16 @@
+"use client";
+// 채팅방 목록·검색 결과에서 개별 방 정보를 표시하는 카드 컴포넌트
+
+import { useRouter } from "next/navigation";
+import { Clock, MessageCircle, Users } from "lucide-react";
+
 import { cn } from "@/lib/utils";
 import type { ChatRoomCardData } from "@/types/chat-room";
-import { formatCapacity, formatRoomDate } from "@/utils/chat-room";
-import { Clock, MessageCircle, Users } from "lucide-react";
-import Link from "next/link";
+import {
+  formatCapacity,
+  formatRoomDate,
+  getCapacityColorClass,
+} from "@/utils/chat-room";
 
 interface Props {
   chatRoom: ChatRoomCardData;
@@ -10,17 +18,22 @@ interface Props {
 }
 
 export default function ChatRoomCard({ chatRoom, unreadMessageCount = 0 }: Props) {
-  const capacityPercent = (chatRoom.current_member / chatRoom.max_capacity) * 100;
-  const isFull = chatRoom.current_member >= chatRoom.max_capacity;
+  const router = useRouter();
+
+  const capacityPercent =
+    chatRoom.max_capacity <= 0
+      ? 0
+      : Math.min((chatRoom.current_member / chatRoom.max_capacity) * 100, 100);
+  const isFull = capacityPercent >= 100;
   const hasUnreadMessages = unreadMessageCount > 0;
   const unreadLabel = unreadMessageCount > 99 ? "99+" : unreadMessageCount;
 
   return (
-    <Link
-      href={`/chat/${chatRoom.id}`}
-      prefetch={false}
+    <button
+      type="button"
+      onClick={() => router.push(`/chat/${chatRoom.id}`)}
       className={cn(
-        "group relative flex min-h-25 w-full items-stretch justify-between gap-3 overflow-hidden text-left",
+        "group relative flex min-h-25 w-full cursor-pointer items-stretch justify-between gap-3 overflow-hidden text-left",
         "border-border/60 bg-card rounded-2xl border p-4 shadow-sm sm:p-5",
         "transition-all duration-200 active:scale-[0.99]",
         "hover:border-brand/40 hover:shadow-brand/5 hover:shadow-md",
@@ -65,7 +78,7 @@ export default function ChatRoomCard({ chatRoom, unreadMessageCount = 0 }: Props
             <div
               className={cn(
                 "h-full rounded-full transition-all duration-300",
-                isFull ? "bg-live" : capacityPercent > 80 ? "bg-warning" : "bg-brand",
+                getCapacityColorClass(capacityPercent),
               )}
               style={{ width: `${capacityPercent}%` }}
             />
@@ -85,7 +98,7 @@ export default function ChatRoomCard({ chatRoom, unreadMessageCount = 0 }: Props
       </div>
 
       <div className="flex shrink-0 flex-col items-end justify-between">
-        <div className="h-5">
+        <div className="flex h-5 items-center justify-end">
           {hasUnreadMessages && (
             <span
               className={cn(
@@ -102,10 +115,10 @@ export default function ChatRoomCard({ chatRoom, unreadMessageCount = 0 }: Props
         <div className="flex items-center gap-1">
           <Clock className="text-muted-foreground/50 h-2.5 w-2.5" />
           <span className="text-muted-foreground/70 text-[11px] whitespace-nowrap">
-            생성일 {formatRoomDate(chatRoom.created_at)}
+            개설 {formatRoomDate(chatRoom.created_at)}
           </span>
         </div>
       </div>
-    </Link>
+    </button>
   );
 }
