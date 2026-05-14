@@ -3,6 +3,7 @@ import { GenericTables } from "@/types/supabase.types";
 
 export type ChatRoomByTab = Database["public"]["Functions"]["get_rooms_by_tab"]["Returns"][number];
 export type ChatRoomTab = "JOINED" | "NOT_JOINED" | "OWNED";
+export type ChatRoomSortOption = "CREATED_AT_DESC" | "LAST_MESSAGE_DESC" | "CURRENT_MEMBER_DESC";
 
 export type ChatRoom = GenericTables<"chat_room">;
 

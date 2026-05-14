@@ -10,12 +10,16 @@
 - **설명**: `package.json`에 정의된 스크립트를 사용하여 Supabase 프로젝트로부터 최신 타입을 가져옵니다.
 - **주기**: 테이블 추가, 컬럼 수정, 함수(RPC) 생성 등 스키마 변화가 있을 때마다 즉시 실행하십시오.
 
-## 2. 데이터베이스 변경 (Migrations vs SQL Editor)
+## 2. 데이터베이스 변경과 Migration 최신화
 
-프로젝트의 복잡도를 낮추고 신속한 개발을 위해 CLI 기반의 Migration 대신 Supabase 대시보드를 활용합니다.
+프로젝트의 복잡도를 낮추고 신속한 개발을 위해 실제 적용은 Supabase 대시보드를 우선 활용합니다.
 
-- **원칙**: Supabase migrations(CLI) 기능을 사용하지 않습니다.
-- **방법**: Supabase 대시보드의 **SQL Editor**를 사용하여 테이블 생성, 수정, RPC 함수 정의 등을 수행하십시오.
+- **적용 방법**: Supabase 대시보드의 **SQL Editor**를 사용하여 테이블 생성, 수정, RPC 함수 정의 등을 수행하십시오.
+- **기록 원칙**: SQL Editor로 적용한 스키마 변경은 작업 완료 전 반드시 `supabase/migrations`에 SQL 파일로 최신화합니다.
+- **파일명**: `YYYYMMDDHHMMSS_작업_내용.sql` 형식으로 작성합니다.
+- **대상**: 테이블 추가, 컬럼 수정, 함수(RPC) 생성/수정, 트리거 변경 등 DB 스키마 또는 DB 로직 변화가 모두 포함됩니다.
+- **주의**: migration 파일은 실제 적용된 SQL과 동등해야 하며, 이후 `npm run types`로 타입을 갱신합니다.
+- **검증 단계**: PR 제출 전 로컬 스키마와 `supabase/migrations` SQL 파일이 동등한지 diff/검증 명령으로 확인하고, 문제가 없으면 `npm run types`를 실행합니다.
 
 ## 3. RPC 및 로직 위치
 

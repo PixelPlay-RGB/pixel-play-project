@@ -4,7 +4,7 @@
 
 import { useState } from "react";
 
-import { MoreVertical } from "lucide-react";
+import { DoorOpen, MoreVertical } from "lucide-react";
 
 import {
   AlertDialog,
@@ -126,10 +126,16 @@ export function ChatRoomMenu({ roomId, ownerId, currentMember, currentUserId }: 
                 : "이 채팅방에서 나가면 참여 목록에서 제거됩니다. 다시 들어오려면 해당 채팅방에 다시 참여해야 합니다."}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isPending}>취소</AlertDialogCancel>
+          <AlertDialogFooter className="m-0 flex-row justify-end gap-2 border-0 bg-transparent px-5 pt-4 pb-5">
+            <AlertDialogCancel
+              className="border-border bg-background text-foreground hover:bg-muted h-10 min-w-24 rounded-xl px-4 font-semibold"
+              disabled={isPending}
+            >
+              취소
+            </AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
+              className="shadow-destructive/10 h-10 min-w-24 rounded-xl px-4 font-bold shadow-sm"
               disabled={isPending}
               type="button"
               onClick={handleLeave}
