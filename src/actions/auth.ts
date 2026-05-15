@@ -9,7 +9,7 @@ import {
 } from "@/lib/zod/auth";
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import { FORM_MESSAGE } from "@/constants/form-message";
-import type { AppActionResult } from "@/types/action";
+import type { AppActionResult, FieldActionResult } from "@/types/action";
 
 import {
   CompleteOAuthProfileInput,
@@ -58,7 +58,7 @@ export async function login(data: LoginFormValues): Promise<ActionResponse> {
 /**
  * 1. OTP 메일 발송
  */
-export async function sendOtpAction(email: string): Promise<ActionResponse> {
+export async function sendOtpAction(email: string): Promise<FieldActionResult> {
   const supabase = await createClient();
 
   // 기존에 로컬 세션 정리
@@ -71,17 +71,17 @@ export async function sendOtpAction(email: string): Promise<ActionResponse> {
 
   if (rpcError) {
     console.error("sendOtpAction check_email_exists error", rpcError);
-    return { success: false, message: FORM_MESSAGE.auth.emailCheckFailed };
+    return { success: false, fieldMessage: FORM_MESSAGE.auth.emailCheckFailed };
   }
   if (exists) {
-    return { success: false, message: FORM_MESSAGE.auth.emailAlreadyExists };
+    return { success: false, fieldMessage: FORM_MESSAGE.auth.emailAlreadyExists };
   }
 
   // OTP 발송
   const { error } = await supabase.auth.signInWithOtp({ email });
   if (error) {
     console.error("sendOtpAction signInWithOtp error", error);
-    return { success: false, message: FORM_MESSAGE.auth.emailCheckFailed };
+    return { success: false, fieldMessage: FORM_MESSAGE.auth.emailCheckFailed };
   }
 
   return { success: true };
@@ -90,14 +90,14 @@ export async function sendOtpAction(email: string): Promise<ActionResponse> {
 /**
  * 2. OTP 번호 검증
  */
-export async function verifyOtpAction(email: string, token: string): Promise<ActionResponse> {
+export async function verifyOtpAction(email: string, token: string): Promise<FieldActionResult> {
   const supabase = await createClient();
 
   // 해당 작업 성공시 임시 세션이 생성됨
   const { error } = await supabase.auth.verifyOtp({ email, token, type: "email" });
   if (error) {
     console.error("verifyOtpAction verifyOtp error", error);
-    return { success: false, message: FORM_MESSAGE.auth.otpInvalid };
+    return { success: false, fieldMessage: FORM_MESSAGE.auth.otpInvalid };
   }
 
   return { success: true };
@@ -201,7 +201,7 @@ export async function completeSignupAction(data: CompleteSignupInput): Promise<A
  */
 export async function verifyCurrentPasswordAction(
   currentPassword: string,
-): Promise<ActionResponse> {
+): Promise<FieldActionResult> {
   const supabase = await createClient();
 
   const {
@@ -219,7 +219,7 @@ export async function verifyCurrentPasswordAction(
 
   if (error) {
     console.error("verifyCurrentPasswordAction signInWithPassword error", error);
-    return { success: false, message: FORM_MESSAGE.auth.currentPasswordInvalid };
+    return { success: false, fieldMessage: FORM_MESSAGE.auth.currentPasswordInvalid };
   }
 
   return { success: true };

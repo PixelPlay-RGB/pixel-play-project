@@ -101,7 +101,7 @@ export default function SignupForm() {
       setOtpStatus("idle");
       setError("email", {
         type: "server",
-        message: result.message ?? FORM_MESSAGE.auth.emailCheckFailed,
+        message: result.fieldMessage ?? FORM_MESSAGE.auth.emailCheckFailed,
       });
     }
   };
@@ -124,7 +124,7 @@ export default function SignupForm() {
       toastAppSuccess(APP_MESSAGE_CODE.success.auth.emailVerified);
     } else {
       setOtpStatus("sent");
-      setOtpError(result.message ?? FORM_MESSAGE.auth.otpInvalid);
+      setOtpError(result.fieldMessage ?? FORM_MESSAGE.auth.otpInvalid);
     }
   };
 
