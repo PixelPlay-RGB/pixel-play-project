@@ -21,17 +21,22 @@ export default function ChatRoomList() {
   const tabType = useChatRoomStore((state) => state.tabType);
   const sortOption = useChatRoomStore((state) => state.sortOption);
   const currentPage = useChatRoomStore((state) => state.currentPage);
+  const searchQuery = useChatRoomStore((state) => state.searchQuery);
   const setCurrentPage = useChatRoomStore((state) => state.setCurrentPage);
   const { isFetched: isUserFetched } = useUser();
 
   const selectedSortOption = CHAT_ROOM_SORT_OPTIONS_BY_TAB[tabType].includes(sortOption)
     ? sortOption
     : DEFAULT_CHAT_ROOM_SORT_OPTION;
-  const query = useChatRooms(tabType, selectedSortOption, currentPage);
+  const query = useChatRooms(tabType, selectedSortOption, currentPage, searchQuery);
   const { data: counts } = useChatRoomCounts();
 
   const chatRooms = query.data ?? [];
-  const totalPages = Math.ceil((counts?.[tabType] ?? 0) / CHAT_ROOM_PAGE_SIZE);
+
+  // 검색 중이면 RPC 응답의 total_count 기반, 아니면 캐시된 counts[tabType] 사용
+  const isSearching = searchQuery.trim().length > 0;
+  const totalItems = isSearching ? (chatRooms[0]?.total_count ?? 0) : (counts?.[tabType] ?? 0);
+  const totalPages = Math.ceil(totalItems / CHAT_ROOM_PAGE_SIZE);
 
   const isInitialLoading = !isUserFetched || query.isLoading;
   const isEmpty = isUserFetched && !query.isLoading && chatRooms.length === 0;
@@ -52,7 +57,7 @@ export default function ChatRoomList() {
         {isInitialLoading ? (
           <ChatRoomListSkeleton />
         ) : isEmpty ? (
-          <ChatRoomEmptyState tabType={tabType} />
+          <ChatRoomEmptyState tabType={tabType} searchQuery={searchQuery} />
         ) : (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             {chatRooms.map((chatRoom) => (
