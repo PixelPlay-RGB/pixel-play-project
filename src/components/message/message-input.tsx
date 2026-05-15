@@ -1,17 +1,17 @@
 "use client";
 
 import { SendHorizontal } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import ChatEmojiPicker from "@/components/chat/chat-emoji-picker";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import { createClient } from "@/lib/supabase/client";
 import { getAppMessageTitle, resolveSupabaseErrorCode } from "@/utils/app-message";
 import { toastAppError } from "@/utils/toast-message";
 import { MESSAGE_CONTENT_MAX_LENGTH } from "@/constants/message";
 import { messageContentSchema } from "@/lib/zod/message";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 interface Props {
@@ -25,6 +25,15 @@ export function MessageInput({ roomId, currentUserId, disabled = false, disabled
   const supabase = createClient();
   const [draft, setDraft] = useState("");
   const sendMessageLockRef = useRef(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // draft 변경마다 높이 자동 조절 (이모지 삽입·직접 입력·전송 후 리셋 모두 커버)
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [draft]);
 
   const handleSend = async () => {
     if (sendMessageLockRef.current || !currentUserId || !roomId) {
@@ -60,16 +69,18 @@ export function MessageInput({ roomId, currentUserId, disabled = false, disabled
   };
 
   return (
-    <div className="border-border bg-background/95 flex shrink-0 items-center gap-2 border-t px-3 py-2 backdrop-blur-sm">
+    <div className="border-border bg-background/95 flex shrink-0 items-end gap-2 border-t px-3 py-2 backdrop-blur-sm">
       <ChatEmojiPicker
         disabled={disabled}
         onEmojiSelect={(emoji) =>
           setDraft((prev) => (prev + emoji).slice(0, MESSAGE_CONTENT_MAX_LENGTH))
         }
       />
-      <Input
+      <textarea
+        ref={textareaRef}
         value={draft}
         disabled={disabled}
+        rows={1}
         maxLength={MESSAGE_CONTENT_MAX_LENGTH}
         title={disabled ? disabledHint : undefined}
         onChange={(e) => setDraft(e.target.value.slice(0, MESSAGE_CONTENT_MAX_LENGTH))}
@@ -85,8 +96,21 @@ export function MessageInput({ roomId, currentUserId, disabled = false, disabled
             ? (disabledHint ?? getAppMessageTitle(APP_MESSAGE_CODE.error.chatRoom.inputLocked))
             : "채팅하기"
         }
-        className="h-9 flex-1 rounded-xl border-border/60 bg-muted/30 py-0 text-sm placeholder:text-muted-foreground/60"
         aria-label="메시지 입력"
+        className={cn(
+          "flex-1 resize-none overflow-y-auto rounded-xl px-3 py-2 text-sm leading-normal",
+          "min-h-9 max-h-32",
+          "border border-border/60 bg-muted/30",
+          "placeholder:text-muted-foreground/60",
+          "outline-none focus-visible:ring-1 focus-visible:ring-ring/60",
+          "disabled:cursor-not-allowed disabled:opacity-50",
+          // 스크롤바: max-h 초과 시에만 노출, 브랜드 톤에 맞춘 thin 디자인
+          "[&::-webkit-scrollbar]:w-1",
+          "[&::-webkit-scrollbar-track]:bg-transparent",
+          "[&::-webkit-scrollbar-thumb]:rounded-full",
+          "[&::-webkit-scrollbar-thumb]:bg-border",
+          "[&::-webkit-scrollbar-thumb:hover]:bg-muted-foreground/40",
+        )}
       />
       <Button
         type="button"
