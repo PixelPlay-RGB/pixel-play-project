@@ -21,12 +21,6 @@ interface Props {
   onPageChange: (page: number) => void;
 }
 
-const activePageButtonClass = cn(
-  "bg-brand text-white shadow-sm shadow-brand/20 rounded-xl font-bold",
-  "hover:bg-brand/90 hover:text-white",
-  "dark:hover:bg-brand/90",
-);
-
 export default function ChatRoomPagination({
   currentPage,
   totalPages,

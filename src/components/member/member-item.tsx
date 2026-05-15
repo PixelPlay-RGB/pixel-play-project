@@ -20,7 +20,7 @@ function OwnerBadge() {
       className={cn(
         "inline-flex shrink-0 items-center gap-0.5 rounded px-1.5 py-0.5",
         "bg-brand/10 text-brand dark:bg-brand/15",
-        "text-[10px] leading-none font-black tracking-tight",
+        "text-xs leading-none font-black tracking-tight",
       )}
     >
       <Crown className="size-2.5" aria-hidden />
