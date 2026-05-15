@@ -46,7 +46,7 @@ export default function HeaderSearchForm() {
               value={query}
               onChange={setQuery}
               onSubmit={handleSearch}
-              placeholder="채팅방 검색"
+              placeholder="채팅방 전체 검색"
               disabled={isLiveSearchDisabled}
               className="w-44"
             />
@@ -66,7 +66,7 @@ export default function HeaderSearchForm() {
             size="icon-sm"
             onClick={() => !isLiveSearchDisabled && setMobileOpen(true)}
             disabled={isLiveSearchDisabled}
-            aria-label="채팅방 검색"
+            aria-label="채팅방 전체 검색"
             className={cn(
               "text-muted-foreground hover:text-foreground",
               isLiveSearchDisabled && "cursor-not-allowed",
@@ -82,7 +82,7 @@ export default function HeaderSearchForm() {
         value={query}
         onChange={setQuery}
         onSubmit={handleSearch}
-        placeholder={isLiveSearchDisabled ? "라이브 검색 준비 중" : "채팅방 검색"}
+        placeholder={isLiveSearchDisabled ? "라이브 검색 준비 중" : "채팅방 전체 검색"}
         disabled={isLiveSearchDisabled}
         className="hidden sm:block sm:w-48 md:w-64"
       />

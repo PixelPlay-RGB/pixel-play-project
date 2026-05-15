@@ -2,7 +2,7 @@
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { Search } from "lucide-react";
-import type { FormEvent } from "react";
+import { SubmitEvent } from "react";
 
 interface Props {
   value: string;
@@ -21,7 +21,7 @@ export default function SearchInput({
   className,
   disabled = false,
 }: Props) {
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     onSubmit();
   };
