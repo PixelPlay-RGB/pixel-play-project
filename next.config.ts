@@ -9,6 +9,10 @@ const nextConfig: NextConfig = {
         hostname: "ftvoynnfpfzmblgrntqj.supabase.co",
       },
       {
+        protocol: "https",
+        hostname: "pixel-play.studio",
+      },
+      {
         protocol: "http",
         hostname: "localhost",
       },
