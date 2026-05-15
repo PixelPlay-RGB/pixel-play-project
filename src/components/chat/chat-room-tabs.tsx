@@ -51,11 +51,13 @@ export default function ChatRoomTabs({ counts, isFetching = false }: Props) {
                 <span
                   className={cn(
                     "flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-xs leading-none font-black",
-                    count === undefined
-                      ? "invisible"
-                      : isActive
-                        ? "bg-brand text-white"
-                        : "bg-muted-foreground/20 text-muted-foreground",
+                    showSpinner
+                      ? "bg-brand text-white"
+                      : count === undefined
+                        ? "invisible"
+                        : isActive
+                          ? "bg-brand text-white"
+                          : "bg-muted-foreground/20 text-muted-foreground",
                   )}
                 >
                   {showSpinner ? (
