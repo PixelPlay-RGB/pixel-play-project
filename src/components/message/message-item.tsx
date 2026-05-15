@@ -27,7 +27,7 @@ export function MessageItem({ message, isOwn }: Props) {
             "bg-brand text-white",
           )}
         >
-          <span className="wrap-break-word">{message.content}</span>
+          <span className="wrap-break-word whitespace-pre-wrap">{message.content}</span>
         </div>
       </div>
     );
@@ -47,7 +47,7 @@ export function MessageItem({ message, isOwn }: Props) {
             "bg-muted/60 text-foreground",
           )}
         >
-          <span className="wrap-break-word">{message.content}</span>
+          <span className="wrap-break-word whitespace-pre-wrap">{message.content}</span>
         </div>
       </div>
     </div>

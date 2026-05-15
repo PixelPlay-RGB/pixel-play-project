@@ -7,9 +7,11 @@ interface ChatRoomState {
   tabType: ChatRoomTab;
   sortOption: ChatRoomSortOption;
   currentPage: number;
+  searchQuery: string;
   setTabType: (tabType: ChatRoomTab) => void;
   setSortOption: (sortOption: ChatRoomSortOption) => void;
   setCurrentPage: (page: number) => void;
+  setSearchQuery: (query: string) => void;
 }
 
 export const useChatRoomStore = create<ChatRoomState>()(
@@ -18,12 +20,14 @@ export const useChatRoomStore = create<ChatRoomState>()(
       tabType: "JOINED",
       sortOption: DEFAULT_CHAT_ROOM_SORT_OPTION,
       currentPage: 1,
+      searchQuery: "",
       setTabType: (tabType) =>
         set(
           {
             tabType,
             sortOption: DEFAULT_CHAT_ROOM_SORT_OPTION,
             currentPage: 1,
+            searchQuery: "",
           },
           false,
           "chatRoom/setTabType",
@@ -32,6 +36,8 @@ export const useChatRoomStore = create<ChatRoomState>()(
         set({ sortOption, currentPage: 1 }, false, "chatRoom/setSortOption"),
       setCurrentPage: (currentPage) =>
         set({ currentPage }, false, "chatRoom/setCurrentPage"),
+      setSearchQuery: (searchQuery) =>
+        set({ searchQuery, currentPage: 1 }, false, "chatRoom/setSearchQuery"),
     }),
     {
       name: "ChatRoomStore",

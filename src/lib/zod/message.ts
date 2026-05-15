@@ -5,7 +5,6 @@ import { MESSAGE_CONTENT_MAX_LENGTH } from "@/constants/message";
 
 export const messageContentSchema = z
   .string()
-  .trim()
   .min(1, "메시지를 입력해주세요.")
   .max(
     MESSAGE_CONTENT_MAX_LENGTH,

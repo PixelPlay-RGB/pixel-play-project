@@ -73,7 +73,7 @@ export function MessageList({
   return (
     <div className="relative min-h-0 flex-1 overflow-hidden">
       <ScrollArea ref={viewportRef} className="size-full" onScroll={handleScroll}>
-        <div className="flex flex-col-reverse gap-0.5 py-2">
+        <div className="flex flex-col-reverse gap-3 py-2">
           {messages.map((message) => (
             <MessageItem
               key={message.id}

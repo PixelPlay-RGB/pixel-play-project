@@ -96,17 +96,16 @@ export default function ChatRoomPagination({
                 aria-disabled={isFetching}
                 onClick={(e) => handlePageClick(e, item)}
                 className={cn(
-                  item === currentPage
-                    ? cn(
-                        "bg-brand shadow-brand/20 rounded-xl font-bold text-white shadow-sm",
-                        "hover:bg-brand/90 hover:text-white",
-                        "dark:hover:bg-brand/90",
-                      )
-                    : cn(
-                        "text-muted-foreground rounded-xl font-semibold",
-                        "hover:bg-brand/10 hover:text-brand",
-                        "dark:hover:bg-brand/15",
-                      ),
+                  item === currentPage && [
+                    "bg-brand shadow-brand/20 rounded-xl font-bold text-white shadow-sm",
+                    "hover:bg-brand/90 hover:text-white",
+                    "dark:hover:bg-brand/90",
+                  ],
+                  item !== currentPage && [
+                    "text-muted-foreground rounded-xl font-semibold",
+                    "hover:bg-brand/10 hover:text-brand",
+                    "dark:hover:bg-brand/15",
+                  ],
                   isFetching && "pointer-events-none opacity-50",
                 )}
               >

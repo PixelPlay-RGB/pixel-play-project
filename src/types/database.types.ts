@@ -209,6 +209,7 @@ export type Database = {
         Args: {
           p_limit?: number
           p_offset?: number
+          p_query?: string
           p_sort_option?: string
           p_tab_type: string
           p_user_id: string
@@ -222,6 +223,7 @@ export type Database = {
           owner_id: string
           owner_nickname: string
           title: string
+          total_count: number
           unread_count: number
         }[]
       }

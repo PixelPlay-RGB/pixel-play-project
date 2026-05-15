@@ -1,13 +1,16 @@
 import { CHAT_ROOM_EMPTY_MESSAGES } from "@/constants/chat-room";
 import { cn } from "@/lib/utils";
 import type { ChatRoomTab } from "@/types/chat-room";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, Search } from "lucide-react";
 
 interface Props {
   tabType: ChatRoomTab;
+  searchQuery?: string;
 }
 
-export default function ChatRoomEmptyState({ tabType }: Props) {
+export default function ChatRoomEmptyState({ tabType, searchQuery }: Props) {
+  const isSearching = !!searchQuery && searchQuery.trim().length > 0;
+
   return (
     <div className={cn("flex flex-col items-center justify-center text-center", "py-24")}>
       <div
@@ -17,10 +20,20 @@ export default function ChatRoomEmptyState({ tabType }: Props) {
           "mb-4",
         )}
       >
-        <MessageSquare className="text-brand h-7 w-7" />
+        {isSearching ? (
+          <Search className="text-brand h-7 w-7" />
+        ) : (
+          <MessageSquare className="text-brand h-7 w-7" />
+        )}
       </div>
-      <h3 className="text-foreground text-base font-bold">채팅방이 없습니다</h3>
-      <p className="text-muted-foreground mt-1.5 text-sm">{CHAT_ROOM_EMPTY_MESSAGES[tabType]}</p>
+      <h3 className="text-foreground text-base font-bold">
+        {isSearching ? "검색 결과가 없습니다" : "채팅방이 없습니다"}
+      </h3>
+      <p className="text-muted-foreground mt-1.5 text-sm">
+        {isSearching
+          ? `"${searchQuery.trim()}"에 해당하는 채팅방을 찾지 못했습니다.`
+          : CHAT_ROOM_EMPTY_MESSAGES[tabType]}
+      </p>
     </div>
   );
 }
