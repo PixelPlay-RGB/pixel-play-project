@@ -14,14 +14,14 @@ interface MessagesPage {
   nextCursor?: string;
 }
 
-export default function useMessages(chatRoomId: string) {
+export default function useMessages(chatRoomId: string, enabled = true) {
   const supabase = createClient();
   const queryClient = useQueryClient();
 
   const query = useInfiniteQuery({
     queryKey: QUERY_KEYS.chat.messages(chatRoomId),
     initialPageParam: undefined as string | undefined,
-    enabled: !!chatRoomId,
+    enabled: enabled && !!chatRoomId,
     staleTime: 1000 * 60,
     queryFn: async ({ pageParam }): Promise<MessagesPage> => {
       let request = supabase
@@ -55,7 +55,7 @@ export default function useMessages(chatRoomId: string) {
   });
 
   useEffect(() => {
-    if (!chatRoomId) return;
+    if (!enabled || !chatRoomId) return;
 
     const channel = supabase
       .channel(`room-message-${chatRoomId}`)
@@ -108,7 +108,7 @@ export default function useMessages(chatRoomId: string) {
     return () => {
       void channel.unsubscribe();
     };
-  }, [queryClient, chatRoomId, supabase]);
+  }, [queryClient, chatRoomId, supabase, enabled]);
 
   const messages = query.data ?? [];
 

@@ -75,11 +75,23 @@ export function MemberActionAlertDialog({
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger render={trigger} />
-      <AlertDialogContent className="border-brand/20 shadow-brand/10 dark:border-brand/10 overflow-hidden rounded-2xl p-0 shadow-xl sm:max-w-md">
-        <AlertDialogHeader className="bg-brand/5 border-brand/10 border-b px-5 pt-5 pb-4 text-left">
+      <AlertDialogContent
+        className={cn(
+          "overflow-hidden rounded-2xl p-0 shadow-xl sm:max-w-md",
+          isKick
+            ? "border-destructive/20 shadow-destructive/10"
+            : "border-brand/20 shadow-brand/10 dark:border-brand/10",
+        )}
+      >
+        <AlertDialogHeader
+          className={cn(
+            "flex items-center gap-4 border-b px-5 pt-5 pb-4 text-left",
+            isKick ? "bg-destructive/5 border-destructive/10" : "bg-brand/5 border-brand/10",
+          )}
+        >
           <AlertDialogMedia
             className={cn(
-              "mb-0 rounded-xl ring-1",
+              "mb-0 shrink-0 rounded-xl ring-1",
               isKick
                 ? "bg-destructive/10 text-destructive ring-destructive/20"
                 : "bg-brand/10 text-brand ring-brand/20",
@@ -87,11 +99,15 @@ export function MemberActionAlertDialog({
           >
             {isKick ? <UserX /> : <Crown />}
           </AlertDialogMedia>
-          <AlertDialogTitle className="text-lg font-bold">{copy.title}</AlertDialogTitle>
-          <AlertDialogDescription className="leading-relaxed text-pretty">
-            {targetNickname}
-            {copy.description}
-          </AlertDialogDescription>
+          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+            <AlertDialogTitle className="text-lg leading-tight font-bold">
+              {copy.title}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="leading-snug text-pretty">
+              {targetNickname}
+              {copy.description}
+            </AlertDialogDescription>
+          </div>
         </AlertDialogHeader>
         <AlertDialogFooter className="m-0 flex-row justify-end gap-2 border-0 bg-transparent px-5 pt-4 pb-5">
           <AlertDialogCancel

@@ -47,7 +47,7 @@ export function MessageItem({ message, isOwn }: Props) {
             "bg-muted/60 text-foreground",
           )}
         >
-          <span>{message.content}</span>
+          <span className="wrap-break-word">{message.content}</span>
         </div>
       </div>
     </div>

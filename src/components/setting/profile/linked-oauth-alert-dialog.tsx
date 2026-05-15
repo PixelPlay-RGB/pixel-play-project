@@ -46,7 +46,6 @@ export default function LinkedOAuthAlertDialog({
   const [isLoading, setIsLoading] = useState(false);
 
   const linkOAuthAction = async (provider: OAuthProvider) => {
-    setIsLoading(true);
     const supabase = createClient();
 
     const { error } = await supabase.auth.signInWithOAuth({
@@ -59,9 +58,8 @@ export default function LinkedOAuthAlertDialog({
     if (error) {
       console.error("linkOAuthAction signInWithOAuth error", error);
       toastAppError(APP_MESSAGE_CODE.error.oauth.linkFailed);
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
   };
 
   const handleToggle = async (provider: OAuthProvider) => {
@@ -78,27 +76,30 @@ export default function LinkedOAuthAlertDialog({
             `${OAUTH_PROVIDER_META[provider].name} 연동이 해제되었습니다.`,
           );
           await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth.all });
+          setOpen(false);
         } else {
           toastAppError(result.code ?? APP_MESSAGE_CODE.error.oauth.unlinkFailed);
         }
+        setIsLoading(false);
       } else {
-        // 연동 로직
         await linkOAuthAction(provider);
-        return;
       }
     } catch (error) {
       console.error("LinkedOAuthAlertDialog toggle error", error);
       toastAppError(APP_MESSAGE_CODE.error.oauth.actionFailed);
-    } finally {
       setIsLoading(false);
-      setOpen(false);
     }
   };
 
   const { logo, name: providerName } = OAUTH_PROVIDER_META[provider];
 
   return (
-    <AlertDialog open={open} onOpenChange={setOpen}>
+    <AlertDialog
+      open={open}
+      onOpenChange={(next) => {
+        if (!isLoading) setOpen(next);
+      }}
+    >
       <AlertDialogTrigger
         render={
           <Button
@@ -125,36 +126,55 @@ export default function LinkedOAuthAlertDialog({
           </Button>
         }
       />
-      <AlertDialogContent className="border-brand/20 shadow-brand/10 dark:border-brand/10 overflow-hidden rounded-2xl p-0 shadow-xl sm:max-w-md">
-        <AlertDialogHeader className="bg-brand/5 border-brand/10 border-b px-5 pt-5 pb-4 text-left">
-          <div className="flex items-center gap-3">
-            <span className="bg-background ring-brand/20 flex size-10 shrink-0 items-center justify-center rounded-xl ring-1">
-              <Image
-                src={logo}
-                alt={providerName}
-                width={20}
-                height={20}
-                className={provider === "github" ? "dark:invert" : undefined}
-              />
-            </span>
-            <div className="min-w-0">
-              <AlertDialogTitle className="text-lg font-bold">
-                {isLinked ? `${providerName} 계정 연동 해제` : `${providerName} 계정 연동`}
-              </AlertDialogTitle>
-              <AlertDialogDescription className="mt-1 leading-relaxed text-pretty">
-                {isLinked
-                  ? `${providerName} 계정 연결을 해제합니다. 이메일 계정 또는 다른 소셜 계정이 남아 있어야 합니다.`
-                  : `${providerName} 계정을 현재 프로필에 연결합니다.`}
-              </AlertDialogDescription>
-            </div>
+      <AlertDialogContent
+        className={cn(
+          "overflow-hidden rounded-2xl p-0 shadow-xl sm:max-w-md",
+          isLinked
+            ? "border-destructive/20 shadow-destructive/10"
+            : "border-brand/20 shadow-brand/10 dark:border-brand/10",
+        )}
+      >
+        <AlertDialogHeader
+          className={cn(
+            "flex items-center gap-4 border-b px-5 pt-5 pb-4 text-left",
+            isLinked ? "bg-destructive/5 border-destructive/10" : "bg-brand/5 border-brand/10",
+          )}
+        >
+          <span
+            className={cn(
+              "bg-background flex size-10 shrink-0 items-center justify-center rounded-xl ring-1",
+              isLinked ? "ring-destructive/20" : "ring-brand/20",
+            )}
+          >
+            <Image
+              src={logo}
+              alt={providerName}
+              width={20}
+              height={20}
+              className={provider === "github" ? "dark:invert" : undefined}
+            />
+          </span>
+          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+            <AlertDialogTitle className="text-lg leading-tight font-bold">
+              {isLinked ? `${providerName} 계정 연동 해제` : `${providerName} 계정 연동`}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="leading-snug text-pretty whitespace-pre-line">
+              {isLinked
+                ? `${providerName} 계정 연결을 해제합니다.`
+                : `${providerName} 계정을 현재 프로필에 연결합니다.`}
+            </AlertDialogDescription>
           </div>
         </AlertDialogHeader>
         <AlertDialogFooter className="m-0 flex-row justify-end gap-2 border-0 bg-transparent px-5 pt-4 pb-5">
-          <AlertDialogCancel className="border-border bg-background text-foreground hover:bg-muted h-10 min-w-24 rounded-xl px-4 font-semibold">
+          <AlertDialogCancel
+            disabled={isLoading}
+            className="border-border bg-background text-foreground hover:bg-muted h-10 min-w-24 rounded-xl px-4 font-semibold"
+          >
             돌아가기
           </AlertDialogCancel>
           <AlertDialogAction
             variant={isLinked ? "destructive" : "default"}
+            disabled={isLoading}
             className={cn(
               "h-10 min-w-24 rounded-xl px-4 font-bold shadow-sm",
               isLinked

@@ -1,13 +1,13 @@
 "use client";
 
-// 채팅방 멤버 상태 변경 Realtime 이벤트를 관리하는 훅
-import { useEffect, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import type { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
+// 채팅방 멤버 상태(참여/강퇴)를 본인 row 단건 조회 + Realtime 구독으로 관리하는 훅
+
+import { useEffect } from "react";
+
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { QUERY_KEYS } from "@/constants/query-keys";
 import { createClient } from "@/lib/supabase/client";
-import type { RoomMember } from "@/types/chat-room-member";
 
 interface UseChatRoomMemberRealtimeParams {
   roomId: string;
@@ -19,53 +19,36 @@ export function useChatRoomMemberRealtime({
   currentUserId,
 }: UseChatRoomMemberRealtimeParams) {
   const queryClient = useQueryClient();
-  const [isKicked, setIsKicked] = useState(false);
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setIsKicked(false);
+  // supabase는 공식문서에도 나와있음 이렇게 사용하면 싱글톤 패턴으로 등록됨 전혀 고려할 문제없음
+  const supabase = createClient();
 
-    if (!roomId || !currentUserId) return;
-
-    let ignore = false;
-
-    const supabase = createClient();
-
-    const checkInitialStatus = async () => {
+  const { data: membership, isFetched: membershipFetched } = useQuery({
+    queryKey: [...QUERY_KEYS.chat.members(roomId), currentUserId],
+    enabled: !!roomId && !!currentUserId,
+    queryFn: async () => {
       const { data, error } = await supabase
         .from("chat_room_member")
-        .select("is_banned")
+        .select("is_banned, last_joined_at")
         .eq("chat_room_id", roomId)
         .eq("user_id", currentUserId)
         .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
 
-      if (!ignore && !error && data?.is_banned) {
-        setIsKicked(true);
-      }
-    };
+  const isKicked = membership?.is_banned ?? false;
+  const isJoined = !!membership?.last_joined_at && !membership.is_banned;
 
-    checkInitialStatus();
+  useEffect(() => {
+    if (!roomId || !currentUserId) return;
 
     const invalidateChatRoomQueries = () => {
       void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.members(roomId) });
       void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.room(roomId) });
       void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.rooms() });
       void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.counts() });
-    };
-
-    const handleMemberChange = (payload: RealtimePostgresChangesPayload<RoomMember>) => {
-      invalidateChatRoomQueries();
-
-      if (payload.eventType !== "UPDATE") return;
-
-      const previous = payload.old as Partial<RoomMember>;
-      const next = payload.new as RoomMember;
-      const wasKicked =
-        previous.is_banned === false && next.is_banned === true && next.user_id === currentUserId;
-
-      if (wasKicked) {
-        setIsKicked(true);
-      }
     };
 
     const channel = supabase
@@ -78,7 +61,9 @@ export function useChatRoomMemberRealtime({
           table: "chat_room_member",
           filter: `chat_room_id=eq.${roomId}`,
         },
-        handleMemberChange,
+        () => {
+          invalidateChatRoomQueries();
+        },
       )
       .on(
         "postgres_changes",
@@ -89,16 +74,16 @@ export function useChatRoomMemberRealtime({
           filter: `id=eq.${roomId}`,
         },
         () => {
-          invalidateChatRoomQueries();
+          void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.room(roomId) });
+          void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.rooms() });
         },
       )
       .subscribe();
 
     return () => {
-      ignore = true;
       void channel.unsubscribe();
     };
-  }, [currentUserId, queryClient, roomId]);
+  }, [supabase, queryClient, roomId, currentUserId]);
 
-  return { isKicked };
+  return { isKicked, isJoined, membershipFetched };
 }
