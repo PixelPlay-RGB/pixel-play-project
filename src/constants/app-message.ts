@@ -54,7 +54,7 @@ export const APP_MESSAGE = {
     },
     profile: {
       updated: {
-        title: "프로필 업데이트 완료",
+        title: "프로필 수정 완료",
         description: "변경한 프로필 정보가 저장되었습니다.",
       },
     },
@@ -67,7 +67,7 @@ export const APP_MESSAGE = {
   error: {
     common: {
       unknown: {
-        title: "오류 발생",
+        title: "처리 실패",
         description: "잠시 후 다시 시도해주세요.",
       },
       notFoundPage: {
@@ -90,13 +90,13 @@ export const APP_MESSAGE = {
       },
       nicknameCheckFailed: {
         title: "닉네임 확인 실패",
-        description: "닉네임 확인 중 오류가 발생했습니다.",
+        description: "닉네임 사용 가능 여부를 확인하지 못했습니다.",
       },
       nicknameAlreadyUsed: {
         title: "이미 사용 중인 닉네임",
       },
       invalidInput: {
-        title: "입력값 오류",
+        title: "입력값 확인 필요",
         description: "입력한 정보를 다시 확인해주세요.",
       },
       authInfoNotFound: {
@@ -108,8 +108,8 @@ export const APP_MESSAGE = {
         description: "잠시 후 다시 시도해주세요.",
       },
       sessionNotFound: {
-        title: "인증 오류",
-        description: "유저 세션을 찾을 수 없습니다.",
+        title: "인증 정보 없음",
+        description: "다시 로그인한 뒤 시도해주세요.",
       },
       passwordChangeFailed: {
         title: "비밀번호 변경 실패",
@@ -120,12 +120,12 @@ export const APP_MESSAGE = {
         description: "입력한 정보를 확인한 뒤 다시 시도해주세요.",
       },
       profileCreateFailed: {
-        title: "프로필 생성 오류",
+        title: "프로필 생성 실패",
         description: "프로필 정보를 저장하지 못했습니다.",
       },
       signupCancelFailed: {
         title: "취소 실패",
-        description: "회원가입 취소 중 오류가 발생했습니다.",
+        description: "회원가입 취소를 완료하지 못했습니다.",
       },
       accountDeleteFailed: {
         title: "계정 삭제 실패",
@@ -223,12 +223,12 @@ export const APP_MESSAGE = {
       },
       ownerTransferFailed: {
         title: "방장 위임 실패",
-        description: "방장 정보를 업데이트하지 못했습니다.",
+        description: "방장 정보를 변경하지 못했습니다.",
       },
     },
     message: {
       invalidInput: {
-        title: "메시지 입력 오류",
+        title: "메시지 확인 필요",
         description: "메시지 내용을 다시 확인해주세요.",
       },
       sendForbidden: {
@@ -237,20 +237,20 @@ export const APP_MESSAGE = {
       },
       sendFailed: {
         title: "전송 실패",
-        description: "알 수 없는 에러가 발생했습니다.",
+        description: "잠시 후 다시 시도해주세요.",
       },
     },
     profile: {
       updateFailed: {
-        title: "프로필 업데이트 실패",
-        description: "프로필 업데이트에 실패했습니다.",
+        title: "프로필 수정 실패",
+        description: "프로필 변경사항을 저장하지 못했습니다.",
       },
       imageTooLarge: {
         title: "이미지 용량 초과",
         description: "5MB 이하의 이미지를 선택해주세요.",
       },
       authMissing: {
-        title: "유저 인증 정보 없음",
+        title: "인증 정보 없음",
         description: "다시 로그인한 뒤 시도해주세요.",
       },
       imageUploadFailed: {
@@ -258,8 +258,8 @@ export const APP_MESSAGE = {
         description: "프로필 이미지를 저장하지 못했습니다.",
       },
       userUpdateFailed: {
-        title: "유저 업데이트 실패",
-        description: "유저 정보를 저장하지 못했습니다.",
+        title: "프로필 저장 실패",
+        description: "프로필 정보를 저장하지 못했습니다.",
       },
     },
     oauth: {
@@ -276,16 +276,16 @@ export const APP_MESSAGE = {
         description: "해제할 소셜 계정을 찾지 못했습니다.",
       },
       userProfileNotFound: {
-        title: "유저 프로필 없음",
+        title: "프로필 없음",
         description: "현재 계정과 연결된 프로필 정보를 찾지 못했습니다.",
       },
       dbUpdateFailed: {
-        title: "데이터베이스 업데이트 실패",
+        title: "계정 정보 저장 실패",
         description: "계정 연동 정보를 저장하지 못했습니다.",
       },
       actionFailed: {
-        title: "작업 오류",
-        description: "알 수 없는 오류가 발생하였습니다.",
+        title: "작업 실패",
+        description: "잠시 후 다시 시도해주세요.",
       },
       defaultAccountCannotUnlink: {
         title: "기본 계정 해제 불가",
@@ -293,11 +293,11 @@ export const APP_MESSAGE = {
       },
     },
     supabase: {
-      "42501": {
+      permissionDenied: {
         title: "권한 없음",
         description: "요청한 작업을 수행할 권한이 없습니다.",
       },
-      PGRST116: {
+      dataNotFound: {
         title: "데이터 없음",
         description: "요청한 데이터를 찾을 수 없습니다.",
       },

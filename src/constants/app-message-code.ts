@@ -1,5 +1,8 @@
 // 앱 메시지 조회에 사용하는 메시지 코드를 관리하는 상수
 
+import type { APP_MESSAGE } from "@/constants/app-message";
+import type { AppMessageCodeSchema } from "@/types/app-message";
+
 export const APP_MESSAGE_CODE = {
   success: {
     auth: {
@@ -97,11 +100,11 @@ export const APP_MESSAGE_CODE = {
       defaultAccountCannotUnlink: "error.oauth.defaultAccountCannotUnlink",
     },
     supabase: {
-      permissionDenied: "error.supabase.42501",
-      dataNotFound: "error.supabase.PGRST116",
+      permissionDenied: "error.supabase.permissionDenied",
+      dataNotFound: "error.supabase.dataNotFound",
     },
   },
-} as const;
+} as const satisfies AppMessageCodeSchema<typeof APP_MESSAGE>;
 
 type NestedValue<T> = T extends string
   ? T
