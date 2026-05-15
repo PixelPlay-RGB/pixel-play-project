@@ -54,6 +54,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public';
 
+DROP TRIGGER IF EXISTS trigger_insert_date_divider_message ON public.message;
+
 CREATE TRIGGER trigger_insert_date_divider_message
   AFTER INSERT ON public.message
   FOR EACH ROW
