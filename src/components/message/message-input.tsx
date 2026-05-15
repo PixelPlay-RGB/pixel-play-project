@@ -12,7 +12,6 @@ import { toastAppError } from "@/utils/toast-message";
 import { MESSAGE_CONTENT_MAX_LENGTH } from "@/constants/message";
 import { messageContentSchema } from "@/lib/zod/message";
 import { cn } from "@/lib/utils";
-import { toast } from "sonner";
 
 interface Props {
   roomId: string;
@@ -48,8 +47,8 @@ export function MessageInput({ roomId, currentUserId, disabled = false, disabled
 
     const parsed = messageContentSchema.safeParse(draft);
     if (!parsed.success) {
-      const first = parsed.error.issues[0];
-      toast.error(first?.message ?? "입력값을 확인해주세요.");
+      console.error("MessageInput validation error", parsed.error);
+      toastAppError(APP_MESSAGE_CODE.error.message.invalidInput);
       return;
     }
 

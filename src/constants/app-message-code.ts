@@ -13,6 +13,11 @@ export const APP_MESSAGE_CODE = {
     },
     chatRoom: {
       created: "success.chatRoom.created",
+      left: "success.chatRoom.left",
+    },
+    chatRoomMember: {
+      kicked: "success.chatRoomMember.kicked",
+      ownerTransferred: "success.chatRoomMember.ownerTransferred",
     },
     profile: {
       updated: "success.profile.updated",
@@ -42,13 +47,19 @@ export const APP_MESSAGE_CODE = {
       signupCancelFailed: "error.auth.signupCancelFailed",
       accountDeleteFailed: "error.auth.accountDeleteFailed",
       oauthInfoLoadFailed: "error.auth.oauthInfoLoadFailed",
+      oauthSyncFailed: "error.auth.oauthSyncFailed",
     },
     chatRoom: {
       createAuthRequired: "error.chatRoom.createAuthRequired",
       createFailed: "error.chatRoom.createFailed",
       createMemberFailed: "error.chatRoom.createMemberFailed",
+      leaveFailed: "error.chatRoom.leaveFailed",
+      leaveOwnerBlocked: "error.chatRoom.leaveOwnerBlocked",
       missingRoomId: "error.chatRoom.missingRoomId",
+      notFound: "error.chatRoom.notFound",
       notFoundOrLoadFailed: "error.chatRoom.notFoundOrLoadFailed",
+      notActiveMember: "error.chatRoom.notActiveMember",
+      notMember: "error.chatRoom.notMember",
       inputLocked: "error.chatRoom.inputLocked",
       isKicked: "error.chatRoom.isKicked",
     },
@@ -56,8 +67,18 @@ export const APP_MESSAGE_CODE = {
       loadFailed: "error.chatRoomList.loadFailed",
     },
     message: {
+      invalidInput: "error.message.invalidInput",
       sendForbidden: "error.message.sendForbidden",
       sendFailed: "error.message.sendFailed",
+    },
+    chatRoomMember: {
+      kickFailed: "error.chatRoomMember.kickFailed",
+      transferFailed: "error.chatRoomMember.transferFailed",
+      notOwner: "error.chatRoomMember.notOwner",
+      ownerCannotKickSelf: "error.chatRoomMember.ownerCannotKickSelf",
+      ownerCannotTransferSelf: "error.chatRoomMember.ownerCannotTransferSelf",
+      targetNotActive: "error.chatRoomMember.targetNotActive",
+      ownerTransferFailed: "error.chatRoomMember.ownerTransferFailed",
     },
     profile: {
       updateFailed: "error.profile.updateFailed",

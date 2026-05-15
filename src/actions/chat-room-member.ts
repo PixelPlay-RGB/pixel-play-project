@@ -1,22 +1,20 @@
 "use server";
 
 // 채팅방 멤버 관리 RPC를 호출하는 서버 액션
+import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import { createClient } from "@/lib/supabase/server";
+import type { AppActionResult } from "@/types/action";
+import { resolveRpcErrorCode } from "@/utils/app-message";
 
 interface ChatRoomMemberActionInput {
   roomId: string;
   targetUserId: string;
 }
 
-interface ChatRoomMemberActionResult {
-  success: boolean;
-  message?: string;
-}
-
 export async function kickChatRoomMemberAction({
   roomId,
   targetUserId,
-}: ChatRoomMemberActionInput): Promise<ChatRoomMemberActionResult> {
+}: ChatRoomMemberActionInput): Promise<AppActionResult> {
   const supabase = await createClient();
 
   const { error } = await supabase.rpc("kick_chat_room_member", {
@@ -25,19 +23,23 @@ export async function kickChatRoomMemberAction({
   });
 
   if (error) {
+    console.error("kickChatRoomMemberAction rpc error", error);
     return {
       success: false,
-      message: "강퇴 처리에 실패했습니다.",
+      code: resolveRpcErrorCode(error, APP_MESSAGE_CODE.error.chatRoomMember.kickFailed),
     };
   }
 
-  return { success: true };
+  return {
+    success: true,
+    code: APP_MESSAGE_CODE.success.chatRoomMember.kicked,
+  };
 }
 
 export async function transferChatRoomOwnerAction({
   roomId,
   targetUserId,
-}: ChatRoomMemberActionInput): Promise<ChatRoomMemberActionResult> {
+}: ChatRoomMemberActionInput): Promise<AppActionResult> {
   const supabase = await createClient();
 
   const { error } = await supabase.rpc("transfer_chat_room_owner", {
@@ -46,11 +48,15 @@ export async function transferChatRoomOwnerAction({
   });
 
   if (error) {
+    console.error("transferChatRoomOwnerAction rpc error", error);
     return {
       success: false,
-      message: "방장 권한 위임에 실패했습니다.",
+      code: resolveRpcErrorCode(error, APP_MESSAGE_CODE.error.chatRoomMember.transferFailed),
     };
   }
 
-  return { success: true };
+  return {
+    success: true,
+    code: APP_MESSAGE_CODE.success.chatRoomMember.ownerTransferred,
+  };
 }

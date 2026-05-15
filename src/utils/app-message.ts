@@ -10,7 +10,58 @@ type AppMessageTypeMap = Record<string, Record<string, AppMessageDomainMap>>;
 
 interface SupabaseLikeError {
   code?: string;
+  message?: string;
 }
+
+const RPC_ERROR_MESSAGE_CODE_MAP: Array<{
+  pattern: string;
+  code: AppMessageCode;
+}> = [
+  {
+    pattern: "owner cannot leave",
+    code: APP_MESSAGE_CODE.error.chatRoom.leaveOwnerBlocked,
+  },
+  {
+    pattern: "target is not an active member",
+    code: APP_MESSAGE_CODE.error.chatRoomMember.targetNotActive,
+  },
+  {
+    pattern: "only owner can kick members",
+    code: APP_MESSAGE_CODE.error.chatRoomMember.notOwner,
+  },
+  {
+    pattern: "only owner can transfer ownership",
+    code: APP_MESSAGE_CODE.error.chatRoomMember.notOwner,
+  },
+  {
+    pattern: "owner cannot kick self",
+    code: APP_MESSAGE_CODE.error.chatRoomMember.ownerCannotKickSelf,
+  },
+  {
+    pattern: "owner cannot transfer to self",
+    code: APP_MESSAGE_CODE.error.chatRoomMember.ownerCannotTransferSelf,
+  },
+  {
+    pattern: "owner transfer failed",
+    code: APP_MESSAGE_CODE.error.chatRoomMember.ownerTransferFailed,
+  },
+  {
+    pattern: "not an active member",
+    code: APP_MESSAGE_CODE.error.chatRoom.notActiveMember,
+  },
+  {
+    pattern: "not a member",
+    code: APP_MESSAGE_CODE.error.chatRoom.notMember,
+  },
+  {
+    pattern: "room not found",
+    code: APP_MESSAGE_CODE.error.chatRoom.notFound,
+  },
+  {
+    pattern: "not authenticated",
+    code: APP_MESSAGE_CODE.error.auth.authInfoNotFound,
+  },
+];
 
 export function getAppMessage(code?: AppMessageCode): AppMessage {
   if (!code) {
@@ -48,4 +99,24 @@ export function resolveSupabaseErrorCode(
   }
 
   return fallbackCode;
+}
+
+export function resolveRpcErrorCode(
+  error: unknown,
+  fallbackCode: AppMessageCode = APP_MESSAGE_CODE.error.common.unknown,
+): AppMessageCode {
+  if (typeof error !== "object" || error === null) {
+    return fallbackCode;
+  }
+
+  const message = (error as SupabaseLikeError).message?.toLowerCase();
+
+  if (!message) {
+    return fallbackCode;
+  }
+
+  return (
+    RPC_ERROR_MESSAGE_CODE_MAP.find(({ pattern }) => message.includes(pattern))?.code ??
+    fallbackCode
+  );
 }

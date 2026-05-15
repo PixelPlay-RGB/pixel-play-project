@@ -22,3 +22,11 @@ export function toastAppError(code: AppMessageCode, description?: string) {
     description: description ?? message.description,
   });
 }
+
+export function toastAppInfo(code: AppMessageCode, description?: string) {
+  const message = getAppMessage(code);
+
+  toast.info(message.title, {
+    description: description ?? message.description,
+  });
+}

@@ -19,24 +19,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useLeaveChatRoom } from "@/hooks/use-leave-chat-room";
-import { toast } from "sonner";
+import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
+import { resolveRpcErrorCode } from "@/utils/app-message";
+import { toastAppError, toastAppInfo } from "@/utils/toast-message";
 
 interface Props {
   roomId: string;
   ownerId: string;
   currentMember: number;
   currentUserId: string;
-}
-
-function mapLeaveRoomError(message: string): string {
-  const lower = message.toLowerCase();
-  if (lower.includes("owner cannot leave")) {
-    return "방장은 다른 참여자에게 방장 권한을 위임한 뒤 나갈 수 있습니다.";
-  }
-  if (lower.includes("not an active member")) return "참여 중이 아니거나 이미 나간 상태입니다.";
-  if (lower.includes("not a member")) return "참여 중인 채팅방이 아닙니다.";
-  if (lower.includes("room not found")) return "채팅방을 찾을 수 없습니다.";
-  return "채팅방 나가기에 실패했습니다.";
 }
 
 export function ChatRoomMenu({ roomId, ownerId, currentMember, currentUserId }: Props) {
@@ -50,8 +41,8 @@ export function ChatRoomMenu({ roomId, ownerId, currentMember, currentUserId }: 
   const handleLeave = () => {
     mutate(roomId, {
       onError: (err: unknown) => {
-        const msg = err instanceof Error ? err.message : "";
-        toast.error(mapLeaveRoomError(msg));
+        console.error("ChatRoomMenu leave error", err);
+        toastAppError(resolveRpcErrorCode(err, APP_MESSAGE_CODE.error.chatRoom.leaveFailed));
       },
     });
   };
@@ -90,7 +81,7 @@ export function ChatRoomMenu({ roomId, ownerId, currentMember, currentUserId }: 
             variant="destructive"
             onClick={() => {
               if (isOwnerLeaveBlocked) {
-                toast.info("방장은 다른 참여자에게 방장 권한을 위임한 뒤 나갈 수 있습니다.");
+                toastAppInfo(APP_MESSAGE_CODE.error.chatRoom.leaveOwnerBlocked);
                 return;
               }
               setMenuOpen(false);

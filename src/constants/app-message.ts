@@ -37,6 +37,20 @@ export const APP_MESSAGE = {
         title: "채팅방 생성 완료",
         description: "생성한 채팅방으로 이동합니다.",
       },
+      left: {
+        title: "채팅방 나가기 완료",
+        description: "채팅방 목록으로 이동합니다.",
+      },
+    },
+    chatRoomMember: {
+      kicked: {
+        title: "강퇴 완료",
+        description: "참여자가 채팅방에서 제외되었습니다.",
+      },
+      ownerTransferred: {
+        title: "방장 위임 완료",
+        description: "방장 권한이 위임되었습니다.",
+      },
     },
     profile: {
       updated: {
@@ -121,6 +135,10 @@ export const APP_MESSAGE = {
         title: "OAuth 정보 조회 실패",
         description: "소셜 로그인 정보를 불러오지 못했습니다.",
       },
+      oauthSyncFailed: {
+        title: "OAuth 동기화 실패",
+        description: "소셜 로그인 정보를 동기화하지 못했습니다.",
+      },
     },
     chatRoom: {
       createAuthRequired: {
@@ -135,13 +153,33 @@ export const APP_MESSAGE = {
         title: "참여 정보 생성 실패",
         description: "채팅방 참여 정보를 저장하지 못했습니다.",
       },
+      leaveFailed: {
+        title: "채팅방 나가기 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      leaveOwnerBlocked: {
+        title: "방장 나가기 불가",
+        description: "다른 참여자에게 방장 권한을 위임한 뒤 나갈 수 있습니다.",
+      },
       missingRoomId: {
         title: "방 정보 없음",
         description: "채팅방 주소를 다시 확인해주세요.",
       },
+      notFound: {
+        title: "채팅방 없음",
+        description: "채팅방을 찾을 수 없습니다.",
+      },
       notFoundOrLoadFailed: {
         title: "채팅방 조회 실패",
         description: "존재하지 않거나 접근할 수 없는 채팅방입니다.",
+      },
+      notActiveMember: {
+        title: "참여 상태 없음",
+        description: "참여 중이 아니거나 이미 나간 채팅방입니다.",
+      },
+      notMember: {
+        title: "참여 정보 없음",
+        description: "참여 중인 채팅방이 아닙니다.",
       },
       inputLocked: {
         title: "메시지 전송 불가",
@@ -158,8 +196,41 @@ export const APP_MESSAGE = {
         description: "채팅방 목록을 불러오지 못했습니다.",
       },
     },
-    chatRoomMember: {},
+    chatRoomMember: {
+      kickFailed: {
+        title: "강퇴 실패",
+        description: "참여자를 강퇴하지 못했습니다.",
+      },
+      transferFailed: {
+        title: "방장 위임 실패",
+        description: "방장 권한을 위임하지 못했습니다.",
+      },
+      notOwner: {
+        title: "방장 권한 없음",
+        description: "방장만 수행할 수 있는 작업입니다.",
+      },
+      ownerCannotKickSelf: {
+        title: "본인 강퇴 불가",
+        description: "본인은 강퇴할 수 없습니다.",
+      },
+      ownerCannotTransferSelf: {
+        title: "본인 위임 불가",
+        description: "다른 참여자에게 방장 권한을 위임해주세요.",
+      },
+      targetNotActive: {
+        title: "대상 참여 상태 없음",
+        description: "대상 참여자가 채팅방에 참여 중인지 확인해주세요.",
+      },
+      ownerTransferFailed: {
+        title: "방장 위임 실패",
+        description: "방장 정보를 업데이트하지 못했습니다.",
+      },
+    },
     message: {
+      invalidInput: {
+        title: "메시지 입력 오류",
+        description: "메시지 내용을 다시 확인해주세요.",
+      },
       sendForbidden: {
         title: "권한 없음",
         description: "메시지를 보낼 수 있는 권한이 없습니다.",

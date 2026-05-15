@@ -4,8 +4,8 @@
 import { useState, type ReactElement } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Crown, UserX } from "lucide-react";
-import { toast } from "sonner";
 
+import { kickChatRoomMemberAction, transferChatRoomOwnerAction } from "@/actions/chat-room-member";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,10 +19,11 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Spinner } from "@/components/ui/spinner";
-import { kickChatRoomMemberAction, transferChatRoomOwnerAction } from "@/actions/chat-room-member";
+import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import { MEMBER_ACTION_COPY, type MemberAction } from "@/constants/chat-room-member";
 import { QUERY_KEYS } from "@/constants/query-keys";
 import { cn } from "@/lib/utils";
+import { toastAppError, toastAppSuccess } from "@/utils/toast-message";
 
 interface Props {
   action: MemberAction;
@@ -44,6 +45,12 @@ export function MemberActionAlertDialog({
   const [isPending, setIsPending] = useState(false);
   const copy = MEMBER_ACTION_COPY[action];
   const isKick = action === "kick";
+  const successCode = isKick
+    ? APP_MESSAGE_CODE.success.chatRoomMember.kicked
+    : APP_MESSAGE_CODE.success.chatRoomMember.ownerTransferred;
+  const fallbackErrorCode = isKick
+    ? APP_MESSAGE_CODE.error.chatRoomMember.kickFailed
+    : APP_MESSAGE_CODE.error.chatRoomMember.transferFailed;
 
   const handleConfirm = async () => {
     setIsPending(true);
@@ -54,19 +61,19 @@ export function MemberActionAlertDialog({
         : await transferChatRoomOwnerAction({ roomId, targetUserId });
 
       if (!result.success) {
-        toast.error(result.message ?? "작업에 실패했습니다.");
+        toastAppError(result.code ?? fallbackErrorCode);
         return;
       }
 
-      toast.success(copy.success);
+      toastAppSuccess(result.code ?? successCode);
       setOpen(false);
       await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.members(roomId) });
       await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.room(roomId) });
       await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.rooms() });
       await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.counts() });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "작업 중 오류가 발생했습니다.";
-      toast.error(message);
+      console.error("MemberActionAlertDialog action error", error);
+      toastAppError(fallbackErrorCode);
     } finally {
       setIsPending(false);
     }

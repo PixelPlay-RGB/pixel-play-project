@@ -5,9 +5,10 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 
+import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import { QUERY_KEYS } from "@/constants/query-keys";
 import { createClient } from "@/lib/supabase/client";
-import { toast } from "sonner";
+import { toastAppSuccess } from "@/utils/toast-message";
 
 export function useLeaveChatRoom() {
   const queryClient = useQueryClient();
@@ -20,7 +21,7 @@ export function useLeaveChatRoom() {
       if (error) throw error;
     },
     onSuccess: async () => {
-      toast.success("채팅방을 나갔습니다.");
+      toastAppSuccess(APP_MESSAGE_CODE.success.chatRoom.left);
       router.push("/");
       queryClient.removeQueries({ queryKey: QUERY_KEYS.chat.room() });
       queryClient.removeQueries({ queryKey: QUERY_KEYS.chat.messages() });
