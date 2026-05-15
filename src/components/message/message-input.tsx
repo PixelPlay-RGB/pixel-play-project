@@ -27,12 +27,15 @@ export function MessageInput({ roomId, currentUserId, disabled = false, disabled
   const sendMessageLockRef = useRef(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // draft 변경마다 높이 자동 조절 (이모지 삽입·직접 입력·전송 후 리셋 모두 커버)
+  // draft 변경마다 높이 자동 조절 + max-h 초과 시에만 스크롤 노출
+  // overflow-y는 기본 hidden → max-h(8rem=128px) 초과 시 auto로 전환
   useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
     el.style.height = "auto";
-    el.style.height = `${el.scrollHeight}px`;
+    const scrollHeight = el.scrollHeight;
+    el.style.height = `${scrollHeight}px`;
+    el.style.overflowY = scrollHeight > 128 ? "auto" : "hidden";
   }, [draft]);
 
   const handleSend = async () => {
@@ -98,7 +101,7 @@ export function MessageInput({ roomId, currentUserId, disabled = false, disabled
         }
         aria-label="메시지 입력"
         className={cn(
-          "flex-1 resize-none overflow-y-auto rounded-xl px-3 py-2 text-sm leading-normal",
+          "flex-1 resize-none overflow-y-hidden rounded-xl px-3 py-2 text-sm leading-normal",
           "min-h-9 max-h-32",
           "border border-border/60 bg-muted/30",
           "placeholder:text-muted-foreground/60",
