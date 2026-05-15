@@ -19,7 +19,7 @@ export default function ChatRoomTabs({ counts, isFetching = false }: Props) {
 
   return (
     <Tabs value={tabType} onValueChange={(nextValue) => setTabType(nextValue as ChatRoomTab)}>
-      <TooltipProvider delay={300}>
+      <TooltipProvider delay={0}>
         <TabsList
           className={cn(
             "grid h-auto w-full min-w-0 grid-cols-3 items-center gap-1 p-1",
