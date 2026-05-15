@@ -27,16 +27,23 @@ export function MemberList({ roomId, currentUserId, ownerId, className }: Props)
       </div>
 
       <ScrollArea className="min-h-0 flex-1">
-        <ul className="py-1.5" role="list">
-          {members.map((member) => (
-            <li key={`${member.chat_room_id}-${member.user_id}`}>
-              <MemberItem
-                roomId={roomId}
-                member={member}
-                canManage={canManageMembers && member.user_id !== currentUserId}
-              />
-            </li>
-          ))}
+        <ul className="flex flex-col gap-1 px-2 py-3">
+          {[...members]
+            .sort((a, b) => {
+              if (a.user_id === ownerId) return -1;
+              if (b.user_id === ownerId) return 1;
+              return 0;
+            })
+            .map((member) => (
+              <li key={`${member.chat_room_id}-${member.user_id}`}>
+                <MemberItem
+                  roomId={roomId}
+                  member={member}
+                  isOwner={member.user_id === ownerId}
+                  canManage={canManageMembers && member.user_id !== currentUserId}
+                />
+              </li>
+            ))}
         </ul>
       </ScrollArea>
     </section>
