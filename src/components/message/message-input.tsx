@@ -21,6 +21,8 @@ interface Props {
   disabledHint?: string;
 }
 
+const MAX_TEXTAREA_HEIGHT_PX = 128; // max-h-32 (8rem)
+
 export function MessageInput({ roomId, currentUserId, disabled = false, disabledHint }: Props) {
   const supabase = createClient();
   const [draft, setDraft] = useState("");
@@ -35,7 +37,8 @@ export function MessageInput({ roomId, currentUserId, disabled = false, disabled
     el.style.height = "auto";
     const scrollHeight = el.scrollHeight;
     el.style.height = `${scrollHeight}px`;
-    el.style.overflowY = scrollHeight > 128 ? "auto" : "hidden";
+    // Tailwind max-h-32와 동기화: 초과 시에만 스크롤바 노출
+    el.style.overflowY = scrollHeight > MAX_TEXTAREA_HEIGHT_PX ? "auto" : "hidden";
   }, [draft]);
 
   const handleSend = async () => {
@@ -102,10 +105,10 @@ export function MessageInput({ roomId, currentUserId, disabled = false, disabled
         aria-label="메시지 입력"
         className={cn(
           "flex-1 resize-none overflow-y-hidden rounded-xl px-3 py-2 text-sm leading-normal",
-          "min-h-9 max-h-32",
-          "border border-border/60 bg-muted/30",
+          "max-h-32 min-h-9",
+          "border-border/60 bg-muted/30 border",
           "placeholder:text-muted-foreground/60",
-          "outline-none focus-visible:ring-1 focus-visible:ring-ring/60",
+          "focus-visible:ring-ring/60 outline-none focus-visible:ring-1",
           "disabled:cursor-not-allowed disabled:opacity-50",
           // 스크롤바: max-h 초과 시에만 노출, 브랜드 톤에 맞춘 thin 디자인
           "[&::-webkit-scrollbar]:w-1",
@@ -123,7 +126,7 @@ export function MessageInput({ roomId, currentUserId, disabled = false, disabled
         title={disabled ? disabledHint : undefined}
         onClick={() => void handleSend()}
         aria-label="전송"
-        className="shrink-0 text-brand hover:bg-brand/10 hover:text-brand"
+        className="text-brand hover:bg-brand/10 hover:text-brand shrink-0"
       >
         <SendHorizontal className="size-5" />
       </Button>

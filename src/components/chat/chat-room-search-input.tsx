@@ -14,6 +14,7 @@ export default function ChatRoomSearchInput() {
 
   // tab 변경 시 store의 searchQuery가 ""로 초기화됨 → 로컬 input도 동기화
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLocalValue(searchQuery);
   }, [tabType, searchQuery]);
 
