@@ -36,7 +36,6 @@ export default function ChatRoomPagination({
   if (totalPages <= 1) return null;
 
   const items = getPageItems(currentPage, totalPages);
-  const isFirstPage = currentPage <= 1;
 
   const handlePageClick = (e: React.MouseEvent, page: number) => {
     e.preventDefault();
@@ -47,7 +46,11 @@ export default function ChatRoomPagination({
 
   const handlePrevious = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (isFetching || isFirstPage) return;
+    if (isFetching) return;
+    if (currentPage <= 1) {
+      onPageChange(totalPages);
+      return;
+    }
     onPageChange(currentPage - 1);
   };
 
@@ -62,7 +65,7 @@ export default function ChatRoomPagination({
     onPageChange(currentPage + 1);
   };
 
-  const isPrevDisabled = isFirstPage || isFetching;
+  const isPrevDisabled = isFetching;
 
   return (
     <Pagination className="pt-2">
