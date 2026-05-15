@@ -6,8 +6,10 @@ import { devtools } from "zustand/middleware";
 interface ChatRoomState {
   tabType: ChatRoomTab;
   sortOption: ChatRoomSortOption;
+  currentPage: number;
   setTabType: (tabType: ChatRoomTab) => void;
   setSortOption: (sortOption: ChatRoomSortOption) => void;
+  setCurrentPage: (page: number) => void;
 }
 
 export const useChatRoomStore = create<ChatRoomState>()(
@@ -15,16 +17,21 @@ export const useChatRoomStore = create<ChatRoomState>()(
     (set) => ({
       tabType: "JOINED",
       sortOption: DEFAULT_CHAT_ROOM_SORT_OPTION,
+      currentPage: 1,
       setTabType: (tabType) =>
         set(
           {
             tabType,
             sortOption: DEFAULT_CHAT_ROOM_SORT_OPTION,
+            currentPage: 1,
           },
           false,
           "chatRoom/setTabType",
         ),
-      setSortOption: (sortOption) => set({ sortOption }, false, "chatRoom/setSortOption"),
+      setSortOption: (sortOption) =>
+        set({ sortOption, currentPage: 1 }, false, "chatRoom/setSortOption"),
+      setCurrentPage: (currentPage) =>
+        set({ currentPage }, false, "chatRoom/setCurrentPage"),
     }),
     {
       name: "ChatRoomStore",

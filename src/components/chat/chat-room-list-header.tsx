@@ -6,9 +6,10 @@ import type { ChatRoomCounts } from "@/types/chat-room";
 
 interface Props {
   counts?: ChatRoomCounts;
+  isFetching?: boolean;
 }
 
-export default function ChatRoomListHeader({ counts }: Props) {
+export default function ChatRoomListHeader({ counts, isFetching = false }: Props) {
   return (
     <div
       className={cn(
@@ -16,7 +17,7 @@ export default function ChatRoomListHeader({ counts }: Props) {
         "lg:flex-row lg:items-center lg:justify-between",
       )}
     >
-      <ChatRoomTabs counts={counts} />
+      <ChatRoomTabs counts={counts} isFetching={isFetching} />
       <div
         className={cn("flex w-full items-center justify-between gap-3", "lg:w-auto lg:justify-end")}
       >

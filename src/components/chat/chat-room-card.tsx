@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import type { ChatRoomCardData } from "@/types/chat-room";
 import { formatCapacity, formatRoomDate } from "@/utils/chat-room";
-import { Clock, MessageCircle, Users } from "lucide-react";
+import { Clock, Crown, MessageCircle, Users } from "lucide-react";
 import Link from "next/link";
 
 interface Props {
@@ -42,11 +42,13 @@ export default function ChatRoomCard({ chatRoom, unreadMessageCount = 0 }: Props
           </h3>
           <span
             className={cn(
-              "text-muted-foreground shrink-0 font-medium tracking-tight",
-              "text-xs",
+              "inline-flex w-fit shrink-0 items-center gap-1 rounded-md px-1.5 py-0.5",
+              "bg-brand/10 text-brand dark:bg-brand/15",
+              "text-xs font-semibold tracking-tight",
             )}
           >
-            @{chatRoom.owner_nickname}
+            <Crown className="size-3" aria-hidden />
+            <span className="max-w-24 truncate">{chatRoom.owner_nickname}</span>
           </span>
         </div>
         {chatRoom.description && (
