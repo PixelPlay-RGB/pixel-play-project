@@ -1,5 +1,6 @@
 "use client";
 
+import { Spinner } from "@/components/ui/spinner";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CHAT_ROOM_TABS, ROOM_TAB_LABELS } from "@/constants/chat-room";
 import { useChatRoomStore } from "@/stores/chat-room";
@@ -8,9 +9,10 @@ import { cn } from "@/lib/utils";
 
 interface Props {
   counts?: ChatRoomCounts;
+  isFetching?: boolean;
 }
 
-export default function ChatRoomTabs({ counts }: Props) {
+export default function ChatRoomTabs({ counts, isFetching = false }: Props) {
   const tabType = useChatRoomStore((state) => state.tabType);
   const setTabType = useChatRoomStore((state) => state.setTabType);
 
@@ -50,7 +52,13 @@ export default function ChatRoomTabs({ counts }: Props) {
                       : "bg-muted-foreground/20 text-muted-foreground",
                 )}
               >
-                {count === undefined ? null : count > 99 ? "99+" : count}
+                {isFetching && tabType === tab ? (
+                  <Spinner className="size-3 text-white" />
+                ) : count === undefined ? null : count > 99 ? (
+                  "99+"
+                ) : (
+                  count
+                )}
               </span>
             </TabsTrigger>
           );
