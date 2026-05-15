@@ -1,6 +1,7 @@
--- get_rooms_by_tab_count 버그 수정 2건
+-- get_rooms_by_tab_count 버그 수정 3건
 -- 1. OWNED/JOINED 탭 unread_count: system 메시지 제외 (message_type = 'text' 조건 추가)
--- 2. NOT_JOINED 탭: 정원 가득 찬 채팅방 제외 (room.current_member < room.max_capacity 조건 추가)
+-- 2. OWNED/JOINED 탭 lateral 최신 메시지 정렬: system 메시지 제외 (message_type = 'text' 조건 추가)
+-- 3. NOT_JOINED 탭: 정원 가득 찬 채팅방 제외 (room.current_member < room.max_capacity 조건 추가)
 
 CREATE OR REPLACE FUNCTION public.get_rooms_by_tab_count(
   p_user_id    uuid,
@@ -72,6 +73,7 @@ begin
       select max(message.created_at) as last_message_at
       from public.message as message
       where message.chat_room_id = room.id
+        and message.message_type = 'text'  -- system 메시지 제외
     ) as latest_message on true
     where room.owner_id = p_user_id
       and (v_query is null or room.title ilike '%' || v_query || '%')
@@ -112,6 +114,7 @@ begin
       select max(message.created_at) as last_message_at
       from public.message as message
       where message.chat_room_id = room.id
+        and message.message_type = 'text'  -- system 메시지 제외
     ) as latest_message on true
     where member.user_id = p_user_id
       and member.is_banned = false
