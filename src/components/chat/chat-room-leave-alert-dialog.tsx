@@ -22,10 +22,17 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   isPending: boolean;
+  isOwner: boolean;
   onConfirmLeave: () => void;
 }
 
-export function ChatRoomLeaveAlertDialog({ open, onOpenChange, isPending, onConfirmLeave }: Props) {
+export function ChatRoomLeaveAlertDialog({
+  open,
+  onOpenChange,
+  isPending,
+  isOwner,
+  onConfirmLeave,
+}: Props) {
   return (
     <AlertDialog
       open={open}
@@ -59,7 +66,9 @@ export function ChatRoomLeaveAlertDialog({ open, onOpenChange, isPending, onConf
               채팅방 나가기
             </AlertDialogTitle>
             <AlertDialogDescription className="leading-snug text-pretty whitespace-pre-line">
-              {"채팅방에서 나가시겠습니까?\n언제든 다시 참여하실 수 있습니다."}
+              {isOwner
+                ? "채팅방에서 나가시겠습니까?\n방장이 나가면 채팅방과\n대화 기록이 함께 삭제됩니다."
+                : "채팅방에서 나가시겠습니까?\n언제든 다시 참여하실 수 있습니다."}
             </AlertDialogDescription>
           </div>
         </AlertDialogHeader>

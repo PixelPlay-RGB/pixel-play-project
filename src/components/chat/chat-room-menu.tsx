@@ -106,6 +106,7 @@ export function ChatRoomMenu({ roomId, ownerId, currentMember, currentUserId }: 
         open={leaveOpen}
         onOpenChange={setLeaveOpen}
         isPending={isPending}
+        isOwner={isOwner}
         onConfirmLeave={handleLeave}
       />
     </>
