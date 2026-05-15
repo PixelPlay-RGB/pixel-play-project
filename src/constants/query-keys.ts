@@ -16,8 +16,8 @@ export const QUERY_KEYS = {
   },
   chat: {
     all: ["chat"] as const,
-    rooms: (userId?: string, tabType?: string, sortOption?: string) =>
-      [...QUERY_KEYS.chat.all, "rooms", userId, tabType, sortOption].filter(Boolean),
+    rooms: (userId?: string, tabType?: string, sortOption?: string, page?: number) =>
+      [...QUERY_KEYS.chat.all, "rooms", userId, tabType, sortOption, page].filter(Boolean),
     counts: (userId?: string) => [...QUERY_KEYS.chat.all, "counts", userId].filter(Boolean),
     room: (roomId?: string) => [...QUERY_KEYS.chat.all, "room", roomId].filter(Boolean),
     messages: (roomId?: string) => [...QUERY_KEYS.chat.all, "messages", roomId].filter(Boolean),
