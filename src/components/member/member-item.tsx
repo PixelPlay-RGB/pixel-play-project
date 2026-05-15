@@ -18,14 +18,12 @@ export function MemberItem({ roomId, member, canManage }: Props) {
 
   if (!canManage) {
     return (
-      <div className="flex w-full items-center gap-2.5 px-2 py-1.5 text-left transition-colors">
-        <Avatar size="sm" className="shrink-0">
+      <div className="flex w-full items-center gap-3 rounded-md px-3 py-2">
+        <Avatar size="default" className="shrink-0">
           {photoUrl ? <AvatarImage src={photoUrl} alt="" /> : null}
           <AvatarFallback>{fallbackText}</AvatarFallback>
         </Avatar>
-        <span className="min-w-0 truncate text-sm text-foreground">
-          {nickname}
-        </span>
+        <span className="min-w-0 truncate text-sm text-foreground">{nickname}</span>
       </div>
     );
   }
@@ -34,15 +32,13 @@ export function MemberItem({ roomId, member, canManage }: Props) {
     <MemberActionPopover roomId={roomId} member={member}>
       <Button
         variant="ghost"
-        className="flex h-auto w-full items-center gap-2.5 justify-start rounded-md px-2 py-1.5 font-normal transition-colors"
+        className="flex h-auto w-full items-center justify-start gap-3 rounded-md px-3 py-2 font-normal transition-colors"
       >
-        <Avatar size="sm" className="shrink-0">
+        <Avatar size="default" className="shrink-0">
           {photoUrl ? <AvatarImage src={photoUrl} alt="" /> : null}
           <AvatarFallback>{fallbackText}</AvatarFallback>
         </Avatar>
-        <span className="min-w-0 truncate text-sm text-foreground">
-          {nickname}
-        </span>
+        <span className="min-w-0 truncate text-sm text-foreground">{nickname}</span>
       </Button>
     </MemberActionPopover>
   );

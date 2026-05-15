@@ -43,14 +43,14 @@ export default function ChatRoomCard({ chatRoom, unreadMessageCount = 0 }: Props
           <span
             className={cn(
               "text-muted-foreground shrink-0 font-medium tracking-tight",
-              "text-[11px]",
+              "text-xs",
             )}
           >
             @{chatRoom.owner_nickname}
           </span>
         </div>
         {chatRoom.description && (
-          <p className={cn("text-muted-foreground line-clamp-1 leading-relaxed", "text-[11px]")}>
+          <p className={cn("text-muted-foreground line-clamp-1 leading-relaxed", "text-xs")}>
             {chatRoom.description}
           </p>
         )}
@@ -74,7 +74,7 @@ export default function ChatRoomCard({ chatRoom, unreadMessageCount = 0 }: Props
             <Users className="text-muted-foreground h-3 w-3" />
             <span
               className={cn(
-                "font-mono text-[11px] font-semibold",
+                "font-mono text-xs font-semibold",
                 isFull ? "text-live" : "text-brand",
               )}
             >
@@ -101,7 +101,7 @@ export default function ChatRoomCard({ chatRoom, unreadMessageCount = 0 }: Props
         </div>
         <div className="flex items-center gap-1">
           <Clock className="text-muted-foreground/50 h-2.5 w-2.5" />
-          <span className="text-muted-foreground/70 text-[11px] whitespace-nowrap">
+          <span className="text-muted-foreground/70 whitespace-nowrap text-xs">
             생성일 {formatRoomDate(chatRoom.created_at)}
           </span>
         </div>

@@ -75,11 +75,11 @@ export default function ProfileAvatarUpload({
         <div
           className={cn(
             "pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-1 rounded-full text-white transition-opacity",
-            isHovering || isDragging ? "bg-black/55 opacity-100" : "opacity-0",
+            isHovering || isDragging ? "bg-black/55 opacity-100 dark:bg-black/70" : "opacity-0",
           )}
         >
           <Camera className="size-6" />
-          <span className="text-[11px] font-medium tracking-wider uppercase">
+          <span className="text-xs font-medium tracking-wider uppercase">
             {isDragging ? "Drop" : "변경"}
           </span>
         </div>

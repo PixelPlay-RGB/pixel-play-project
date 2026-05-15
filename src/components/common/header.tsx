@@ -1,3 +1,5 @@
+// 애플리케이션 헤더 - 로고, 검색, 테마 전환, 프로필 배지 표시
+
 import LoginButton from "@/components/auth/login-button";
 import Logo from "@/components/common/logo";
 import ThemeToggleButton from "@/components/common/theme-toggle-button";
@@ -28,12 +30,12 @@ export default async function Header() {
         "dark:border-border dark:bg-muted/60", // 다크 모드 톤다운 조합
       )}
     >
-      <div className="flex flex-wrap items-center justify-between px-3 py-2 sm:flex-nowrap sm:px-5">
-        <Link href="/" className="h-10 w-32 sm:w-40">
-          <Logo className="dark:text-foreground h-full w-full text-[#1e1d37]" />
+      <div className="flex h-14 items-center justify-between px-3 sm:px-5">
+        <Link href="/" className="h-9 w-28 shrink-0 sm:w-36">
+          <Logo className="text-foreground h-full w-full" />
         </Link>
 
-        <div className="flex items-center gap-3 sm:gap-5">
+        <div className="flex items-center gap-2 sm:gap-3">
           {user && hasProfile && <HeaderSearchForm />}
           <ThemeToggleButton />
           {user && hasProfile && <HeaderProfileBadge />}

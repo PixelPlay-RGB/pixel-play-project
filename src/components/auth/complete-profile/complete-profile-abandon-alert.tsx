@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { LogOut } from "lucide-react";
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import type { AppMessageCode } from "@/constants/app-message-code";
 import { useAuthStore } from "@/stores/auth";

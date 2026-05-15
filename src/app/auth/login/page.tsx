@@ -17,7 +17,7 @@ export default function Page() {
         )}
       >
         <div className="mb-4 flex flex-col items-center gap-3 sm:mb-6 sm:gap-4">
-          <Logo className="dark:text-foreground text-[#1e1d37]" />
+          <Logo className="text-foreground" />
           <Separator className="bg-brand/40" />
           <p className="text-xs tracking-widest uppercase">로그인</p>
         </div>

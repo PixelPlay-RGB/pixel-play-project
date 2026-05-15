@@ -57,11 +57,11 @@ export default function MainMenuSidebar() {
     <SidebarProvider className="h-app-content min-h-0 overflow-hidden">
       <Sidebar
         collapsible={isMobile ? "offcanvas" : "none"}
-        className="bg-background h-full shrink-0 border-r border-zinc-200 dark:border-zinc-800/50"
+        className="h-full shrink-0 border-r border-border bg-background"
       >
         <SidebarContent>
           <SidebarGroup className="p-4 pt-5">
-            <SidebarGroupLabel className="mb-3 px-2 text-xs font-semibold tracking-wider text-zinc-400 uppercase dark:text-zinc-500">
+            <SidebarGroupLabel className="mb-3 px-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
               메뉴
             </SidebarGroupLabel>
             <SidebarGroupContent>
@@ -73,7 +73,7 @@ export default function MainMenuSidebar() {
 
       <SidebarInset>
         {isMobile && (
-          <div className="flex shrink-0 items-center gap-3 border-b border-zinc-200 p-4 dark:border-zinc-800/50">
+          <div className="flex shrink-0 items-center gap-3 border-b border-border p-4">
             <SidebarTrigger className="cursor-pointer" />
             <span className="text-foreground text-sm font-semibold">
               {MAIN_MENU_SIDEBAR_ITEMS.find((item) => item.key === activeMenu)?.label}

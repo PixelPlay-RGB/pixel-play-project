@@ -29,7 +29,7 @@ export default async function Page() {
     <div className="container m-auto">
       <div className="border-brand/20 bg-card/80 m-auto max-w-md rounded-2xl border-2 p-8 shadow-[0_0_30px_#46c6a90a] backdrop-blur-sm dark:shadow-[0_0_60px_#46c6a918]">
         <div className="mb-6 flex flex-col items-center gap-4">
-          <Logo className="dark:text-foreground text-[#1e1d37]" />
+          <Logo className="text-foreground" />
           <Separator className="bg-brand/40" />
           <div className="flex flex-col items-center gap-1 text-center">
             <p className="text-xs tracking-widest uppercase">추가 정보 입력</p>

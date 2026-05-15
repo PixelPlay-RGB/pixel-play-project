@@ -8,6 +8,7 @@ import { QUERY_KEYS } from "@/constants/query-keys";
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import { toastAppError } from "@/utils/toast-message";
 import type { LoginProvider } from "@/types/auth";
+import { toast } from "sonner";
 
 /**
  * 앱 루트에서 1회 마운트되어 Supabase Auth 상태를 Zustand store(AuthUser)에 동기화.
