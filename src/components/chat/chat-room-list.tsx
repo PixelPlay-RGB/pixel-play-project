@@ -38,6 +38,11 @@ export default function ChatRoomList() {
   const totalItems = isSearching ? (chatRooms[0]?.total_count ?? 0) : (counts?.[tabType] ?? 0);
   const totalPages = Math.ceil(totalItems / CHAT_ROOM_PAGE_SIZE);
 
+  // 검색 중일 때 현재 탭의 카운트를 total_count로 교체 → ChatRoomTabs에 반영
+  const effectiveCounts = isSearching && counts
+    ? { ...counts, [tabType]: chatRooms[0]?.total_count ?? 0 }
+    : counts;
+
   const isInitialLoading = !isUserFetched || query.isLoading;
   const isEmpty = isUserFetched && !query.isLoading && chatRooms.length === 0;
   const isPageFetching = query.isFetching && query.isPlaceholderData;
@@ -51,7 +56,7 @@ export default function ChatRoomList() {
 
   return (
     <div className="flex min-h-full flex-col gap-5">
-      <ChatRoomListHeader counts={counts} isFetching={isPageFetching} />
+      <ChatRoomListHeader counts={effectiveCounts} isFetching={isPageFetching} />
 
       <div className="flex flex-1 flex-col">
         {isInitialLoading ? (
