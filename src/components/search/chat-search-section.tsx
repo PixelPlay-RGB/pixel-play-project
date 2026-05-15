@@ -1,5 +1,5 @@
 // 채팅 검색 결과를 섹션 단위로 렌더링합니다.
-import ChatRoomCard from "@/components/chat/chat-room-card";
+import ChatRoomCard from "@/components/chat-room-list/chat-room-card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";

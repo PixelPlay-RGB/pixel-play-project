@@ -1,7 +1,7 @@
 "use client";
 
 import AuthListener from "@/components/auth/auth-listener";
-import ChatRoomsUnreadRealtimeListener from "@/components/chat/chat-rooms-unread-realtime-listener";
+import ChatRoomsUnreadRealtimeListener from "@/components/chat-room-list/chat-rooms-unread-realtime-listener";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { ThemeProvider } from "next-themes";

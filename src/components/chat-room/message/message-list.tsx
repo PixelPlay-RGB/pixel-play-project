@@ -1,6 +1,6 @@
 "use client";
 
-import { MessageItem } from "@/components/message/message-item";
+import { MessageItem } from "@/components/chat-room/message/message-item";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import type { MessageQuery } from "@/types/message";

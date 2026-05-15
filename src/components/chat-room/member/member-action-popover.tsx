@@ -4,7 +4,7 @@ import { Crown, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
-import { MemberActionAlertDialog } from "@/components/member/member-action-alert-dialog";
+import { MemberActionAlertDialog } from "@/components/chat-room/member/member-action-alert-dialog";
 import type { RoomMemberQuery } from "@/types/chat-room-member";
 import type { ReactElement } from "react";
 

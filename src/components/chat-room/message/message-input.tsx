@@ -3,7 +3,7 @@
 import { SendHorizontal } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
-import ChatEmojiPicker from "@/components/chat/chat-emoji-picker";
+import ChatEmojiPicker from "@/components/chat-room/chat-emoji-picker";
 import { Button } from "@/components/ui/button";
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import { createClient } from "@/lib/supabase/client";

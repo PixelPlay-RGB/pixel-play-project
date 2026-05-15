@@ -1,7 +1,7 @@
-import CreateChatRoomDialog from "@/components/chat/create-chat-room-dialog";
-import ChatRoomSearchInput from "@/components/chat/chat-room-search-input";
-import ChatRoomSortMenu from "@/components/chat/chat-room-sort-menu";
-import ChatRoomTabs from "@/components/chat/chat-room-tabs";
+import CreateChatRoomDialog from "@/components/chat-room-list/create-chat-room-dialog";
+import ChatRoomSearchInput from "@/components/chat-room-list/chat-room-search-input";
+import ChatRoomSortMenu from "@/components/chat-room-list/chat-room-sort-menu";
+import ChatRoomTabs from "@/components/chat-room-list/chat-room-tabs";
 import { cn } from "@/lib/utils";
 import type { ChatRoomCounts } from "@/types/chat-room";
 

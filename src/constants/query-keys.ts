@@ -30,6 +30,8 @@ export const QUERY_KEYS = {
       [...QUERY_KEYS.chat.all, "counts", userId].filter((v) => v !== undefined),
     room: (roomId?: string) =>
       [...QUERY_KEYS.chat.all, "room", roomId].filter((v) => v !== undefined),
+    member: (roomId?: string, userId?: string) =>
+      [...QUERY_KEYS.chat.all, "member", roomId, userId].filter((v) => v !== undefined),
     messages: (roomId?: string) =>
       [...QUERY_KEYS.chat.all, "messages", roomId].filter((v) => v !== undefined),
     members: (roomId?: string) =>

@@ -2,7 +2,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import type { MessageQuery } from "@/types/message";
-import { SystemMessageItem } from "@/components/message/system-message-item";
+import { SystemMessageItem } from "@/components/chat-room/message/system-message-item";
 import { getAvatarFallbackText } from "@/utils/avatar";
 
 interface Props {

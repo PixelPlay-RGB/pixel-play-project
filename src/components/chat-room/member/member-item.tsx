@@ -1,5 +1,5 @@
 // 채팅방 참여자 목록의 단일 항목을 표시하는 컴포넌트
-import { MemberActionPopover } from "@/components/member/member-action-popover";
+import { MemberActionPopover } from "@/components/chat-room/member/member-action-popover";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";

@@ -1,10 +1,10 @@
 "use client";
 
-import ChatRoomCard from "@/components/chat/chat-room-card";
-import ChatRoomEmptyState from "@/components/chat/chat-room-empty-state";
-import ChatRoomListHeader from "@/components/chat/chat-room-list-header";
-import ChatRoomListSkeleton from "@/components/chat/chat-room-list-skeleton";
-import ChatRoomPagination from "@/components/chat/chat-room-pagination";
+import ChatRoomCard from "@/components/chat-room-list/chat-room-card";
+import ChatRoomEmptyState from "@/components/chat-room-list/chat-room-empty-state";
+import ChatRoomListHeader from "@/components/chat-room-list/chat-room-list-header";
+import ChatRoomListSkeleton from "@/components/chat-room-list/chat-room-list-skeleton";
+import ChatRoomPagination from "@/components/chat-room-list/chat-room-pagination";
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import { useChatRoomCounts } from "@/hooks/use-chat-room-counts";
 import {

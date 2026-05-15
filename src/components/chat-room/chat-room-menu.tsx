@@ -6,7 +6,7 @@ import { useState } from "react";
 
 import { Ellipsis } from "lucide-react";
 
-import { ChatRoomLeaveAlertDialog } from "@/components/chat/chat-room-leave-alert-dialog";
+import { ChatRoomLeaveAlertDialog } from "@/components/chat-room/chat-room-leave-alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -20,21 +20,25 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useLeaveChatRoom } from "@/hooks/use-leave-chat-room";
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
+import { useRoom } from "@/hooks/use-chat-room";
+import { useUser } from "@/hooks/use-profile";
 import { resolveRpcErrorCode } from "@/utils/app-message";
 import { toastAppError, toastAppInfo } from "@/utils/toast-message";
 
 interface Props {
   roomId: string;
-  ownerId: string;
-  currentMember: number;
-  currentUserId: string;
 }
 
-export function ChatRoomMenu({ roomId, ownerId, currentMember, currentUserId }: Props) {
+export function ChatRoomMenu({ roomId }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [leaveOpen, setLeaveOpen] = useState(false);
   const { mutate, isPending } = useLeaveChatRoom();
+  const { data: profile } = useUser();
+  const roomQuery = useRoom(roomId);
 
+  const currentUserId = profile?.id ?? "";
+  const ownerId = roomQuery.data?.owner_id ?? "";
+  const currentMember = roomQuery.data?.current_member ?? 0;
   const isOwner = currentUserId === ownerId;
   const isOwnerLeaveBlocked = isOwner && currentMember > 1;
 
@@ -47,7 +51,7 @@ export function ChatRoomMenu({ roomId, ownerId, currentMember, currentUserId }: 
     });
   };
 
-  if (!currentUserId) {
+  if (!currentUserId || !roomQuery.data) {
     return null;
   }
 
