@@ -61,8 +61,7 @@ export default function OAuthButtons({ loading, onLoadingChange }: OAuthButtonsP
         onClick={() => handleSignIn("github")}
         className={cn(
           "w-full cursor-pointer gap-2 py-5 tracking-wide",
-          "border border-[#30363d] bg-[#161b22] text-white",
-          "hover:border-brand/40 hover:bg-[#21262d]",
+          "oauth-github-button border",
         )}
       >
         {loading === "github" ? (

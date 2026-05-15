@@ -57,8 +57,8 @@
 <div
   className={cn(
     "flex items-center gap-2",
-    "w-full max-w-50 h-10",
-    "bg-brand transition-all duration-200"
+    "h-10 w-full max-w-50",
+    "bg-brand transition-all duration-200",
   )}
 />
 ```

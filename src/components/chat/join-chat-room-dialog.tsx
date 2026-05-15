@@ -69,7 +69,10 @@ export function JoinChatRoomDialog({ open, roomId, roomTitle, isFull }: Props) {
         <AlertDialogFooter className="m-0 flex-row justify-end gap-2 border-0 bg-transparent px-5 pt-4 pb-5">
           <AlertDialogCancel
             onClick={() => router.back()}
-            className="border-border bg-background text-foreground hover:bg-muted h-10 min-w-24 rounded-xl px-4 font-semibold"
+            className={cn(
+              "h-10 min-w-24 rounded-xl px-4 font-semibold",
+              "border-border bg-background text-foreground hover:bg-muted",
+            )}
           >
             돌아가기
           </AlertDialogCancel>
@@ -77,7 +80,10 @@ export function JoinChatRoomDialog({ open, roomId, roomTitle, isFull }: Props) {
             <AlertDialogAction
               onClick={() => mutate(roomId)}
               disabled={isPending}
-              className="bg-brand shadow-brand/20 hover:bg-brand/90 h-10 min-w-24 rounded-xl px-4 font-bold text-white shadow-sm"
+              className={cn(
+                "h-10 min-w-24 rounded-xl px-4 font-bold shadow-sm",
+                "bg-brand shadow-brand/20 hover:bg-brand/90 text-white",
+              )}
             >
               {isPending ? <Spinner className="size-4" /> : "참여하기"}
             </AlertDialogAction>

@@ -20,7 +20,7 @@ export default function SignUpGenderField({ htmlFor, content, radioValue }: Prop
     >
       <Field orientation="horizontal">
         <FieldContent>
-          <FieldTitle className="text-sm">{content}</FieldTitle>
+          <FieldTitle className="text-xs whitespace-nowrap sm:text-sm">{content}</FieldTitle>
         </FieldContent>
         <RadioGroupItem
           value={radioValue}

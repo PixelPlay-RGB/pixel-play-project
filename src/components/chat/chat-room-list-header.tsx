@@ -13,15 +13,13 @@ interface Props {
 export default function ChatRoomListHeader({ counts, isFetching = false }: Props) {
   return (
     <div className={cn("border-border/50 flex flex-col gap-3 border-b pb-5")}>
-      <div
-        className={cn(
-          "flex flex-col gap-3",
-          "lg:flex-row lg:items-center lg:justify-between",
-        )}
-      >
+      <div className={cn("flex flex-col gap-3", "lg:flex-row lg:items-center lg:justify-between")}>
         <ChatRoomTabs counts={counts} isFetching={isFetching} />
         <div
-          className={cn("flex w-full items-center justify-between gap-3", "lg:w-auto lg:justify-end")}
+          className={cn(
+            "flex w-full items-center justify-between gap-3",
+            "lg:w-auto lg:justify-end",
+          )}
         >
           <ChatRoomSortMenu />
           <CreateChatRoomDialog />

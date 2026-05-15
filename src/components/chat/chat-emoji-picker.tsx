@@ -12,8 +12,6 @@ import { Spinner } from "@/components/ui/spinner";
 import type { EmojiClickData } from "emoji-picker-react";
 import { Theme } from "emoji-picker-react";
 
-import { eprThemedStyle } from "@/constants/chat-emoji-picker";
-
 const EmojiPicker = dynamic(() => import("emoji-picker-react"), {
   ssr: false,
   loading: () => (
@@ -49,7 +47,7 @@ export default function ChatEmojiPicker({ onEmojiSelect, disabled = false }: Pro
             variant="ghost"
             aria-label="이모지 선택"
             disabled={disabled}
-            className="shrink-0 text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground shrink-0"
           >
             <Smile className="size-5" />
           </Button>
@@ -65,11 +63,7 @@ export default function ChatEmojiPicker({ onEmojiSelect, disabled = false }: Pro
           <div className="emoji-picker-panel">
             <EmojiPicker
               lazyLoadEmojis
-              className="text-foreground font-sans"
-              style={{
-                fontFamily: "var(--font-sans, ui-sans-serif, system-ui, sans-serif)",
-                ...eprThemedStyle,
-              }}
+              className="pixelplay-emoji-picker text-foreground font-sans"
               theme={theme === "dark" ? Theme.DARK : Theme.LIGHT}
               onEmojiClick={handleEmojiClick}
             />

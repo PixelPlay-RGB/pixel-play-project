@@ -416,7 +416,7 @@ export default function SignupForm() {
         disabled={isSubmitting || !emailVerified}
         className={cn(
           "bg-brand hover:bg-brand/85 w-full cursor-pointer py-5 font-bold tracking-widest text-white uppercase",
-          "transition-all active:scale-[0.98] disabled:opacity-40",
+          "transition-all active:scale-95 disabled:opacity-40",
         )}
       >
         {isSubmitting ? <Spinner /> : "회원가입"}

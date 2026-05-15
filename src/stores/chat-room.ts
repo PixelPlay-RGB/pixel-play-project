@@ -34,8 +34,7 @@ export const useChatRoomStore = create<ChatRoomState>()(
         ),
       setSortOption: (sortOption) =>
         set({ sortOption, currentPage: 1 }, false, "chatRoom/setSortOption"),
-      setCurrentPage: (currentPage) =>
-        set({ currentPage }, false, "chatRoom/setCurrentPage"),
+      setCurrentPage: (currentPage) => set({ currentPage }, false, "chatRoom/setCurrentPage"),
       setSearchQuery: (searchQuery) =>
         set({ searchQuery, currentPage: 1 }, false, "chatRoom/setSearchQuery"),
     }),

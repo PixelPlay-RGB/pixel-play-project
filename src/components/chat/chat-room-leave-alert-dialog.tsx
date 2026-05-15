@@ -16,6 +16,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Spinner } from "@/components/ui/spinner";
+import { cn } from "@/lib/utils";
 
 interface Props {
   open: boolean;
@@ -34,17 +35,30 @@ export function ChatRoomLeaveAlertDialog({ open, onOpenChange, isPending, onConf
     >
       <AlertDialogContent
         showCloseButton={false}
-        className="border-destructive/20 shadow-destructive/10 overflow-hidden rounded-2xl p-0 shadow-xl sm:max-w-md"
+        className={cn(
+          "overflow-hidden rounded-2xl p-0 shadow-xl sm:max-w-md",
+          "border-destructive/20 shadow-destructive/10",
+        )}
       >
-        <AlertDialogHeader className="bg-destructive/5 border-destructive/10 flex items-center gap-4 border-b px-5 pt-5 pb-4 text-left">
-          <AlertDialogMedia className="bg-destructive/10 text-destructive ring-destructive/20 mb-0 shrink-0 rounded-xl ring-1">
+        <AlertDialogHeader
+          className={cn(
+            "flex items-center gap-4 border-b px-5 pt-5 pb-4 text-left",
+            "bg-destructive/5 border-destructive/10",
+          )}
+        >
+          <AlertDialogMedia
+            className={cn(
+              "mb-0 shrink-0 rounded-xl ring-1",
+              "bg-destructive/10 text-destructive ring-destructive/20",
+            )}
+          >
             <LogOut />
           </AlertDialogMedia>
           <div className="flex min-w-0 flex-1 flex-col gap-1.5">
             <AlertDialogTitle className="text-lg leading-tight font-bold">
               채팅방 나가기
             </AlertDialogTitle>
-            <AlertDialogDescription className="leading-snug whitespace-pre-line text-pretty">
+            <AlertDialogDescription className="leading-snug text-pretty whitespace-pre-line">
               {"채팅방에서 나가시겠습니까?\n언제든 다시 참여하실 수 있습니다."}
             </AlertDialogDescription>
           </div>
@@ -52,7 +66,10 @@ export function ChatRoomLeaveAlertDialog({ open, onOpenChange, isPending, onConf
         <AlertDialogFooter className="m-0 flex-row justify-end gap-2 border-0 bg-transparent px-5 pt-4 pb-5">
           <AlertDialogCancel
             disabled={isPending}
-            className="border-border bg-background text-foreground hover:bg-muted h-10 min-w-24 rounded-xl px-4 font-semibold"
+            className={cn(
+              "h-10 min-w-24 rounded-xl px-4 font-semibold",
+              "border-border bg-background text-foreground hover:bg-muted",
+            )}
           >
             돌아가기
           </AlertDialogCancel>

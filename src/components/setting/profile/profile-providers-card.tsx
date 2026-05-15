@@ -47,7 +47,7 @@ export default function ProfileProvidersCard() {
         <CardAction>
           <span
             className={cn(
-              "bg-muted rounded border px-2 py-1 font-mono text-[12px]",
+              "bg-muted rounded border px-2 py-1 font-mono text-xs",
               "border-brand/30 text-brand",
             )}
           >
@@ -81,12 +81,17 @@ export default function ProfileProvidersCard() {
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="text-sm font-medium">{name}</span>
                     {isPrimary && isLinked && (
-                      <span className="bg-muted text-brand rounded-sm px-1 py-0.5 text-[10px] font-medium tracking-widest uppercase">
+                      <span
+                        className={cn(
+                          "rounded-sm px-1 py-0.5 text-xs font-medium tracking-widest uppercase",
+                          "bg-muted text-brand",
+                        )}
+                      >
                         기본
                       </span>
                     )}
                   </div>
-                  <div className="text-muted-foreground truncate font-mono text-[12px]">
+                  <div className="text-muted-foreground truncate font-mono text-xs">
                     {isLinked ? "연동됨" : "연동되지 않음"}
                   </div>
                 </div>

@@ -32,13 +32,7 @@ export default function RootLayout({
   return (
     <html
       lang="ko"
-      className={cn(
-        "h-full",
-        "antialiased",
-        notoSans.variable,
-        geistMono.variable,
-        "font-sans",
-      )}
+      className={cn("h-full", "antialiased", notoSans.variable, geistMono.variable, "font-sans")}
       suppressHydrationWarning
     >
       <body className="bg-brand/5 dark:bg-background flex min-h-full flex-col">

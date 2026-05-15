@@ -8,18 +8,18 @@ Next.js 16 App Router, React 19, Supabase Auth/Postgres/Realtime, TanStack Query
 
 ## 기술 스택
 
-| 분류 | 기술 |
-| --- | --- |
-| Framework | Next.js 16 App Router, React 19, TypeScript strict |
-| Styling | Tailwind CSS 4, shadcn, Base UI, lucide-react |
-| Auth | Supabase Auth, Email OTP, Google OAuth, GitHub OAuth |
-| Database | Supabase Postgres |
-| Realtime | Supabase Realtime Postgres Changes |
-| Server State | TanStack Query v5 |
-| Client State | Zustand v5 |
-| Form / Validation | react-hook-form v7, Zod v4 |
-| Theme | next-themes |
-| Formatter | Prettier, prettier-plugin-tailwindcss |
+| 분류              | 기술                                                 |
+| ----------------- | ---------------------------------------------------- |
+| Framework         | Next.js 16 App Router, React 19, TypeScript strict   |
+| Styling           | Tailwind CSS 4, shadcn, Base UI, lucide-react        |
+| Auth              | Supabase Auth, Email OTP, Google OAuth, GitHub OAuth |
+| Database          | Supabase Postgres                                    |
+| Realtime          | Supabase Realtime Postgres Changes                   |
+| Server State      | TanStack Query v5                                    |
+| Client State      | Zustand v5                                           |
+| Form / Validation | react-hook-form v7, Zod v4                           |
+| Theme             | next-themes                                          |
+| Formatter         | Prettier, prettier-plugin-tailwindcss                |
 
 ---
 
@@ -49,11 +49,11 @@ npm install
 cp .env.example .env.local
 ```
 
-| 변수 | 설명 |
-| --- | --- |
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase 프로젝트 URL |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase publishable key |
-| `SUPABASE_SERVICE_ROLE_KEY` | 회원 탈퇴 등 관리자 작업에 사용하는 service role key |
+| 변수                                   | 설명                                                 |
+| -------------------------------------- | ---------------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`             | Supabase 프로젝트 URL                                |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase publishable key                             |
+| `SUPABASE_SERVICE_ROLE_KEY`            | 회원 탈퇴 등 관리자 작업에 사용하는 service role key |
 
 환경 변수 키를 추가하거나 변경하면 루트의 `env.d.ts` 타입 선언도 함께 갱신합니다.
 
@@ -86,15 +86,15 @@ npm run dev
 
 ## 명령어
 
-| 명령어 | 설명 |
-| --- | --- |
-| `npm run dev` | 개발 서버 실행 |
-| `npm run build` | 프로덕션 빌드와 타입 확인 |
-| `npm run start` | 프로덕션 서버 실행 |
-| `npm run lint` | ESLint 검사 |
-| `npm run format` | Prettier 포맷 적용 |
-| `npm run format:check` | Prettier 포맷 검사 |
-| `npm run types` | Supabase 타입을 `src/types/database.types.ts`로 재생성 |
+| 명령어                 | 설명                                                   |
+| ---------------------- | ------------------------------------------------------ |
+| `npm run dev`          | 개발 서버 실행                                         |
+| `npm run build`        | 프로덕션 빌드와 타입 확인                              |
+| `npm run start`        | 프로덕션 서버 실행                                     |
+| `npm run lint`         | ESLint 검사                                            |
+| `npm run format`       | Prettier 포맷 적용                                     |
+| `npm run format:check` | Prettier 포맷 검사                                     |
+| `npm run types`        | Supabase 타입을 `src/types/database.types.ts`로 재생성 |
 
 ---
 
@@ -201,94 +201,94 @@ src/
 
 ### 주요 테이블
 
-| 테이블 | 설명 |
-| --- | --- |
-| `user` | 서비스 유저 프로필. Supabase Auth user id와 동일한 `id`를 사용합니다. |
-| `chat_room` | 채팅방 메타데이터와 정원, 현재 참여자 수를 저장합니다. |
+| 테이블             | 설명                                                                          |
+| ------------------ | ----------------------------------------------------------------------------- |
+| `user`             | 서비스 유저 프로필. Supabase Auth user id와 동일한 `id`를 사용합니다.         |
+| `chat_room`        | 채팅방 메타데이터와 정원, 현재 참여자 수를 저장합니다.                        |
 | `chat_room_member` | 채팅방 참여 상태, 강퇴 여부, 마지막 입장 시각, 마지막 읽음 시각을 저장합니다. |
-| `message` | 채팅 메시지와 시스템 메시지를 저장합니다. |
+| `message`          | 채팅 메시지와 시스템 메시지를 저장합니다.                                     |
 
 ### 주요 컬럼
 
 `user`.
 
-| 컬럼 | 설명 |
-| --- | --- |
-| `id` | Auth user id와 동일한 uuid |
-| `email` | 이메일 |
-| `name` | 실명 |
-| `nickname` | 서비스 표시 이름 |
-| `birth` | 생년월일 |
-| `phone` | 휴대전화번호 |
-| `gender` | `male`, `female`, `none` |
-| `photo_url` | 프로필 이미지 URL |
-| `linked_providers` | `google`, `github`, `email` 배열 |
-| `created_at`, `modified_at` | 생성, 수정 시각 |
+| 컬럼                        | 설명                             |
+| --------------------------- | -------------------------------- |
+| `id`                        | Auth user id와 동일한 uuid       |
+| `email`                     | 이메일                           |
+| `name`                      | 실명                             |
+| `nickname`                  | 서비스 표시 이름                 |
+| `birth`                     | 생년월일                         |
+| `phone`                     | 휴대전화번호                     |
+| `gender`                    | `male`, `female`, `none`         |
+| `photo_url`                 | 프로필 이미지 URL                |
+| `linked_providers`          | `google`, `github`, `email` 배열 |
+| `created_at`, `modified_at` | 생성, 수정 시각                  |
 
 `chat_room`.
 
-| 컬럼 | 설명 |
-| --- | --- |
-| `id` | 채팅방 uuid |
-| `owner_id` | 방장 `user.id` |
-| `title` | 제목 |
-| `description` | 설명 |
-| `max_capacity` | 최대 인원 |
-| `current_member` | 현재 활성 참여자 수 |
-| `created_at`, `modified_at` | 생성, 수정 시각 |
+| 컬럼                        | 설명                |
+| --------------------------- | ------------------- |
+| `id`                        | 채팅방 uuid         |
+| `owner_id`                  | 방장 `user.id`      |
+| `title`                     | 제목                |
+| `description`               | 설명                |
+| `max_capacity`              | 최대 인원           |
+| `current_member`            | 현재 활성 참여자 수 |
+| `created_at`, `modified_at` | 생성, 수정 시각     |
 
 `chat_room_member`.
 
-| 컬럼 | 설명 |
-| --- | --- |
-| `id` | 멤버 row uuid |
-| `chat_room_id` | 채팅방 id |
-| `user_id` | 유저 id |
+| 컬럼             | 설명             |
+| ---------------- | ---------------- |
+| `id`             | 멤버 row uuid    |
+| `chat_room_id`   | 채팅방 id        |
+| `user_id`        | 유저 id          |
 | `last_joined_at` | 마지막 입장 시각 |
-| `last_read_at` | 마지막 읽음 시각 |
-| `is_banned` | 강퇴 여부 |
-| `created_at` | 생성 시각 |
+| `last_read_at`   | 마지막 읽음 시각 |
+| `is_banned`      | 강퇴 여부        |
+| `created_at`     | 생성 시각        |
 
 `message`.
 
-| 컬럼 | 설명 |
-| --- | --- |
-| `id` | 메시지 uuid |
-| `chat_room_id` | 채팅방 id |
-| `user_id` | 작성자 id |
-| `content` | 메시지 내용 |
-| `message_type` | `text`, `system` |
-| `created_at`, `modified_at` | 생성, 수정 시각 |
+| 컬럼                        | 설명             |
+| --------------------------- | ---------------- |
+| `id`                        | 메시지 uuid      |
+| `chat_room_id`              | 채팅방 id        |
+| `user_id`                   | 작성자 id        |
+| `content`                   | 메시지 내용      |
+| `message_type`              | `text`, `system` |
+| `created_at`, `modified_at` | 생성, 수정 시각  |
 
 ### RPC
 
-| 함수 | 용도 |
-| --- | --- |
-| `check_email_exists` | 이메일 중복 확인 |
-| `check_nickname_exists` | 닉네임 중복 확인 |
-| `get_room_counts_by_user` | 채팅방 목록 탭별 개수 조회 |
-| `get_rooms_by_tab_count` | 탭/정렬/페이지네이션/탭 내 검색/unread_count/total_count 통합 채팅방 목록 조회 |
-| `join_chat_room` | 채팅방 참여 |
-| `leave_chat_room` | 채팅방 나가기 |
-| `mark_room_read` | 방 읽음 처리 |
-| `search_chat_rooms` | 채팅방 제목, 방장 닉네임 검색 |
-| `kick_chat_room_member` | 방장의 참여자 강퇴 |
-| `transfer_chat_room_owner` | 방장 권한 위임 |
+| 함수                       | 용도                                                                           |
+| -------------------------- | ------------------------------------------------------------------------------ |
+| `check_email_exists`       | 이메일 중복 확인                                                               |
+| `check_nickname_exists`    | 닉네임 중복 확인                                                               |
+| `get_room_counts_by_user`  | 채팅방 목록 탭별 개수 조회                                                     |
+| `get_rooms_by_tab_count`   | 탭/정렬/페이지네이션/탭 내 검색/unread_count/total_count 통합 채팅방 목록 조회 |
+| `join_chat_room`           | 채팅방 참여                                                                    |
+| `leave_chat_room`          | 채팅방 나가기                                                                  |
+| `mark_room_read`           | 방 읽음 처리                                                                   |
+| `search_chat_rooms`        | 채팅방 제목, 방장 닉네임 검색                                                  |
+| `kick_chat_room_member`    | 방장의 참여자 강퇴                                                             |
+| `transfer_chat_room_owner` | 방장 권한 위임                                                                 |
 
 ### Supabase Storage
 
-| 버킷 | 경로 | 용도 |
-| --- | --- | --- |
+| 버킷       | 경로                             | 용도             |
+| ---------- | -------------------------------- | ---------------- |
 | `profiles` | `avatars/{user.id}/avatar.{ext}` | 유저 프로필 사진 |
 
 프로필 이미지 업로드는 `upsert`로 처리하고, 확장자가 달라져 남은 파일은 정리합니다. 공개 URL에는 캐시 갱신을 위해 `?t={Date.now()}` 쿼리를 붙입니다.
 
 ### DB Triggers
 
-| 트리거 | 설명 |
-| --- | --- |
-| `trigger_insert_date_divider_message` | text 메시지 INSERT 시 해당 날짜(KST) 첫 메시지이면 날짜 구분 system 메시지를 자동 삽입합니다. |
-| `trigger_insert_chat_room_member_system_message` | 채팅방 참여/나가기 시 system 메시지를 자동 삽입합니다. |
+| 트리거                                           | 설명                                                                                          |
+| ------------------------------------------------ | --------------------------------------------------------------------------------------------- |
+| `trigger_insert_date_divider_message`            | text 메시지 INSERT 시 해당 날짜(KST) 첫 메시지이면 날짜 구분 system 메시지를 자동 삽입합니다. |
+| `trigger_insert_chat_room_member_system_message` | 채팅방 참여/나가기 시 system 메시지를 자동 삽입합니다.                                        |
 
 ### 스키마 변경 절차
 
@@ -300,26 +300,26 @@ npm run types
 
 현재 저장소의 `supabase/migrations/` 에 포함된 주요 migration 파일은 다음과 같습니다.
 
-| 파일 | 내용 |
-| --- | --- |
-| `20260506021151_create_kv_table_55ce40ce.sql` | KV 테이블 생성 |
-| `20260507053827_add_pagination_to_get_rooms_by_tab.sql` | 채팅방 목록 페이지네이션 추가 |
-| `20260507060357_mark_room_read_rpc.sql` | `mark_room_read` RPC 추가 |
-| `20260507064503_drop_paginated_get_rooms_by_tab.sql` | 기존 페이지네이션 RPC 제거 |
-| `20260507074832_leave_chat_room_rpc.sql` | `leave_chat_room` RPC 추가 |
-| `20260511012256_trigger_update_member_count_add_last_joined_at.sql` | 멤버 수 트리거 및 `last_joined_at` 추가 |
-| `20260511032318_create_join_chat_room_rpc.sql` | `join_chat_room` RPC 추가 |
-| `20260511052223_update_join_chat_room_rpc_active_member_policy.sql` | 활성 멤버 정책 반영 |
-| `20260511061734_join_chat_room_security_definer.sql` | security definer 적용 |
-| `20260511075805_add_get_rooms_by_tab_count.sql` | `get_rooms_by_tab_count` 추가 |
-| `20260512123000_update_get_rooms_by_tab_sort.sql` | 채팅방 목록 정렬 RPC 업데이트 |
-| `20260514000000_update_get_rooms_by_tab_count_add_sort.sql` | 정렬 옵션 통합 |
-| `20260514010000_update_get_rooms_by_tab_count_add_pagination.sql` | 페이지네이션 통합 |
-| `20260514020000_drop_old_get_rooms_by_tab_count_overload.sql` | 구 오버로드 제거 |
-| `20260514030000_replace_join_chat_room_rpc.sql` | `join_chat_room` RPC 교체 |
-| `20260515000000_get_rooms_by_tab_count_add_query.sql` | 탭 내 검색 파라미터 추가 |
-| `20260515010000_get_rooms_by_tab_count_fix_unread_and_full_room.sql` | unread 계산 및 정원 마감 필터 수정 |
-| `20260515020000_insert_date_divider_message_trigger.sql` | 날짜 구분 system 메시지 트리거 추가 |
+| 파일                                                                 | 내용                                    |
+| -------------------------------------------------------------------- | --------------------------------------- |
+| `20260506021151_create_kv_table_55ce40ce.sql`                        | KV 테이블 생성                          |
+| `20260507053827_add_pagination_to_get_rooms_by_tab.sql`              | 채팅방 목록 페이지네이션 추가           |
+| `20260507060357_mark_room_read_rpc.sql`                              | `mark_room_read` RPC 추가               |
+| `20260507064503_drop_paginated_get_rooms_by_tab.sql`                 | 기존 페이지네이션 RPC 제거              |
+| `20260507074832_leave_chat_room_rpc.sql`                             | `leave_chat_room` RPC 추가              |
+| `20260511012256_trigger_update_member_count_add_last_joined_at.sql`  | 멤버 수 트리거 및 `last_joined_at` 추가 |
+| `20260511032318_create_join_chat_room_rpc.sql`                       | `join_chat_room` RPC 추가               |
+| `20260511052223_update_join_chat_room_rpc_active_member_policy.sql`  | 활성 멤버 정책 반영                     |
+| `20260511061734_join_chat_room_security_definer.sql`                 | security definer 적용                   |
+| `20260511075805_add_get_rooms_by_tab_count.sql`                      | `get_rooms_by_tab_count` 추가           |
+| `20260512123000_update_get_rooms_by_tab_sort.sql`                    | 채팅방 목록 정렬 RPC 업데이트           |
+| `20260514000000_update_get_rooms_by_tab_count_add_sort.sql`          | 정렬 옵션 통합                          |
+| `20260514010000_update_get_rooms_by_tab_count_add_pagination.sql`    | 페이지네이션 통합                       |
+| `20260514020000_drop_old_get_rooms_by_tab_count_overload.sql`        | 구 오버로드 제거                        |
+| `20260514030000_replace_join_chat_room_rpc.sql`                      | `join_chat_room` RPC 교체               |
+| `20260515000000_get_rooms_by_tab_count_add_query.sql`                | 탭 내 검색 파라미터 추가                |
+| `20260515010000_get_rooms_by_tab_count_fix_unread_and_full_room.sql` | unread 계산 및 정원 마감 필터 수정      |
+| `20260515020000_insert_date_divider_message_trigger.sql`             | 날짜 구분 system 메시지 트리거 추가     |
 
 ---
 

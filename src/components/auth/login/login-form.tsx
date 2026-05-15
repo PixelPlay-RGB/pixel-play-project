@@ -105,7 +105,7 @@ export default function LoginForm({ loading, onLoadingChange: setIsLoading }: Lo
         className={cn(
           "w-full cursor-pointer py-5 font-bold tracking-widest uppercase",
           "bg-brand hover:bg-brand/85 text-white",
-          "transition-all active:scale-[0.98] disabled:opacity-40",
+          "transition-all active:scale-95 disabled:opacity-40",
         )}
       >
         {isSubmitting ? <Spinner /> : "로그인"}

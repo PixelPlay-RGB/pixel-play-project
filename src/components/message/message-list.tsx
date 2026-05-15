@@ -2,6 +2,7 @@
 
 import { MessageItem } from "@/components/message/message-item";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 import type { MessageQuery } from "@/types/message";
 import { useCallback, useLayoutEffect, useRef } from "react";
 
@@ -86,7 +87,12 @@ export function MessageList({
 
       {isLoadingPrevious ? (
         <div className="pointer-events-none absolute inset-x-0 top-2 z-10 flex justify-center">
-          <div className="bg-background/90 text-muted-foreground rounded-md px-2 py-1 text-center text-xs shadow-sm backdrop-blur-sm">
+          <div
+            className={cn(
+              "rounded-md px-2 py-1 text-center text-xs shadow-sm backdrop-blur-sm",
+              "bg-background/90 text-muted-foreground",
+            )}
+          >
             이전 메시지 불러오는 중...
           </div>
         </div>

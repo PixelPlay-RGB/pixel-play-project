@@ -11,7 +11,13 @@ export type ChatRoom = GenericTables<"chat_room">;
 
 export type ChatRoomCardData = Pick<
   ChatRoomByTabWithUnreadCount,
-  "id" | "title" | "description" | "owner_nickname" | "current_member" | "max_capacity" | "created_at"
+  | "id"
+  | "title"
+  | "description"
+  | "owner_nickname"
+  | "current_member"
+  | "max_capacity"
+  | "created_at"
 >;
 
 // 모든 탭 키가 항상 존재하는 타입 (로딩 중 여부는 쿼리 반환값 자체가 undefined인지로 판단)

@@ -6,9 +6,5 @@ export default function ChatLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
-    <div className="h-app-content min-h-0 w-full overflow-hidden">
-      {children}
-    </div>
-  );
+  return <div className="h-app-content min-h-0 w-full overflow-hidden">{children}</div>;
 }

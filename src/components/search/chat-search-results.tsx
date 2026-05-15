@@ -4,6 +4,7 @@
 import ChatRoomListSkeleton from "@/components/chat/chat-room-list-skeleton";
 import ChatSearchSection from "@/components/search/chat-search-section";
 import { useChatRoomSearch } from "@/hooks/use-chat-room-search";
+import { cn } from "@/lib/utils";
 import type { ChatSearchResult } from "@/types/search";
 import { Search } from "lucide-react";
 
@@ -68,7 +69,12 @@ function EmptySearchResult({ message }: { message: string }) {
   return (
     <div className="flex min-h-120 w-full items-center justify-center px-4 py-12 text-center">
       <div className="flex max-w-80 flex-col items-center">
-        <div className="bg-brand/10 ring-brand/20 dark:bg-brand/15 mb-4 flex h-16 w-16 items-center justify-center rounded-2xl ring-1">
+        <div
+          className={cn(
+            "mb-4 flex h-16 w-16 items-center justify-center rounded-2xl ring-1",
+            "bg-brand/10 ring-brand/20 dark:bg-brand/15",
+          )}
+        >
           <Search className="text-brand h-7 w-7" />
         </div>
         <h2 className="text-foreground text-base font-bold">채팅방을 찾지 못했습니다</h2>

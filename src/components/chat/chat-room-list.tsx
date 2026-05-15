@@ -39,9 +39,8 @@ export default function ChatRoomList() {
   const totalPages = Math.ceil(totalItems / CHAT_ROOM_PAGE_SIZE);
 
   // 검색 중일 때 현재 탭의 카운트를 total_count로 교체 → ChatRoomTabs에 반영
-  const effectiveCounts = isSearching && counts
-    ? { ...counts, [tabType]: chatRooms[0]?.total_count ?? 0 }
-    : counts;
+  const effectiveCounts =
+    isSearching && counts ? { ...counts, [tabType]: chatRooms[0]?.total_count ?? 0 } : counts;
 
   const isInitialLoading = !isUserFetched || query.isLoading;
   const isEmpty = isUserFetched && !query.isLoading && chatRooms.length === 0;
@@ -50,7 +49,9 @@ export default function ChatRoomList() {
   if (query.isError) {
     const message = getAppMessage(APP_MESSAGE_CODE.error.chatRoomList.loadFailed);
     return (
-      <div className="flex flex-1 items-center justify-center text-zinc-500">{message.title}</div>
+      <div className="text-muted-foreground flex flex-1 items-center justify-center">
+        {message.title}
+      </div>
     );
   }
 

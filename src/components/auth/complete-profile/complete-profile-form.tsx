@@ -218,7 +218,10 @@ export default function CompleteProfileForm() {
       <Button
         type="submit"
         disabled={isSubmitting || isCancelling || !isValid || nicknameStatus !== "available"}
-        className="bg-brand hover:bg-brand/85 w-full cursor-pointer py-5 font-bold tracking-widest text-white uppercase disabled:opacity-40"
+        className={cn(
+          "w-full cursor-pointer py-5 font-bold tracking-widest uppercase disabled:opacity-40",
+          "bg-brand hover:bg-brand/85 text-white",
+        )}
       >
         {isSubmitting ? <Spinner /> : "완료"}
       </Button>

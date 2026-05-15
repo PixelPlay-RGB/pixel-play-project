@@ -22,9 +22,9 @@ export default function ChatRoomCard({ chatRoom, unreadMessageCount = 0 }: Props
       className={cn(
         "group relative flex min-h-25 w-full items-stretch justify-between gap-3 overflow-hidden text-left",
         "border-border/60 bg-card rounded-2xl border p-4 shadow-sm sm:p-5",
-        "transition-all duration-200 active:scale-[0.99]",
+        "transition-all duration-200 active:translate-y-px",
         "hover:border-brand/40 hover:shadow-brand/5 hover:shadow-md",
-        "dark:hover:border-brand/30 dark:bg-zinc-900/50 dark:shadow-none dark:hover:bg-zinc-800/50",
+        "dark:hover:border-brand/30 dark:hover:bg-accent/50 dark:shadow-none",
       )}
     >
       <span
@@ -61,7 +61,7 @@ export default function ChatRoomCard({ chatRoom, unreadMessageCount = 0 }: Props
           <div
             className={cn(
               "relative h-1.5 w-20 overflow-hidden rounded-full",
-              "bg-border/60 dark:bg-zinc-700/50",
+              "bg-border/60 dark:bg-border",
             )}
           >
             <div
@@ -75,10 +75,7 @@ export default function ChatRoomCard({ chatRoom, unreadMessageCount = 0 }: Props
           <div className="flex items-center gap-1">
             <Users className="text-muted-foreground h-3 w-3" />
             <span
-              className={cn(
-                "font-mono text-xs font-semibold",
-                isFull ? "text-live" : "text-brand",
-              )}
+              className={cn("font-mono text-xs font-semibold", isFull ? "text-live" : "text-brand")}
             >
               {formatCapacity(chatRoom.current_member, chatRoom.max_capacity)}
             </span>
@@ -92,7 +89,7 @@ export default function ChatRoomCard({ chatRoom, unreadMessageCount = 0 }: Props
             <span
               className={cn(
                 "bg-brand inline-flex h-5 items-center gap-1 rounded-full px-2 shadow-sm",
-                "text-[10px] leading-none font-black text-white",
+                "text-xs leading-none font-black text-white",
                 "shadow-brand/30",
               )}
             >
@@ -103,7 +100,7 @@ export default function ChatRoomCard({ chatRoom, unreadMessageCount = 0 }: Props
         </div>
         <div className="flex items-center gap-1">
           <Clock className="text-muted-foreground/50 h-2.5 w-2.5" />
-          <span className="text-muted-foreground/70 whitespace-nowrap text-xs">
+          <span className="text-muted-foreground/70 text-xs whitespace-nowrap">
             생성일 {formatRoomDate(chatRoom.created_at)}
           </span>
         </div>

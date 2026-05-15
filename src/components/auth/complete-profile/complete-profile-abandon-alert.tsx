@@ -16,6 +16,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { LogOut } from "lucide-react";
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import type { AppMessageCode } from "@/constants/app-message-code";
+import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth";
 import { toastAppError, toastAppSuccess } from "@/utils/toast-message";
 import { useQueryClient } from "@tanstack/react-query";
@@ -78,10 +79,20 @@ export default function CompleteProfileAbandonAlert({
           </Button>
         }
       />
-      <AlertDialogContent className="border-destructive/20 shadow-destructive/10 overflow-hidden rounded-2xl p-0 shadow-xl sm:max-w-md">
+      <AlertDialogContent
+        className={cn(
+          "overflow-hidden rounded-2xl p-0 shadow-xl sm:max-w-md",
+          "border-destructive/20 shadow-destructive/10",
+        )}
+      >
         <AlertDialogHeader className="bg-destructive/5 border-destructive/10 border-b px-5 pt-5 pb-4 text-left">
           <div className="flex items-center gap-3">
-            <span className="bg-destructive/10 text-destructive ring-destructive/20 flex size-10 shrink-0 items-center justify-center rounded-xl ring-1">
+            <span
+              className={cn(
+                "flex size-10 shrink-0 items-center justify-center rounded-xl ring-1",
+                "bg-destructive/10 text-destructive ring-destructive/20",
+              )}
+            >
               <LogOut className="size-5" />
             </span>
             <div className="min-w-0">
@@ -94,7 +105,10 @@ export default function CompleteProfileAbandonAlert({
         </AlertDialogHeader>
         <AlertDialogFooter className="m-0 flex-row justify-end gap-2 border-0 bg-transparent px-5 pt-4 pb-5">
           <AlertDialogCancel
-            className="border-border bg-background text-foreground hover:bg-muted h-10 min-w-24 rounded-xl px-4 font-semibold"
+            className={cn(
+              "h-10 min-w-24 rounded-xl px-4 font-semibold",
+              "border-border bg-background text-foreground hover:bg-muted",
+            )}
             disabled={isCancelling}
           >
             돌아가기

@@ -280,11 +280,11 @@ export default function ProfileForm() {
         </div>
         <dl className="mt-5 grid grid-cols-2 gap-4">
           <div>
-            <dt className="text-muted-foreground text-[12px]">가입일</dt>
+            <dt className="text-muted-foreground text-xs">가입일</dt>
             <dd className="font-mono text-sm">{formatDate(user.created_at)}</dd>
           </div>
           <div>
-            <dt className="text-muted-foreground text-[12px]">마지막 수정일</dt>
+            <dt className="text-muted-foreground text-xs">마지막 수정일</dt>
             <dd className="font-mono text-sm">{formatDate(user.modified_at)}</dd>
           </div>
         </dl>

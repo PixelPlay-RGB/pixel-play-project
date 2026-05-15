@@ -28,14 +28,11 @@ export default function MainMenuSidebarItemRenderer(
           "dark:data-active:bg-brand/15",
           isActive
             ? "bg-brand/10 text-brand! hover:bg-brand/10 hover:text-brand! dark:bg-brand/15 dark:hover:bg-brand/15"
-            : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800/50 dark:hover:text-zinc-100",
+            : "text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-muted/50",
         )}
       >
         <Icon
-          className={cn(
-            "h-5 w-5 shrink-0",
-            isActive ? "text-brand!" : "text-zinc-400 dark:text-zinc-500",
-          )}
+          className={cn("h-5 w-5 shrink-0", isActive ? "text-brand!" : "text-muted-foreground/70")}
         />
         <span className={cn(isActive && "text-brand!")}>{label}</span>
       </SidebarMenuButton>

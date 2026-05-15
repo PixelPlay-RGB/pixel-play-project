@@ -75,7 +75,7 @@ export default function ChatRoomPagination({
               "pl-1.5!",
               "border-border/60 bg-background text-muted-foreground rounded-xl border font-semibold",
               "hover:border-brand/40 hover:bg-brand/10 hover:text-brand",
-              "dark:border-border/30 dark:hover:bg-brand/15 dark:bg-zinc-900/50",
+              "dark:border-border/30 dark:bg-card dark:hover:bg-brand/15",
               isPrevDisabled && "pointer-events-none opacity-50",
             )}
           >
@@ -129,7 +129,7 @@ export default function ChatRoomPagination({
               "pr-1.5!",
               "border-border/60 bg-background text-muted-foreground rounded-xl border font-semibold",
               "hover:border-brand/40 hover:bg-brand/10 hover:text-brand",
-              "dark:border-border/30 dark:hover:bg-brand/15 dark:bg-zinc-900/50",
+              "dark:border-border/30 dark:bg-card dark:hover:bg-brand/15",
               isFetching && "pointer-events-none opacity-50",
             )}
           >

@@ -21,6 +21,7 @@ import { useMarkRoomReadLifecycle } from "@/hooks/use-mark-room-read-lifecycle";
 import useMessages from "@/hooks/use-messages";
 import { useUser } from "@/hooks/use-profile";
 import { useRoomMembers } from "@/hooks/use-room-members";
+import { cn } from "@/lib/utils";
 import { getAppMessage } from "@/utils/app-message";
 
 interface Props {
@@ -31,7 +32,12 @@ function ChatRoomError({ code }: { code: AppMessageCode }) {
   const message = getAppMessage(code);
 
   return (
-    <div className="bg-background text-foreground flex h-full min-h-0 flex-col items-center justify-center gap-3 px-4 text-center">
+    <div
+      className={cn(
+        "flex h-full min-h-0 flex-col items-center justify-center gap-3 px-4 text-center",
+        "bg-background text-foreground",
+      )}
+    >
       <p className="text-sm">{message.title}</p>
       <Link href="/" className="text-sm underline">
         처음으로

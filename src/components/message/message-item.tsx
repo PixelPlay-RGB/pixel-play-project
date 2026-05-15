@@ -23,7 +23,7 @@ export function MessageItem({ message, isOwn }: Props) {
       <div className="flex justify-end px-3 py-0.5">
         <div
           className={cn(
-            "max-w-[88%] rounded-2xl rounded-tr-sm px-3 py-1.5 text-sm leading-snug",
+            "max-w-80 rounded-2xl rounded-tr-sm px-3 py-1.5 text-sm leading-snug sm:max-w-md lg:max-w-lg",
             "bg-brand text-white",
           )}
         >

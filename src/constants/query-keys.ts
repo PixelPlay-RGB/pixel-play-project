@@ -16,12 +16,24 @@ export const QUERY_KEYS = {
   },
   chat: {
     all: ["chat"] as const,
-    rooms: (userId?: string, tabType?: string, sortOption?: string, page?: number, searchQuery?: string) =>
-      [...QUERY_KEYS.chat.all, "rooms", userId, tabType, sortOption, page, searchQuery].filter((v) => v !== undefined),
-    counts: (userId?: string) => [...QUERY_KEYS.chat.all, "counts", userId].filter((v) => v !== undefined),
-    room: (roomId?: string) => [...QUERY_KEYS.chat.all, "room", roomId].filter((v) => v !== undefined),
-    messages: (roomId?: string) => [...QUERY_KEYS.chat.all, "messages", roomId].filter((v) => v !== undefined),
-    members: (roomId?: string) => [...QUERY_KEYS.chat.all, "members", roomId].filter((v) => v !== undefined),
+    rooms: (
+      userId?: string,
+      tabType?: string,
+      sortOption?: string,
+      page?: number,
+      searchQuery?: string,
+    ) =>
+      [...QUERY_KEYS.chat.all, "rooms", userId, tabType, sortOption, page, searchQuery].filter(
+        (v) => v !== undefined,
+      ),
+    counts: (userId?: string) =>
+      [...QUERY_KEYS.chat.all, "counts", userId].filter((v) => v !== undefined),
+    room: (roomId?: string) =>
+      [...QUERY_KEYS.chat.all, "room", roomId].filter((v) => v !== undefined),
+    messages: (roomId?: string) =>
+      [...QUERY_KEYS.chat.all, "messages", roomId].filter((v) => v !== undefined),
+    members: (roomId?: string) =>
+      [...QUERY_KEYS.chat.all, "members", roomId].filter((v) => v !== undefined),
     search: (query?: string, section?: string) =>
       [...QUERY_KEYS.chat.all, "search", query, section].filter((v) => v !== undefined),
   },

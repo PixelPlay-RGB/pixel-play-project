@@ -80,7 +80,12 @@ export default function CreateChatRoomDialog() {
       >
         <DialogHeader className="bg-brand/5 border-brand/10 border-b px-5 pt-5 pb-4">
           <div className="flex items-center gap-3">
-            <span className="bg-brand/10 text-brand ring-brand/20 flex size-10 shrink-0 items-center justify-center rounded-xl ring-1">
+            <span
+              className={cn(
+                "flex size-10 shrink-0 items-center justify-center rounded-xl ring-1",
+                "bg-brand/10 text-brand ring-brand/20",
+              )}
+            >
               <MessageSquarePlus className="size-5" />
             </span>
             <div className="min-w-0">
@@ -104,7 +109,7 @@ export default function CreateChatRoomDialog() {
                 "h-auto rounded-xl px-4 py-2.5 text-sm transition-all",
                 "border-border bg-muted/30 placeholder:text-muted-foreground/60",
                 "focus-visible:border-brand/50 focus-visible:ring-brand/30",
-                "dark:border-zinc-700/50 dark:bg-zinc-800/50",
+                "dark:border-input dark:bg-input/30",
               )}
             />
             <FieldError errors={[errors.title]} />
@@ -122,7 +127,7 @@ export default function CreateChatRoomDialog() {
                 "h-auto min-h-20 resize-none rounded-xl px-4 py-2.5 text-sm transition-all",
                 "border-border bg-muted/30 placeholder:text-muted-foreground/60",
                 "focus-visible:border-brand/50 focus-visible:ring-brand/30",
-                "dark:border-zinc-700/50 dark:bg-zinc-800/50",
+                "dark:border-input dark:bg-input/30",
               )}
             />
             <FieldError errors={[errors.description]} />
@@ -141,7 +146,7 @@ export default function CreateChatRoomDialog() {
                 "h-auto rounded-xl px-4 py-2.5 text-sm transition-all",
                 "border-border bg-muted/30",
                 "focus-visible:border-brand/50 focus-visible:ring-brand/30",
-                "dark:border-zinc-700/50 dark:bg-zinc-800/50",
+                "dark:border-input dark:bg-input/30",
               )}
             />
             <FieldError errors={[errors.capacity]} />
