@@ -53,6 +53,7 @@
 
 ## 다음 작업 후보
 
+- `MessageInput`은 현재 `useSendMessage`의 `isPending`으로 submit UI를 막고 있습니다. 아주 빠른 Enter/submit 연속 입력까지 즉시 차단하려면 추후 `useRef` 기반 전송 lock을 다시 추가하는 것이 좋습니다.
 - `useUser`의 `DBUser | null` 설계를 별도 분기에서 required boundary 기준으로 재검토해야 합니다.
 - `proxy.ts`에서 로그인 검증이 확실한 화면은 불필요한 null 방어를 줄이고, 실제 nullable인 데이터와 required 데이터 경계를 명확히 나누는 것이 좋습니다.
 - join, leave, kick, transfer는 테스트 유저와 테스트 방을 명확히 잡은 뒤 side effect QA를 추가로 진행할 수 있습니다.
