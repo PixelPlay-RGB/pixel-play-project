@@ -121,8 +121,8 @@ npm run dev
 ### 채팅방 목록
 
 - `JOINED`, `NOT_JOINED`, `OWNED` 탭으로 채팅방 목록을 분리합니다.
-- 탭별 개수는 `get_room_counts_by_user` RPC로 조회합니다.
-- 목록 데이터는 `get_rooms_by_tab_count` RPC 단일 함수로 조회합니다. unread_count, 정렬, 페이지네이션, 탭 내 검색, total_count를 모두 처리합니다.
+- 채팅방 목록은 `get_chat_room_list` RPC로 탭별 개수와 목록 데이터를 함께 조회합니다.
+- `get_chat_room_list`는 unread_count, 정렬, 번호형 페이지네이션, 탭 내 검색, total_count를 한 응답으로 처리합니다.
 - 정렬 옵션은 생성일 최신순, 최신 메시지순, 참여자 많은순을 제공합니다.
 - 참여 가능한 채팅방 탭에서는 최신 메시지순을 노출하지 않습니다.
 - 탭 변경 시 정렬값과 검색어는 기본값으로 초기화합니다.
@@ -137,6 +137,7 @@ npm run dev
 
 - `/chat/[room-id]` 라우트에서 채팅방 상세 화면을 제공합니다.
 - 방 정보, 참여자 목록, 메시지 목록, 메시지 입력 영역을 렌더링합니다.
+- 방 정보, 현재 유저 멤버십, 활성 참여자 목록은 `get_chat_room_detail` RPC로 함께 조회합니다.
 - 미참여 유저가 진입하면 `JoinChatRoomDialog`가 표시됩니다. 정원 마감 상태에서는 참여 불가 안내만 표시합니다 (destructive 색상). 참여 완료 후 Realtime으로 자동 상태 전환됩니다.
 - 참여자 목록은 활성 멤버만 표시합니다.
 - 방장은 참여자 Popover에서 강퇴와 방장 권한 위임을 실행할 수 있습니다.
@@ -262,18 +263,17 @@ src/
 
 ### RPC
 
-| 함수                       | 용도                                                                           |
-| -------------------------- | ------------------------------------------------------------------------------ |
-| `check_email_exists`       | 이메일 중복 확인                                                               |
-| `check_nickname_exists`    | 닉네임 중복 확인                                                               |
-| `get_room_counts_by_user`  | 채팅방 목록 탭별 개수 조회                                                     |
-| `get_rooms_by_tab_count`   | 탭/정렬/페이지네이션/탭 내 검색/unread_count/total_count 통합 채팅방 목록 조회 |
-| `join_chat_room`           | 채팅방 참여                                                                    |
-| `leave_chat_room`          | 채팅방 나가기                                                                  |
-| `mark_room_read`           | 방 읽음 처리                                                                   |
-| `search_chat_rooms`        | 채팅방 제목, 방장 닉네임 검색                                                  |
-| `kick_chat_room_member`    | 방장의 참여자 강퇴                                                             |
-| `transfer_chat_room_owner` | 방장 권한 위임                                                                 |
+| 함수                       | 용도                                                                     |
+| -------------------------- | ------------------------------------------------------------------------ |
+| `check_email_exists`       | 이메일 중복 확인                                                         |
+| `get_chat_room_list`       | 탭/count/정렬/페이지네이션/탭 내 검색/unread_count 통합 채팅방 목록 조회 |
+| `get_chat_room_detail`     | 채팅방 정보, 현재 유저 멤버십, 활성 참여자 목록 통합 조회                |
+| `join_chat_room`           | 채팅방 참여                                                              |
+| `leave_chat_room`          | 채팅방 나가기                                                            |
+| `mark_room_read`           | 방 읽음 처리                                                             |
+| `search_chat_rooms`        | 채팅방 제목, 방장 닉네임 검색                                            |
+| `kick_chat_room_member`    | 방장의 참여자 강퇴                                                       |
+| `transfer_chat_room_owner` | 방장 권한 위임                                                           |
 
 ### Supabase Storage
 
@@ -320,6 +320,13 @@ npm run types
 | `20260515000000_get_rooms_by_tab_count_add_query.sql`                | 탭 내 검색 파라미터 추가                |
 | `20260515010000_get_rooms_by_tab_count_fix_unread_and_full_room.sql` | unread 계산 및 정원 마감 필터 수정      |
 | `20260515020000_insert_date_divider_message_trigger.sql`             | 날짜 구분 system 메시지 트리거 추가     |
+| `20260516000000_refactor_chat_room_rpc_concurrency.sql`              | 채팅방 RPC 동시성 제어 정리             |
+| `20260516070131_restrict_chat_room_rpc_execute.sql`                  | 채팅방 RPC 실행 권한 정리               |
+| `20260516070741_restrict_member_management_rpc_to_service_role.sql`  | 참여자 관리 RPC 실행 경계 강화          |
+| `20260516072941_restrict_advisor_security_definer_rpc.sql`           | Advisor 대상 RPC 권한 정리              |
+| `20260516093908_add_chat_room_list_rpc.sql`                          | 채팅방 목록 RPC 통합                    |
+| `20260516113108_add_chat_room_detail_rpc.sql`                        | 채팅방 상세 RPC 추가                    |
+| `20260516121058_drop_unused_chat_room_legacy_rpcs.sql`               | 미사용 채팅방 목록 RPC 제거             |
 
 ---
 
