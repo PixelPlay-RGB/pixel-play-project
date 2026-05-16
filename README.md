@@ -135,7 +135,7 @@ npm run dev
 
 ### 채팅방 상세
 
-- `/chat/[room-id]` 라우트에서 채팅방 상세 화면을 제공합니다.
+- `/chat-room/[roomId]` 라우트에서 채팅방 상세 화면을 제공합니다.
 - 방 정보, 참여자 목록, 메시지 목록, 메시지 입력 영역을 렌더링합니다.
 - 방 정보, 현재 유저 멤버십, 활성 참여자 목록은 `get_chat_room_detail` RPC로 함께 조회합니다.
 - 미참여 유저가 진입하면 `JoinChatRoomDialog`가 표시됩니다. 정원 마감 상태에서는 참여 불가 안내만 표시합니다 (destructive 색상). 참여 완료 후 Realtime으로 자동 상태 전환됩니다.
@@ -174,14 +174,14 @@ src/
 │   ├── (settings)/       # 설정 라우트 그룹
 │   ├── api/              # Route Handler
 │   ├── auth/             # 인증 라우트
-│   ├── chat/[room-id]/   # 채팅방 상세
+│   ├── chat-room/[roomId]/ # 채팅방 상세
 │   └── search/chat/      # 채팅방 검색
 ├── components/
 │   ├── auth/             # 로그인, 회원가입, OAuth, 비밀번호 UI
-│   ├── chat/             # 채팅방 목록, 카드, 생성 Dialog, 방 메뉴
+│   ├── chat-room/        # 채팅방 상세, 메시지, 참여자 관리 UI
+│   ├── chat-room-list/   # 채팅방 목록, 카드, 생성 Dialog
 │   ├── common/           # Header, Footer, Providers, Sidebar
-│   ├── member/           # 참여자 목록, 강퇴, 권한 위임 UI
-│   ├── message/          # 메시지 목록, 입력, 메시지 item
+│   ├── live/             # 라이브 준비 화면
 │   ├── search/           # 검색 입력과 검색 결과
 │   ├── setting/          # 프로필 설정
 │   └── ui/               # shadcn / Base UI 기반 공통 컴포넌트
@@ -309,7 +309,9 @@ npm run types
 | `20260507074832_leave_chat_room_rpc.sql`                             | `leave_chat_room` RPC 추가              |
 | `20260511012256_trigger_update_member_count_add_last_joined_at.sql`  | 멤버 수 트리거 및 `last_joined_at` 추가 |
 | `20260511032318_create_join_chat_room_rpc.sql`                       | `join_chat_room` RPC 추가               |
+| `20260511033426_fix_join_chat_room_return_type.sql`                  | `join_chat_room` 반환 타입 수정         |
 | `20260511052223_update_join_chat_room_rpc_active_member_policy.sql`  | 활성 멤버 정책 반영                     |
+| `20260511052342_drop_old_join_chat_room_rpc.sql`                     | 구 `join_chat_room` RPC 제거            |
 | `20260511061734_join_chat_room_security_definer.sql`                 | security definer 적용                   |
 | `20260511075805_add_get_rooms_by_tab_count.sql`                      | `get_rooms_by_tab_count` 추가           |
 | `20260512123000_update_get_rooms_by_tab_sort.sql`                    | 채팅방 목록 정렬 RPC 업데이트           |
@@ -327,6 +329,7 @@ npm run types
 | `20260516093908_add_chat_room_list_rpc.sql`                          | 채팅방 목록 RPC 통합                    |
 | `20260516113108_add_chat_room_detail_rpc.sql`                        | 채팅방 상세 RPC 추가                    |
 | `20260516121058_drop_unused_chat_room_legacy_rpcs.sql`               | 미사용 채팅방 목록 RPC 제거             |
+| `20260516230042_fix_chat_room_performance_advisor.sql`               | 채팅방 DB 성능 Advisor 정리             |
 
 ---
 
