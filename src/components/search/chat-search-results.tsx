@@ -3,64 +3,52 @@
 // 채팅방 검색 결과를 조회하고 제목/방장 섹션으로 나눠 표시합니다.
 import ChatRoomCardGridSkeleton from "@/components/chat-room/shared/chat-room-card-grid-skeleton";
 import ChatSearchSection from "@/components/search/chat-search-section";
-import { useChatRoomSearch } from "@/hooks/use-chat-room-search";
+import { useChatRoomSearchResults } from "@/hooks/use-chat-room-search-results";
 import { cn } from "@/lib/utils";
-import type { ChatSearchResult } from "@/types/search";
 import { Search } from "lucide-react";
 
 interface Props {
   query: string;
 }
 
-function flattenPages(pages?: ChatSearchResult[][]) {
-  return pages?.flat() ?? [];
-}
-
 export default function ChatSearchResults({ query }: Props) {
-  const trimmedQuery = query.trim();
-  const titleSearch = useChatRoomSearch(trimmedQuery, "title");
-  const ownerSearch = useChatRoomSearch(trimmedQuery, "owner");
+  const searchResults = useChatRoomSearchResults(query);
 
-  if (!trimmedQuery) {
+  if (searchResults.isEmptyQuery) {
     return <EmptySearchResult message="검색어를 입력하면 채팅방 검색 결과가 표시됩니다." />;
   }
 
-  if (titleSearch.isError || ownerSearch.isError) {
+  if (searchResults.isError) {
     return <EmptySearchResult message="채팅방 검색 결과를 불러오지 못했습니다." />;
   }
 
-  if (titleSearch.isLoading || ownerSearch.isLoading) {
+  if (searchResults.isLoading) {
     return <ChatRoomCardGridSkeleton />;
   }
 
-  const titleResults = flattenPages(titleSearch.data?.pages);
-  const ownerResults = flattenPages(ownerSearch.data?.pages);
-
   return (
     <div className="flex flex-col gap-8 md:gap-10">
-      {titleResults.length > 0 && (
+      {searchResults.title.results.length > 0 && (
         <ChatSearchSection
           title="제목"
           description="채팅방 제목 검색 결과입니다."
-          results={titleResults}
-          hasMore={titleSearch.hasNextPage}
-          isFetchingMore={titleSearch.isFetchingNextPage}
-          onLoadMore={() => titleSearch.fetchNextPage()}
+          results={searchResults.title.results}
+          hasMore={searchResults.title.hasMore}
+          isFetchingMore={searchResults.title.isFetchingMore}
+          onLoadMore={() => searchResults.title.fetchMore()}
         />
       )}
-      {ownerResults.length > 0 && (
+      {searchResults.owner.results.length > 0 && (
         <ChatSearchSection
           title="닉네임"
           description="방을 생성한 사용자의 닉네임 검색 결과입니다."
-          results={ownerResults}
-          hasMore={ownerSearch.hasNextPage}
-          isFetchingMore={ownerSearch.isFetchingNextPage}
-          onLoadMore={() => ownerSearch.fetchNextPage()}
+          results={searchResults.owner.results}
+          hasMore={searchResults.owner.hasMore}
+          isFetchingMore={searchResults.owner.isFetchingMore}
+          onLoadMore={() => searchResults.owner.fetchMore()}
         />
       )}
-      {titleResults.length === 0 && ownerResults.length === 0 && (
-        <EmptySearchResult message="검색 결과가 없습니다." />
-      )}
+      {searchResults.isEmptyResult && <EmptySearchResult message="검색 결과가 없습니다." />}
     </div>
   );
 }

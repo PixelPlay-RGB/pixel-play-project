@@ -1,6 +1,6 @@
 "use client";
 
-// 채팅방 검색 결과를 Supabase RPC로 조회합니다.
+// 채팅방 검색 결과 페이지에 필요한 섹션별 검색 상태를 제공합니다.
 import { QUERY_KEYS } from "@/constants/query-keys";
 import { CHAT_SEARCH_RESULT_LIMIT } from "@/constants/search";
 import { createClient } from "@/lib/supabase/client";
@@ -13,6 +13,10 @@ function isChatSearchSection(section: string): section is ChatSearchSection {
 
 function isChatSearchResult(result: { section: string }): result is ChatSearchResult {
   return isChatSearchSection(result.section);
+}
+
+function flattenPages(pages?: ChatSearchResult[][]) {
+  return pages?.flat() ?? [];
 }
 
 async function fetchChatRoomSearchResults(
@@ -36,7 +40,7 @@ async function fetchChatRoomSearchResults(
   return (data ?? []).filter(isChatSearchResult);
 }
 
-export function useChatRoomSearch(query: string, section: ChatSearchSection) {
+function useChatRoomSearchSection(query: string, section: ChatSearchSection) {
   const trimmedQuery = query.trim();
 
   return useInfiniteQuery<ChatSearchResult[]>({
@@ -48,4 +52,32 @@ export function useChatRoomSearch(query: string, section: ChatSearchSection) {
       lastPage.at(-1)?.has_more ? allPages.length * CHAT_SEARCH_RESULT_LIMIT : undefined,
     enabled: trimmedQuery.length > 0,
   });
+}
+
+export function useChatRoomSearchResults(query: string) {
+  const trimmedQuery = query.trim();
+  const titleSearch = useChatRoomSearchSection(trimmedQuery, "title");
+  const ownerSearch = useChatRoomSearchSection(trimmedQuery, "owner");
+  const titleResults = flattenPages(titleSearch.data?.pages);
+  const ownerResults = flattenPages(ownerSearch.data?.pages);
+
+  return {
+    trimmedQuery,
+    isEmptyQuery: trimmedQuery.length === 0,
+    isError: titleSearch.isError || ownerSearch.isError,
+    isLoading: titleSearch.isLoading || ownerSearch.isLoading,
+    isEmptyResult: titleResults.length === 0 && ownerResults.length === 0,
+    title: {
+      results: titleResults,
+      hasMore: titleSearch.hasNextPage,
+      isFetchingMore: titleSearch.isFetchingNextPage,
+      fetchMore: titleSearch.fetchNextPage,
+    },
+    owner: {
+      results: ownerResults,
+      hasMore: ownerSearch.hasNextPage,
+      isFetchingMore: ownerSearch.isFetchingNextPage,
+      fetchMore: ownerSearch.fetchNextPage,
+    },
+  };
 }
