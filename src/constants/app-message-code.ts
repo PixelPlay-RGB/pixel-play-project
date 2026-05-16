@@ -56,6 +56,8 @@ export const APP_MESSAGE_CODE = {
       createAuthRequired: "error.chatRoom.createAuthRequired",
       createFailed: "error.chatRoom.createFailed",
       createMemberFailed: "error.chatRoom.createMemberFailed",
+      joinFailed: "error.chatRoom.joinFailed",
+      full: "error.chatRoom.full",
       leaveFailed: "error.chatRoom.leaveFailed",
       leaveOwnerBlocked: "error.chatRoom.leaveOwnerBlocked",
       missingRoomId: "error.chatRoom.missingRoomId",

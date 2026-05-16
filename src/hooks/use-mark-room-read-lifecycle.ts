@@ -5,8 +5,8 @@ import { useEffect } from "react";
 
 import { useQueryClient } from "@tanstack/react-query";
 
+import { markRoomReadAction } from "@/actions/chat-room-member";
 import { QUERY_KEYS } from "@/constants/query-keys";
-import { createClient } from "@/lib/supabase/client";
 
 interface Options {
   roomId: string;
@@ -27,12 +27,10 @@ export function useMarkRoomReadLifecycle({ roomId, enabled }: Options) {
     }
 
     const id = roomId;
-    const supabase = createClient();
 
     const mark = () => {
-      void supabase.rpc("mark_room_read", { p_room_id: id }).then(({ error }) => {
-        if (error) {
-          console.error("채팅방 읽음 처리 RPC 실패", error);
+      void markRoomReadAction(id).then((result) => {
+        if (!result.success) {
           return;
         }
         invalidateChatQueries(queryClient);

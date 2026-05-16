@@ -2,10 +2,8 @@
 
 // 채팅방 멤버 관리 액션을 확인하고 실행하는 AlertDialog
 import { useState, type ReactElement } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import { Crown, UserX } from "lucide-react";
 
-import { kickChatRoomMemberAction, transferChatRoomOwnerAction } from "@/actions/chat-room-member";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,11 +17,9 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Spinner } from "@/components/ui/spinner";
-import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import { MEMBER_ACTION_COPY, type MemberAction } from "@/constants/chat-room-member";
-import { QUERY_KEYS } from "@/constants/query-keys";
+import { useChatRoomMemberAction } from "@/hooks/use-chat-room-member-action";
 import { cn } from "@/lib/utils";
-import { toastAppError, toastAppSuccess } from "@/utils/toast-message";
 
 interface Props {
   action: MemberAction;
@@ -40,43 +36,22 @@ export function MemberActionAlertDialog({
   targetNickname,
   trigger,
 }: Props) {
-  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [isPending, setIsPending] = useState(false);
   const copy = MEMBER_ACTION_COPY[action];
   const isKick = action === "kick";
-  const successCode = isKick
-    ? APP_MESSAGE_CODE.success.chatRoomMember.kicked
-    : APP_MESSAGE_CODE.success.chatRoomMember.ownerTransferred;
-  const fallbackErrorCode = isKick
-    ? APP_MESSAGE_CODE.error.chatRoomMember.kickFailed
-    : APP_MESSAGE_CODE.error.chatRoomMember.transferFailed;
+  const { mutate, isPending } = useChatRoomMemberAction({ action, roomId });
 
-  const handleConfirm = async () => {
-    setIsPending(true);
-
-    try {
-      const result = isKick
-        ? await kickChatRoomMemberAction({ roomId, targetUserId })
-        : await transferChatRoomOwnerAction({ roomId, targetUserId });
-
-      if (!result.success) {
-        toastAppError(result.code ?? fallbackErrorCode);
-        return;
-      }
-
-      toastAppSuccess(result.code ?? successCode);
-      setOpen(false);
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.members(roomId) });
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.room(roomId) });
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.rooms() });
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.counts() });
-    } catch (error) {
-      console.error("참여자 관리 작업 처리 실패", error);
-      toastAppError(fallbackErrorCode);
-    } finally {
-      setIsPending(false);
-    }
+  const handleConfirm = () => {
+    mutate(
+      { targetUserId },
+      {
+        onSuccess: (result) => {
+          if (result.success) {
+            setOpen(false);
+          }
+        },
+      },
+    );
   };
 
   return (

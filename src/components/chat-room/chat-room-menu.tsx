@@ -22,8 +22,7 @@ import { useLeaveChatRoom } from "@/hooks/use-leave-chat-room";
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import { useRoom } from "@/hooks/use-chat-room";
 import { useUser } from "@/hooks/use-profile";
-import { resolveRpcErrorCode } from "@/utils/app-message";
-import { toastAppError, toastAppInfo } from "@/utils/toast-message";
+import { toastAppInfo } from "@/utils/toast-message";
 
 interface Props {
   roomId: string;
@@ -43,12 +42,7 @@ export function ChatRoomMenu({ roomId }: Props) {
   const isOwnerLeaveBlocked = isOwner && currentMember > 1;
 
   const handleLeave = () => {
-    mutate(roomId, {
-      onError: (err: unknown) => {
-        console.error("채팅방 메뉴의 나가기 처리 실패", err);
-        toastAppError(resolveRpcErrorCode(err, APP_MESSAGE_CODE.error.chatRoom.leaveFailed));
-      },
-    });
+    mutate(roomId);
   };
 
   if (!currentUserId || !roomQuery.data) {

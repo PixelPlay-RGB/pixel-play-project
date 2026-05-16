@@ -153,6 +153,14 @@ export const APP_MESSAGE = {
         title: "참여 정보 생성 실패",
         description: "채팅방 참여 정보를 저장하지 못했습니다.",
       },
+      joinFailed: {
+        title: "채팅방 참여 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      full: {
+        title: "채팅방 정원 마감",
+        description: "정원이 가득 차 참여할 수 없습니다.",
+      },
       leaveFailed: {
         title: "채팅방 나가기 실패",
         description: "잠시 후 다시 시도해주세요.",
