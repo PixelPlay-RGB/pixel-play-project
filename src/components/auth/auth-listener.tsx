@@ -38,7 +38,7 @@ export default function AuthListener() {
     void supabase.auth.getUser().then(async ({ data, error }) => {
       if (error) {
         if (!isAuthSessionMissingError(error)) {
-          console.error("AuthListener getUser error", error);
+          console.error("인증 리스너의 인증 유저 조회 실패", error);
           await supabase.auth.signOut({ scope: "local" });
         }
         setUser(null);
@@ -67,7 +67,7 @@ export default function AuthListener() {
         .maybeSingle();
 
       if (error) {
-        console.error("AuthListener linked providers select error", error);
+        console.error("인증 리스너의 소셜 로그인 정보 조회 실패", error);
         toastAppError(APP_MESSAGE_CODE.error.auth.oauthInfoLoadFailed);
         return;
       }
@@ -89,7 +89,7 @@ export default function AuthListener() {
           .eq("id", user.id);
 
         if (updateError) {
-          console.error("AuthListener linked providers update error", updateError);
+          console.error("인증 리스너의 소셜 로그인 정보 동기화 실패", updateError);
           toastAppError(APP_MESSAGE_CODE.error.auth.oauthSyncFailed);
           setIsCanChangePassword(false);
           return;

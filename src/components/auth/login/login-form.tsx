@@ -59,7 +59,7 @@ export default function LoginForm({ loading, onLoadingChange: setIsLoading }: Lo
 
     if (authError || !authUser) {
       if (authError && !isAuthSessionMissingError(authError)) {
-        console.error("LoginForm getUser error", authError);
+        console.error("로그인 폼의 인증 유저 조회 실패", authError);
       }
       toastAppError(APP_MESSAGE_CODE.error.auth.authInfoLoadFailed);
       setIsLoading(null);

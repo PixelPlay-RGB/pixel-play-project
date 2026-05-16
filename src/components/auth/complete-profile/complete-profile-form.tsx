@@ -88,7 +88,7 @@ export default function CompleteProfileForm() {
 
     if (authError || !authUser) {
       if (authError && !isAuthSessionMissingError(authError)) {
-        console.error("CompleteProfileForm getUser error", authError);
+        console.error("프로필 완성 폼의 인증 유저 조회 실패", authError);
       }
       toastAppError(APP_MESSAGE_CODE.error.auth.sessionNotFound);
       return;

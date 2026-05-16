@@ -23,7 +23,7 @@ export async function kickChatRoomMemberAction({
   });
 
   if (error) {
-    console.error("kickChatRoomMemberAction rpc error", error);
+    console.error("채팅방 참여자 강퇴 RPC 실패", error);
     return {
       success: false,
       code: resolveRpcErrorCode(error, APP_MESSAGE_CODE.error.chatRoomMember.kickFailed),
@@ -48,7 +48,7 @@ export async function transferChatRoomOwnerAction({
   });
 
   if (error) {
-    console.error("transferChatRoomOwnerAction rpc error", error);
+    console.error("채팅방 방장 위임 RPC 실패", error);
     return {
       success: false,
       code: resolveRpcErrorCode(error, APP_MESSAGE_CODE.error.chatRoomMember.transferFailed),

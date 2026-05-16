@@ -60,7 +60,7 @@ export default function CompleteProfileAbandonAlert({
       router.replace("/auth/login");
       router.refresh();
     } catch (error) {
-      console.error("CompleteProfileAbandonAlert cancel error", error);
+      console.error("프로필 완성 취소 실패", error);
       toastAppError(APP_MESSAGE_CODE.error.auth.signupCancelFailed);
       setIsCancelling(false);
     }

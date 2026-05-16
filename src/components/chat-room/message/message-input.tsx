@@ -62,7 +62,7 @@ export function MessageInput({ roomId, currentUserId, disabled = false, disabled
     });
 
     if (error) {
-      console.error(error);
+      console.error("메시지 전송 실패", error);
       toastAppError(resolveSupabaseErrorCode(error, APP_MESSAGE_CODE.error.message.sendFailed));
       sendMessageLockRef.current = false;
       return;

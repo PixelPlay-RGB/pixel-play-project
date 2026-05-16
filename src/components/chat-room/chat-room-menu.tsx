@@ -45,7 +45,7 @@ export function ChatRoomMenu({ roomId }: Props) {
   const handleLeave = () => {
     mutate(roomId, {
       onError: (err: unknown) => {
-        console.error("ChatRoomMenu leave error", err);
+        console.error("채팅방 메뉴의 나가기 처리 실패", err);
         toastAppError(resolveRpcErrorCode(err, APP_MESSAGE_CODE.error.chatRoom.leaveFailed));
       },
     });

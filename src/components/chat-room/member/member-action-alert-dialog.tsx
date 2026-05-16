@@ -72,7 +72,7 @@ export function MemberActionAlertDialog({
       await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.rooms() });
       await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.counts() });
     } catch (error) {
-      console.error("MemberActionAlertDialog action error", error);
+      console.error("참여자 관리 작업 처리 실패", error);
       toastAppError(fallbackErrorCode);
     } finally {
       setIsPending(false);

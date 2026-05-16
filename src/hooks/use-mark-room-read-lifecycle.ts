@@ -32,7 +32,7 @@ export function useMarkRoomReadLifecycle({ roomId, enabled }: Options) {
     const mark = () => {
       void supabase.rpc("mark_room_read", { p_room_id: id }).then(({ error }) => {
         if (error) {
-          console.error("mark_room_read failed", error);
+          console.error("채팅방 읽음 처리 RPC 실패", error);
           return;
         }
         invalidateChatQueries(queryClient);

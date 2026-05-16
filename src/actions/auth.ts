@@ -44,7 +44,7 @@ export async function login(data: LoginFormValues): Promise<ActionResponse> {
   });
 
   if (error) {
-    console.error("login signInWithPassword error", error);
+    console.error("로그인 인증 실패", error);
     return {
       success: false,
       code: APP_MESSAGE_CODE.error.auth.invalidCredentials,
@@ -71,7 +71,7 @@ export async function sendOtpAction(email: string): Promise<FieldActionResult> {
   });
 
   if (rpcError) {
-    console.error("sendOtpAction check_email_exists error", rpcError);
+    console.error("이메일 중복 확인 실패", rpcError);
     return { success: false, fieldMessage: FORM_MESSAGE.auth.emailCheckFailed };
   }
   if (exists) {
@@ -81,7 +81,7 @@ export async function sendOtpAction(email: string): Promise<FieldActionResult> {
   // OTP 발송
   const { error } = await supabase.auth.signInWithOtp({ email });
   if (error) {
-    console.error("sendOtpAction signInWithOtp error", error);
+    console.error("OTP 이메일 발송 실패", error);
     return { success: false, fieldMessage: FORM_MESSAGE.auth.emailCheckFailed };
   }
 
@@ -97,7 +97,7 @@ export async function verifyOtpAction(email: string, token: string): Promise<Fie
   // 해당 작업 성공시 임시 세션이 생성됨
   const { error } = await supabase.auth.verifyOtp({ email, token, type: "email" });
   if (error) {
-    console.error("verifyOtpAction verifyOtp error", error);
+    console.error("OTP 검증 실패", error);
     return { success: false, fieldMessage: FORM_MESSAGE.auth.otpInvalid };
   }
 
@@ -115,7 +115,7 @@ export async function checkNicknameAction(nickname: string): Promise<ActionRespo
   });
 
   if (error) {
-    console.error("checkNicknameAction check_nickname_exists error", error);
+    console.error("닉네임 중복 확인 실패", error);
     return { success: false, code: APP_MESSAGE_CODE.error.auth.nicknameCheckFailed };
   }
 
@@ -147,7 +147,7 @@ export async function completeSignupAction(data: CompleteSignupInput): Promise<A
 
   if (getUserError || !user) {
     if (getUserError && !isAuthSessionMissingError(getUserError)) {
-      console.error("completeSignupAction getUser error", getUserError);
+      console.error("회원가입 완료 중 인증 유저 조회 실패", getUserError);
     }
     return { success: false, code: APP_MESSAGE_CODE.error.auth.authInfoNotFound };
   }
@@ -162,7 +162,7 @@ export async function completeSignupAction(data: CompleteSignupInput): Promise<A
   });
 
   if (authError) {
-    console.error("completeSignupAction updateUser error", authError);
+    console.error("회원가입 완료 중 인증 정보 업데이트 실패", authError);
     return { success: false, code: APP_MESSAGE_CODE.error.auth.authInfoLoadFailed };
   }
 
@@ -191,7 +191,7 @@ export async function completeSignupAction(data: CompleteSignupInput): Promise<A
   );
 
   if (dbError) {
-    console.error("completeSignupAction user upsert error", dbError);
+    console.error("회원가입 완료 중 사용자 프로필 저장 실패", dbError);
     return { success: false, code: APP_MESSAGE_CODE.error.auth.signupFailed };
   }
 
@@ -213,7 +213,7 @@ export async function verifyCurrentPasswordAction(
   } = await supabase.auth.getUser();
 
   if (userError && !isAuthSessionMissingError(userError)) {
-    console.error("verifyCurrentPasswordAction getUser error", userError);
+    console.error("현재 비밀번호 검증 중 인증 유저 조회 실패", userError);
   }
 
   if (!user?.email) {
@@ -226,7 +226,7 @@ export async function verifyCurrentPasswordAction(
   });
 
   if (error) {
-    console.error("verifyCurrentPasswordAction signInWithPassword error", error);
+    console.error("현재 비밀번호 검증 실패", error);
     return { success: false, fieldMessage: FORM_MESSAGE.auth.currentPasswordInvalid };
   }
 
@@ -242,7 +242,7 @@ export async function changePasswordAction(newPassword: string): Promise<ActionR
   const { error } = await supabase.auth.updateUser({ password: newPassword });
 
   if (error) {
-    console.error("changePasswordAction updateUser error", error);
+    console.error("비밀번호 변경 실패", error);
     return { success: false, code: APP_MESSAGE_CODE.error.auth.passwordChangeFailed };
   }
 
@@ -271,7 +271,7 @@ export async function completeOAuthProfileAction(
 
   if (!user || userError) {
     if (userError && !isAuthSessionMissingError(userError)) {
-      console.error("completeOAuthProfileAction getUser error", userError);
+      console.error("OAuth 프로필 완성 중 인증 유저 조회 실패", userError);
     }
     return {
       success: false,
@@ -287,7 +287,7 @@ export async function completeOAuthProfileAction(
   });
 
   if (authError) {
-    console.error("completeOAuthProfileAction updateUser error", authError);
+    console.error("OAuth 프로필 완성 중 인증 정보 업데이트 실패", authError);
     return { success: false, code: APP_MESSAGE_CODE.error.auth.authInfoLoadFailed };
   }
 
@@ -320,7 +320,7 @@ export async function completeOAuthProfileAction(
   );
 
   if (dbError) {
-    console.error("completeOAuthProfileAction user upsert error", dbError);
+    console.error("OAuth 프로필 완성 중 사용자 프로필 저장 실패", dbError);
     return {
       success: false,
       code: APP_MESSAGE_CODE.error.auth.profileCreateFailed,
@@ -344,7 +344,7 @@ export async function unLinkOAuthAction(provider: OAuthProvider): Promise<Action
 
   if (authError || !user) {
     if (authError && !isAuthSessionMissingError(authError)) {
-      console.error("unLinkOAuthAction getUser error", authError);
+      console.error("OAuth 연동 해제 중 인증 유저 조회 실패", authError);
     }
     return {
       success: false,
@@ -363,7 +363,7 @@ export async function unLinkOAuthAction(provider: OAuthProvider): Promise<Action
 
   const { error: unLinkError } = await supabase.auth.unlinkIdentity(identity);
   if (unLinkError) {
-    console.error("unLinkOAuthAction unlinkIdentity error", unLinkError);
+    console.error("OAuth 연동 해제 실패", unLinkError);
     return {
       success: false,
       code: APP_MESSAGE_CODE.error.oauth.unlinkFailed,
@@ -377,7 +377,7 @@ export async function unLinkOAuthAction(provider: OAuthProvider): Promise<Action
     .single();
 
   if (!dbUser || dbUserError) {
-    if (dbUserError) console.error("unLinkOAuthAction user select error", dbUserError);
+    if (dbUserError) console.error("OAuth 연동 해제 중 사용자 프로필 조회 실패", dbUserError);
     return {
       success: false,
       code: APP_MESSAGE_CODE.error.oauth.userProfileNotFound,
@@ -393,7 +393,7 @@ export async function unLinkOAuthAction(provider: OAuthProvider): Promise<Action
     .eq("id", user.id);
 
   if (updateError) {
-    console.error("unLinkOAuthAction user update error", updateError);
+    console.error("OAuth 연동 해제 중 사용자 프로필 업데이트 실패", updateError);
     return {
       success: false,
       code: APP_MESSAGE_CODE.error.oauth.dbUpdateFailed,
@@ -433,7 +433,7 @@ export async function updateProfileAction(formData: FormData): Promise<ActionRes
 
   if (!user || userError) {
     if (userError && !isAuthSessionMissingError(userError)) {
-      console.error("updateProfileAction getUser error", userError);
+      console.error("프로필 수정 중 인증 유저 조회 실패", userError);
     }
     return {
       success: false,
@@ -457,7 +457,7 @@ export async function updateProfileAction(formData: FormData): Promise<ActionRes
         .upload(filePath, file, { upsert: true, contentType: file.type });
 
       if (uploadError) {
-        console.error("updateProfileAction profile image upload error", uploadError);
+        console.error("프로필 이미지 업로드 실패", uploadError);
         return {
           success: false,
           code: APP_MESSAGE_CODE.error.profile.imageUploadFailed,
@@ -489,7 +489,7 @@ export async function updateProfileAction(formData: FormData): Promise<ActionRes
   });
 
   if (authUpdateError) {
-    console.error("updateProfileAction updateUser error", authUpdateError);
+    console.error("프로필 수정 중 인증 정보 업데이트 실패", authUpdateError);
     return {
       success: false,
       code: APP_MESSAGE_CODE.error.profile.userUpdateFailed,
@@ -505,7 +505,7 @@ export async function updateProfileAction(formData: FormData): Promise<ActionRes
     .eq("id", user.id);
 
   if (updateError) {
-    console.error("updateProfileAction user update error", updateError);
+    console.error("프로필 수정 중 사용자 프로필 업데이트 실패", updateError);
     return {
       success: false,
       code: APP_MESSAGE_CODE.error.profile.userUpdateFailed,

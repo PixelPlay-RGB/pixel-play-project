@@ -26,7 +26,7 @@ export default function OAuthButtons({ loading, onLoadingChange }: OAuthButtonsP
     });
 
     if (error) {
-      console.error(`${provider} 로그인 에러: `, error.message);
+      console.error(`${provider} 로그인 실패`, error.message);
       onLoadingChange(null);
     }
   };

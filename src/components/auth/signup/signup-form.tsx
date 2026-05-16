@@ -157,7 +157,7 @@ export default function SignupForm() {
 
     if (authError || !authUser) {
       if (authError && !isAuthSessionMissingError(authError)) {
-        console.error("SignupForm getUser error", authError);
+        console.error("회원가입 폼의 인증 유저 조회 실패", authError);
       }
       toastAppError(APP_MESSAGE_CODE.error.auth.authInfoLoadFailed);
       setUser(null);

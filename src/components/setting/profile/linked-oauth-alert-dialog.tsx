@@ -56,7 +56,7 @@ export default function LinkedOAuthAlertDialog({
     });
 
     if (error) {
-      console.error("linkOAuthAction signInWithOAuth error", error);
+      console.error("OAuth 계정 연동 요청 실패", error);
       toastAppError(APP_MESSAGE_CODE.error.oauth.linkFailed);
       setIsLoading(false);
     }
@@ -85,7 +85,7 @@ export default function LinkedOAuthAlertDialog({
         await linkOAuthAction(provider);
       }
     } catch (error) {
-      console.error("LinkedOAuthAlertDialog toggle error", error);
+      console.error("OAuth 계정 연동 상태 변경 실패", error);
       toastAppError(APP_MESSAGE_CODE.error.oauth.actionFailed);
       setIsLoading(false);
     }

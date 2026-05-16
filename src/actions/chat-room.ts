@@ -31,7 +31,7 @@ export const createChatRoomAction = async (
     .single();
 
   if (roomError || !room) {
-    if (roomError) console.error("createChatRoomAction room insert error", roomError);
+    if (roomError) console.error("채팅방 생성 중 방 정보 저장 실패", roomError);
     return { success: false, code: APP_MESSAGE_CODE.error.chatRoom.createFailed };
   }
 
@@ -41,11 +41,11 @@ export const createChatRoomAction = async (
   });
 
   if (memberError) {
-    console.error("createChatRoomAction member insert error", memberError);
+    console.error("채팅방 생성 중 참여 정보 저장 실패", memberError);
     const { error: rollbackError } = await supabase.from("chat_room").delete().eq("id", room.id);
 
     if (rollbackError) {
-      console.error("createChatRoomAction rollback room delete error", rollbackError);
+      console.error("채팅방 생성 실패 후 방 정보 롤백 실패", rollbackError);
     }
 
     return { success: false, code: APP_MESSAGE_CODE.error.chatRoom.createMemberFailed };
