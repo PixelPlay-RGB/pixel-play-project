@@ -1,4 +1,4 @@
-// 새 메시지 INSERT 시 채팅방 목록·안읽음 관련 React Query를 무효화합니다.
+// 새 메시지 INSERT 시 채팅방 목록 React Query를 무효화합니다.
 "use client";
 
 import { QUERY_KEYS } from "@/constants/query-keys";
@@ -7,7 +7,7 @@ import { useAuthStore } from "@/stores/auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 
-export function useChatRoomsUnreadRealtime() {
+export function useChatRoomListUnreadRealtime() {
   const userId = useAuthStore((s) => s.user?.id ?? null);
   const queryClient = useQueryClient();
 

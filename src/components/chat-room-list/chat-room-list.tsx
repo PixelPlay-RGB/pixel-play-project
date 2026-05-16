@@ -5,6 +5,7 @@ import ChatRoomCardGridSkeleton from "@/components/chat-room/shared/chat-room-ca
 import ChatRoomListHeader from "@/components/chat-room-list/chat-room-list-header";
 import ChatRoomListEmptyState from "@/components/chat-room-list/chat-room-list-empty-state";
 import ChatRoomListPagination from "@/components/chat-room-list/chat-room-list-pagination";
+import ChatRoomListUnreadRealtimeListener from "@/components/chat-room-list/chat-room-list-unread-realtime-listener";
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import {
   CHAT_ROOM_SORT_OPTIONS_BY_TAB,
@@ -47,6 +48,7 @@ export default function ChatRoomList() {
 
   return (
     <div className="flex min-h-full flex-col gap-5">
+      <ChatRoomListUnreadRealtimeListener />
       <ChatRoomListHeader counts={chatRoomList.counts} isFetching={isPageFetching} />
 
       <div className="flex flex-1 flex-col">
