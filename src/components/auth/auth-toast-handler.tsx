@@ -1,7 +1,7 @@
 "use client";
 
-import { useUser } from "@/hooks/use-profile";
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
+import { useNullableUser } from "@/hooks/use-profile";
 import { toastAppSuccess } from "@/utils/toast-message";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect } from "react";
@@ -47,7 +47,7 @@ function AuthToastInner({ nickname }: { nickname: string }) {
 }
 
 export default function AuthToastHandler() {
-  const { data: user, isLoading } = useUser();
+  const { data: user, isLoading } = useNullableUser();
 
   if (isLoading || !user) {
     return null;

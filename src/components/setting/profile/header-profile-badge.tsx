@@ -18,7 +18,7 @@ import { useState } from "react";
 export default function HeaderProfileBadge() {
   const supabase = createClient();
   const router = useRouter();
-  const { data: user, isLoading } = useUser();
+  const { data: user, isError, isLoading } = useUser();
   const isCanChangePassword = useAuthStore((state) => state.isCanChangePassword);
 
   const [open, setOpen] = useState(false);
@@ -28,8 +28,12 @@ export default function HeaderProfileBadge() {
     router.refresh();
   };
 
-  if (isLoading || !user) {
+  if (isLoading) {
     return <Spinner />;
+  }
+
+  if (isError || !user) {
+    return null;
   }
 
   return (

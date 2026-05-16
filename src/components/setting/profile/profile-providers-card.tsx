@@ -17,14 +17,18 @@ import { OAuthProvider } from "@/types/auth";
 import Image from "next/image";
 
 export default function ProfileProvidersCard() {
-  const { data: user, isLoading } = useUser();
+  const { data: user, isError, isLoading } = useUser();
 
-  if (isLoading || !user) {
+  if (isLoading) {
     return (
       <div className="flex justify-center py-10">
         <Spinner />
       </div>
     );
+  }
+
+  if (isError || !user) {
+    return null;
   }
 
   const hasEmailAuth = user.linked_providers.includes("email");

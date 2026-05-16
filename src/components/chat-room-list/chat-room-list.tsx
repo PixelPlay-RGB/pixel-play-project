@@ -12,7 +12,7 @@ import {
   DEFAULT_CHAT_ROOM_SORT_OPTION,
 } from "@/constants/chat-room";
 import { useChatRoomList } from "@/hooks/use-chat-room-list";
-import { useUser } from "@/hooks/use-profile";
+import { resolveProfileQueryErrorCode, useUser } from "@/hooks/use-profile";
 import { useChatRoomStore } from "@/stores/chat-room";
 import { getAppMessage } from "@/utils/app-message";
 import { EMPTY_CHAT_ROOM_LIST } from "@/utils/chat-room-list";
@@ -23,7 +23,7 @@ export default function ChatRoomList() {
   const currentPage = useChatRoomStore((state) => state.currentPage);
   const searchQuery = useChatRoomStore((state) => state.searchQuery);
   const setCurrentPage = useChatRoomStore((state) => state.setCurrentPage);
-  const { isFetched: isUserFetched } = useUser();
+  const { error: userError, isError: isUserError, isFetched: isUserFetched } = useUser();
 
   const selectedSortOption = CHAT_ROOM_SORT_OPTIONS_BY_TAB[tabType].includes(sortOption)
     ? sortOption
@@ -37,8 +37,12 @@ export default function ChatRoomList() {
   const isEmpty = isUserFetched && !query.isLoading && chatRooms.length === 0;
   const isPageFetching = query.isFetching && query.isPlaceholderData;
 
-  if (query.isError) {
-    const message = getAppMessage(APP_MESSAGE_CODE.error.chatRoomList.loadFailed);
+  if (isUserError || query.isError) {
+    const message = getAppMessage(
+      isUserError
+        ? resolveProfileQueryErrorCode(userError)
+        : APP_MESSAGE_CODE.error.chatRoomList.loadFailed,
+    );
     return (
       <div className="text-muted-foreground flex flex-1 items-center justify-center">
         {message.title}

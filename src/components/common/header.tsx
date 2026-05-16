@@ -17,7 +17,15 @@ export default async function Header() {
 
   let hasProfile = false;
   if (user) {
-    const { data: profile } = await supabase.from("user").select("id").eq("id", user.id).single();
+    const { data: profile, error: profileError } = await supabase
+      .from("user")
+      .select("id")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (profileError) {
+      console.error("헤더 프로필 존재 여부 조회 실패", profileError);
+    }
 
     hasProfile = !!profile;
   }

@@ -540,19 +540,24 @@ export async function updateProfileAction(formData: FormData): Promise<ActionRes
     };
   }
 
-  const { error: updateError } = await supabase
+  const { data: updatedProfile, error: updateError } = await supabase
     .from("user")
     .update({
       nickname,
       photo_url: photoUrl,
     })
-    .eq("id", user.id);
+    .eq("id", user.id)
+    .select("id")
+    .single();
 
-  if (updateError) {
+  if (updateError || !updatedProfile) {
     console.error("프로필 수정 중 사용자 프로필 업데이트 실패", updateError);
     return {
       success: false,
-      code: APP_MESSAGE_CODE.error.profile.userUpdateFailed,
+      code:
+        updateError?.code === "PGRST116"
+          ? APP_MESSAGE_CODE.error.profile.notFound
+          : APP_MESSAGE_CODE.error.profile.userUpdateFailed,
     };
   }
 

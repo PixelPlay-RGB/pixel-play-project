@@ -21,11 +21,16 @@ export async function GET(request: NextRequest) {
     } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error && user) {
-      const { data: existingUser } = await supabase
+      const { data: existingUser, error: existingUserError } = await supabase
         .from("user")
         .select("id, linked_providers, photo_url")
         .eq("id", user.id)
-        .single();
+        .maybeSingle();
+
+      if (existingUserError) {
+        console.error("OAuth 콜백 중 사용자 프로필 조회 실패", existingUserError);
+        return NextResponse.redirect(`${origin}/auth/login?error=oauth_callback_failed`);
+      }
 
       if (!existingUser) {
         // 신규 OAuth 유저라면 추가 정보 입력 페이지로 보냄
@@ -54,7 +59,15 @@ export async function GET(request: NextRequest) {
       }
 
       if (Object.keys(updatePayload).length > 0) {
-        await supabase.from("user").update(updatePayload).eq("id", user.id);
+        const { error: updateError } = await supabase
+          .from("user")
+          .update(updatePayload)
+          .eq("id", user.id);
+
+        if (updateError) {
+          console.error("OAuth 콜백 중 사용자 프로필 업데이트 실패", updateError);
+          return NextResponse.redirect(`${origin}/auth/login?error=oauth_callback_failed`);
+        }
       }
 
       return NextResponse.redirect(

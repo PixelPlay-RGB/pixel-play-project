@@ -5,7 +5,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { QUERY_KEYS } from "@/constants/query-keys";
-import { useUser } from "@/hooks/use-profile";
+import { resolveProfileQueryErrorCode, useUser } from "@/hooks/use-profile";
 import { createClient } from "@/lib/supabase/client";
 import type { ChatRoomDetailData } from "@/utils/chat-room-detail";
 import { EMPTY_CHAT_ROOM_DETAIL, parseChatRoomDetail } from "@/utils/chat-room-detail";
@@ -15,7 +15,7 @@ async function fetchChatRoomDetail(roomId: string): Promise<ChatRoomDetailData> 
 
   const { data, error } = await supabase
     .rpc("get_chat_room_detail", { p_room_id: roomId })
-    .maybeSingle();
+    .single();
 
   if (error) {
     throw error;
@@ -25,7 +25,13 @@ async function fetchChatRoomDetail(roomId: string): Promise<ChatRoomDetailData> 
 }
 
 export function useChatRoomDetail(roomId: string) {
-  const { data: currentUser, isFetched: profileFetched, isPending: profilePending } = useUser();
+  const {
+    data: currentUser,
+    error: profileError,
+    isError: isProfileError,
+    isFetched: profileFetched,
+    isPending: profilePending,
+  } = useUser();
   const currentUserId = currentUser?.id ?? "";
   const canQueryDetail = !!roomId && !!currentUserId && profileFetched;
   const detailQuery = useQuery<ChatRoomDetailData>({
@@ -61,6 +67,7 @@ export function useChatRoomDetail(roomId: string) {
     currentUser,
     currentUserId,
     profilePending,
+    profileErrorCode: isProfileError ? resolveProfileQueryErrorCode(profileError) : null,
     room,
     roomPending: canQueryDetail && detailQuery.isPending,
     roomFetched: detailQuery.isFetched,

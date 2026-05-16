@@ -249,6 +249,10 @@ export const APP_MESSAGE = {
       },
     },
     profile: {
+      notFound: {
+        title: "프로필 없음",
+        description: "프로필 정보를 찾지 못했습니다. 다시 로그인한 뒤 시도해주세요.",
+      },
       updateFailed: {
         title: "프로필 수정 실패",
         description: "프로필 변경사항을 저장하지 못했습니다.",

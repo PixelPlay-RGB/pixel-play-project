@@ -18,7 +18,8 @@ interface Props {
 }
 
 export function ChatRoom({ roomId }: Props) {
-  const { currentUserId, profilePending, roomMissing } = useChatRoomDetail(roomId);
+  const { currentUserId, profileErrorCode, profilePending, roomMissing } =
+    useChatRoomDetail(roomId);
   const [membersSheetOpen, setMembersSheetOpen] = useState(false);
 
   useChatRoomDetailRealtimeInvalidation({ roomId, currentUserId });
@@ -29,6 +30,10 @@ export function ChatRoom({ roomId }: Props) {
         <Spinner className="text-muted-foreground size-8" />
       </div>
     );
+  }
+
+  if (profileErrorCode) {
+    return <ChatRoomError code={profileErrorCode} />;
   }
 
   if (!roomId) {

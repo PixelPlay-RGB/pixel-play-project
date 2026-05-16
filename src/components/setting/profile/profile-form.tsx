@@ -23,16 +23,17 @@ import { checkNicknameAction, updateProfileAction } from "@/actions/auth";
 import ProfileFormSkeleton from "@/components/setting/profile/profile-form-skeleton";
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import { QUERY_KEYS } from "@/constants/query-keys";
-import { useUser } from "@/hooks/use-profile";
+import { resolveProfileQueryErrorCode, useUser } from "@/hooks/use-profile";
 import { cn } from "@/lib/utils";
 import { ProfileFormValues, profileSchema } from "@/lib/zod/auth";
 import type { NicknameStatus } from "@/types/auth";
 import { formatDate } from "@/utils/format";
+import { getAppMessage } from "@/utils/app-message";
 import { toastAppError, toastAppSuccess } from "@/utils/toast-message";
 import { useQueryClient } from "@tanstack/react-query";
 
 export default function ProfileForm() {
-  const { data: user, isLoading } = useUser();
+  const { data: user, error: userError, isError: isUserError, isLoading } = useUser();
 
   const queryClient = useQueryClient();
 
@@ -65,7 +66,21 @@ export default function ProfileForm() {
     };
   }, [photoUrl]);
 
-  if (isLoading || !user) {
+  if (isLoading) {
+    return <ProfileFormSkeleton />;
+  }
+
+  if (isUserError) {
+    const message = getAppMessage(resolveProfileQueryErrorCode(userError));
+
+    return (
+      <ProfileCard title={message.title}>
+        <p className="text-muted-foreground text-sm">{message.description}</p>
+      </ProfileCard>
+    );
+  }
+
+  if (!user) {
     return <ProfileFormSkeleton />;
   }
 

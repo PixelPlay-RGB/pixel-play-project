@@ -16,11 +16,7 @@ import type {
   ChatRoomSortOption,
   ChatRoomTab,
 } from "@/types/chat-room";
-import {
-  EMPTY_CHAT_ROOM_LIST,
-  getEffectiveChatRoomCounts,
-  parseChatRoomListItems,
-} from "@/utils/chat-room-list";
+import { getEffectiveChatRoomCounts, parseChatRoomListItems } from "@/utils/chat-room-list";
 
 interface ChatRoomListResult {
   rooms: ChatRoomListItem[];
@@ -61,17 +57,10 @@ async function fetchChatRoomList({
       p_sort_option: sortOption,
       p_query: queryParam,
     })
-    .maybeSingle();
+    .single();
 
   if (error) {
     throw error;
-  }
-
-  if (!data) {
-    return {
-      ...EMPTY_CHAT_ROOM_LIST,
-      totalPages: 0,
-    };
   }
 
   const baseCounts = getBaseCounts(data);

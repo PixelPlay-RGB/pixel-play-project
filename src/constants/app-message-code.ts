@@ -86,6 +86,7 @@ export const APP_MESSAGE_CODE = {
       ownerTransferFailed: "error.chatRoomMember.ownerTransferFailed",
     },
     profile: {
+      notFound: "error.profile.notFound",
       updateFailed: "error.profile.updateFailed",
       imageTooLarge: "error.profile.imageTooLarge",
       authMissing: "error.profile.authMissing",

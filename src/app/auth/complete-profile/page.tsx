@@ -16,11 +16,15 @@ export default async function Page() {
   }
 
   // 이미 프로필이 완성된 유저가 직접 접근한 경우 홈으로
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from("user")
     .select("nickname")
     .eq("id", user.id)
-    .single();
+    .maybeSingle();
+
+  if (profileError) {
+    console.error("추가 정보 입력 페이지에서 프로필 조회 실패", profileError);
+  }
 
   if (profile?.nickname) {
     redirect("/");
