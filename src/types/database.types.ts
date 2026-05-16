@@ -211,36 +211,6 @@ export type Database = {
           total_count: number;
         }[];
       };
-      get_room_counts_by_user: {
-        Args: { p_user_id: string };
-        Returns: {
-          joined: number;
-          not_joined: number;
-          owned: number;
-        }[];
-      };
-      get_rooms_by_tab_count: {
-        Args: {
-          p_limit?: number;
-          p_offset?: number;
-          p_query?: string;
-          p_sort_option?: string;
-          p_tab_type: string;
-          p_user_id: string;
-        };
-        Returns: {
-          created_at: string;
-          current_member: number;
-          description: string;
-          id: string;
-          max_capacity: number;
-          owner_id: string;
-          owner_nickname: string;
-          title: string;
-          total_count: number;
-          unread_count: number;
-        }[];
-      };
       join_chat_room: { Args: { p_room_id: string }; Returns: undefined };
       kick_chat_room_member: {
         Args: {
