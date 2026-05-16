@@ -47,7 +47,6 @@ export function MessageInput({ roomId, currentUserId, disabled = false, disabled
 
     const parsed = messageContentSchema.safeParse(draft);
     if (!parsed.success) {
-      console.error("MessageInput validation error", parsed.error);
       toastAppError(APP_MESSAGE_CODE.error.message.invalidInput);
       return;
     }

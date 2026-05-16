@@ -29,6 +29,7 @@ import { cn } from "@/lib/utils";
 import { signUpSchema } from "@/lib/zod/auth";
 import { useAuthStore } from "@/stores/auth";
 import type { NicknameStatus, OtpStatus, SignUpFormValues } from "@/types/auth";
+import { isAuthSessionMissingError } from "@/utils/auth-error";
 import { formatPhone } from "@/utils/format";
 import { toastAppError, toastAppSuccess } from "@/utils/toast-message";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -155,7 +156,7 @@ export default function SignupForm() {
     } = await supabase.auth.getUser();
 
     if (authError || !authUser) {
-      if (authError) {
+      if (authError && !isAuthSessionMissingError(authError)) {
         console.error("SignupForm getUser error", authError);
       }
       toastAppError(APP_MESSAGE_CODE.error.auth.authInfoLoadFailed);

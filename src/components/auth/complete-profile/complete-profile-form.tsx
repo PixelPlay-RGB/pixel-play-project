@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 import { completeOAuthProfileSchema, CompleteOAuthProfileValues } from "@/lib/zod/auth";
 import { useAuthStore } from "@/stores/auth";
 import type { NicknameStatus } from "@/types/auth";
+import { isAuthSessionMissingError } from "@/utils/auth-error";
 import { formatPhone } from "@/utils/format";
 import { toastAppError } from "@/utils/toast-message";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -86,7 +87,7 @@ export default function CompleteProfileForm() {
     } = await supabase.auth.getUser();
 
     if (authError || !authUser) {
-      if (authError) {
+      if (authError && !isAuthSessionMissingError(authError)) {
         console.error("CompleteProfileForm getUser error", authError);
       }
       toastAppError(APP_MESSAGE_CODE.error.auth.sessionNotFound);

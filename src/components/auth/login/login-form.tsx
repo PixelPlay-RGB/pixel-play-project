@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { loginSchema } from "@/lib/zod/auth";
 import { useAuthStore } from "@/stores/auth";
 import type { LoginFormValues, LoginProvider } from "@/types/auth";
+import { isAuthSessionMissingError } from "@/utils/auth-error";
 import { toastAppError } from "@/utils/toast-message";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
@@ -57,7 +58,7 @@ export default function LoginForm({ loading, onLoadingChange: setIsLoading }: Lo
     } = await supabase.auth.getUser();
 
     if (authError || !authUser) {
-      if (authError) {
+      if (authError && !isAuthSessionMissingError(authError)) {
         console.error("LoginForm getUser error", authError);
       }
       toastAppError(APP_MESSAGE_CODE.error.auth.authInfoLoadFailed);

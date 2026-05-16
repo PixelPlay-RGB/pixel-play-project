@@ -8,6 +8,7 @@ import { QUERY_KEYS } from "@/constants/query-keys";
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import { toastAppError } from "@/utils/toast-message";
 import type { LoginProvider } from "@/types/auth";
+import { isAuthSessionMissingError } from "@/utils/auth-error";
 
 /**
  * 앱 루트에서 1회 마운트되어 Supabase Auth 상태를 Zustand store(AuthUser)에 동기화.
@@ -34,10 +35,12 @@ export default function AuthListener() {
     });
 
     // 서버에서 세션 실제 유효성 검증 (스테일 JWT 방어)
-    supabase.auth.getUser().then(({ data, error }) => {
+    void supabase.auth.getUser().then(async ({ data, error }) => {
       if (error) {
-        console.error("AuthListener getUser error", error);
-        supabase.auth.signOut({ scope: "local" });
+        if (!isAuthSessionMissingError(error)) {
+          console.error("AuthListener getUser error", error);
+          await supabase.auth.signOut({ scope: "local" });
+        }
         setUser(null);
       } else {
         setUser(data.user ?? null);

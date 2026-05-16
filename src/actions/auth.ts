@@ -10,6 +10,7 @@ import {
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import { FORM_MESSAGE } from "@/constants/form-message";
 import type { AppActionResult, FieldActionResult } from "@/types/action";
+import { isAuthSessionMissingError } from "@/utils/auth-error";
 
 import {
   CompleteOAuthProfileInput,
@@ -145,7 +146,9 @@ export async function completeSignupAction(data: CompleteSignupInput): Promise<A
   } = await supabase.auth.getUser();
 
   if (getUserError || !user) {
-    if (getUserError) console.error("completeSignupAction getUser error", getUserError);
+    if (getUserError && !isAuthSessionMissingError(getUserError)) {
+      console.error("completeSignupAction getUser error", getUserError);
+    }
     return { success: false, code: APP_MESSAGE_CODE.error.auth.authInfoNotFound };
   }
 
@@ -206,7 +209,12 @@ export async function verifyCurrentPasswordAction(
 
   const {
     data: { user },
+    error: userError,
   } = await supabase.auth.getUser();
+
+  if (userError && !isAuthSessionMissingError(userError)) {
+    console.error("verifyCurrentPasswordAction getUser error", userError);
+  }
 
   if (!user?.email) {
     return { success: false, code: APP_MESSAGE_CODE.error.auth.authInfoLoadFailed };
@@ -262,7 +270,9 @@ export async function completeOAuthProfileAction(
   } = await supabase.auth.getUser();
 
   if (!user || userError) {
-    if (userError) console.error("completeOAuthProfileAction getUser error", userError);
+    if (userError && !isAuthSessionMissingError(userError)) {
+      console.error("completeOAuthProfileAction getUser error", userError);
+    }
     return {
       success: false,
       code: APP_MESSAGE_CODE.error.auth.authInfoNotFound,
@@ -333,7 +343,9 @@ export async function unLinkOAuthAction(provider: OAuthProvider): Promise<Action
   } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    if (authError) console.error("unLinkOAuthAction getUser error", authError);
+    if (authError && !isAuthSessionMissingError(authError)) {
+      console.error("unLinkOAuthAction getUser error", authError);
+    }
     return {
       success: false,
       code: APP_MESSAGE_CODE.error.profile.authMissing,
@@ -420,7 +432,9 @@ export async function updateProfileAction(formData: FormData): Promise<ActionRes
   } = await supabase.auth.getUser();
 
   if (!user || userError) {
-    if (userError) console.error("updateProfileAction getUser error", userError);
+    if (userError && !isAuthSessionMissingError(userError)) {
+      console.error("updateProfileAction getUser error", userError);
+    }
     return {
       success: false,
       code: APP_MESSAGE_CODE.error.profile.authMissing,
