@@ -44,7 +44,6 @@ export function ChatRoomMessageSection({ roomId }: Props) {
 
       <MessageInput
         roomId={roomId}
-        currentUserId={currentUserId}
         disabled={!canSendMessage}
         disabledHint={
           getAppMessage(

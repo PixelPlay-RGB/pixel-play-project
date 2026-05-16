@@ -63,6 +63,32 @@ const CHAT_ROOM_RPC_ERROR_CODE_MAP: Array<{
   },
 ];
 
+const MESSAGE_RPC_ERROR_CODE_MAP: Array<{
+  errorCode: string;
+  code: AppMessageCode;
+}> = [
+  {
+    errorCode: "PX400",
+    code: APP_MESSAGE_CODE.error.message.invalidInput,
+  },
+  {
+    errorCode: "PX401",
+    code: APP_MESSAGE_CODE.error.auth.authInfoNotFound,
+  },
+  {
+    errorCode: "PX404",
+    code: APP_MESSAGE_CODE.error.chatRoom.notFound,
+  },
+  {
+    errorCode: "PX423",
+    code: APP_MESSAGE_CODE.error.chatRoom.isKicked,
+  },
+  {
+    errorCode: "PX461",
+    code: APP_MESSAGE_CODE.error.message.sendForbidden,
+  },
+];
+
 export function getAppMessage(code?: AppMessageCode): AppMessage {
   if (!code) {
     return APP_MESSAGE.error.common.unknown;
@@ -122,4 +148,27 @@ export function isKnownChatRoomRpcError(error: unknown) {
   const code = (error as SupabaseLikeError).code;
 
   return CHAT_ROOM_RPC_ERROR_CODE_MAP.some((item) => item.errorCode === code);
+}
+
+export function resolveMessageRpcErrorCode(
+  error: unknown,
+  fallbackCode: AppMessageCode = APP_MESSAGE_CODE.error.common.unknown,
+): AppMessageCode {
+  if (typeof error !== "object" || error === null) {
+    return fallbackCode;
+  }
+
+  const code = (error as SupabaseLikeError).code;
+
+  return MESSAGE_RPC_ERROR_CODE_MAP.find((item) => item.errorCode === code)?.code ?? fallbackCode;
+}
+
+export function isKnownMessageRpcError(error: unknown) {
+  if (typeof error !== "object" || error === null) {
+    return false;
+  }
+
+  const code = (error as SupabaseLikeError).code;
+
+  return MESSAGE_RPC_ERROR_CODE_MAP.some((item) => item.errorCode === code);
 }

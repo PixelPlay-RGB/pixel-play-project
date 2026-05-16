@@ -242,6 +242,10 @@ export type Database = {
           title: string;
         }[];
       };
+      send_chat_message: {
+        Args: { p_content: string; p_room_id: string };
+        Returns: undefined;
+      };
       transfer_chat_room_owner: {
         Args: {
           p_actor_user_id: string;

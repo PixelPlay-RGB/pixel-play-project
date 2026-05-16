@@ -1,32 +1,31 @@
 "use client";
 
 import { SendHorizontal } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 
 import ChatEmojiPicker from "@/components/chat-room/chat-emoji-picker";
 import { Button } from "@/components/ui/button";
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
-import { createClient } from "@/lib/supabase/client";
-import { getAppMessageTitle, resolveSupabaseErrorCode } from "@/utils/app-message";
-import { toastAppError } from "@/utils/toast-message";
 import { MESSAGE_CONTENT_MAX_LENGTH } from "@/constants/message";
-import { messageContentSchema } from "@/lib/zod/message";
+import { useSendMessage } from "@/hooks/use-send-message";
 import { cn } from "@/lib/utils";
+import { messageContentSchema } from "@/lib/zod/message";
+import { getAppMessageTitle } from "@/utils/app-message";
+import { toastAppError } from "@/utils/toast-message";
 
 interface Props {
   roomId: string;
-  currentUserId: string;
   disabled?: boolean;
   disabledHint?: string;
 }
 
 const MAX_TEXTAREA_HEIGHT_PX = 128; // max-h-32 (8rem)
 
-export function MessageInput({ roomId, currentUserId, disabled = false, disabledHint }: Props) {
-  const supabase = createClient();
+export function MessageInput({ roomId, disabled = false, disabledHint }: Props) {
+  const sendMessageMutation = useSendMessage(roomId);
   const [draft, setDraft] = useState("");
-  const sendMessageLockRef = useRef(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const submitDisabled = disabled || sendMessageMutation.isPending;
 
   // draft 변경마다 높이 자동 조절 + max-h 초과 시에만 스크롤 노출
   // overflow-y는 기본 hidden → max-h(8rem=128px) 초과 시 auto로 전환
@@ -40,8 +39,10 @@ export function MessageInput({ roomId, currentUserId, disabled = false, disabled
     el.style.overflowY = scrollHeight > MAX_TEXTAREA_HEIGHT_PX ? "auto" : "hidden";
   }, [draft]);
 
-  const handleSend = async () => {
-    if (sendMessageLockRef.current || !currentUserId || !roomId) {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (submitDisabled || !roomId) {
       return;
     }
 
@@ -53,29 +54,24 @@ export function MessageInput({ roomId, currentUserId, disabled = false, disabled
 
     const content = parsed.data;
 
-    sendMessageLockRef.current = true;
+    try {
+      const result = await sendMessageMutation.mutateAsync(content);
 
-    const { error } = await supabase.from("message").insert({
-      chat_room_id: roomId,
-      user_id: currentUserId,
-      content,
-    });
-
-    if (error) {
-      console.error("메시지 전송 실패", error);
-      toastAppError(resolveSupabaseErrorCode(error, APP_MESSAGE_CODE.error.message.sendFailed));
-      sendMessageLockRef.current = false;
+      if (result.success) {
+        setDraft("");
+      }
+    } catch {
       return;
     }
-
-    setDraft("");
-    sendMessageLockRef.current = false;
   };
 
   return (
-    <div className="border-border bg-background/95 flex shrink-0 items-end gap-2 border-t px-3 py-2 backdrop-blur-sm">
+    <form
+      onSubmit={handleSubmit}
+      className="border-border bg-background/95 flex shrink-0 items-end gap-2 border-t px-3 py-2 backdrop-blur-sm"
+    >
       <ChatEmojiPicker
-        disabled={disabled}
+        disabled={submitDisabled}
         onEmojiSelect={(emoji) =>
           setDraft((prev) => (prev + emoji).slice(0, MESSAGE_CONTENT_MAX_LENGTH))
         }
@@ -89,10 +85,10 @@ export function MessageInput({ roomId, currentUserId, disabled = false, disabled
         title={disabled ? disabledHint : undefined}
         onChange={(e) => setDraft(e.target.value.slice(0, MESSAGE_CONTENT_MAX_LENGTH))}
         onKeyDown={(e) => {
-          if (disabled) return;
+          if (submitDisabled) return;
           if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
-            void handleSend();
+            e.currentTarget.form?.requestSubmit();
           }
         }}
         placeholder={
@@ -117,17 +113,16 @@ export function MessageInput({ roomId, currentUserId, disabled = false, disabled
         )}
       />
       <Button
-        type="button"
+        type="submit"
         size="icon-lg"
         variant="ghost"
-        disabled={disabled}
+        disabled={submitDisabled}
         title={disabled ? disabledHint : undefined}
-        onClick={() => void handleSend()}
         aria-label="전송"
         className="text-brand hover:bg-brand/10 hover:text-brand shrink-0"
       >
         <SendHorizontal className="size-5" />
       </Button>
-    </div>
+    </form>
   );
 }

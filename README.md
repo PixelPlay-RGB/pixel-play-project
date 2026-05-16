@@ -150,7 +150,7 @@ npm run dev
 - 메시지 목록은 `useInfiniteQuery`로 최신 메시지부터 조회합니다.
 - 상단 근접 시 이전 메시지를 추가로 가져옵니다.
 - 새 메시지는 Supabase Realtime `postgres_changes` INSERT 이벤트를 받아 React Query cache에 반영합니다.
-- 텍스트 메시지 전송과 이모지 입력을 제공합니다.
+- 텍스트 메시지는 `send_chat_message` RPC로 전송하고 이모지 입력을 제공합니다.
 - 메시지 입력은 auto-resize `textarea`로 구현합니다. 최대 높이는 `max-h-32`이며 초과 시 스크롤됩니다. Shift+Enter는 줄바꿈, Enter는 전송입니다.
 - 멀티라인 메시지는 `whitespace-pre-wrap`으로 렌더링합니다.
 - 날짜 구분 시스템 메시지는 PostgreSQL AFTER INSERT Trigger(`trigger_insert_date_divider_message`)가 매일 첫 text 메시지 INSERT 시 `📅 YYYY년 MM월 DD일 요일` 형식의 system 메시지를 1ms 앞 타임스탬프로 자동 삽입합니다. 프론트는 `SystemMessageItem`에서 lucide Calendar 아이콘으로 렌더링합니다.
@@ -271,6 +271,7 @@ src/
 | `join_chat_room`           | 채팅방 참여                                                              |
 | `leave_chat_room`          | 채팅방 나가기                                                            |
 | `mark_room_read`           | 방 읽음 처리                                                             |
+| `send_chat_message`        | 활성 참여자의 텍스트 메시지 전송                                         |
 | `search_chat_rooms`        | 채팅방 제목, 방장 닉네임 검색                                            |
 | `kick_chat_room_member`    | 방장의 참여자 강퇴                                                       |
 | `transfer_chat_room_owner` | 방장 권한 위임                                                           |
@@ -330,6 +331,7 @@ npm run types
 | `20260516113108_add_chat_room_detail_rpc.sql`                        | 채팅방 상세 RPC 추가                    |
 | `20260516121058_drop_unused_chat_room_legacy_rpcs.sql`               | 미사용 채팅방 목록 RPC 제거             |
 | `20260516230042_fix_chat_room_performance_advisor.sql`               | 채팅방 DB 성능 Advisor 정리             |
+| `20260516234000_add_send_chat_message_rpc.sql`                       | 메시지 전송 RPC와 본문 DB 제약 추가     |
 
 ---
 
