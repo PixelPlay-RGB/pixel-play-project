@@ -1,5 +1,6 @@
 "use client";
 
+// 채팅방 목록에서 새 채팅방 생성 다이얼로그를 렌더링합니다.
 import { createChatRoomAction } from "@/actions/chat-room";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,7 +27,7 @@ import { MessageSquarePlus, Plus } from "lucide-react";
 import { useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 
-export default function CreateChatRoomDialog() {
+export default function ChatRoomListCreateDialog() {
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
 

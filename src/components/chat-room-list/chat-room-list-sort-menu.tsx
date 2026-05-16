@@ -23,7 +23,7 @@ import { cn } from "@/lib/utils";
 import { useChatRoomStore } from "@/stores/chat-room";
 import type { ChatRoomSortOption } from "@/types/chat-room";
 
-export default function ChatRoomSortMenu() {
+export default function ChatRoomListSortMenu() {
   const tabType = useChatRoomStore((state) => state.tabType);
   const sortOption = useChatRoomStore((state) => state.sortOption);
   const setSortOption = useChatRoomStore((state) => state.setSortOption);

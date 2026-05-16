@@ -1,7 +1,7 @@
 "use client";
 
 import AuthListener from "@/components/auth/auth-listener";
-import ChatRoomsUnreadRealtimeListener from "@/components/chat-room-list/chat-rooms-unread-realtime-listener";
+import ChatRoomUnreadRealtimeListener from "@/components/chat-room/shared/chat-room-unread-realtime-listener";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { ThemeProvider } from "next-themes";
@@ -14,7 +14,7 @@ export default function Providers({ children }: { children: ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
         <AuthListener />
-        <ChatRoomsUnreadRealtimeListener />
+        <ChatRoomUnreadRealtimeListener />
         {children}
         <ReactQueryDevtools initialIsOpen={false} />
       </ThemeProvider>

@@ -1,7 +1,8 @@
+// 채팅방 카드 그리드 로딩 상태를 렌더링합니다.
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
-export default function ChatRoomListSkeleton() {
+export default function ChatRoomCardGridSkeleton() {
   return (
     <div className={cn("grid grid-cols-1 gap-3", "sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4")}>
       {Array.from({ length: 12 }).map((_, i) => (

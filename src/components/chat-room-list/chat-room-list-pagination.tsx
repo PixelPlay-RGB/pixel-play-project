@@ -1,4 +1,4 @@
-// 채팅방 목록 페이지네이션 (shadcn Pagination wrapper)
+// 채팅방 목록 페이지네이션을 렌더링합니다.
 "use client";
 
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
@@ -21,7 +21,7 @@ interface Props {
   onPageChange: (page: number) => void;
 }
 
-export default function ChatRoomPagination({
+export default function ChatRoomListPagination({
   currentPage,
   totalPages,
   isFetching,

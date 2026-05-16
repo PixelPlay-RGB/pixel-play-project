@@ -1,5 +1,6 @@
 "use client";
 
+// 채팅방 목록 탭과 탭별 카운트를 렌더링합니다.
 import { ChevronDown } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -26,7 +27,7 @@ interface Props {
   isFetching?: boolean;
 }
 
-function TabCountBadge({
+function ChatRoomListTabCountBadge({
   count,
   isActive,
   showSpinner,
@@ -62,7 +63,7 @@ function TabCountBadge({
   );
 }
 
-export default function ChatRoomTabs({ counts, isFetching = false }: Props) {
+export default function ChatRoomListTabs({ counts, isFetching = false }: Props) {
   const tabType = useChatRoomStore((state) => state.tabType);
   const setTabType = useChatRoomStore((state) => state.setTabType);
   const activeCount = counts?.[tabType];
@@ -85,7 +86,11 @@ export default function ChatRoomTabs({ counts, isFetching = false }: Props) {
               >
                 <span className="flex min-w-0 items-center gap-1.5">
                   <span className="truncate text-sm font-semibold">{ROOM_TAB_LABELS[tabType]}</span>
-                  <TabCountBadge count={activeCount} isActive showSpinner={showActiveSpinner} />
+                  <ChatRoomListTabCountBadge
+                    count={activeCount}
+                    isActive
+                    showSpinner={showActiveSpinner}
+                  />
                 </span>
                 <ChevronDown className="text-muted-foreground size-4 shrink-0" />
               </Button>
@@ -112,7 +117,7 @@ export default function ChatRoomTabs({ counts, isFetching = false }: Props) {
                       className="gap-2 py-2"
                     >
                       <span className="min-w-0 flex-1 truncate">{ROOM_TAB_LABELS[tab]}</span>
-                      <TabCountBadge
+                      <ChatRoomListTabCountBadge
                         count={count}
                         isActive={isActive}
                         showSpinner={showSpinner}
@@ -161,7 +166,11 @@ export default function ChatRoomTabs({ counts, isFetching = false }: Props) {
                   }
                 >
                   <span className="min-w-0 truncate">{ROOM_TAB_LABELS[tab]}</span>
-                  <TabCountBadge count={count} isActive={isActive} showSpinner={showSpinner} />
+                  <ChatRoomListTabCountBadge
+                    count={count}
+                    isActive={isActive}
+                    showSpinner={showSpinner}
+                  />
                 </TabsTrigger>
               );
 

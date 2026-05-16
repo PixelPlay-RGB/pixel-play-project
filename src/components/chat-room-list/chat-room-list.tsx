@@ -1,10 +1,10 @@
 "use client";
 
-import ChatRoomCard from "@/components/chat-room-list/chat-room-card";
-import ChatRoomEmptyState from "@/components/chat-room-list/chat-room-empty-state";
+import ChatRoomCard from "@/components/chat-room/shared/chat-room-card";
+import ChatRoomCardGridSkeleton from "@/components/chat-room/shared/chat-room-card-grid-skeleton";
 import ChatRoomListHeader from "@/components/chat-room-list/chat-room-list-header";
-import ChatRoomListSkeleton from "@/components/chat-room-list/chat-room-list-skeleton";
-import ChatRoomPagination from "@/components/chat-room-list/chat-room-pagination";
+import ChatRoomListEmptyState from "@/components/chat-room-list/chat-room-list-empty-state";
+import ChatRoomListPagination from "@/components/chat-room-list/chat-room-list-pagination";
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import {
   CHAT_ROOM_SORT_OPTIONS_BY_TAB,
@@ -51,9 +51,9 @@ export default function ChatRoomList() {
 
       <div className="flex flex-1 flex-col">
         {isInitialLoading ? (
-          <ChatRoomListSkeleton />
+          <ChatRoomCardGridSkeleton />
         ) : isEmpty ? (
-          <ChatRoomEmptyState tabType={tabType} searchQuery={searchQuery} />
+          <ChatRoomListEmptyState tabType={tabType} searchQuery={searchQuery} />
         ) : (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             {chatRooms.map((chatRoom) => (
@@ -67,7 +67,7 @@ export default function ChatRoomList() {
         )}
       </div>
 
-      <ChatRoomPagination
+      <ChatRoomListPagination
         currentPage={currentPage}
         totalPages={chatRoomList.totalPages}
         isFetching={isPageFetching}

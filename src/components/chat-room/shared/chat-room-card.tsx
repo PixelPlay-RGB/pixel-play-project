@@ -1,3 +1,4 @@
+// 채팅방 카드 UI를 렌더링합니다.
 import { cn } from "@/lib/utils";
 import type { ChatRoomCardData } from "@/types/chat-room";
 import { formatCapacity, formatRoomDate } from "@/utils/chat-room";

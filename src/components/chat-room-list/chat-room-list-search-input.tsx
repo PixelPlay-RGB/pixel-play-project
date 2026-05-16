@@ -1,11 +1,11 @@
-// 채팅방 목록 탭 내부 검색 입력 컴포넌트 (Submit 기반)
+// 채팅방 목록 탭 내부 검색 입력을 렌더링합니다.
 "use client";
 
 import SearchInput from "@/components/search/search-input";
 import { useChatRoomStore } from "@/stores/chat-room";
 import { useEffect, useState } from "react";
 
-export default function ChatRoomSearchInput() {
+export default function ChatRoomListSearchInput() {
   const tabType = useChatRoomStore((s) => s.tabType);
   const searchQuery = useChatRoomStore((s) => s.searchQuery);
   const setSearchQuery = useChatRoomStore((s) => s.setSearchQuery);

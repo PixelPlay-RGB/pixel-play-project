@@ -1,3 +1,4 @@
+// 채팅방 목록 빈 상태를 렌더링합니다.
 import { CHAT_ROOM_EMPTY_MESSAGES } from "@/constants/chat-room";
 import { cn } from "@/lib/utils";
 import type { ChatRoomTab } from "@/types/chat-room";
@@ -8,7 +9,7 @@ interface Props {
   searchQuery?: string;
 }
 
-export default function ChatRoomEmptyState({ tabType, searchQuery }: Props) {
+export default function ChatRoomListEmptyState({ tabType, searchQuery }: Props) {
   const isSearching = !!searchQuery && searchQuery.trim().length > 0;
 
   return (

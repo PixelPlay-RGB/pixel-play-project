@@ -3,7 +3,7 @@
 
 import { useChatRoomsUnreadRealtime } from "@/hooks/use-chat-rooms-unread-realtime";
 
-export default function ChatRoomsUnreadRealtimeListener() {
+export default function ChatRoomUnreadRealtimeListener() {
   useChatRoomsUnreadRealtime();
   return null;
 }

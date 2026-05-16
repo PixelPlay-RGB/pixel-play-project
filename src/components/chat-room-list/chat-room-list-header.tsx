@@ -1,7 +1,7 @@
-import CreateChatRoomDialog from "@/components/chat-room-list/create-chat-room-dialog";
-import ChatRoomSearchInput from "@/components/chat-room-list/chat-room-search-input";
-import ChatRoomSortMenu from "@/components/chat-room-list/chat-room-sort-menu";
-import ChatRoomTabs from "@/components/chat-room-list/chat-room-tabs";
+import ChatRoomListCreateDialog from "@/components/chat-room-list/chat-room-list-create-dialog";
+import ChatRoomListSearchInput from "@/components/chat-room-list/chat-room-list-search-input";
+import ChatRoomListSortMenu from "@/components/chat-room-list/chat-room-list-sort-menu";
+import ChatRoomListTabs from "@/components/chat-room-list/chat-room-list-tabs";
 import { cn } from "@/lib/utils";
 import type { ChatRoomCounts } from "@/types/chat-room";
 
@@ -14,18 +14,18 @@ export default function ChatRoomListHeader({ counts, isFetching = false }: Props
   return (
     <div className={cn("border-border/50 flex flex-col gap-3 border-b pb-5")}>
       <div className={cn("flex flex-col gap-3", "lg:flex-row lg:items-center lg:justify-between")}>
-        <ChatRoomTabs counts={counts} isFetching={isFetching} />
+        <ChatRoomListTabs counts={counts} isFetching={isFetching} />
         <div
           className={cn(
             "flex w-full items-center justify-between gap-3",
             "lg:w-auto lg:justify-end",
           )}
         >
-          <ChatRoomSortMenu />
-          <CreateChatRoomDialog />
+          <ChatRoomListSortMenu />
+          <ChatRoomListCreateDialog />
         </div>
       </div>
-      <ChatRoomSearchInput />
+      <ChatRoomListSearchInput />
     </div>
   );
 }
