@@ -1,5 +1,6 @@
 "use server";
 
+import { createAdminClient } from "@/lib/supabase/admin-client";
 import { createClient } from "@/lib/supabase/server";
 import {
   completeOAuthProfileSchema,
@@ -22,6 +23,55 @@ import { revalidatePath } from "next/cache";
 
 export interface ActionResponse extends AppActionResult {
   photoUrl?: string | null;
+}
+
+type DuplicateCheckResult =
+  | {
+      success: true;
+      exists: boolean;
+    }
+  | {
+      success: false;
+    };
+
+async function checkEmailExists(email: string): Promise<DuplicateCheckResult> {
+  try {
+    const supabase = createAdminClient();
+    const { data, error } = await supabase.rpc("check_email_exists", {
+      target_email: email,
+    });
+
+    if (error) {
+      console.error("이메일 중복 확인 실패", error);
+      return { success: false };
+    }
+
+    return { success: true, exists: Boolean(data) };
+  } catch (error) {
+    console.error("이메일 중복 확인용 Admin Client 생성 실패", error);
+    return { success: false };
+  }
+}
+
+async function checkNicknameExists(nickname: string): Promise<DuplicateCheckResult> {
+  try {
+    const supabase = createAdminClient();
+    const { data, error } = await supabase
+      .from("user")
+      .select("id")
+      .eq("nickname", nickname)
+      .maybeSingle();
+
+    if (error) {
+      console.error("닉네임 중복 확인 실패", error);
+      return { success: false };
+    }
+
+    return { success: true, exists: Boolean(data) };
+  } catch (error) {
+    console.error("닉네임 중복 확인용 Admin Client 생성 실패", error);
+    return { success: false };
+  }
 }
 
 /**
@@ -65,16 +115,13 @@ export async function sendOtpAction(email: string): Promise<FieldActionResult> {
   // 기존에 로컬 세션 정리
   await supabase.auth.signOut({ scope: "local" });
 
-  // 중복 이메일 체크 (supabase RPC 사용)
-  const { data: exists, error: rpcError } = await supabase.rpc("check_email_exists", {
-    target_email: email,
-  });
+  const emailCheck = await checkEmailExists(email);
 
-  if (rpcError) {
-    console.error("이메일 중복 확인 실패", rpcError);
+  if (!emailCheck.success) {
     return { success: false, fieldMessage: FORM_MESSAGE.auth.emailCheckFailed };
   }
-  if (exists) {
+
+  if (emailCheck.exists) {
     return { success: false, fieldMessage: FORM_MESSAGE.auth.emailAlreadyExists };
   }
 
@@ -108,18 +155,13 @@ export async function verifyOtpAction(email: string, token: string): Promise<Fie
  * 닉네임 중복 확인
  */
 export async function checkNicknameAction(nickname: string): Promise<ActionResponse> {
-  const supabase = await createClient();
+  const nicknameCheck = await checkNicknameExists(nickname);
 
-  const { data: exists, error } = await supabase.rpc("check_nickname_exists", {
-    target_nickname: nickname,
-  });
-
-  if (error) {
-    console.error("닉네임 중복 확인 실패", error);
+  if (!nicknameCheck.success) {
     return { success: false, code: APP_MESSAGE_CODE.error.auth.nicknameCheckFailed };
   }
 
-  if (exists) {
+  if (nicknameCheck.exists) {
     return { success: false, code: APP_MESSAGE_CODE.error.auth.nicknameAlreadyUsed };
   }
 
@@ -166,11 +208,12 @@ export async function completeSignupAction(data: CompleteSignupInput): Promise<A
     return { success: false, code: APP_MESSAGE_CODE.error.auth.authInfoLoadFailed };
   }
 
-  // 닉네임 중복 체크
-  const { data: nicknameExists } = await supabase.rpc("check_nickname_exists", {
-    target_nickname: nickname,
-  });
-  if (nicknameExists) {
+  const nicknameCheck = await checkNicknameExists(nickname);
+  if (!nicknameCheck.success) {
+    return { success: false, code: APP_MESSAGE_CODE.error.auth.nicknameCheckFailed };
+  }
+
+  if (nicknameCheck.exists) {
     return { success: false, code: APP_MESSAGE_CODE.error.auth.nicknameAlreadyUsed };
   }
 
@@ -291,11 +334,12 @@ export async function completeOAuthProfileAction(
     return { success: false, code: APP_MESSAGE_CODE.error.auth.authInfoLoadFailed };
   }
 
-  // 닉네임 중복 체크
-  const { data: nicknameExists } = await supabase.rpc("check_nickname_exists", {
-    target_nickname: nickname,
-  });
-  if (nicknameExists) {
+  const nicknameCheck = await checkNicknameExists(nickname);
+  if (!nicknameCheck.success) {
+    return { success: false, code: APP_MESSAGE_CODE.error.auth.nicknameCheckFailed };
+  }
+
+  if (nicknameCheck.exists) {
     return { success: false, code: APP_MESSAGE_CODE.error.auth.nicknameAlreadyUsed };
   }
 

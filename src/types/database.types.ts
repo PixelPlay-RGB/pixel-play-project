@@ -187,10 +187,6 @@ export type Database = {
     };
     Functions: {
       check_email_exists: { Args: { target_email: string }; Returns: boolean };
-      check_nickname_exists: {
-        Args: { target_nickname: string };
-        Returns: boolean;
-      };
       get_room_counts_by_user: {
         Args: { p_user_id: string };
         Returns: {
