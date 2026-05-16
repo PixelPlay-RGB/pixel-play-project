@@ -223,7 +223,11 @@ export type Database = {
       };
       join_chat_room: { Args: { p_room_id: string }; Returns: undefined };
       kick_chat_room_member: {
-        Args: { p_room_id: string; p_target_user_id: string };
+        Args: {
+          p_actor_user_id: string;
+          p_room_id: string;
+          p_target_user_id: string;
+        };
         Returns: undefined;
       };
       leave_chat_room: { Args: { p_room_id: string }; Returns: undefined };
@@ -249,7 +253,11 @@ export type Database = {
         }[];
       };
       transfer_chat_room_owner: {
-        Args: { p_room_id: string; p_target_user_id: string };
+        Args: {
+          p_actor_user_id: string;
+          p_room_id: string;
+          p_target_user_id: string;
+        };
         Returns: undefined;
       };
     };
