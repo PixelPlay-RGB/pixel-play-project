@@ -27,8 +27,7 @@ export function useChatRoomMemberRealtimeInvalidation({ roomId, currentUserId }:
       });
       void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.members(roomId) });
       void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.room(roomId) });
-      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.rooms() });
-      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.counts() });
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.list() });
     };
 
     const channel = supabase
@@ -55,7 +54,7 @@ export function useChatRoomMemberRealtimeInvalidation({ roomId, currentUserId }:
         },
         () => {
           void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.room(roomId) });
-          void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.rooms() });
+          void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.list() });
         },
       )
       .subscribe();

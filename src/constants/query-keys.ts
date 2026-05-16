@@ -16,18 +16,24 @@ export const QUERY_KEYS = {
   },
   chat: {
     all: ["chat"] as const,
-    rooms: (
+    list: (
       userId?: string,
       tabType?: string,
       sortOption?: string,
       page?: number,
       searchQuery?: string,
+      limit?: number,
     ) =>
-      [...QUERY_KEYS.chat.all, "rooms", userId, tabType, sortOption, page, searchQuery].filter(
-        (v) => v !== undefined,
-      ),
-    counts: (userId?: string) =>
-      [...QUERY_KEYS.chat.all, "counts", userId].filter((v) => v !== undefined),
+      [
+        ...QUERY_KEYS.chat.all,
+        "list",
+        userId,
+        tabType,
+        sortOption,
+        page,
+        searchQuery,
+        limit,
+      ].filter((v) => v !== undefined),
     room: (roomId?: string) =>
       [...QUERY_KEYS.chat.all, "room", roomId].filter((v) => v !== undefined),
     member: (roomId?: string, userId?: string) =>

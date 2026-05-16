@@ -20,8 +20,7 @@ export function useChatRoomsUnreadRealtime() {
     const channel = supabase
       .channel(`chat-rooms-unread:${userId}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "message" }, () => {
-        void queryClient.invalidateQueries({ queryKey: [...QUERY_KEYS.chat.all, "rooms"] });
-        void queryClient.invalidateQueries({ queryKey: [...QUERY_KEYS.chat.all, "counts"] });
+        void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.list() });
       })
       .subscribe();
 

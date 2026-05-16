@@ -187,6 +187,22 @@ export type Database = {
     };
     Functions: {
       check_email_exists: { Args: { target_email: string }; Returns: boolean };
+      get_chat_room_list: {
+        Args: {
+          p_limit?: number;
+          p_offset?: number;
+          p_query?: string;
+          p_sort_option?: string;
+          p_tab_type: string;
+        };
+        Returns: {
+          joined_count: number;
+          not_joined_count: number;
+          owned_count: number;
+          rooms: Json;
+          total_count: number;
+        }[];
+      };
       get_room_counts_by_user: {
         Args: { p_user_id: string };
         Returns: {

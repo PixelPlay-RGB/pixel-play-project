@@ -6,16 +6,15 @@ import ChatRoomListHeader from "@/components/chat-room-list/chat-room-list-heade
 import ChatRoomListSkeleton from "@/components/chat-room-list/chat-room-list-skeleton";
 import ChatRoomPagination from "@/components/chat-room-list/chat-room-pagination";
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
-import { useChatRoomCounts } from "@/hooks/use-chat-room-counts";
 import {
-  CHAT_ROOM_PAGE_SIZE,
   CHAT_ROOM_SORT_OPTIONS_BY_TAB,
   DEFAULT_CHAT_ROOM_SORT_OPTION,
 } from "@/constants/chat-room";
-import { useChatRooms } from "@/hooks/use-chat-rooms";
+import { useChatRoomList } from "@/hooks/use-chat-room-list";
 import { useUser } from "@/hooks/use-profile";
 import { useChatRoomStore } from "@/stores/chat-room";
 import { getAppMessage } from "@/utils/app-message";
+import { EMPTY_CHAT_ROOM_LIST } from "@/utils/chat-room-list";
 
 export default function ChatRoomList() {
   const tabType = useChatRoomStore((state) => state.tabType);
@@ -28,19 +27,10 @@ export default function ChatRoomList() {
   const selectedSortOption = CHAT_ROOM_SORT_OPTIONS_BY_TAB[tabType].includes(sortOption)
     ? sortOption
     : DEFAULT_CHAT_ROOM_SORT_OPTION;
-  const query = useChatRooms(tabType, selectedSortOption, currentPage, searchQuery);
-  const { data: counts } = useChatRoomCounts();
+  const query = useChatRoomList(tabType, selectedSortOption, currentPage, searchQuery);
 
-  const chatRooms = query.data ?? [];
-
-  // 검색 중이면 RPC 응답의 total_count 기반, 아니면 캐시된 counts[tabType] 사용
-  const isSearching = searchQuery.trim().length > 0;
-  const totalItems = isSearching ? (chatRooms[0]?.total_count ?? 0) : (counts?.[tabType] ?? 0);
-  const totalPages = Math.ceil(totalItems / CHAT_ROOM_PAGE_SIZE);
-
-  // 검색 중일 때 현재 탭의 카운트를 total_count로 교체 → ChatRoomTabs에 반영
-  const effectiveCounts =
-    isSearching && counts ? { ...counts, [tabType]: chatRooms[0]?.total_count ?? 0 } : counts;
+  const chatRoomList = query.data ?? EMPTY_CHAT_ROOM_LIST;
+  const chatRooms = chatRoomList.rooms;
 
   const isInitialLoading = !isUserFetched || query.isLoading;
   const isEmpty = isUserFetched && !query.isLoading && chatRooms.length === 0;
@@ -57,7 +47,7 @@ export default function ChatRoomList() {
 
   return (
     <div className="flex min-h-full flex-col gap-5">
-      <ChatRoomListHeader counts={effectiveCounts} isFetching={isPageFetching} />
+      <ChatRoomListHeader counts={chatRoomList.counts} isFetching={isPageFetching} />
 
       <div className="flex flex-1 flex-col">
         {isInitialLoading ? (
@@ -79,7 +69,7 @@ export default function ChatRoomList() {
 
       <ChatRoomPagination
         currentPage={currentPage}
-        totalPages={totalPages}
+        totalPages={chatRoomList.totalPages}
         isFetching={isPageFetching}
         onPageChange={setCurrentPage}
       />

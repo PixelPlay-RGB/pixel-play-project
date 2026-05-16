@@ -1,16 +1,28 @@
 import type { Database } from "@/types/database.types";
 import { GenericTables } from "@/types/supabase.types";
 
-/** get_rooms_by_tab_count RPC 한 행 (목록 + 안읽음 개수) */
-export type ChatRoomByTabWithUnreadCount =
-  Database["public"]["Functions"]["get_rooms_by_tab_count"]["Returns"][number];
 export type ChatRoomTab = "JOINED" | "NOT_JOINED" | "OWNED";
 export type ChatRoomSortOption = "CREATED_AT_DESC" | "LAST_MESSAGE_DESC" | "CURRENT_MEMBER_DESC";
 
 export type ChatRoom = GenericTables<"chat_room">;
 
+export type ChatRoomListResponse =
+  Database["public"]["Functions"]["get_chat_room_list"]["Returns"][number];
+
+export interface ChatRoomListItem {
+  id: string;
+  title: string;
+  description: string | null;
+  max_capacity: number;
+  current_member: number;
+  owner_id: string;
+  owner_nickname: string;
+  created_at: string;
+  unread_count: number;
+}
+
 export type ChatRoomCardData = Pick<
-  ChatRoomByTabWithUnreadCount,
+  ChatRoomListItem,
   | "id"
   | "title"
   | "description"
