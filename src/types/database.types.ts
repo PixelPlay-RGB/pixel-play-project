@@ -187,6 +187,14 @@ export type Database = {
     };
     Functions: {
       check_email_exists: { Args: { target_email: string }; Returns: boolean };
+      get_chat_room_detail: {
+        Args: { p_room_id: string };
+        Returns: {
+          members: Json;
+          membership: Json;
+          room: Json;
+        }[];
+      };
       get_chat_room_list: {
         Args: {
           p_limit?: number;

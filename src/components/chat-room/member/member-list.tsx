@@ -1,6 +1,5 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useChatRoomDetail } from "@/hooks/use-chat-room-detail";
-import { useRoomMembers } from "@/hooks/use-room-members";
 import { cn } from "@/lib/utils";
 import { MemberItem } from "./member-item";
 
@@ -10,8 +9,7 @@ interface Props {
 }
 
 export function MemberList({ roomId, className }: Props) {
-  const { currentUserId, room, canManageMembers } = useChatRoomDetail(roomId);
-  const { data: members = [] } = useRoomMembers(roomId);
+  const { currentUserId, room, members, canManageMembers } = useChatRoomDetail(roomId);
   const ownerId = room?.owner_id;
 
   return (
@@ -28,22 +26,16 @@ export function MemberList({ roomId, className }: Props) {
 
       <ScrollArea className="min-h-0 flex-1">
         <ul className="flex flex-col gap-1 px-2 py-3">
-          {[...members]
-            .sort((a, b) => {
-              if (a.user_id === ownerId) return -1;
-              if (b.user_id === ownerId) return 1;
-              return 0;
-            })
-            .map((member) => (
-              <li key={`${member.chat_room_id}-${member.user_id}`}>
-                <MemberItem
-                  roomId={roomId}
-                  member={member}
-                  isOwner={member.user_id === ownerId}
-                  canManage={canManageMembers && member.user_id !== currentUserId}
-                />
-              </li>
-            ))}
+          {members.map((member) => (
+            <li key={`${member.chat_room_id}-${member.user_id}`}>
+              <MemberItem
+                roomId={roomId}
+                member={member}
+                isOwner={member.user_id === ownerId}
+                canManage={canManageMembers && member.user_id !== currentUserId}
+              />
+            </li>
+          ))}
         </ul>
       </ScrollArea>
     </section>

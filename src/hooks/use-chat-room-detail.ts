@@ -2,20 +2,42 @@
 
 // 채팅방 상세 화면에서 공통으로 사용하는 방과 멤버십 상태를 조립하는 훅
 
-import { useRoom } from "@/hooks/use-chat-room";
-import { useCurrentChatRoomMembership } from "@/hooks/use-current-chat-room-membership";
+import { useQuery } from "@tanstack/react-query";
+
+import { QUERY_KEYS } from "@/constants/query-keys";
 import { useUser } from "@/hooks/use-profile";
+import { createClient } from "@/lib/supabase/client";
+import type { ChatRoomDetailData } from "@/utils/chat-room-detail";
+import { EMPTY_CHAT_ROOM_DETAIL, parseChatRoomDetail } from "@/utils/chat-room-detail";
+
+async function fetchChatRoomDetail(roomId: string): Promise<ChatRoomDetailData> {
+  const supabase = createClient();
+
+  const { data, error } = await supabase
+    .rpc("get_chat_room_detail", { p_room_id: roomId })
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  return parseChatRoomDetail(data);
+}
 
 export function useChatRoomDetail(roomId: string) {
-  const { data: currentUser, isPending: profilePending } = useUser();
+  const { data: currentUser, isFetched: profileFetched, isPending: profilePending } = useUser();
   const currentUserId = currentUser?.id ?? "";
-  const roomQuery = useRoom(roomId);
-  const membershipQuery = useCurrentChatRoomMembership({ roomId, currentUserId });
+  const canQueryDetail = !!roomId && !!currentUserId && profileFetched;
+  const detailQuery = useQuery<ChatRoomDetailData>({
+    queryKey: QUERY_KEYS.chat.detail(roomId, currentUserId),
+    queryFn: () => fetchChatRoomDetail(roomId),
+    enabled: canQueryDetail,
+  });
 
-  const room = roomQuery.data ?? null;
-  const membership = membershipQuery.membership;
-  const isJoined = membershipQuery.isJoined;
-  const isKicked = membershipQuery.isKicked;
+  const detail = detailQuery.data ?? EMPTY_CHAT_ROOM_DETAIL;
+  const { room, membership, members } = detail;
+  const isKicked = membership?.is_banned ?? false;
+  const isJoined = !!membership?.last_joined_at && !membership.is_banned;
   const isFull = room != null && room.current_member >= room.max_capacity;
   const isOwner = room != null && currentUserId === room.owner_id;
   const canManageMembers = isOwner;
@@ -24,31 +46,28 @@ export function useChatRoomDetail(roomId: string) {
     !!roomId &&
     !profilePending &&
     !!currentUserId &&
-    roomQuery.isFetched &&
+    detailQuery.isFetched &&
     room != null &&
-    roomQuery.error == null &&
+    detailQuery.error == null &&
     !isKicked &&
     isJoined;
   const canSendMessage = !profilePending && !!currentUserId && isJoined && !isKicked;
-  const shouldShowJoinDialog =
-    membershipQuery.membershipFetched &&
-    roomQuery.isFetched &&
-    room != null &&
-    !isJoined &&
-    !isKicked;
+  const shouldShowJoinDialog = detailQuery.isFetched && room != null && !isJoined && !isKicked;
   const canRequestJoin = shouldShowJoinDialog && !isFull;
-  const roomMissing = !!roomId && roomQuery.isFetched && (roomQuery.error != null || room == null);
+  const roomMissing =
+    !!roomId && detailQuery.isFetched && (detailQuery.error != null || room == null);
 
   return {
     currentUser,
     currentUserId,
     profilePending,
     room,
-    roomPending: roomQuery.isPending,
-    roomFetched: roomQuery.isFetched,
+    roomPending: canQueryDetail && detailQuery.isPending,
+    roomFetched: detailQuery.isFetched,
     roomMissing,
     membership,
-    membershipFetched: membershipQuery.membershipFetched,
+    membershipFetched: detailQuery.isFetched,
+    members,
     isJoined,
     isKicked,
     isFull,

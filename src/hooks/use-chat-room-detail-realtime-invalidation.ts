@@ -1,6 +1,6 @@
 "use client";
 
-// chat_room_member 변경 시 채팅방 관련 쿼리를 무효화하는 훅
+// 채팅방 상세 관련 realtime 변경 시 상세와 목록 쿼리를 무효화하는 훅
 
 import { useEffect } from "react";
 
@@ -14,7 +14,7 @@ interface Params {
   currentUserId: string;
 }
 
-export function useChatRoomMemberRealtimeInvalidation({ roomId, currentUserId }: Params) {
+export function useChatRoomDetailRealtimeInvalidation({ roomId, currentUserId }: Params) {
   const queryClient = useQueryClient();
   const supabase = createClient();
 
@@ -22,16 +22,12 @@ export function useChatRoomMemberRealtimeInvalidation({ roomId, currentUserId }:
     if (!roomId || !currentUserId) return;
 
     const invalidateChatRoomQueries = () => {
-      void queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.chat.membership(roomId, currentUserId),
-      });
-      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.members(roomId) });
-      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.room(roomId) });
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.detail(roomId) });
       void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.list() });
     };
 
     const channel = supabase
-      .channel(`chat-room-member-${roomId}`)
+      .channel(`chat-room-detail-${roomId}`)
       .on(
         "postgres_changes",
         {
@@ -53,8 +49,7 @@ export function useChatRoomMemberRealtimeInvalidation({ roomId, currentUserId }:
           filter: `id=eq.${roomId}`,
         },
         () => {
-          void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.room(roomId) });
-          void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.list() });
+          invalidateChatRoomQueries();
         },
       )
       .subscribe();

@@ -34,14 +34,10 @@ export const QUERY_KEYS = {
         searchQuery,
         limit,
       ].filter((v) => v !== undefined),
-    room: (roomId?: string) =>
-      [...QUERY_KEYS.chat.all, "room", roomId].filter((v) => v !== undefined),
-    membership: (roomId?: string, userId?: string) =>
-      [...QUERY_KEYS.chat.all, "membership", roomId, userId].filter((v) => v !== undefined),
+    detail: (roomId?: string, userId?: string) =>
+      [...QUERY_KEYS.chat.all, "detail", roomId, userId].filter((v) => v !== undefined),
     messages: (roomId?: string) =>
       [...QUERY_KEYS.chat.all, "messages", roomId].filter((v) => v !== undefined),
-    members: (roomId?: string) =>
-      [...QUERY_KEYS.chat.all, "members", roomId].filter((v) => v !== undefined),
     search: (query?: string, section?: string) =>
       [...QUERY_KEYS.chat.all, "search", query, section].filter((v) => v !== undefined),
   },

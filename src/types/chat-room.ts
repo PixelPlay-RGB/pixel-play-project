@@ -6,6 +6,9 @@ export type ChatRoomSortOption = "CREATED_AT_DESC" | "LAST_MESSAGE_DESC" | "CURR
 
 export type ChatRoom = GenericTables<"chat_room">;
 
+export type ChatRoomDetailResponse =
+  Database["public"]["Functions"]["get_chat_room_detail"]["Returns"][number];
+
 export type ChatRoomListResponse =
   Database["public"]["Functions"]["get_chat_room_list"]["Returns"][number];
 

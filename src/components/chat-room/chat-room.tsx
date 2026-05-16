@@ -11,7 +11,7 @@ import { ChatRoomMessageSection } from "@/components/chat-room/chat-room-message
 import { Spinner } from "@/components/ui/spinner";
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import { useChatRoomDetail } from "@/hooks/use-chat-room-detail";
-import { useChatRoomMemberRealtimeInvalidation } from "@/hooks/use-chat-room-member-realtime-invalidation";
+import { useChatRoomDetailRealtimeInvalidation } from "@/hooks/use-chat-room-detail-realtime-invalidation";
 
 interface Props {
   roomId: string;
@@ -21,7 +21,7 @@ export function ChatRoom({ roomId }: Props) {
   const { currentUserId, profilePending, roomMissing } = useChatRoomDetail(roomId);
   const [membersSheetOpen, setMembersSheetOpen] = useState(false);
 
-  useChatRoomMemberRealtimeInvalidation({ roomId, currentUserId });
+  useChatRoomDetailRealtimeInvalidation({ roomId, currentUserId });
 
   if (profilePending) {
     return (
