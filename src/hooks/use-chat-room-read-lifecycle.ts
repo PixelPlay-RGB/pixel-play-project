@@ -1,5 +1,6 @@
-// 채팅방 진입·이탈 시 last_read_at을 갱신하는 훅
 "use client";
+
+// 채팅방 상세 진입과 이탈 시 읽음 상태를 갱신하는 훅
 
 import { useEffect } from "react";
 
@@ -18,7 +19,7 @@ function invalidateChatQueries(queryClient: ReturnType<typeof useQueryClient>) {
   void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.all });
 }
 
-export function useMarkRoomReadLifecycle({ roomId, enabled }: Options) {
+export function useChatRoomReadLifecycle({ roomId, enabled }: Options) {
   const queryClient = useQueryClient();
 
   useEffect(() => {

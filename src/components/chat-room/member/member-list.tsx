@@ -1,6 +1,5 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useRoom } from "@/hooks/use-chat-room";
-import { useUser } from "@/hooks/use-profile";
+import { useChatRoomDetail } from "@/hooks/use-chat-room-detail";
 import { useRoomMembers } from "@/hooks/use-room-members";
 import { cn } from "@/lib/utils";
 import { MemberItem } from "./member-item";
@@ -11,12 +10,9 @@ interface Props {
 }
 
 export function MemberList({ roomId, className }: Props) {
-  const { data: profile } = useUser();
-  const roomQuery = useRoom(roomId);
+  const { currentUserId, room, canManageMembers } = useChatRoomDetail(roomId);
   const { data: members = [] } = useRoomMembers(roomId);
-  const currentUserId = profile?.id ?? "";
-  const ownerId = roomQuery.data?.owner_id;
-  const canManageMembers = !!currentUserId && currentUserId === ownerId;
+  const ownerId = room?.owner_id;
 
   return (
     <section

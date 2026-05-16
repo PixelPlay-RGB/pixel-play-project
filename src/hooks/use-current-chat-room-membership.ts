@@ -1,6 +1,6 @@
 "use client";
 
-// 현재 사용자의 chat_room_member 행과 참여 상태를 조회하는 훅
+// 현재 사용자의 채팅방 멤버십과 참여 상태를 조회하는 훅
 
 import { useQuery } from "@tanstack/react-query";
 
@@ -8,18 +8,18 @@ import { QUERY_KEYS } from "@/constants/query-keys";
 import { createClient } from "@/lib/supabase/client";
 import type { RoomMember } from "@/types/chat-room-member";
 
-type CurrentChatRoomMemberRow = Pick<RoomMember, "is_banned" | "last_joined_at">;
+type CurrentChatRoomMembership = Pick<RoomMember, "is_banned" | "last_joined_at">;
 
 interface Params {
   roomId: string;
   currentUserId: string;
 }
 
-export function useCurrentChatRoomMemberRow({ roomId, currentUserId }: Params) {
+export function useCurrentChatRoomMembership({ roomId, currentUserId }: Params) {
   const supabase = createClient();
 
-  const query = useQuery<CurrentChatRoomMemberRow | null>({
-    queryKey: QUERY_KEYS.chat.member(roomId, currentUserId),
+  const query = useQuery<CurrentChatRoomMembership | null>({
+    queryKey: QUERY_KEYS.chat.membership(roomId, currentUserId),
     enabled: !!roomId && !!currentUserId,
     queryFn: async () => {
       const { data, error } = await supabase
@@ -35,14 +35,13 @@ export function useCurrentChatRoomMemberRow({ roomId, currentUserId }: Params) {
     },
   });
 
-  const currentChatRoomMemberRow = query.data ?? null;
-  const isKicked = currentChatRoomMemberRow?.is_banned ?? false;
-  const isJoined =
-    !!currentChatRoomMemberRow?.last_joined_at && !currentChatRoomMemberRow.is_banned;
+  const membership = query.data ?? null;
+  const isKicked = membership?.is_banned ?? false;
+  const isJoined = !!membership?.last_joined_at && !membership.is_banned;
 
   return {
     ...query,
-    currentChatRoomMemberRow,
+    membership,
     isKicked,
     isJoined,
     membershipFetched: query.isFetched,

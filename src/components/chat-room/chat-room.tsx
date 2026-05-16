@@ -10,18 +10,15 @@ import { ChatRoomMemberSidebar } from "@/components/chat-room/chat-room-member-s
 import { ChatRoomMessageSection } from "@/components/chat-room/chat-room-message-section";
 import { Spinner } from "@/components/ui/spinner";
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
-import { useRoom } from "@/hooks/use-chat-room";
+import { useChatRoomDetail } from "@/hooks/use-chat-room-detail";
 import { useChatRoomMemberRealtimeInvalidation } from "@/hooks/use-chat-room-member-realtime-invalidation";
-import { useUser } from "@/hooks/use-profile";
 
 interface Props {
   roomId: string;
 }
 
 export function ChatRoom({ roomId }: Props) {
-  const { data: profile, isPending: profilePending } = useUser();
-  const currentUserId = profile?.id ?? "";
-  const roomQuery = useRoom(roomId);
+  const { currentUserId, profilePending, roomMissing } = useChatRoomDetail(roomId);
   const [membersSheetOpen, setMembersSheetOpen] = useState(false);
 
   useChatRoomMemberRealtimeInvalidation({ roomId, currentUserId });
@@ -38,8 +35,6 @@ export function ChatRoom({ roomId }: Props) {
     return <ChatRoomError code={APP_MESSAGE_CODE.error.chatRoom.missingRoomId} />;
   }
 
-  const roomMissing =
-    !!roomId && roomQuery.isFetched && (roomQuery.error != null || roomQuery.data == null);
   if (roomMissing) {
     return <ChatRoomError code={APP_MESSAGE_CODE.error.chatRoom.notFoundOrLoadFailed} />;
   }

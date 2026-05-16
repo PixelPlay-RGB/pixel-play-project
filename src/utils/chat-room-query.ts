@@ -5,7 +5,7 @@ import type { QueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/constants/query-keys";
 
 export function invalidateChatRoomMutationQueries(queryClient: QueryClient, roomId: string) {
-  void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.member(roomId) });
+  void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.membership(roomId) });
   void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.members(roomId) });
   void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.room(roomId) });
   void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.list() });

@@ -5,11 +5,9 @@
 import { MessageInput } from "@/components/chat-room/message/message-input";
 import { MessageList } from "@/components/chat-room/message/message-list";
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
-import { useRoom } from "@/hooks/use-chat-room";
-import { useCurrentChatRoomMemberRow } from "@/hooks/use-current-chat-room-member-row";
-import { useMarkRoomReadLifecycle } from "@/hooks/use-mark-room-read-lifecycle";
+import { useChatRoomDetail } from "@/hooks/use-chat-room-detail";
+import { useChatRoomReadLifecycle } from "@/hooks/use-chat-room-read-lifecycle";
 import useMessages from "@/hooks/use-messages";
-import { useUser } from "@/hooks/use-profile";
 import { getAppMessage } from "@/utils/app-message";
 
 interface Props {
@@ -17,24 +15,12 @@ interface Props {
 }
 
 export function ChatRoomMessageSection({ roomId }: Props) {
-  const { data: profile, isPending: profilePending } = useUser();
-  const currentUserId = profile?.id ?? "";
-  const roomQuery = useRoom(roomId);
-  const { isKicked, isJoined } = useCurrentChatRoomMemberRow({ roomId, currentUserId });
+  const { currentUserId, isKicked, canFetchMessages, canMarkRoomRead, canSendMessage } =
+    useChatRoomDetail(roomId);
   const { messages, hasMorePrevious, isLoadingPrevious, fetchPreviousPage, isLoadingInitial } =
-    useMessages(roomId, isJoined);
+    useMessages(roomId, canFetchMessages);
 
-  const markRoomReadEnabled =
-    !!roomId &&
-    !profilePending &&
-    !!currentUserId &&
-    roomQuery.isFetched &&
-    roomQuery.data != null &&
-    roomQuery.error == null &&
-    !isKicked &&
-    isJoined;
-
-  useMarkRoomReadLifecycle({ roomId, enabled: markRoomReadEnabled });
+  useChatRoomReadLifecycle({ roomId, enabled: canMarkRoomRead });
 
   const handleLoadPrevious = (): boolean => {
     if (isLoadingPrevious || !hasMorePrevious) {
@@ -44,8 +30,6 @@ export function ChatRoomMessageSection({ roomId }: Props) {
     void fetchPreviousPage();
     return true;
   };
-
-  const inputLocked = profilePending || !currentUserId || !isJoined;
 
   return (
     <>
@@ -61,7 +45,7 @@ export function ChatRoomMessageSection({ roomId }: Props) {
       <MessageInput
         roomId={roomId}
         currentUserId={currentUserId}
-        disabled={inputLocked || isKicked}
+        disabled={!canSendMessage}
         disabledHint={
           getAppMessage(
             isKicked

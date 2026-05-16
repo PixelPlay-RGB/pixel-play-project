@@ -6,7 +6,7 @@ import { Users } from "lucide-react";
 
 import { ChatRoomMenu } from "@/components/chat-room/chat-room-menu";
 import { Button } from "@/components/ui/button";
-import { useRoom } from "@/hooks/use-chat-room";
+import { useChatRoomDetail } from "@/hooks/use-chat-room-detail";
 
 interface Props {
   roomId: string;
@@ -14,13 +14,12 @@ interface Props {
 }
 
 export function ChatRoomHeader({ roomId, onOpenMembers }: Props) {
-  const roomQuery = useRoom(roomId);
-  const room = roomQuery.data;
+  const { room, roomPending } = useChatRoomDetail(roomId);
 
   return (
     <div className="border-border/50 bg-muted/20 flex h-14 shrink-0 items-center gap-2 border-b px-4">
       <h1 className="min-w-0 flex-1 truncate text-sm font-semibold">
-        {roomQuery.isPending ? "불러오는 중…" : (room?.title ?? "채팅방")}
+        {roomPending ? "불러오는 중…" : (room?.title ?? "채팅방")}
       </h1>
       <div className="flex shrink-0 items-center gap-1.5">
         <Button

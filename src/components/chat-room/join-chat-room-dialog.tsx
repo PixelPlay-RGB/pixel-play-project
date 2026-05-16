@@ -24,9 +24,10 @@ interface Props {
   roomId: string;
   roomTitle: string;
   isFull: boolean;
+  canRequestJoin: boolean;
 }
 
-export function JoinChatRoomDialog({ open, roomId, roomTitle, isFull }: Props) {
+export function JoinChatRoomDialog({ open, roomId, roomTitle, isFull, canRequestJoin }: Props) {
   const router = useRouter();
   const { mutate, isPending } = useJoinChatRoom();
 
@@ -76,10 +77,10 @@ export function JoinChatRoomDialog({ open, roomId, roomTitle, isFull }: Props) {
           >
             돌아가기
           </AlertDialogCancel>
-          {!isFull && (
+          {canRequestJoin && (
             <AlertDialogAction
               onClick={() => mutate(roomId)}
-              disabled={isPending}
+              disabled={isPending || !canRequestJoin}
               className={cn(
                 "h-10 min-w-24 rounded-xl px-4 font-bold shadow-sm",
                 "bg-brand shadow-brand/20 hover:bg-brand/90 text-white",

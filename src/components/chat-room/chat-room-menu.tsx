@@ -18,10 +18,9 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useLeaveChatRoom } from "@/hooks/use-leave-chat-room";
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
-import { useRoom } from "@/hooks/use-chat-room";
-import { useUser } from "@/hooks/use-profile";
+import { useChatRoomDetail } from "@/hooks/use-chat-room-detail";
+import { useLeaveChatRoom } from "@/hooks/use-leave-chat-room";
 import { toastAppInfo } from "@/utils/toast-message";
 
 interface Props {
@@ -32,20 +31,16 @@ export function ChatRoomMenu({ roomId }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [leaveOpen, setLeaveOpen] = useState(false);
   const { mutate, isPending } = useLeaveChatRoom();
-  const { data: profile } = useUser();
-  const roomQuery = useRoom(roomId);
+  const { currentUserId, room, isOwner } = useChatRoomDetail(roomId);
 
-  const currentUserId = profile?.id ?? "";
-  const ownerId = roomQuery.data?.owner_id ?? "";
-  const currentMember = roomQuery.data?.current_member ?? 0;
-  const isOwner = currentUserId === ownerId;
+  const currentMember = room?.current_member ?? 0;
   const isOwnerLeaveBlocked = isOwner && currentMember > 1;
 
   const handleLeave = () => {
     mutate(roomId);
   };
 
-  if (!currentUserId || !roomQuery.data) {
+  if (!currentUserId || !room) {
     return null;
   }
 

@@ -23,7 +23,7 @@ export function useChatRoomMemberRealtimeInvalidation({ roomId, currentUserId }:
 
     const invalidateChatRoomQueries = () => {
       void queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.chat.member(roomId, currentUserId),
+        queryKey: QUERY_KEYS.chat.membership(roomId, currentUserId),
       });
       void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.members(roomId) });
       void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.room(roomId) });

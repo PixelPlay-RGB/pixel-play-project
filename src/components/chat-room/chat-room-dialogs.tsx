@@ -4,26 +4,15 @@
 
 import { JoinChatRoomDialog } from "@/components/chat-room/join-chat-room-dialog";
 import { KickedRoomAlertDialog } from "@/components/chat-room/member/kicked-room-alert-dialog";
-import { useRoom } from "@/hooks/use-chat-room";
-import { useCurrentChatRoomMemberRow } from "@/hooks/use-current-chat-room-member-row";
-import { useUser } from "@/hooks/use-profile";
+import { useChatRoomDetail } from "@/hooks/use-chat-room-detail";
 
 interface Props {
   roomId: string;
 }
 
 export function ChatRoomDialogs({ roomId }: Props) {
-  const { data: profile } = useUser();
-  const currentUserId = profile?.id ?? "";
-  const roomQuery = useRoom(roomId);
-  const { isKicked, isJoined, membershipFetched } = useCurrentChatRoomMemberRow({
-    roomId,
-    currentUserId,
-  });
-  const room = roomQuery.data;
-  const isFull = room != null && room.current_member >= room.max_capacity;
-  const shouldShowJoinDialog =
-    membershipFetched && roomQuery.isFetched && room != null && !isJoined && !isKicked;
+  const { room, isKicked, isFull, shouldShowJoinDialog, canRequestJoin } =
+    useChatRoomDetail(roomId);
 
   return (
     <>
@@ -33,6 +22,7 @@ export function ChatRoomDialogs({ roomId }: Props) {
         roomId={roomId}
         roomTitle={room?.title ?? ""}
         isFull={isFull}
+        canRequestJoin={canRequestJoin}
       />
     </>
   );

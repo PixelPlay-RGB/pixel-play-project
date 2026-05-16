@@ -17,11 +17,12 @@ interface MessagesPage {
 export default function useMessages(chatRoomId: string, enabled = true) {
   const supabase = createClient();
   const queryClient = useQueryClient();
+  const queryEnabled = enabled && !!chatRoomId;
 
   const query = useInfiniteQuery({
     queryKey: QUERY_KEYS.chat.messages(chatRoomId),
     initialPageParam: undefined as string | undefined,
-    enabled: enabled && !!chatRoomId,
+    enabled: queryEnabled,
     staleTime: 1000 * 60,
     queryFn: async ({ pageParam }): Promise<MessagesPage> => {
       let request = supabase
@@ -55,7 +56,7 @@ export default function useMessages(chatRoomId: string, enabled = true) {
   });
 
   useEffect(() => {
-    if (!enabled || !chatRoomId) return;
+    if (!queryEnabled) return;
 
     const channel = supabase
       .channel(`room-message-${chatRoomId}`)
@@ -108,15 +109,15 @@ export default function useMessages(chatRoomId: string, enabled = true) {
     return () => {
       void channel.unsubscribe();
     };
-  }, [queryClient, chatRoomId, supabase, enabled]);
+  }, [queryClient, chatRoomId, supabase, queryEnabled]);
 
-  const messages = query.data ?? [];
+  const messages = queryEnabled ? (query.data ?? []) : [];
 
   return {
     messages,
-    hasMorePrevious: query.hasNextPage ?? false,
-    isLoadingPrevious: query.isFetchingNextPage,
-    isLoadingInitial: query.isLoading,
+    hasMorePrevious: queryEnabled ? (query.hasNextPage ?? false) : false,
+    isLoadingPrevious: queryEnabled && query.isFetchingNextPage,
+    isLoadingInitial: queryEnabled && query.isLoading,
     error: query.error,
     fetchPreviousPage: query.fetchNextPage,
   };
