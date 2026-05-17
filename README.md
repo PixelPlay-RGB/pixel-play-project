@@ -106,6 +106,8 @@ npm run dev
 
 - 이메일 OTP 인증 후 비밀번호와 프로필을 완성하는 회원가입 흐름을 제공합니다.
 - 이메일과 비밀번호 기반 로그인을 제공합니다.
+- 회원가입과 새 비밀번호 변경은 Supabase Auth 정책과 맞춰 최소 8자, 영문 소문자, 영문 대문자, 숫자, 특수문자를 요구합니다.
+- 로그인과 현재 비밀번호 확인은 기존 계정 호환을 위해 비밀번호 입력 여부만 검증하고, 실제 인증은 Supabase Auth에 위임합니다.
 - Google, GitHub OAuth 로그인과 추가 프로필 입력 흐름을 제공합니다.
 - OAuth 연동 계정 목록을 `linked_providers`로 관리합니다.
 - 로그인 상태는 Supabase 세션을 기준으로 검증하고 `AuthListener`가 Zustand store에 동기화합니다.
