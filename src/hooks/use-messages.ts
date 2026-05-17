@@ -14,6 +14,21 @@ interface MessagesPage {
   nextCursor?: string;
 }
 
+function insertMessageByCreatedAtDesc(items: MessageQuery[], nextMessage: MessageQuery) {
+  if (items.some((item) => item.id === nextMessage.id)) {
+    return items;
+  }
+
+  const nextCreatedAt = Date.parse(nextMessage.created_at);
+  const insertIndex = items.findIndex((item) => Date.parse(item.created_at) < nextCreatedAt);
+
+  if (insertIndex === -1) {
+    return [...items, nextMessage];
+  }
+
+  return [...items.slice(0, insertIndex), nextMessage, ...items.slice(insertIndex)];
+}
+
 export default function useMessages(chatRoomId: string, enabled = true) {
   const supabase = createClient();
   const queryClient = useQueryClient();
@@ -98,7 +113,13 @@ export default function useMessages(chatRoomId: string, enabled = true) {
 
               return {
                 ...previous,
-                pages: [{ ...firstPage, items: [nextMessage, ...firstPage.items] }, ...restPages],
+                pages: [
+                  {
+                    ...firstPage,
+                    items: insertMessageByCreatedAtDesc(firstPage.items, nextMessage),
+                  },
+                  ...restPages,
+                ],
               };
             },
           );
