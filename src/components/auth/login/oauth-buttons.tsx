@@ -2,49 +2,35 @@
 
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
-import { LoginProvider } from "@/types/auth";
+import type { OAuthProvider } from "@/types/auth";
 import Image from "next/image";
 
 interface OAuthButtonsProps {
-  loading: LoginProvider | null;
-  onLoadingChange: (provider: LoginProvider | null) => void;
+  disabled: boolean;
+  loadingProvider: OAuthProvider | null;
+  onOAuthLogin: (provider: OAuthProvider) => Promise<unknown>;
 }
 
-export default function OAuthButtons({ loading, onLoadingChange }: OAuthButtonsProps) {
-  const supabase = createClient();
-
-  const handleSignIn = async (provider: Exclude<LoginProvider, "email">) => {
-    onLoadingChange(provider);
-
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
-
-    if (error) {
-      console.error(`${provider} 로그인 실패`, error.message);
-      onLoadingChange(null);
-    }
-  };
-
+export default function OAuthButtons({
+  disabled,
+  loadingProvider,
+  onOAuthLogin,
+}: OAuthButtonsProps) {
   return (
     <div className="flex flex-col gap-3">
       {/* Google Login Button */}
       <Button
         type="button"
         variant="outline"
-        disabled={loading !== null}
-        onClick={() => handleSignIn("google")}
+        disabled={disabled}
+        onClick={() => void onOAuthLogin("google").catch(() => undefined)}
         className={cn(
           "w-full cursor-pointer gap-2 py-5 tracking-wide",
           "border-border/60 hover:border-brand/40 hover:bg-brand/5",
         )}
       >
-        {loading === "google" ? (
+        {loadingProvider === "google" ? (
           <Spinner />
         ) : (
           <>
@@ -57,14 +43,14 @@ export default function OAuthButtons({ loading, onLoadingChange }: OAuthButtonsP
       {/* GitHub Login Button */}
       <Button
         type="button"
-        disabled={loading !== null}
-        onClick={() => handleSignIn("github")}
+        disabled={disabled}
+        onClick={() => void onOAuthLogin("github").catch(() => undefined)}
         className={cn(
           "w-full cursor-pointer gap-2 py-5 tracking-wide",
           "oauth-github-button border",
         )}
       >
-        {loading === "github" ? (
+        {loadingProvider === "github" ? (
           <Spinner />
         ) : (
           <>

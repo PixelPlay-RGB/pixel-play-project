@@ -55,7 +55,12 @@ export function MemberActionAlertDialog({
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={setOpen}>
+    <AlertDialog
+      open={open}
+      onOpenChange={(next) => {
+        if (!isPending) setOpen(next);
+      }}
+    >
       <AlertDialogTrigger render={trigger} />
       <AlertDialogContent
         className={cn(

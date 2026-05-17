@@ -6,26 +6,23 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { SETTING_MENU } from "@/constants/setting-menu";
+import { useLogout } from "@/hooks/use-logout";
 import { useUser } from "@/hooks/use-profile";
-import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth";
 import { getAvatarFallbackText } from "@/utils/avatar";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function HeaderProfileBadge() {
-  const supabase = createClient();
-  const router = useRouter();
   const { data: user, isError, isLoading } = useUser();
   const isCanChangePassword = useAuthStore((state) => state.isCanChangePassword);
+  const logoutMutation = useLogout();
 
   const [open, setOpen] = useState(false);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.refresh();
+    await logoutMutation.mutateAsync().catch(() => undefined);
   };
 
   if (isLoading) {
@@ -73,6 +70,7 @@ export default function HeaderProfileBadge() {
               {
                 onClose: () => setOpen(false),
                 onLogout: handleLogout,
+                isLogoutPending: logoutMutation.isPending,
                 // actions: {
                 //   settings: handleSetting
                 // }

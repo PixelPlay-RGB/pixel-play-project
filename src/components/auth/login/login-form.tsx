@@ -1,36 +1,23 @@
 "use client";
 
-import { login } from "@/actions/auth";
 import AuthInputGroup from "@/components/auth/auth-input-group";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
-import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
-import { LOGIN_PARAM } from "@/constants/auth";
-import { QUERY_KEYS } from "@/constants/query-keys";
-import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { loginSchema } from "@/lib/zod/auth";
-import { useAuthStore } from "@/stores/auth";
-import type { LoginFormValues, LoginProvider } from "@/types/auth";
-import { isAuthSessionMissingError } from "@/utils/auth-error";
-import { toastAppError } from "@/utils/toast-message";
+import type { LoginFormValues } from "@/types/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQueryClient } from "@tanstack/react-query";
 import { LockKeyhole, Mail } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 
 interface LoginFormProps {
-  loading: LoginProvider | null;
-  onLoadingChange: (provider: LoginProvider | null) => void;
+  disabled: boolean;
+  isPending: boolean;
+  onLogin: (values: LoginFormValues) => Promise<unknown>;
 }
 
-export default function LoginForm({ loading, onLoadingChange: setIsLoading }: LoginFormProps) {
-  const router = useRouter();
-  const setUser = useAuthStore((s) => s.setUser);
-  const queryClient = useQueryClient();
-
+export default function LoginForm({ disabled, isPending, onLogin }: LoginFormProps) {
   const {
     register,
     handleSubmit,
@@ -41,37 +28,7 @@ export default function LoginForm({ loading, onLoadingChange: setIsLoading }: Lo
   });
 
   const onSubmit = async (data: LoginFormValues) => {
-    setIsLoading("email");
-    const result = await login(data);
-
-    if (!result.success) {
-      toastAppError(result.code ?? APP_MESSAGE_CODE.error.auth.invalidCredentials);
-      setIsLoading(null);
-      return;
-    }
-
-    // 서버 액션에서 세팅된 쿠키를 클라이언트가 읽어 store 동기화
-    const supabase = createClient();
-    const {
-      data: { user: authUser },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !authUser) {
-      if (authError && !isAuthSessionMissingError(authError)) {
-        console.error("로그인 폼의 인증 유저 조회 실패", authError);
-      }
-      toastAppError(APP_MESSAGE_CODE.error.auth.authInfoLoadFailed);
-      setIsLoading(null);
-      return;
-    }
-
-    setUser(authUser);
-    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth.profile(authUser.id) });
-
-    setIsLoading(null);
-    router.push(`/${LOGIN_PARAM}`);
-    router.refresh();
+    await onLogin(data).catch(() => undefined);
   };
 
   return (
@@ -102,14 +59,14 @@ export default function LoginForm({ loading, onLoadingChange: setIsLoading }: Lo
 
       <Button
         type="submit"
-        disabled={isSubmitting || loading != null}
+        disabled={isSubmitting || disabled}
         className={cn(
           "w-full cursor-pointer py-5 font-bold tracking-widest uppercase",
           "bg-brand hover:bg-brand/85 text-white",
           "transition-all active:scale-95 disabled:opacity-40",
         )}
       >
-        {isSubmitting ? <Spinner /> : "로그인"}
+        {isSubmitting || isPending ? <Spinner /> : "로그인"}
       </Button>
     </form>
   );

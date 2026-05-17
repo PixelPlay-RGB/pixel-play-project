@@ -11,12 +11,14 @@ interface ProfileAvatarUploadProps {
   photoUrl: string | null;
   nickname: string;
   onFileChange: (file: File | null) => void;
+  disabled?: boolean;
 }
 
 export default function ProfileAvatarUpload({
   photoUrl,
   nickname,
   onFileChange,
+  disabled = false,
 }: ProfileAvatarUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
@@ -25,6 +27,7 @@ export default function ProfileAvatarUpload({
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (disabled) return;
     if (e.type === "dragenter" || e.type === "dragover") setIsDragging(true);
     else if (e.type === "dragleave") setIsDragging(false);
   };
@@ -33,6 +36,7 @@ export default function ProfileAvatarUpload({
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
+    if (disabled) return;
     const file = e.dataTransfer.files?.[0];
     if (file) {
       onFileChange(file);
@@ -41,6 +45,7 @@ export default function ProfileAvatarUpload({
   };
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (disabled) return;
     const file = e.target.files?.[0] ?? null;
     if (file) onFileChange(file);
     e.target.value = "";
@@ -56,7 +61,9 @@ export default function ProfileAvatarUpload({
         onDrop={handleDrop}
         onMouseEnter={() => setIsHovering(true)}
         onMouseLeave={() => setIsHovering(false)}
-        onClick={() => inputRef.current?.click()}
+        onClick={() => {
+          if (!disabled) inputRef.current?.click();
+        }}
       >
         <div
           className={cn(
@@ -65,7 +72,12 @@ export default function ProfileAvatarUpload({
           )}
         />
 
-        <Avatar className="ring-brand size-24 cursor-pointer ring-2 transition-all hover:ring-[3px] sm:size-28">
+        <Avatar
+          className={cn(
+            "ring-brand size-24 ring-2 transition-all hover:ring-[3px] sm:size-28",
+            disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer",
+          )}
+        >
           <AvatarImage src={photoUrl ?? undefined} alt="profile" className="object-cover" />
           <AvatarFallback className="text-muted-foreground bg-muted text-3xl font-semibold">
             {getAvatarFallbackText(nickname, 1)}
@@ -88,6 +100,7 @@ export default function ProfileAvatarUpload({
           ref={inputRef}
           type="file"
           accept="image/jpeg,image/png,image/webp"
+          disabled={disabled}
           className="hidden"
           onChange={handleInputChange}
         />
@@ -105,6 +118,7 @@ export default function ProfileAvatarUpload({
             type="button"
             size="sm"
             variant="outline"
+            disabled={disabled}
             className="border-brand! text-brand! hover:opacity-60"
             onClick={() => inputRef.current?.click()}
           >
@@ -116,8 +130,10 @@ export default function ProfileAvatarUpload({
               type="button"
               size="sm"
               variant="outline"
+              disabled={disabled}
               onClick={(e) => {
                 e.stopPropagation();
+                if (disabled) return;
                 onFileChange(null);
                 if (inputRef.current) inputRef.current.value = "";
               }}

@@ -2,7 +2,6 @@ import LoginSection from "@/components/auth/login/login-section";
 import Logo from "@/components/common/logo";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import Link from "next/link";
 
 export default function Page() {
   return (
@@ -23,15 +22,6 @@ export default function Page() {
         </div>
         <div className="flex flex-col gap-4 sm:gap-5">
           <LoginSection />
-          <Link
-            className={cn(
-              "text-brand self-end text-sm underline underline-offset-4",
-              "transition-colors hover:opacity-60 sm:self-end",
-            )}
-            href="/auth/signup"
-          >
-            회원 가입
-          </Link>
         </div>
       </div>
     </div>

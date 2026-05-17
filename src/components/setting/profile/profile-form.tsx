@@ -19,28 +19,24 @@ import {
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 
-import { checkNicknameAction, updateProfileAction } from "@/actions/auth";
 import ProfileFormSkeleton from "@/components/setting/profile/profile-form-skeleton";
-import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
-import { QUERY_KEYS } from "@/constants/query-keys";
+import { useCheckNicknameMutation } from "@/hooks/use-signup-mutations";
+import { useUpdateProfileMutation } from "@/hooks/use-profile-mutations";
 import { resolveProfileQueryErrorCode, useUser } from "@/hooks/use-profile";
 import { cn } from "@/lib/utils";
 import { ProfileFormValues, profileSchema } from "@/lib/zod/auth";
 import type { NicknameStatus } from "@/types/auth";
 import { formatDate } from "@/utils/format";
 import { getAppMessage } from "@/utils/app-message";
-import { toastAppError, toastAppSuccess } from "@/utils/toast-message";
-import { useQueryClient } from "@tanstack/react-query";
 
 export default function ProfileForm() {
   const { data: user, error: userError, isError: isUserError, isLoading } = useUser();
 
-  const queryClient = useQueryClient();
-
   const [nicknameStatus, setNicknameStatus] = useState<NicknameStatus>("idle");
   const [verifiedNickname, setVerifiedNickname] = useState("");
-  const [isSaving, setIsSaving] = useState(false);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const checkNicknameMutation = useCheckNicknameMutation();
+  const updateProfileMutation = useUpdateProfileMutation();
 
   const {
     control,
@@ -86,6 +82,8 @@ export default function ProfileForm() {
 
   // 파생 상태 계산
   const nicknameChanged = !!dirtyFields.nickname;
+  const isSaving = updateProfileMutation.isPending;
+  const isBusy = isSaving || checkNicknameMutation.isPending;
   const canSave =
     Object.keys(errors).length === 0 && (!nicknameChanged || nicknameStatus === "available");
 
@@ -102,11 +100,13 @@ export default function ProfileForm() {
 
   const handleCheckNickname = async () => {
     const nickname = getValues("nickname");
-    if (!nickname || errors.nickname) return;
+    if (isBusy || !nickname || errors.nickname) return;
 
     setNicknameStatus("checking");
 
-    const result = await checkNicknameAction(nickname);
+    const result = await checkNicknameMutation.mutateAsync(nickname).catch(() => ({
+      success: false,
+    }));
 
     if (!result.success) {
       setNicknameStatus("taken");
@@ -118,6 +118,8 @@ export default function ProfileForm() {
   };
 
   const handleFileChange = (file: File | null) => {
+    if (isSaving) return;
+
     if (!file) {
       setPendingFile(null);
       setValue("photoUrl", null, { shouldDirty: true });
@@ -131,6 +133,8 @@ export default function ProfileForm() {
   };
 
   const handleReset = () => {
+    if (isBusy) return;
+
     reset({
       nickname: user.nickname,
       photoUrl: user.photo_url ?? null,
@@ -140,8 +144,7 @@ export default function ProfileForm() {
   };
 
   const handleSave = async (data: ProfileFormValues) => {
-    if (!canSave) return;
-    setIsSaving(true);
+    if (!canSave || isBusy) return;
 
     const formData = new FormData();
     formData.append("nickname", data.nickname);
@@ -157,12 +160,9 @@ export default function ProfileForm() {
       formData.append("photoUrl", data.photoUrl || "");
     }
 
-    const result = await updateProfileAction(formData);
+    const result = await updateProfileMutation.mutateAsync(formData).catch(() => null);
 
-    if (!result.success) {
-      toastAppError(result.code ?? APP_MESSAGE_CODE.error.profile.updateFailed);
-
-      setIsSaving(false);
+    if (!result?.success) {
       return;
     }
 
@@ -171,13 +171,8 @@ export default function ProfileForm() {
       photoUrl: result.photoUrl,
     });
 
-    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth.all });
-
-    setIsSaving(false);
     setVerifiedNickname(data.nickname);
     setPendingFile(null);
-
-    toastAppSuccess(APP_MESSAGE_CODE.success.profile.updated);
   };
 
   return (
@@ -187,12 +182,12 @@ export default function ProfileForm() {
         contentStyle={"flex flex-col gap-6"}
         footer={
           <>
-            <Button variant="outline" onClick={handleReset} disabled={!isDirty || isSaving}>
+            <Button variant="outline" onClick={handleReset} disabled={!isDirty || isBusy}>
               되돌리기
             </Button>
             <Button
               type={"submit"}
-              disabled={!isDirty || isSaving || !canSave}
+              disabled={!isDirty || isBusy || !canSave}
               className="bg-brand text-white"
             >
               {isSaving ? <Spinner /> : "변경사항 저장"}
@@ -209,6 +204,7 @@ export default function ProfileForm() {
               photoUrl={value || null}
               nickname={getValues("nickname")}
               onFileChange={handleFileChange}
+              disabled={isSaving}
             />
           )}
         />
@@ -247,6 +243,7 @@ export default function ProfileForm() {
                     field.onChange(trim);
                     handleNicknameChange(trim);
                   }}
+                  disabled={isBusy}
                 />
               )}
             />
@@ -255,10 +252,10 @@ export default function ProfileForm() {
                 type="button"
                 variant="outline"
                 onClick={handleCheckNickname}
-                disabled={nicknameStatus === "checking" || !!errors.nickname || !nicknameChanged}
+                disabled={isBusy || !!errors.nickname || !nicknameChanged}
                 className="text-brand border-brand/40"
               >
-                {nicknameStatus === "checking" ? (
+                {checkNicknameMutation.isPending ? (
                   <Spinner />
                 ) : nicknameStatus === "available" && nicknameChanged ? (
                   "사용가능"

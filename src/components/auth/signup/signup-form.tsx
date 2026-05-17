@@ -1,11 +1,5 @@
 "use client";
 
-import {
-  checkNicknameAction,
-  completeSignupAction,
-  sendOtpAction,
-  verifyOtpAction,
-} from "@/actions/auth";
 import AuthInputGroup from "@/components/auth/auth-input-group";
 import SignUpGenderField from "@/components/auth/signup/signup-gender-field";
 import { Button } from "@/components/ui/button";
@@ -21,38 +15,37 @@ import { RadioGroup } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
-import { SIGNUP_FORM_DEFAULTS, WELCOME_PARAM } from "@/constants/auth";
+import { SIGNUP_FORM_DEFAULTS } from "@/constants/auth";
 import { FORM_MESSAGE } from "@/constants/form-message";
-import { QUERY_KEYS } from "@/constants/query-keys";
-import { createClient } from "@/lib/supabase/client";
+import {
+  useCheckNicknameMutation,
+  useCompleteSignupMutation,
+  useSendOtpMutation,
+  useVerifyOtpMutation,
+} from "@/hooks/use-signup-mutations";
 import { cn } from "@/lib/utils";
 import { signUpSchema } from "@/lib/zod/auth";
-import { useAuthStore } from "@/stores/auth";
 import type { NicknameStatus, OtpStatus, SignUpFormValues } from "@/types/auth";
-import { isAuthSessionMissingError } from "@/utils/auth-error";
 import { formatPhone } from "@/utils/format";
-import { toastAppError, toastAppSuccess } from "@/utils/toast-message";
+import { toastAppError } from "@/utils/toast-message";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQueryClient } from "@tanstack/react-query";
 import { CalendarDays, LockKeyhole, Mail, Smartphone, User, UserStar } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 
 export default function SignupForm() {
-  const router = useRouter();
-  const setUser = useAuthStore((s) => s.setUser);
-  const queryClient = useQueryClient();
-
   const [otpStatus, setOtpStatus] = useState<OtpStatus>("idle");
   const [otpCode, setOtpCode] = useState("");
   const [otpError, setOtpError] = useState("");
   const [nicknameStatus, setNicknameStatus] = useState<NicknameStatus>("idle");
   const [verifiedNickname, setVerifiedNickname] = useState("");
 
+  const sendOtpMutation = useSendOtpMutation();
+  const verifyOtpMutation = useVerifyOtpMutation();
+  const checkNicknameMutation = useCheckNicknameMutation();
+  const completeSignupMutation = useCompleteSignupMutation();
+
   const emailVerified = otpStatus === "verified";
-  const isSendingOtp = otpStatus === "sending";
-  const isVerifyingOtp = otpStatus === "verifying";
   const otpSent = otpStatus !== "idle" && otpStatus !== "sending";
 
   const {
@@ -69,12 +62,23 @@ export default function SignupForm() {
     defaultValues: SIGNUP_FORM_DEFAULTS,
   });
 
+  const isBusy =
+    sendOtpMutation.isPending ||
+    verifyOtpMutation.isPending ||
+    checkNicknameMutation.isPending ||
+    completeSignupMutation.isPending ||
+    isSubmitting;
+  const canSubmit = emailVerified && nicknameStatus === "available" && !isBusy;
+
   const handleCheckNickname = async () => {
     const nickname = getValues("nickname");
-    if (!nickname || errors.nickname) return;
+    if (isBusy || !nickname || errors.nickname) return;
 
     setNicknameStatus("checking");
-    const result = await checkNicknameAction(nickname);
+    const result = await checkNicknameMutation.mutateAsync(nickname).catch(() => ({
+      success: false,
+    }));
+
     if (result.success) {
       setVerifiedNickname(nickname);
       setNicknameStatus("available");
@@ -83,10 +87,9 @@ export default function SignupForm() {
     }
   };
 
-  // 1. OTP 발송
   const handleSendOtp = async () => {
     const email = getValues("email");
-    if (!email) {
+    if (isBusy || emailVerified || !email || errors.email) {
       return;
     }
 
@@ -94,42 +97,46 @@ export default function SignupForm() {
     setOtpError("");
     clearErrors("email");
 
-    const result = await sendOtpAction(email);
+    const result = await sendOtpMutation.mutateAsync(email).catch(() => ({
+      success: false,
+      fieldMessage: FORM_MESSAGE.auth.emailCheckFailed,
+    }));
+
     if (result.success) {
       setOtpStatus("sent");
-      toastAppSuccess(APP_MESSAGE_CODE.success.auth.emailOtpSent);
-    } else {
-      setOtpStatus("idle");
-      setError("email", {
-        type: "server",
-        message: result.fieldMessage ?? FORM_MESSAGE.auth.emailCheckFailed,
-      });
-    }
-  };
-
-  // 2. OTP 검증
-  const handleVerifyOtp = async () => {
-    const email = getValues("email");
-    if (!email || !otpCode) {
       return;
     }
 
-    if (otpCode.length < 6) return;
+    setOtpStatus("idle");
+    setError("email", {
+      type: "server",
+      message: result.fieldMessage ?? FORM_MESSAGE.auth.emailCheckFailed,
+    });
+  };
+
+  const handleVerifyOtp = async () => {
+    const email = getValues("email");
+    if (isBusy || !email || !otpCode || otpCode.length < 6) {
+      return;
+    }
 
     setOtpStatus("verifying");
     setOtpError("");
 
-    const result = await verifyOtpAction(email, otpCode);
+    const result = await verifyOtpMutation.mutateAsync({ email, token: otpCode }).catch(() => ({
+      success: false,
+      fieldMessage: FORM_MESSAGE.auth.otpInvalid,
+    }));
+
     if (result.success) {
       setOtpStatus("verified");
-      toastAppSuccess(APP_MESSAGE_CODE.success.auth.emailVerified);
-    } else {
-      setOtpStatus("sent");
-      setOtpError(result.fieldMessage ?? FORM_MESSAGE.auth.otpInvalid);
+      return;
     }
+
+    setOtpStatus("sent");
+    setOtpError(result.fieldMessage ?? FORM_MESSAGE.auth.otpInvalid);
   };
 
-  // 3. 최종 가입
   const onSubmit = async (data: SignUpFormValues) => {
     if (!emailVerified) {
       toastAppError(APP_MESSAGE_CODE.error.auth.emailVerificationRequired);
@@ -141,34 +148,7 @@ export default function SignupForm() {
       return;
     }
 
-    const result = await completeSignupAction(data);
-
-    if (!result.success) {
-      toastAppError(result.code ?? APP_MESSAGE_CODE.error.auth.signupFailed);
-      return;
-    }
-
-    // 서버 액션에서 세팅된 쿠키를 클라이언트가 읽어 store 동기화
-    const supabase = createClient();
-    const {
-      data: { user: authUser },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !authUser) {
-      if (authError && !isAuthSessionMissingError(authError)) {
-        console.error("회원가입 폼의 인증 유저 조회 실패", authError);
-      }
-      toastAppError(APP_MESSAGE_CODE.error.auth.authInfoLoadFailed);
-      setUser(null);
-      return;
-    }
-
-    setUser(authUser);
-    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth.profile(authUser.id) });
-
-    router.push(`/${WELCOME_PARAM}`);
-    router.refresh();
+    await completeSignupMutation.mutateAsync(data).catch(() => undefined);
   };
 
   return (
@@ -195,7 +175,7 @@ export default function SignupForm() {
               type="email"
               placeholder="아이디(이메일)"
               aria-invalid={!!errors.email}
-              disabled={emailVerified}
+              disabled={emailVerified || isBusy}
             />
             <InputGroupAddon align="inline-end">
               <InputGroupButton
@@ -203,10 +183,10 @@ export default function SignupForm() {
                 size="sm"
                 variant="outline"
                 onClick={handleSendOtp}
-                disabled={isSendingOtp || emailVerified || !!errors.email}
+                disabled={isBusy || emailVerified || !!errors.email || !dirtyFields.email}
                 className="border-brand/40 text-brand hover:bg-brand cursor-pointer hover:text-white"
               >
-                {isSendingOtp ? (
+                {sendOtpMutation.isPending ? (
                   <Spinner />
                 ) : emailVerified ? (
                   "인증완료"
@@ -231,6 +211,7 @@ export default function SignupForm() {
                 maxLength={6}
                 placeholder="인증 코드 6자리"
                 value={otpCode}
+                disabled={isBusy && !verifyOtpMutation.isPending}
                 onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
               />
               <InputGroupAddon align="inline-end">
@@ -239,10 +220,10 @@ export default function SignupForm() {
                   size="xs"
                   variant="outline"
                   onClick={handleVerifyOtp}
-                  disabled={isVerifyingOtp}
+                  disabled={isBusy || otpCode.length < 6}
                   className="border-brand/40 text-brand hover:bg-brand hover:cursor-pointer hover:text-white"
                 >
-                  {isVerifyingOtp ? <Spinner /> : "확인"}
+                  {verifyOtpMutation.isPending ? <Spinner /> : "확인"}
                 </InputGroupButton>
               </InputGroupAddon>
             </InputGroup>
@@ -326,6 +307,7 @@ export default function SignupForm() {
               type="text"
               placeholder="닉네임"
               aria-invalid={!!errors.nickname || nicknameStatus === "taken"}
+              disabled={isBusy}
             />
             <InputGroupAddon align="inline-end">
               <InputGroupButton
@@ -333,10 +315,10 @@ export default function SignupForm() {
                 size="sm"
                 variant="outline"
                 onClick={handleCheckNickname}
-                disabled={nicknameStatus === "checking" || !!errors.nickname}
+                disabled={isBusy || !!errors.nickname || !dirtyFields.nickname}
                 className="border-brand/40 text-brand hover:bg-brand cursor-pointer hover:text-white"
               >
-                {nicknameStatus === "checking" ? (
+                {checkNicknameMutation.isPending ? (
                   <Spinner />
                 ) : nicknameStatus === "available" ? (
                   "사용가능"
@@ -414,13 +396,13 @@ export default function SignupForm() {
       {/* 제출 버튼 */}
       <Button
         type="submit"
-        disabled={isSubmitting || !emailVerified}
+        disabled={!canSubmit}
         className={cn(
           "bg-brand hover:bg-brand/85 w-full cursor-pointer py-5 font-bold tracking-widest text-white uppercase",
           "transition-all active:scale-95 disabled:opacity-40",
         )}
       >
-        {isSubmitting ? <Spinner /> : "회원가입"}
+        {completeSignupMutation.isPending || isSubmitting ? <Spinner /> : "회원가입"}
       </Button>
     </form>
   );

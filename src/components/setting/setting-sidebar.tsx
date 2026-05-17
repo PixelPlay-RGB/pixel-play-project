@@ -13,22 +13,21 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
+import { Spinner } from "@/components/ui/spinner";
 import { SETTING_MENU } from "@/constants/setting-menu";
-import { createClient } from "@/lib/supabase/client";
+import { useLogout } from "@/hooks/use-logout";
 import { useAuthStore } from "@/stores/auth";
 import { LogOut } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 
 export default function SettingSidebar({ isMobile }: { isMobile?: boolean }) {
-  const router = useRouter();
   const pathname = usePathname();
-  const supabase = createClient();
+  const logoutMutation = useLogout();
 
   const isCanChangePassword = useAuthStore((state) => state.isCanChangePassword);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.refresh();
+    await logoutMutation.mutateAsync().catch(() => undefined);
   };
 
   const mainItems = SETTING_MENU.filter((item) => item.type !== "logout");
@@ -48,6 +47,7 @@ export default function SettingSidebar({ isMobile }: { isMobile?: boolean }) {
                   item,
                   {
                     onLogout: handleLogout,
+                    isLogoutPending: logoutMutation.isPending,
                     isActive: (href) => pathname === href,
                   },
                   isCanChangePassword,
@@ -63,8 +63,12 @@ export default function SettingSidebar({ isMobile }: { isMobile?: boolean }) {
         <div className="p-2">
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton onClick={handleLogout} className="text-muted-foreground">
-                <LogOut />
+              <SidebarMenuButton
+                onClick={() => void handleLogout()}
+                disabled={logoutMutation.isPending}
+                className="text-muted-foreground"
+              >
+                {logoutMutation.isPending ? <Spinner /> : <LogOut />}
                 <span>로그아웃</span>
               </SidebarMenuButton>
             </SidebarMenuItem>

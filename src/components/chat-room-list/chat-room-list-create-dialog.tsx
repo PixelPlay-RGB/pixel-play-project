@@ -1,7 +1,6 @@
 "use client";
 
 // 채팅방 목록에서 새 채팅방 생성 다이얼로그를 렌더링합니다.
-import { createChatRoomAction } from "@/actions/chat-room";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -14,27 +13,24 @@ import {
 import { FieldError } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import {
   CHAT_ROOM_DESCRIPTION_MAX_LENGTH,
   CHAT_ROOM_MAX_CAPACITY,
   CHAT_ROOM_MIN_CAPACITY,
   CHAT_ROOM_TITLE_MAX_LENGTH,
 } from "@/constants/chat-room";
-import { QUERY_KEYS } from "@/constants/query-keys";
+import { useCreateChatRoom } from "@/hooks/use-create-chat-room";
 import { cn } from "@/lib/utils";
 import { CREATE_CHAT_ROOM_DEFAULT_VALUES, createChatRoomSchema } from "@/lib/zod/chat-room";
 import type { CreateChatRoomInput } from "@/lib/zod/chat-room";
-import { toastAppError, toastAppSuccess } from "@/utils/toast-message";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQueryClient } from "@tanstack/react-query";
 import { MessageSquarePlus, Plus } from "lucide-react";
 import { useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 
 export default function ChatRoomListCreateDialog() {
   const [open, setOpen] = useState(false);
-  const queryClient = useQueryClient();
+  const createRoomMutation = useCreateChatRoom();
 
   const {
     register,
@@ -50,23 +46,29 @@ export default function ChatRoomListCreateDialog() {
 
   const title = useWatch({ control, name: "title" }) ?? "";
   const description = useWatch({ control, name: "description" }) ?? "";
+  const isBusy = isSubmitting || createRoomMutation.isPending;
+
+  const handleOpenChange = (next: boolean) => {
+    if (!isBusy) {
+      setOpen(next);
+    }
+  };
 
   const handleCreateRoom = async (values: CreateChatRoomInput) => {
-    const result = await createChatRoomAction(values);
+    const result = await createRoomMutation.mutateAsync(values).catch(() => ({
+      success: false,
+    }));
 
     if (!result.success) {
-      toastAppError(result.code ?? APP_MESSAGE_CODE.error.chatRoom.createFailed);
       return;
     }
 
-    toastAppSuccess(result.code ?? APP_MESSAGE_CODE.success.chatRoom.created);
     setOpen(false);
     reset(CREATE_CHAT_ROOM_DEFAULT_VALUES);
-    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.all });
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger
         className={cn(
           "flex items-center gap-1.5 self-end px-5 py-2",
@@ -167,6 +169,7 @@ export default function ChatRoomListCreateDialog() {
               type="button"
               variant="outline"
               onClick={() => setOpen(false)}
+              disabled={isBusy}
               className={cn(
                 "bg-background h-10 flex-1 rounded-xl transition-all",
                 "text-foreground text-sm font-semibold",
@@ -177,14 +180,14 @@ export default function ChatRoomListCreateDialog() {
             </Button>
             <Button
               type="submit"
-              disabled={!isValid || isSubmitting}
+              disabled={!isValid || isBusy}
               className={cn(
                 "bg-brand h-10 flex-1 rounded-xl transition-all",
                 "shadow-brand/20 text-sm font-bold text-white shadow-sm",
                 "hover:opacity-90 active:scale-95",
               )}
             >
-              {isSubmitting ? "생성 중..." : "생성하기"}
+              {isBusy ? "생성 중..." : "생성하기"}
             </Button>
           </div>
         </form>
