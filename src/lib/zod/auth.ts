@@ -6,16 +6,19 @@ export const loginSchema = z.object({
   password: z.string().min(1, { error: FORM_MESSAGE.auth.passwordRequired }),
 });
 
+const passwordSchema = z
+  .string()
+  .min(8, { error: FORM_MESSAGE.auth.passwordMin })
+  .regex(/[a-z]/, { error: FORM_MESSAGE.auth.passwordLowercase })
+  .regex(/[A-Z]/, { error: FORM_MESSAGE.auth.passwordUppercase })
+  .regex(/[0-9]/, { error: FORM_MESSAGE.auth.passwordDigit })
+  .regex(/[^A-Za-z0-9]/, { error: FORM_MESSAGE.auth.passwordSymbol });
+
+const currentPasswordSchema = z.string().min(1, { error: FORM_MESSAGE.auth.passwordRequired });
+
 export const signUpBaseSchema = z.object({
   email: z.email({ error: FORM_MESSAGE.auth.emailInvalid }),
-  // [PROD] 영문 대문자 1개 이상, 숫자 1개 이상, 특수문자(!@#$%^&*) 1개 이상, 최소 8자
-  // password: z.string()
-  //   .min(8, { error: "비밀번호는 8자 이상이어야 합니다." })
-  //   .regex(/[A-Z]/, { error: "영문 대문자를 1개 이상 포함해야 합니다." })
-  //   .regex(/[0-9]/, { error: "숫자를 1개 이상 포함해야 합니다." })
-  //   .regex(/[!@#$%^&*]/, { error: "특수문자(!@#$%^&*)를 1개 이상 포함해야 합니다." }),
-  // [TEST]
-  password: z.string().min(6, { error: FORM_MESSAGE.auth.passwordMin }),
+  password: passwordSchema,
   passwordConfirm: z.string(),
   name: z.string().min(2, { error: FORM_MESSAGE.auth.nameMin }),
   nickname: z
@@ -50,12 +53,12 @@ export const completeOAuthProfileSchema = signUpBaseSchema.pick({
 });
 
 export const verifyPasswordSchema = z.object({
-  currentPassword: signUpBaseSchema.shape.password,
+  currentPassword: currentPasswordSchema,
 });
 
 export const changePasswordSchema = z
   .object({
-    newPassword: signUpBaseSchema.shape.password,
+    newPassword: passwordSchema,
     newPasswordConfirm: z.string(),
   })
   .refine((data) => data.newPassword === data.newPasswordConfirm, {
