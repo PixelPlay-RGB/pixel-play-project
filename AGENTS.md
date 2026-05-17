@@ -18,6 +18,7 @@
 - 앱 메시지/toast 컨벤션: [.agents/app-message-convention/SKILLS.md](./.agents/app-message-convention/SKILLS.md)
 - 커밋/브랜치 컨벤션: [.agents/git-convention/SKILLS.md](./.agents/git-convention/SKILLS.md)
 - Supabase/DB 컨벤션: [.agents/supabase-convention/SKILLS.md](./.agents/supabase-convention/SKILLS.md)
+- 검증/권한 실행 규칙: [.agents/validation-convention/SKILLS.md](./.agents/validation-convention/SKILLS.md)
 
 ---
 
