@@ -2,6 +2,8 @@ import type { ChatRoomSortOption, ChatRoomTab } from "@/types/chat-room";
 
 export const CHAT_ROOM_MIN_CAPACITY = 2;
 export const CHAT_ROOM_MAX_CAPACITY = 50;
+export const CHAT_ROOM_TITLE_MAX_LENGTH = 50;
+export const CHAT_ROOM_DESCRIPTION_MAX_LENGTH = 200;
 export const CHAT_ROOM_PAGE_SIZE = 16;
 export const CHAT_ROOM_MOBILE_PAGE_SIZE = 8;
 

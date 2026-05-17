@@ -22,6 +22,8 @@ export const FORM_MESSAGE = {
   },
   chatRoom: {
     titleRequired: "방 제목을 입력해주세요.",
+    titleMax: (max: number) => `방 제목은 ${max}자 이하여야 합니다.`,
+    descriptionMax: (max: number) => `방 설명은 ${max}자 이하여야 합니다.`,
     capacityRequired: "참여 가능 인원을 입력해주세요.",
     capacityInteger: "참여 가능 인원은 정수로 입력해주세요.",
     capacityMin: (min: number) => `최소 ${min}명 이상이어야 합니다.`,

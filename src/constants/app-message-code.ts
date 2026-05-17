@@ -54,6 +54,7 @@ export const APP_MESSAGE_CODE = {
     },
     chatRoom: {
       createAuthRequired: "error.chatRoom.createAuthRequired",
+      invalidInput: "error.chatRoom.invalidInput",
       createFailed: "error.chatRoom.createFailed",
       createMemberFailed: "error.chatRoom.createMemberFailed",
       joinFailed: "error.chatRoom.joinFailed",

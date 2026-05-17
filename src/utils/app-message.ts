@@ -18,6 +18,10 @@ const CHAT_ROOM_RPC_ERROR_CODE_MAP: Array<{
   code: AppMessageCode;
 }> = [
   {
+    errorCode: "PX400",
+    code: APP_MESSAGE_CODE.error.chatRoom.invalidInput,
+  },
+  {
     errorCode: "PX401",
     code: APP_MESSAGE_CODE.error.auth.authInfoNotFound,
   },

@@ -15,7 +15,12 @@ import { FieldError } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
-import { CHAT_ROOM_MAX_CAPACITY, CHAT_ROOM_MIN_CAPACITY } from "@/constants/chat-room";
+import {
+  CHAT_ROOM_DESCRIPTION_MAX_LENGTH,
+  CHAT_ROOM_MAX_CAPACITY,
+  CHAT_ROOM_MIN_CAPACITY,
+  CHAT_ROOM_TITLE_MAX_LENGTH,
+} from "@/constants/chat-room";
 import { QUERY_KEYS } from "@/constants/query-keys";
 import { cn } from "@/lib/utils";
 import { CREATE_CHAT_ROOM_DEFAULT_VALUES, createChatRoomSchema } from "@/lib/zod/chat-room";
@@ -105,7 +110,7 @@ export default function ChatRoomListCreateDialog() {
               type="text"
               {...register("title")}
               placeholder="방 제목을 입력하세요"
-              maxLength={50}
+              maxLength={CHAT_ROOM_TITLE_MAX_LENGTH}
               className={cn(
                 "h-auto rounded-xl px-4 py-2.5 text-sm transition-all",
                 "border-border bg-muted/30 placeholder:text-muted-foreground/60",
@@ -114,7 +119,9 @@ export default function ChatRoomListCreateDialog() {
               )}
             />
             <FieldError errors={[errors.title]} />
-            <p className="text-muted-foreground text-right text-xs">{title.length} / 50</p>
+            <p className="text-muted-foreground text-right text-xs">
+              {title.length} / {CHAT_ROOM_TITLE_MAX_LENGTH}
+            </p>
           </div>
           <div className="flex flex-col gap-1.5">
             <label className="text-muted-foreground text-xs font-semibold">
@@ -123,7 +130,7 @@ export default function ChatRoomListCreateDialog() {
             <Textarea
               {...register("description")}
               placeholder="방의 목적이나 규칙을 적어주세요"
-              maxLength={200}
+              maxLength={CHAT_ROOM_DESCRIPTION_MAX_LENGTH}
               className={cn(
                 "h-auto min-h-20 resize-none rounded-xl px-4 py-2.5 text-sm transition-all",
                 "border-border bg-muted/30 placeholder:text-muted-foreground/60",
@@ -133,7 +140,7 @@ export default function ChatRoomListCreateDialog() {
             />
             <FieldError errors={[errors.description]} />
             <p className="text-muted-foreground text-right text-xs">
-              {description?.length ?? 0} / 200
+              {description?.length ?? 0} / {CHAT_ROOM_DESCRIPTION_MAX_LENGTH}
             </p>
           </div>
           <div className="flex flex-col gap-1.5">

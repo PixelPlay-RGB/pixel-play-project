@@ -145,6 +145,10 @@ export const APP_MESSAGE = {
         title: "인증 정보 없음",
         description: "다시 로그인한 뒤 채팅방을 생성해주세요.",
       },
+      invalidInput: {
+        title: "채팅방 정보 확인 필요",
+        description: "입력한 채팅방 정보를 다시 확인해주세요.",
+      },
       createFailed: {
         title: "채팅방 생성 실패",
         description: "채팅방 정보를 저장하지 못했습니다.",

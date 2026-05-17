@@ -187,6 +187,15 @@ export type Database = {
     };
     Functions: {
       check_email_exists: { Args: { target_email: string }; Returns: boolean };
+      create_chat_room: {
+        Args: {
+          p_actor_user_id: string;
+          p_description?: string;
+          p_max_capacity?: number;
+          p_title: string;
+        };
+        Returns: string;
+      };
       get_chat_room_detail: {
         Args: { p_room_id: string };
         Returns: {
@@ -211,7 +220,10 @@ export type Database = {
           total_count: number;
         }[];
       };
-      join_chat_room: { Args: { p_room_id: string }; Returns: undefined };
+      join_chat_room: {
+        Args: { p_actor_user_id: string; p_room_id: string };
+        Returns: undefined;
+      };
       kick_chat_room_member: {
         Args: {
           p_actor_user_id: string;
@@ -220,8 +232,14 @@ export type Database = {
         };
         Returns: undefined;
       };
-      leave_chat_room: { Args: { p_room_id: string }; Returns: undefined };
-      mark_room_read: { Args: { p_room_id: string }; Returns: undefined };
+      leave_chat_room: {
+        Args: { p_actor_user_id: string; p_room_id: string };
+        Returns: undefined;
+      };
+      mark_room_read: {
+        Args: { p_actor_user_id: string; p_room_id: string };
+        Returns: undefined;
+      };
       search_chat_rooms: {
         Args: {
           p_limit?: number;
@@ -243,7 +261,7 @@ export type Database = {
         }[];
       };
       send_chat_message: {
-        Args: { p_content: string; p_room_id: string };
+        Args: { p_actor_user_id: string; p_content: string; p_room_id: string };
         Returns: undefined;
       };
       transfer_chat_room_owner: {

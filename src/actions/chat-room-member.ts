@@ -1,28 +1,17 @@
 "use server";
 
 // 채팅방 멤버십과 멤버 관리 RPC를 호출하는 서버 액션
+import { getAuthenticatedActorId } from "@/actions/authenticated-actor";
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import type { AppMessageCode } from "@/constants/app-message-code";
 import { createAdminClient } from "@/lib/supabase/admin-client";
-import { createClient } from "@/lib/supabase/server";
 import type { AppActionResult } from "@/types/action";
 import { isKnownChatRoomRpcError, resolveChatRoomRpcErrorCode } from "@/utils/app-message";
-import { isAuthSessionMissingError } from "@/utils/auth-error";
 
 interface ChatRoomMemberActionInput {
   roomId: string;
   targetUserId: string;
 }
-
-type AuthenticatedActorResult =
-  | {
-      success: true;
-      userId: string;
-    }
-  | {
-      success: false;
-      result: AppActionResult;
-    };
 
 function createRpcFailureResult(
   error: unknown,
@@ -39,37 +28,18 @@ function createRpcFailureResult(
   };
 }
 
-async function getAuthenticatedActorId(): Promise<AuthenticatedActorResult> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
-
-  if (error && !isAuthSessionMissingError(error)) {
-    console.error("채팅방 참여자 관리 중 인증 유저 조회 실패", error);
-  }
-
-  if (!user) {
-    return {
-      success: false,
-      result: {
-        success: false,
-        code: APP_MESSAGE_CODE.error.auth.authInfoNotFound,
-      },
-    };
-  }
-
-  return {
-    success: true,
-    userId: user.id,
-  };
-}
-
 export async function joinChatRoomAction(roomId: string): Promise<AppActionResult> {
-  const supabase = await createClient();
+  const actor = await getAuthenticatedActorId({
+    logLabel: "채팅방 참여 중 인증 유저 조회 실패",
+  });
 
+  if (!actor.success) {
+    return actor.result;
+  }
+
+  const supabase = createAdminClient();
   const { error } = await supabase.rpc("join_chat_room", {
+    p_actor_user_id: actor.userId,
     p_room_id: roomId,
   });
 
@@ -87,9 +57,17 @@ export async function joinChatRoomAction(roomId: string): Promise<AppActionResul
 }
 
 export async function leaveChatRoomAction(roomId: string): Promise<AppActionResult> {
-  const supabase = await createClient();
+  const actor = await getAuthenticatedActorId({
+    logLabel: "채팅방 나가기 중 인증 유저 조회 실패",
+  });
 
+  if (!actor.success) {
+    return actor.result;
+  }
+
+  const supabase = createAdminClient();
   const { error } = await supabase.rpc("leave_chat_room", {
+    p_actor_user_id: actor.userId,
     p_room_id: roomId,
   });
 
@@ -108,9 +86,17 @@ export async function leaveChatRoomAction(roomId: string): Promise<AppActionResu
 }
 
 export async function markRoomReadAction(roomId: string): Promise<AppActionResult> {
-  const supabase = await createClient();
+  const actor = await getAuthenticatedActorId({
+    logLabel: "채팅방 읽음 처리 중 인증 유저 조회 실패",
+  });
 
+  if (!actor.success) {
+    return actor.result;
+  }
+
+  const supabase = createAdminClient();
   const { error } = await supabase.rpc("mark_room_read", {
+    p_actor_user_id: actor.userId,
     p_room_id: roomId,
   });
 
@@ -131,7 +117,9 @@ export async function kickChatRoomMemberAction({
   roomId,
   targetUserId,
 }: ChatRoomMemberActionInput): Promise<AppActionResult> {
-  const actor = await getAuthenticatedActorId();
+  const actor = await getAuthenticatedActorId({
+    logLabel: "채팅방 참여자 관리 중 인증 유저 조회 실패",
+  });
 
   if (!actor.success) {
     return actor.result;
@@ -163,7 +151,9 @@ export async function transferChatRoomOwnerAction({
   roomId,
   targetUserId,
 }: ChatRoomMemberActionInput): Promise<AppActionResult> {
-  const actor = await getAuthenticatedActorId();
+  const actor = await getAuthenticatedActorId({
+    logLabel: "채팅방 참여자 관리 중 인증 유저 조회 실패",
+  });
 
   if (!actor.success) {
     return actor.result;
