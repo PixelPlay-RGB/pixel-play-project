@@ -4,9 +4,19 @@ import Logo from "@/components/common/logo";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { redirectAuthenticatedUserFromAuthPage } from "@/utils/auth-page-server";
+import { sanitizeRedirectPath } from "@/utils/redirect";
 
-export default async function Page() {
-  await redirectAuthenticatedUserFromAuthPage();
+interface Props {
+  searchParams: Promise<{
+    next?: string;
+  }>;
+}
+
+export default async function Page({ searchParams }: Props) {
+  const { next } = await searchParams;
+  const safeNext = sanitizeRedirectPath(next);
+
+  await redirectAuthenticatedUserFromAuthPage(safeNext);
 
   return (
     <div className="container m-auto">
@@ -26,7 +36,7 @@ export default async function Page() {
           <p className="text-xs tracking-widest uppercase">회원가입</p>
         </div>
 
-        <SignupForm />
+        <SignupForm next={safeNext} />
       </div>
     </div>
   );

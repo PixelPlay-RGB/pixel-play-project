@@ -1,5 +1,7 @@
 // 라우트 페이지를 렌더링합니다.
 import MainMenuSidebar from "@/components/common/main-menu-sidebar";
+import PublicHomePreview from "@/components/public/public-home-preview";
+import { getCurrentProfileSnapshot } from "@/utils/profile-server";
 import type { Metadata } from "next";
 
 const HOME_METADATA_TITLE = "실시간 채팅 서비스";
@@ -30,6 +32,12 @@ export const metadata: Metadata = {
   },
 };
 
-export default function Home() {
+export default async function Home() {
+  const { profile } = await getCurrentProfileSnapshot();
+
+  if (!profile) {
+    return <PublicHomePreview />;
+  }
+
   return <MainMenuSidebar />;
 }

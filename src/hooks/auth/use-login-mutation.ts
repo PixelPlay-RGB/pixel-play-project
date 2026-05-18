@@ -8,11 +8,12 @@ import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth";
 import type { LoginFormValues, OAuthProvider } from "@/types/auth";
 import { isAuthSessionMissingError } from "@/utils/auth-error";
+import { appendSearchParam, sanitizeRedirectPath } from "@/utils/redirect";
 import { toastAppError } from "@/utils/toast-message";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 
-export function useLoginMutation() {
+export function useLoginMutation(next = "/") {
   const router = useRouter();
   const queryClient = useQueryClient();
   const setUser = useAuthStore((state) => state.setUser);
@@ -43,7 +44,7 @@ export function useLoginMutation() {
       setUser(authUser);
       await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth.profile(authUser.id) });
 
-      router.replace(`/${LOGIN_PARAM}`);
+      router.replace(appendSearchParam(next, LOGIN_PARAM));
 
       return result;
     },
@@ -54,15 +55,16 @@ export function useLoginMutation() {
   });
 }
 
-export function useOAuthLoginMutation() {
+export function useOAuthLoginMutation(next = "/") {
   const supabase = createClient();
+  const safeNext = sanitizeRedirectPath(next);
 
   return useMutation({
     mutationFn: async (provider: OAuthProvider) => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(safeNext)}`,
         },
       });
 

@@ -35,14 +35,18 @@ import { CalendarDays, LockKeyhole, Mail, Smartphone, User, UserStar } from "luc
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 
-export default function SignupForm() {
+interface Props {
+  next: string;
+}
+
+export default function SignupForm({ next }: Props) {
   const [otpStatus, setOtpStatus] = useState<OtpStatus>("idle");
   const [otpCode, setOtpCode] = useState("");
   const [otpError, setOtpError] = useState("");
 
   const sendOtpMutation = useSendOtpMutation();
   const verifyOtpMutation = useVerifyOtpMutation();
-  const completeSignupMutation = useCompleteSignupMutation();
+  const completeSignupMutation = useCompleteSignupMutation(next);
 
   const emailVerified = otpStatus === "verified";
   const otpSent = otpStatus !== "idle" && otpStatus !== "sending";

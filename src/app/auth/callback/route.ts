@@ -2,6 +2,7 @@
 import { LINKED_PARAM, LOGIN_PARAM } from "@/constants/auth";
 import { createClient } from "@/lib/supabase/server";
 import { LoginProvider } from "@/types/auth";
+import { appendSearchParam, createPathWithNext, sanitizeRedirectPath } from "@/utils/redirect";
 import { NextResponse, type NextRequest } from "next/server";
 
 /**
@@ -12,7 +13,7 @@ import { NextResponse, type NextRequest } from "next/server";
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/";
+  const next = sanitizeRedirectPath(searchParams.get("next"));
 
   if (code) {
     const supabase = await createClient();
@@ -35,7 +36,9 @@ export async function GET(request: NextRequest) {
 
       if (!existingUser) {
         // 신규 OAuth 유저라면 추가 정보 입력 페이지로 보냄
-        return NextResponse.redirect(`${origin}/auth/complete-profile`);
+        return NextResponse.redirect(
+          `${origin}${createPathWithNext("/auth/complete-profile", next)}`,
+        );
       }
 
       const VALID_PROVIDERS: LoginProvider[] = ["email", "google", "github"];
@@ -72,7 +75,7 @@ export async function GET(request: NextRequest) {
       }
 
       return NextResponse.redirect(
-        `${origin}${next}${newProviders.length > 0 ? LINKED_PARAM : LOGIN_PARAM}`,
+        `${origin}${appendSearchParam(next, newProviders.length > 0 ? LINKED_PARAM : LOGIN_PARAM)}`,
       );
     }
   }

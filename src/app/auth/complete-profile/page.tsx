@@ -4,16 +4,25 @@ import Logo from "@/components/common/logo";
 import { Separator } from "@/components/ui/separator";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
+import { createPathWithNext, sanitizeRedirectPath } from "@/utils/redirect";
 import { redirect } from "next/navigation";
 
-export default async function Page() {
+interface Props {
+  searchParams: Promise<{
+    next?: string;
+  }>;
+}
+
+export default async function Page({ searchParams }: Props) {
+  const { next } = await searchParams;
+  const safeNext = sanitizeRedirectPath(next);
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/auth/login");
+    redirect(createPathWithNext("/auth/login", safeNext));
   }
 
   // 이미 프로필이 완성된 유저가 직접 접근한 경우 홈으로
@@ -28,7 +37,7 @@ export default async function Page() {
   }
 
   if (profile?.nickname) {
-    redirect("/");
+    redirect(safeNext);
   }
 
   return (
@@ -52,7 +61,7 @@ export default async function Page() {
             </p>
           </div>
         </div>
-        <CompleteProfileForm />
+        <CompleteProfileForm next={safeNext} />
       </div>
     </div>
   );

@@ -13,6 +13,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth";
 import type { CompleteSignupInput } from "@/types/auth";
 import { isAuthSessionMissingError } from "@/utils/auth-error";
+import { appendSearchParam } from "@/utils/redirect";
 import { toastAppError, toastAppSuccess } from "@/utils/toast-message";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
@@ -55,7 +56,7 @@ export function useCheckNicknameMutation() {
   });
 }
 
-export function useCompleteSignupMutation() {
+export function useCompleteSignupMutation(next = "/") {
   const router = useRouter();
   const queryClient = useQueryClient();
   const setUser = useAuthStore((state) => state.setUser);
@@ -87,7 +88,7 @@ export function useCompleteSignupMutation() {
       setUser(authUser);
       await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth.profile(authUser.id) });
 
-      router.replace(`/${WELCOME_PARAM}`);
+      router.replace(appendSearchParam(next, WELCOME_PARAM));
 
       return result;
     },
