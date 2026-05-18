@@ -131,6 +131,12 @@ npm run dev
 - 모바일에서는 사이드바가 offcanvas 형태로 동작합니다.
 - 헤더 검색 입력은 채팅 메뉴에서 채팅방 검색 페이지로 이동합니다. 모바일에서는 검색 아이콘 클릭 시 전체 폭 검색 모드 헤더로 전환됩니다.
 
+### SEO와 공유 미리보기
+
+- production domain은 `https://pixel-play.studio`를 metadata base URL로 사용합니다.
+- 메인 페이지와 채팅방 상세 페이지는 Open Graph와 Twitter large image metadata를 제공합니다.
+- 공유 썸네일은 `public/og-home.webp`, `public/og-chat-room.webp` 정적 에셋을 사용합니다.
+
 ### 채팅방 목록
 
 - `JOINED`, `NOT_JOINED`, `OWNED` 탭으로 채팅방 목록을 분리합니다.
@@ -177,7 +183,7 @@ npm run dev
 - 메시지 입력 draft와 auto-resize는 `useMessageDraft`, `useAutoResizeTextarea`로 관리합니다. 최대 높이는 `max-h-32`이며 초과 시 스크롤됩니다. Shift+Enter는 줄바꿈, Enter는 전송입니다.
 - 메시지 입력 중인 멤버는 참여자 목록 avatar의 접속 dot 대신 Motion 기반 3점 typing indicator로 표시하고, 일정 시간 입력이 없으면 접속 dot으로 돌아갑니다.
 - 멀티라인 메시지는 `whitespace-pre-wrap`으로 렌더링합니다.
-- 날짜 구분 시스템 메시지는 PostgreSQL AFTER INSERT Trigger(`trigger_insert_date_divider_message`)가 매일 첫 text 메시지 INSERT 시 `📅 YYYY년 MM월 DD일 요일` 형식의 system 메시지를 1ms 앞 타임스탬프로 자동 삽입합니다.
+- 날짜 구분 시스템 메시지는 PostgreSQL AFTER INSERT Trigger(`trigger_insert_date_divider_message`)가 매일 첫 메시지 INSERT 시 `📅 YYYY년 MM월 DD일 요일` 형식의 system 메시지를 1ms 앞 타임스탬프로 자동 삽입합니다. 날짜 구분 메시지 자체는 재귀 방지를 위해 제외하고, text 메시지와 일반 system 메시지를 기준으로 날짜를 구분합니다.
 - 날짜 구분 메시지는 partial unique index와 `ON CONFLICT DO NOTHING`으로 같은 방, 같은 날짜 중복 생성을 방지합니다.
 - 프론트는 `SystemMessageItem`에서 lucide Calendar 아이콘으로 날짜 구분 메시지를 렌더링합니다.
 - 시스템 메시지는 별도 컴포넌트로 렌더링합니다.
@@ -342,43 +348,45 @@ npm run types
 
 현재 저장소의 `supabase/migrations/` 에 포함된 주요 migration 파일은 다음과 같습니다.
 
-| 파일                                                                  | 내용                                     |
-| --------------------------------------------------------------------- | ---------------------------------------- |
-| `20260506021151_create_kv_table_55ce40ce.sql`                         | KV 테이블 생성                           |
-| `20260507053827_add_pagination_to_get_rooms_by_tab.sql`               | 채팅방 목록 페이지네이션 추가            |
-| `20260507060357_mark_room_read_rpc.sql`                               | `mark_room_read` RPC 추가                |
-| `20260507064503_drop_paginated_get_rooms_by_tab.sql`                  | 기존 페이지네이션 RPC 제거               |
-| `20260507074832_leave_chat_room_rpc.sql`                              | `leave_chat_room` RPC 추가               |
-| `20260511012256_trigger_update_member_count_add_last_joined_at.sql`   | 멤버 수 트리거 및 `last_joined_at` 추가  |
-| `20260511032318_create_join_chat_room_rpc.sql`                        | `join_chat_room` RPC 추가                |
-| `20260511033426_fix_join_chat_room_return_type.sql`                   | `join_chat_room` 반환 타입 수정          |
-| `20260511052223_update_join_chat_room_rpc_active_member_policy.sql`   | 활성 멤버 정책 반영                      |
-| `20260511052342_drop_old_join_chat_room_rpc.sql`                      | 구 `join_chat_room` RPC 제거             |
-| `20260511061734_join_chat_room_security_definer.sql`                  | security definer 적용                    |
-| `20260511075805_add_get_rooms_by_tab_count.sql`                       | `get_rooms_by_tab_count` 추가            |
-| `20260512123000_update_get_rooms_by_tab_sort.sql`                     | 채팅방 목록 정렬 RPC 업데이트            |
-| `20260514000000_update_get_rooms_by_tab_count_add_sort.sql`           | 정렬 옵션 통합                           |
-| `20260514010000_update_get_rooms_by_tab_count_add_pagination.sql`     | 페이지네이션 통합                        |
-| `20260514020000_drop_old_get_rooms_by_tab_count_overload.sql`         | 구 오버로드 제거                         |
-| `20260514030000_replace_join_chat_room_rpc.sql`                       | `join_chat_room` RPC 교체                |
-| `20260515000000_get_rooms_by_tab_count_add_query.sql`                 | 탭 내 검색 파라미터 추가                 |
-| `20260515010000_get_rooms_by_tab_count_fix_unread_and_full_room.sql`  | unread 계산 및 정원 마감 필터 수정       |
-| `20260515020000_insert_date_divider_message_trigger.sql`              | 날짜 구분 system 메시지 트리거 추가      |
-| `20260516000000_refactor_chat_room_rpc_concurrency.sql`               | 채팅방 RPC 동시성 제어 정리              |
-| `20260516070131_restrict_chat_room_rpc_execute.sql`                   | 채팅방 RPC 실행 권한 정리                |
-| `20260516070741_restrict_member_management_rpc_to_service_role.sql`   | 참여자 관리 RPC 실행 경계 강화           |
-| `20260516072941_restrict_advisor_security_definer_rpc.sql`            | Advisor 대상 RPC 권한 정리               |
-| `20260516093908_add_chat_room_list_rpc.sql`                           | 채팅방 목록 RPC 통합                     |
-| `20260516113108_add_chat_room_detail_rpc.sql`                         | 채팅방 상세 RPC 추가                     |
-| `20260516121058_drop_unused_chat_room_legacy_rpcs.sql`                | 미사용 채팅방 목록 RPC 제거              |
-| `20260516230042_fix_chat_room_performance_advisor.sql`                | 채팅방 DB 성능 Advisor 정리              |
-| `20260516234000_add_send_chat_message_rpc.sql`                        | 메시지 전송 RPC와 본문 DB 제약 추가      |
-| `20260517130338_restrict_chat_room_write_access.sql`                  | 채팅 테이블 직접 쓰기 권한 폐쇄          |
-| `20260517130631_harden_date_divider_trigger_search_path.sql`          | 날짜 구분 trigger 함수 search_path 보강  |
-| `20260517130931_restrict_write_rpc_execute_to_service_role.sql`       | 쓰기 RPC 실행 경계 service role로 정리   |
-| `20260517141944_harden_message_send_and_date_divider_concurrency.sql` | 메시지 전송과 날짜 구분 동시성 보강      |
-| `20260518111049_update_chat_room_list_default_sort.sql`               | 채팅방 목록 기본 정렬 최신 메시지순 전환 |
-| `20260518212356_return_send_chat_message_id.sql`                      | 메시지 optimistic reconcile용 id 반환    |
+| 파일                                                                  | 내용                                      |
+| --------------------------------------------------------------------- | ----------------------------------------- |
+| `20260506021151_create_kv_table_55ce40ce.sql`                         | KV 테이블 생성                            |
+| `20260507053827_add_pagination_to_get_rooms_by_tab.sql`               | 채팅방 목록 페이지네이션 추가             |
+| `20260507060357_mark_room_read_rpc.sql`                               | `mark_room_read` RPC 추가                 |
+| `20260507064503_drop_paginated_get_rooms_by_tab.sql`                  | 기존 페이지네이션 RPC 제거                |
+| `20260507074832_leave_chat_room_rpc.sql`                              | `leave_chat_room` RPC 추가                |
+| `20260511012256_trigger_update_member_count_add_last_joined_at.sql`   | 멤버 수 트리거 및 `last_joined_at` 추가   |
+| `20260511032318_create_join_chat_room_rpc.sql`                        | `join_chat_room` RPC 추가                 |
+| `20260511033426_fix_join_chat_room_return_type.sql`                   | `join_chat_room` 반환 타입 수정           |
+| `20260511052223_update_join_chat_room_rpc_active_member_policy.sql`   | 활성 멤버 정책 반영                       |
+| `20260511052342_drop_old_join_chat_room_rpc.sql`                      | 구 `join_chat_room` RPC 제거              |
+| `20260511061734_join_chat_room_security_definer.sql`                  | security definer 적용                     |
+| `20260511075805_add_get_rooms_by_tab_count.sql`                       | `get_rooms_by_tab_count` 추가             |
+| `20260512123000_update_get_rooms_by_tab_sort.sql`                     | 채팅방 목록 정렬 RPC 업데이트             |
+| `20260514000000_update_get_rooms_by_tab_count_add_sort.sql`           | 정렬 옵션 통합                            |
+| `20260514010000_update_get_rooms_by_tab_count_add_pagination.sql`     | 페이지네이션 통합                         |
+| `20260514020000_drop_old_get_rooms_by_tab_count_overload.sql`         | 구 오버로드 제거                          |
+| `20260514030000_replace_join_chat_room_rpc.sql`                       | `join_chat_room` RPC 교체                 |
+| `20260515000000_get_rooms_by_tab_count_add_query.sql`                 | 탭 내 검색 파라미터 추가                  |
+| `20260515010000_get_rooms_by_tab_count_fix_unread_and_full_room.sql`  | unread 계산 및 정원 마감 필터 수정        |
+| `20260515020000_insert_date_divider_message_trigger.sql`              | 날짜 구분 system 메시지 트리거 추가       |
+| `20260516000000_refactor_chat_room_rpc_concurrency.sql`               | 채팅방 RPC 동시성 제어 정리               |
+| `20260516070131_restrict_chat_room_rpc_execute.sql`                   | 채팅방 RPC 실행 권한 정리                 |
+| `20260516070741_restrict_member_management_rpc_to_service_role.sql`   | 참여자 관리 RPC 실행 경계 강화            |
+| `20260516072941_restrict_advisor_security_definer_rpc.sql`            | Advisor 대상 RPC 권한 정리                |
+| `20260516093908_add_chat_room_list_rpc.sql`                           | 채팅방 목록 RPC 통합                      |
+| `20260516113108_add_chat_room_detail_rpc.sql`                         | 채팅방 상세 RPC 추가                      |
+| `20260516121058_drop_unused_chat_room_legacy_rpcs.sql`                | 미사용 채팅방 목록 RPC 제거               |
+| `20260516230042_fix_chat_room_performance_advisor.sql`                | 채팅방 DB 성능 Advisor 정리               |
+| `20260516234000_add_send_chat_message_rpc.sql`                        | 메시지 전송 RPC와 본문 DB 제약 추가       |
+| `20260517130338_restrict_chat_room_write_access.sql`                  | 채팅 테이블 직접 쓰기 권한 폐쇄           |
+| `20260517130631_harden_date_divider_trigger_search_path.sql`          | 날짜 구분 trigger 함수 search_path 보강   |
+| `20260517130931_restrict_write_rpc_execute_to_service_role.sql`       | 쓰기 RPC 실행 경계 service role로 정리    |
+| `20260517141944_harden_message_send_and_date_divider_concurrency.sql` | 메시지 전송과 날짜 구분 동시성 보강       |
+| `20260518111049_update_chat_room_list_default_sort.sql`               | 채팅방 목록 기본 정렬 최신 메시지순 전환  |
+| `20260518212356_return_send_chat_message_id.sql`                      | 메시지 optimistic reconcile용 id 반환     |
+| `20260518213000_preserve_system_messages_with_system_user.sql`        | system 메시지 고정 user 보존 처리         |
+| `20260519000100_include_system_messages_in_date_divider.sql`          | system 메시지 날짜 divider 생성 기준 포함 |
 
 ---
 
@@ -425,6 +433,6 @@ npm run types
 
 ## 마무리 점검 상태
 
-- Supabase 원격 migration history와 로컬 migration 파일명은 2026년 5월 18일 기준으로 정합화되어 있습니다.
-- 채팅 도메인의 직접 쓰기 권한, RPC 실행 경계, 날짜 divider 동시성, 메시지 optimistic reconcile, Presence와 Broadcast 기반 입력 상태 표시는 검증 완료 상태입니다.
+- Supabase 원격 migration history와 로컬 migration 파일명은 2026년 5월 19일 기준으로 정합화되어 있습니다.
+- 채팅 도메인의 직접 쓰기 권한, RPC 실행 경계, 날짜 divider 동시성, system 메시지 날짜 구분, 메시지 optimistic reconcile, Presence와 Broadcast 기반 입력 상태 표시는 검증 완료 상태입니다.
 - 최종 UI polish에서 채팅방 목록 skeleton, `/auth/complete-profile` 모바일 카드, `/profile` 모바일 sidebar 초기 렌더, 검색 실패 메시지 중앙화를 정리했습니다.
