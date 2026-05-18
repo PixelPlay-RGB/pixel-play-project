@@ -10,25 +10,39 @@ import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import { MESSAGE_CONTENT_MAX_LENGTH } from "@/constants/message";
 import { useAutoResizeTextarea } from "@/hooks/common/use-auto-resize-textarea";
 import { useMessageDraft } from "@/hooks/message/use-message-draft";
-import { useSendMessage } from "@/hooks/message/use-send-message";
+import type { SendMessageVariables } from "@/hooks/message/use-send-message";
 import { cn } from "@/lib/utils";
+import type { AppActionResult } from "@/types/action";
+import type { MessageQuery } from "@/types/message";
 import { messageContentSchema } from "@/lib/zod/message";
 import { getAppMessageTitle } from "@/utils/app-message";
 import { toastAppError } from "@/utils/toast-message";
+import type { UseMutationResult } from "@tanstack/react-query";
 
 interface Props {
   roomId: string;
+  sendMessageMutation: UseMutationResult<
+    AppActionResult<{ message: MessageQuery }>,
+    Error,
+    SendMessageVariables
+  >;
   disabled?: boolean;
   disabledHint?: string;
 }
 
 const MAX_TEXTAREA_HEIGHT_PX = 128; // max-h-32 (8rem)
 
-export function MessageInput({ roomId, disabled = false, disabledHint }: Props) {
-  const sendMessageMutation = useSendMessage(roomId);
-  const { draft, setDraft, appendDraft, clearDraft } = useMessageDraft(MESSAGE_CONTENT_MAX_LENGTH);
+export function MessageInput({
+  roomId,
+  sendMessageMutation,
+  disabled = false,
+  disabledHint,
+}: Props) {
+  const { mutateAsync, isPending } = sendMessageMutation;
+  const { draft, setDraft, appendDraft } = useMessageDraft(MESSAGE_CONTENT_MAX_LENGTH);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const submitDisabled = disabled || sendMessageMutation.isPending;
+  const sendingRef = useRef(false);
+  const submitDisabled = disabled || isPending;
 
   useAutoResizeTextarea({
     textareaRef,
@@ -39,7 +53,7 @@ export function MessageInput({ roomId, disabled = false, disabledHint }: Props) 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (submitDisabled || !roomId) {
+    if (submitDisabled || !roomId || sendingRef.current) {
       return;
     }
 
@@ -51,14 +65,15 @@ export function MessageInput({ roomId, disabled = false, disabledHint }: Props) 
 
     const content = parsed.data;
 
-    try {
-      const result = await sendMessageMutation.mutateAsync(content);
+    sendingRef.current = true;
+    setDraft("");
 
-      if (result.success) {
-        clearDraft(content);
-      }
+    try {
+      await mutateAsync({ content });
     } catch {
-      return;
+      /* 실패한 메시지는 목록에 남고 clientFailed UI로 처리 */
+    } finally {
+      sendingRef.current = false;
     }
   };
 
@@ -77,7 +92,7 @@ export function MessageInput({ roomId, disabled = false, disabledHint }: Props) 
         title={disabled ? disabledHint : undefined}
         onChange={(e) => setDraft(e.target.value)}
         onKeyDown={(e) => {
-          if (submitDisabled) return;
+          if (submitDisabled || sendingRef.current) return;
           if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
             e.currentTarget.form?.requestSubmit();

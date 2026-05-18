@@ -15,7 +15,7 @@ interface MessagesPage {
   nextCursor?: string;
 }
 
-function insertMessageByCreatedAtDesc(items: MessageQuery[], nextMessage: MessageQuery) {
+export function insertMessageByCreatedAtDesc(items: MessageQuery[], nextMessage: MessageQuery) {
   if (items.some((item) => item.id === nextMessage.id)) {
     return items;
   }

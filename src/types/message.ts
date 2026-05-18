@@ -11,4 +11,6 @@ export interface MessageQuery extends Message {
     nickname: string;
     photo_url: string | null;
   };
+  /** 클라이언트 전용: DB 전송 실패 시 재전송·취소 UI */
+  clientFailed?: boolean;
 }

@@ -6,6 +6,7 @@ import { getAuthenticatedActorId } from "@/actions/authenticated-actor";
 import { createAdminClient } from "@/lib/supabase/admin-client";
 import { messageContentSchema } from "@/lib/zod/message";
 import type { AppActionResult } from "@/types/action";
+import type { MessageQuery } from "@/types/message";
 import { isKnownMessageRpcError, resolveMessageRpcErrorCode } from "@/utils/app-message";
 
 interface SendMessageActionInput {
@@ -16,7 +17,7 @@ interface SendMessageActionInput {
 export async function sendMessageAction({
   roomId,
   content,
-}: SendMessageActionInput): Promise<AppActionResult> {
+}: SendMessageActionInput): Promise<AppActionResult<{ message: MessageQuery }>> {
   if (!roomId) {
     return {
       success: false,
@@ -38,7 +39,11 @@ export async function sendMessageAction({
   });
 
   if (!actor.success) {
-    return actor.result;
+    return {
+      success: false,
+      code: actor.result.code,
+      photoUrl: actor.result.photoUrl,
+    };
   }
 
   const supabase = createAdminClient();
@@ -59,7 +64,26 @@ export async function sendMessageAction({
     };
   }
 
+  const { data: messageRow, error: rowError } = await supabase
+    .from("message")
+    .select("*, user:user_id!inner(nickname, photo_url)")
+    .eq("chat_room_id", roomId)
+    .eq("user_id", actor.userId)
+    .eq("content", parsed.data)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (rowError || !messageRow) {
+    console.error("전송 직후 메시지 조회 실패", rowError);
+    return {
+      success: false,
+      code: APP_MESSAGE_CODE.error.message.sendFailed,
+    };
+  }
+
   return {
     success: true,
+    data: { message: messageRow as MessageQuery },
   };
 }

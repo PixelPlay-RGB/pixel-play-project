@@ -16,6 +16,9 @@ interface Props {
   hasMorePrevious: boolean;
   isLoadingPrevious: boolean;
   onReachTop: () => boolean;
+  onRetryFailedSend?: (messageId: string, content: string) => void;
+  onCancelFailedSend?: (messageId: string) => void;
+  isSendMutationPending?: boolean;
 }
 
 function canGroupMessages(current: MessageQuery, adjacent?: MessageQuery) {
@@ -31,6 +34,9 @@ export function MessageList({
   hasMorePrevious,
   isLoadingPrevious,
   onReachTop,
+  onRetryFailedSend,
+  onCancelFailedSend,
+  isSendMutationPending = false,
 }: Props) {
   const { viewportRef, showLatestButton, handleScroll, scrollToLatest } = useMessageListViewport({
     messages,
@@ -58,6 +64,9 @@ export function MessageList({
                 isGroupedWithPrevious={isGroupedWithPrevious}
                 isGroupedWithNext={isGroupedWithNext}
                 showAuthor={!isGroupedWithPrevious}
+                onRetryFailedSend={onRetryFailedSend}
+                onCancelFailedSend={onCancelFailedSend}
+                isSendMutationPending={isSendMutationPending}
               />
             );
           })}
