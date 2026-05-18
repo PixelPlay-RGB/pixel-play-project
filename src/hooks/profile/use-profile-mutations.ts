@@ -6,9 +6,11 @@ import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import { QUERY_KEYS } from "@/constants/query-keys";
 import { toastAppError, toastAppSuccess } from "@/utils/toast-message";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 
 export function useUpdateProfileMutation() {
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   return useMutation({
     mutationFn: (formData: FormData) => updateProfileAction(formData),
@@ -19,6 +21,7 @@ export function useUpdateProfileMutation() {
       }
 
       await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth.all });
+      router.refresh();
       toastAppSuccess(APP_MESSAGE_CODE.success.profile.updated);
     },
     onError: (error) => {

@@ -5,30 +5,12 @@ import Logo from "@/components/common/logo";
 import ThemeToggleButton from "@/components/common/theme-toggle-button";
 import HeaderSearchForm from "@/components/search/header-search-form";
 import HeaderProfileBadge from "@/components/setting/profile/header-profile-badge";
-import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
+import { getCurrentProfileSnapshot } from "@/utils/profile-server";
 import Link from "next/link";
 
 export default async function Header() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  let hasProfile = false;
-  if (user) {
-    const { data: profile, error: profileError } = await supabase
-      .from("user")
-      .select("id")
-      .eq("id", user.id)
-      .maybeSingle();
-
-    if (profileError) {
-      console.error("헤더 프로필 존재 여부 조회 실패", profileError);
-    }
-
-    hasProfile = !!profile;
-  }
+  const { hasAuthUser, profile } = await getCurrentProfileSnapshot();
 
   return (
     <header
@@ -44,10 +26,10 @@ export default async function Header() {
         </Link>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          {user && hasProfile && <HeaderSearchForm />}
+          {profile && <HeaderSearchForm />}
           <ThemeToggleButton />
-          {user && hasProfile && <HeaderProfileBadge />}
-          {!user && <LoginButton />}
+          {profile && <HeaderProfileBadge profile={profile} />}
+          {!hasAuthUser && <LoginButton />}
         </div>
       </div>
     </header>

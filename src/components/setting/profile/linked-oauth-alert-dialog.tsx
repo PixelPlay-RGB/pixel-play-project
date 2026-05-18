@@ -25,6 +25,7 @@ import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Plug, Unlink } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 interface Props {
   isLinked: boolean;
@@ -41,6 +42,7 @@ export default function LinkedOAuthAlertDialog({
   linkedOAuth,
 }: Props) {
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -76,6 +78,7 @@ export default function LinkedOAuthAlertDialog({
             `${OAUTH_PROVIDER_META[provider].name} 연동이 해제되었습니다.`,
           );
           await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth.all });
+          router.refresh();
           setOpen(false);
         } else {
           toastAppError(result.code ?? APP_MESSAGE_CODE.error.oauth.unlinkFailed);

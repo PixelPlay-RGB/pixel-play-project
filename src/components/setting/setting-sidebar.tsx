@@ -16,16 +16,20 @@ import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { SETTING_MENU } from "@/constants/setting-menu";
 import { useLogout } from "@/hooks/auth/use-logout";
-import { useUser } from "@/hooks/profile/use-profile";
+import type { CurrentProfileSnapshot } from "@/utils/profile-server";
 import { LogOut } from "lucide-react";
 import { usePathname } from "next/navigation";
 
-export default function SettingSidebar({ isMobile }: { isMobile?: boolean }) {
+interface Props {
+  isMobile?: boolean;
+  profile: CurrentProfileSnapshot | null;
+}
+
+export default function SettingSidebar({ isMobile, profile }: Props) {
   const pathname = usePathname();
   const logoutMutation = useLogout();
-  const { data: user } = useUser();
 
-  const isCanChangePassword = user?.linked_providers.includes("email") ?? false;
+  const isCanChangePassword = profile?.linked_providers.includes("email") ?? false;
 
   const handleLogout = async () => {
     await logoutMutation.mutateAsync().catch(() => undefined);
