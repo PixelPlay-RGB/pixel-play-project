@@ -55,3 +55,6 @@ next-env.d.ts
 # Agent work notes
 checklist.md
 context-notes.md
+
+# Supabase CLI local state
+supabase/.temp/
