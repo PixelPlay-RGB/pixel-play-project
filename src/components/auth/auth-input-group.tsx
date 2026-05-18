@@ -1,7 +1,12 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from "@/components/ui/input-group";
 import { forwardRef, InputHTMLAttributes, ReactNode, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 
@@ -30,12 +35,17 @@ const AuthInputGroup = forwardRef<HTMLInputElement, Props>(
         <InputGroupInput ref={ref} type={inputType} {...props} />
 
         {isPasswordField && (
-          <InputGroupAddon
-            align="inline-end"
-            className="hover:text-brand cursor-pointer px-3 transition-colors"
-            onClick={() => setShowPassword(!showPassword)}
-          >
-            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+          <InputGroupAddon align="inline-end">
+            <InputGroupButton
+              type="button"
+              size="icon-xs"
+              aria-label={showPassword ? "비밀번호 숨기기" : "비밀번호 표시"}
+              aria-pressed={showPassword}
+              className="hover:text-brand transition-colors"
+              onClick={() => setShowPassword((prev) => !prev)}
+            >
+              {showPassword ? <EyeOff size={18} aria-hidden /> : <Eye size={18} aria-hidden />}
+            </InputGroupButton>
           </InputGroupAddon>
         )}
       </InputGroup>

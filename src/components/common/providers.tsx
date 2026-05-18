@@ -6,6 +6,8 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { ThemeProvider } from "next-themes";
 import { ReactNode, useState } from "react";
 
+const isReactQueryDevtoolsEnabled = process.env.NEXT_PUBLIC_ENABLE_REACT_QUERY_DEVTOOLS === "true";
+
 export default function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => new QueryClient({}));
 
@@ -14,7 +16,7 @@ export default function Providers({ children }: { children: ReactNode }) {
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
         <AuthListener />
         {children}
-        <ReactQueryDevtools initialIsOpen={false} />
+        {isReactQueryDevtoolsEnabled && <ReactQueryDevtools initialIsOpen={false} />}
       </ThemeProvider>
     </QueryClientProvider>
   );

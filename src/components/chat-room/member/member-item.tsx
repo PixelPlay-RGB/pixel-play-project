@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { RoomMemberQuery } from "@/types/chat-room-member";
-import { getAvatarFallbackText } from "@/utils/avatar";
+import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/avatar";
 import { Crown } from "lucide-react";
 
 interface Props {
@@ -44,7 +44,7 @@ function MemberContent({
     <>
       <div className="shrink-0">
         <Avatar size="default">
-          {photoUrl ? <AvatarImage src={photoUrl} alt={`${nickname}의 프로필 사진`} /> : null}
+          <AvatarImage src={getAvatarImageSrc(photoUrl)} alt={`${nickname}의 프로필 사진`} />
           <AvatarFallback>{fallbackText}</AvatarFallback>
         </Avatar>
       </div>

@@ -52,11 +52,12 @@ npm install
 cp .env.example .env.local
 ```
 
-| 변수                                   | 설명                                                 |
-| -------------------------------------- | ---------------------------------------------------- |
-| `NEXT_PUBLIC_SUPABASE_URL`             | Supabase 프로젝트 URL                                |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase publishable key                             |
-| `SUPABASE_SERVICE_ROLE_KEY`            | 회원 탈퇴 등 관리자 작업에 사용하는 service role key |
+| 변수                                      | 설명                                                      |
+| ----------------------------------------- | --------------------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`                | Supabase 프로젝트 URL                                     |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`    | Supabase publishable key                                  |
+| `NEXT_PUBLIC_ENABLE_REACT_QUERY_DEVTOOLS` | 개발 중 React Query Devtools 표시 여부 (`true`일 때 표시) |
+| `SUPABASE_SERVICE_ROLE_KEY`               | 회원 탈퇴 등 관리자 작업에 사용하는 service role key      |
 
 환경 변수 키를 추가하거나 변경하면 루트의 `env.d.ts` 타입 선언도 함께 갱신합니다.
 
@@ -118,6 +119,7 @@ npm run dev
 - 프로필이 없는 로그인 유저는 `/auth/complete-profile`로 이동합니다.
 - 비로그인 유저는 보호 라우트 접근 시 `/auth/login`으로 이동합니다.
 - 비밀번호 변경, 프로필 수정, 프로필 이미지 업로드와 삭제, 회원 탈퇴 API를 제공합니다.
+- 프로필 이미지가 없는 유저는 `public/default-avatar.webp` 기본 이미지를 표시합니다.
 - 로그인, OAuth 로그인, 회원가입 OTP, 닉네임 확인, 프로필 완성, 프로필 수정, 로그아웃은 mutation hook으로 호출 상태와 toast, router 이동, query invalidation을 관리합니다.
 - 제출, 취소, 닫기, 링크 이동 같은 UI 동작은 같은 busy 상태를 기준으로 잠겨 중복 요청을 방지합니다.
 

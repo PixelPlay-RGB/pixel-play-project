@@ -23,6 +23,7 @@ export default function ThemeToggleButton() {
   return (
     <button
       onClick={() => setTheme(isDark ? "light" : "dark")}
+      aria-label={isDark ? "라이트 모드로 전환" : "다크 모드로 전환"}
       className={cn(
         "grid size-10 place-items-center rounded-md",
         "hover:bg-muted cursor-pointer",
@@ -31,7 +32,6 @@ export default function ThemeToggleButton() {
       )}
     >
       {isDark ? <Sun size={24} /> : <Moon size={24} />}
-      <span className="sr-only">Toggle theme</span>
     </button>
   );
 }

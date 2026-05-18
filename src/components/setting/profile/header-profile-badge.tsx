@@ -7,7 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { SETTING_MENU } from "@/constants/setting-menu";
 import { useLogout } from "@/hooks/auth/use-logout";
 import { cn } from "@/lib/utils";
-import { getAvatarFallbackText } from "@/utils/avatar";
+import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/avatar";
 import type { CurrentProfileSnapshot } from "@/utils/profile-server";
 import Link from "next/link";
 import { useState } from "react";
@@ -26,12 +26,17 @@ export default function HeaderProfileBadge({ profile }: Props) {
   };
 
   const isCanChangePassword = profile.linked_providers.includes("email");
+  const avatarSrc = getAvatarImageSrc(profile.photo_url);
+  const avatarAlt = `${profile.nickname}의 프로필 사진`;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger className="cursor-pointer outline-none hover:opacity-80">
+      <PopoverTrigger
+        className="cursor-pointer outline-none hover:opacity-80"
+        aria-label="프로필 메뉴 열기"
+      >
         <Avatar className={cn("ring-brand ring-2 transition-all duration-200 hover:ring-[3px]")}>
-          <AvatarImage src={profile.photo_url ?? undefined} />
+          <AvatarImage src={avatarSrc} alt={avatarAlt} />
           <AvatarFallback>{getAvatarFallbackText(profile.nickname)}</AvatarFallback>
         </Avatar>
       </PopoverTrigger>
@@ -43,7 +48,7 @@ export default function HeaderProfileBadge({ profile }: Props) {
           className="hover:bg-muted flex items-center gap-4 rounded-lg p-1"
         >
           <Avatar className="border-brand/10 h-12 w-12 border">
-            <AvatarImage src={profile.photo_url ?? undefined} />
+            <AvatarImage src={avatarSrc} alt={avatarAlt} />
             <AvatarFallback>{getAvatarFallbackText(profile.nickname)}</AvatarFallback>
           </Avatar>
 

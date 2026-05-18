@@ -3,7 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import type { MessageQuery } from "@/types/message";
 import { SystemMessageItem } from "@/components/chat-room/message/system-message-item";
-import { getAvatarFallbackText } from "@/utils/avatar";
+import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/avatar";
 
 interface Props {
   message: MessageQuery;
@@ -26,6 +26,7 @@ export function MessageItem({
 
   const { nickname, photo_url: photoUrl } = message.user;
   const fallbackText = getAvatarFallbackText(nickname);
+  const avatarSrc = getAvatarImageSrc(photoUrl);
 
   if (isOwn) {
     return (
@@ -51,7 +52,7 @@ export function MessageItem({
     <div className={cn("flex gap-2 px-3 pb-0.5", isGroupedWithPrevious ? "pt-0.5" : "pt-2")}>
       {showAuthor ? (
         <Avatar size="lg" className="mt-0.5 shrink-0">
-          {photoUrl && <AvatarImage src={photoUrl} alt="" />}
+          <AvatarImage src={avatarSrc} alt={`${nickname}의 프로필 사진`} />
           <AvatarFallback>{fallbackText}</AvatarFallback>
         </Avatar>
       ) : (

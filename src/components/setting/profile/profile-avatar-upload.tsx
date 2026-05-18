@@ -5,7 +5,7 @@ import { Camera, Trash2, Upload } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { getAvatarFallbackText } from "@/utils/avatar";
+import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/avatar";
 
 interface ProfileAvatarUploadProps {
   photoUrl: string | null;
@@ -23,6 +23,7 @@ export default function ProfileAvatarUpload({
   const [isDragging, setIsDragging] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const avatarSrc = getAvatarImageSrc(photoUrl);
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -52,7 +53,7 @@ export default function ProfileAvatarUpload({
   };
 
   return (
-    <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-start">
+    <div className="flex items-start gap-4 sm:gap-5">
       <div
         className="relative shrink-0"
         onDragEnter={handleDrag}
@@ -64,6 +65,17 @@ export default function ProfileAvatarUpload({
         onClick={() => {
           if (!disabled) inputRef.current?.click();
         }}
+        onKeyDown={(e) => {
+          if (disabled) return;
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            inputRef.current?.click();
+          }
+        }}
+        role="button"
+        tabIndex={disabled ? -1 : 0}
+        aria-disabled={disabled}
+        aria-label="프로필 사진 변경"
       >
         <div
           className={cn(
@@ -78,7 +90,7 @@ export default function ProfileAvatarUpload({
             disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer",
           )}
         >
-          <AvatarImage src={photoUrl ?? undefined} alt="profile" className="object-cover" />
+          <AvatarImage src={avatarSrc} alt={`${nickname}의 프로필 사진`} className="object-cover" />
           <AvatarFallback className="text-muted-foreground bg-muted text-3xl font-semibold">
             {getAvatarFallbackText(nickname, 1)}
           </AvatarFallback>
@@ -92,7 +104,7 @@ export default function ProfileAvatarUpload({
         >
           <Camera className="size-6" />
           <span className="text-xs font-medium tracking-wider uppercase">
-            {isDragging ? "Drop" : "변경"}
+            {isDragging ? "놓기" : "변경"}
           </span>
         </div>
 
@@ -106,14 +118,14 @@ export default function ProfileAvatarUpload({
         />
       </div>
 
-      <div className="min-w-0 flex-1 text-center sm:text-left">
+      <div className="min-w-0 flex-1 text-left">
         <h3 className="mb-1 text-sm font-semibold">프로필 사진</h3>
         <p className="text-muted-foreground mb-4 text-xs leading-relaxed">
           드래그해서 올리거나 이미지를 클릭하세요.
           <br className="hidden sm:block" />
           정사각형 비율, 최대 5MB (JPG, PNG, WEBP).
         </p>
-        <div className="flex flex-wrap justify-center gap-2 sm:justify-start">
+        <div className="flex flex-wrap justify-start gap-2">
           <Button
             type="button"
             size="sm"
