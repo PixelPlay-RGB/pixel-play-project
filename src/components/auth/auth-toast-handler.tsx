@@ -4,11 +4,12 @@
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import { useNullableUser } from "@/hooks/profile/use-profile";
 import { toastAppSuccess } from "@/utils/toast-message";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect } from "react";
 
 function AuthToastInner({ nickname }: { nickname: string }) {
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   const router = useRouter();
 
   useEffect(() => {
@@ -33,16 +34,10 @@ function AuthToastInner({ nickname }: { nickname: string }) {
       params.delete("welcome");
     }
 
-    const currentPath = window.location.pathname;
-    if (currentPath.includes("profile")) {
-      router.replace("/profile");
-      return;
-    }
-
-    // 토스트 표시 후 URL에서 파라미터 제거 (새로고침 시 재표시 방지)
-    const newUrl = params.size > 0 ? `?${params.toString()}` : "/";
+    // 토스트 표시 후 URL에서 파라미터만 제거해 next redirect 경로를 보존
+    const newUrl = params.size > 0 ? `${pathname}?${params.toString()}` : pathname;
     router.replace(newUrl, { scroll: false });
-  }, [searchParams, router, nickname]);
+  }, [searchParams, pathname, router, nickname]);
 
   return null;
 }
