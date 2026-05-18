@@ -9,6 +9,7 @@ import {
   CHAT_ROOM_TYPING_KEEPALIVE_INTERVAL_MS,
   CHAT_ROOM_TYPING_PRUNE_INTERVAL_MS,
   CHAT_ROOM_TYPING_REMOTE_TIMEOUT_MS,
+  CHAT_ROOM_TYPING_STOP_DELAY_MS,
 } from "@/constants/chat-room-presence";
 import { createClient } from "@/lib/supabase/client";
 import type {
@@ -49,6 +50,7 @@ export function useChatRoomPresence({ roomId, currentUser, enabled }: Params) {
   const typingRef = useRef(false);
   const typingIdleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const typingKeepaliveTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const typingStopDelayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isSubscribedRef = useRef(false);
 
   const refreshMemberPresence = useCallback(() => {
@@ -76,6 +78,15 @@ export function useChatRoomPresence({ roomId, currentUser, enabled }: Params) {
 
     clearInterval(typingKeepaliveTimerRef.current);
     typingKeepaliveTimerRef.current = null;
+  }, []);
+
+  const clearTypingStopDelayTimer = useCallback(() => {
+    if (!typingStopDelayTimerRef.current) {
+      return;
+    }
+
+    clearTimeout(typingStopDelayTimerRef.current);
+    typingStopDelayTimerRef.current = null;
   }, []);
 
   const sendTypingBroadcast = useCallback(
@@ -111,9 +122,10 @@ export function useChatRoomPresence({ roomId, currentUser, enabled }: Params) {
     [currentUserId, enabled, roomId],
   );
 
-  const stopTyping = useCallback(() => {
+  const stopTypingImmediately = useCallback(() => {
     clearTypingIdleTimer();
     clearTypingKeepaliveTimer();
+    clearTypingStopDelayTimer();
 
     if (!typingRef.current) {
       return;
@@ -130,21 +142,37 @@ export function useChatRoomPresence({ roomId, currentUser, enabled }: Params) {
   }, [
     clearTypingIdleTimer,
     clearTypingKeepaliveTimer,
+    clearTypingStopDelayTimer,
     currentUserId,
     refreshMemberPresence,
     sendTypingBroadcast,
   ]);
 
+  const scheduleStopTyping = useCallback(() => {
+    clearTypingIdleTimer();
+
+    if (!typingRef.current || typingStopDelayTimerRef.current) {
+      return;
+    }
+
+    typingStopDelayTimerRef.current = setTimeout(() => {
+      typingStopDelayTimerRef.current = null;
+      stopTypingImmediately();
+    }, CHAT_ROOM_TYPING_STOP_DELAY_MS);
+  }, [clearTypingIdleTimer, stopTypingImmediately]);
+
   const setTyping = useCallback(
     (isTyping: boolean) => {
       if (!isTyping) {
-        stopTyping();
+        scheduleStopTyping();
         return;
       }
 
       if (!currentUserId) {
         return;
       }
+
+      clearTypingStopDelayTimer();
 
       const nowMs = Date.now();
       const wasTyping = typingRef.current;
@@ -158,7 +186,7 @@ export function useChatRoomPresence({ roomId, currentUser, enabled }: Params) {
       }
 
       clearTypingIdleTimer();
-      typingIdleTimerRef.current = setTimeout(stopTyping, CHAT_ROOM_TYPING_IDLE_TIMEOUT_MS);
+      typingIdleTimerRef.current = setTimeout(scheduleStopTyping, CHAT_ROOM_TYPING_IDLE_TIMEOUT_MS);
 
       if (!typingKeepaliveTimerRef.current) {
         typingKeepaliveTimerRef.current = setInterval(() => {
@@ -176,10 +204,11 @@ export function useChatRoomPresence({ roomId, currentUser, enabled }: Params) {
     [
       clearTypingIdleTimer,
       clearTypingKeepaliveTimer,
+      clearTypingStopDelayTimer,
       currentUserId,
       refreshMemberPresence,
+      scheduleStopTyping,
       sendTypingBroadcast,
-      stopTyping,
     ],
   );
 
@@ -326,6 +355,7 @@ export function useChatRoomPresence({ roomId, currentUser, enabled }: Params) {
       isActive = false;
       clearTypingIdleTimer();
       clearTypingKeepaliveTimer();
+      clearTypingStopDelayTimer();
       clearInterval(pruneInterval);
 
       if (typingRef.current) {
@@ -352,6 +382,7 @@ export function useChatRoomPresence({ roomId, currentUser, enabled }: Params) {
   }, [
     clearTypingIdleTimer,
     clearTypingKeepaliveTimer,
+    clearTypingStopDelayTimer,
     currentUserId,
     enabled,
     handleTypingBroadcast,
