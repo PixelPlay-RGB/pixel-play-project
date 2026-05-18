@@ -404,3 +404,5 @@ Broadcast와 Presence는 아직 제품 기능으로 사용하지 않습니다.
 
 - 라이브 스트리밍 메뉴는 아직 준비 상태입니다.
 - 메시지 수정/삭제 기능이 미구현 상태입니다.
+- typing indicator와 presence 기반 유저 indicator는 아직 제품 기능으로 사용하지 않습니다.
+- Supabase CLI 기반 migration 동기화 전에는 원격 migration history와 로컬 migration 파일 timestamp 차이를 별도로 확인해야 합니다.
