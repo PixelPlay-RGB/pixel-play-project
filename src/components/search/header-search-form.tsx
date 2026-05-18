@@ -68,8 +68,8 @@ export default function HeaderSearchForm() {
               variants={mobileHeaderSearchVariants}
               transition={mobileHeaderSearchTransition}
               className={cn(
-                "border-brand/15 bg-brand/5 dark:border-border dark:bg-muted/60",
-                "absolute inset-x-0 top-0 z-20 flex h-14 items-center gap-2 border-b px-3 backdrop-blur-sm",
+                "border-brand/15 bg-background dark:border-border",
+                "fixed inset-x-0 top-0 z-[60] flex h-14 items-center gap-2 border-b px-3 shadow-sm",
               )}
             >
               <Button
