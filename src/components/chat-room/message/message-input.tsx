@@ -143,11 +143,11 @@ export function MessageInput({
         }
         aria-label="메시지 입력"
         className={cn(
-          "flex-1 resize-none overflow-y-hidden rounded-xl px-3 py-2 text-sm leading-normal",
+          "flex-1 resize-none overflow-y-hidden rounded-xl px-3 py-2 text-base leading-normal md:text-sm",
           "max-h-32 min-h-9",
           "border-border/60 bg-muted/30 border",
           "placeholder:text-muted-foreground/60",
-          "focus-visible:ring-ring/60 outline-none focus-visible:ring-1",
+          "md:focus-visible:ring-ring/60 outline-none focus-visible:ring-0 md:focus-visible:ring-1",
           "disabled:cursor-not-allowed disabled:opacity-50",
           // 스크롤바: max-h 초과 시에만 노출, 브랜드 톤에 맞춘 thin 디자인
           "[&::-webkit-scrollbar]:w-1",
