@@ -14,27 +14,8 @@ export function useMessageDraft(maxLength: number) {
     [clampDraft],
   );
 
-  const appendDraft = useCallback(
-    (value: string) => {
-      setDraftState((prev) => clampDraft(prev + value));
-    },
-    [clampDraft],
-  );
-
-  const clearDraft = useCallback((expectedValue?: string) => {
-    setDraftState((prev) => {
-      if (expectedValue !== undefined && prev !== expectedValue) {
-        return prev;
-      }
-
-      return "";
-    });
-  }, []);
-
   return {
     draft,
     setDraft,
-    appendDraft,
-    clearDraft,
   };
 }

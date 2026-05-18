@@ -33,10 +33,10 @@ export function MessageInput({
   disabledHint,
 }: Props) {
   const { setTyping } = useChatRoomPresenceContext();
-  const { draft, setDraft, appendDraft, clearDraft } = useMessageDraft(MESSAGE_CONTENT_MAX_LENGTH);
+  const { draft, setDraft } = useMessageDraft(MESSAGE_CONTENT_MAX_LENGTH);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const latestDraftRef = useRef("");
-  const submitDisabled = disabled || sendMessageMutation.isPending;
+  const submitDisabled = disabled;
 
   useAutoResizeTextarea({
     textareaRef,
@@ -75,8 +75,7 @@ export function MessageInput({
 
   const handleEmojiSelect = (emoji: string) => {
     const nextDraft = syncTypingStatus(latestDraftRef.current + emoji);
-    appendDraft(emoji);
-    latestDraftRef.current = nextDraft;
+    setDraft(nextDraft);
   };
 
   const handleSubmit = async (event: SubmitEvent<HTMLFormElement>) => {
@@ -86,7 +85,13 @@ export function MessageInput({
       return;
     }
 
-    const parsed = messageContentSchema.safeParse(draft);
+    const submitSnapshot = (textareaRef.current?.value ?? latestDraftRef.current ?? draft).slice(
+      0,
+      MESSAGE_CONTENT_MAX_LENGTH,
+    );
+    latestDraftRef.current = submitSnapshot;
+
+    const parsed = messageContentSchema.safeParse(submitSnapshot);
     if (!parsed.success) {
       toastAppError(APP_MESSAGE_CODE.error.message.invalidInput);
       return;
@@ -95,17 +100,14 @@ export function MessageInput({
     const content = parsed.data;
 
     setTyping(false);
+    setDraft("");
+    latestDraftRef.current = "";
+    if (textareaRef.current) {
+      textareaRef.current.value = "";
+    }
 
     try {
-      const result = await sendMessageMutation.sendMessage(content);
-
-      if (result.success) {
-        clearDraft(content);
-
-        if (latestDraftRef.current === content) {
-          latestDraftRef.current = "";
-        }
-      }
+      await sendMessageMutation.sendMessage(content);
     } catch {
       return;
     }

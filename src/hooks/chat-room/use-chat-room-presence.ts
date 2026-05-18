@@ -6,8 +6,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   CHAT_ROOM_TYPING_BROADCAST_EVENT,
   CHAT_ROOM_TYPING_IDLE_TIMEOUT_MS,
+  CHAT_ROOM_TYPING_KEEPALIVE_INTERVAL_MS,
   CHAT_ROOM_TYPING_PRUNE_INTERVAL_MS,
-  CHAT_ROOM_TYPING_REFRESH_INTERVAL_MS,
+  CHAT_ROOM_TYPING_REMOTE_TIMEOUT_MS,
 } from "@/constants/chat-room-presence";
 import { createClient } from "@/lib/supabase/client";
 import type {
@@ -46,8 +47,8 @@ export function useChatRoomPresence({ roomId, currentUser, enabled }: Params) {
   const typingMemberMapRef = useRef<ChatRoomTypingMemberMap>({});
   const onlineAtRef = useRef(new Date().toISOString());
   const typingRef = useRef(false);
-  const lastTypingSentAtRef = useRef(0);
   const typingIdleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const typingKeepaliveTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isSubscribedRef = useRef(false);
 
   const refreshMemberPresence = useCallback(() => {
@@ -66,6 +67,15 @@ export function useChatRoomPresence({ roomId, currentUser, enabled }: Params) {
 
     clearTimeout(typingIdleTimerRef.current);
     typingIdleTimerRef.current = null;
+  }, []);
+
+  const clearTypingKeepaliveTimer = useCallback(() => {
+    if (!typingKeepaliveTimerRef.current) {
+      return;
+    }
+
+    clearInterval(typingKeepaliveTimerRef.current);
+    typingKeepaliveTimerRef.current = null;
   }, []);
 
   const sendTypingBroadcast = useCallback(
@@ -103,13 +113,13 @@ export function useChatRoomPresence({ roomId, currentUser, enabled }: Params) {
 
   const stopTyping = useCallback(() => {
     clearTypingIdleTimer();
+    clearTypingKeepaliveTimer();
 
     if (!typingRef.current) {
       return;
     }
 
     typingRef.current = false;
-    lastTypingSentAtRef.current = 0;
 
     if (currentUserId) {
       delete typingMemberMapRef.current[currentUserId];
@@ -117,7 +127,13 @@ export function useChatRoomPresence({ roomId, currentUser, enabled }: Params) {
     }
 
     void sendTypingBroadcast(false);
-  }, [clearTypingIdleTimer, currentUserId, refreshMemberPresence, sendTypingBroadcast]);
+  }, [
+    clearTypingIdleTimer,
+    clearTypingKeepaliveTimer,
+    currentUserId,
+    refreshMemberPresence,
+    sendTypingBroadcast,
+  ]);
 
   const setTyping = useCallback(
     (isTyping: boolean) => {
@@ -134,24 +150,37 @@ export function useChatRoomPresence({ roomId, currentUser, enabled }: Params) {
       const wasTyping = typingRef.current;
 
       typingRef.current = true;
-      typingMemberMapRef.current[currentUserId] = nowMs + CHAT_ROOM_TYPING_IDLE_TIMEOUT_MS;
+      typingMemberMapRef.current[currentUserId] = nowMs + CHAT_ROOM_TYPING_REMOTE_TIMEOUT_MS;
 
       if (!wasTyping) {
         refreshMemberPresence();
-      }
-
-      if (
-        !wasTyping ||
-        nowMs - lastTypingSentAtRef.current >= CHAT_ROOM_TYPING_REFRESH_INTERVAL_MS
-      ) {
-        lastTypingSentAtRef.current = nowMs;
         void sendTypingBroadcast(true);
       }
 
       clearTypingIdleTimer();
       typingIdleTimerRef.current = setTimeout(stopTyping, CHAT_ROOM_TYPING_IDLE_TIMEOUT_MS);
+
+      if (!typingKeepaliveTimerRef.current) {
+        typingKeepaliveTimerRef.current = setInterval(() => {
+          if (!typingRef.current) {
+            clearTypingKeepaliveTimer();
+            return;
+          }
+
+          typingMemberMapRef.current[currentUserId] =
+            Date.now() + CHAT_ROOM_TYPING_REMOTE_TIMEOUT_MS;
+          void sendTypingBroadcast(true);
+        }, CHAT_ROOM_TYPING_KEEPALIVE_INTERVAL_MS);
+      }
     },
-    [clearTypingIdleTimer, currentUserId, refreshMemberPresence, sendTypingBroadcast, stopTyping],
+    [
+      clearTypingIdleTimer,
+      clearTypingKeepaliveTimer,
+      currentUserId,
+      refreshMemberPresence,
+      sendTypingBroadcast,
+      stopTyping,
+    ],
   );
 
   const pruneTypingMembers = useCallback(() => {
@@ -208,7 +237,8 @@ export function useChatRoomPresence({ roomId, currentUser, enabled }: Params) {
       if (payload.isTyping) {
         const wasTyping = payload.userId in typingMemberMapRef.current;
 
-        typingMemberMapRef.current[payload.userId] = Date.now() + CHAT_ROOM_TYPING_IDLE_TIMEOUT_MS;
+        typingMemberMapRef.current[payload.userId] =
+          Date.now() + CHAT_ROOM_TYPING_REMOTE_TIMEOUT_MS;
 
         if (!wasTyping) {
           refreshMemberPresence();
@@ -295,6 +325,7 @@ export function useChatRoomPresence({ roomId, currentUser, enabled }: Params) {
     return () => {
       isActive = false;
       clearTypingIdleTimer();
+      clearTypingKeepaliveTimer();
       clearInterval(pruneInterval);
 
       if (typingRef.current) {
@@ -303,7 +334,6 @@ export function useChatRoomPresence({ roomId, currentUser, enabled }: Params) {
       }
 
       typingRef.current = false;
-      lastTypingSentAtRef.current = 0;
       isSubscribedRef.current = false;
       presenceStateRef.current = {};
       typingMemberMapRef.current = {};
@@ -321,6 +351,7 @@ export function useChatRoomPresence({ roomId, currentUser, enabled }: Params) {
     };
   }, [
     clearTypingIdleTimer,
+    clearTypingKeepaliveTimer,
     currentUserId,
     enabled,
     handleTypingBroadcast,
