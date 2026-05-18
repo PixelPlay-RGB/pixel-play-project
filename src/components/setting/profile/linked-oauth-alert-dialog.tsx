@@ -1,6 +1,6 @@
 "use client";
 
-import { unLinkOAuthAction } from "@/actions/auth";
+import { unLinkOAuthAction } from "@/actions/auth/oauth";
 import {
   AlertDialog,
   AlertDialogAction,

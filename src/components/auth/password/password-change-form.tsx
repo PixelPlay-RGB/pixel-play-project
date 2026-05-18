@@ -1,6 +1,6 @@
 "use client";
 
-import { changePasswordAction } from "@/actions/auth";
+import { changePasswordAction } from "@/actions/auth/password";
 import AuthInputGroup from "@/components/auth/auth-input-group";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field";

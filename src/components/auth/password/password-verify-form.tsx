@@ -1,6 +1,6 @@
 "use client";
 
-import { verifyCurrentPasswordAction } from "@/actions/auth";
+import { verifyCurrentPasswordAction } from "@/actions/auth/password";
 import AuthInputGroup from "@/components/auth/auth-input-group";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field";

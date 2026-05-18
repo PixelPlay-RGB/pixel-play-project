@@ -1,7 +1,7 @@
 "use client";
 
 // 프로필 수정 Server Action 호출과 프로필 캐시 갱신을 관리하는 mutation 훅
-import { updateProfileAction } from "@/actions/auth";
+import { updateProfileAction } from "@/actions/profile";
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import { QUERY_KEYS } from "@/constants/query-keys";
 import { toastAppError, toastAppSuccess } from "@/utils/toast-message";

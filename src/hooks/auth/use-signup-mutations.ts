@@ -6,7 +6,7 @@ import {
   completeSignupAction,
   sendOtpAction,
   verifyOtpAction,
-} from "@/actions/auth";
+} from "@/actions/auth/signup";
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import { WELCOME_PARAM } from "@/constants/auth";
 import { QUERY_KEYS } from "@/constants/query-keys";
