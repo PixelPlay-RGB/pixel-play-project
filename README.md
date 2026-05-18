@@ -367,10 +367,10 @@ npm run types
 | `20260516121058_drop_unused_chat_room_legacy_rpcs.sql`                | 미사용 채팅방 목록 RPC 제거             |
 | `20260516230042_fix_chat_room_performance_advisor.sql`                | 채팅방 DB 성능 Advisor 정리             |
 | `20260516234000_add_send_chat_message_rpc.sql`                        | 메시지 전송 RPC와 본문 DB 제약 추가     |
-| `20260517220049_restrict_chat_room_write_access.sql`                  | 채팅 테이블 직접 쓰기 권한 폐쇄         |
-| `20260517220610_harden_date_divider_trigger_search_path.sql`          | 날짜 구분 trigger 함수 search_path 보강 |
-| `20260517220803_restrict_write_rpc_execute_to_service_role.sql`       | 쓰기 RPC 실행 경계 service role로 정리  |
-| `20260517231746_harden_message_send_and_date_divider_concurrency.sql` | 메시지 전송과 날짜 구분 동시성 보강     |
+| `20260517130338_restrict_chat_room_write_access.sql`                  | 채팅 테이블 직접 쓰기 권한 폐쇄         |
+| `20260517130631_harden_date_divider_trigger_search_path.sql`          | 날짜 구분 trigger 함수 search_path 보강 |
+| `20260517130931_restrict_write_rpc_execute_to_service_role.sql`       | 쓰기 RPC 실행 경계 service role로 정리  |
+| `20260517141944_harden_message_send_and_date_divider_concurrency.sql` | 메시지 전송과 날짜 구분 동시성 보강     |
 
 ---
 
@@ -405,4 +405,4 @@ Broadcast와 Presence는 아직 제품 기능으로 사용하지 않습니다.
 - 라이브 스트리밍 메뉴는 아직 준비 상태입니다.
 - 메시지 수정/삭제 기능이 미구현 상태입니다.
 - typing indicator와 presence 기반 유저 indicator는 아직 제품 기능으로 사용하지 않습니다.
-- Supabase CLI 기반 migration 동기화 전에는 원격 migration history와 로컬 migration 파일 timestamp 차이를 별도로 확인해야 합니다.
+- Supabase 원격 migration history와 로컬 migration 파일명은 2026년 5월 18일 기준으로 정합화되어 있습니다.
