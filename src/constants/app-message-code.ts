@@ -45,6 +45,7 @@ export const APP_MESSAGE_CODE = {
       authInfoLoadFailed: "error.auth.authInfoLoadFailed",
       sessionNotFound: "error.auth.sessionNotFound",
       passwordChangeFailed: "error.auth.passwordChangeFailed",
+      passwordChangedLogoutFailed: "error.auth.passwordChangedLogoutFailed",
       signupFailed: "error.auth.signupFailed",
       profileCreateFailed: "error.auth.profileCreateFailed",
       signupCancelFailed: "error.auth.signupCancelFailed",

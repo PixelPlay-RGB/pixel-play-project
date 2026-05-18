@@ -66,6 +66,11 @@ export const changePasswordSchema = z
     path: ["newPasswordConfirm"],
   });
 
+export const changePasswordActionSchema = z.object({
+  currentPassword: currentPasswordSchema,
+  newPassword: passwordSchema,
+});
+
 export const profileSchema = z.object({
   nickname: signUpBaseSchema.shape.nickname,
   photoUrl: z.url().nullable().optional(),

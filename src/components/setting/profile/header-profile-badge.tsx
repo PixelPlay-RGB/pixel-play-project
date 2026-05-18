@@ -9,14 +9,12 @@ import { SETTING_MENU } from "@/constants/setting-menu";
 import { useLogout } from "@/hooks/use-logout";
 import { useUser } from "@/hooks/use-profile";
 import { cn } from "@/lib/utils";
-import { useAuthStore } from "@/stores/auth";
 import { getAvatarFallbackText } from "@/utils/avatar";
 import Link from "next/link";
 import { useState } from "react";
 
 export default function HeaderProfileBadge() {
   const { data: user, isError, isLoading } = useUser();
-  const isCanChangePassword = useAuthStore((state) => state.isCanChangePassword);
   const logoutMutation = useLogout();
 
   const [open, setOpen] = useState(false);
@@ -32,6 +30,8 @@ export default function HeaderProfileBadge() {
   if (isError || !user) {
     return null;
   }
+
+  const isCanChangePassword = user.linked_providers.includes("email");
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

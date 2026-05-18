@@ -16,15 +16,16 @@ import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { SETTING_MENU } from "@/constants/setting-menu";
 import { useLogout } from "@/hooks/use-logout";
-import { useAuthStore } from "@/stores/auth";
+import { useUser } from "@/hooks/use-profile";
 import { LogOut } from "lucide-react";
 import { usePathname } from "next/navigation";
 
 export default function SettingSidebar({ isMobile }: { isMobile?: boolean }) {
   const pathname = usePathname();
   const logoutMutation = useLogout();
+  const { data: user } = useUser();
 
-  const isCanChangePassword = useAuthStore((state) => state.isCanChangePassword);
+  const isCanChangePassword = user?.linked_providers.includes("email") ?? false;
 
   const handleLogout = async () => {
     await logoutMutation.mutateAsync().catch(() => undefined);

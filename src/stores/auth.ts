@@ -5,10 +5,8 @@ import { devtools } from "zustand/middleware";
 export interface UserState {
   user: AuthUser | null;
   loading: boolean;
-  isCanChangePassword: boolean;
   setUser: (user: AuthUser | null) => void;
   setLoading: (loading: boolean) => void;
-  setIsCanChangePassword: (isCan: boolean) => void;
 }
 
 /**
@@ -20,10 +18,8 @@ export const useAuthStore = create<UserState>()(
     (set) => ({
       user: null,
       loading: true,
-      isCanChangePassword: false,
       setUser: (user) => set({ user, loading: false }, false, "auth/setUser"),
       setLoading: (loading) => set({ loading }, false, "auth/setLoading"),
-      setIsCanChangePassword: (isCan) => set({ isCanChangePassword: isCan }),
     }),
     {
       name: "AuthStore",

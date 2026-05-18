@@ -3,6 +3,7 @@
 import { createAdminClient } from "@/lib/supabase/admin-client";
 import { createClient } from "@/lib/supabase/server";
 import {
+  changePasswordActionSchema,
   completeOAuthProfileSchema,
   LoginFormValues,
   loginSchema,
@@ -279,8 +280,40 @@ export async function verifyCurrentPasswordAction(
 /**
  * 비밀번호 변경
  */
-export async function changePasswordAction(newPassword: string): Promise<ActionResponse> {
+export async function changePasswordAction(input: {
+  currentPassword: string;
+  newPassword: string;
+}): Promise<ActionResponse> {
+  const parsed = changePasswordActionSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, code: APP_MESSAGE_CODE.error.auth.invalidInput };
+  }
+
   const supabase = await createClient();
+  const { currentPassword, newPassword } = parsed.data;
+
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError && !isAuthSessionMissingError(userError)) {
+    console.error("비밀번호 변경 중 인증 유저 조회 실패", userError);
+  }
+
+  if (!user?.email) {
+    return { success: false, code: APP_MESSAGE_CODE.error.auth.authInfoLoadFailed };
+  }
+
+  const { error: verifyError } = await supabase.auth.signInWithPassword({
+    email: user.email,
+    password: currentPassword,
+  });
+
+  if (verifyError) {
+    console.error("비밀번호 변경 중 현재 비밀번호 재검증 실패", verifyError);
+    return { success: false, code: APP_MESSAGE_CODE.error.auth.passwordChangeFailed };
+  }
 
   const { error } = await supabase.auth.updateUser({ password: newPassword });
 
@@ -289,6 +322,14 @@ export async function changePasswordAction(newPassword: string): Promise<ActionR
     return { success: false, code: APP_MESSAGE_CODE.error.auth.passwordChangeFailed };
   }
 
+  const { error: signOutError } = await supabase.auth.signOut();
+
+  if (signOutError) {
+    console.error("비밀번호 변경 후 로그아웃 실패", signOutError);
+    return { success: false, code: APP_MESSAGE_CODE.error.auth.passwordChangedLogoutFailed };
+  }
+
+  revalidatePath("/", "layout");
   return { success: true };
 }
 

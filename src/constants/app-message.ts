@@ -115,6 +115,10 @@ export const APP_MESSAGE = {
         title: "비밀번호 변경 실패",
         description: "잠시 후 다시 시도해주세요.",
       },
+      passwordChangedLogoutFailed: {
+        title: "로그아웃 실패",
+        description: "비밀번호가 변경되었습니다. 직접 로그아웃한 뒤 다시 로그인해주세요.",
+      },
       signupFailed: {
         title: "회원가입 실패",
         description: "입력한 정보를 확인한 뒤 다시 시도해주세요.",
