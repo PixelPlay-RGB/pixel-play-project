@@ -18,6 +18,7 @@
 - 앱 메시지/toast 컨벤션: [.agents/app-message-convention/SKILLS.md](./.agents/app-message-convention/SKILLS.md)
 - 커밋/브랜치 컨벤션: [.agents/git-convention/SKILLS.md](./.agents/git-convention/SKILLS.md)
 - Supabase/DB 컨벤션: [.agents/supabase-convention/SKILLS.md](./.agents/supabase-convention/SKILLS.md)
+- 검증/권한 실행 규칙: [.agents/validation-convention/SKILLS.md](./.agents/validation-convention/SKILLS.md)
 
 ---
 
@@ -95,7 +96,7 @@
 - **Checklist (`checklist.md`)**: 체크박스 형태의 구체적 작업 목록.
 - **Context Notes (`context-notes.md`)**: 작업 중 내린 결정과 그 이유를 기록.
 - `checklist.md`와 `context-notes.md`는 에이전트 전용 작업 기록 파일입니다.
-- `checklist.md`와 `context-notes.md`는 커밋 대상에 포함하지 말고, PR 작성 전 반드시 삭제하십시오.
+- `checklist.md`와 `context-notes.md`는 커밋 대상에 포함하지 말고, 하나의 논리적 변화 커밋이 완료된 후 반드시 삭제하십시오.
 - 사용자가 계획만 주고 코딩을 지시하면 멈추고 산출물 생성 여부를 물으십시오.
 
 ### 2.9 완료 전 테스트 실행 (Run Tests)

@@ -1,3 +1,4 @@
+// query-keys 상수를 정의합니다.
 /**
  * Centralized Query Key Factory
  *
@@ -12,16 +13,33 @@ export const QUERY_KEYS = {
   auth: {
     all: ["auth"] as const,
     session: () => [...QUERY_KEYS.auth.all, "session"],
+    profiles: () => [...QUERY_KEYS.auth.all, "profile"],
     profile: (userId?: string) => [...QUERY_KEYS.auth.all, "profile", userId ?? "session"],
   },
   chat: {
     all: ["chat"] as const,
-    rooms: (userId?: string, tabType?: string, sortOption?: string, page?: number, searchQuery?: string) =>
-      [...QUERY_KEYS.chat.all, "rooms", userId, tabType, sortOption, page, searchQuery].filter((v) => v !== undefined),
-    counts: (userId?: string) => [...QUERY_KEYS.chat.all, "counts", userId].filter((v) => v !== undefined),
-    room: (roomId?: string) => [...QUERY_KEYS.chat.all, "room", roomId].filter((v) => v !== undefined),
-    messages: (roomId?: string) => [...QUERY_KEYS.chat.all, "messages", roomId].filter((v) => v !== undefined),
-    members: (roomId?: string) => [...QUERY_KEYS.chat.all, "members", roomId].filter((v) => v !== undefined),
+    list: (
+      userId?: string,
+      tabType?: string,
+      sortOption?: string,
+      page?: number,
+      searchQuery?: string,
+      limit?: number,
+    ) =>
+      [
+        ...QUERY_KEYS.chat.all,
+        "list",
+        userId,
+        tabType,
+        sortOption,
+        page,
+        searchQuery,
+        limit,
+      ].filter((v) => v !== undefined),
+    detail: (roomId?: string, userId?: string) =>
+      [...QUERY_KEYS.chat.all, "detail", roomId, userId].filter((v) => v !== undefined),
+    messages: (roomId?: string) =>
+      [...QUERY_KEYS.chat.all, "messages", roomId].filter((v) => v !== undefined),
     search: (query?: string, section?: string) =>
       [...QUERY_KEYS.chat.all, "search", query, section].filter((v) => v !== undefined),
   },

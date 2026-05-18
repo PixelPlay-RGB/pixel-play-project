@@ -2,7 +2,7 @@
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { Search } from "lucide-react";
-import { SubmitEvent } from "react";
+import type { KeyboardEventHandler, SubmitEvent } from "react";
 
 interface Props {
   value: string;
@@ -11,6 +11,8 @@ interface Props {
   placeholder?: string;
   className?: string;
   disabled?: boolean;
+  autoFocus?: boolean;
+  onKeyDown?: KeyboardEventHandler<HTMLInputElement>;
 }
 
 export default function SearchInput({
@@ -20,6 +22,8 @@ export default function SearchInput({
   placeholder = "검색어를 입력하세요",
   className,
   disabled = false,
+  autoFocus = false,
+  onKeyDown,
 }: Props) {
   const handleSubmit = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -38,7 +42,9 @@ export default function SearchInput({
         type="search"
         value={value}
         disabled={disabled}
+        autoFocus={autoFocus}
         onChange={(event) => onChange(event.target.value)}
+        onKeyDown={onKeyDown}
         placeholder={placeholder}
         className={cn(
           "h-9 rounded-full pr-3 pl-9 text-sm",

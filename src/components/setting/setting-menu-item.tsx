@@ -1,6 +1,8 @@
+// setting-menu-item 컴포넌트를 제공합니다.
 import PasswordDialog from "@/components/auth/password/password-dialog";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
+import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 import type { SettingMenuItem } from "@/types/setting-menu";
 import Link from "next/link";
@@ -9,6 +11,7 @@ import { ReactNode } from "react";
 export type SettingMenuHandlers = {
   onClose?: () => void; // Popover 컨텍스트에서 사용 (있으면 Popover 스타일, 없으면 Sidebar 스타일)
   onLogout: () => Promise<void>;
+  isLogoutPending?: boolean;
   isActive?: (href: string) => boolean;
   actions?: Record<string, () => void | Promise<void>>;
 };
@@ -20,7 +23,7 @@ export default function SettingMenuItemRenderer(
   handlers: SettingMenuHandlers,
   isCanChangePassword: boolean,
 ): ReactNode {
-  const { onClose, onLogout, actions, isActive } = handlers;
+  const { onClose, onLogout, isLogoutPending = false, actions, isActive } = handlers;
   const Icon = item.icon;
 
   if (onClose !== undefined) {
@@ -53,8 +56,14 @@ export default function SettingMenuItemRenderer(
         );
       case "logout":
         return (
-          <Button key={item.id} variant="ghost" className={POPOVER_ITEM_CLASS} onClick={onLogout}>
-            {Icon && <Icon />}
+          <Button
+            key={item.id}
+            variant="ghost"
+            className={POPOVER_ITEM_CLASS}
+            onClick={() => void onLogout()}
+            disabled={isLogoutPending}
+          >
+            {isLogoutPending ? <Spinner /> : Icon && <Icon />}
             {item.label}
           </Button>
         );
@@ -98,8 +107,8 @@ export default function SettingMenuItemRenderer(
     case "logout":
       return (
         <SidebarMenuItem key={item.id}>
-          <SidebarMenuButton onClick={onLogout}>
-            {Icon && <Icon />}
+          <SidebarMenuButton onClick={() => void onLogout()} disabled={isLogoutPending}>
+            {isLogoutPending ? <Spinner /> : Icon && <Icon />}
             <span>{item.label}</span>
           </SidebarMenuButton>
         </SidebarMenuItem>

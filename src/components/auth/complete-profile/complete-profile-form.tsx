@@ -1,6 +1,6 @@
 "use client";
+// complete-profile-form 컴포넌트를 제공합니다.
 
-import { checkNicknameAction, completeOAuthProfileAction } from "@/actions/auth";
 import AuthInputGroup from "@/components/auth/auth-input-group";
 import CompleteProfileAbandonAlert from "@/components/auth/complete-profile/complete-profile-abandon-alert";
 import SignUpGenderField from "@/components/auth/signup/signup-gender-field";
@@ -16,29 +16,21 @@ import {
 import { RadioGroup } from "@/components/ui/radio-group";
 import { Spinner } from "@/components/ui/spinner";
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
-import { WELCOME_PARAM } from "@/constants/auth";
-import { QUERY_KEYS } from "@/constants/query-keys";
-import { createClient } from "@/lib/supabase/client";
+import { useCompleteProfileMutation } from "@/hooks/auth/use-complete-profile-mutation";
+import { useNicknameAvailability } from "@/hooks/profile/use-nickname-availability";
 import { cn } from "@/lib/utils";
-import { completeOAuthProfileSchema, CompleteOAuthProfileValues } from "@/lib/zod/auth";
-import { useAuthStore } from "@/stores/auth";
-import type { NicknameStatus } from "@/types/auth";
+import { completeOAuthProfileSchema, type CompleteOAuthProfileValues } from "@/lib/zod/auth";
+import { getTodayDateInputValue } from "@/utils/date";
 import { formatPhone } from "@/utils/format";
 import { toastAppError } from "@/utils/toast-message";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQueryClient } from "@tanstack/react-query";
 import { CalendarDays, Smartphone, User, UserStar } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 
 export default function CompleteProfileForm() {
-  const router = useRouter();
-  const setUser = useAuthStore((s) => s.setUser);
-  const queryClient = useQueryClient();
-  const [nicknameStatus, setNicknameStatus] = useState<NicknameStatus>("idle");
-  const [verifiedNickname, setVerifiedNickname] = useState("");
   const [isCancelling, setIsCancelling] = useState(false);
+  const completeProfileMutation = useCompleteProfileMutation();
 
   const {
     register,
@@ -52,52 +44,33 @@ export default function CompleteProfileForm() {
     defaultValues: { name: "", nickname: "", birth: "", phone: "", gender: "male" },
   });
 
-  const handleCheckNickname = async () => {
-    const nickname = getValues("nickname");
-    if (!nickname || errors.nickname) return;
+  const isFormBusy = isSubmitting || isCancelling || completeProfileMutation.isPending;
 
-    setNicknameStatus("checking");
-    const result = await checkNicknameAction(nickname);
-    if (result.success) {
-      setVerifiedNickname(nickname);
-      setNicknameStatus("available");
-    } else {
-      setNicknameStatus("taken");
-    }
+  const {
+    nicknameStatus,
+    isCheckingNickname,
+    isNicknameAvailable,
+    checkNickname,
+    syncNicknameStatus,
+  } = useNicknameAvailability({
+    getNickname: () => getValues("nickname"),
+    hasNicknameError: () => !!errors.nickname,
+    isBlocked: isFormBusy,
+  });
+
+  const isBusy = isFormBusy || isCheckingNickname;
+
+  const handleCheckNickname = async () => {
+    await checkNickname();
   };
 
   const onSubmit = async (data: CompleteOAuthProfileValues) => {
-    if (nicknameStatus !== "available") {
+    if (!isNicknameAvailable) {
       toastAppError(APP_MESSAGE_CODE.error.auth.nicknameCheckRequired);
       return;
     }
 
-    const result = await completeOAuthProfileAction(data);
-    if (!result.success) {
-      toastAppError(result.code ?? APP_MESSAGE_CODE.error.auth.profileCreateFailed);
-      return;
-    }
-
-    // 서버 액션에서 갱신된 user_metadata를 클라이언트 store에 동기화
-    const supabase = createClient();
-    const {
-      data: { user: authUser },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !authUser) {
-      if (authError) {
-        console.error("CompleteProfileForm getUser error", authError);
-      }
-      toastAppError(APP_MESSAGE_CODE.error.auth.sessionNotFound);
-      return;
-    }
-
-    setUser(authUser);
-    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth.profile(authUser.id) });
-
-    router.push(`/${WELCOME_PARAM}`);
-    router.refresh();
+    await completeProfileMutation.mutateAsync(data).catch(() => undefined);
   };
 
   return (
@@ -130,13 +103,13 @@ export default function CompleteProfileForm() {
             <InputGroupInput
               {...register("nickname", {
                 onChange: (e) => {
-                  const val = e.target.value;
-                  setNicknameStatus(val && val === verifiedNickname ? "available" : "idle");
+                  syncNicknameStatus(e.target.value);
                 },
               })}
               type="text"
               placeholder="닉네임"
               aria-invalid={!!errors.nickname || nicknameStatus === "taken"}
+              disabled={isBusy}
             />
             <InputGroupAddon align="inline-end">
               <InputGroupButton
@@ -144,10 +117,10 @@ export default function CompleteProfileForm() {
                 size="sm"
                 variant="outline"
                 onClick={handleCheckNickname}
-                disabled={nicknameStatus === "checking" || !!errors.nickname}
+                disabled={isBusy || !!errors.nickname || !dirtyFields.nickname}
                 className="border-brand/40 text-brand hover:bg-brand cursor-pointer hover:text-white"
               >
-                {nicknameStatus === "checking" ? (
+                {isCheckingNickname ? (
                   <Spinner />
                 ) : nicknameStatus === "available" ? (
                   "사용가능"
@@ -170,6 +143,7 @@ export default function CompleteProfileForm() {
           <AuthInputGroup
             {...register("birth")}
             type="date"
+            max={getTodayDateInputValue()}
             placeholder="생년월일"
             icon={<CalendarDays />}
             aria-invalid={!!errors.birth}
@@ -217,14 +191,17 @@ export default function CompleteProfileForm() {
 
       <Button
         type="submit"
-        disabled={isSubmitting || isCancelling || !isValid || nicknameStatus !== "available"}
-        className="bg-brand hover:bg-brand/85 w-full cursor-pointer py-5 font-bold tracking-widest text-white uppercase disabled:opacity-40"
+        disabled={isBusy || !isValid || !isNicknameAvailable}
+        className={cn(
+          "w-full cursor-pointer py-5 font-bold tracking-widest uppercase disabled:opacity-40",
+          "bg-brand hover:bg-brand/85 text-white",
+        )}
       >
-        {isSubmitting ? <Spinner /> : "완료"}
+        {completeProfileMutation.isPending || isSubmitting ? <Spinner /> : "완료"}
       </Button>
       <CompleteProfileAbandonAlert
         isCancelling={isCancelling}
-        isSubmitting={isSubmitting}
+        isSubmitting={isBusy}
         setIsCancelling={setIsCancelling}
       />
     </form>

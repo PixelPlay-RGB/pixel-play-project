@@ -1,16 +1,18 @@
 "use client";
+// password-change-form 컴포넌트를 제공합니다.
 
-import { changePasswordAction } from "@/actions/auth";
+import { changePasswordAction } from "@/actions/auth/password";
 import AuthInputGroup from "@/components/auth/auth-input-group";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import { FORM_MESSAGE } from "@/constants/form-message";
-import { createClient } from "@/lib/supabase/client";
 import { changePasswordSchema, ChangePasswordValues } from "@/lib/zod/auth";
+import { useAuthStore } from "@/stores/auth";
 import { toastAppError, toastAppSuccess } from "@/utils/toast-message";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import { LockKeyhole } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -21,8 +23,9 @@ interface Props {
 }
 
 export default function PasswordChangeForm({ currentPassword, onOpenChange }: Props) {
-  const supabase = createClient();
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const setUser = useAuthStore((state) => state.setUser);
 
   const {
     register,
@@ -43,7 +46,10 @@ export default function PasswordChangeForm({ currentPassword, onOpenChange }: Pr
       return;
     }
 
-    const result = await changePasswordAction(data.newPassword);
+    const result = await changePasswordAction({
+      currentPassword,
+      newPassword: data.newPassword,
+    });
 
     if (!result.success) {
       toastAppError(result.code ?? APP_MESSAGE_CODE.error.auth.passwordChangeFailed);
@@ -53,9 +59,9 @@ export default function PasswordChangeForm({ currentPassword, onOpenChange }: Pr
     toastAppSuccess(APP_MESSAGE_CODE.success.auth.passwordChanged);
 
     onOpenChange();
-
-    await supabase.auth.signOut();
-    router.refresh();
+    setUser(null);
+    queryClient.clear();
+    router.replace("/auth/login");
   };
 
   return (

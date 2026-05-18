@@ -1,14 +1,12 @@
 "use client";
+// auth-listener 컴포넌트를 제공합니다.
 
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth";
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/constants/query-keys";
-import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
-import { toastAppError } from "@/utils/toast-message";
-import type { LoginProvider } from "@/types/auth";
-import { toast } from "sonner";
+import { isAuthSessionMissingError } from "@/utils/auth-error";
 
 /**
  * 앱 루트에서 1회 마운트되어 Supabase Auth 상태를 Zustand store(AuthUser)에 동기화.
@@ -18,9 +16,7 @@ import { toast } from "sonner";
  * DB 프로필(public.user)은 여기서 다루지 않음 → React Query의 useProfile 훅 사용.
  */
 export default function AuthListener() {
-  const user = useAuthStore((s) => s.user);
   const setUser = useAuthStore((s) => s.setUser);
-  const setIsCanChangePassword = useAuthStore((s) => s.setIsCanChangePassword);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -30,77 +26,29 @@ export default function AuthListener() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth.all });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.all });
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth.all });
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.all });
     });
 
     // 서버에서 세션 실제 유효성 검증 (스테일 JWT 방어)
-    supabase.auth.getUser().then(({ data, error }) => {
+    void supabase.auth.getUser().then(async ({ data, error }) => {
       if (error) {
-        supabase.auth.signOut({ scope: "local" });
+        if (!isAuthSessionMissingError(error)) {
+          console.error("인증 리스너의 인증 유저 조회 실패", error);
+          await supabase.auth.signOut({ scope: "local" });
+        }
         setUser(null);
       } else {
         setUser(data.user ?? null);
       }
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth.all });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.all });
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth.all });
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chat.all });
     });
 
     return () => {
       subscription.unsubscribe();
     };
   }, [setUser, queryClient]);
-
-  useEffect(() => {
-    const supabase = createClient();
-
-    const getProviders = async () => {
-      if (!user) return;
-
-      const { data, error } = await supabase
-        .from("user")
-        .select("linked_providers")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      if (error) {
-        console.error("AuthListener linked providers select error", error);
-        toastAppError(APP_MESSAGE_CODE.error.auth.oauthInfoLoadFailed);
-        return;
-      }
-
-      if (!data) {
-        // 프로필 미생성(complete-profile 진행 중) — 정상 케이스
-        setIsCanChangePassword(false);
-        return;
-      }
-
-      const linkedProviders = data.linked_providers ?? [];
-      const hasEmailIdentity = user.identities?.some((identity) => identity.provider === "email");
-
-      if (hasEmailIdentity && !linkedProviders.includes("email")) {
-        const nextProviders: LoginProvider[] = ["email", ...linkedProviders];
-        const { error: updateError } = await supabase
-          .from("user")
-          .update({ linked_providers: nextProviders })
-          .eq("id", user.id);
-
-        if (updateError) {
-          toast.error("OAuth 정보 동기화 실패");
-          setIsCanChangePassword(false);
-          return;
-        }
-
-        await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth.all });
-        setIsCanChangePassword(true);
-        return;
-      }
-
-      setIsCanChangePassword(linkedProviders.includes("email"));
-    };
-
-    getProviders();
-  }, [user, setIsCanChangePassword, queryClient]);
 
   return null;
 }

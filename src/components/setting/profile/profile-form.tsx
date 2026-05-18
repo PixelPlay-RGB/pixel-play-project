@@ -1,4 +1,5 @@
 "use client";
+// profile-form 컴포넌트를 제공합니다.
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Lock, Mail, UserStar } from "lucide-react";
@@ -8,6 +9,7 @@ import { Controller, useForm, useWatch } from "react-hook-form";
 import ProfileAvatarUpload from "@/components/setting/profile/profile-avatar-upload";
 import ProfileCard from "@/components/setting/profile/profile-card";
 import ProfileProvidersCard from "@/components/setting/profile/profile-providers-card";
+import ProfileFormSkeleton from "@/components/setting/profile/profile-form-skeleton";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field";
 import {
@@ -19,27 +21,19 @@ import {
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 
-import { checkNicknameAction, updateProfileAction } from "@/actions/auth";
-import ProfileFormSkeleton from "@/components/setting/profile/profile-form-skeleton";
-import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
-import { QUERY_KEYS } from "@/constants/query-keys";
-import { useUser } from "@/hooks/use-profile";
+import { useNicknameAvailability } from "@/hooks/profile/use-nickname-availability";
+import { useUpdateProfileMutation } from "@/hooks/profile/use-profile-mutations";
+import { resolveProfileQueryErrorCode, useUser } from "@/hooks/profile/use-profile";
 import { cn } from "@/lib/utils";
 import { ProfileFormValues, profileSchema } from "@/lib/zod/auth";
-import type { NicknameStatus } from "@/types/auth";
 import { formatDate } from "@/utils/format";
-import { toastAppError, toastAppSuccess } from "@/utils/toast-message";
-import { useQueryClient } from "@tanstack/react-query";
+import { getAppMessage } from "@/utils/app-message";
 
 export default function ProfileForm() {
-  const { data: user, isLoading } = useUser();
+  const { data: user, error: userError, isError: isUserError, isLoading } = useUser();
 
-  const queryClient = useQueryClient();
-
-  const [nicknameStatus, setNicknameStatus] = useState<NicknameStatus>("idle");
-  const [verifiedNickname, setVerifiedNickname] = useState("");
-  const [isSaving, setIsSaving] = useState(false);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const updateProfileMutation = useUpdateProfileMutation();
 
   const {
     control,
@@ -57,52 +51,55 @@ export default function ProfileForm() {
     },
   });
 
+  const isSaving = updateProfileMutation.isPending;
+  const nicknameAvailability = useNicknameAvailability({
+    getNickname: () => getValues("nickname"),
+    hasNicknameError: () => !!errors.nickname,
+    isBlocked: isSaving,
+    currentNickname: user?.nickname,
+  });
+
   // blob URL 메모리 누수 방지: photoUrl 이 blob: 으로 바뀔 때마다 이전 blob revoke + unmount cleanup
   const photoUrl = useWatch({ control, name: "photoUrl" });
+  const nicknameValue = useWatch({ control, name: "nickname" });
   useEffect(() => {
     return () => {
       if (photoUrl?.startsWith("blob:")) URL.revokeObjectURL(photoUrl);
     };
   }, [photoUrl]);
 
-  if (isLoading || !user) {
+  if (isLoading) {
+    return <ProfileFormSkeleton />;
+  }
+
+  if (isUserError) {
+    const message = getAppMessage(resolveProfileQueryErrorCode(userError));
+
+    return (
+      <ProfileCard title={message.title}>
+        <p className="text-muted-foreground text-sm">{message.description}</p>
+      </ProfileCard>
+    );
+  }
+
+  if (!user) {
     return <ProfileFormSkeleton />;
   }
 
   // 파생 상태 계산
-  const nicknameChanged = !!dirtyFields.nickname;
+  const nicknameChanged = nicknameValue !== user.nickname;
+  const isBusy = isSaving || nicknameAvailability.isCheckingNickname;
   const canSave =
-    Object.keys(errors).length === 0 && (!nicknameChanged || nicknameStatus === "available");
-
-  // 핸들러 정의
-  const handleNicknameChange = (value: string) => {
-    if (value === user.nickname) {
-      setNicknameStatus("idle");
-    } else if (value === verifiedNickname) {
-      setNicknameStatus("available");
-    } else {
-      setNicknameStatus("idle");
-    }
-  };
+    Object.keys(errors).length === 0 &&
+    (!nicknameChanged || nicknameAvailability.isNicknameAvailable);
 
   const handleCheckNickname = async () => {
-    const nickname = getValues("nickname");
-    if (!nickname || errors.nickname) return;
-
-    setNicknameStatus("checking");
-
-    const result = await checkNicknameAction(nickname);
-
-    if (!result.success) {
-      setNicknameStatus("taken");
-      return;
-    }
-
-    setVerifiedNickname(nickname);
-    setNicknameStatus("available");
+    await nicknameAvailability.checkNickname();
   };
 
   const handleFileChange = (file: File | null) => {
+    if (isSaving) return;
+
     if (!file) {
       setPendingFile(null);
       setValue("photoUrl", null, { shouldDirty: true });
@@ -116,17 +113,18 @@ export default function ProfileForm() {
   };
 
   const handleReset = () => {
+    if (isBusy) return;
+
     reset({
       nickname: user.nickname,
       photoUrl: user.photo_url ?? null,
     });
-    setNicknameStatus("idle");
+    nicknameAvailability.resetNicknameAvailability();
     setPendingFile(null);
   };
 
   const handleSave = async (data: ProfileFormValues) => {
-    if (!canSave) return;
-    setIsSaving(true);
+    if (!canSave || isBusy) return;
 
     const formData = new FormData();
     formData.append("nickname", data.nickname);
@@ -142,12 +140,9 @@ export default function ProfileForm() {
       formData.append("photoUrl", data.photoUrl || "");
     }
 
-    const result = await updateProfileAction(formData);
+    const result = await updateProfileMutation.mutateAsync(formData).catch(() => null);
 
-    if (!result.success) {
-      toastAppError(result.code ?? APP_MESSAGE_CODE.error.profile.updateFailed);
-
-      setIsSaving(false);
+    if (!result?.success) {
       return;
     }
 
@@ -156,13 +151,8 @@ export default function ProfileForm() {
       photoUrl: result.photoUrl,
     });
 
-    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth.all });
-
-    setIsSaving(false);
-    setVerifiedNickname(data.nickname);
+    nicknameAvailability.markNicknameAvailable(data.nickname);
     setPendingFile(null);
-
-    toastAppSuccess(APP_MESSAGE_CODE.success.profile.updated);
   };
 
   return (
@@ -172,12 +162,12 @@ export default function ProfileForm() {
         contentStyle={"flex flex-col gap-6"}
         footer={
           <>
-            <Button variant="outline" onClick={handleReset} disabled={!isDirty || isSaving}>
+            <Button variant="outline" onClick={handleReset} disabled={!isDirty || isBusy}>
               되돌리기
             </Button>
             <Button
               type={"submit"}
-              disabled={!isDirty || isSaving || !canSave}
+              disabled={!isDirty || isBusy || !canSave}
               className="bg-brand text-white"
             >
               {isSaving ? <Spinner /> : "변경사항 저장"}
@@ -192,8 +182,9 @@ export default function ProfileForm() {
           render={({ field: { value } }) => (
             <ProfileAvatarUpload
               photoUrl={value || null}
-              nickname={getValues("nickname")}
+              nickname={nicknameValue}
               onFileChange={handleFileChange}
+              disabled={isSaving}
             />
           )}
         />
@@ -202,10 +193,11 @@ export default function ProfileForm() {
           <Label htmlFor="profile-nickname">닉네임</Label>
           <InputGroup
             className={cn(
-              nicknameStatus === "available" &&
+              nicknameAvailability.nicknameStatus === "available" &&
                 nicknameChanged &&
                 "border-brand ring-brand/20 ring-3",
-              (nicknameStatus === "taken" || errors.nickname) && "border-destructive",
+              (nicknameAvailability.nicknameStatus === "taken" || errors.nickname) &&
+                "border-destructive",
             )}
           >
             <InputGroupAddon align="inline-start">
@@ -219,19 +211,10 @@ export default function ProfileForm() {
                   {...field}
                   id="profile-nickname"
                   onChange={(e) => {
-                    const val = e.target.value.replace(/^\s+/, "");
-                    e.target.value = val;
-
-                    field.onChange(val);
-                    handleNicknameChange(val);
+                    field.onChange(e.target.value);
+                    nicknameAvailability.syncNicknameStatus(e.target.value);
                   }}
-                  onBlur={(e) => {
-                    const trim = e.target.value.trim();
-                    e.target.value = trim;
-
-                    field.onChange(trim);
-                    handleNicknameChange(trim);
-                  }}
+                  disabled={isBusy}
                 />
               )}
             />
@@ -240,12 +223,12 @@ export default function ProfileForm() {
                 type="button"
                 variant="outline"
                 onClick={handleCheckNickname}
-                disabled={nicknameStatus === "checking" || !!errors.nickname || !nicknameChanged}
+                disabled={isBusy || !!errors.nickname || !nicknameChanged}
                 className="text-brand border-brand/40"
               >
-                {nicknameStatus === "checking" ? (
+                {nicknameAvailability.isCheckingNickname ? (
                   <Spinner />
-                ) : nicknameStatus === "available" && nicknameChanged ? (
+                ) : nicknameAvailability.nicknameStatus === "available" && nicknameChanged ? (
                   "사용가능"
                 ) : !nicknameChanged ? (
                   "사용 중"
@@ -255,10 +238,10 @@ export default function ProfileForm() {
               </InputGroupButton>
             </InputGroupAddon>
           </InputGroup>
-          {nicknameStatus === "available" && (
+          {nicknameAvailability.nicknameStatus === "available" && nicknameChanged && (
             <p className="text-brand text-xs">사용 가능한 닉네임입니다.</p>
           )}
-          {nicknameStatus === "taken" && (
+          {nicknameAvailability.nicknameStatus === "taken" && (
             <p className="text-destructive text-xs">이미 사용 중인 닉네임입니다.</p>
           )}
           <FieldError errors={[errors.nickname]} />
@@ -280,11 +263,11 @@ export default function ProfileForm() {
         </div>
         <dl className="mt-5 grid grid-cols-2 gap-4">
           <div>
-            <dt className="text-muted-foreground text-[12px]">가입일</dt>
+            <dt className="text-muted-foreground text-xs">가입일</dt>
             <dd className="font-mono text-sm">{formatDate(user.created_at)}</dd>
           </div>
           <div>
-            <dt className="text-muted-foreground text-[12px]">마지막 수정일</dt>
+            <dt className="text-muted-foreground text-xs">마지막 수정일</dt>
             <dd className="font-mono text-sm">{formatDate(user.modified_at)}</dd>
           </div>
         </dl>

@@ -3,15 +3,31 @@
 
 import SettingSidebar from "@/components/setting/setting-sidebar";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { ReactNode } from "react";
+import { useIsMobile } from "@/hooks/common/use-mobile";
+import type { CurrentProfileSnapshot } from "@/utils/profile-server";
+import { ReactNode, useEffect, useState } from "react";
 
-export function SettingShell({ children }: { children: ReactNode }) {
+interface Props {
+  children: ReactNode;
+  profile: CurrentProfileSnapshot | null;
+}
+
+export function SettingShell({ children, profile }: Props) {
   const isMobile = useIsMobile();
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) {
+    return <div className="h-app-content min-h-0 overflow-auto p-6 md:p-10">{children}</div>;
+  }
 
   return (
     <SidebarProvider className="h-app-content min-h-0 overflow-hidden">
-      <SettingSidebar isMobile={isMobile} />
+      <SettingSidebar isMobile={isMobile} profile={profile} />
       <SidebarInset className="min-w-0 overflow-hidden">
         {isMobile && (
           <div className="border-border flex shrink-0 items-center gap-3 border-b p-4">

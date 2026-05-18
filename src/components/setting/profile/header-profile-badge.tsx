@@ -1,43 +1,44 @@
 "use client";
+// header-profile-badge 컴포넌트를 제공합니다.
 
 import SettingMenuItem from "@/components/setting/setting-menu-item";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
-import { Spinner } from "@/components/ui/spinner";
 import { SETTING_MENU } from "@/constants/setting-menu";
-import { useUser } from "@/hooks/use-profile";
-import { createClient } from "@/lib/supabase/client";
+import { useLogout } from "@/hooks/auth/use-logout";
 import { cn } from "@/lib/utils";
-import { useAuthStore } from "@/stores/auth";
-import { getAvatarFallbackText } from "@/utils/avatar";
+import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/avatar";
+import type { CurrentProfileSnapshot } from "@/utils/profile-server";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export default function HeaderProfileBadge() {
-  const supabase = createClient();
-  const router = useRouter();
-  const { data: user, isLoading } = useUser();
-  const isCanChangePassword = useAuthStore((state) => state.isCanChangePassword);
+interface Props {
+  profile: CurrentProfileSnapshot;
+}
+
+export default function HeaderProfileBadge({ profile }: Props) {
+  const logoutMutation = useLogout();
 
   const [open, setOpen] = useState(false);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.refresh();
+    await logoutMutation.mutateAsync().catch(() => undefined);
   };
 
-  if (isLoading || !user) {
-    return <Spinner />;
-  }
+  const isCanChangePassword = profile.linked_providers.includes("email");
+  const avatarSrc = getAvatarImageSrc(profile.photo_url);
+  const avatarAlt = `${profile.nickname}의 프로필 사진`;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger className="cursor-pointer outline-none hover:opacity-80">
+      <PopoverTrigger
+        className="cursor-pointer outline-none hover:opacity-80"
+        aria-label="프로필 메뉴 열기"
+      >
         <Avatar className={cn("ring-brand ring-2 transition-all duration-200 hover:ring-[3px]")}>
-          <AvatarImage src={user.photo_url ?? undefined} />
-          <AvatarFallback>{getAvatarFallbackText(user.nickname)}</AvatarFallback>
+          <AvatarImage src={avatarSrc} alt={avatarAlt} />
+          <AvatarFallback>{getAvatarFallbackText(profile.nickname)}</AvatarFallback>
         </Avatar>
       </PopoverTrigger>
 
@@ -48,14 +49,14 @@ export default function HeaderProfileBadge() {
           className="hover:bg-muted flex items-center gap-4 rounded-lg p-1"
         >
           <Avatar className="border-brand/10 h-12 w-12 border">
-            <AvatarImage src={user.photo_url ?? undefined} />
-            <AvatarFallback>{getAvatarFallbackText(user.nickname)}</AvatarFallback>
+            <AvatarImage src={avatarSrc} alt={avatarAlt} />
+            <AvatarFallback>{getAvatarFallbackText(profile.nickname)}</AvatarFallback>
           </Avatar>
 
           <div className="flex flex-col gap-1">
             <p className={"bg-muted text-brand rounded-sm px-1 py-0.5 text-xs"}>프로필 설정</p>
             <p className="text-foreground keep-space text-lg leading-tight font-bold tracking-tight">
-              {user.nickname}
+              {profile.nickname}
             </p>
           </div>
         </Link>
@@ -69,6 +70,7 @@ export default function HeaderProfileBadge() {
               {
                 onClose: () => setOpen(false),
                 onLogout: handleLogout,
+                isLogoutPending: logoutMutation.isPending,
                 // actions: {
                 //   settings: handleSetting
                 // }

@@ -1,54 +1,50 @@
 "use server";
+// chat-room Server Action을 관리합니다.
 
-import { createClient } from "@/lib/supabase/server";
+import { getAuthenticatedActorId } from "@/actions/authenticated-actor";
+import { createAdminClient } from "@/lib/supabase/admin-client";
+import { createChatRoomSchema } from "@/lib/zod/chat-room";
 import type { CreateChatRoomInput } from "@/lib/zod/chat-room";
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import type { AppActionResult } from "@/types/action";
+import { isKnownChatRoomRpcError, resolveChatRoomRpcErrorCode } from "@/utils/app-message";
 import { revalidatePath } from "next/cache";
 
 export const createChatRoomAction = async (
   formData: CreateChatRoomInput,
 ): Promise<AppActionResult> => {
-  const supabase = await createClient();
+  const parsed = createChatRoomSchema.safeParse(formData);
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { success: false, code: APP_MESSAGE_CODE.error.chatRoom.createAuthRequired };
+  if (!parsed.success) {
+    return { success: false, code: APP_MESSAGE_CODE.error.chatRoom.invalidInput };
   }
 
-  const { data: room, error: roomError } = await supabase
-    .from("chat_room")
-    .insert({
-      title: formData.title,
-      max_capacity: formData.capacity,
-      owner_id: user.id,
-      description: formData.description ?? null,
-    })
-    .select("id")
-    .single();
-
-  if (roomError || !room) {
-    if (roomError) console.error("createChatRoomAction room insert error", roomError);
-    return { success: false, code: APP_MESSAGE_CODE.error.chatRoom.createFailed };
-  }
-
-  const { error: memberError } = await supabase.from("chat_room_member").insert({
-    chat_room_id: room.id,
-    user_id: user.id,
+  const actor = await getAuthenticatedActorId({
+    logLabel: "채팅방 생성 중 인증 유저 조회 실패",
+    missingCode: APP_MESSAGE_CODE.error.chatRoom.createAuthRequired,
   });
 
-  if (memberError) {
-    console.error("createChatRoomAction member insert error", memberError);
-    const { error: rollbackError } = await supabase.from("chat_room").delete().eq("id", room.id);
+  if (!actor.success) {
+    return actor.result;
+  }
 
-    if (rollbackError) {
-      console.error("createChatRoomAction rollback room delete error", rollbackError);
+  const supabase = createAdminClient();
+
+  const { error } = await supabase.rpc("create_chat_room", {
+    p_actor_user_id: actor.userId,
+    p_title: parsed.data.title,
+    p_description: parsed.data.description ?? "",
+    p_max_capacity: parsed.data.capacity,
+  });
+
+  if (error) {
+    if (!isKnownChatRoomRpcError(error)) {
+      console.error("채팅방 생성 RPC 실패", error);
     }
 
-    return { success: false, code: APP_MESSAGE_CODE.error.chatRoom.createMemberFailed };
+    const code = resolveChatRoomRpcErrorCode(error, APP_MESSAGE_CODE.error.chatRoom.createFailed);
+
+    return { success: false, code };
   }
 
   revalidatePath("/");

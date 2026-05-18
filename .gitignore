@@ -51,3 +51,10 @@ next-env.d.ts
 
 # Claude Code
 .claude/
+
+# Agent work notes
+checklist.md
+context-notes.md
+
+# Supabase CLI local state
+supabase/.temp/

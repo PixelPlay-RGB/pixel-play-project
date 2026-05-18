@@ -1,6 +1,7 @@
 "use client";
+// linked-oauth-alert-dialog 컴포넌트를 제공합니다.
 
-import { unLinkOAuthAction } from "@/actions/auth";
+import { unLinkOAuthAction } from "@/actions/auth/oauth";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,6 +26,7 @@ import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Plug, Unlink } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 interface Props {
   isLinked: boolean;
@@ -41,6 +43,7 @@ export default function LinkedOAuthAlertDialog({
   linkedOAuth,
 }: Props) {
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -56,7 +59,7 @@ export default function LinkedOAuthAlertDialog({
     });
 
     if (error) {
-      console.error("linkOAuthAction signInWithOAuth error", error);
+      console.error("OAuth 계정 연동 요청 실패", error);
       toastAppError(APP_MESSAGE_CODE.error.oauth.linkFailed);
       setIsLoading(false);
     }
@@ -75,7 +78,8 @@ export default function LinkedOAuthAlertDialog({
             APP_MESSAGE_CODE.success.oauth.unlinked,
             `${OAUTH_PROVIDER_META[provider].name} 연동이 해제되었습니다.`,
           );
-          await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth.all });
+          await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth.profiles() });
+          router.refresh();
           setOpen(false);
         } else {
           toastAppError(result.code ?? APP_MESSAGE_CODE.error.oauth.unlinkFailed);
@@ -85,7 +89,7 @@ export default function LinkedOAuthAlertDialog({
         await linkOAuthAction(provider);
       }
     } catch (error) {
-      console.error("LinkedOAuthAlertDialog toggle error", error);
+      console.error("OAuth 계정 연동 상태 변경 실패", error);
       toastAppError(APP_MESSAGE_CODE.error.oauth.actionFailed);
       setIsLoading(false);
     }
@@ -168,7 +172,10 @@ export default function LinkedOAuthAlertDialog({
         <AlertDialogFooter className="m-0 flex-row justify-end gap-2 border-0 bg-transparent px-5 pt-4 pb-5">
           <AlertDialogCancel
             disabled={isLoading}
-            className="border-border bg-background text-foreground hover:bg-muted h-10 min-w-24 rounded-xl px-4 font-semibold"
+            className={cn(
+              "h-10 min-w-24 rounded-xl px-4 font-semibold",
+              "border-border bg-background text-foreground hover:bg-muted",
+            )}
           >
             돌아가기
           </AlertDialogCancel>

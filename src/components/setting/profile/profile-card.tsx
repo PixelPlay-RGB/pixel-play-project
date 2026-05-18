@@ -1,3 +1,4 @@
+// profile-card 컴포넌트를 제공합니다.
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ReactNode } from "react";
 

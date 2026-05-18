@@ -1,4 +1,5 @@
 "use client";
+// password-dialog 컴포넌트를 제공합니다.
 
 import { Button } from "@/components/ui/button";
 import {
@@ -51,10 +52,20 @@ export default function PasswordDialog({ className, icon, label, trigger }: Prop
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger render={trigger ?? defaultTrigger} />
-      <DialogContent className="border-brand/20 shadow-brand/10 dark:border-brand/10 overflow-hidden rounded-2xl p-0 shadow-xl sm:max-w-md">
+      <DialogContent
+        className={cn(
+          "overflow-hidden rounded-2xl p-0 shadow-xl sm:max-w-md",
+          "border-brand/20 shadow-brand/10 dark:border-brand/10",
+        )}
+      >
         <DialogHeader className="bg-brand/5 border-brand/10 border-b px-5 pt-5 pb-4">
           <div className="flex items-center gap-3">
-            <span className="bg-brand/10 text-brand ring-brand/20 flex size-10 shrink-0 items-center justify-center rounded-xl ring-1">
+            <span
+              className={cn(
+                "flex size-10 shrink-0 items-center justify-center rounded-xl ring-1",
+                "bg-brand/10 text-brand ring-brand/20",
+              )}
+            >
               <KeyRound className="size-5" />
             </span>
             <div className="min-w-0">

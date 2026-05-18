@@ -1,3 +1,4 @@
+// main-menu-sidebar 상수를 정의합니다.
 import { MessageSquare, Radio } from "lucide-react";
 import type { MainMenuSidebarItem } from "@/types/main-menu-sidebar";
 

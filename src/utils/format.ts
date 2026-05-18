@@ -1,3 +1,4 @@
+// format 유틸리티 함수를 제공합니다.
 export function formatDate(iso: string): string {
   const d = new Date(iso);
   const pad = (n: number) => String(n).padStart(2, "0");
