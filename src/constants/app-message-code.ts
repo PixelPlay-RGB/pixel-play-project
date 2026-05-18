@@ -73,6 +73,9 @@ export const APP_MESSAGE_CODE = {
     chatRoomList: {
       loadFailed: "error.chatRoomList.loadFailed",
     },
+    search: {
+      loadFailed: "error.search.loadFailed",
+    },
     message: {
       invalidInput: "error.message.invalidInput",
       sendForbidden: "error.message.sendForbidden",

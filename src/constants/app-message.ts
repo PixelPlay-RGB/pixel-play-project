@@ -212,6 +212,12 @@ export const APP_MESSAGE = {
         description: "채팅방 목록을 불러오지 못했습니다.",
       },
     },
+    search: {
+      loadFailed: {
+        title: "검색 결과 조회 실패",
+        description: "잠시 후 다시 검색해 주세요.",
+      },
+    },
     chatRoomMember: {
       kickFailed: {
         title: "강퇴 실패",
