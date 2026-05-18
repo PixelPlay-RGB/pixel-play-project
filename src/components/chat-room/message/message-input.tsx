@@ -2,13 +2,12 @@
 // message-input 컴포넌트를 제공합니다.
 
 import { SendHorizontal } from "lucide-react";
-import { type FormEvent, useEffect, useRef } from "react";
+import { type SubmitEvent, useCallback, useEffect, useRef } from "react";
 
 import ChatEmojiPicker from "@/components/chat-room/chat-emoji-picker";
 import { useChatRoomPresenceContext } from "@/components/chat-room/chat-room-presence-provider";
 import { Button } from "@/components/ui/button";
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
-import { CHAT_ROOM_TYPING_DRAFT_POLL_INTERVAL_MS } from "@/constants/chat-room-presence";
 import { MESSAGE_CONTENT_MAX_LENGTH } from "@/constants/message";
 import { useAutoResizeTextarea } from "@/hooks/common/use-auto-resize-textarea";
 import { useMessageDraft } from "@/hooks/message/use-message-draft";
@@ -31,7 +30,7 @@ export function MessageInput({ roomId, disabled = false, disabledHint }: Props) 
   const { setTyping } = useChatRoomPresenceContext();
   const { draft, setDraft, appendDraft, clearDraft } = useMessageDraft(MESSAGE_CONTENT_MAX_LENGTH);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const lastObservedDraftRef = useRef("");
+  const latestDraftRef = useRef("");
   const submitDisabled = disabled || sendMessageMutation.isPending;
 
   useAutoResizeTextarea({
@@ -40,9 +39,17 @@ export function MessageInput({ roomId, disabled = false, disabledHint }: Props) 
     maxHeightPx: MAX_TEXTAREA_HEIGHT_PX,
   });
 
-  useEffect(() => {
-    setTyping(!disabled && draft.length > 0);
-  }, [disabled, draft, setTyping]);
+  const syncTypingStatus = useCallback(
+    (value: string) => {
+      const nextDraft = value.slice(0, MESSAGE_CONTENT_MAX_LENGTH);
+
+      latestDraftRef.current = nextDraft;
+      setTyping(!disabled && nextDraft.length > 0);
+
+      return nextDraft;
+    },
+    [disabled, setTyping],
+  );
 
   useEffect(() => {
     return () => {
@@ -51,53 +58,23 @@ export function MessageInput({ roomId, disabled = false, disabledHint }: Props) 
   }, [setTyping]);
 
   useEffect(() => {
-    const draftPollInterval = window.setInterval(() => {
-      const currentDraft = textareaRef.current?.value ?? "";
-
-      if (currentDraft === lastObservedDraftRef.current) {
-        if (currentDraft.length === 0) {
-          setTyping(false);
-        }
-
-        return;
-      }
-
-      lastObservedDraftRef.current = currentDraft;
-
-      if (currentDraft.length === 0) {
-        setTyping(false);
-        return;
-      }
-
-      setTyping(!disabled);
-    }, CHAT_ROOM_TYPING_DRAFT_POLL_INTERVAL_MS);
-
-    return () => {
-      window.clearInterval(draftPollInterval);
-    };
-  }, [disabled, setTyping]);
-
-  const syncTypingStatus = (value: string) => {
     if (disabled) {
       setTyping(false);
-      return;
     }
-
-    setTyping(value.length > 0);
-  };
+  }, [disabled, setTyping]);
 
   const handleDraftChange = (value: string) => {
-    lastObservedDraftRef.current = value;
-    setDraft(value);
-    syncTypingStatus(value);
+    const nextDraft = syncTypingStatus(value);
+    setDraft(nextDraft);
   };
 
   const handleEmojiSelect = (emoji: string) => {
+    const nextDraft = syncTypingStatus(latestDraftRef.current + emoji);
     appendDraft(emoji);
-    setTyping(!disabled);
+    latestDraftRef.current = nextDraft;
   };
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (submitDisabled || !roomId) {
@@ -112,11 +89,17 @@ export function MessageInput({ roomId, disabled = false, disabledHint }: Props) 
 
     const content = parsed.data;
 
+    setTyping(false);
+
     try {
       const result = await sendMessageMutation.mutateAsync(content);
 
       if (result.success) {
         clearDraft(content);
+
+        if (latestDraftRef.current === content) {
+          latestDraftRef.current = "";
+        }
       }
     } catch {
       return;
@@ -137,13 +120,7 @@ export function MessageInput({ roomId, disabled = false, disabledHint }: Props) 
         maxLength={MESSAGE_CONTENT_MAX_LENGTH}
         title={disabled ? disabledHint : undefined}
         onChange={(e) => handleDraftChange(e.target.value)}
-        onBeforeInput={() => setTyping(!disabled)}
-        onInput={(e) => syncTypingStatus(e.currentTarget.value)}
-        onPaste={() => setTyping(!disabled)}
-        onCompositionStart={() => setTyping(!disabled)}
-        onCompositionEnd={(e) => syncTypingStatus(e.currentTarget.value)}
-        onFocus={() => setTyping(!disabled && draft.length > 0)}
-        onBlur={() => setTyping(false)}
+        onCompositionEnd={(e) => handleDraftChange(e.currentTarget.value)}
         onKeyDown={(e) => {
           if (submitDisabled) return;
           if (e.key === "Enter" && !e.shiftKey) {
@@ -151,22 +128,6 @@ export function MessageInput({ roomId, disabled = false, disabledHint }: Props) 
             e.currentTarget.form?.requestSubmit();
             return;
           }
-
-          if ((e.key === "Backspace" || e.key === "Delete") && e.currentTarget.value.length <= 1) {
-            setTyping(false);
-            return;
-          }
-
-          if (e.key.length === 1 || e.key === "Backspace" || e.key === "Delete") {
-            setTyping(true);
-          }
-        }}
-        onKeyUp={(e) => {
-          if (e.key === "Enter" && !e.shiftKey) {
-            return;
-          }
-
-          syncTypingStatus(e.currentTarget.value);
         }}
         placeholder={
           disabled

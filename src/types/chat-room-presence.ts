@@ -7,11 +7,18 @@ export interface ChatRoomPresencePayload {
   roomId: string;
   nickname: string;
   photoUrl: string | null;
-  isTyping: boolean;
-  typingAt: string | null;
   onlineAt: string;
+}
+
+export interface ChatRoomTypingBroadcastPayload {
+  roomId: string;
+  userId: string;
+  isTyping: boolean;
+  updatedAt: string;
 }
 
 export type ChatRoomPresenceState = Record<string, ChatRoomPresencePayload[]>;
 
 export type ChatRoomMemberPresenceMap = Record<string, ChatRoomPresenceStatus>;
+
+export type ChatRoomTypingMemberMap = Record<string, number>;

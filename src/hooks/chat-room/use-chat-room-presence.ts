@@ -4,8 +4,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
-  CHAT_ROOM_PRESENCE_REFRESH_INTERVAL_MS,
+  CHAT_ROOM_TYPING_BROADCAST_EVENT,
   CHAT_ROOM_TYPING_IDLE_TIMEOUT_MS,
+  CHAT_ROOM_TYPING_PRUNE_INTERVAL_MS,
   CHAT_ROOM_TYPING_REFRESH_INTERVAL_MS,
 } from "@/constants/chat-room-presence";
 import { createClient } from "@/lib/supabase/client";
@@ -13,11 +14,16 @@ import type {
   ChatRoomMemberPresenceMap,
   ChatRoomPresencePayload,
   ChatRoomPresenceState,
+  ChatRoomTypingBroadcastPayload,
+  ChatRoomTypingMemberMap,
 } from "@/types/chat-room-presence";
 import type { DBUser } from "@/types/user";
 import {
   createChatRoomPresenceChannelName,
   createChatRoomPresencePayload,
+  createChatRoomPresenceRealtimeTopic,
+  createChatRoomTypingBroadcastPayload,
+  pruneChatRoomTypingMemberMap,
   resolveChatRoomMemberPresenceMap,
 } from "@/utils/chat-room-presence";
 
@@ -31,18 +37,26 @@ interface Params {
 
 export function useChatRoomPresence({ roomId, currentUser, enabled }: Params) {
   const supabase = useMemo(() => createClient(), []);
+  const currentUserId = currentUser?.id ?? null;
+  const currentUserNickname = currentUser?.nickname ?? null;
+  const currentUserPhotoUrl = currentUser?.photo_url ?? null;
   const [memberPresence, setMemberPresence] = useState<ChatRoomMemberPresenceMap>({});
   const channelRef = useRef<ChatRoomPresenceChannel | null>(null);
   const presenceStateRef = useRef<ChatRoomPresenceState>({});
+  const typingMemberMapRef = useRef<ChatRoomTypingMemberMap>({});
   const onlineAtRef = useRef(new Date().toISOString());
   const typingRef = useRef(false);
   const lastTypingSentAtRef = useRef(0);
-  const lastTypingStoppedAtRef = useRef(0);
   const typingIdleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const typingRefreshTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const isSubscribedRef = useRef(false);
 
   const refreshMemberPresence = useCallback(() => {
-    setMemberPresence(resolveChatRoomMemberPresenceMap(presenceStateRef.current, Date.now()));
+    setMemberPresence(
+      resolveChatRoomMemberPresenceMap(
+        presenceStateRef.current,
+        Object.keys(typingMemberMapRef.current),
+      ),
+    );
   }, []);
 
   const clearTypingIdleTimer = useCallback(() => {
@@ -54,164 +68,268 @@ export function useChatRoomPresence({ roomId, currentUser, enabled }: Params) {
     typingIdleTimerRef.current = null;
   }, []);
 
-  const clearTypingRefreshTimer = useCallback(() => {
-    if (!typingRefreshTimerRef.current) {
-      return;
-    }
-
-    clearInterval(typingRefreshTimerRef.current);
-    typingRefreshTimerRef.current = null;
-  }, []);
-
-  const publishPresence = useCallback(
+  const sendTypingBroadcast = useCallback(
     async (isTyping: boolean) => {
-      if (!enabled || !roomId || !currentUser || !channelRef.current) {
+      if (
+        !enabled ||
+        !roomId ||
+        !currentUserId ||
+        !channelRef.current ||
+        !isSubscribedRef.current
+      ) {
         return;
       }
 
-      typingRef.current = isTyping;
-      const nowIso = new Date().toISOString();
-
-      await channelRef.current.track(
-        createChatRoomPresencePayload({
+      const sendStatus = await channelRef.current.send({
+        type: "broadcast",
+        event: CHAT_ROOM_TYPING_BROADCAST_EVENT,
+        payload: createChatRoomTypingBroadcastPayload({
           roomId,
-          userId: currentUser.id,
-          nickname: currentUser.nickname,
-          photoUrl: currentUser.photo_url,
+          userId: currentUserId,
           isTyping,
-          onlineAt: onlineAtRef.current,
-          nowIso,
+          nowIso: new Date().toISOString(),
         }),
-      );
+      });
+
+      if (process.env.NODE_ENV === "development" && sendStatus !== "ok") {
+        console.debug("[chat-room-presence] typing broadcast failed", {
+          isTyping,
+          sendStatus,
+        });
+      }
     },
-    [currentUser, enabled, roomId],
+    [currentUserId, enabled, roomId],
   );
 
-  const startTypingRefreshTimer = useCallback(() => {
-    if (typingRefreshTimerRef.current) {
+  const stopTyping = useCallback(() => {
+    clearTypingIdleTimer();
+
+    if (!typingRef.current) {
       return;
     }
 
-    typingRefreshTimerRef.current = setInterval(() => {
-      if (!typingRef.current) {
-        return;
-      }
+    typingRef.current = false;
+    lastTypingSentAtRef.current = 0;
 
-      void publishPresence(true);
-    }, CHAT_ROOM_TYPING_REFRESH_INTERVAL_MS);
-  }, [publishPresence]);
+    if (currentUserId) {
+      delete typingMemberMapRef.current[currentUserId];
+      refreshMemberPresence();
+    }
+
+    void sendTypingBroadcast(false);
+  }, [clearTypingIdleTimer, currentUserId, refreshMemberPresence, sendTypingBroadcast]);
 
   const setTyping = useCallback(
     (isTyping: boolean) => {
-      clearTypingIdleTimer();
-
       if (!isTyping) {
-        clearTypingRefreshTimer();
+        stopTyping();
+        return;
+      }
 
-        const nowMs = Date.now();
-        const shouldPublishTypingStop =
-          typingRef.current ||
-          nowMs - lastTypingStoppedAtRef.current >= CHAT_ROOM_TYPING_REFRESH_INTERVAL_MS;
-
-        if (shouldPublishTypingStop) {
-          lastTypingStoppedAtRef.current = nowMs;
-          lastTypingSentAtRef.current = 0;
-          void publishPresence(false);
-        }
-
+      if (!currentUserId) {
         return;
       }
 
       const nowMs = Date.now();
-      const shouldRefreshTyping =
-        !typingRef.current ||
-        nowMs - lastTypingSentAtRef.current >= CHAT_ROOM_TYPING_REFRESH_INTERVAL_MS;
+      const wasTyping = typingRef.current;
 
-      if (shouldRefreshTyping) {
-        lastTypingSentAtRef.current = nowMs;
-        lastTypingStoppedAtRef.current = 0;
-        void publishPresence(true);
+      typingRef.current = true;
+      typingMemberMapRef.current[currentUserId] = nowMs + CHAT_ROOM_TYPING_IDLE_TIMEOUT_MS;
+
+      if (!wasTyping) {
+        refreshMemberPresence();
       }
 
-      startTypingRefreshTimer();
+      if (
+        !wasTyping ||
+        nowMs - lastTypingSentAtRef.current >= CHAT_ROOM_TYPING_REFRESH_INTERVAL_MS
+      ) {
+        lastTypingSentAtRef.current = nowMs;
+        void sendTypingBroadcast(true);
+      }
 
-      typingIdleTimerRef.current = setTimeout(() => {
-        lastTypingSentAtRef.current = 0;
-        clearTypingRefreshTimer();
-        void publishPresence(false);
-      }, CHAT_ROOM_TYPING_IDLE_TIMEOUT_MS);
+      clearTypingIdleTimer();
+      typingIdleTimerRef.current = setTimeout(stopTyping, CHAT_ROOM_TYPING_IDLE_TIMEOUT_MS);
     },
-    [clearTypingIdleTimer, clearTypingRefreshTimer, publishPresence, startTypingRefreshTimer],
+    [clearTypingIdleTimer, currentUserId, refreshMemberPresence, sendTypingBroadcast, stopTyping],
   );
 
-  useEffect(() => {
-    if (!enabled || !roomId || !currentUser) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setMemberPresence({});
-      presenceStateRef.current = {};
+  const pruneTypingMembers = useCallback(() => {
+    const nextTypingMemberMap = pruneChatRoomTypingMemberMap(
+      typingMemberMapRef.current,
+      Date.now(),
+    );
+
+    if (
+      Object.keys(nextTypingMemberMap).length === Object.keys(typingMemberMapRef.current).length
+    ) {
       return;
     }
 
+    typingMemberMapRef.current = nextTypingMemberMap;
+    refreshMemberPresence();
+  }, [refreshMemberPresence]);
+
+  const trackPresence = useCallback(async () => {
+    if (
+      !enabled ||
+      !roomId ||
+      !currentUserId ||
+      !currentUserNickname ||
+      !channelRef.current ||
+      !isSubscribedRef.current
+    ) {
+      return;
+    }
+
+    const trackStatus = await channelRef.current.track(
+      createChatRoomPresencePayload({
+        roomId,
+        userId: currentUserId,
+        nickname: currentUserNickname,
+        photoUrl: currentUserPhotoUrl,
+        onlineAt: onlineAtRef.current,
+      }),
+    );
+
+    if (process.env.NODE_ENV === "development" && trackStatus !== "ok") {
+      console.debug("[chat-room-presence] presence track", {
+        trackStatus,
+      });
+    }
+  }, [currentUserId, currentUserNickname, currentUserPhotoUrl, enabled, roomId]);
+
+  const handleTypingBroadcast = useCallback(
+    ({ payload }: { payload: ChatRoomTypingBroadcastPayload }) => {
+      if (payload.roomId !== roomId || payload.userId === currentUserId) {
+        return;
+      }
+
+      if (payload.isTyping) {
+        const wasTyping = payload.userId in typingMemberMapRef.current;
+
+        typingMemberMapRef.current[payload.userId] = Date.now() + CHAT_ROOM_TYPING_IDLE_TIMEOUT_MS;
+
+        if (!wasTyping) {
+          refreshMemberPresence();
+        }
+      } else {
+        const wasTyping = payload.userId in typingMemberMapRef.current;
+
+        delete typingMemberMapRef.current[payload.userId];
+
+        if (wasTyping) {
+          refreshMemberPresence();
+        }
+      }
+    },
+    [currentUserId, refreshMemberPresence, roomId],
+  );
+
+  useEffect(() => {
+    if (!enabled || !roomId || !currentUserId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setMemberPresence({});
+      presenceStateRef.current = {};
+      typingMemberMapRef.current = {};
+      return;
+    }
+
+    let isActive = true;
+    let channel: ChatRoomPresenceChannel | null = null;
+    const channelName = createChatRoomPresenceChannelName(roomId);
+    const realtimeTopic = createChatRoomPresenceRealtimeTopic(roomId);
     const clientKey =
       typeof crypto !== "undefined" && "randomUUID" in crypto
         ? crypto.randomUUID()
         : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-    const channel = supabase.channel(createChatRoomPresenceChannelName(roomId), {
-      config: {
-        presence: {
-          key: `${currentUser.id}-${clientKey}`,
+
+    void (async () => {
+      const staleChannels = supabase
+        .getChannels()
+        .filter((existingChannel) => existingChannel.topic === realtimeTopic);
+
+      await Promise.all(staleChannels.map((staleChannel) => supabase.removeChannel(staleChannel)));
+
+      if (!isActive) {
+        return;
+      }
+
+      channel = supabase.channel(channelName, {
+        config: {
+          presence: {
+            key: `${currentUserId}-${clientKey}`,
+          },
         },
-      },
-    });
-
-    onlineAtRef.current = new Date().toISOString();
-    channelRef.current = channel;
-
-    channel
-      .on("presence", { event: "sync" }, () => {
-        presenceStateRef.current = channel.presenceState<ChatRoomPresencePayload>();
-        refreshMemberPresence();
-      })
-      .subscribe((status) => {
-        if (status !== "SUBSCRIBED") {
-          return;
-        }
-
-        void publishPresence(false);
       });
 
-    const refreshInterval = window.setInterval(
-      refreshMemberPresence,
-      CHAT_ROOM_PRESENCE_REFRESH_INTERVAL_MS,
-    );
+      onlineAtRef.current = new Date().toISOString();
+      channelRef.current = channel;
+
+      channel
+        .on<ChatRoomTypingBroadcastPayload>(
+          "broadcast",
+          { event: CHAT_ROOM_TYPING_BROADCAST_EVENT },
+          handleTypingBroadcast,
+        )
+        .on("presence", { event: "sync" }, () => {
+          if (!channel) {
+            return;
+          }
+
+          presenceStateRef.current = channel.presenceState<ChatRoomPresencePayload>();
+          refreshMemberPresence();
+        })
+        .subscribe((status) => {
+          if (status !== "SUBSCRIBED") {
+            return;
+          }
+
+          isSubscribedRef.current = true;
+          void trackPresence();
+        });
+    })();
+
+    const pruneInterval = setInterval(pruneTypingMembers, CHAT_ROOM_TYPING_PRUNE_INTERVAL_MS);
 
     return () => {
+      isActive = false;
       clearTypingIdleTimer();
-      clearTypingRefreshTimer();
-      window.clearInterval(refreshInterval);
+      clearInterval(pruneInterval);
+
+      if (typingRef.current) {
+        typingRef.current = false;
+        void sendTypingBroadcast(false);
+      }
+
       typingRef.current = false;
       lastTypingSentAtRef.current = 0;
-      lastTypingStoppedAtRef.current = 0;
+      isSubscribedRef.current = false;
       presenceStateRef.current = {};
+      typingMemberMapRef.current = {};
       setMemberPresence({});
+
+      if (!channel) {
+        return;
+      }
 
       if (channelRef.current === channel) {
         channelRef.current = null;
       }
 
-      void channel.untrack().finally(() => {
-        void channel.unsubscribe();
-      });
+      void supabase.removeChannel(channel);
     };
   }, [
     clearTypingIdleTimer,
-    clearTypingRefreshTimer,
-    currentUser,
+    currentUserId,
     enabled,
-    publishPresence,
+    handleTypingBroadcast,
+    pruneTypingMembers,
     refreshMemberPresence,
     roomId,
+    sendTypingBroadcast,
     supabase,
+    trackPresence,
   ]);
 
   return {
