@@ -4,8 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { Metadata } from "next";
 
 const CHAT_ROOM_METADATA_FALLBACK_TITLE = "채팅방";
-const CHAT_ROOM_METADATA_FALLBACK_DESCRIPTION =
-  "PixelPlay 채팅방에서 실시간 메시지와 참여자 상호작용을 즐겨보세요.";
+const CHAT_ROOM_METADATA_FALLBACK_DESCRIPTION = "PixelPlay 채팅방에서 실시간 메시지를 즐겨보세요.";
 
 export async function generateMetadata(props: PageProps<"/chat-room/[roomId]">): Promise<Metadata> {
   const { roomId } = await props.params;

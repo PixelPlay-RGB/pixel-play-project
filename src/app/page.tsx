@@ -2,7 +2,7 @@
 import MainMenuSidebar from "@/components/common/main-menu-sidebar";
 import type { Metadata } from "next";
 
-const HOME_METADATA_TITLE = "실시간 채팅과 라이브 상호작용";
+const HOME_METADATA_TITLE = "실시간 채팅 서비스";
 const HOME_METADATA_DESCRIPTION =
   "PixelPlay에서 채팅방을 만들고 참여하며 실시간 소통을 즐겨보세요.";
 
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
         url: "/og-home.webp",
         width: 1200,
         height: 630,
-        alt: "PixelPlay 실시간 상호작용 메인 화면",
+        alt: "PixelPlay 메인 화면",
       },
     ],
   },

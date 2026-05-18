@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     type: "website",
     siteName: "PixelPlay",
     title: "PixelPlay - RGB",
-    description: "화면의 최소 단위인 픽셀을 즐긴다! 실시간 채팅과 라이브 상호작용을 즐겨보세요.",
+    description: "화면의 최소 단위인 픽셀을 즐긴다! 실시간 채팅과 라이브를 즐겨보세요.",
     url: "/",
     images: [
       {
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "PixelPlay - RGB",
-    description: "화면의 최소 단위인 픽셀을 즐긴다! 실시간 채팅과 라이브 상호작용을 즐겨보세요.",
+    description: "화면의 최소 단위인 픽셀을 즐긴다! 실시간 채팅과 라이브를 즐겨보세요.",
     images: ["/og-home.webp"],
   },
 };
