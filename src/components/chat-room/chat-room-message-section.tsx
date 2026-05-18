@@ -7,6 +7,7 @@ import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import { useChatRoomDetail } from "@/hooks/chat-room/use-chat-room-detail";
 import { useChatRoomReadLifecycle } from "@/hooks/chat-room/use-chat-room-read-lifecycle";
 import useMessages from "@/hooks/message/use-messages";
+import { useSendMessage } from "@/hooks/message/use-send-message";
 import { getAppMessage } from "@/utils/app-message";
 
 interface Props {
@@ -14,10 +15,17 @@ interface Props {
 }
 
 export function ChatRoomMessageSection({ roomId }: Props) {
-  const { currentUserId, isKicked, canFetchMessages, canMarkRoomRead, canSendMessage } =
-    useChatRoomDetail(roomId);
+  const {
+    currentUser,
+    currentUserId,
+    isKicked,
+    canFetchMessages,
+    canMarkRoomRead,
+    canSendMessage,
+  } = useChatRoomDetail(roomId);
   const { messages, hasMorePrevious, isLoadingPrevious, fetchPreviousPage, isLoadingInitial } =
     useMessages(roomId, canFetchMessages);
+  const sendMessageMutation = useSendMessage(roomId, currentUser);
 
   useChatRoomReadLifecycle({ roomId, enabled: canMarkRoomRead });
 
@@ -39,10 +47,14 @@ export function ChatRoomMessageSection({ roomId }: Props) {
         hasMorePrevious={hasMorePrevious}
         isLoadingPrevious={isLoadingPrevious || isLoadingInitial}
         onReachTop={handleLoadPrevious}
+        isRetryPending={sendMessageMutation.isPending}
+        onRetryMessage={sendMessageMutation.retryMessage}
+        onCancelMessage={sendMessageMutation.cancelMessage}
       />
 
       <MessageInput
         roomId={roomId}
+        sendMessageMutation={sendMessageMutation}
         disabled={!canSendMessage}
         disabledHint={
           getAppMessage(

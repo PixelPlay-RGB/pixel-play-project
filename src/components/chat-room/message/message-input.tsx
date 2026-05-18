@@ -11,7 +11,7 @@ import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import { MESSAGE_CONTENT_MAX_LENGTH } from "@/constants/message";
 import { useAutoResizeTextarea } from "@/hooks/common/use-auto-resize-textarea";
 import { useMessageDraft } from "@/hooks/message/use-message-draft";
-import { useSendMessage } from "@/hooks/message/use-send-message";
+import type { useSendMessage } from "@/hooks/message/use-send-message";
 import { cn } from "@/lib/utils";
 import { messageContentSchema } from "@/lib/zod/message";
 import { getAppMessageTitle } from "@/utils/app-message";
@@ -19,14 +19,19 @@ import { toastAppError } from "@/utils/toast-message";
 
 interface Props {
   roomId: string;
+  sendMessageMutation: ReturnType<typeof useSendMessage>;
   disabled?: boolean;
   disabledHint?: string;
 }
 
 const MAX_TEXTAREA_HEIGHT_PX = 128; // max-h-32 (8rem)
 
-export function MessageInput({ roomId, disabled = false, disabledHint }: Props) {
-  const sendMessageMutation = useSendMessage(roomId);
+export function MessageInput({
+  roomId,
+  sendMessageMutation,
+  disabled = false,
+  disabledHint,
+}: Props) {
   const { setTyping } = useChatRoomPresenceContext();
   const { draft, setDraft, appendDraft, clearDraft } = useMessageDraft(MESSAGE_CONTENT_MAX_LENGTH);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -92,7 +97,7 @@ export function MessageInput({ roomId, disabled = false, disabledHint }: Props) 
     setTyping(false);
 
     try {
-      const result = await sendMessageMutation.mutateAsync(content);
+      const result = await sendMessageMutation.sendMessage(content);
 
       if (result.success) {
         clearDraft(content);

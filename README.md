@@ -171,6 +171,7 @@ npm run dev
 - 같은 작성자의 연속 text 메시지는 bubble grouping으로 avatar와 nickname 반복을 줄입니다.
 - 새 메시지는 Supabase Realtime `postgres_changes` INSERT 이벤트를 받아 React Query cache에 `created_at desc` 순서로 병합합니다.
 - 텍스트 메시지는 `sendMessageAction`이 `send_chat_message` RPC를 호출하는 방식으로 전송하고 이모지 입력을 제공합니다.
+- 메시지 전송은 TanStack Query cache에 optimistic 메시지를 먼저 삽입하고, RPC가 반환한 message id로 서버 메시지를 조회해 교체합니다. 전송 실패 시 해당 메시지에 재전송과 취소 액션을 표시합니다.
 - 메시지 입력 draft와 auto-resize는 `useMessageDraft`, `useAutoResizeTextarea`로 관리합니다. 최대 높이는 `max-h-32`이며 초과 시 스크롤됩니다. Shift+Enter는 줄바꿈, Enter는 전송입니다.
 - 메시지 입력 중인 멤버는 참여자 목록 avatar의 접속 dot 대신 Motion 기반 3점 typing indicator로 표시하고, 일정 시간 입력이 없으면 접속 dot으로 돌아갑니다.
 - 멀티라인 메시지는 `whitespace-pre-wrap`으로 렌더링합니다.
@@ -306,7 +307,7 @@ src/
 | `join_chat_room`           | 채팅방 참여                                                              |
 | `leave_chat_room`          | 채팅방 나가기                                                            |
 | `mark_room_read`           | 방 읽음 처리                                                             |
-| `send_chat_message`        | 활성 참여자의 텍스트 메시지 전송                                         |
+| `send_chat_message`        | 활성 참여자의 텍스트 메시지 전송 후 생성된 message id 반환               |
 | `search_chat_rooms`        | 채팅방 제목, 방장 닉네임 검색                                            |
 | `kick_chat_room_member`    | 방장의 참여자 강퇴                                                       |
 | `transfer_chat_room_owner` | 방장 권한 위임                                                           |
@@ -374,6 +375,7 @@ npm run types
 | `20260517130931_restrict_write_rpc_execute_to_service_role.sql`       | 쓰기 RPC 실행 경계 service role로 정리   |
 | `20260517141944_harden_message_send_and_date_divider_concurrency.sql` | 메시지 전송과 날짜 구분 동시성 보강      |
 | `20260518111049_update_chat_room_list_default_sort.sql`               | 채팅방 목록 기본 정렬 최신 메시지순 전환 |
+| `20260518212356_return_send_chat_message_id.sql`                      | 메시지 optimistic reconcile용 id 반환    |
 
 ---
 

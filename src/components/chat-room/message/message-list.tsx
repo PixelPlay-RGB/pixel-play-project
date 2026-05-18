@@ -8,15 +8,18 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useMessageListViewport } from "@/hooks/message/use-message-list-viewport";
 import { cn } from "@/lib/utils";
-import type { MessageQuery } from "@/types/message";
+import type { MessageListItem } from "@/types/message";
 import { canGroupMessages } from "@/utils/message";
 
 interface Props {
-  messages: MessageQuery[];
+  messages: MessageListItem[];
   currentUserId: string;
   hasMorePrevious: boolean;
   isLoadingPrevious: boolean;
   onReachTop: () => boolean;
+  isRetryPending: boolean;
+  onRetryMessage: (message: MessageListItem) => void;
+  onCancelMessage: (messageId: string) => void;
 }
 
 export function MessageList({
@@ -25,6 +28,9 @@ export function MessageList({
   hasMorePrevious,
   isLoadingPrevious,
   onReachTop,
+  isRetryPending,
+  onRetryMessage,
+  onCancelMessage,
 }: Props) {
   const { viewportRef, showLatestButton, handleScroll, scrollToLatest } = useMessageListViewport({
     messages,
@@ -52,6 +58,9 @@ export function MessageList({
                 isGroupedWithPrevious={isGroupedWithPrevious}
                 isGroupedWithNext={isGroupedWithNext}
                 showAuthor={!isGroupedWithPrevious}
+                isRetryPending={isRetryPending}
+                onRetry={() => onRetryMessage(message)}
+                onCancel={() => onCancelMessage(message.id)}
               />
             );
           })}

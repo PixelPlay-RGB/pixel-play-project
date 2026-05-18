@@ -7,28 +7,9 @@ import { useInfiniteQuery, useQueryClient, type InfiniteData } from "@tanstack/r
 
 import { QUERY_KEYS } from "@/constants/query-keys";
 import { createClient } from "@/lib/supabase/client";
-import type { MessageQuery } from "@/types/message";
+import type { MessageListItem, MessagesPage } from "@/types/message";
 import { MESSAGE_PAGE_SIZE } from "@/constants/message";
-
-interface MessagesPage {
-  items: MessageQuery[];
-  nextCursor?: string;
-}
-
-function insertMessageByCreatedAtDesc(items: MessageQuery[], nextMessage: MessageQuery) {
-  if (items.some((item) => item.id === nextMessage.id)) {
-    return items;
-  }
-
-  const nextCreatedAt = Date.parse(nextMessage.created_at);
-  const insertIndex = items.findIndex((item) => Date.parse(item.created_at) < nextCreatedAt);
-
-  if (insertIndex === -1) {
-    return [...items, nextMessage];
-  }
-
-  return [...items.slice(0, insertIndex), nextMessage, ...items.slice(insertIndex)];
-}
+import { insertMessageByCreatedAtDesc } from "@/utils/message";
 
 export default function useMessages(chatRoomId: string, enabled = true) {
   const supabase = createClient();
@@ -56,7 +37,7 @@ export default function useMessages(chatRoomId: string, enabled = true) {
 
       if (error) throw error;
 
-      const items: MessageQuery[] = data ?? [];
+      const items: MessageListItem[] = data ?? [];
       const nextCursor =
         items.length === MESSAGE_PAGE_SIZE ? items[items.length - 1]?.created_at : undefined;
 

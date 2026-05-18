@@ -12,3 +12,14 @@ export interface MessageQuery extends Message {
     photo_url: string | null;
   };
 }
+
+export type MessageClientStatus = "sending" | "failed";
+
+export interface MessageListItem extends MessageQuery {
+  clientStatus?: MessageClientStatus;
+}
+
+export interface MessagesPage {
+  items: MessageListItem[];
+  nextCursor?: string;
+}
