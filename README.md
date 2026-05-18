@@ -10,19 +10,19 @@ Next.js 16 App Router, React 19, Supabase Auth/Postgres/Realtime, TanStack Query
 
 ## 기술 스택
 
-| 분류              | 기술                                                 |
-| ----------------- | ---------------------------------------------------- |
-| Framework         | Next.js 16 App Router, React 19, TypeScript strict   |
-| Styling           | Tailwind CSS 4, shadcn, Base UI, lucide-react        |
-| Auth              | Supabase Auth, Email OTP, Google OAuth, GitHub OAuth |
-| Database          | Supabase Postgres                                    |
-| Realtime          | Supabase Realtime Postgres Changes, Presence         |
-| Server State      | TanStack Query v5                                    |
-| Client State      | Zustand v5                                           |
-| Form / Validation | react-hook-form v7, Zod v4                           |
-| Animation         | Motion                                               |
-| Theme             | next-themes                                          |
-| Formatter         | Prettier, prettier-plugin-tailwindcss                |
+| 분류              | 기술                                                    |
+| ----------------- | ------------------------------------------------------- |
+| Framework         | Next.js 16 App Router, React 19, TypeScript strict      |
+| Styling           | Tailwind CSS 4, shadcn, Base UI, lucide-react           |
+| Auth              | Supabase Auth, Email OTP, Google OAuth, GitHub OAuth    |
+| Database          | Supabase Postgres                                       |
+| Realtime          | Supabase Realtime Postgres Changes, Presence, Broadcast |
+| Server State      | TanStack Query v5                                       |
+| Client State      | Zustand v5                                              |
+| Form / Validation | react-hook-form v7, Zod v4                              |
+| Animation         | Motion                                                  |
+| Theme             | next-themes                                             |
+| Formatter         | Prettier, prettier-plugin-tailwindcss                   |
 
 ---
 
@@ -397,8 +397,8 @@ npm run types
 - 메시지 Realtime 병합은 최신순 정렬을 유지해 `flex-col-reverse` 레이아웃에서도 새로고침 전후 날짜 구분 위치가 일관되도록 처리합니다.
 - `chat_room_member` 변경 이벤트로 참여자 목록, 방 정보, 목록 count를 갱신합니다.
 - 강퇴 상태는 현재 유저의 `chat_room_member.is_banned` 변경을 감지해 UI에 반영합니다.
-- Presence는 채팅방 접속 상태와 typing indicator 표시 전용으로 사용하며, 권한 판단이나 DB 저장에는 사용하지 않습니다.
-- Broadcast는 아직 제품 기능으로 사용하지 않습니다.
+- Presence는 채팅방 접속 상태 표시 전용으로 사용하며, 권한 판단이나 DB 저장에는 사용하지 않습니다.
+- Broadcast는 채팅방 typing indicator 표시 전용으로 사용합니다. 메시지 입력 시작, 해제, idle timeout 상태만 전송하고 DB에는 저장하지 않습니다.
 
 ---
 
