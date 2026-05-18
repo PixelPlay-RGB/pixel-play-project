@@ -20,6 +20,7 @@ Next.js 16 App Router, React 19, Supabase Auth/Postgres/Realtime, TanStack Query
 | Server State      | TanStack Query v5                                    |
 | Client State      | Zustand v5                                           |
 | Form / Validation | react-hook-form v7, Zod v4                           |
+| Animation         | Motion                                               |
 | Theme             | next-themes                                          |
 | Formatter         | Prettier, prettier-plugin-tailwindcss                |
 
@@ -124,7 +125,7 @@ npm run dev
 - 좌측 사이드바에서 채팅과 라이브 메뉴를 전환합니다.
 - 현재 라이브 메뉴는 준비 상태 화면을 제공합니다.
 - 모바일에서는 사이드바가 offcanvas 형태로 동작합니다.
-- 헤더 검색 입력은 채팅 메뉴에서 채팅방 검색 페이지로 이동합니다.
+- 헤더 검색 입력은 채팅 메뉴에서 채팅방 검색 페이지로 이동합니다. 모바일에서는 검색 아이콘 클릭 시 전체 폭 검색 모드 헤더로 전환됩니다.
 
 ### 채팅방 목록
 
@@ -212,6 +213,7 @@ src/
 │   ├── profile/          # 프로필 조회, 수정, 닉네임 확인 훅
 │   └── search/           # 검색 결과 조회 훅
 ├── lib/
+│   ├── framer-motion/   # Motion animation preset
 │   ├── supabase/         # browser, server, admin client
 │   ├── utils/            # 공통 유틸
 │   └── zod/              # Zod schema

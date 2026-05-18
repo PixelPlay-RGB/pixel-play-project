@@ -2,10 +2,14 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
-export default function ChatRoomCardGridSkeleton() {
+interface Props {
+  count?: number;
+}
+
+export default function ChatRoomCardGridSkeleton({ count = 12 }: Props) {
   return (
     <div className={cn("grid grid-cols-1 gap-3", "sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4")}>
-      {Array.from({ length: 12 }).map((_, i) => (
+      {Array.from({ length: count }).map((_, i) => (
         <div
           key={i}
           className={cn(

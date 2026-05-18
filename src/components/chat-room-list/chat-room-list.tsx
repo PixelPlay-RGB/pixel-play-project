@@ -12,10 +12,12 @@ import {
   DEFAULT_CHAT_ROOM_SORT_OPTION,
 } from "@/constants/chat-room";
 import { useChatRoomList } from "@/hooks/chat-room/use-chat-room-list";
+import { useChatRoomPageSize } from "@/hooks/chat-room/use-chat-room-page-size";
 import { resolveProfileQueryErrorCode, useUser } from "@/hooks/profile/use-profile";
 import { useChatRoomStore } from "@/stores/chat-room";
 import { getAppMessage } from "@/utils/app-message";
 import { EMPTY_CHAT_ROOM_LIST } from "@/utils/chat-room-list";
+import { useCallback } from "react";
 
 export default function ChatRoomList() {
   const tabType = useChatRoomStore((state) => state.tabType);
@@ -24,11 +26,15 @@ export default function ChatRoomList() {
   const searchQuery = useChatRoomStore((state) => state.searchQuery);
   const setCurrentPage = useChatRoomStore((state) => state.setCurrentPage);
   const { error: userError, isError: isUserError, isFetched: isUserFetched } = useUser();
+  const handlePageSizeChange = useCallback(() => {
+    setCurrentPage(1);
+  }, [setCurrentPage]);
+  const pageSize = useChatRoomPageSize({ onPageSizeChange: handlePageSizeChange });
 
   const selectedSortOption = CHAT_ROOM_SORT_OPTIONS_BY_TAB[tabType].includes(sortOption)
     ? sortOption
     : DEFAULT_CHAT_ROOM_SORT_OPTION;
-  const query = useChatRoomList(tabType, selectedSortOption, currentPage, searchQuery);
+  const query = useChatRoomList(tabType, selectedSortOption, currentPage, searchQuery, pageSize);
 
   const chatRoomList = query.data ?? EMPTY_CHAT_ROOM_LIST;
   const chatRooms = chatRoomList.rooms;
@@ -57,7 +63,7 @@ export default function ChatRoomList() {
 
       <div className="flex flex-1 flex-col">
         {isInitialLoading ? (
-          <ChatRoomCardGridSkeleton />
+          <ChatRoomCardGridSkeleton count={pageSize ?? undefined} />
         ) : isEmpty ? (
           <ChatRoomListEmptyState tabType={tabType} searchQuery={searchQuery} />
         ) : (

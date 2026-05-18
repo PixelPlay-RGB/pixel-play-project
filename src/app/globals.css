@@ -62,7 +62,9 @@
 }
 
 :root {
+  --app-header-height: 56px;
   --app-content-height: calc(100vh - 148px);
+  --chat-content-height: calc(100dvh - var(--app-header-height));
 
   --brand: #46c6a9;
   --brand-foreground: #ffffff;
@@ -177,6 +179,10 @@
 @layer utilities {
   .h-app-content {
     height: var(--app-content-height);
+  }
+
+  .h-chat-content {
+    height: var(--chat-content-height);
   }
 
   .bg-auth-grid {

@@ -22,8 +22,14 @@ export function useMessageDraft(maxLength: number) {
     [clampDraft],
   );
 
-  const clearDraft = useCallback(() => {
-    setDraftState("");
+  const clearDraft = useCallback((expectedValue?: string) => {
+    setDraftState((prev) => {
+      if (expectedValue !== undefined && prev !== expectedValue) {
+        return prev;
+      }
+
+      return "";
+    });
   }, []);
 
   return {

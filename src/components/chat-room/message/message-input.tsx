@@ -54,7 +54,7 @@ export function MessageInput({ roomId, disabled = false, disabledHint }: Props) 
       const result = await sendMessageMutation.mutateAsync(content);
 
       if (result.success) {
-        clearDraft();
+        clearDraft(content);
       }
     } catch {
       return;

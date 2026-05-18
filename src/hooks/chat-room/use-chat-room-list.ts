@@ -4,9 +4,7 @@
 
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
-import { CHAT_ROOM_MOBILE_PAGE_SIZE, CHAT_ROOM_PAGE_SIZE } from "@/constants/chat-room";
 import { QUERY_KEYS } from "@/constants/query-keys";
-import { useIsMobile } from "@/hooks/common/use-mobile";
 import { useUser } from "@/hooks/profile/use-profile";
 import { createClient } from "@/lib/supabase/client";
 import type {
@@ -79,33 +77,43 @@ export function useChatRoomList(
   sortOption: ChatRoomSortOption,
   currentPage: number,
   searchQuery: string,
+  pageSize: number | null,
 ) {
   const { data: currentUser, isFetched: isUserFetched } = useUser();
-  const isMobile = useIsMobile();
-  const limit = isMobile ? CHAT_ROOM_MOBILE_PAGE_SIZE : CHAT_ROOM_PAGE_SIZE;
-  const offset = (currentPage - 1) * limit;
+  const limit = pageSize;
+  const offset = limit === null ? 0 : (currentPage - 1) * limit;
   const trimmedQuery = searchQuery.trim();
   const queryParam = trimmedQuery || undefined;
 
-  return useQuery<ChatRoomListResult>({
+  const query = useQuery<ChatRoomListResult>({
     queryKey: QUERY_KEYS.chat.list(
       currentUser?.id,
       tabType,
       sortOption,
       currentPage,
       queryParam,
-      limit,
+      limit ?? undefined,
     ),
-    queryFn: () =>
-      fetchChatRoomList({
+    queryFn: () => {
+      if (limit === null) {
+        throw new Error("채팅방 목록 page size가 아직 확정되지 않았습니다.");
+      }
+
+      return fetchChatRoomList({
         tabType,
         sortOption,
         limit,
         offset,
         searchQuery: trimmedQuery,
-      }),
-    enabled: !!currentUser?.id && isUserFetched,
+      });
+    },
+    enabled: !!currentUser?.id && isUserFetched && limit !== null,
     placeholderData: keepPreviousData,
     refetchOnMount: "always",
   });
+
+  return {
+    ...query,
+    pageSize,
+  };
 }

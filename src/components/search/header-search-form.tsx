@@ -3,10 +3,15 @@
 // Header에서 검색어를 입력받아 검색 페이지로 이동합니다.
 import SearchInput from "@/components/search/search-input";
 import { Button } from "@/components/ui/button";
+import {
+  mobileHeaderSearchTransition,
+  mobileHeaderSearchVariants,
+} from "@/lib/framer-motion/header-search";
 import { cn } from "@/lib/utils";
 import { useMainMenuStore } from "@/stores/main-menu";
 import type { MainMenuSidebarKey } from "@/types/main-menu-sidebar";
-import { Search, X } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
+import { ArrowLeft, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -22,6 +27,7 @@ export default function HeaderSearchForm() {
   const [query, setQuery] = useState("");
   const [mobileOpen, setMobileOpen] = useState(false);
   const isLiveSearchDisabled = activeMenu === "live";
+  const isMobileSearchOpen = mobileOpen && !isLiveSearchDisabled;
 
   const handleSearch = () => {
     const trimmedQuery = query.trim();
@@ -38,46 +44,62 @@ export default function HeaderSearchForm() {
 
   return (
     <>
-      {/* 모바일: 아이콘 토글 → 검색창 인라인 표시 */}
       <div className="sm:hidden">
-        {mobileOpen ? (
-          <div className="flex items-center gap-1">
-            <SearchInput
-              value={query}
-              onChange={setQuery}
-              onSubmit={handleSearch}
-              placeholder="채팅방 전체 검색"
-              disabled={isLiveSearchDisabled}
-              className="w-44"
-            />
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              onClick={handleClose}
-              aria-label="검색 닫기"
-              className="text-muted-foreground hover:text-foreground shrink-0"
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          onClick={() => !isLiveSearchDisabled && setMobileOpen(true)}
+          disabled={isLiveSearchDisabled}
+          aria-label="채팅방 전체 검색"
+          className={cn(
+            "text-muted-foreground hover:text-foreground",
+            isLiveSearchDisabled && "cursor-not-allowed",
+          )}
+        >
+          <Search className="size-5" />
+        </Button>
+        <AnimatePresence>
+          {isMobileSearchOpen && (
+            <motion.div
+              key="mobile-header-search"
+              initial="closed"
+              animate="open"
+              exit="closed"
+              variants={mobileHeaderSearchVariants}
+              transition={mobileHeaderSearchTransition}
+              className={cn(
+                "border-brand/15 bg-brand/5 dark:border-border dark:bg-muted/60",
+                "absolute inset-x-0 top-0 z-20 flex h-14 items-center gap-2 border-b px-3 backdrop-blur-sm",
+              )}
             >
-              <X className="size-4" />
-            </Button>
-          </div>
-        ) : (
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={() => !isLiveSearchDisabled && setMobileOpen(true)}
-            disabled={isLiveSearchDisabled}
-            aria-label="채팅방 전체 검색"
-            className={cn(
-              "text-muted-foreground hover:text-foreground",
-              isLiveSearchDisabled && "cursor-not-allowed",
-            )}
-          >
-            <Search className="size-5" />
-          </Button>
-        )}
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={handleClose}
+                aria-label="검색 닫기"
+                className="text-muted-foreground hover:text-foreground shrink-0"
+              >
+                <ArrowLeft className="size-5" />
+              </Button>
+              <SearchInput
+                value={query}
+                onChange={setQuery}
+                onSubmit={handleSearch}
+                placeholder="채팅방 전체 검색"
+                disabled={isLiveSearchDisabled}
+                autoFocus
+                onKeyDown={(event) => {
+                  if (event.key === "Escape") {
+                    handleClose();
+                  }
+                }}
+                className="min-w-0 flex-1"
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
-      {/* sm 이상: 항상 검색 인풋 */}
       <SearchInput
         value={query}
         onChange={setQuery}

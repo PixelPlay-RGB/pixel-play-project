@@ -4,8 +4,17 @@ export const CHAT_ROOM_MIN_CAPACITY = 2;
 export const CHAT_ROOM_MAX_CAPACITY = 50;
 export const CHAT_ROOM_TITLE_MAX_LENGTH = 50;
 export const CHAT_ROOM_DESCRIPTION_MAX_LENGTH = 200;
-export const CHAT_ROOM_PAGE_SIZE = 16;
-export const CHAT_ROOM_MOBILE_PAGE_SIZE = 8;
+export const CHAT_ROOM_GRID_BREAKPOINTS = {
+  sm: 640,
+  xl: 1280,
+  twoXl: 1536,
+} as const;
+export const CHAT_ROOM_PAGE_SIZE_BY_COLUMN_COUNT = {
+  one: 8,
+  two: 12,
+  three: 12,
+  four: 16,
+} as const;
 
 export const CHAT_ROOM_TABS: ChatRoomTab[] = ["JOINED", "NOT_JOINED", "OWNED"];
 
