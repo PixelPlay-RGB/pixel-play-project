@@ -4,15 +4,19 @@
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth";
-import { usePathname, useRouter } from "next/navigation";
+import { createPathWithNext } from "@/utils/redirect";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 export default function LoginButton() {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const loading = useAuthStore((s) => s.loading);
 
   const handleAuth = () => {
-    router.push("/auth/login");
+    const query = searchParams.toString();
+    const next = `${pathname}${query ? `?${query}` : ""}`;
+    router.push(createPathWithNext("/auth/login", next));
   };
 
   if (loading) return <Spinner />;

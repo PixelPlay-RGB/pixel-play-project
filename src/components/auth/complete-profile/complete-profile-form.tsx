@@ -28,9 +28,13 @@ import { CalendarDays, Smartphone, User, UserStar } from "lucide-react";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 
-export default function CompleteProfileForm() {
+interface Props {
+  next: string;
+}
+
+export default function CompleteProfileForm({ next }: Props) {
   const [isCancelling, setIsCancelling] = useState(false);
-  const completeProfileMutation = useCompleteProfileMutation();
+  const completeProfileMutation = useCompleteProfileMutation(next);
 
   const {
     register,

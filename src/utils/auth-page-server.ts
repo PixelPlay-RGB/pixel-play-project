@@ -2,8 +2,9 @@
 import { redirect } from "next/navigation";
 
 import { getCurrentProfileSnapshot } from "@/utils/profile-server";
+import { sanitizeRedirectPath } from "@/utils/redirect";
 
-export async function redirectAuthenticatedUserFromAuthPage() {
+export async function redirectAuthenticatedUserFromAuthPage(next?: string | null) {
   const { hasAuthUser, profile } = await getCurrentProfileSnapshot();
 
   if (!hasAuthUser) {
@@ -11,8 +12,9 @@ export async function redirectAuthenticatedUserFromAuthPage() {
   }
 
   if (profile) {
-    redirect("/");
+    redirect(sanitizeRedirectPath(next));
   }
 
-  redirect("/auth/complete-profile");
+  const redirectPath = sanitizeRedirectPath(next);
+  redirect(`/auth/complete-profile?next=${encodeURIComponent(redirectPath)}`);
 }

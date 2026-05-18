@@ -1,6 +1,19 @@
 import { Database } from "@/types/database.types";
+import { createPathWithNext } from "@/utils/redirect";
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+
+function getCurrentPathWithSearch(request: NextRequest) {
+  return `${request.nextUrl.pathname}${request.nextUrl.search}`;
+}
+
+function isPublicRoute(pathname: string) {
+  return pathname === "/" || pathname.startsWith("/chat-room/");
+}
+
+function isPublicAuthRoute(pathname: string) {
+  return pathname === "/auth/login" || pathname === "/auth/signup" || pathname === "/auth/callback";
+}
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -36,17 +49,20 @@ export async function updateSession(request: NextRequest) {
   const user = data?.claims;
 
   const { pathname } = request.nextUrl;
-  const isAuthPage = pathname.startsWith("/auth");
+  const isCompleteProfilePage = pathname === "/auth/complete-profile";
+  const currentPath = getCurrentPathWithSearch(request);
 
   // 비로그인 처리
-  if (!user && !isAuthPage) {
+  if (!user && !isPublicRoute(pathname) && !isPublicAuthRoute(pathname)) {
     const url = request.nextUrl.clone();
+    const loginPath = createPathWithNext("/auth/login", currentPath);
     url.pathname = "/auth/login";
+    url.search = new URL(loginPath, request.url).search;
     return NextResponse.redirect(url);
   }
 
   // 로그인된 유저의 추가 정보 확인 (DB 조회)
-  if (user && !isAuthPage && !pathname.startsWith("/api")) {
+  if (user && !pathname.startsWith("/api") && !isPublicAuthRoute(pathname)) {
     // '프로필 완성' 체크를 위한 DB 조회
     const { data: profile, error: profileError } = await supabase
       .from("user")
@@ -59,9 +75,11 @@ export async function updateSession(request: NextRequest) {
     }
 
     // 닉네임(display_name)이 없다면 프로필 설정 페이지로 강제 이동
-    if (!profile?.nickname && pathname !== "/auth/complete-profile") {
+    if (!profile?.nickname && !isCompleteProfilePage) {
       const url = request.nextUrl.clone();
+      const completeProfilePath = createPathWithNext("/auth/complete-profile", currentPath);
       url.pathname = "/auth/complete-profile";
+      url.search = new URL(completeProfilePath, request.url).search;
       const redirectResponse = NextResponse.redirect(url);
       supabaseResponse.cookies
         .getAll()

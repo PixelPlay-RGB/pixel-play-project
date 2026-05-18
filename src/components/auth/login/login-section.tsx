@@ -7,10 +7,15 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import LoginForm from "./login-form";
 import OAuthButtons from "./oauth-buttons";
+import { createPathWithNext } from "@/utils/redirect";
 
-export default function LoginSection() {
-  const loginMutation = useLoginMutation();
-  const oauthMutation = useOAuthLoginMutation();
+interface Props {
+  next: string;
+}
+
+export default function LoginSection({ next }: Props) {
+  const loginMutation = useLoginMutation(next);
+  const oauthMutation = useOAuthLoginMutation(next);
   const isBusy = loginMutation.isPending || oauthMutation.isPending;
   const signupLinkClassName = cn(
     "text-brand self-end text-sm underline underline-offset-4",
@@ -40,7 +45,7 @@ export default function LoginSection() {
           회원 가입
         </span>
       ) : (
-        <Link className={signupLinkClassName} href="/auth/signup">
+        <Link className={signupLinkClassName} href={createPathWithNext("/auth/signup", next)}>
           회원 가입
         </Link>
       )}

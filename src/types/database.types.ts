@@ -220,6 +220,14 @@ export type Database = {
           total_count: number;
         }[];
       };
+      get_public_chat_room_metadata: {
+        Args: { p_room_id: string };
+        Returns: {
+          description: string;
+          id: string;
+          title: string;
+        }[];
+      };
       join_chat_room: {
         Args: { p_actor_user_id: string; p_room_id: string };
         Returns: undefined;

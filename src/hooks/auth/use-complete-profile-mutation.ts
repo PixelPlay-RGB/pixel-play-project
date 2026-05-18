@@ -8,11 +8,12 @@ import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth";
 import type { CompleteOAuthProfileValues } from "@/lib/zod/auth";
 import { isAuthSessionMissingError } from "@/utils/auth-error";
+import { appendSearchParam } from "@/utils/redirect";
 import { toastAppError } from "@/utils/toast-message";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 
-export function useCompleteProfileMutation() {
+export function useCompleteProfileMutation(next = "/") {
   const router = useRouter();
   const queryClient = useQueryClient();
   const setUser = useAuthStore((state) => state.setUser);
@@ -43,7 +44,7 @@ export function useCompleteProfileMutation() {
       setUser(authUser);
       await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth.profile(authUser.id) });
 
-      router.replace(`/${WELCOME_PARAM}`);
+      router.replace(appendSearchParam(next, WELCOME_PARAM));
 
       return result;
     },
