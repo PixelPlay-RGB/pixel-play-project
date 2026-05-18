@@ -113,7 +113,7 @@ export function resolveProfileQueryErrorCode(error: unknown): AppMessageCode {
  * 현재 로그인된 유저의 public.user 프로필을 필수 데이터로 조회.
  * - AuthUser(Zustand)가 준비되면 자동 실행
  * - 5분간 캐싱 → 여러 컴포넌트에서 호출해도 네트워크 1회
- * - 프로필 업데이트 후에는 `queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth.profile() })`로 갱신
+ * - 프로필 업데이트 후에는 `queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth.profiles() })`로 갱신
  */
 export function useUser() {
   const user = useAuthStore((s) => s.user);

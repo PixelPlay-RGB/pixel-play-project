@@ -62,7 +62,6 @@ export default function PasswordChangeForm({ currentPassword, onOpenChange }: Pr
     setUser(null);
     queryClient.clear();
     router.replace("/auth/login");
-    router.refresh();
   };
 
   return (

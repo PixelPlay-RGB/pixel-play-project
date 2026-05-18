@@ -43,8 +43,7 @@ export function useLoginMutation() {
       setUser(authUser);
       await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth.profile(authUser.id) });
 
-      router.push(`/${LOGIN_PARAM}`);
-      router.refresh();
+      router.replace(`/${LOGIN_PARAM}`);
 
       return result;
     },

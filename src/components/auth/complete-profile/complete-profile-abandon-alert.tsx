@@ -59,7 +59,6 @@ export default function CompleteProfileAbandonAlert({
       toastAppSuccess(APP_MESSAGE_CODE.success.auth.signupCanceled);
 
       router.replace("/auth/login");
-      router.refresh();
     } catch (error) {
       console.error("프로필 완성 취소 실패", error);
       toastAppError(APP_MESSAGE_CODE.error.auth.signupCancelFailed);

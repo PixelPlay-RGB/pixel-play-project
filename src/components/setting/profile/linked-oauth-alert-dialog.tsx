@@ -78,7 +78,7 @@ export default function LinkedOAuthAlertDialog({
             APP_MESSAGE_CODE.success.oauth.unlinked,
             `${OAUTH_PROVIDER_META[provider].name} 연동이 해제되었습니다.`,
           );
-          await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth.all });
+          await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth.profiles() });
           router.refresh();
           setOpen(false);
         } else {

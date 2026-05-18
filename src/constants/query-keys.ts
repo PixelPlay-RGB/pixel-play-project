@@ -13,6 +13,7 @@ export const QUERY_KEYS = {
   auth: {
     all: ["auth"] as const,
     session: () => [...QUERY_KEYS.auth.all, "session"],
+    profiles: () => [...QUERY_KEYS.auth.all, "profile"],
     profile: (userId?: string) => [...QUERY_KEYS.auth.all, "profile", userId ?? "session"],
   },
   chat: {
