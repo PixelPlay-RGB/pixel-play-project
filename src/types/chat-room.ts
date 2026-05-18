@@ -1,3 +1,4 @@
+// chat-room 도메인 타입을 정의합니다.
 import type { Database } from "@/types/database.types";
 import { GenericTables } from "@/types/supabase.types";
 

@@ -1,3 +1,4 @@
+// chat-room Zod 검증 스키마를 정의합니다.
 import { z } from "zod";
 import {
   CHAT_ROOM_DESCRIPTION_MAX_LENGTH,

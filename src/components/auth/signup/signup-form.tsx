@@ -1,4 +1,5 @@
 "use client";
+// signup-form 컴포넌트를 제공합니다.
 
 import AuthInputGroup from "@/components/auth/auth-input-group";
 import SignUpGenderField from "@/components/auth/signup/signup-gender-field";

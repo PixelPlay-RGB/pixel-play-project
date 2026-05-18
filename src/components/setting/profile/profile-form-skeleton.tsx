@@ -1,3 +1,4 @@
+// profile-form-skeleton 컴포넌트를 제공합니다.
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 

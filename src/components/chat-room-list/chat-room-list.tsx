@@ -1,4 +1,5 @@
 "use client";
+// chat-room-list 컴포넌트를 제공합니다.
 
 import ChatRoomCard from "@/components/chat-room/shared/chat-room-card";
 import ChatRoomCardGridSkeleton from "@/components/chat-room/shared/chat-room-card-grid-skeleton";

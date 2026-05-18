@@ -1,4 +1,5 @@
 "use client";
+// profile-providers-card 컴포넌트를 제공합니다.
 
 import LinkedOAuthAlertDialog from "@/components/setting/profile/linked-oauth-alert-dialog";
 import {

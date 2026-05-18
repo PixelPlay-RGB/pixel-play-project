@@ -1,5 +1,4 @@
 "use server";
-
 // 채팅방 멤버십과 멤버 관리 RPC를 호출하는 서버 액션
 import { getAuthenticatedActorId } from "@/actions/authenticated-actor";
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";

@@ -1,3 +1,4 @@
+// main-menu-sidebar-item 컴포넌트를 제공합니다.
 import { SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import type { MainMenuSidebarItem, MainMenuSidebarKey } from "@/types/main-menu-sidebar";

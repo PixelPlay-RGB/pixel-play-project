@@ -1,4 +1,5 @@
 "use client";
+// message-list 컴포넌트를 제공합니다.
 
 import { ArrowDown } from "lucide-react";
 

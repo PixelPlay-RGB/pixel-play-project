@@ -1,5 +1,4 @@
 "use client";
-
 // 메시지 목록 viewport 스크롤 위치와 최신 메시지 이동 상태를 관리하는 hook
 import type { MessageQuery } from "@/types/message";
 import { useCallback, useLayoutEffect, useRef, useState, type UIEvent } from "react";

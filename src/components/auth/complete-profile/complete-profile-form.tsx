@@ -1,4 +1,5 @@
 "use client";
+// complete-profile-form 컴포넌트를 제공합니다.
 
 import AuthInputGroup from "@/components/auth/auth-input-group";
 import CompleteProfileAbandonAlert from "@/components/auth/complete-profile/complete-profile-abandon-alert";

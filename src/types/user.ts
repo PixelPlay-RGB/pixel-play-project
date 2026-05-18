@@ -1,3 +1,4 @@
+// user 도메인 타입을 정의합니다.
 import { GenericTables } from "@/types/supabase.types";
 import { User as AuthUser } from "@supabase/supabase-js";
 

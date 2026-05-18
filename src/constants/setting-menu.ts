@@ -1,3 +1,4 @@
+// setting-menu 상수를 정의합니다.
 import { SettingMenuItem } from "@/types/setting-menu";
 import { Key, LogOut, User } from "lucide-react";
 

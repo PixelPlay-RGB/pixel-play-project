@@ -1,3 +1,4 @@
+// 404 Not Found 화면을 렌더링합니다.
 import { buttonVariants } from "@/components/ui/button";
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import { cn } from "@/lib/utils";

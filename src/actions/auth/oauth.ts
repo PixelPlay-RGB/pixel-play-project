@@ -1,5 +1,4 @@
 "use server";
-
 // OAuth 프로필 완성과 OAuth 연동 해제 Server Action을 관리합니다.
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import { checkNicknameExists, type ActionResponse } from "@/actions/auth/shared";

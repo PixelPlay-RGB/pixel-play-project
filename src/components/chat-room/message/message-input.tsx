@@ -1,4 +1,5 @@
 "use client";
+// message-input 컴포넌트를 제공합니다.
 
 import { SendHorizontal } from "lucide-react";
 import { type FormEvent, useRef } from "react";

@@ -1,3 +1,4 @@
+// 라우트 페이지를 렌더링합니다.
 import LoginSection from "@/components/auth/login/login-section";
 import Logo from "@/components/common/logo";
 import { Separator } from "@/components/ui/separator";

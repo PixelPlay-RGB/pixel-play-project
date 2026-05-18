@@ -1,3 +1,4 @@
+// query-keys 상수를 정의합니다.
 /**
  * Centralized Query Key Factory
  *

@@ -1,4 +1,5 @@
 "use client";
+// main-menu-sidebar 컴포넌트를 제공합니다.
 
 import ChatRoomList from "@/components/chat-room-list/chat-room-list";
 import MainMenuSidebarItemRenderer from "@/components/common/main-menu-sidebar-item";

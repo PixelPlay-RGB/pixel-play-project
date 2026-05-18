@@ -1,5 +1,4 @@
 "use client";
-
 // OAuth 추가 프로필 완성 Server Action의 클라이언트 후처리를 관리하는 훅
 import { completeOAuthProfileAction } from "@/actions/auth/oauth";
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";

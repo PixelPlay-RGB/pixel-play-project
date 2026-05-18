@@ -1,4 +1,5 @@
 "use client";
+// password-change-form 컴포넌트를 제공합니다.
 
 import { changePasswordAction } from "@/actions/auth/password";
 import AuthInputGroup from "@/components/auth/auth-input-group";

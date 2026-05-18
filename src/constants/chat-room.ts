@@ -1,3 +1,4 @@
+// chat-room 상수를 정의합니다.
 import type { ChatRoomSortOption, ChatRoomTab } from "@/types/chat-room";
 
 export const CHAT_ROOM_MIN_CAPACITY = 2;

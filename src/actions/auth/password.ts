@@ -1,5 +1,4 @@
 "use server";
-
 // 현재 비밀번호 확인과 비밀번호 변경 Server Action을 관리합니다.
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import { FORM_MESSAGE } from "@/constants/form-message";

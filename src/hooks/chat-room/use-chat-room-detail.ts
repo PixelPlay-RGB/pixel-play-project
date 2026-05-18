@@ -1,5 +1,4 @@
 "use client";
-
 // 채팅방 상세 화면에서 공통으로 사용하는 방과 멤버십 상태를 조립하는 훅
 
 import { useQuery } from "@tanstack/react-query";

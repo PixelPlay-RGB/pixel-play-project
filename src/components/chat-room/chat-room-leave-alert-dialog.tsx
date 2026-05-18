@@ -1,5 +1,4 @@
 "use client";
-
 // 채팅방 나가기 확인용 AlertDialog
 
 import { DoorOpen, LogOut } from "lucide-react";

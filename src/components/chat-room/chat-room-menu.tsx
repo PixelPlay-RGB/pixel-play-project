@@ -1,5 +1,4 @@
 "use client";
-
 // 채팅방 헤더 더보기 메뉴(나가기 및 추후 기능 진입점)
 
 import { useState } from "react";

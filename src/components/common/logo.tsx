@@ -1,3 +1,4 @@
+// logo 컴포넌트를 제공합니다.
 export default function Logo({ className }: { className?: string }) {
   return (
     <svg

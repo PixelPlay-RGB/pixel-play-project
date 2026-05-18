@@ -1,5 +1,4 @@
 "use server";
-
 // 이메일 OTP 회원가입 Server Action을 관리합니다.
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import { FORM_MESSAGE } from "@/constants/form-message";

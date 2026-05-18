@@ -1,3 +1,4 @@
+// live-list 컴포넌트를 제공합니다.
 import { Radio } from "lucide-react";
 import { cn } from "@/lib/utils";
 

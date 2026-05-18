@@ -1,4 +1,5 @@
 "use client";
+// chat-room 컴포넌트를 제공합니다.
 
 import { useState } from "react";
 

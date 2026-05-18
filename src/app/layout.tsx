@@ -1,3 +1,4 @@
+// 라우트 레이아웃을 구성합니다.
 import Footer from "@/components/common/footer";
 import Header from "@/components/common/header";
 import { Toaster } from "@/components/ui/sonner";

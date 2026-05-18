@@ -1,5 +1,4 @@
 "use client";
-
 // 모바일 채팅방 참여자 목록 Sheet를 표시하는 컴포넌트
 
 import { MemberList } from "@/components/chat-room/member/member-list";

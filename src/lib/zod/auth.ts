@@ -1,3 +1,4 @@
+// auth Zod 검증 스키마를 정의합니다.
 import { FORM_MESSAGE } from "@/constants/form-message";
 import { z } from "zod";
 

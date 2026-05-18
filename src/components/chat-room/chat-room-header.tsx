@@ -1,5 +1,4 @@
 "use client";
-
 // 채팅방 상세 화면의 상단 제목과 참여자 진입 버튼을 표시하는 헤더
 
 import { Users } from "lucide-react";

@@ -1,3 +1,4 @@
+// 라우트 레이아웃을 구성합니다.
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="relative flex flex-1 items-center justify-center py-6 sm:py-12 dark:bg-transparent">

@@ -1,4 +1,5 @@
 "use client";
+// profile-avatar-upload 컴포넌트를 제공합니다.
 
 import { ChangeEvent, useRef, useState } from "react";
 import { Camera, Trash2, Upload } from "lucide-react";

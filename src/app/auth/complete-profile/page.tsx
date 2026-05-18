@@ -1,3 +1,4 @@
+// 라우트 페이지를 렌더링합니다.
 import CompleteProfileForm from "@/components/auth/complete-profile/complete-profile-form";
 import Logo from "@/components/common/logo";
 import { Separator } from "@/components/ui/separator";

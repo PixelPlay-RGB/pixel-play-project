@@ -1,5 +1,4 @@
 "use client";
-
 // Header에서 검색어를 입력받아 검색 페이지로 이동합니다.
 import SearchInput from "@/components/search/search-input";
 import { Button } from "@/components/ui/button";

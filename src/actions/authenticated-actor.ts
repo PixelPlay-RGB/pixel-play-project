@@ -1,5 +1,4 @@
 "use server";
-
 // 서버 액션에서 인증된 사용자 ID를 조회하는 공용 헬퍼입니다.
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import type { AppMessageCode } from "@/constants/app-message-code";

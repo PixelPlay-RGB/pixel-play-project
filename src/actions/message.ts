@@ -1,5 +1,4 @@
 "use server";
-
 // 메시지 전송 RPC를 호출하는 서버 액션
 
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";

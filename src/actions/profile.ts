@@ -1,5 +1,4 @@
 "use server";
-
 // 프로필 수정 Server Action을 관리합니다.
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import type { ActionResponse } from "@/actions/auth/shared";

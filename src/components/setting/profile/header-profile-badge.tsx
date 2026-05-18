@@ -1,4 +1,5 @@
 "use client";
+// header-profile-badge 컴포넌트를 제공합니다.
 
 import SettingMenuItem from "@/components/setting/setting-menu-item";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";

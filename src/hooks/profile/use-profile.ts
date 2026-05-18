@@ -1,4 +1,5 @@
 "use client";
+// use-profile 훅을 제공합니다.
 
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth";

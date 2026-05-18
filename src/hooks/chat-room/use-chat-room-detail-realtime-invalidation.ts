@@ -1,5 +1,4 @@
 "use client";
-
 // 채팅방 상세 관련 realtime 변경 시 상세와 목록 쿼리를 무효화하는 훅
 
 import { useEffect } from "react";

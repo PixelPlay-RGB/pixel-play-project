@@ -1,5 +1,4 @@
 "use client";
-
 // 채팅방 검색 결과 페이지에 필요한 섹션별 검색 상태를 제공합니다.
 import { QUERY_KEYS } from "@/constants/query-keys";
 import { CHAT_SEARCH_RESULT_LIMIT } from "@/constants/search";

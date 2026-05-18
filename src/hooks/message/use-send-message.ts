@@ -1,5 +1,4 @@
 "use client";
-
 // 메시지 전송 서버 액션과 후속 캐시 갱신을 담당하는 mutation 훅
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";

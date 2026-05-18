@@ -1,3 +1,4 @@
+// member-list 컴포넌트를 제공합니다.
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useChatRoomDetail } from "@/hooks/chat-room/use-chat-room-detail";
 import { cn } from "@/lib/utils";

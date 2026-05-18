@@ -1,5 +1,4 @@
 "use client";
-
 // 강퇴당한 유저에게 알림을 표시하고 메인으로 이동시키는 Dialog
 import { useRouter } from "next/navigation";
 import { DoorOpen, UserX } from "lucide-react";

@@ -1,5 +1,4 @@
 "use client";
-
 // 채팅방 상세 진입과 이탈 시 읽음 상태를 갱신하는 훅
 
 import { useEffect } from "react";

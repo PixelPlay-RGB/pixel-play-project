@@ -1,4 +1,5 @@
 "use client";
+// linked-oauth-alert-dialog 컴포넌트를 제공합니다.
 
 import { unLinkOAuthAction } from "@/actions/auth/oauth";
 import {

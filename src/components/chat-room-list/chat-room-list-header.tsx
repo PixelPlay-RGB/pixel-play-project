@@ -1,3 +1,4 @@
+// chat-room-list-header 컴포넌트를 제공합니다.
 import ChatRoomListCreateDialog from "@/components/chat-room-list/chat-room-list-create-dialog";
 import ChatRoomListSearchInput from "@/components/chat-room-list/chat-room-list-search-input";
 import ChatRoomListSortMenu from "@/components/chat-room-list/chat-room-list-sort-menu";

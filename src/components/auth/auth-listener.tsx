@@ -1,4 +1,5 @@
 "use client";
+// auth-listener 컴포넌트를 제공합니다.
 
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth";

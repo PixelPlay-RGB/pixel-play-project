@@ -1,4 +1,5 @@
 "use server";
+// chat-room Server Action을 관리합니다.
 
 import { getAuthenticatedActorId } from "@/actions/authenticated-actor";
 import { createAdminClient } from "@/lib/supabase/admin-client";

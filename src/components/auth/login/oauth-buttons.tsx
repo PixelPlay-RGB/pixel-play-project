@@ -1,4 +1,5 @@
 "use client";
+// oauth-buttons 컴포넌트를 제공합니다.
 
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";

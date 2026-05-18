@@ -1,5 +1,4 @@
 "use client";
-
 // 채팅방 메시지 목록과 메시지 입력 영역을 조립하는 컴포넌트
 
 import { MessageInput } from "@/components/chat-room/message/message-input";

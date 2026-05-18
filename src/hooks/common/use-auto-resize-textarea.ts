@@ -1,5 +1,4 @@
 "use client";
-
 // textarea 값을 기준으로 높이와 내부 스크롤 노출을 조절하는 hook
 import { useEffect, type RefObject } from "react";
 

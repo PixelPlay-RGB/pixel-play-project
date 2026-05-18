@@ -1,5 +1,4 @@
 "use client";
-
 // 채팅방 나가기 서버 액션 호출 후 채팅 관련 쿼리를 무효화하고 홈으로 이동하는 mutation 훅
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";

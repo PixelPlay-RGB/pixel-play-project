@@ -1,3 +1,4 @@
+// use-mobile 훅을 제공합니다.
 import * as React from "react";
 
 const MOBILE_BREAKPOINT = 768;

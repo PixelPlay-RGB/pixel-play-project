@@ -1,5 +1,4 @@
 "use client";
-
 // 홈 채팅방 목록의 방 목록과 탭 count를 함께 조회하는 훅
 
 import { keepPreviousData, useQuery } from "@tanstack/react-query";

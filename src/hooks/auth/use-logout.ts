@@ -1,5 +1,4 @@
 "use client";
-
 // 로그아웃 요청과 인증 상태 정리를 관리하는 mutation 훅
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth";

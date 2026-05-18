@@ -1,5 +1,4 @@
 "use client";
-
 // 채팅방 상세 화면의 참여와 강퇴 상태 Dialog를 조립하는 컴포넌트
 
 import { JoinChatRoomDialog } from "@/components/chat-room/join-chat-room-dialog";

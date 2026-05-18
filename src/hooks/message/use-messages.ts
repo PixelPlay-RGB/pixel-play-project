@@ -1,4 +1,5 @@
 "use client";
+// use-messages 훅을 제공합니다.
 
 import { useEffect } from "react";
 

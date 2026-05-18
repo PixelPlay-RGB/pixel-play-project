@@ -1,5 +1,4 @@
 "use client";
-
 // 채팅방 목록에서 새 채팅방 생성 다이얼로그를 렌더링합니다.
 import { Button } from "@/components/ui/button";
 import {

@@ -1,4 +1,5 @@
 "use client";
+// password-dialog 컴포넌트를 제공합니다.
 
 import { Button } from "@/components/ui/button";
 import {

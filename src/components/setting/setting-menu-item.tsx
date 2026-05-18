@@ -1,3 +1,4 @@
+// setting-menu-item 컴포넌트를 제공합니다.
 import PasswordDialog from "@/components/auth/password/password-dialog";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";

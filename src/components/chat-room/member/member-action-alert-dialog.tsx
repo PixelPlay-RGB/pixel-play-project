@@ -1,5 +1,4 @@
 "use client";
-
 // 채팅방 멤버 관리 액션을 확인하고 실행하는 AlertDialog
 import { useState, type ReactElement } from "react";
 import { Crown, UserX } from "lucide-react";

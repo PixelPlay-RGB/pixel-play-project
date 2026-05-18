@@ -1,4 +1,5 @@
 "use client";
+// chat-emoji-picker 컴포넌트를 제공합니다.
 
 import { Smile } from "lucide-react";
 import { useTheme } from "next-themes";

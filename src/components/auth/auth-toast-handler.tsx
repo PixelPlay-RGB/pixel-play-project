@@ -1,4 +1,5 @@
 "use client";
+// auth-toast-handler 컴포넌트를 제공합니다.
 
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import { useNullableUser } from "@/hooks/profile/use-profile";

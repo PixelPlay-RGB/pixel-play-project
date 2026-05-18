@@ -1,3 +1,4 @@
+// 라우트 핸들러를 처리합니다.
 import { LINKED_PARAM, LOGIN_PARAM } from "@/constants/auth";
 import { createClient } from "@/lib/supabase/server";
 import { LoginProvider } from "@/types/auth";

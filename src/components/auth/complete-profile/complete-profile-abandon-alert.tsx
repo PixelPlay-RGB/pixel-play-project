@@ -1,4 +1,5 @@
 "use client";
+// complete-profile-abandon-alert 컴포넌트를 제공합니다.
 
 import {
   AlertDialog,

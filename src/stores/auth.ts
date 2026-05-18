@@ -1,3 +1,4 @@
+// auth Zustand store를 관리합니다.
 import { AuthUser } from "@/types/user";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
