@@ -43,8 +43,7 @@ export function useCompleteProfileMutation() {
       setUser(authUser);
       await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth.profile(authUser.id) });
 
-      router.push(`/${WELCOME_PARAM}`);
-      router.refresh();
+      router.replace(`/${WELCOME_PARAM}`);
 
       return result;
     },
