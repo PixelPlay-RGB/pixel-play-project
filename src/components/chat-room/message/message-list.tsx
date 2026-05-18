@@ -9,6 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useMessageListViewport } from "@/hooks/message/use-message-list-viewport";
 import { cn } from "@/lib/utils";
 import type { MessageQuery } from "@/types/message";
+import { canGroupMessages } from "@/utils/message";
 
 interface Props {
   messages: MessageQuery[];
@@ -16,13 +17,6 @@ interface Props {
   hasMorePrevious: boolean;
   isLoadingPrevious: boolean;
   onReachTop: () => boolean;
-}
-
-function canGroupMessages(current: MessageQuery, adjacent?: MessageQuery) {
-  if (!adjacent) return false;
-  if (current.message_type !== "text" || adjacent.message_type !== "text") return false;
-
-  return current.user_id === adjacent.user_id;
 }
 
 export function MessageList({

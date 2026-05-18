@@ -3,3 +3,9 @@
 export const MESSAGE_CONTENT_MAX_LENGTH = 2000;
 
 export const MESSAGE_PAGE_SIZE = 20;
+
+export const MESSAGE_DATE_DIVIDER_PREFIX = "📅 ";
+
+export const MESSAGE_LIST_TOP_PREFETCH_PX = 50;
+
+export const MESSAGE_LIST_LATEST_THRESHOLD_PX = 96;

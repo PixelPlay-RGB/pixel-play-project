@@ -1,10 +1,13 @@
 "use client";
 // 메시지 목록 viewport 스크롤 위치와 최신 메시지 이동 상태를 관리하는 hook
-import type { MessageQuery } from "@/types/message";
 import { useCallback, useLayoutEffect, useRef, useState, type UIEvent } from "react";
 
-const TOP_PREFETCH_PX = 50;
-const LATEST_MESSAGE_THRESHOLD_PX = 96;
+import {
+  MESSAGE_LIST_LATEST_THRESHOLD_PX,
+  MESSAGE_LIST_TOP_PREFETCH_PX,
+} from "@/constants/message";
+import type { MessageQuery } from "@/types/message";
+import { getLatestMessageDistance } from "@/utils/message";
 
 interface UseMessageListViewportOptions {
   messages: MessageQuery[];
@@ -12,10 +15,6 @@ interface UseMessageListViewportOptions {
   hasMorePrevious: boolean;
   isLoadingPrevious: boolean;
   onReachTop: () => boolean;
-}
-
-function getLatestDistance(viewport: HTMLDivElement): number {
-  return Math.max(viewport.scrollHeight - viewport.clientHeight - viewport.scrollTop, 0);
 }
 
 export function useMessageListViewport({
@@ -33,7 +32,7 @@ export function useMessageListViewport({
   const [showLatestButton, setShowLatestButton] = useState(false);
 
   const isNearLatest = useCallback((viewport: HTMLDivElement) => {
-    return getLatestDistance(viewport) <= LATEST_MESSAGE_THRESHOLD_PX;
+    return getLatestMessageDistance(viewport) <= MESSAGE_LIST_LATEST_THRESHOLD_PX;
   }, []);
 
   const updateLatestButton = useCallback(
@@ -100,7 +99,7 @@ export function useMessageListViewport({
       const viewport = event.currentTarget;
       updateLatestButton(viewport);
 
-      const isNearTop = viewport.scrollTop <= TOP_PREFETCH_PX;
+      const isNearTop = viewport.scrollTop <= MESSAGE_LIST_TOP_PREFETCH_PX;
       if (isNearTop && hasMorePrevious && !isLoadingPrevious) {
         onReachTop();
       }
