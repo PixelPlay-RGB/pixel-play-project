@@ -6,6 +6,7 @@ import { getAuthenticatedActorId } from "@/actions/authenticated-actor";
 import { createAdminClient } from "@/lib/supabase/admin-client";
 import { messageContentSchema } from "@/lib/zod/message";
 import type { AppActionResult } from "@/types/action";
+import type { MessageQuery } from "@/types/message";
 import { isKnownMessageRpcError, resolveMessageRpcErrorCode } from "@/utils/app-message";
 
 interface SendMessageActionInput {
@@ -16,7 +17,7 @@ interface SendMessageActionInput {
 export async function sendMessageAction({
   roomId,
   content,
-}: SendMessageActionInput): Promise<AppActionResult> {
+}: SendMessageActionInput): Promise<AppActionResult<{ message: MessageQuery }>> {
   if (!roomId) {
     return {
       success: false,
@@ -38,11 +39,14 @@ export async function sendMessageAction({
   });
 
   if (!actor.success) {
-    return actor.result;
+    return {
+      success: false,
+      code: actor.result.code,
+    };
   }
 
   const supabase = createAdminClient();
-  const { error } = await supabase.rpc("send_chat_message", {
+  const { data: messageId, error } = await supabase.rpc("send_chat_message", {
     p_actor_user_id: actor.userId,
     p_room_id: roomId,
     p_content: parsed.data,
@@ -59,7 +63,32 @@ export async function sendMessageAction({
     };
   }
 
+  if (!messageId) {
+    console.error("메시지 전송 RPC가 생성 메시지 id를 반환하지 않음");
+    return {
+      success: false,
+      code: APP_MESSAGE_CODE.error.message.sendFailed,
+    };
+  }
+
+  const { data: message, error: messageError } = await supabase
+    .from("message")
+    .select("*, user:user_id!inner(nickname, photo_url)")
+    .eq("id", messageId)
+    .single();
+
+  if (messageError || !message) {
+    console.error("전송 메시지 조회 실패", messageError);
+    return {
+      success: false,
+      code: APP_MESSAGE_CODE.error.message.sendFailed,
+    };
+  }
+
   return {
     success: true,
+    data: {
+      message,
+    },
   };
 }
