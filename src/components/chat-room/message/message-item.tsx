@@ -8,9 +8,18 @@ import { getAvatarFallbackText } from "@/utils/avatar";
 interface Props {
   message: MessageQuery;
   isOwn: boolean;
+  isGroupedWithPrevious: boolean;
+  isGroupedWithNext: boolean;
+  showAuthor: boolean;
 }
 
-export function MessageItem({ message, isOwn }: Props) {
+export function MessageItem({
+  message,
+  isOwn,
+  isGroupedWithPrevious,
+  isGroupedWithNext,
+  showAuthor,
+}: Props) {
   if (message.message_type === "system") {
     return <SystemMessageItem message={message} />;
   }
@@ -20,11 +29,16 @@ export function MessageItem({ message, isOwn }: Props) {
 
   if (isOwn) {
     return (
-      <div className="flex justify-end px-3 py-0.5">
+      <div
+        className={cn("flex justify-end px-3 pb-0.5", isGroupedWithPrevious ? "pt-0.5" : "pt-2")}
+      >
         <div
           className={cn(
-            "max-w-80 rounded-2xl rounded-tr-sm px-3 py-1.5 text-sm leading-snug sm:max-w-md lg:max-w-lg",
+            "max-w-80 rounded-2xl px-3 py-1.5 text-sm leading-snug sm:max-w-md lg:max-w-lg",
             "bg-brand text-white",
+            !isGroupedWithPrevious && "rounded-tr-sm",
+            isGroupedWithPrevious && "rounded-tr-md",
+            isGroupedWithNext && "rounded-br-md",
           )}
         >
           <span className="wrap-break-word whitespace-pre-wrap">{message.content}</span>
@@ -34,17 +48,24 @@ export function MessageItem({ message, isOwn }: Props) {
   }
 
   return (
-    <div className="flex gap-2 px-3 py-0.5">
-      <Avatar size={"lg"} className="mt-0.5 shrink-0">
-        {photoUrl && <AvatarImage src={photoUrl} alt="" />}
-        <AvatarFallback>{fallbackText}</AvatarFallback>
-      </Avatar>
+    <div className={cn("flex gap-2 px-3 pb-0.5", isGroupedWithPrevious ? "pt-0.5" : "pt-2")}>
+      {showAuthor ? (
+        <Avatar size="lg" className="mt-0.5 shrink-0">
+          {photoUrl && <AvatarImage src={photoUrl} alt="" />}
+          <AvatarFallback>{fallbackText}</AvatarFallback>
+        </Avatar>
+      ) : (
+        <div aria-hidden className="w-10 shrink-0" />
+      )}
       <div className="min-w-0 flex-1">
-        <div className="mb-1.5 text-xs font-medium">{nickname}</div>
+        {showAuthor ? <div className="mb-1.5 text-xs font-medium">{nickname}</div> : null}
         <div
           className={cn(
-            "inline-block max-w-full rounded-2xl rounded-tl-sm px-3 py-1.5 text-sm leading-snug",
+            "inline-block max-w-full rounded-2xl px-3 py-1.5 text-sm leading-snug",
             "bg-muted/60 text-foreground",
+            showAuthor && "rounded-tl-sm",
+            !showAuthor && "rounded-tl-md",
+            isGroupedWithNext && "rounded-bl-md",
           )}
         >
           <span className="wrap-break-word whitespace-pre-wrap">{message.content}</span>

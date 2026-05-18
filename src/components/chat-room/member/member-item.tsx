@@ -42,17 +42,11 @@ function MemberContent({
 }) {
   return (
     <>
-      <div className="relative shrink-0">
+      <div className="shrink-0">
         <Avatar size="default">
           {photoUrl ? <AvatarImage src={photoUrl} alt={`${nickname}의 프로필 사진`} /> : null}
           <AvatarFallback>{fallbackText}</AvatarFallback>
         </Avatar>
-        {isOwner && (
-          <span
-            aria-hidden
-            className="border-background bg-brand absolute -right-0.5 -bottom-0.5 h-3 w-3 rounded-full border-2"
-          />
-        )}
       </div>
       <div className="flex min-w-0 flex-1 items-center gap-1.5">
         <span

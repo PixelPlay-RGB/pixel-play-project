@@ -1,0 +1,12 @@
+- [x] 메시지 bubble grouping metadata 계산 및 렌더링 반영
+- [x] 로그인 상태 auth 페이지 redirect helper 추가
+- [x] `/auth/login`, `/auth/signup` 서버 redirect 적용
+- [x] `/search/chat` empty state 문구 분리
+- [x] 채팅방 목록 페이지네이션 순환 제거 및 경계 disabled 적용
+- [x] 참여자 목록 방장 avatar 상태점 제거
+- [x] README 최신화 필요 여부 확인 및 반영
+- [x] 정적 검색 검증
+- [x] `types`, `format:check`, `lint`, `build` 실행
+- [x] Chrome QA
+- [x] Notion 작업 현황 페이지 갱신
+- [ ] 논리 커밋 후 작업 기록 파일 삭제

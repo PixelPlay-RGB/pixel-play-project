@@ -113,6 +113,7 @@ npm run dev
 - Google, GitHub OAuth 로그인과 추가 프로필 입력 흐름을 제공합니다.
 - OAuth 연동 계정 목록을 `linked_providers`로 관리합니다.
 - 로그인 상태는 Supabase 세션을 기준으로 검증하고 `AuthListener`가 Zustand store에 동기화합니다.
+- 로그인 완료 사용자가 `/auth/login`, `/auth/signup`에 직접 접근하면 홈으로 이동합니다.
 - Header 프로필 배지와 Settings sidebar의 표시용 프로필은 서버 snapshot으로 조회하고, profile mutation 성공 후 `router.refresh()`로 갱신합니다.
 - 프로필이 없는 로그인 유저는 `/auth/complete-profile`로 이동합니다.
 - 비로그인 유저는 보호 라우트 접근 시 `/auth/login`으로 이동합니다.
@@ -137,7 +138,7 @@ npm run dev
 - 탭 변경 시 정렬값과 검색어는 기본값으로 초기화합니다.
 - `ChatRoomSearchInput`으로 현재 탭 내에서 채팅방 제목을 필터링할 수 있습니다. 검색 중에는 탭 badge가 `total_count`로 오버라이드됩니다.
 - 채팅방 목록은 `useQuery`와 `keepPreviousData` 기반 번호형 페이지네이션으로 조회합니다.
-- 페이지네이션은 `ChatRoomPagination`에서 이전/다음, 페이지 번호, 줄임표를 표시하며 마지막 페이지의 다음 버튼은 1페이지로 순환합니다.
+- 페이지네이션은 `ChatRoomPagination`에서 이전/다음, 페이지 번호, 줄임표를 표시하며 첫 페이지의 이전과 마지막 페이지의 다음 버튼은 비활성화합니다.
 - `NOT_JOINED` 탭에서는 정원이 마감된 채팅방을 제외합니다 (`current_member < max_capacity`).
 - 채팅방 카드에는 제목, 설명, 방장 닉네임, 현재 인원, 최대 인원, 생성일을 표시합니다.
 - 채팅방 생성 Dialog에서 제목, 설명, 정원을 입력해 방을 만들 수 있습니다.
@@ -164,6 +165,7 @@ npm run dev
 - 상단 근접 시 이전 메시지를 추가로 가져옵니다.
 - 메시지 목록 viewport 상태는 `useMessageListViewport`가 관리하며 이전 메시지 추가 시 현재 스크롤 위치를 보정합니다.
 - 사용자가 과거 메시지 위치에 있을 때는 목록 하단에 최근 메시지 이동 버튼을 표시합니다.
+- 같은 작성자의 연속 text 메시지는 bubble grouping으로 avatar와 nickname 반복을 줄입니다.
 - 새 메시지는 Supabase Realtime `postgres_changes` INSERT 이벤트를 받아 React Query cache에 `created_at desc` 순서로 병합합니다.
 - 텍스트 메시지는 `sendMessageAction`이 `send_chat_message` RPC를 호출하는 방식으로 전송하고 이모지 입력을 제공합니다.
 - 메시지 입력 draft와 auto-resize는 `useMessageDraft`, `useAutoResizeTextarea`로 관리합니다. 최대 높이는 `max-h-32`이며 초과 시 스크롤됩니다. Shift+Enter는 줄바꿈, Enter는 전송입니다.
@@ -178,6 +180,7 @@ npm run dev
 - `/search/chat?query=검색어` 라우트에서 채팅방 검색 결과를 제공합니다.
 - 제목 검색과 방장 닉네임 검색을 섹션으로 나누어 표시합니다.
 - 검색 결과는 `search_chat_rooms` RPC와 `useInfiniteQuery`로 페이지 단위 조회합니다.
+- 빈 검색어, 결과 없음, 검색 오류 상태는 서로 다른 안내 문구로 표시합니다.
 - 각 섹션은 더보기 버튼으로 다음 페이지를 불러옵니다.
 
 ---

@@ -40,26 +40,20 @@ export default function ChatRoomListPagination({
 
   const handlePrevious = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (isFetching) return;
-    if (currentPage <= 1) {
-      onPageChange(totalPages);
-      return;
-    }
+    if (isFetching || currentPage <= 1) return;
+
     onPageChange(currentPage - 1);
   };
 
-  // 마지막 페이지에서 "다음" 클릭 시 page=1로 순환
   const handleNext = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (isFetching) return;
-    if (currentPage >= totalPages) {
-      onPageChange(1);
-      return;
-    }
+    if (isFetching || currentPage >= totalPages) return;
+
     onPageChange(currentPage + 1);
   };
 
-  const isPrevDisabled = isFetching;
+  const isPrevDisabled = isFetching || currentPage <= 1;
+  const isNextDisabled = isFetching || currentPage >= totalPages;
 
   return (
     <Pagination className="pt-2">
@@ -69,7 +63,8 @@ export default function ChatRoomListPagination({
             href="#"
             onClick={handlePrevious}
             aria-disabled={isPrevDisabled}
-            aria-label="Go to previous page"
+            aria-label="이전 페이지로 이동"
+            tabIndex={isPrevDisabled ? -1 : undefined}
             size="default"
             className={cn(
               "pl-1.5!",
@@ -122,15 +117,16 @@ export default function ChatRoomListPagination({
           <PaginationLink
             href="#"
             onClick={handleNext}
-            aria-disabled={isFetching}
-            aria-label="Go to next page"
+            aria-disabled={isNextDisabled}
+            aria-label="다음 페이지로 이동"
+            tabIndex={isNextDisabled ? -1 : undefined}
             size="default"
             className={cn(
               "pr-1.5!",
               "border-border/60 bg-background text-muted-foreground rounded-xl border font-semibold",
               "hover:border-brand/40 hover:bg-brand/10 hover:text-brand",
               "dark:border-border/30 dark:bg-card dark:hover:bg-brand/15",
-              isFetching && "pointer-events-none opacity-50",
+              isNextDisabled && "pointer-events-none opacity-50",
             )}
           >
             <span className="hidden sm:block">다음</span>

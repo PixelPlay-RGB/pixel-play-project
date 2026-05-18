@@ -15,11 +15,21 @@ export default function ChatSearchResults({ query }: Props) {
   const searchResults = useChatRoomSearchResults(query);
 
   if (searchResults.isEmptyQuery) {
-    return <EmptySearchResult message="검색어를 입력하면 채팅방 검색 결과가 표시됩니다." />;
+    return (
+      <EmptySearchResult
+        title="검색어를 입력해 주세요"
+        message="검색어를 입력하면 채팅방 검색 결과가 표시됩니다."
+      />
+    );
   }
 
   if (searchResults.isError) {
-    return <EmptySearchResult message="채팅방 검색 결과를 불러오지 못했습니다." />;
+    return (
+      <EmptySearchResult
+        title="검색 결과를 불러오지 못했습니다"
+        message="잠시 후 다시 검색해 주세요."
+      />
+    );
   }
 
   if (searchResults.isLoading) {
@@ -48,12 +58,17 @@ export default function ChatSearchResults({ query }: Props) {
           onLoadMore={() => searchResults.owner.fetchMore()}
         />
       )}
-      {searchResults.isEmptyResult && <EmptySearchResult message="검색 결과가 없습니다." />}
+      {searchResults.isEmptyResult && (
+        <EmptySearchResult
+          title="검색 결과가 없습니다"
+          message="다른 검색어로 다시 시도해 주세요."
+        />
+      )}
     </div>
   );
 }
 
-function EmptySearchResult({ message }: { message: string }) {
+function EmptySearchResult({ title, message }: { title: string; message: string }) {
   return (
     <div className="flex min-h-120 w-full items-center justify-center px-4 py-12 text-center">
       <div className="flex max-w-80 flex-col items-center">
@@ -65,7 +80,7 @@ function EmptySearchResult({ message }: { message: string }) {
         >
           <Search className="text-brand h-7 w-7" />
         </div>
-        <h2 className="text-foreground text-base font-bold">채팅방을 찾지 못했습니다</h2>
+        <h2 className="text-foreground text-base font-bold">{title}</h2>
         <p className="text-muted-foreground mt-1.5 text-sm leading-relaxed">{message}</p>
       </div>
     </div>

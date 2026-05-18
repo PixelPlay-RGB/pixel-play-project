@@ -2,8 +2,11 @@ import LoginSection from "@/components/auth/login/login-section";
 import Logo from "@/components/common/logo";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { redirectAuthenticatedUserFromAuthPage } from "@/utils/auth-page-server";
 
-export default function Page() {
+export default async function Page() {
+  await redirectAuthenticatedUserFromAuthPage();
+
   return (
     <div className="container m-auto">
       <div

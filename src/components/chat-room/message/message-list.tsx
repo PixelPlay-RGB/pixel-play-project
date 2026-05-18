@@ -17,6 +17,13 @@ interface Props {
   onReachTop: () => boolean;
 }
 
+function canGroupMessages(current: MessageQuery, adjacent?: MessageQuery) {
+  if (!adjacent) return false;
+  if (current.message_type !== "text" || adjacent.message_type !== "text") return false;
+
+  return current.user_id === adjacent.user_id;
+}
+
 export function MessageList({
   messages,
   currentUserId,
@@ -35,14 +42,24 @@ export function MessageList({
   return (
     <div className="relative min-h-0 flex-1 overflow-hidden">
       <ScrollArea ref={viewportRef} className="size-full" onScroll={handleScroll}>
-        <div className="flex flex-col-reverse gap-3 py-2">
-          {messages.map((message) => (
-            <MessageItem
-              key={message.id}
-              message={message}
-              isOwn={message.user_id === currentUserId}
-            />
-          ))}
+        <div className="flex flex-col-reverse py-2">
+          {messages.map((message, index) => {
+            const previousOnScreen = messages[index + 1];
+            const nextOnScreen = messages[index - 1];
+            const isGroupedWithPrevious = canGroupMessages(message, previousOnScreen);
+            const isGroupedWithNext = canGroupMessages(message, nextOnScreen);
+
+            return (
+              <MessageItem
+                key={message.id}
+                message={message}
+                isOwn={message.user_id === currentUserId}
+                isGroupedWithPrevious={isGroupedWithPrevious}
+                isGroupedWithNext={isGroupedWithNext}
+                showAuthor={!isGroupedWithPrevious}
+              />
+            );
+          })}
         </div>
       </ScrollArea>
 
