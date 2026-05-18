@@ -84,7 +84,7 @@ https://<supabase-project-id>.supabase.co/auth/v1/callback
 npm run dev
 ```
 
-브라우저에서 <http://localhost:3000>에 접속합니다. 비로그인 상태에서는 `/auth/login`으로 이동합니다.
+브라우저에서 <http://localhost:3000>에 접속합니다. 비로그인 상태의 `/`와 `/chat-room/[roomId]`는 공유 preview를 표시하고, 보호 라우트는 `/auth/login?next=<현재경로>`로 이동합니다.
 
 ---
 
@@ -118,7 +118,7 @@ npm run dev
 - 로그인 완료 사용자가 `/auth/login`, `/auth/signup`에 직접 접근하면 홈으로 이동합니다.
 - Header 프로필 배지와 Settings sidebar의 표시용 프로필은 서버 snapshot으로 조회하고, profile mutation 성공 후 `router.refresh()`로 갱신합니다.
 - 프로필이 없는 로그인 유저는 `/auth/complete-profile`로 이동합니다.
-- 비로그인 유저는 보호 라우트 접근 시 `/auth/login`으로 이동합니다.
+- 비로그인 유저는 보호 라우트 접근 시 `/auth/login?next=<현재경로>`로 이동하고, 로그인 성공 후 원래 경로로 돌아갑니다.
 - 비밀번호 변경, 프로필 수정, 프로필 이미지 업로드와 삭제, 회원 탈퇴 API를 제공합니다.
 - 프로필 이미지가 없는 유저는 `public/default-avatar.webp` 기본 이미지를 표시합니다.
 - 로그인, OAuth 로그인, 회원가입 OTP, 닉네임 확인, 프로필 완성, 프로필 수정, 로그아웃은 mutation hook으로 호출 상태와 toast, router 이동, query invalidation을 관리합니다.
@@ -136,6 +136,8 @@ npm run dev
 - production domain은 `https://pixel-play.studio`를 metadata base URL로 사용합니다.
 - 메인 페이지와 채팅방 상세 페이지는 Open Graph와 Twitter large image metadata를 제공합니다.
 - 공유 썸네일은 `public/og-home.webp`, `public/og-chat-room.webp` 정적 에셋을 사용합니다.
+- `/`와 `/chat-room/[roomId]`는 비로그인 상태에서도 public preview를 렌더링해 일반 링크 공유 크롤러가 metadata를 읽을 수 있습니다.
+- 비로그인 채팅방 preview는 `get_public_chat_room_metadata` RPC로 title과 description만 조회합니다. 메시지, 멤버, unread, presence는 공개하지 않습니다.
 
 ### 채팅방 목록
 
@@ -158,6 +160,7 @@ npm run dev
 ### 채팅방 상세
 
 - `/chat-room/[roomId]` 라우트에서 채팅방 상세 화면을 제공합니다.
+- 비로그인 사용자가 공유 링크로 접근하면 채팅방 title, description, 로그인 CTA만 있는 public preview를 표시합니다. 로그인 후에는 같은 URL에서 기존 채팅방 상세 화면으로 전환됩니다.
 - 방 정보, 참여자 목록, 메시지 목록, 메시지 입력 영역을 렌더링합니다.
 - 방 정보, 현재 유저 멤버십, 활성 참여자 목록은 `get_chat_room_detail` RPC로 함께 조회합니다.
 - 미참여 유저가 진입하면 `JoinChatRoomDialog`가 표시됩니다. 정원 마감 상태에서는 참여 불가 안내만 표시합니다 (destructive 색상). 참여 완료 후 Realtime으로 자동 상태 전환됩니다.
@@ -387,6 +390,7 @@ npm run types
 | `20260518212356_return_send_chat_message_id.sql`                      | 메시지 optimistic reconcile용 id 반환     |
 | `20260518213000_preserve_system_messages_with_system_user.sql`        | system 메시지 고정 user 보존 처리         |
 | `20260519000100_include_system_messages_in_date_divider.sql`          | system 메시지 날짜 divider 생성 기준 포함 |
+| `20260519020000_add_public_chat_room_metadata_rpc.sql`                | 공유 preview용 채팅방 metadata RPC 추가   |
 
 ---
 
@@ -434,5 +438,5 @@ npm run types
 ## 마무리 점검 상태
 
 - Supabase 원격 migration history와 로컬 migration 파일명은 2026년 5월 19일 기준으로 정합화되어 있습니다.
-- 채팅 도메인의 직접 쓰기 권한, RPC 실행 경계, 날짜 divider 동시성, system 메시지 날짜 구분, 메시지 optimistic reconcile, Presence와 Broadcast 기반 입력 상태 표시는 검증 완료 상태입니다.
+- 채팅 도메인의 직접 쓰기 권한, RPC 실행 경계, 공개 공유 preview metadata RPC, 날짜 divider 동시성, system 메시지 날짜 구분, 메시지 optimistic reconcile, Presence와 Broadcast 기반 입력 상태 표시는 검증 완료 상태입니다.
 - 최종 UI polish에서 채팅방 목록 skeleton, `/auth/complete-profile` 모바일 카드, `/profile` 모바일 sidebar 초기 렌더, 검색 실패 메시지 중앙화를 정리했습니다.
