@@ -1,6 +1,0 @@
-- UX 2차 범위는 메시지 grouping, auth page redirect, 검색 empty state, pagination boundary, 방장 상태점 제거입니다.
-- DB, RPC, Server Action, Query Key 구조는 변경하지 않습니다.
-- `flex-col-reverse`와 `created_at desc` 메시지 정렬은 유지합니다.
-- 페이지네이션은 지호님 선택대로 1페이지 이전과 마지막 페이지 다음을 비활성화합니다.
-- Presence와 typing indicator는 이번 범위에서 제외합니다.
-- Chrome QA에서 상대방 연속 메시지 fixture는 확인하지 못해, 상대 메시지 avatar/nickname 반복 제거는 정적 코드와 기존 방의 own grouping, system divider break로 검증했습니다.
