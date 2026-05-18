@@ -112,6 +112,7 @@ npm run dev
 - Google, GitHub OAuth 로그인과 추가 프로필 입력 흐름을 제공합니다.
 - OAuth 연동 계정 목록을 `linked_providers`로 관리합니다.
 - 로그인 상태는 Supabase 세션을 기준으로 검증하고 `AuthListener`가 Zustand store에 동기화합니다.
+- Header 프로필 배지와 Settings sidebar의 표시용 프로필은 서버 snapshot으로 조회하고, profile mutation 성공 후 `router.refresh()`로 갱신합니다.
 - 프로필이 없는 로그인 유저는 `/auth/complete-profile`로 이동합니다.
 - 비로그인 유저는 보호 라우트 접근 시 `/auth/login`으로 이동합니다.
 - 비밀번호 변경, 프로필 수정, 프로필 이미지 업로드와 삭제, 회원 탈퇴 API를 제공합니다.
@@ -185,6 +186,8 @@ npm run dev
 ```text
 src/
 ├── actions/              # Server Actions
+│   ├── auth/             # 로그인, 회원가입, 비밀번호, OAuth Server Actions
+│   └── profile.ts        # 프로필 수정 Server Action
 ├── app/                  # Next.js App Router
 │   ├── (settings)/       # 설정 라우트 그룹
 │   ├── api/              # Route Handler
@@ -215,7 +218,7 @@ src/
 ├── mock/                 # 개발용 mock 데이터
 ├── stores/               # Zustand stores
 ├── types/                # 도메인 타입과 Supabase 생성 타입
-└── utils/                # 표시용 유틸
+└── utils/                # 도메인 보조 유틸과 서버 snapshot helper
 ```
 
 ---
@@ -371,6 +374,7 @@ npm run types
 - 채팅방 목록 탭, 정렬값, 검색어(`searchQuery`)는 `useChatRoomStore`가 관리합니다. 탭 변경 시 정렬값과 검색어가 함께 초기화됩니다.
 - 서버 데이터는 TanStack Query로 관리합니다.
 - Server Action 호출의 pending, toast, router 이동, query invalidation은 `src/hooks/{domain}`의 도메인별 mutation hook에서 관리합니다.
+- Header 프로필 배지와 Settings sidebar는 표시용 프로필 snapshot을 Server Component 경계에서 받아 사용하며, 프로필 수정과 OAuth unlink 후에는 `router.refresh()`로 snapshot을 갱신합니다.
 - Query Key는 `src/constants/query-keys.ts`의 `QUERY_KEYS`를 기준으로 생성합니다.
 - Supabase 스키마 타입은 `src/types/database.types.ts`를 기준으로 사용합니다.
 
