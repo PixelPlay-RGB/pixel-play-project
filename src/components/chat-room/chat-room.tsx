@@ -9,6 +9,7 @@ import { ChatRoomHeader } from "@/components/chat-room/chat-room-header";
 import { ChatRoomMemberSheet } from "@/components/chat-room/chat-room-member-sheet";
 import { ChatRoomMemberSidebar } from "@/components/chat-room/chat-room-member-sidebar";
 import { ChatRoomMessageSection } from "@/components/chat-room/chat-room-message-section";
+import { ChatRoomPresenceProvider } from "@/components/chat-room/chat-room-presence-provider";
 import { Spinner } from "@/components/ui/spinner";
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import { useChatRoomDetail } from "@/hooks/chat-room/use-chat-room-detail";
@@ -19,8 +20,15 @@ interface Props {
 }
 
 export function ChatRoom({ roomId }: Props) {
-  const { currentUserId, profileErrorCode, profilePending, roomMissing } =
-    useChatRoomDetail(roomId);
+  const {
+    currentUser,
+    currentUserId,
+    profileErrorCode,
+    profilePending,
+    roomMissing,
+    isJoined,
+    isKicked,
+  } = useChatRoomDetail(roomId);
   const [membersSheetOpen, setMembersSheetOpen] = useState(false);
 
   useChatRoomDetailRealtimeInvalidation({ roomId, currentUserId });
@@ -46,20 +54,26 @@ export function ChatRoom({ roomId }: Props) {
   }
 
   return (
-    <div className="bg-background text-foreground flex h-full min-h-0 w-full overflow-hidden md:flex-row">
-      <ChatRoomMemberSidebar roomId={roomId} />
+    <ChatRoomPresenceProvider
+      roomId={roomId}
+      currentUser={currentUser ?? null}
+      enabled={isJoined && !isKicked}
+    >
+      <div className="bg-background text-foreground flex h-full min-h-0 w-full overflow-hidden md:flex-row">
+        <ChatRoomMemberSidebar roomId={roomId} />
 
-      <section className="bg-background flex min-h-0 min-w-0 flex-1 flex-col">
-        <ChatRoomHeader roomId={roomId} onOpenMembers={() => setMembersSheetOpen(true)} />
-        <ChatRoomMessageSection roomId={roomId} />
-      </section>
+        <section className="bg-background flex min-h-0 min-w-0 flex-1 flex-col">
+          <ChatRoomHeader roomId={roomId} onOpenMembers={() => setMembersSheetOpen(true)} />
+          <ChatRoomMessageSection roomId={roomId} />
+        </section>
 
-      <ChatRoomMemberSheet
-        roomId={roomId}
-        open={membersSheetOpen}
-        onOpenChange={setMembersSheetOpen}
-      />
-      <ChatRoomDialogs roomId={roomId} />
-    </div>
+        <ChatRoomMemberSheet
+          roomId={roomId}
+          open={membersSheetOpen}
+          onOpenChange={setMembersSheetOpen}
+        />
+        <ChatRoomDialogs roomId={roomId} />
+      </div>
+    </ChatRoomPresenceProvider>
   );
 }

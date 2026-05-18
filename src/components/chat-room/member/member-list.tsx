@@ -1,4 +1,5 @@
 // member-list 컴포넌트를 제공합니다.
+import { useChatRoomPresenceContext } from "@/components/chat-room/chat-room-presence-provider";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useChatRoomDetail } from "@/hooks/chat-room/use-chat-room-detail";
 import { cn } from "@/lib/utils";
@@ -11,6 +12,7 @@ interface Props {
 
 export function MemberList({ roomId, className }: Props) {
   const { currentUserId, room, members, canManageMembers } = useChatRoomDetail(roomId);
+  const { getMemberPresenceStatus } = useChatRoomPresenceContext();
   const ownerId = room?.owner_id;
 
   return (
@@ -34,6 +36,7 @@ export function MemberList({ roomId, className }: Props) {
                 member={member}
                 isOwner={member.user_id === ownerId}
                 canManage={canManageMembers && member.user_id !== currentUserId}
+                presenceStatus={getMemberPresenceStatus(member.user_id)}
               />
             </li>
           ))}

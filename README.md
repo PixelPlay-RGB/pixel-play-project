@@ -16,7 +16,7 @@ Next.js 16 App Router, React 19, Supabase Auth/Postgres/Realtime, TanStack Query
 | Styling           | Tailwind CSS 4, shadcn, Base UI, lucide-react        |
 | Auth              | Supabase Auth, Email OTP, Google OAuth, GitHub OAuth |
 | Database          | Supabase Postgres                                    |
-| Realtime          | Supabase Realtime Postgres Changes                   |
+| Realtime          | Supabase Realtime Postgres Changes, Presence         |
 | Server State      | TanStack Query v5                                    |
 | Client State      | Zustand v5                                           |
 | Form / Validation | react-hook-form v7, Zod v4                           |
@@ -155,6 +155,7 @@ npm run dev
 - 미참여 유저가 진입하면 `JoinChatRoomDialog`가 표시됩니다. 정원 마감 상태에서는 참여 불가 안내만 표시합니다 (destructive 색상). 참여 완료 후 Realtime으로 자동 상태 전환됩니다.
 - 참여자 목록은 활성 멤버만 표시합니다.
 - 방장은 참여자 Popover에서 강퇴와 방장 권한 위임을 실행할 수 있습니다.
+- 현재 채팅방에 접속 중인 멤버는 참여자 목록 avatar의 상태 dot으로 표시합니다.
 - 강퇴된 유저는 Realtime 이벤트로 감지되어 입력이 잠기고 안내 Dialog가 표시됩니다.
 - 일반 참여자는 채팅방 메뉴에서 나가기를 실행할 수 있습니다.
 - 방장은 현재 정책상 채팅방 나가기가 제한됩니다.
@@ -171,6 +172,7 @@ npm run dev
 - 새 메시지는 Supabase Realtime `postgres_changes` INSERT 이벤트를 받아 React Query cache에 `created_at desc` 순서로 병합합니다.
 - 텍스트 메시지는 `sendMessageAction`이 `send_chat_message` RPC를 호출하는 방식으로 전송하고 이모지 입력을 제공합니다.
 - 메시지 입력 draft와 auto-resize는 `useMessageDraft`, `useAutoResizeTextarea`로 관리합니다. 최대 높이는 `max-h-32`이며 초과 시 스크롤됩니다. Shift+Enter는 줄바꿈, Enter는 전송입니다.
+- 메시지 입력 중인 멤버는 참여자 목록 avatar의 접속 dot 대신 Motion 기반 3점 typing indicator로 표시하고, 일정 시간 입력이 없으면 접속 dot으로 돌아갑니다.
 - 멀티라인 메시지는 `whitespace-pre-wrap`으로 렌더링합니다.
 - 날짜 구분 시스템 메시지는 PostgreSQL AFTER INSERT Trigger(`trigger_insert_date_divider_message`)가 매일 첫 text 메시지 INSERT 시 `📅 YYYY년 MM월 DD일 요일` 형식의 system 메시지를 1ms 앞 타임스탬프로 자동 삽입합니다.
 - 날짜 구분 메시지는 partial unique index와 `ON CONFLICT DO NOTHING`으로 같은 방, 같은 날짜 중복 생성을 방지합니다.
@@ -389,14 +391,14 @@ npm run types
 
 ## 실시간 처리
 
-현재 앱은 Supabase Realtime의 Postgres Changes를 사용합니다.
+현재 앱은 Supabase Realtime의 Postgres Changes와 Presence를 사용합니다.
 
 - `message` INSERT 이벤트로 새 메시지를 목록에 반영합니다.
 - 메시지 Realtime 병합은 최신순 정렬을 유지해 `flex-col-reverse` 레이아웃에서도 새로고침 전후 날짜 구분 위치가 일관되도록 처리합니다.
 - `chat_room_member` 변경 이벤트로 참여자 목록, 방 정보, 목록 count를 갱신합니다.
 - 강퇴 상태는 현재 유저의 `chat_room_member.is_banned` 변경을 감지해 UI에 반영합니다.
-
-Broadcast와 Presence는 아직 제품 기능으로 사용하지 않습니다.
+- Presence는 채팅방 접속 상태와 typing indicator 표시 전용으로 사용하며, 권한 판단이나 DB 저장에는 사용하지 않습니다.
+- Broadcast는 아직 제품 기능으로 사용하지 않습니다.
 
 ---
 
@@ -404,5 +406,4 @@ Broadcast와 Presence는 아직 제품 기능으로 사용하지 않습니다.
 
 - 라이브 스트리밍 메뉴는 아직 준비 상태입니다.
 - 메시지 수정/삭제 기능이 미구현 상태입니다.
-- typing indicator와 presence 기반 유저 indicator는 아직 제품 기능으로 사용하지 않습니다.
 - Supabase 원격 migration history와 로컬 migration 파일명은 2026년 5월 18일 기준으로 정합화되어 있습니다.

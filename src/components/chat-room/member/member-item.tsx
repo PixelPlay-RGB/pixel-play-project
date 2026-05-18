@@ -1,9 +1,11 @@
 // 채팅방 참여자 목록의 단일 항목을 표시하는 컴포넌트
 import { MemberActionPopover } from "@/components/chat-room/member/member-action-popover";
+import { MemberPresenceBadge } from "@/components/chat-room/member/member-presence-badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { RoomMemberQuery } from "@/types/chat-room-member";
+import type { ChatRoomPresenceStatus } from "@/types/chat-room-presence";
 import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/avatar";
 import { Crown } from "lucide-react";
 
@@ -12,6 +14,7 @@ interface Props {
   member: RoomMemberQuery;
   isOwner: boolean;
   canManage: boolean;
+  presenceStatus: ChatRoomPresenceStatus | null;
 }
 
 function OwnerBadge() {
@@ -34,11 +37,13 @@ function MemberContent({
   fallbackText,
   nickname,
   isOwner,
+  presenceStatus,
 }: {
   photoUrl: string | null;
   fallbackText: string;
   nickname: string;
   isOwner: boolean;
+  presenceStatus: ChatRoomPresenceStatus | null;
 }) {
   return (
     <>
@@ -46,6 +51,7 @@ function MemberContent({
         <Avatar size="default">
           <AvatarImage src={getAvatarImageSrc(photoUrl)} alt={`${nickname}의 프로필 사진`} />
           <AvatarFallback>{fallbackText}</AvatarFallback>
+          <MemberPresenceBadge status={presenceStatus} />
         </Avatar>
       </div>
       <div className="flex min-w-0 flex-1 items-center gap-1.5">
@@ -63,7 +69,7 @@ function MemberContent({
   );
 }
 
-export function MemberItem({ roomId, member, isOwner, canManage }: Props) {
+export function MemberItem({ roomId, member, isOwner, canManage, presenceStatus }: Props) {
   const nickname = member.user.nickname;
   const photoUrl = member.user.photo_url;
   const fallbackText = getAvatarFallbackText(nickname);
@@ -81,6 +87,7 @@ export function MemberItem({ roomId, member, isOwner, canManage }: Props) {
           fallbackText={fallbackText}
           nickname={nickname}
           isOwner={isOwner}
+          presenceStatus={presenceStatus}
         />
       </div>
     );
@@ -100,6 +107,7 @@ export function MemberItem({ roomId, member, isOwner, canManage }: Props) {
           fallbackText={fallbackText}
           nickname={nickname}
           isOwner={isOwner}
+          presenceStatus={presenceStatus}
         />
       </Button>
     </MemberActionPopover>
