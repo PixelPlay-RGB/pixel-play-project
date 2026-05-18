@@ -1,3 +1,4 @@
+// message 도메인 타입을 정의합니다.
 import { GenericTables } from "@/types/supabase.types";
 
 /**
@@ -10,4 +11,15 @@ export interface MessageQuery extends Message {
     nickname: string;
     photo_url: string | null;
   };
+}
+
+export type MessageClientStatus = "sending" | "failed";
+
+export interface MessageListItem extends MessageQuery {
+  clientStatus?: MessageClientStatus;
+}
+
+export interface MessagesPage {
+  items: MessageListItem[];
+  nextCursor?: string;
 }

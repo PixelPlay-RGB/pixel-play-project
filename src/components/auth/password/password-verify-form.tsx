@@ -1,6 +1,7 @@
 "use client";
+// password-verify-form 컴포넌트를 제공합니다.
 
-import { verifyCurrentPasswordAction } from "@/actions/auth";
+import { verifyCurrentPasswordAction } from "@/actions/auth/password";
 import AuthInputGroup from "@/components/auth/auth-input-group";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field";
@@ -31,7 +32,7 @@ export default function PasswordVerifyForm({ onVerified }: Props) {
 
     if (!result.success) {
       setError("currentPassword", {
-        message: result.message ?? FORM_MESSAGE.auth.currentPasswordInvalid,
+        message: result.fieldMessage ?? FORM_MESSAGE.auth.currentPasswordInvalid,
       });
       return;
     }

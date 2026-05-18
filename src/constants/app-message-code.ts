@@ -1,5 +1,8 @@
 // 앱 메시지 조회에 사용하는 메시지 코드를 관리하는 상수
 
+import type { APP_MESSAGE } from "@/constants/app-message";
+import type { AppMessageCodeSchema } from "@/types/app-message";
+
 export const APP_MESSAGE_CODE = {
   success: {
     auth: {
@@ -13,6 +16,11 @@ export const APP_MESSAGE_CODE = {
     },
     chatRoom: {
       created: "success.chatRoom.created",
+      left: "success.chatRoom.left",
+    },
+    chatRoomMember: {
+      kicked: "success.chatRoomMember.kicked",
+      ownerTransferred: "success.chatRoomMember.ownerTransferred",
     },
     profile: {
       updated: "success.profile.updated",
@@ -37,29 +45,53 @@ export const APP_MESSAGE_CODE = {
       authInfoLoadFailed: "error.auth.authInfoLoadFailed",
       sessionNotFound: "error.auth.sessionNotFound",
       passwordChangeFailed: "error.auth.passwordChangeFailed",
+      passwordChangedLogoutFailed: "error.auth.passwordChangedLogoutFailed",
       signupFailed: "error.auth.signupFailed",
       profileCreateFailed: "error.auth.profileCreateFailed",
       signupCancelFailed: "error.auth.signupCancelFailed",
       accountDeleteFailed: "error.auth.accountDeleteFailed",
       oauthInfoLoadFailed: "error.auth.oauthInfoLoadFailed",
+      oauthSyncFailed: "error.auth.oauthSyncFailed",
     },
     chatRoom: {
       createAuthRequired: "error.chatRoom.createAuthRequired",
+      invalidInput: "error.chatRoom.invalidInput",
       createFailed: "error.chatRoom.createFailed",
       createMemberFailed: "error.chatRoom.createMemberFailed",
+      joinFailed: "error.chatRoom.joinFailed",
+      full: "error.chatRoom.full",
+      leaveFailed: "error.chatRoom.leaveFailed",
+      leaveOwnerBlocked: "error.chatRoom.leaveOwnerBlocked",
       missingRoomId: "error.chatRoom.missingRoomId",
+      notFound: "error.chatRoom.notFound",
       notFoundOrLoadFailed: "error.chatRoom.notFoundOrLoadFailed",
+      notActiveMember: "error.chatRoom.notActiveMember",
+      notMember: "error.chatRoom.notMember",
       inputLocked: "error.chatRoom.inputLocked",
       isKicked: "error.chatRoom.isKicked",
     },
     chatRoomList: {
       loadFailed: "error.chatRoomList.loadFailed",
     },
+    search: {
+      loadFailed: "error.search.loadFailed",
+    },
     message: {
+      invalidInput: "error.message.invalidInput",
       sendForbidden: "error.message.sendForbidden",
       sendFailed: "error.message.sendFailed",
     },
+    chatRoomMember: {
+      kickFailed: "error.chatRoomMember.kickFailed",
+      transferFailed: "error.chatRoomMember.transferFailed",
+      notOwner: "error.chatRoomMember.notOwner",
+      ownerCannotKickSelf: "error.chatRoomMember.ownerCannotKickSelf",
+      ownerCannotTransferSelf: "error.chatRoomMember.ownerCannotTransferSelf",
+      targetNotActive: "error.chatRoomMember.targetNotActive",
+      ownerTransferFailed: "error.chatRoomMember.ownerTransferFailed",
+    },
     profile: {
+      notFound: "error.profile.notFound",
       updateFailed: "error.profile.updateFailed",
       imageTooLarge: "error.profile.imageTooLarge",
       authMissing: "error.profile.authMissing",
@@ -76,11 +108,11 @@ export const APP_MESSAGE_CODE = {
       defaultAccountCannotUnlink: "error.oauth.defaultAccountCannotUnlink",
     },
     supabase: {
-      permissionDenied: "error.supabase.42501",
-      dataNotFound: "error.supabase.PGRST116",
+      permissionDenied: "error.supabase.permissionDenied",
+      dataNotFound: "error.supabase.dataNotFound",
     },
   },
-} as const;
+} as const satisfies AppMessageCodeSchema<typeof APP_MESSAGE>;
 
 type NestedValue<T> = T extends string
   ? T

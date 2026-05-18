@@ -1,3 +1,4 @@
+// auth 도메인 타입을 정의합니다.
 import { SignUpFormValues } from "@/lib/zod/auth";
 
 export type OtpStatus = "idle" | "sending" | "sent" | "verifying" | "verified";

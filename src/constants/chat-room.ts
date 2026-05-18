@@ -1,8 +1,21 @@
+// chat-room 상수를 정의합니다.
 import type { ChatRoomSortOption, ChatRoomTab } from "@/types/chat-room";
 
 export const CHAT_ROOM_MIN_CAPACITY = 2;
 export const CHAT_ROOM_MAX_CAPACITY = 50;
-export const CHAT_ROOM_PAGE_SIZE = 16;
+export const CHAT_ROOM_TITLE_MAX_LENGTH = 50;
+export const CHAT_ROOM_DESCRIPTION_MAX_LENGTH = 200;
+export const CHAT_ROOM_GRID_BREAKPOINTS = {
+  sm: 640,
+  xl: 1280,
+  twoXl: 1536,
+} as const;
+export const CHAT_ROOM_PAGE_SIZE_BY_COLUMN_COUNT = {
+  one: 8,
+  two: 12,
+  three: 12,
+  four: 16,
+} as const;
 
 export const CHAT_ROOM_TABS: ChatRoomTab[] = ["JOINED", "NOT_JOINED", "OWNED"];
 
@@ -18,7 +31,13 @@ export const CHAT_ROOM_EMPTY_MESSAGES: Record<ChatRoomTab, string> = {
   OWNED: "아직 만든 채팅방이 없어요.",
 };
 
-export const DEFAULT_CHAT_ROOM_SORT_OPTION: ChatRoomSortOption = "CREATED_AT_DESC";
+export const DEFAULT_CHAT_ROOM_SORT_OPTION: ChatRoomSortOption = "LAST_MESSAGE_DESC";
+
+export const DEFAULT_CHAT_ROOM_SORT_OPTION_BY_TAB: Record<ChatRoomTab, ChatRoomSortOption> = {
+  JOINED: "LAST_MESSAGE_DESC",
+  NOT_JOINED: "CREATED_AT_DESC",
+  OWNED: "LAST_MESSAGE_DESC",
+};
 
 export const CHAT_ROOM_SORT_LABELS: Record<ChatRoomSortOption, string> = {
   CREATED_AT_DESC: "생성일 최신순",
@@ -27,7 +46,7 @@ export const CHAT_ROOM_SORT_LABELS: Record<ChatRoomSortOption, string> = {
 };
 
 export const CHAT_ROOM_SORT_OPTIONS_BY_TAB: Record<ChatRoomTab, ChatRoomSortOption[]> = {
-  JOINED: ["CREATED_AT_DESC", "LAST_MESSAGE_DESC", "CURRENT_MEMBER_DESC"],
+  JOINED: ["LAST_MESSAGE_DESC", "CREATED_AT_DESC", "CURRENT_MEMBER_DESC"],
   NOT_JOINED: ["CREATED_AT_DESC", "CURRENT_MEMBER_DESC"],
-  OWNED: ["CREATED_AT_DESC", "LAST_MESSAGE_DESC", "CURRENT_MEMBER_DESC"],
+  OWNED: ["LAST_MESSAGE_DESC", "CREATED_AT_DESC", "CURRENT_MEMBER_DESC"],
 };

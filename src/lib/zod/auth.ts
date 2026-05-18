@@ -1,4 +1,6 @@
+// auth Zod 검증 스키마를 정의합니다.
 import { FORM_MESSAGE } from "@/constants/form-message";
+import { isDateInputValueOnOrBeforeToday, isValidDateInputValue } from "@/utils/date";
 import { z } from "zod";
 
 export const loginSchema = z.object({
@@ -6,29 +8,33 @@ export const loginSchema = z.object({
   password: z.string().min(1, { error: FORM_MESSAGE.auth.passwordRequired }),
 });
 
+const passwordSchema = z
+  .string()
+  .min(8, { error: FORM_MESSAGE.auth.passwordMin })
+  .regex(/[a-z]/, { error: FORM_MESSAGE.auth.passwordLowercase })
+  .regex(/[A-Z]/, { error: FORM_MESSAGE.auth.passwordUppercase })
+  .regex(/[0-9]/, { error: FORM_MESSAGE.auth.passwordDigit })
+  .regex(/[^A-Za-z0-9]/, { error: FORM_MESSAGE.auth.passwordSymbol });
+
+const currentPasswordSchema = z.string().min(1, { error: FORM_MESSAGE.auth.passwordRequired });
+
 export const signUpBaseSchema = z.object({
   email: z.email({ error: FORM_MESSAGE.auth.emailInvalid }),
-  // [PROD] 영문 대문자 1개 이상, 숫자 1개 이상, 특수문자(!@#$%^&*) 1개 이상, 최소 8자
-  // password: z.string()
-  //   .min(8, { error: "비밀번호는 8자 이상이어야 합니다." })
-  //   .regex(/[A-Z]/, { error: "영문 대문자를 1개 이상 포함해야 합니다." })
-  //   .regex(/[0-9]/, { error: "숫자를 1개 이상 포함해야 합니다." })
-  //   .regex(/[!@#$%^&*]/, { error: "특수문자(!@#$%^&*)를 1개 이상 포함해야 합니다." }),
-  // [TEST]
-  password: z.string().min(6, { error: FORM_MESSAGE.auth.passwordMin }),
+  password: passwordSchema,
   passwordConfirm: z.string(),
   name: z.string().min(2, { error: FORM_MESSAGE.auth.nameMin }),
   nickname: z
     .string()
     .min(2, { error: FORM_MESSAGE.auth.nicknameMin })
     .max(10, { error: FORM_MESSAGE.auth.nicknameMax })
-    .regex(/^[a-zA-Z0-9가-힣\s]+$/, {
+    .regex(/^[a-zA-Z0-9가-힣]+$/, {
       error: FORM_MESSAGE.auth.nicknameInvalidCharacters,
-    })
-    .refine((val) => val.trim().length > 0, {
-      error: FORM_MESSAGE.auth.nicknameBlank,
     }),
-  birth: z.string().min(1, { error: FORM_MESSAGE.auth.birthRequired }),
+  birth: z
+    .string()
+    .min(1, { error: FORM_MESSAGE.auth.birthRequired })
+    .refine(isValidDateInputValue, { error: FORM_MESSAGE.auth.birthInvalid })
+    .refine(isDateInputValueOnOrBeforeToday, { error: FORM_MESSAGE.auth.birthFuture }),
   phone: z.string().regex(/^010-?\d{4}-?\d{4}$/, { error: FORM_MESSAGE.auth.phoneInvalid }),
   gender: z.enum(["male", "female", "none"], { error: FORM_MESSAGE.auth.genderRequired }),
 });
@@ -50,18 +56,23 @@ export const completeOAuthProfileSchema = signUpBaseSchema.pick({
 });
 
 export const verifyPasswordSchema = z.object({
-  currentPassword: signUpBaseSchema.shape.password,
+  currentPassword: currentPasswordSchema,
 });
 
 export const changePasswordSchema = z
   .object({
-    newPassword: signUpBaseSchema.shape.password,
+    newPassword: passwordSchema,
     newPasswordConfirm: z.string(),
   })
   .refine((data) => data.newPassword === data.newPasswordConfirm, {
     error: FORM_MESSAGE.auth.passwordMismatch,
     path: ["newPasswordConfirm"],
   });
+
+export const changePasswordActionSchema = z.object({
+  currentPassword: currentPasswordSchema,
+  newPassword: passwordSchema,
+});
 
 export const profileSchema = z.object({
   nickname: signUpBaseSchema.shape.nickname,

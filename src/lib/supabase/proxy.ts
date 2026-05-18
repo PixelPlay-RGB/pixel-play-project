@@ -48,11 +48,15 @@ export async function updateSession(request: NextRequest) {
   // 로그인된 유저의 추가 정보 확인 (DB 조회)
   if (user && !isAuthPage && !pathname.startsWith("/api")) {
     // '프로필 완성' 체크를 위한 DB 조회
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from("user")
       .select("nickname")
       .eq("id", user.sub)
-      .single();
+      .maybeSingle();
+
+    if (profileError) {
+      console.error("프록시 프로필 완성 여부 조회 실패", profileError);
+    }
 
     // 닉네임(display_name)이 없다면 프로필 설정 페이지로 강제 이동
     if (!profile?.nickname && pathname !== "/auth/complete-profile") {

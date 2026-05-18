@@ -1,3 +1,4 @@
+// footer 컴포넌트를 제공합니다.
 import { members } from "@/constants/footer";
 import { cn } from "@/lib/utils";
 import Image from "next/image";

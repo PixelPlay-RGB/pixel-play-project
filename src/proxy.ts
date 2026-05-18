@@ -1,3 +1,4 @@
+// Next.js 프록시 미들웨어를 구성합니다.
 import { type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/proxy";
 

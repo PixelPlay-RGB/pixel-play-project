@@ -31,7 +31,7 @@ export async function POST() {
     return NextResponse.json({ message: "success" });
   } catch (error: unknown) {
     if (error instanceof AuthError) {
-      console.error("withdraw deleteUser auth error", error);
+      console.error("회원 탈퇴 중 인증 유저 삭제 실패", error);
       return NextResponse.json(
         { code: APP_MESSAGE_CODE.error.auth.accountDeleteFailed },
         { status: error.status || 500 },
@@ -39,14 +39,14 @@ export async function POST() {
     }
 
     if (error instanceof Error) {
-      console.error("withdraw deleteUser error", error);
+      console.error("회원 탈퇴 중 사용자 삭제 실패", error);
       return NextResponse.json(
         { code: APP_MESSAGE_CODE.error.auth.accountDeleteFailed },
         { status: 500 },
       );
     }
 
-    console.error("withdraw deleteUser unknown error", error);
+    console.error("회원 탈퇴 중 알 수 없는 오류 발생", error);
     return NextResponse.json(
       { code: APP_MESSAGE_CODE.error.auth.accountDeleteFailed },
       { status: 500 },

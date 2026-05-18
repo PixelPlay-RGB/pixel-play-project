@@ -1,10 +1,13 @@
+// 라우트 페이지를 렌더링합니다.
 import LoginSection from "@/components/auth/login/login-section";
 import Logo from "@/components/common/logo";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import Link from "next/link";
+import { redirectAuthenticatedUserFromAuthPage } from "@/utils/auth-page-server";
 
-export default function Page() {
+export default async function Page() {
+  await redirectAuthenticatedUserFromAuthPage();
+
   return (
     <div className="container m-auto">
       <div
@@ -13,7 +16,7 @@ export default function Page() {
           "border-brand/20 border-0 border-t border-b",
           "sm:max-w-md sm:rounded-2xl sm:border sm:p-8",
           "md:border-2",
-          "shadow-[0_0_30px_#46c6a90a] dark:shadow-[0_0_60px_#46c6a918]",
+          "shadow-brand-panel",
         )}
       >
         <div className="mb-4 flex flex-col items-center gap-3 sm:mb-6 sm:gap-4">
@@ -23,12 +26,6 @@ export default function Page() {
         </div>
         <div className="flex flex-col gap-4 sm:gap-5">
           <LoginSection />
-          <Link
-            className="text-brand self-end text-sm underline underline-offset-4 transition-colors hover:opacity-60 sm:self-end"
-            href="/auth/signup"
-          >
-            회원 가입
-          </Link>
         </div>
       </div>
     </div>

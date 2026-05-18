@@ -1,3 +1,4 @@
+// auth 상수를 정의합니다.
 import type { OAuthProvider, SignUpFormValues } from "@/types/auth";
 
 export const OAUTH_PROVIDERS: OAuthProvider[] = ["google", "github"] as const;

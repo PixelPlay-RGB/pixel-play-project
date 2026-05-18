@@ -1,9 +1,13 @@
+// 라우트 페이지를 렌더링합니다.
 import SignupForm from "@/components/auth/signup/signup-form";
 import Logo from "@/components/common/logo";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { redirectAuthenticatedUserFromAuthPage } from "@/utils/auth-page-server";
 
-export default function Page() {
+export default async function Page() {
+  await redirectAuthenticatedUserFromAuthPage();
+
   return (
     <div className="container m-auto">
       <div
@@ -13,7 +17,7 @@ export default function Page() {
           "border-brand/20 border-0 border-t border-b",
           "sm:rounded-2xl sm:border",
           "md:border-2",
-          "shadow-[0_0_30px_#46c6a90a] dark:shadow-[0_0_60px_#46c6a918]",
+          "shadow-brand-panel",
         )}
       >
         <div className={cn("mb-4 flex flex-col items-center gap-3", "sm:mb-6 sm:gap-4")}>
