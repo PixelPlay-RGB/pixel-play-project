@@ -1,6 +1,15 @@
 // 채팅방 목록 RPC 응답을 화면 모델로 정규화합니다.
 
-import type { ChatRoomCounts, ChatRoomListItem, ChatRoomTab } from "@/types/chat-room";
+import {
+  CHAT_ROOM_SORT_OPTIONS_BY_TAB,
+  DEFAULT_CHAT_ROOM_SORT_OPTION_BY_TAB,
+} from "@/constants/chat-room";
+import type {
+  ChatRoomCounts,
+  ChatRoomListItem,
+  ChatRoomSortOption,
+  ChatRoomTab,
+} from "@/types/chat-room";
 import type { Json } from "@/types/database.types";
 
 type JsonRecord = { [key: string]: Json | undefined };
@@ -91,4 +100,13 @@ export function getEffectiveChatRoomCounts(
     ...counts,
     [tabType]: totalItems,
   };
+}
+
+export function getValidChatRoomSortOption(
+  tabType: ChatRoomTab,
+  sortOption: ChatRoomSortOption,
+): ChatRoomSortOption {
+  return CHAT_ROOM_SORT_OPTIONS_BY_TAB[tabType].includes(sortOption)
+    ? sortOption
+    : DEFAULT_CHAT_ROOM_SORT_OPTION_BY_TAB[tabType];
 }

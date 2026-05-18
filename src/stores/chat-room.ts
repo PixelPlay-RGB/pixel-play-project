@@ -1,5 +1,5 @@
 // chat-room Zustand store를 관리합니다.
-import { DEFAULT_CHAT_ROOM_SORT_OPTION } from "@/constants/chat-room";
+import { DEFAULT_CHAT_ROOM_SORT_OPTION_BY_TAB } from "@/constants/chat-room";
 import type { ChatRoomSortOption, ChatRoomTab } from "@/types/chat-room";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
@@ -19,14 +19,14 @@ export const useChatRoomStore = create<ChatRoomState>()(
   devtools(
     (set) => ({
       tabType: "JOINED",
-      sortOption: DEFAULT_CHAT_ROOM_SORT_OPTION,
+      sortOption: DEFAULT_CHAT_ROOM_SORT_OPTION_BY_TAB.JOINED,
       currentPage: 1,
       searchQuery: "",
       setTabType: (tabType) =>
         set(
           {
             tabType,
-            sortOption: DEFAULT_CHAT_ROOM_SORT_OPTION,
+            sortOption: DEFAULT_CHAT_ROOM_SORT_OPTION_BY_TAB[tabType],
             currentPage: 1,
             searchQuery: "",
           },

@@ -8,16 +8,12 @@ import ChatRoomListEmptyState from "@/components/chat-room-list/chat-room-list-e
 import ChatRoomListPagination from "@/components/chat-room-list/chat-room-list-pagination";
 import ChatRoomListUnreadRealtimeListener from "@/components/chat-room-list/chat-room-list-unread-realtime-listener";
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
-import {
-  CHAT_ROOM_SORT_OPTIONS_BY_TAB,
-  DEFAULT_CHAT_ROOM_SORT_OPTION,
-} from "@/constants/chat-room";
 import { useChatRoomList } from "@/hooks/chat-room/use-chat-room-list";
 import { useChatRoomPageSize } from "@/hooks/chat-room/use-chat-room-page-size";
 import { resolveProfileQueryErrorCode, useUser } from "@/hooks/profile/use-profile";
 import { useChatRoomStore } from "@/stores/chat-room";
 import { getAppMessage } from "@/utils/app-message";
-import { EMPTY_CHAT_ROOM_LIST } from "@/utils/chat-room-list";
+import { EMPTY_CHAT_ROOM_LIST, getValidChatRoomSortOption } from "@/utils/chat-room-list";
 import { useCallback } from "react";
 
 export default function ChatRoomList() {
@@ -32,9 +28,7 @@ export default function ChatRoomList() {
   }, [setCurrentPage]);
   const pageSize = useChatRoomPageSize({ onPageSizeChange: handlePageSizeChange });
 
-  const selectedSortOption = CHAT_ROOM_SORT_OPTIONS_BY_TAB[tabType].includes(sortOption)
-    ? sortOption
-    : DEFAULT_CHAT_ROOM_SORT_OPTION;
+  const selectedSortOption = getValidChatRoomSortOption(tabType, sortOption);
   const query = useChatRoomList(tabType, selectedSortOption, currentPage, searchQuery, pageSize);
 
   const chatRoomList = query.data ?? EMPTY_CHAT_ROOM_LIST;

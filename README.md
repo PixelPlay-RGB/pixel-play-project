@@ -135,9 +135,9 @@ npm run dev
 - `JOINED`, `NOT_JOINED`, `OWNED` 탭으로 채팅방 목록을 분리합니다.
 - 채팅방 목록은 `get_chat_room_list` RPC로 탭별 개수와 목록 데이터를 함께 조회합니다.
 - `get_chat_room_list`는 unread_count, 정렬, 번호형 페이지네이션, 탭 내 검색, total_count를 한 응답으로 처리합니다.
-- 정렬 옵션은 생성일 최신순, 최신 메시지순, 참여자 많은순을 제공합니다.
-- 참여 가능한 채팅방 탭에서는 최신 메시지순을 노출하지 않습니다.
-- 탭 변경 시 정렬값과 검색어는 기본값으로 초기화합니다.
+- `JOINED`, `OWNED` 탭의 기본 정렬은 최신 메시지순이며 정렬 옵션은 최신 메시지순, 생성일 최신순, 참여자 많은순 순서로 제공합니다.
+- `NOT_JOINED` 탭의 기본 정렬은 생성일 최신순이며 최신 메시지순을 노출하지 않습니다.
+- 탭 변경 시 정렬값은 탭별 기본값으로, 검색어는 빈 값으로 초기화합니다.
 - `ChatRoomSearchInput`으로 현재 탭 내에서 채팅방 제목을 필터링할 수 있습니다. 검색 중에는 탭 badge가 `total_count`로 오버라이드됩니다.
 - 채팅방 목록은 `useQuery`와 `keepPreviousData` 기반 번호형 페이지네이션으로 조회합니다.
 - 페이지네이션은 `ChatRoomPagination`에서 이전/다음, 페이지 번호, 줄임표를 표시하며 첫 페이지의 이전과 마지막 페이지의 다음 버튼은 비활성화합니다.
@@ -338,41 +338,42 @@ npm run types
 
 현재 저장소의 `supabase/migrations/` 에 포함된 주요 migration 파일은 다음과 같습니다.
 
-| 파일                                                                  | 내용                                    |
-| --------------------------------------------------------------------- | --------------------------------------- |
-| `20260506021151_create_kv_table_55ce40ce.sql`                         | KV 테이블 생성                          |
-| `20260507053827_add_pagination_to_get_rooms_by_tab.sql`               | 채팅방 목록 페이지네이션 추가           |
-| `20260507060357_mark_room_read_rpc.sql`                               | `mark_room_read` RPC 추가               |
-| `20260507064503_drop_paginated_get_rooms_by_tab.sql`                  | 기존 페이지네이션 RPC 제거              |
-| `20260507074832_leave_chat_room_rpc.sql`                              | `leave_chat_room` RPC 추가              |
-| `20260511012256_trigger_update_member_count_add_last_joined_at.sql`   | 멤버 수 트리거 및 `last_joined_at` 추가 |
-| `20260511032318_create_join_chat_room_rpc.sql`                        | `join_chat_room` RPC 추가               |
-| `20260511033426_fix_join_chat_room_return_type.sql`                   | `join_chat_room` 반환 타입 수정         |
-| `20260511052223_update_join_chat_room_rpc_active_member_policy.sql`   | 활성 멤버 정책 반영                     |
-| `20260511052342_drop_old_join_chat_room_rpc.sql`                      | 구 `join_chat_room` RPC 제거            |
-| `20260511061734_join_chat_room_security_definer.sql`                  | security definer 적용                   |
-| `20260511075805_add_get_rooms_by_tab_count.sql`                       | `get_rooms_by_tab_count` 추가           |
-| `20260512123000_update_get_rooms_by_tab_sort.sql`                     | 채팅방 목록 정렬 RPC 업데이트           |
-| `20260514000000_update_get_rooms_by_tab_count_add_sort.sql`           | 정렬 옵션 통합                          |
-| `20260514010000_update_get_rooms_by_tab_count_add_pagination.sql`     | 페이지네이션 통합                       |
-| `20260514020000_drop_old_get_rooms_by_tab_count_overload.sql`         | 구 오버로드 제거                        |
-| `20260514030000_replace_join_chat_room_rpc.sql`                       | `join_chat_room` RPC 교체               |
-| `20260515000000_get_rooms_by_tab_count_add_query.sql`                 | 탭 내 검색 파라미터 추가                |
-| `20260515010000_get_rooms_by_tab_count_fix_unread_and_full_room.sql`  | unread 계산 및 정원 마감 필터 수정      |
-| `20260515020000_insert_date_divider_message_trigger.sql`              | 날짜 구분 system 메시지 트리거 추가     |
-| `20260516000000_refactor_chat_room_rpc_concurrency.sql`               | 채팅방 RPC 동시성 제어 정리             |
-| `20260516070131_restrict_chat_room_rpc_execute.sql`                   | 채팅방 RPC 실행 권한 정리               |
-| `20260516070741_restrict_member_management_rpc_to_service_role.sql`   | 참여자 관리 RPC 실행 경계 강화          |
-| `20260516072941_restrict_advisor_security_definer_rpc.sql`            | Advisor 대상 RPC 권한 정리              |
-| `20260516093908_add_chat_room_list_rpc.sql`                           | 채팅방 목록 RPC 통합                    |
-| `20260516113108_add_chat_room_detail_rpc.sql`                         | 채팅방 상세 RPC 추가                    |
-| `20260516121058_drop_unused_chat_room_legacy_rpcs.sql`                | 미사용 채팅방 목록 RPC 제거             |
-| `20260516230042_fix_chat_room_performance_advisor.sql`                | 채팅방 DB 성능 Advisor 정리             |
-| `20260516234000_add_send_chat_message_rpc.sql`                        | 메시지 전송 RPC와 본문 DB 제약 추가     |
-| `20260517130338_restrict_chat_room_write_access.sql`                  | 채팅 테이블 직접 쓰기 권한 폐쇄         |
-| `20260517130631_harden_date_divider_trigger_search_path.sql`          | 날짜 구분 trigger 함수 search_path 보강 |
-| `20260517130931_restrict_write_rpc_execute_to_service_role.sql`       | 쓰기 RPC 실행 경계 service role로 정리  |
-| `20260517141944_harden_message_send_and_date_divider_concurrency.sql` | 메시지 전송과 날짜 구분 동시성 보강     |
+| 파일                                                                  | 내용                                     |
+| --------------------------------------------------------------------- | ---------------------------------------- |
+| `20260506021151_create_kv_table_55ce40ce.sql`                         | KV 테이블 생성                           |
+| `20260507053827_add_pagination_to_get_rooms_by_tab.sql`               | 채팅방 목록 페이지네이션 추가            |
+| `20260507060357_mark_room_read_rpc.sql`                               | `mark_room_read` RPC 추가                |
+| `20260507064503_drop_paginated_get_rooms_by_tab.sql`                  | 기존 페이지네이션 RPC 제거               |
+| `20260507074832_leave_chat_room_rpc.sql`                              | `leave_chat_room` RPC 추가               |
+| `20260511012256_trigger_update_member_count_add_last_joined_at.sql`   | 멤버 수 트리거 및 `last_joined_at` 추가  |
+| `20260511032318_create_join_chat_room_rpc.sql`                        | `join_chat_room` RPC 추가                |
+| `20260511033426_fix_join_chat_room_return_type.sql`                   | `join_chat_room` 반환 타입 수정          |
+| `20260511052223_update_join_chat_room_rpc_active_member_policy.sql`   | 활성 멤버 정책 반영                      |
+| `20260511052342_drop_old_join_chat_room_rpc.sql`                      | 구 `join_chat_room` RPC 제거             |
+| `20260511061734_join_chat_room_security_definer.sql`                  | security definer 적용                    |
+| `20260511075805_add_get_rooms_by_tab_count.sql`                       | `get_rooms_by_tab_count` 추가            |
+| `20260512123000_update_get_rooms_by_tab_sort.sql`                     | 채팅방 목록 정렬 RPC 업데이트            |
+| `20260514000000_update_get_rooms_by_tab_count_add_sort.sql`           | 정렬 옵션 통합                           |
+| `20260514010000_update_get_rooms_by_tab_count_add_pagination.sql`     | 페이지네이션 통합                        |
+| `20260514020000_drop_old_get_rooms_by_tab_count_overload.sql`         | 구 오버로드 제거                         |
+| `20260514030000_replace_join_chat_room_rpc.sql`                       | `join_chat_room` RPC 교체                |
+| `20260515000000_get_rooms_by_tab_count_add_query.sql`                 | 탭 내 검색 파라미터 추가                 |
+| `20260515010000_get_rooms_by_tab_count_fix_unread_and_full_room.sql`  | unread 계산 및 정원 마감 필터 수정       |
+| `20260515020000_insert_date_divider_message_trigger.sql`              | 날짜 구분 system 메시지 트리거 추가      |
+| `20260516000000_refactor_chat_room_rpc_concurrency.sql`               | 채팅방 RPC 동시성 제어 정리              |
+| `20260516070131_restrict_chat_room_rpc_execute.sql`                   | 채팅방 RPC 실행 권한 정리                |
+| `20260516070741_restrict_member_management_rpc_to_service_role.sql`   | 참여자 관리 RPC 실행 경계 강화           |
+| `20260516072941_restrict_advisor_security_definer_rpc.sql`            | Advisor 대상 RPC 권한 정리               |
+| `20260516093908_add_chat_room_list_rpc.sql`                           | 채팅방 목록 RPC 통합                     |
+| `20260516113108_add_chat_room_detail_rpc.sql`                         | 채팅방 상세 RPC 추가                     |
+| `20260516121058_drop_unused_chat_room_legacy_rpcs.sql`                | 미사용 채팅방 목록 RPC 제거              |
+| `20260516230042_fix_chat_room_performance_advisor.sql`                | 채팅방 DB 성능 Advisor 정리              |
+| `20260516234000_add_send_chat_message_rpc.sql`                        | 메시지 전송 RPC와 본문 DB 제약 추가      |
+| `20260517130338_restrict_chat_room_write_access.sql`                  | 채팅 테이블 직접 쓰기 권한 폐쇄          |
+| `20260517130631_harden_date_divider_trigger_search_path.sql`          | 날짜 구분 trigger 함수 search_path 보강  |
+| `20260517130931_restrict_write_rpc_execute_to_service_role.sql`       | 쓰기 RPC 실행 경계 service role로 정리   |
+| `20260517141944_harden_message_send_and_date_divider_concurrency.sql` | 메시지 전송과 날짜 구분 동시성 보강      |
+| `20260518111049_update_chat_room_list_default_sort.sql`               | 채팅방 목록 기본 정렬 최신 메시지순 전환 |
 
 ---
 
@@ -380,7 +381,7 @@ npm run types
 
 - 인증 세션은 `useAuthStore`가 관리합니다.
 - 메인 메뉴 선택 상태는 `useMainMenuStore`가 관리합니다.
-- 채팅방 목록 탭, 정렬값, 검색어(`searchQuery`)는 `useChatRoomStore`가 관리합니다. 탭 변경 시 정렬값과 검색어가 함께 초기화됩니다.
+- 채팅방 목록 탭, 정렬값, 검색어(`searchQuery`)는 `useChatRoomStore`가 관리합니다. 탭 변경 시 정렬값은 탭별 기본값으로, 검색어는 빈 값으로 초기화됩니다.
 - 서버 데이터는 TanStack Query로 관리합니다.
 - Server Action 호출의 pending, toast, router 이동, query invalidation은 `src/hooks/{domain}`의 도메인별 mutation hook에서 관리합니다.
 - Header 프로필 배지와 Settings sidebar는 표시용 프로필 snapshot을 Server Component 경계에서 받아 사용하며, 프로필 수정과 OAuth unlink 후에는 `router.refresh()`로 snapshot을 갱신합니다.

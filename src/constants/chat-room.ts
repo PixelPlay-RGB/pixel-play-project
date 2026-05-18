@@ -31,7 +31,13 @@ export const CHAT_ROOM_EMPTY_MESSAGES: Record<ChatRoomTab, string> = {
   OWNED: "아직 만든 채팅방이 없어요.",
 };
 
-export const DEFAULT_CHAT_ROOM_SORT_OPTION: ChatRoomSortOption = "CREATED_AT_DESC";
+export const DEFAULT_CHAT_ROOM_SORT_OPTION: ChatRoomSortOption = "LAST_MESSAGE_DESC";
+
+export const DEFAULT_CHAT_ROOM_SORT_OPTION_BY_TAB: Record<ChatRoomTab, ChatRoomSortOption> = {
+  JOINED: "LAST_MESSAGE_DESC",
+  NOT_JOINED: "CREATED_AT_DESC",
+  OWNED: "LAST_MESSAGE_DESC",
+};
 
 export const CHAT_ROOM_SORT_LABELS: Record<ChatRoomSortOption, string> = {
   CREATED_AT_DESC: "생성일 최신순",
@@ -40,7 +46,7 @@ export const CHAT_ROOM_SORT_LABELS: Record<ChatRoomSortOption, string> = {
 };
 
 export const CHAT_ROOM_SORT_OPTIONS_BY_TAB: Record<ChatRoomTab, ChatRoomSortOption[]> = {
-  JOINED: ["CREATED_AT_DESC", "LAST_MESSAGE_DESC", "CURRENT_MEMBER_DESC"],
+  JOINED: ["LAST_MESSAGE_DESC", "CREATED_AT_DESC", "CURRENT_MEMBER_DESC"],
   NOT_JOINED: ["CREATED_AT_DESC", "CURRENT_MEMBER_DESC"],
-  OWNED: ["CREATED_AT_DESC", "LAST_MESSAGE_DESC", "CURRENT_MEMBER_DESC"],
+  OWNED: ["LAST_MESSAGE_DESC", "CREATED_AT_DESC", "CURRENT_MEMBER_DESC"],
 };
