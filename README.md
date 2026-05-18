@@ -140,6 +140,7 @@ npm run dev
 - 탭 변경 시 정렬값은 탭별 기본값으로, 검색어는 빈 값으로 초기화합니다.
 - `ChatRoomSearchInput`으로 현재 탭 내에서 채팅방 제목을 필터링할 수 있습니다. 검색 중에는 탭 badge가 `total_count`로 오버라이드됩니다.
 - 채팅방 목록은 `useQuery`와 `keepPreviousData` 기반 번호형 페이지네이션으로 조회합니다.
+- 채팅방 목록 page size는 grid 열 수에 맞춰 모바일 8개, 2열 12개, 3열 12개, 4열 16개로 조정합니다. 초기 skeleton도 같은 반응형 정책을 따릅니다.
 - 페이지네이션은 `ChatRoomPagination`에서 이전/다음, 페이지 번호, 줄임표를 표시하며 첫 페이지의 이전과 마지막 페이지의 다음 버튼은 비활성화합니다.
 - `NOT_JOINED` 탭에서는 정원이 마감된 채팅방을 제외합니다 (`current_member < max_capacity`).
 - 채팅방 카드에는 제목, 설명, 방장 닉네임, 현재 인원, 최대 인원, 생성일을 표시합니다.
@@ -187,6 +188,7 @@ npm run dev
 - 검색 결과는 `search_chat_rooms` RPC와 `useInfiniteQuery`로 페이지 단위 조회합니다.
 - 빈 검색어, 결과 없음, 검색 오류 상태는 서로 다른 안내 문구로 표시합니다.
 - 각 섹션은 더보기 버튼으로 다음 페이지를 불러옵니다.
+- 검색 실패 문구는 `APP_MESSAGE_CODE.error.search.loadFailed`를 통해 전역 메시지 정책을 따릅니다.
 
 ---
 
@@ -392,9 +394,18 @@ npm run types
 
 ---
 
+## 앱 메시지와 에러 처리
+
+- 사용자에게 노출되는 toast, alert, error UI 문구는 `APP_MESSAGE`와 `APP_MESSAGE_CODE`로 관리합니다.
+- Zod와 React Hook Form의 필드 오류 문구는 `FORM_MESSAGE`로 분리합니다.
+- Supabase, Auth, DB 원본 에러는 `console.error`에만 남기고 사용자 UI에는 고정 메시지 코드를 표시합니다.
+- empty state, 버튼 라벨, 일반 안내 문구는 전역 에러 메시지 대상에서 제외하고 해당 컴포넌트의 UI 문구로 유지합니다.
+
+---
+
 ## 실시간 처리
 
-현재 앱은 Supabase Realtime의 Postgres Changes와 Presence를 사용합니다.
+현재 앱은 Supabase Realtime의 Postgres Changes, Presence, Broadcast를 사용합니다.
 
 - `message` INSERT 이벤트로 새 메시지를 목록에 반영합니다.
 - 메시지 Realtime 병합은 최신순 정렬을 유지해 `flex-col-reverse` 레이아웃에서도 새로고침 전후 날짜 구분 위치가 일관되도록 처리합니다.
@@ -409,4 +420,10 @@ npm run types
 
 - 라이브 스트리밍 메뉴는 아직 준비 상태입니다.
 - 메시지 수정/삭제 기능이 미구현 상태입니다.
+- 추가 SRP 분리는 제품 기능 추가나 실제 유지보수 문제가 확인될 때만 진행합니다.
+
+## 마무리 점검 상태
+
 - Supabase 원격 migration history와 로컬 migration 파일명은 2026년 5월 18일 기준으로 정합화되어 있습니다.
+- 채팅 도메인의 직접 쓰기 권한, RPC 실행 경계, 날짜 divider 동시성, 메시지 optimistic reconcile, Presence와 Broadcast 기반 입력 상태 표시는 검증 완료 상태입니다.
+- 최종 UI polish에서 채팅방 목록 skeleton, `/auth/complete-profile` 모바일 카드, `/profile` 모바일 sidebar 초기 렌더, 검색 실패 메시지 중앙화를 정리했습니다.
