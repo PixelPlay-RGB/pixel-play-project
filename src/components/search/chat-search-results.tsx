@@ -3,7 +3,7 @@
 // 채팅방 검색 결과를 조회하고 제목/방장 섹션으로 나눠 표시합니다.
 import ChatRoomCardGridSkeleton from "@/components/chat-room/shared/chat-room-card-grid-skeleton";
 import ChatSearchSection from "@/components/search/chat-search-section";
-import { useChatRoomSearchResults } from "@/hooks/use-chat-room-search-results";
+import { useChatRoomSearchResults } from "@/hooks/search/use-chat-room-search-results";
 import { cn } from "@/lib/utils";
 import { Search } from "lucide-react";
 

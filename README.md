@@ -107,6 +107,7 @@ npm run dev
 - 이메일 OTP 인증 후 비밀번호와 프로필을 완성하는 회원가입 흐름을 제공합니다.
 - 이메일과 비밀번호 기반 로그인을 제공합니다.
 - 회원가입과 새 비밀번호 변경은 Supabase Auth 정책과 맞춰 최소 8자, 영문 소문자, 영문 대문자, 숫자, 특수문자를 요구합니다.
+- 닉네임은 2자 이상 10자 이하의 영문, 숫자, 한글만 허용하며 공백과 특수문자는 사용할 수 없습니다.
 - 로그인과 현재 비밀번호 확인은 기존 계정 호환을 위해 비밀번호 입력 여부만 검증하고, 실제 인증은 Supabase Auth에 위임합니다.
 - Google, GitHub OAuth 로그인과 추가 프로필 입력 흐름을 제공합니다.
 - OAuth 연동 계정 목록을 `linked_providers`로 관리합니다.
@@ -198,7 +199,13 @@ src/
 │   ├── setting/          # 프로필 설정
 │   └── ui/               # shadcn / Base UI 기반 공통 컴포넌트
 ├── constants/            # 상수와 Query Key Factory
-├── hooks/                # React Query, mutation, Realtime, 반응형 훅
+├── hooks/
+│   ├── auth/             # 인증 mutation 훅
+│   ├── chat-room/        # 채팅방 조회, 참여, 멤버 액션, Realtime 훅
+│   ├── common/           # 반응형, observer 등 공통 훅
+│   ├── message/          # 메시지 조회와 전송 훅
+│   ├── profile/          # 프로필 조회, 수정, 닉네임 확인 훅
+│   └── search/           # 검색 결과 조회 훅
 ├── lib/
 │   ├── supabase/         # browser, server, admin client
 │   ├── utils/            # 공통 유틸
@@ -361,7 +368,7 @@ npm run types
 - 메인 메뉴 선택 상태는 `useMainMenuStore`가 관리합니다.
 - 채팅방 목록 탭, 정렬값, 검색어(`searchQuery`)는 `useChatRoomStore`가 관리합니다. 탭 변경 시 정렬값과 검색어가 함께 초기화됩니다.
 - 서버 데이터는 TanStack Query로 관리합니다.
-- Server Action 호출의 pending, toast, router 이동, query invalidation은 도메인별 mutation hook에서 관리합니다.
+- Server Action 호출의 pending, toast, router 이동, query invalidation은 `src/hooks/{domain}`의 도메인별 mutation hook에서 관리합니다.
 - Query Key는 `src/constants/query-keys.ts`의 `QUERY_KEYS`를 기준으로 생성합니다.
 - Supabase 스키마 타입은 `src/types/database.types.ts`를 기준으로 사용합니다.
 

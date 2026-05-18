@@ -5,9 +5,9 @@
 import { MessageInput } from "@/components/chat-room/message/message-input";
 import { MessageList } from "@/components/chat-room/message/message-list";
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
-import { useChatRoomDetail } from "@/hooks/use-chat-room-detail";
-import { useChatRoomReadLifecycle } from "@/hooks/use-chat-room-read-lifecycle";
-import useMessages from "@/hooks/use-messages";
+import { useChatRoomDetail } from "@/hooks/chat-room/use-chat-room-detail";
+import { useChatRoomReadLifecycle } from "@/hooks/chat-room/use-chat-room-read-lifecycle";
+import useMessages from "@/hooks/message/use-messages";
 import { getAppMessage } from "@/utils/app-message";
 
 interface Props {

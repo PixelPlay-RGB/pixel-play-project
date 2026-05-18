@@ -5,7 +5,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { QUERY_KEYS } from "@/constants/query-keys";
-import { resolveProfileQueryErrorCode, useUser } from "@/hooks/use-profile";
+import { resolveProfileQueryErrorCode, useUser } from "@/hooks/profile/use-profile";
 import { createClient } from "@/lib/supabase/client";
 import type { ChatRoomDetailData } from "@/utils/chat-room-detail";
 import { EMPTY_CHAT_ROOM_DETAIL, parseChatRoomDetail } from "@/utils/chat-room-detail";

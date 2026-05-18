@@ -3,7 +3,7 @@
 
 import SettingSidebar from "@/components/setting/setting-sidebar";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/common/use-mobile";
 import { ReactNode } from "react";
 
 export function SettingShell({ children }: { children: ReactNode }) {

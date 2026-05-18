@@ -4,7 +4,7 @@ import ChatRoomList from "@/components/chat-room-list/chat-room-list";
 import MainMenuSidebarItemRenderer from "@/components/common/main-menu-sidebar-item";
 import LiveList from "@/components/live/live-list";
 import { MAIN_MENU_SIDEBAR_ITEMS } from "@/constants/main-menu-sidebar";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/common/use-mobile";
 import { useMainMenuStore } from "@/stores/main-menu";
 import { cn } from "@/lib/utils";
 import type { MainMenuSidebarKey } from "@/types/main-menu-sidebar";

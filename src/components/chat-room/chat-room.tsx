@@ -10,8 +10,8 @@ import { ChatRoomMemberSidebar } from "@/components/chat-room/chat-room-member-s
 import { ChatRoomMessageSection } from "@/components/chat-room/chat-room-message-section";
 import { Spinner } from "@/components/ui/spinner";
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
-import { useChatRoomDetail } from "@/hooks/use-chat-room-detail";
-import { useChatRoomDetailRealtimeInvalidation } from "@/hooks/use-chat-room-detail-realtime-invalidation";
+import { useChatRoomDetail } from "@/hooks/chat-room/use-chat-room-detail";
+import { useChatRoomDetailRealtimeInvalidation } from "@/hooks/chat-room/use-chat-room-detail-realtime-invalidation";
 
 interface Props {
   roomId: string;

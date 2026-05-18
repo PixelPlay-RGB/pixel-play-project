@@ -1,7 +1,7 @@
 "use client";
 
 import { Separator } from "@/components/ui/separator";
-import { useLoginMutation, useOAuthLoginMutation } from "@/hooks/use-login-mutation";
+import { useLoginMutation, useOAuthLoginMutation } from "@/hooks/auth/use-login-mutation";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import LoginForm from "./login-form";

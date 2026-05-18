@@ -8,6 +8,7 @@ import { Controller, useForm, useWatch } from "react-hook-form";
 import ProfileAvatarUpload from "@/components/setting/profile/profile-avatar-upload";
 import ProfileCard from "@/components/setting/profile/profile-card";
 import ProfileProvidersCard from "@/components/setting/profile/profile-providers-card";
+import ProfileFormSkeleton from "@/components/setting/profile/profile-form-skeleton";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field";
 import {
@@ -19,23 +20,18 @@ import {
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 
-import ProfileFormSkeleton from "@/components/setting/profile/profile-form-skeleton";
-import { useCheckNicknameMutation } from "@/hooks/use-signup-mutations";
-import { useUpdateProfileMutation } from "@/hooks/use-profile-mutations";
-import { resolveProfileQueryErrorCode, useUser } from "@/hooks/use-profile";
+import { useNicknameAvailability } from "@/hooks/profile/use-nickname-availability";
+import { useUpdateProfileMutation } from "@/hooks/profile/use-profile-mutations";
+import { resolveProfileQueryErrorCode, useUser } from "@/hooks/profile/use-profile";
 import { cn } from "@/lib/utils";
 import { ProfileFormValues, profileSchema } from "@/lib/zod/auth";
-import type { NicknameStatus } from "@/types/auth";
 import { formatDate } from "@/utils/format";
 import { getAppMessage } from "@/utils/app-message";
 
 export default function ProfileForm() {
   const { data: user, error: userError, isError: isUserError, isLoading } = useUser();
 
-  const [nicknameStatus, setNicknameStatus] = useState<NicknameStatus>("idle");
-  const [verifiedNickname, setVerifiedNickname] = useState("");
   const [pendingFile, setPendingFile] = useState<File | null>(null);
-  const checkNicknameMutation = useCheckNicknameMutation();
   const updateProfileMutation = useUpdateProfileMutation();
 
   const {
@@ -54,8 +50,17 @@ export default function ProfileForm() {
     },
   });
 
+  const isSaving = updateProfileMutation.isPending;
+  const nicknameAvailability = useNicknameAvailability({
+    getNickname: () => getValues("nickname"),
+    hasNicknameError: () => !!errors.nickname,
+    isBlocked: isSaving,
+    currentNickname: user?.nickname,
+  });
+
   // blob URL 메모리 누수 방지: photoUrl 이 blob: 으로 바뀔 때마다 이전 blob revoke + unmount cleanup
   const photoUrl = useWatch({ control, name: "photoUrl" });
+  const nicknameValue = useWatch({ control, name: "nickname" });
   useEffect(() => {
     return () => {
       if (photoUrl?.startsWith("blob:")) URL.revokeObjectURL(photoUrl);
@@ -81,40 +86,14 @@ export default function ProfileForm() {
   }
 
   // 파생 상태 계산
-  const nicknameChanged = !!dirtyFields.nickname;
-  const isSaving = updateProfileMutation.isPending;
-  const isBusy = isSaving || checkNicknameMutation.isPending;
+  const nicknameChanged = nicknameValue !== user.nickname;
+  const isBusy = isSaving || nicknameAvailability.isCheckingNickname;
   const canSave =
-    Object.keys(errors).length === 0 && (!nicknameChanged || nicknameStatus === "available");
-
-  // 핸들러 정의
-  const handleNicknameChange = (value: string) => {
-    if (value === user.nickname) {
-      setNicknameStatus("idle");
-    } else if (value === verifiedNickname) {
-      setNicknameStatus("available");
-    } else {
-      setNicknameStatus("idle");
-    }
-  };
+    Object.keys(errors).length === 0 &&
+    (!nicknameChanged || nicknameAvailability.isNicknameAvailable);
 
   const handleCheckNickname = async () => {
-    const nickname = getValues("nickname");
-    if (isBusy || !nickname || errors.nickname) return;
-
-    setNicknameStatus("checking");
-
-    const result = await checkNicknameMutation.mutateAsync(nickname).catch(() => ({
-      success: false,
-    }));
-
-    if (!result.success) {
-      setNicknameStatus("taken");
-      return;
-    }
-
-    setVerifiedNickname(nickname);
-    setNicknameStatus("available");
+    await nicknameAvailability.checkNickname();
   };
 
   const handleFileChange = (file: File | null) => {
@@ -139,7 +118,7 @@ export default function ProfileForm() {
       nickname: user.nickname,
       photoUrl: user.photo_url ?? null,
     });
-    setNicknameStatus("idle");
+    nicknameAvailability.resetNicknameAvailability();
     setPendingFile(null);
   };
 
@@ -171,7 +150,7 @@ export default function ProfileForm() {
       photoUrl: result.photoUrl,
     });
 
-    setVerifiedNickname(data.nickname);
+    nicknameAvailability.markNicknameAvailable(data.nickname);
     setPendingFile(null);
   };
 
@@ -202,7 +181,7 @@ export default function ProfileForm() {
           render={({ field: { value } }) => (
             <ProfileAvatarUpload
               photoUrl={value || null}
-              nickname={getValues("nickname")}
+              nickname={nicknameValue}
               onFileChange={handleFileChange}
               disabled={isSaving}
             />
@@ -213,10 +192,11 @@ export default function ProfileForm() {
           <Label htmlFor="profile-nickname">닉네임</Label>
           <InputGroup
             className={cn(
-              nicknameStatus === "available" &&
+              nicknameAvailability.nicknameStatus === "available" &&
                 nicknameChanged &&
                 "border-brand ring-brand/20 ring-3",
-              (nicknameStatus === "taken" || errors.nickname) && "border-destructive",
+              (nicknameAvailability.nicknameStatus === "taken" || errors.nickname) &&
+                "border-destructive",
             )}
           >
             <InputGroupAddon align="inline-start">
@@ -230,18 +210,8 @@ export default function ProfileForm() {
                   {...field}
                   id="profile-nickname"
                   onChange={(e) => {
-                    const val = e.target.value.replace(/^\s+/, "");
-                    e.target.value = val;
-
-                    field.onChange(val);
-                    handleNicknameChange(val);
-                  }}
-                  onBlur={(e) => {
-                    const trim = e.target.value.trim();
-                    e.target.value = trim;
-
-                    field.onChange(trim);
-                    handleNicknameChange(trim);
+                    field.onChange(e.target.value);
+                    nicknameAvailability.syncNicknameStatus(e.target.value);
                   }}
                   disabled={isBusy}
                 />
@@ -255,9 +225,9 @@ export default function ProfileForm() {
                 disabled={isBusy || !!errors.nickname || !nicknameChanged}
                 className="text-brand border-brand/40"
               >
-                {checkNicknameMutation.isPending ? (
+                {nicknameAvailability.isCheckingNickname ? (
                   <Spinner />
-                ) : nicknameStatus === "available" && nicknameChanged ? (
+                ) : nicknameAvailability.nicknameStatus === "available" && nicknameChanged ? (
                   "사용가능"
                 ) : !nicknameChanged ? (
                   "사용 중"
@@ -267,10 +237,10 @@ export default function ProfileForm() {
               </InputGroupButton>
             </InputGroupAddon>
           </InputGroup>
-          {nicknameStatus === "available" && (
+          {nicknameAvailability.nicknameStatus === "available" && nicknameChanged && (
             <p className="text-brand text-xs">사용 가능한 닉네임입니다.</p>
           )}
-          {nicknameStatus === "taken" && (
+          {nicknameAvailability.nicknameStatus === "taken" && (
             <p className="text-destructive text-xs">이미 사용 중인 닉네임입니다.</p>
           )}
           <FieldError errors={[errors.nickname]} />

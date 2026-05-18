@@ -15,8 +15,8 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { SETTING_MENU } from "@/constants/setting-menu";
-import { useLogout } from "@/hooks/use-logout";
-import { useUser } from "@/hooks/use-profile";
+import { useLogout } from "@/hooks/auth/use-logout";
+import { useUser } from "@/hooks/profile/use-profile";
 import { LogOut } from "lucide-react";
 import { usePathname } from "next/navigation";
 

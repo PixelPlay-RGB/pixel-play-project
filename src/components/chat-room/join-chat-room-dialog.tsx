@@ -16,7 +16,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Spinner } from "@/components/ui/spinner";
-import { useJoinChatRoom } from "@/hooks/use-join-chat-room";
+import { useJoinChatRoom } from "@/hooks/chat-room/use-join-chat-room";
 import { cn } from "@/lib/utils";
 
 interface Props {

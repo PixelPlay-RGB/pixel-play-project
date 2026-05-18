@@ -19,7 +19,7 @@ import {
   CHAT_ROOM_MIN_CAPACITY,
   CHAT_ROOM_TITLE_MAX_LENGTH,
 } from "@/constants/chat-room";
-import { useCreateChatRoom } from "@/hooks/use-create-chat-room";
+import { useCreateChatRoom } from "@/hooks/chat-room/use-create-chat-room";
 import { cn } from "@/lib/utils";
 import { CREATE_CHAT_ROOM_DEFAULT_VALUES, createChatRoomSchema } from "@/lib/zod/chat-room";
 import type { CreateChatRoomInput } from "@/lib/zod/chat-room";

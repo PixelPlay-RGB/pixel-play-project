@@ -6,8 +6,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { SETTING_MENU } from "@/constants/setting-menu";
-import { useLogout } from "@/hooks/use-logout";
-import { useUser } from "@/hooks/use-profile";
+import { useLogout } from "@/hooks/auth/use-logout";
+import { useUser } from "@/hooks/profile/use-profile";
 import { cn } from "@/lib/utils";
 import { getAvatarFallbackText } from "@/utils/avatar";
 import Link from "next/link";

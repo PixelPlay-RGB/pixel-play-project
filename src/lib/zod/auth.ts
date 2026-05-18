@@ -25,11 +25,8 @@ export const signUpBaseSchema = z.object({
     .string()
     .min(2, { error: FORM_MESSAGE.auth.nicknameMin })
     .max(10, { error: FORM_MESSAGE.auth.nicknameMax })
-    .regex(/^[a-zA-Z0-9가-힣\s]+$/, {
+    .regex(/^[a-zA-Z0-9가-힣]+$/, {
       error: FORM_MESSAGE.auth.nicknameInvalidCharacters,
-    })
-    .refine((val) => val.trim().length > 0, {
-      error: FORM_MESSAGE.auth.nicknameBlank,
     }),
   birth: z.string().min(1, { error: FORM_MESSAGE.auth.birthRequired }),
   phone: z.string().regex(/^010-?\d{4}-?\d{4}$/, { error: FORM_MESSAGE.auth.phoneInvalid }),

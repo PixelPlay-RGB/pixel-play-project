@@ -6,8 +6,8 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 import { CHAT_ROOM_MOBILE_PAGE_SIZE, CHAT_ROOM_PAGE_SIZE } from "@/constants/chat-room";
 import { QUERY_KEYS } from "@/constants/query-keys";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { useUser } from "@/hooks/use-profile";
+import { useIsMobile } from "@/hooks/common/use-mobile";
+import { useUser } from "@/hooks/profile/use-profile";
 import { createClient } from "@/lib/supabase/client";
 import type {
   ChatRoomCounts,

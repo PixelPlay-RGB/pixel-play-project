@@ -18,14 +18,14 @@ import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import { SIGNUP_FORM_DEFAULTS } from "@/constants/auth";
 import { FORM_MESSAGE } from "@/constants/form-message";
 import {
-  useCheckNicknameMutation,
   useCompleteSignupMutation,
   useSendOtpMutation,
   useVerifyOtpMutation,
-} from "@/hooks/use-signup-mutations";
+} from "@/hooks/auth/use-signup-mutations";
+import { useNicknameAvailability } from "@/hooks/profile/use-nickname-availability";
 import { cn } from "@/lib/utils";
 import { signUpSchema } from "@/lib/zod/auth";
-import type { NicknameStatus, OtpStatus, SignUpFormValues } from "@/types/auth";
+import type { OtpStatus, SignUpFormValues } from "@/types/auth";
 import { formatPhone } from "@/utils/format";
 import { toastAppError } from "@/utils/toast-message";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -37,12 +37,9 @@ export default function SignupForm() {
   const [otpStatus, setOtpStatus] = useState<OtpStatus>("idle");
   const [otpCode, setOtpCode] = useState("");
   const [otpError, setOtpError] = useState("");
-  const [nicknameStatus, setNicknameStatus] = useState<NicknameStatus>("idle");
-  const [verifiedNickname, setVerifiedNickname] = useState("");
 
   const sendOtpMutation = useSendOtpMutation();
   const verifyOtpMutation = useVerifyOtpMutation();
-  const checkNicknameMutation = useCheckNicknameMutation();
   const completeSignupMutation = useCompleteSignupMutation();
 
   const emailVerified = otpStatus === "verified";
@@ -62,29 +59,29 @@ export default function SignupForm() {
     defaultValues: SIGNUP_FORM_DEFAULTS,
   });
 
-  const isBusy =
+  const isFormBusy =
     sendOtpMutation.isPending ||
     verifyOtpMutation.isPending ||
-    checkNicknameMutation.isPending ||
     completeSignupMutation.isPending ||
     isSubmitting;
-  const canSubmit = emailVerified && nicknameStatus === "available" && !isBusy;
+
+  const {
+    nicknameStatus,
+    isCheckingNickname,
+    isNicknameAvailable,
+    checkNickname,
+    syncNicknameStatus,
+  } = useNicknameAvailability({
+    getNickname: () => getValues("nickname"),
+    hasNicknameError: () => !!errors.nickname,
+    isBlocked: isFormBusy,
+  });
+
+  const isBusy = isFormBusy || isCheckingNickname;
+  const canSubmit = emailVerified && isNicknameAvailable && !isBusy;
 
   const handleCheckNickname = async () => {
-    const nickname = getValues("nickname");
-    if (isBusy || !nickname || errors.nickname) return;
-
-    setNicknameStatus("checking");
-    const result = await checkNicknameMutation.mutateAsync(nickname).catch(() => ({
-      success: false,
-    }));
-
-    if (result.success) {
-      setVerifiedNickname(nickname);
-      setNicknameStatus("available");
-    } else {
-      setNicknameStatus("taken");
-    }
+    await checkNickname();
   };
 
   const handleSendOtp = async () => {
@@ -143,7 +140,7 @@ export default function SignupForm() {
       return;
     }
 
-    if (nicknameStatus !== "available") {
+    if (!isNicknameAvailable) {
       toastAppError(APP_MESSAGE_CODE.error.auth.nicknameCheckRequired);
       return;
     }
@@ -292,16 +289,7 @@ export default function SignupForm() {
             <InputGroupInput
               {...register("nickname", {
                 onChange: (e) => {
-                  const val = e.target.value.replace(/^\s+/, "");
-                  e.target.value = val;
-
-                  setNicknameStatus(val && val === verifiedNickname ? "available" : "idle");
-                },
-                onBlur: (e) => {
-                  const trim = e.target.value.trim();
-                  e.target.value = trim;
-
-                  setNicknameStatus(trim && trim === verifiedNickname ? "available" : "idle");
+                  syncNicknameStatus(e.target.value);
                 },
               })}
               type="text"
@@ -318,7 +306,7 @@ export default function SignupForm() {
                 disabled={isBusy || !!errors.nickname || !dirtyFields.nickname}
                 className="border-brand/40 text-brand hover:bg-brand cursor-pointer hover:text-white"
               >
-                {checkNicknameMutation.isPending ? (
+                {isCheckingNickname ? (
                   <Spinner />
                 ) : nicknameStatus === "available" ? (
                   "사용가능"

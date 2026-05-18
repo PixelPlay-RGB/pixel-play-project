@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { OAUTH_PROVIDER_META, OAUTH_PROVIDERS } from "@/constants/auth";
-import { useUser } from "@/hooks/use-profile";
+import { useUser } from "@/hooks/profile/use-profile";
 import { cn } from "@/lib/utils";
 import { OAuthProvider } from "@/types/auth";
 import Image from "next/image";

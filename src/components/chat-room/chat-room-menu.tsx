@@ -19,8 +19,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
-import { useChatRoomDetail } from "@/hooks/use-chat-room-detail";
-import { useLeaveChatRoom } from "@/hooks/use-leave-chat-room";
+import { useChatRoomDetail } from "@/hooks/chat-room/use-chat-room-detail";
+import { useLeaveChatRoom } from "@/hooks/chat-room/use-leave-chat-room";
 import { toastAppInfo } from "@/utils/toast-message";
 
 interface Props {

@@ -6,7 +6,7 @@ import { Users } from "lucide-react";
 
 import { ChatRoomMenu } from "@/components/chat-room/chat-room-menu";
 import { Button } from "@/components/ui/button";
-import { useChatRoomDetail } from "@/hooks/use-chat-room-detail";
+import { useChatRoomDetail } from "@/hooks/chat-room/use-chat-room-detail";
 
 interface Props {
   roomId: string;

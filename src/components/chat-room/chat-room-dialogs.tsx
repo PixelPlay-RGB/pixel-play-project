@@ -4,7 +4,7 @@
 
 import { JoinChatRoomDialog } from "@/components/chat-room/join-chat-room-dialog";
 import { KickedRoomAlertDialog } from "@/components/chat-room/member/kicked-room-alert-dialog";
-import { useChatRoomDetail } from "@/hooks/use-chat-room-detail";
+import { useChatRoomDetail } from "@/hooks/chat-room/use-chat-room-detail";
 
 interface Props {
   roomId: string;

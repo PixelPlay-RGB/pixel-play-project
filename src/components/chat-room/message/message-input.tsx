@@ -7,7 +7,7 @@ import ChatEmojiPicker from "@/components/chat-room/chat-emoji-picker";
 import { Button } from "@/components/ui/button";
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import { MESSAGE_CONTENT_MAX_LENGTH } from "@/constants/message";
-import { useSendMessage } from "@/hooks/use-send-message";
+import { useSendMessage } from "@/hooks/message/use-send-message";
 import { cn } from "@/lib/utils";
 import { messageContentSchema } from "@/lib/zod/message";
 import { getAppMessageTitle } from "@/utils/app-message";

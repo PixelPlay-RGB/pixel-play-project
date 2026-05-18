@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Spinner } from "@/components/ui/spinner";
 import { MEMBER_ACTION_COPY, type MemberAction } from "@/constants/chat-room-member";
-import { useChatRoomMemberAction } from "@/hooks/use-chat-room-member-action";
+import { useChatRoomMemberAction } from "@/hooks/chat-room/use-chat-room-member-action";
 import { cn } from "@/lib/utils";
 
 interface Props {

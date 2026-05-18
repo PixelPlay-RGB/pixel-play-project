@@ -1,5 +1,5 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useChatRoomDetail } from "@/hooks/use-chat-room-detail";
+import { useChatRoomDetail } from "@/hooks/chat-room/use-chat-room-detail";
 import { cn } from "@/lib/utils";
 import { MemberItem } from "./member-item";
 

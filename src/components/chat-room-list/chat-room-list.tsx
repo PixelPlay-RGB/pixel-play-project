@@ -11,8 +11,8 @@ import {
   CHAT_ROOM_SORT_OPTIONS_BY_TAB,
   DEFAULT_CHAT_ROOM_SORT_OPTION,
 } from "@/constants/chat-room";
-import { useChatRoomList } from "@/hooks/use-chat-room-list";
-import { resolveProfileQueryErrorCode, useUser } from "@/hooks/use-profile";
+import { useChatRoomList } from "@/hooks/chat-room/use-chat-room-list";
+import { resolveProfileQueryErrorCode, useUser } from "@/hooks/profile/use-profile";
 import { useChatRoomStore } from "@/stores/chat-room";
 import { getAppMessage } from "@/utils/app-message";
 import { EMPTY_CHAT_ROOM_LIST } from "@/utils/chat-room-list";

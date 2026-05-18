@@ -15,11 +15,10 @@ import {
 import { RadioGroup } from "@/components/ui/radio-group";
 import { Spinner } from "@/components/ui/spinner";
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
-import { useCompleteProfileMutation } from "@/hooks/use-complete-profile-mutation";
-import { useCheckNicknameMutation } from "@/hooks/use-signup-mutations";
+import { useCompleteProfileMutation } from "@/hooks/auth/use-complete-profile-mutation";
+import { useNicknameAvailability } from "@/hooks/profile/use-nickname-availability";
 import { cn } from "@/lib/utils";
 import { completeOAuthProfileSchema, type CompleteOAuthProfileValues } from "@/lib/zod/auth";
-import type { NicknameStatus } from "@/types/auth";
 import { formatPhone } from "@/utils/format";
 import { toastAppError } from "@/utils/toast-message";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -28,10 +27,7 @@ import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 
 export default function CompleteProfileForm() {
-  const [nicknameStatus, setNicknameStatus] = useState<NicknameStatus>("idle");
-  const [verifiedNickname, setVerifiedNickname] = useState("");
   const [isCancelling, setIsCancelling] = useState(false);
-  const checkNicknameMutation = useCheckNicknameMutation();
   const completeProfileMutation = useCompleteProfileMutation();
 
   const {
@@ -46,31 +42,28 @@ export default function CompleteProfileForm() {
     defaultValues: { name: "", nickname: "", birth: "", phone: "", gender: "male" },
   });
 
-  const isBusy =
-    isSubmitting ||
-    isCancelling ||
-    checkNicknameMutation.isPending ||
-    completeProfileMutation.isPending;
+  const isFormBusy = isSubmitting || isCancelling || completeProfileMutation.isPending;
+
+  const {
+    nicknameStatus,
+    isCheckingNickname,
+    isNicknameAvailable,
+    checkNickname,
+    syncNicknameStatus,
+  } = useNicknameAvailability({
+    getNickname: () => getValues("nickname"),
+    hasNicknameError: () => !!errors.nickname,
+    isBlocked: isFormBusy,
+  });
+
+  const isBusy = isFormBusy || isCheckingNickname;
 
   const handleCheckNickname = async () => {
-    const nickname = getValues("nickname");
-    if (isBusy || !nickname || errors.nickname) return;
-
-    setNicknameStatus("checking");
-    const result = await checkNicknameMutation.mutateAsync(nickname).catch(() => ({
-      success: false,
-    }));
-
-    if (result.success) {
-      setVerifiedNickname(nickname);
-      setNicknameStatus("available");
-    } else {
-      setNicknameStatus("taken");
-    }
+    await checkNickname();
   };
 
   const onSubmit = async (data: CompleteOAuthProfileValues) => {
-    if (nicknameStatus !== "available") {
+    if (!isNicknameAvailable) {
       toastAppError(APP_MESSAGE_CODE.error.auth.nicknameCheckRequired);
       return;
     }
@@ -108,8 +101,7 @@ export default function CompleteProfileForm() {
             <InputGroupInput
               {...register("nickname", {
                 onChange: (e) => {
-                  const val = e.target.value;
-                  setNicknameStatus(val && val === verifiedNickname ? "available" : "idle");
+                  syncNicknameStatus(e.target.value);
                 },
               })}
               type="text"
@@ -126,7 +118,7 @@ export default function CompleteProfileForm() {
                 disabled={isBusy || !!errors.nickname || !dirtyFields.nickname}
                 className="border-brand/40 text-brand hover:bg-brand cursor-pointer hover:text-white"
               >
-                {checkNicknameMutation.isPending ? (
+                {isCheckingNickname ? (
                   <Spinner />
                 ) : nicknameStatus === "available" ? (
                   "사용가능"
@@ -196,7 +188,7 @@ export default function CompleteProfileForm() {
 
       <Button
         type="submit"
-        disabled={isBusy || !isValid || nicknameStatus !== "available"}
+        disabled={isBusy || !isValid || !isNicknameAvailable}
         className={cn(
           "w-full cursor-pointer py-5 font-bold tracking-widest uppercase disabled:opacity-40",
           "bg-brand hover:bg-brand/85 text-white",
