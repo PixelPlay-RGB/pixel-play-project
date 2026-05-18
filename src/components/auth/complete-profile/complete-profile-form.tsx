@@ -20,6 +20,7 @@ import { useCompleteProfileMutation } from "@/hooks/auth/use-complete-profile-mu
 import { useNicknameAvailability } from "@/hooks/profile/use-nickname-availability";
 import { cn } from "@/lib/utils";
 import { completeOAuthProfileSchema, type CompleteOAuthProfileValues } from "@/lib/zod/auth";
+import { getTodayDateInputValue } from "@/utils/date";
 import { formatPhone } from "@/utils/format";
 import { toastAppError } from "@/utils/toast-message";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -142,6 +143,7 @@ export default function CompleteProfileForm() {
           <AuthInputGroup
             {...register("birth")}
             type="date"
+            max={getTodayDateInputValue()}
             placeholder="생년월일"
             icon={<CalendarDays />}
             aria-invalid={!!errors.birth}

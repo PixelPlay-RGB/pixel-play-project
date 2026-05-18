@@ -17,6 +17,8 @@ export const FORM_MESSAGE = {
     nicknameMax: "닉네임은 10자 이하여야 합니다.",
     nicknameInvalidCharacters: "공백과 특수문자는 사용할 수 없습니다.",
     birthRequired: "생년월일을 입력해주세요.",
+    birthInvalid: "올바른 생년월일 형식을 입력해주세요.",
+    birthFuture: "생년월일은 오늘 이후 날짜를 선택할 수 없습니다.",
     phoneInvalid: "올바른 휴대전화번호 형식을 입력해주세요.",
     genderRequired: "성별을 선택해주세요.",
     otpInvalid: "인증 코드가 올바르지 않습니다.",

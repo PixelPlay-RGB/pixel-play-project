@@ -1,5 +1,6 @@
 // auth Zod 검증 스키마를 정의합니다.
 import { FORM_MESSAGE } from "@/constants/form-message";
+import { isDateInputValueOnOrBeforeToday, isValidDateInputValue } from "@/utils/date";
 import { z } from "zod";
 
 export const loginSchema = z.object({
@@ -29,7 +30,11 @@ export const signUpBaseSchema = z.object({
     .regex(/^[a-zA-Z0-9가-힣]+$/, {
       error: FORM_MESSAGE.auth.nicknameInvalidCharacters,
     }),
-  birth: z.string().min(1, { error: FORM_MESSAGE.auth.birthRequired }),
+  birth: z
+    .string()
+    .min(1, { error: FORM_MESSAGE.auth.birthRequired })
+    .refine(isValidDateInputValue, { error: FORM_MESSAGE.auth.birthInvalid })
+    .refine(isDateInputValueOnOrBeforeToday, { error: FORM_MESSAGE.auth.birthFuture }),
   phone: z.string().regex(/^010-?\d{4}-?\d{4}$/, { error: FORM_MESSAGE.auth.phoneInvalid }),
   gender: z.enum(["male", "female", "none"], { error: FORM_MESSAGE.auth.genderRequired }),
 });

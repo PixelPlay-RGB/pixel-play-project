@@ -27,6 +27,7 @@ import { useNicknameAvailability } from "@/hooks/profile/use-nickname-availabili
 import { cn } from "@/lib/utils";
 import { signUpSchema } from "@/lib/zod/auth";
 import type { OtpStatus, SignUpFormValues } from "@/types/auth";
+import { getTodayDateInputValue } from "@/utils/date";
 import { formatPhone } from "@/utils/format";
 import { toastAppError } from "@/utils/toast-message";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -331,6 +332,7 @@ export default function SignupForm() {
             {...register("birth")}
             name="birth"
             type="date"
+            max={getTodayDateInputValue()}
             placeholder="생년월일"
             icon={<CalendarDays />}
             aria-invalid={!!errors.birth}
