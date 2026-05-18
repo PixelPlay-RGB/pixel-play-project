@@ -1,6 +1,6 @@
 // 라우트 레이아웃을 구성합니다.
-import Footer from "@/components/common/footer";
 import Header from "@/components/common/header";
+import RouteFooter from "@/components/common/route-footer";
 import { Toaster } from "@/components/ui/sonner";
 import Providers from "@/components/common/providers";
 import { cn } from "@/lib/utils";
@@ -42,7 +42,7 @@ export default function RootLayout({
           <Header />
           <AuthToastHandler />
           <main className="flex flex-1 flex-col">{children}</main>
-          <Footer />
+          <RouteFooter />
         </Providers>
       </body>
     </html>
