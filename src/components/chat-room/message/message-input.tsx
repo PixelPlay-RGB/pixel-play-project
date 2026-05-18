@@ -1,12 +1,14 @@
 "use client";
 
 import { SendHorizontal } from "lucide-react";
-import { type FormEvent, useEffect, useRef, useState } from "react";
+import { type FormEvent, useRef } from "react";
 
 import ChatEmojiPicker from "@/components/chat-room/chat-emoji-picker";
 import { Button } from "@/components/ui/button";
 import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
 import { MESSAGE_CONTENT_MAX_LENGTH } from "@/constants/message";
+import { useAutoResizeTextarea } from "@/hooks/common/use-auto-resize-textarea";
+import { useMessageDraft } from "@/hooks/message/use-message-draft";
 import { useSendMessage } from "@/hooks/message/use-send-message";
 import { cn } from "@/lib/utils";
 import { messageContentSchema } from "@/lib/zod/message";
@@ -23,21 +25,15 @@ const MAX_TEXTAREA_HEIGHT_PX = 128; // max-h-32 (8rem)
 
 export function MessageInput({ roomId, disabled = false, disabledHint }: Props) {
   const sendMessageMutation = useSendMessage(roomId);
-  const [draft, setDraft] = useState("");
+  const { draft, setDraft, appendDraft, clearDraft } = useMessageDraft(MESSAGE_CONTENT_MAX_LENGTH);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const submitDisabled = disabled || sendMessageMutation.isPending;
 
-  // draft 변경마다 높이 자동 조절 + max-h 초과 시에만 스크롤 노출
-  // overflow-y는 기본 hidden → max-h(8rem=128px) 초과 시 auto로 전환
-  useEffect(() => {
-    const el = textareaRef.current;
-    if (!el) return;
-    el.style.height = "auto";
-    const scrollHeight = el.scrollHeight;
-    el.style.height = `${scrollHeight}px`;
-    // Tailwind max-h-32와 동기화: 초과 시에만 스크롤바 노출
-    el.style.overflowY = scrollHeight > MAX_TEXTAREA_HEIGHT_PX ? "auto" : "hidden";
-  }, [draft]);
+  useAutoResizeTextarea({
+    textareaRef,
+    value: draft,
+    maxHeightPx: MAX_TEXTAREA_HEIGHT_PX,
+  });
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -58,7 +54,7 @@ export function MessageInput({ roomId, disabled = false, disabledHint }: Props) 
       const result = await sendMessageMutation.mutateAsync(content);
 
       if (result.success) {
-        setDraft("");
+        clearDraft();
       }
     } catch {
       return;
@@ -70,12 +66,7 @@ export function MessageInput({ roomId, disabled = false, disabledHint }: Props) 
       onSubmit={handleSubmit}
       className="border-border bg-background/95 flex shrink-0 items-end gap-2 border-t px-3 py-2 backdrop-blur-sm"
     >
-      <ChatEmojiPicker
-        disabled={submitDisabled}
-        onEmojiSelect={(emoji) =>
-          setDraft((prev) => (prev + emoji).slice(0, MESSAGE_CONTENT_MAX_LENGTH))
-        }
-      />
+      <ChatEmojiPicker disabled={submitDisabled} onEmojiSelect={appendDraft} />
       <textarea
         ref={textareaRef}
         value={draft}
@@ -83,7 +74,7 @@ export function MessageInput({ roomId, disabled = false, disabledHint }: Props) 
         rows={1}
         maxLength={MESSAGE_CONTENT_MAX_LENGTH}
         title={disabled ? disabledHint : undefined}
-        onChange={(e) => setDraft(e.target.value.slice(0, MESSAGE_CONTENT_MAX_LENGTH))}
+        onChange={(e) => setDraft(e.target.value)}
         onKeyDown={(e) => {
           if (submitDisabled) return;
           if (e.key === "Enter" && !e.shiftKey) {

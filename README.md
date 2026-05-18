@@ -160,9 +160,11 @@ npm run dev
 
 - 메시지 목록은 `useInfiniteQuery`로 최신 메시지부터 조회합니다.
 - 상단 근접 시 이전 메시지를 추가로 가져옵니다.
+- 메시지 목록 viewport 상태는 `useMessageListViewport`가 관리하며 이전 메시지 추가 시 현재 스크롤 위치를 보정합니다.
+- 사용자가 과거 메시지 위치에 있을 때는 목록 하단에 최근 메시지 이동 버튼을 표시합니다.
 - 새 메시지는 Supabase Realtime `postgres_changes` INSERT 이벤트를 받아 React Query cache에 `created_at desc` 순서로 병합합니다.
 - 텍스트 메시지는 `sendMessageAction`이 `send_chat_message` RPC를 호출하는 방식으로 전송하고 이모지 입력을 제공합니다.
-- 메시지 입력은 auto-resize `textarea`로 구현합니다. 최대 높이는 `max-h-32`이며 초과 시 스크롤됩니다. Shift+Enter는 줄바꿈, Enter는 전송입니다.
+- 메시지 입력 draft와 auto-resize는 `useMessageDraft`, `useAutoResizeTextarea`로 관리합니다. 최대 높이는 `max-h-32`이며 초과 시 스크롤됩니다. Shift+Enter는 줄바꿈, Enter는 전송입니다.
 - 멀티라인 메시지는 `whitespace-pre-wrap`으로 렌더링합니다.
 - 날짜 구분 시스템 메시지는 PostgreSQL AFTER INSERT Trigger(`trigger_insert_date_divider_message`)가 매일 첫 text 메시지 INSERT 시 `📅 YYYY년 MM월 DD일 요일` 형식의 system 메시지를 1ms 앞 타임스탬프로 자동 삽입합니다.
 - 날짜 구분 메시지는 partial unique index와 `ON CONFLICT DO NOTHING`으로 같은 방, 같은 날짜 중복 생성을 방지합니다.
