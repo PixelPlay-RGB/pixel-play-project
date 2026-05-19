@@ -4,9 +4,9 @@ import { MemberPresenceBadge } from "@/components/chat-room/member/member-presen
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { RoomMemberQuery } from "@/types/chat-room-member";
-import type { ChatRoomPresenceStatus } from "@/types/chat-room-presence";
-import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/avatar";
+import type { RoomMemberQuery } from "@/types/chat-room/chat-room-member";
+import type { ChatRoomPresenceStatus } from "@/types/chat-room/chat-room-presence";
+import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
 import { Crown } from "lucide-react";
 
 interface Props {

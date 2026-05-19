@@ -1,6 +1,6 @@
 // 채팅방 카드 그리드 로딩 상태를 렌더링합니다.
 import { Skeleton } from "@/components/ui/skeleton";
-import { CHAT_ROOM_PAGE_SIZE_BY_COLUMN_COUNT } from "@/constants/chat-room";
+import { CHAT_ROOM_PAGE_SIZE_BY_COLUMN_COUNT } from "@/constants/chat-room/chat-room";
 import { cn } from "@/lib/utils";
 
 interface Props {

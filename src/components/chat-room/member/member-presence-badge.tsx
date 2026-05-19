@@ -11,7 +11,7 @@ import {
   chatRoomTypingDotTransition,
 } from "@/lib/framer-motion/chat-room-presence";
 import { cn } from "@/lib/utils";
-import type { ChatRoomPresenceStatus } from "@/types/chat-room-presence";
+import type { ChatRoomPresenceStatus } from "@/types/chat-room/chat-room-presence";
 
 interface Props {
   status: ChatRoomPresenceStatus | null;

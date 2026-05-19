@@ -11,10 +11,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
-import { OAUTH_PROVIDER_META, OAUTH_PROVIDERS } from "@/constants/auth";
+import { OAUTH_PROVIDER_META, OAUTH_PROVIDERS } from "@/constants/auth/auth";
 import { useUser } from "@/hooks/profile/use-profile";
 import { cn } from "@/lib/utils";
-import { OAuthProvider } from "@/types/auth";
+import { OAuthProvider } from "@/types/auth/auth";
 import Image from "next/image";
 
 export default function ProfileProvidersCard() {

@@ -3,7 +3,7 @@ import ChatRoomCard from "@/components/chat-room/shared/chat-room-card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import type { ChatSearchResult } from "@/types/search";
+import type { ChatSearchResult } from "@/types/search/search";
 import { ChevronDown, Loader2 } from "lucide-react";
 
 interface Props {

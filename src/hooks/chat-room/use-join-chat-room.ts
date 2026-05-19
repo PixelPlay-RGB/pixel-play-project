@@ -3,10 +3,10 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { joinChatRoomAction } from "@/actions/chat-room-member";
-import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
-import { invalidateChatRoomMutationQueries } from "@/utils/chat-room-query";
-import { toastAppError } from "@/utils/toast-message";
+import { joinChatRoomAction } from "@/actions/chat-room/chat-room-member";
+import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
+import { invalidateChatRoomMutationQueries } from "@/utils/chat-room/chat-room-query";
+import { toastAppError } from "@/utils/common/toast-message";
 
 export function useJoinChatRoom() {
   const queryClient = useQueryClient();

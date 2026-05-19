@@ -14,11 +14,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { CHAT_ROOM_SORT_LABELS, CHAT_ROOM_SORT_OPTIONS_BY_TAB } from "@/constants/chat-room";
+import {
+  CHAT_ROOM_SORT_LABELS,
+  CHAT_ROOM_SORT_OPTIONS_BY_TAB,
+} from "@/constants/chat-room/chat-room";
 import { cn } from "@/lib/utils";
 import { useChatRoomStore } from "@/stores/chat-room";
-import type { ChatRoomSortOption } from "@/types/chat-room";
-import { getValidChatRoomSortOption } from "@/utils/chat-room-list";
+import type { ChatRoomSortOption } from "@/types/chat-room/chat-room";
+import { getValidChatRoomSortOption } from "@/utils/chat-room/chat-room-list";
 
 export default function ChatRoomListSortMenu() {
   const tabType = useChatRoomStore((state) => state.tabType);

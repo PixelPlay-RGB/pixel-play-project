@@ -5,11 +5,11 @@ import SettingMenuItem from "@/components/setting/setting-menu-item";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
-import { SETTING_MENU } from "@/constants/setting-menu";
+import { SETTING_MENU } from "@/constants/setting/setting-menu";
 import { useLogout } from "@/hooks/auth/use-logout";
 import { cn } from "@/lib/utils";
-import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/avatar";
-import type { CurrentProfileSnapshot } from "@/utils/profile-server";
+import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
+import type { CurrentProfileSnapshot } from "@/utils/profile/profile-server";
 import Link from "next/link";
 import { useState } from "react";
 

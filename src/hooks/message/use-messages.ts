@@ -5,11 +5,11 @@ import { useEffect } from "react";
 
 import { useInfiniteQuery, useQueryClient, type InfiniteData } from "@tanstack/react-query";
 
-import { QUERY_KEYS } from "@/constants/query-keys";
+import { QUERY_KEYS } from "@/constants/common/query-keys";
 import { createClient } from "@/lib/supabase/client";
-import type { MessageListItem, MessagesPage } from "@/types/message";
-import { MESSAGE_PAGE_SIZE } from "@/constants/message";
-import { insertMessageByCreatedAtDesc } from "@/utils/message";
+import type { MessageListItem, MessagesPage } from "@/types/message/message";
+import { MESSAGE_PAGE_SIZE } from "@/constants/message/message";
+import { insertMessageByCreatedAtDesc } from "@/utils/message/message";
 
 export default function useMessages(chatRoomId: string, enabled = true) {
   const supabase = createClient();

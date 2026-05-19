@@ -1,9 +1,9 @@
 "use client";
 // auth-toast-handler 컴포넌트를 제공합니다.
 
-import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
+import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { useNullableUser } from "@/hooks/profile/use-profile";
-import { toastAppSuccess } from "@/utils/toast-message";
+import { toastAppSuccess } from "@/utils/common/toast-message";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect } from "react";
 

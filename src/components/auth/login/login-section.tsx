@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import LoginForm from "./login-form";
 import OAuthButtons from "./oauth-buttons";
-import { createPathWithNext } from "@/utils/redirect";
+import { createPathWithNext } from "@/utils/common/redirect";
 
 interface Props {
   next: string;

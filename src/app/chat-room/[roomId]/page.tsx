@@ -1,8 +1,8 @@
 // 라우트 페이지를 렌더링합니다.
 import { ChatRoom } from "@/components/chat-room/chat-room";
 import PublicChatRoomPreview from "@/components/public/public-chat-room-preview";
-import { getPublicChatRoomMetadata } from "@/utils/public-chat-room";
-import { getCurrentProfileSnapshot } from "@/utils/profile-server";
+import { getPublicChatRoomMetadata } from "@/utils/public/public-chat-room";
+import { getCurrentProfileSnapshot } from "@/utils/profile/profile-server";
 import type { Metadata } from "next";
 
 const CHAT_ROOM_METADATA_FALLBACK_TITLE = "채팅방";

@@ -3,13 +3,13 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth";
-import type { AuthUser, DBUser } from "@/types/user";
+import type { AuthUser, DBUser } from "@/types/profile/user";
 import { useQuery } from "@tanstack/react-query";
-import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
-import { QUERY_KEYS } from "@/constants/query-keys";
-import type { AppMessageCode } from "@/constants/app-message-code";
-import { resolveSupabaseErrorCode } from "@/utils/app-message";
-import { isAuthSessionMissingError } from "@/utils/auth-error";
+import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
+import { QUERY_KEYS } from "@/constants/common/query-keys";
+import type { AppMessageCode } from "@/constants/common/app-message-code";
+import { resolveSupabaseErrorCode } from "@/utils/common/app-message";
+import { isAuthSessionMissingError } from "@/utils/auth/auth-error";
 
 type MissingProfileReason = "auth" | "profile";
 

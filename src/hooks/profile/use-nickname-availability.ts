@@ -1,7 +1,7 @@
 "use client";
 // 닉네임 중복 확인 상태 전이를 폼 단위로 관리하는 hook
 import { useCheckNicknameMutation } from "@/hooks/auth/use-signup-mutations";
-import type { NicknameStatus } from "@/types/auth";
+import type { NicknameStatus } from "@/types/auth/auth";
 import { useCallback, useState } from "react";
 
 interface UseNicknameAvailabilityOptions {

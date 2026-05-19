@@ -1,9 +1,9 @@
 // 채팅방 시스템 메시지를 중앙 안내 형태로 표시하는 컴포넌트
 import { Calendar } from "lucide-react";
 
-import { MESSAGE_DATE_DIVIDER_PREFIX } from "@/constants/message";
+import { MESSAGE_DATE_DIVIDER_PREFIX } from "@/constants/message/message";
 import { cn } from "@/lib/utils";
-import type { Message } from "@/types/message";
+import type { Message } from "@/types/message/message";
 
 interface Props {
   message: Message;

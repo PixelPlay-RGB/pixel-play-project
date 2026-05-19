@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 
-import type { AppMessageCode } from "@/constants/app-message-code";
+import type { AppMessageCode } from "@/constants/common/app-message-code";
 import { cn } from "@/lib/utils";
-import { getAppMessage } from "@/utils/app-message";
+import { getAppMessage } from "@/utils/common/app-message";
 
 interface Props {
   code: AppMessageCode;

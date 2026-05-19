@@ -1,6 +1,6 @@
 // chat-room Zustand store를 관리합니다.
-import { DEFAULT_CHAT_ROOM_SORT_OPTION_BY_TAB } from "@/constants/chat-room";
-import type { ChatRoomSortOption, ChatRoomTab } from "@/types/chat-room";
+import { DEFAULT_CHAT_ROOM_SORT_OPTION_BY_TAB } from "@/constants/chat-room/chat-room";
+import type { ChatRoomSortOption, ChatRoomTab } from "@/types/chat-room/chat-room";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 

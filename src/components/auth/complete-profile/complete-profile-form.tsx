@@ -15,14 +15,14 @@ import {
 } from "@/components/ui/input-group";
 import { RadioGroup } from "@/components/ui/radio-group";
 import { Spinner } from "@/components/ui/spinner";
-import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
+import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { useCompleteProfileMutation } from "@/hooks/auth/use-complete-profile-mutation";
 import { useNicknameAvailability } from "@/hooks/profile/use-nickname-availability";
 import { cn } from "@/lib/utils";
 import { completeOAuthProfileSchema, type CompleteOAuthProfileValues } from "@/lib/zod/auth";
-import { getTodayDateInputValue } from "@/utils/date";
-import { formatPhone } from "@/utils/format";
-import { toastAppError } from "@/utils/toast-message";
+import { getTodayDateInputValue } from "@/utils/common/date";
+import { formatPhone } from "@/utils/common/format";
+import { toastAppError } from "@/utils/common/toast-message";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CalendarDays, Smartphone, User, UserStar } from "lucide-react";
 import { useState } from "react";

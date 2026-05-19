@@ -1,10 +1,10 @@
-// 라우트 페이지를 렌더링합니다.
+﻿// 라우트 페이지를 렌더링합니다.
 import LoginSection from "@/components/auth/login/login-section";
 import Logo from "@/components/common/logo";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { redirectAuthenticatedUserFromAuthPage } from "@/utils/auth-page-server";
-import { sanitizeRedirectPath } from "@/utils/redirect";
+import { redirectAuthenticatedUserFromAuthPage } from "@/utils/auth/auth-page-server";
+import { sanitizeRedirectPath } from "@/utils/common/redirect";
 
 interface Props {
   searchParams: Promise<{

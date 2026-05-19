@@ -1,8 +1,8 @@
 // 404 Not Found 화면을 렌더링합니다.
 import { buttonVariants } from "@/components/ui/button";
-import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
+import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { cn } from "@/lib/utils";
-import { getAppMessage } from "@/utils/app-message";
+import { getAppMessage } from "@/utils/common/app-message";
 import Link from "next/link";
 
 export default function NotFound() {

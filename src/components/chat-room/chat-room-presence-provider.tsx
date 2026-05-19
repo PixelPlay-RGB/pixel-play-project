@@ -4,8 +4,11 @@
 import { createContext, type ReactNode, useContext, useMemo } from "react";
 
 import { useChatRoomPresence } from "@/hooks/chat-room/use-chat-room-presence";
-import type { ChatRoomMemberPresenceMap, ChatRoomPresenceStatus } from "@/types/chat-room-presence";
-import type { DBUser } from "@/types/user";
+import type {
+  ChatRoomMemberPresenceMap,
+  ChatRoomPresenceStatus,
+} from "@/types/chat-room/chat-room-presence";
+import type { DBUser } from "@/types/profile/user";
 
 interface ChatRoomPresenceContextValue {
   memberPresence: ChatRoomMemberPresenceMap;

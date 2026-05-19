@@ -1,8 +1,12 @@
 // 라우트 핸들러를 처리합니다.
-import { LINKED_PARAM, LOGIN_PARAM } from "@/constants/auth";
+import { LINKED_PARAM, LOGIN_PARAM } from "@/constants/auth/auth";
 import { createClient } from "@/lib/supabase/server";
-import { LoginProvider } from "@/types/auth";
-import { appendSearchParam, createPathWithNext, sanitizeRedirectPath } from "@/utils/redirect";
+import { LoginProvider } from "@/types/auth/auth";
+import {
+  appendSearchParam,
+  createPathWithNext,
+  sanitizeRedirectPath,
+} from "@/utils/common/redirect";
 import { NextResponse, type NextRequest } from "next/server";
 
 /**

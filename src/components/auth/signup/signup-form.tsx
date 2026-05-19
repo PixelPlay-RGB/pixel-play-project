@@ -15,9 +15,9 @@ import {
 import { RadioGroup } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
-import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
-import { SIGNUP_FORM_DEFAULTS } from "@/constants/auth";
-import { FORM_MESSAGE } from "@/constants/form-message";
+import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
+import { SIGNUP_FORM_DEFAULTS } from "@/constants/auth/auth";
+import { FORM_MESSAGE } from "@/constants/common/form-message";
 import {
   useCompleteSignupMutation,
   useSendOtpMutation,
@@ -26,10 +26,10 @@ import {
 import { useNicknameAvailability } from "@/hooks/profile/use-nickname-availability";
 import { cn } from "@/lib/utils";
 import { signUpSchema } from "@/lib/zod/auth";
-import type { OtpStatus, SignUpFormValues } from "@/types/auth";
-import { getTodayDateInputValue } from "@/utils/date";
-import { formatPhone } from "@/utils/format";
-import { toastAppError } from "@/utils/toast-message";
+import type { OtpStatus, SignUpFormValues } from "@/types/auth/auth";
+import { getTodayDateInputValue } from "@/utils/common/date";
+import { formatPhone } from "@/utils/common/format";
+import { toastAppError } from "@/utils/common/toast-message";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CalendarDays, LockKeyhole, Mail, Smartphone, User, UserStar } from "lucide-react";
 import { useState } from "react";

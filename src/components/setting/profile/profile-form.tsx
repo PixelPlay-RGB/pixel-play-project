@@ -26,8 +26,8 @@ import { useUpdateProfileMutation } from "@/hooks/profile/use-profile-mutations"
 import { resolveProfileQueryErrorCode, useUser } from "@/hooks/profile/use-profile";
 import { cn } from "@/lib/utils";
 import { ProfileFormValues, profileSchema } from "@/lib/zod/auth";
-import { formatDate } from "@/utils/format";
-import { getAppMessage } from "@/utils/app-message";
+import { formatDate } from "@/utils/common/format";
+import { getAppMessage } from "@/utils/common/app-message";
 
 export default function ProfileForm() {
   const { data: user, error: userError, isError: isUserError, isLoading } = useUser();

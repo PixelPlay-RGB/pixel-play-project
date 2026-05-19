@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/pagination";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
-import { getPageItems } from "@/utils/pagination";
+import { getPageItems } from "@/utils/common/pagination";
 
 interface Props {
   currentPage: number;

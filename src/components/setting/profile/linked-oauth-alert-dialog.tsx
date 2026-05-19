@@ -15,13 +15,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
-import { OAUTH_PROVIDER_META } from "@/constants/auth";
-import { QUERY_KEYS } from "@/constants/query-keys";
+import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
+import { OAUTH_PROVIDER_META } from "@/constants/auth/auth";
+import { QUERY_KEYS } from "@/constants/common/query-keys";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
-import { OAuthProvider } from "@/types/auth";
-import { toastAppError, toastAppSuccess } from "@/utils/toast-message";
+import { OAuthProvider } from "@/types/auth/auth";
+import { toastAppError, toastAppSuccess } from "@/utils/common/toast-message";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Plug, Unlink } from "lucide-react";

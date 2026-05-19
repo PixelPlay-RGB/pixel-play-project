@@ -5,9 +5,9 @@ import { useCallback, useLayoutEffect, useRef, useState, type UIEvent } from "re
 import {
   MESSAGE_LIST_LATEST_THRESHOLD_PX,
   MESSAGE_LIST_TOP_PREFETCH_PX,
-} from "@/constants/message";
-import type { MessageQuery } from "@/types/message";
-import { getLatestMessageDistance } from "@/utils/message";
+} from "@/constants/message/message";
+import type { MessageQuery } from "@/types/message/message";
+import { getLatestMessageDistance } from "@/utils/message/message";
 
 interface UseMessageListViewportOptions {
   messages: MessageQuery[];

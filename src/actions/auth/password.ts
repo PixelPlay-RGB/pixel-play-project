@@ -1,12 +1,12 @@
-"use server";
+﻿"use server";
 // 현재 비밀번호 확인과 비밀번호 변경 Server Action을 관리합니다.
-import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
-import { FORM_MESSAGE } from "@/constants/form-message";
+import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
+import { FORM_MESSAGE } from "@/constants/common/form-message";
 import type { ActionResponse } from "@/actions/auth/shared";
 import { createClient } from "@/lib/supabase/server";
 import { changePasswordActionSchema } from "@/lib/zod/auth";
-import type { FieldActionResult } from "@/types/action";
-import { isAuthSessionMissingError } from "@/utils/auth-error";
+import type { FieldActionResult } from "@/types/common/action";
+import { isAuthSessionMissingError } from "@/utils/auth/auth-error";
 import { revalidatePath } from "next/cache";
 
 export async function verifyCurrentPasswordAction(
