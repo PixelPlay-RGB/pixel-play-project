@@ -63,7 +63,8 @@
 
 :root {
   --app-header-height: 57px;
-  --app-content-height: calc(100vh - 148px);
+  --app-footer-height: 73px;
+  --app-content-height: calc(100dvh - var(--app-header-height) - var(--app-footer-height));
   --chat-content-height: calc(100dvh - var(--app-header-height));
 
   --brand: #46c6a9;
@@ -158,6 +159,12 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+}
+
+@media (width >= 40rem) {
+  :root {
+    --app-footer-height: 89px;
+  }
 }
 
 @layer base {
