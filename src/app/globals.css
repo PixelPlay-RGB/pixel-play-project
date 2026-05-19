@@ -62,7 +62,7 @@
 }
 
 :root {
-  --app-header-height: 56px;
+  --app-header-height: 57px;
   --app-content-height: calc(100vh - 148px);
   --chat-content-height: calc(100dvh - var(--app-header-height));
 
