@@ -16,9 +16,9 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
-import { CHAT_ROOM_TABS, ROOM_TAB_LABELS } from "@/constants/chat-room";
+import { CHAT_ROOM_TABS, ROOM_TAB_LABELS } from "@/constants/chat-room/chat-room";
 import { useChatRoomStore } from "@/stores/chat-room";
-import type { ChatRoomCounts, ChatRoomTab } from "@/types/chat-room";
+import type { ChatRoomCounts, ChatRoomTab } from "@/types/chat-room/chat-room";
 import { cn } from "@/lib/utils";
 
 interface Props {

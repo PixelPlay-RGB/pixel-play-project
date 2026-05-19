@@ -4,7 +4,7 @@
 import SettingSidebar from "@/components/setting/setting-sidebar";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/common/use-mobile";
-import type { CurrentProfileSnapshot } from "@/utils/profile-server";
+import type { CurrentProfileSnapshot } from "@/utils/profile/profile-server";
 import { ReactNode, useEffect, useState } from "react";
 
 interface Props {

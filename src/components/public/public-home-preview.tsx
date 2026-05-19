@@ -2,7 +2,7 @@
 import Logo from "@/components/common/logo";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { createPathWithNext } from "@/utils/redirect";
+import { createPathWithNext } from "@/utils/common/redirect";
 import { MessageCircle, Sparkles, UsersRound } from "lucide-react";
 import Link from "next/link";
 

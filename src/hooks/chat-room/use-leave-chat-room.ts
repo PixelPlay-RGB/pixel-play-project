@@ -4,13 +4,13 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 
-import { leaveChatRoomAction } from "@/actions/chat-room-member";
-import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
+import { leaveChatRoomAction } from "@/actions/chat-room/chat-room-member";
+import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import {
   invalidateChatRoomMutationQueries,
   removeChatRoomDetailQueries,
-} from "@/utils/chat-room-query";
-import { toastAppError, toastAppSuccess } from "@/utils/toast-message";
+} from "@/utils/chat-room/chat-room-query";
+import { toastAppError, toastAppSuccess } from "@/utils/common/toast-message";
 
 export function useLeaveChatRoom() {
   const queryClient = useQueryClient();

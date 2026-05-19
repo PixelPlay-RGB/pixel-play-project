@@ -1,5 +1,5 @@
 // auth Zustand store를 관리합니다.
-import { AuthUser } from "@/types/user";
+import { AuthUser } from "@/types/profile/user";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 

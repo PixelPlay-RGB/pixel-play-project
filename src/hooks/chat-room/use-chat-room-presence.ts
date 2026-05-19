@@ -10,7 +10,7 @@ import {
   CHAT_ROOM_TYPING_PRUNE_INTERVAL_MS,
   CHAT_ROOM_TYPING_REMOTE_TIMEOUT_MS,
   CHAT_ROOM_TYPING_STOP_DELAY_MS,
-} from "@/constants/chat-room-presence";
+} from "@/constants/chat-room/chat-room-presence";
 import { createClient } from "@/lib/supabase/client";
 import type {
   ChatRoomMemberPresenceMap,
@@ -18,8 +18,8 @@ import type {
   ChatRoomPresenceState,
   ChatRoomTypingBroadcastPayload,
   ChatRoomTypingMemberMap,
-} from "@/types/chat-room-presence";
-import type { DBUser } from "@/types/user";
+} from "@/types/chat-room/chat-room-presence";
+import type { DBUser } from "@/types/profile/user";
 import {
   createChatRoomPresenceChannelName,
   createChatRoomPresencePayload,
@@ -27,7 +27,7 @@ import {
   createChatRoomTypingBroadcastPayload,
   pruneChatRoomTypingMemberMap,
   resolveChatRoomMemberPresenceMap,
-} from "@/utils/chat-room-presence";
+} from "@/utils/chat-room/chat-room-presence";
 
 type ChatRoomPresenceChannel = ReturnType<ReturnType<typeof createClient>["channel"]>;
 

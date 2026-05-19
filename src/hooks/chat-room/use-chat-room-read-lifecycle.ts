@@ -5,8 +5,8 @@ import { useEffect } from "react";
 
 import { useQueryClient } from "@tanstack/react-query";
 
-import { markRoomReadAction } from "@/actions/chat-room-member";
-import { QUERY_KEYS } from "@/constants/query-keys";
+import { markRoomReadAction } from "@/actions/chat-room/chat-room-member";
+import { QUERY_KEYS } from "@/constants/common/query-keys";
 
 interface Options {
   roomId: string;

@@ -3,20 +3,20 @@
 
 import { useMutation, useQueryClient, type InfiniteData } from "@tanstack/react-query";
 
-import { sendMessageAction } from "@/actions/message";
-import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
-import { QUERY_KEYS } from "@/constants/query-keys";
-import type { AppActionResult } from "@/types/action";
-import type { MessageListItem, MessageQuery, MessagesPage } from "@/types/message";
-import type { DBUser } from "@/types/user";
-import { createOptimisticMessage, updateFirstMessagesPage } from "@/utils/message-cache";
+import { sendMessageAction } from "@/actions/message/message";
+import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
+import { QUERY_KEYS } from "@/constants/common/query-keys";
+import type { AppActionResult } from "@/types/common/action";
+import type { MessageListItem, MessageQuery, MessagesPage } from "@/types/message/message";
+import type { DBUser } from "@/types/profile/user";
+import { createOptimisticMessage, updateFirstMessagesPage } from "@/utils/message/message-cache";
 import {
   insertMessageByCreatedAtDesc,
   removeMessageById,
   replaceMessageById,
   updateMessageClientStatus,
-} from "@/utils/message";
-import { toastAppError } from "@/utils/toast-message";
+} from "@/utils/message/message";
+import { toastAppError } from "@/utils/common/toast-message";
 
 export interface SendMessageVariables {
   content: string;

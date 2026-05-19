@@ -4,7 +4,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
-import type { SettingMenuItem } from "@/types/setting-menu";
+import type { SettingMenuItem } from "@/types/setting/setting-menu";
 import Link from "next/link";
 import { ReactNode } from "react";
 

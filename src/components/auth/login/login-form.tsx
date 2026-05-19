@@ -7,7 +7,7 @@ import { FieldError } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 import { loginSchema } from "@/lib/zod/auth";
-import type { LoginFormValues } from "@/types/auth";
+import type { LoginFormValues } from "@/types/auth/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LockKeyhole, Mail } from "lucide-react";
 import { useForm } from "react-hook-form";

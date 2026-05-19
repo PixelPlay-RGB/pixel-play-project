@@ -4,7 +4,7 @@
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
-import type { OAuthProvider } from "@/types/auth";
+import type { OAuthProvider } from "@/types/auth/auth";
 import Image from "next/image";
 
 interface OAuthButtonsProps {

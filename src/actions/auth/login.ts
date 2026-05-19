@@ -1,6 +1,6 @@
-"use server";
+﻿"use server";
 // 이메일과 비밀번호 로그인 Server Action을 관리합니다.
-import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
+import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { createClient } from "@/lib/supabase/server";
 import { loginSchema, type LoginFormValues } from "@/lib/zod/auth";
 import type { ActionResponse } from "@/actions/auth/shared";

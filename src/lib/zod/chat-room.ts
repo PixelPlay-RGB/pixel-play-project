@@ -5,8 +5,8 @@ import {
   CHAT_ROOM_MAX_CAPACITY,
   CHAT_ROOM_MIN_CAPACITY,
   CHAT_ROOM_TITLE_MAX_LENGTH,
-} from "@/constants/chat-room";
-import { FORM_MESSAGE } from "@/constants/form-message";
+} from "@/constants/chat-room/chat-room";
+import { FORM_MESSAGE } from "@/constants/common/form-message";
 
 export const createChatRoomSchema = z.object({
   title: z

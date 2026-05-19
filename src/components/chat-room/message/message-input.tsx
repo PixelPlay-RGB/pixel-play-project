@@ -7,15 +7,15 @@ import { type SubmitEvent, useCallback, useEffect, useRef } from "react";
 import ChatEmojiPicker from "@/components/chat-room/chat-emoji-picker";
 import { useChatRoomPresenceContext } from "@/components/chat-room/chat-room-presence-provider";
 import { Button } from "@/components/ui/button";
-import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
-import { MESSAGE_CONTENT_MAX_LENGTH } from "@/constants/message";
+import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
+import { MESSAGE_CONTENT_MAX_LENGTH } from "@/constants/message/message";
 import { useAutoResizeTextarea } from "@/hooks/common/use-auto-resize-textarea";
 import { useMessageDraft } from "@/hooks/message/use-message-draft";
 import type { useSendMessage } from "@/hooks/message/use-send-message";
 import { cn } from "@/lib/utils";
 import { messageContentSchema } from "@/lib/zod/message";
-import { getAppMessageTitle } from "@/utils/app-message";
-import { toastAppError } from "@/utils/toast-message";
+import { getAppMessageTitle } from "@/utils/common/app-message";
+import { toastAppError } from "@/utils/common/toast-message";
 
 interface Props {
   roomId: string;

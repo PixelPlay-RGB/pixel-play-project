@@ -6,7 +6,7 @@ import ThemeToggleButton from "@/components/common/theme-toggle-button";
 import HeaderSearchForm from "@/components/search/header-search-form";
 import HeaderProfileBadge from "@/components/setting/profile/header-profile-badge";
 import { cn } from "@/lib/utils";
-import { getCurrentProfileSnapshot } from "@/utils/profile-server";
+import { getCurrentProfileSnapshot } from "@/utils/profile/profile-server";
 import Link from "next/link";
 
 export default async function Header() {

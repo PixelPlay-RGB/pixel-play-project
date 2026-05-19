@@ -1,5 +1,5 @@
 import { Database } from "@/types/database.types";
-import { createPathWithNext } from "@/utils/redirect";
+import { createPathWithNext } from "@/utils/common/redirect";
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 

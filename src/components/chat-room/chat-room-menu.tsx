@@ -17,10 +17,10 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
+import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { useChatRoomDetail } from "@/hooks/chat-room/use-chat-room-detail";
 import { useLeaveChatRoom } from "@/hooks/chat-room/use-leave-chat-room";
-import { toastAppInfo } from "@/utils/toast-message";
+import { toastAppInfo } from "@/utils/common/toast-message";
 
 interface Props {
   roomId: string;

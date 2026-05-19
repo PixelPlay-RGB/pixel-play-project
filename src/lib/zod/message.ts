@@ -1,7 +1,7 @@
 // 채팅 메시지 본문(content) 입력 검증 스키마를 정의한다.
 import { z } from "zod";
 
-import { MESSAGE_CONTENT_MAX_LENGTH } from "@/constants/message";
+import { MESSAGE_CONTENT_MAX_LENGTH } from "@/constants/message/message";
 
 export const messageContentSchema = z
   .string()

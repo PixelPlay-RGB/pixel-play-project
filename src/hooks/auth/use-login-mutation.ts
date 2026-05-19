@@ -1,15 +1,15 @@
 "use client";
 // 로그인 Server Action과 OAuth 로그인 요청의 클라이언트 후처리를 관리하는 훅
 import { login } from "@/actions/auth/login";
-import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
-import { LOGIN_PARAM } from "@/constants/auth";
-import { QUERY_KEYS } from "@/constants/query-keys";
+import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
+import { LOGIN_PARAM } from "@/constants/auth/auth";
+import { QUERY_KEYS } from "@/constants/common/query-keys";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth";
-import type { LoginFormValues, OAuthProvider } from "@/types/auth";
-import { isAuthSessionMissingError } from "@/utils/auth-error";
-import { appendSearchParam, sanitizeRedirectPath } from "@/utils/redirect";
-import { toastAppError } from "@/utils/toast-message";
+import type { LoginFormValues, OAuthProvider } from "@/types/auth/auth";
+import { isAuthSessionMissingError } from "@/utils/auth/auth-error";
+import { appendSearchParam, sanitizeRedirectPath } from "@/utils/common/redirect";
+import { toastAppError } from "@/utils/common/toast-message";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 

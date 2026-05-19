@@ -6,15 +6,15 @@ import {
   sendOtpAction,
   verifyOtpAction,
 } from "@/actions/auth/signup";
-import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
-import { WELCOME_PARAM } from "@/constants/auth";
-import { QUERY_KEYS } from "@/constants/query-keys";
+import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
+import { WELCOME_PARAM } from "@/constants/auth/auth";
+import { QUERY_KEYS } from "@/constants/common/query-keys";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth";
-import type { CompleteSignupInput } from "@/types/auth";
-import { isAuthSessionMissingError } from "@/utils/auth-error";
-import { appendSearchParam } from "@/utils/redirect";
-import { toastAppError, toastAppSuccess } from "@/utils/toast-message";
+import type { CompleteSignupInput } from "@/types/auth/auth";
+import { isAuthSessionMissingError } from "@/utils/auth/auth-error";
+import { appendSearchParam } from "@/utils/common/redirect";
+import { toastAppError, toastAppSuccess } from "@/utils/common/toast-message";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 

@@ -3,12 +3,12 @@
 
 import { MessageInput } from "@/components/chat-room/message/message-input";
 import { MessageList } from "@/components/chat-room/message/message-list";
-import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
+import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { useChatRoomDetail } from "@/hooks/chat-room/use-chat-room-detail";
 import { useChatRoomReadLifecycle } from "@/hooks/chat-room/use-chat-room-read-lifecycle";
 import useMessages from "@/hooks/message/use-messages";
 import { useSendMessage } from "@/hooks/message/use-send-message";
-import { getAppMessage } from "@/utils/app-message";
+import { getAppMessage } from "@/utils/common/app-message";
 
 interface Props {
   roomId: string;

@@ -6,7 +6,7 @@ import { Camera, Trash2, Upload } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/avatar";
+import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
 
 interface ProfileAvatarUploadProps {
   photoUrl: string | null;

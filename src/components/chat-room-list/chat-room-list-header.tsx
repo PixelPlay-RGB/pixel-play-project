@@ -4,7 +4,7 @@ import ChatRoomListSearchInput from "@/components/chat-room-list/chat-room-list-
 import ChatRoomListSortMenu from "@/components/chat-room-list/chat-room-list-sort-menu";
 import ChatRoomListTabs from "@/components/chat-room-list/chat-room-list-tabs";
 import { cn } from "@/lib/utils";
-import type { ChatRoomCounts } from "@/types/chat-room";
+import type { ChatRoomCounts } from "@/types/chat-room/chat-room";
 
 interface Props {
   counts?: ChatRoomCounts;

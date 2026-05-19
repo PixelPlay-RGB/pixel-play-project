@@ -4,7 +4,7 @@
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth";
-import { createPathWithNext } from "@/utils/redirect";
+import { createPathWithNext } from "@/utils/common/redirect";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 export default function LoginButton() {

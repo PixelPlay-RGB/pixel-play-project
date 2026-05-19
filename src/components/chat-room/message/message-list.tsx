@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useMessageListViewport } from "@/hooks/message/use-message-list-viewport";
 import { cn } from "@/lib/utils";
-import type { MessageListItem } from "@/types/message";
-import { canGroupMessages } from "@/utils/message";
+import type { MessageListItem } from "@/types/message/message";
+import { canGroupMessages } from "@/utils/message/message";
 
 interface Props {
   messages: MessageListItem[];

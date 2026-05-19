@@ -8,7 +8,7 @@ import {
 } from "@/lib/framer-motion/header-search";
 import { cn } from "@/lib/utils";
 import { useMainMenuStore } from "@/stores/main-menu";
-import type { MainMenuSidebarKey } from "@/types/main-menu-sidebar";
+import type { MainMenuSidebarKey } from "@/types/common/main-menu-sidebar";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowLeft, Search } from "lucide-react";
 import { useRouter } from "next/navigation";

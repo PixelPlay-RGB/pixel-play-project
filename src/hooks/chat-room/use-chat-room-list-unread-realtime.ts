@@ -1,7 +1,7 @@
 // 새 메시지 INSERT 시 채팅방 목록 React Query를 무효화합니다.
 "use client";
 
-import { QUERY_KEYS } from "@/constants/query-keys";
+import { QUERY_KEYS } from "@/constants/common/query-keys";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth";
 import { useQueryClient } from "@tanstack/react-query";

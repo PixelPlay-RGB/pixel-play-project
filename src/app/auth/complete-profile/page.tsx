@@ -1,10 +1,10 @@
-// 라우트 페이지를 렌더링합니다.
+﻿// 라우트 페이지를 렌더링합니다.
 import CompleteProfileForm from "@/components/auth/complete-profile/complete-profile-form";
 import Logo from "@/components/common/logo";
 import { Separator } from "@/components/ui/separator";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
-import { createPathWithNext, sanitizeRedirectPath } from "@/utils/redirect";
+import { createPathWithNext, sanitizeRedirectPath } from "@/utils/common/redirect";
 import { redirect } from "next/navigation";
 
 interface Props {

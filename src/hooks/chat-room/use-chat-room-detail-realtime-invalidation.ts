@@ -5,7 +5,7 @@ import { useEffect } from "react";
 
 import { useQueryClient } from "@tanstack/react-query";
 
-import { QUERY_KEYS } from "@/constants/query-keys";
+import { QUERY_KEYS } from "@/constants/common/query-keys";
 import { createClient } from "@/lib/supabase/client";
 
 interface Params {

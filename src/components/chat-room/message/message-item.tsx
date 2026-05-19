@@ -3,10 +3,10 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
-import type { MessageListItem } from "@/types/message";
+import type { MessageListItem } from "@/types/message/message";
 import { FailedMessageActions } from "@/components/chat-room/message/failed-message-actions";
 import { SystemMessageItem } from "@/components/chat-room/message/system-message-item";
-import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/avatar";
+import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
 
 interface Props {
   message: MessageListItem;

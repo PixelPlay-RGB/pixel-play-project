@@ -15,9 +15,9 @@ import {
 } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
-import { SETTING_MENU } from "@/constants/setting-menu";
+import { SETTING_MENU } from "@/constants/setting/setting-menu";
 import { useLogout } from "@/hooks/auth/use-logout";
-import type { CurrentProfileSnapshot } from "@/utils/profile-server";
+import type { CurrentProfileSnapshot } from "@/utils/profile/profile-server";
 import { LogOut } from "lucide-react";
 import { usePathname } from "next/navigation";
 

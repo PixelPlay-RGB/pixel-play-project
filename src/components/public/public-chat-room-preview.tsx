@@ -1,9 +1,9 @@
 // 비로그인 사용자에게 채팅방 공유 preview를 제공합니다.
 import Logo from "@/components/common/logo";
 import { buttonVariants } from "@/components/ui/button";
-import type { PublicChatRoomMetadata } from "@/utils/public-chat-room";
+import type { PublicChatRoomMetadata } from "@/utils/public/public-chat-room";
 import { cn } from "@/lib/utils";
-import { createPathWithNext } from "@/utils/redirect";
+import { createPathWithNext } from "@/utils/common/redirect";
 import { DoorOpen, MessageCircle } from "lucide-react";
 import Link from "next/link";
 

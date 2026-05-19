@@ -1,7 +1,7 @@
 // 채팅방 목록 빈 상태를 렌더링합니다.
-import { CHAT_ROOM_EMPTY_MESSAGES } from "@/constants/chat-room";
+import { CHAT_ROOM_EMPTY_MESSAGES } from "@/constants/chat-room/chat-room";
 import { cn } from "@/lib/utils";
-import type { ChatRoomTab } from "@/types/chat-room";
+import type { ChatRoomTab } from "@/types/chat-room/chat-room";
 import { MessageSquare, Search } from "lucide-react";
 
 interface Props {

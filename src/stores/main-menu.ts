@@ -1,5 +1,5 @@
 // 메인 메뉴의 활성 상태를 전역에서 공유합니다.
-import type { MainMenuSidebarKey } from "@/types/main-menu-sidebar";
+import type { MainMenuSidebarKey } from "@/types/common/main-menu-sidebar";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 

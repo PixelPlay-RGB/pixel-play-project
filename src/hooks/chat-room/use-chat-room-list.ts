@@ -3,7 +3,7 @@
 
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
-import { QUERY_KEYS } from "@/constants/query-keys";
+import { QUERY_KEYS } from "@/constants/common/query-keys";
 import { useUser } from "@/hooks/profile/use-profile";
 import { createClient } from "@/lib/supabase/client";
 import type {
@@ -12,8 +12,11 @@ import type {
   ChatRoomListResponse,
   ChatRoomSortOption,
   ChatRoomTab,
-} from "@/types/chat-room";
-import { getEffectiveChatRoomCounts, parseChatRoomListItems } from "@/utils/chat-room-list";
+} from "@/types/chat-room/chat-room";
+import {
+  getEffectiveChatRoomCounts,
+  parseChatRoomListItems,
+} from "@/utils/chat-room/chat-room-list";
 
 interface ChatRoomListResult {
   rooms: ChatRoomListItem[];

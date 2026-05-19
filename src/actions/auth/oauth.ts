@@ -1,11 +1,11 @@
 "use server";
 // OAuth 프로필 완성과 OAuth 연동 해제 Server Action을 관리합니다.
-import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
+import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { checkNicknameExists, type ActionResponse } from "@/actions/auth/shared";
 import { createClient } from "@/lib/supabase/server";
 import { completeOAuthProfileSchema } from "@/lib/zod/auth";
-import type { CompleteOAuthProfileInput, LoginProvider, OAuthProvider } from "@/types/auth";
-import { isAuthSessionMissingError } from "@/utils/auth-error";
+import type { CompleteOAuthProfileInput, LoginProvider, OAuthProvider } from "@/types/auth/auth";
+import { isAuthSessionMissingError } from "@/utils/auth/auth-error";
 import { revalidatePath } from "next/cache";
 
 export async function completeOAuthProfileAction(

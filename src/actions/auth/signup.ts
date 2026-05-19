@@ -1,13 +1,13 @@
 "use server";
 // 이메일 OTP 회원가입 Server Action을 관리합니다.
-import { APP_MESSAGE_CODE } from "@/constants/app-message-code";
-import { FORM_MESSAGE } from "@/constants/form-message";
+import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
+import { FORM_MESSAGE } from "@/constants/common/form-message";
 import { checkEmailExists, checkNicknameExists, type ActionResponse } from "@/actions/auth/shared";
 import { createClient } from "@/lib/supabase/server";
 import { signUpBaseSchema } from "@/lib/zod/auth";
-import type { FieldActionResult } from "@/types/action";
-import type { CompleteSignupInput } from "@/types/auth";
-import { isAuthSessionMissingError } from "@/utils/auth-error";
+import type { FieldActionResult } from "@/types/common/action";
+import type { CompleteSignupInput } from "@/types/auth/auth";
+import { isAuthSessionMissingError } from "@/utils/auth/auth-error";
 import { revalidatePath } from "next/cache";
 
 export async function sendOtpAction(email: string): Promise<FieldActionResult> {

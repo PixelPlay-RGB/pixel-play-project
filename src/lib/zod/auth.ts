@@ -1,6 +1,6 @@
 // auth Zod 검증 스키마를 정의합니다.
-import { FORM_MESSAGE } from "@/constants/form-message";
-import { isDateInputValueOnOrBeforeToday, isValidDateInputValue } from "@/utils/date";
+import { FORM_MESSAGE } from "@/constants/common/form-message";
+import { isDateInputValueOnOrBeforeToday, isValidDateInputValue } from "@/utils/common/date";
 import { z } from "zod";
 
 export const loginSchema = z.object({

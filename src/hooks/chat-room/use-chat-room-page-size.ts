@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   CHAT_ROOM_GRID_BREAKPOINTS,
   CHAT_ROOM_PAGE_SIZE_BY_COLUMN_COUNT,
-} from "@/constants/chat-room";
+} from "@/constants/chat-room/chat-room";
 
 interface UseChatRoomPageSizeOptions {
   onPageSizeChange?: () => void;
