@@ -45,7 +45,7 @@ export default function CompleteProfileForm({ next }: Props) {
   } = useForm<CompleteOAuthProfileValues>({
     resolver: zodResolver(completeOAuthProfileSchema),
     mode: "onChange",
-    defaultValues: { name: "", nickname: "", birth: "", phone: "", gender: "male" },
+    defaultValues: { name: "", nickname: "", birth: "", phone: "" },
   });
 
   const isFormBusy = isSubmitting || isCancelling || completeProfileMutation.isPending;
@@ -180,7 +180,11 @@ export default function CompleteProfileForm({ next }: Props) {
                 name="gender"
                 control={control}
                 render={({ field }) => (
-                  <RadioGroup onValueChange={field.onChange} defaultValue="male" className="flex">
+                  <RadioGroup
+                    value={field.value ?? ""}
+                    onValueChange={field.onChange}
+                    className="flex"
+                  >
                     <SignUpGenderField htmlFor="male" content="남성" radioValue="male" />
                     <SignUpGenderField htmlFor="female" content="여성" radioValue="female" />
                     <SignUpGenderField htmlFor="none" content="선택안함" radioValue="none" />

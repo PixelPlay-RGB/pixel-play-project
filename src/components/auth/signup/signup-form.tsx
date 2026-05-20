@@ -373,7 +373,11 @@ export default function SignupForm({ next }: Props) {
                 name="gender"
                 control={control}
                 render={({ field }) => (
-                  <RadioGroup onValueChange={field.onChange} className="grid grid-cols-3">
+                  <RadioGroup
+                    value={field.value ?? ""}
+                    onValueChange={field.onChange}
+                    className="grid grid-cols-3"
+                  >
                     <SignUpGenderField htmlFor="male" content="남성" radioValue="male" />
                     <SignUpGenderField htmlFor="female" content="여성" radioValue="female" />
                     <SignUpGenderField htmlFor="none" content="선택안함" radioValue="none" />
