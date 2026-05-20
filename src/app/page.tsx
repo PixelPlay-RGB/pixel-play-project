@@ -4,9 +4,9 @@ import PublicHomePreview from "@/components/public/public-home-preview";
 import { getCurrentProfileSnapshot } from "@/utils/profile/profile-server";
 import type { Metadata } from "next";
 
-const HOME_METADATA_TITLE = "PixelPlay";
+const HOME_METADATA_TITLE = "PixelPlay - RGB";
 const HOME_METADATA_DESCRIPTION =
-  "PixelPlay에서 채팅방을 만들고 참여하며 실시간 소통을 즐겨보세요.";
+  "화면의 최소 단위인 픽셀을 즐긴다! 화면에 보여지는 스트리밍 서비스를 즐겨보세요";
 
 export const metadata: Metadata = {
   title: {
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
         url: "/og-home.webp",
         width: 1200,
         height: 630,
-        alt: "PixelPlay 메인 화면",
+        alt: "PixelPlay 메인 썸네일",
       },
     ],
   },
