@@ -9,6 +9,7 @@ export type CurrentProfileSnapshot = Pick<
 >;
 
 export interface CurrentProfileSnapshotState {
+  authProviders: string[];
   hasAuthUser: boolean;
   profile: CurrentProfileSnapshot | null;
 }
@@ -26,10 +27,15 @@ export async function getCurrentProfileSnapshot(): Promise<CurrentProfileSnapsho
 
   if (!user) {
     return {
+      authProviders: [],
       hasAuthUser: false,
       profile: null,
     };
   }
+
+  const authProviders = ((user.app_metadata?.providers ?? []) as string[]).filter(
+    (provider): provider is string => typeof provider === "string",
+  );
 
   const { data: profile, error: profileError } = await supabase
     .from("user")
@@ -40,12 +46,14 @@ export async function getCurrentProfileSnapshot(): Promise<CurrentProfileSnapsho
   if (profileError) {
     console.error("현재 프로필 snapshot 조회 실패", profileError);
     return {
+      authProviders,
       hasAuthUser: true,
       profile: null,
     };
   }
 
   return {
+    authProviders,
     hasAuthUser: true,
     profile,
   };

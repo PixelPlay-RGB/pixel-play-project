@@ -16,7 +16,9 @@ export default async function Page({ searchParams }: Props) {
   const { next } = await searchParams;
   const safeNext = sanitizeRedirectPath(next);
 
-  await redirectAuthenticatedUserFromAuthPage(safeNext);
+  await redirectAuthenticatedUserFromAuthPage(safeNext, {
+    allowEmailSignupInProgress: true,
+  });
 
   return (
     <div className="container m-auto">
