@@ -107,17 +107,20 @@ npm run dev
 ### 인증
 
 - 이메일 OTP 인증 후 비밀번호와 프로필을 완성하는 회원가입 흐름을 제공합니다.
+- OTP 인증 직후 생성되는 email 세션은 `/auth/signup`에 머무르며, 회원가입 폼에서 나머지 정보를 모두 입력해야 가입을 완료할 수 있습니다.
 - 이메일과 비밀번호 기반 로그인을 제공합니다.
 - 회원가입과 새 비밀번호 변경은 Supabase Auth 정책과 맞춰 최소 8자, 영문 소문자, 영문 대문자, 숫자, 특수문자를 요구합니다.
 - 닉네임은 2자 이상 10자 이하의 영문, 숫자, 한글만 허용하며 공백과 특수문자는 사용할 수 없습니다.
 - 생년월일은 KST 기준 오늘 이후 날짜를 선택할 수 없으며, date input `max`와 Zod schema에서 함께 검증합니다.
+- 성별은 `male`, `female`, `none` 중 하나를 사용자가 직접 선택해야 하며 기본 선택값을 두지 않습니다.
 - 로그인과 현재 비밀번호 확인은 기존 계정 호환을 위해 비밀번호 입력 여부만 검증하고, 실제 인증은 Supabase Auth에 위임합니다.
 - Google, GitHub OAuth 로그인과 추가 프로필 입력 흐름을 제공합니다.
 - OAuth 연동 계정 목록을 `linked_providers`로 관리합니다.
+- 운영 메일 발송은 Supabase Custom SMTP 설정으로 처리하며, 앱 코드에는 SMTP key를 저장하지 않습니다.
 - 로그인 상태는 Supabase 세션을 기준으로 검증하고 `AuthListener`가 Zustand store에 동기화합니다.
 - 로그인 완료 사용자가 `/auth/login`, `/auth/signup`에 직접 접근하면 홈으로 이동합니다.
 - Header 프로필 배지와 Settings sidebar의 표시용 프로필은 서버 snapshot으로 조회하고, profile mutation 성공 후 `router.refresh()`로 갱신합니다.
-- 프로필이 없는 로그인 유저는 `/auth/complete-profile`로 이동합니다.
+- 프로필이 없는 OAuth 로그인 유저는 `/auth/complete-profile`로 이동합니다. 이메일 OTP 회원가입 중간 세션은 `/auth/signup`에서 최종 가입 폼을 계속 작성합니다.
 - 비로그인 유저는 보호 라우트 접근 시 `/auth/login?next=<현재경로>`로 이동하고, 로그인 성공 후 원래 경로로 돌아갑니다.
 - 비밀번호 변경, 프로필 수정, 프로필 이미지 업로드와 삭제, 회원 탈퇴 API를 제공합니다.
 - 프로필 이미지가 없는 유저는 `public/default-avatar.webp` 기본 이미지를 표시합니다.
@@ -206,41 +209,66 @@ npm run dev
 
 ```text
 src/
-├── actions/              # Server Actions
-│   ├── auth/             # 로그인, 회원가입, 비밀번호, OAuth Server Actions
-│   └── profile.ts        # 프로필 수정 Server Action
-├── app/                  # Next.js App Router
-│   ├── (settings)/       # 설정 라우트 그룹
-│   ├── api/              # Route Handler
-│   ├── auth/             # 인증 라우트
-│   ├── chat-room/[roomId]/ # 채팅방 상세
-│   └── search/chat/      # 채팅방 검색
+├── actions/               # Server Actions
+│   ├── auth/              # 로그인, 회원가입, 비밀번호, OAuth
+│   ├── chat-room/         # 채팅방 생성, 참여, 나가기, 멤버 액션
+│   ├── common/            # 인증 사용자 확인 등 공통 action helper
+│   ├── message/           # 메시지 전송
+│   └── profile/           # 프로필 수정
+├── app/                   # Next.js App Router
+│   ├── (settings)/        # 설정 라우트 그룹
+│   ├── api/               # Route Handler
+│   ├── auth/              # 로그인, 회원가입, OAuth callback, 프로필 완성
+│   ├── chat-room/[roomId] # 채팅방 상세와 공유 preview
+│   └── search/chat/       # 채팅방 검색
 ├── components/
-│   ├── auth/             # 로그인, 회원가입, OAuth, 비밀번호 UI
-│   ├── chat-room/        # 채팅방 상세, 메시지, 참여자 관리 UI
-│   ├── chat-room-list/   # 채팅방 목록, 카드, 생성 Dialog
-│   ├── common/           # Header, Footer, Providers, Sidebar
-│   ├── live/             # 라이브 준비 화면
-│   ├── search/           # 검색 입력과 검색 결과
-│   ├── setting/          # 프로필 설정
-│   └── ui/               # shadcn / Base UI 기반 공통 컴포넌트
-├── constants/            # 상수와 Query Key Factory
+│   ├── auth/              # 로그인, 회원가입, OAuth, 비밀번호 UI
+│   ├── chat-room/         # 채팅방 상세, 메시지, 참여자 관리 UI
+│   ├── chat-room-list/    # 채팅방 목록, 카드, 생성 Dialog
+│   ├── common/            # Header, Footer, Providers, Sidebar
+│   ├── live/              # 라이브 준비 화면
+│   ├── public/            # 비로그인 public preview UI
+│   ├── search/            # 검색 입력과 검색 결과
+│   ├── setting/           # 프로필 설정
+│   └── ui/                # shadcn / Base UI 기반 공통 컴포넌트
+├── constants/             # 도메인별 상수와 Query Key Factory
+│   ├── auth/
+│   ├── chat-room/
+│   ├── common/
+│   ├── message/
+│   ├── public/
+│   ├── search/
+│   └── setting/
 ├── hooks/
-│   ├── auth/             # 인증 mutation 훅
-│   ├── chat-room/        # 채팅방 조회, 참여, 멤버 액션, Realtime 훅
-│   ├── common/           # 반응형, observer 등 공통 훅
-│   ├── message/          # 메시지 조회와 전송 훅
-│   ├── profile/          # 프로필 조회, 수정, 닉네임 확인 훅
-│   └── search/           # 검색 결과 조회 훅
+│   ├── auth/              # 인증 mutation 훅
+│   ├── chat-room/         # 채팅방 조회, 참여, 멤버 액션, Realtime 훅
+│   ├── common/            # 반응형, observer, textarea resize 훅
+│   ├── message/           # 메시지 조회, 전송, draft, viewport 훅
+│   ├── profile/           # 프로필 조회, 수정, 닉네임 확인 훅
+│   └── search/            # 검색 결과 조회 훅
 ├── lib/
-│   ├── framer-motion/   # Motion animation preset
-│   ├── supabase/         # browser, server, admin client
-│   ├── utils/            # 공통 유틸
-│   └── zod/              # Zod schema
-├── mock/                 # 개발용 mock 데이터
-├── stores/               # Zustand stores
-├── types/                # 도메인 타입과 Supabase 생성 타입
-└── utils/                # 도메인 보조 유틸과 서버 snapshot helper
+│   ├── framer-motion/     # Motion animation preset
+│   ├── supabase/          # browser, server, admin client, proxy
+│   └── zod/               # Zod schema
+├── mock/                  # 개발용 mock 데이터
+├── stores/                # Zustand stores
+├── types/                 # 도메인 타입과 Supabase 생성 타입
+│   ├── auth/
+│   ├── chat-room/
+│   ├── common/
+│   ├── message/
+│   ├── profile/
+│   ├── public/
+│   ├── search/
+│   ├── setting/
+│   └── database.types.ts
+└── utils/                 # 도메인 보조 유틸과 서버 snapshot helper
+    ├── auth/
+    ├── chat-room/
+    ├── common/
+    ├── message/
+    ├── profile/
+    └── public/
 ```
 
 ---
@@ -336,10 +364,10 @@ src/
 
 ### DB Triggers
 
-| 트리거                                           | 설명                                                                                                                                         |
-| ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `trigger_insert_date_divider_message`            | text 메시지 INSERT 시 해당 날짜(KST) 첫 메시지이면 날짜 구분 system 메시지를 자동 삽입합니다. 중복 방지는 partial unique index로 처리합니다. |
-| `trigger_insert_chat_room_member_system_message` | 채팅방 참여/나가기 시 system 메시지를 자동 삽입합니다.                                                                                       |
+| 트리거                                           | 설명                                                                                                                                                              |
+| ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `trigger_insert_date_divider_message`            | text 메시지와 일반 system 메시지 INSERT 시 해당 날짜(KST) 첫 메시지이면 날짜 구분 system 메시지를 자동 삽입합니다. 중복 방지는 partial unique index로 처리합니다. |
+| `trigger_insert_chat_room_member_system_message` | 채팅방 참여/나가기 시 system 메시지를 자동 삽입합니다.                                                                                                            |
 
 ### 스키마 변경 절차
 
@@ -402,7 +430,7 @@ npm run types
 - 서버 데이터는 TanStack Query로 관리합니다.
 - Server Action 호출의 pending, toast, router 이동, query invalidation은 `src/hooks/{domain}`의 도메인별 mutation hook에서 관리합니다.
 - Header 프로필 배지와 Settings sidebar는 표시용 프로필 snapshot을 Server Component 경계에서 받아 사용하며, 프로필 수정과 OAuth unlink 후에는 `router.refresh()`로 snapshot을 갱신합니다.
-- Query Key는 `src/constants/query-keys.ts`의 `QUERY_KEYS`를 기준으로 생성합니다.
+- Query Key는 `src/constants/common/query-keys.ts`의 `QUERY_KEYS`를 기준으로 생성합니다.
 - Supabase 스키마 타입은 `src/types/database.types.ts`를 기준으로 사용합니다.
 
 ---
