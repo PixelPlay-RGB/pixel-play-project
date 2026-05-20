@@ -1,11 +1,6 @@
 // 공개 채팅방 preview와 metadata 조회를 관리합니다.
 import { createClient } from "@/lib/supabase/server";
-
-export interface PublicChatRoomMetadata {
-  id: string;
-  title: string;
-  description: string;
-}
+import type { PublicChatRoomMetadata } from "@/types/public/public";
 
 export async function getPublicChatRoomMetadata(
   roomId: string,

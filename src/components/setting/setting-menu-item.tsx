@@ -5,16 +5,9 @@ import { SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 import type { SettingMenuItem } from "@/types/setting/setting-menu";
+import type { SettingMenuHandlers } from "@/types/setting/setting-menu";
 import Link from "next/link";
 import { ReactNode } from "react";
-
-export type SettingMenuHandlers = {
-  onClose?: () => void; // Popover 컨텍스트에서 사용 (있으면 Popover 스타일, 없으면 Sidebar 스타일)
-  onLogout: () => Promise<void>;
-  isLogoutPending?: boolean;
-  isActive?: (href: string) => boolean;
-  actions?: Record<string, () => void | Promise<void>>;
-};
 
 const POPOVER_ITEM_CLASS = "cursor-pointer w-full flex-row justify-start gap-5";
 

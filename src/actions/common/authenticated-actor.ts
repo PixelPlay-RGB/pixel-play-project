@@ -3,18 +3,8 @@
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import type { AppMessageCode } from "@/constants/common/app-message-code";
 import { createClient } from "@/lib/supabase/server";
-import type { AppActionResult } from "@/types/common/action";
+import type { AuthenticatedActorResult } from "@/types/auth/auth";
 import { isAuthSessionMissingError } from "@/utils/auth/auth-error";
-
-export type AuthenticatedActorResult =
-  | {
-      success: true;
-      userId: string;
-    }
-  | {
-      success: false;
-      result: AppActionResult;
-    };
 
 interface GetAuthenticatedActorIdOptions {
   logLabel: string;

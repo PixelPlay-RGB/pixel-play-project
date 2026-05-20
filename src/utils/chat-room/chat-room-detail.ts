@@ -1,16 +1,14 @@
 // 채팅방 상세 RPC 응답을 화면 모델로 정규화합니다.
 
-import type { ChatRoom, ChatRoomDetailResponse } from "@/types/chat-room/chat-room";
+import type {
+  ChatRoom,
+  ChatRoomDetailData,
+  ChatRoomDetailResponse,
+} from "@/types/chat-room/chat-room";
 import type { RoomMember, RoomMemberQuery } from "@/types/chat-room/chat-room-member";
 import type { Json } from "@/types/database.types";
 
 type JsonRecord = { [key: string]: Json | undefined };
-
-export interface ChatRoomDetailData {
-  room: ChatRoom | null;
-  membership: RoomMember | null;
-  members: RoomMemberQuery[];
-}
 
 export const EMPTY_CHAT_ROOM_DETAIL: ChatRoomDetailData = {
   room: null,

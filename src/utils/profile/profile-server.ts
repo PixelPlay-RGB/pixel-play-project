@@ -1,18 +1,7 @@
 // 서버 컴포넌트에서 사용할 현재 프로필 snapshot 조회를 관리합니다.
 import { createClient } from "@/lib/supabase/server";
-import type { DBUser } from "@/types/profile/user";
+import type { CurrentProfileSnapshotState } from "@/types/profile/user";
 import { isAuthSessionMissingError } from "@/utils/auth/auth-error";
-
-export type CurrentProfileSnapshot = Pick<
-  DBUser,
-  "id" | "nickname" | "photo_url" | "linked_providers"
->;
-
-export interface CurrentProfileSnapshotState {
-  authProviders: string[];
-  hasAuthUser: boolean;
-  profile: CurrentProfileSnapshot | null;
-}
 
 export async function getCurrentProfileSnapshot(): Promise<CurrentProfileSnapshotState> {
   const supabase = await createClient();

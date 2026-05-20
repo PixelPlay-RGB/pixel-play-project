@@ -2,7 +2,8 @@
 // 이메일 OTP 회원가입 Server Action을 관리합니다.
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { FORM_MESSAGE } from "@/constants/common/form-message";
-import { checkEmailExists, checkNicknameExists, type ActionResponse } from "@/actions/auth/shared";
+import { checkEmailExists, checkNicknameExists } from "@/actions/auth/shared";
+import type { ActionResponse } from "@/types/common/action";
 import { createClient } from "@/lib/supabase/server";
 import { signUpBaseSchema } from "@/lib/zod/auth";
 import type { FieldActionResult } from "@/types/common/action";

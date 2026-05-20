@@ -11,3 +11,14 @@ export type { AuthUser };
  * public.user 테이블 row (프로필 정보)
  */
 export type DBUser = GenericTables<"user">;
+
+export type CurrentProfileSnapshot = Pick<
+  DBUser,
+  "id" | "nickname" | "photo_url" | "linked_providers"
+>;
+
+export interface CurrentProfileSnapshotState {
+  authProviders: string[];
+  hasAuthUser: boolean;
+  profile: CurrentProfileSnapshot | null;
+}
