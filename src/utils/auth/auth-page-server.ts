@@ -4,8 +4,15 @@ import { redirect } from "next/navigation";
 import { getCurrentProfileSnapshot } from "@/utils/profile/profile-server";
 import { sanitizeRedirectPath } from "@/utils/common/redirect";
 
-export async function redirectAuthenticatedUserFromAuthPage(next?: string | null) {
-  const { hasAuthUser, profile } = await getCurrentProfileSnapshot();
+interface RedirectAuthenticatedUserFromAuthPageOptions {
+  allowEmailSignupInProgress?: boolean;
+}
+
+export async function redirectAuthenticatedUserFromAuthPage(
+  next?: string | null,
+  options: RedirectAuthenticatedUserFromAuthPageOptions = {},
+) {
+  const { authProviders, hasAuthUser, profile } = await getCurrentProfileSnapshot();
 
   if (!hasAuthUser) {
     return;
@@ -13,6 +20,10 @@ export async function redirectAuthenticatedUserFromAuthPage(next?: string | null
 
   if (profile) {
     redirect(sanitizeRedirectPath(next));
+  }
+
+  if (options.allowEmailSignupInProgress && authProviders.includes("email")) {
+    return;
   }
 
   const redirectPath = sanitizeRedirectPath(next);
