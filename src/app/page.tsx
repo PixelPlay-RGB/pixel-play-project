@@ -4,15 +4,17 @@ import PublicHomePreview from "@/components/public/public-home-preview";
 import { getCurrentProfileSnapshot } from "@/utils/profile/profile-server";
 import type { Metadata } from "next";
 
-const HOME_METADATA_TITLE = "실시간 채팅 서비스";
+const HOME_METADATA_TITLE = "PixelPlay";
 const HOME_METADATA_DESCRIPTION =
   "PixelPlay에서 채팅방을 만들고 참여하며 실시간 소통을 즐겨보세요.";
 
 export const metadata: Metadata = {
-  title: HOME_METADATA_TITLE,
+  title: {
+    absolute: HOME_METADATA_TITLE,
+  },
   description: HOME_METADATA_DESCRIPTION,
   openGraph: {
-    title: `${HOME_METADATA_TITLE} | PixelPlay`,
+    title: HOME_METADATA_TITLE,
     description: HOME_METADATA_DESCRIPTION,
     url: "/",
     images: [
@@ -26,7 +28,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: `${HOME_METADATA_TITLE} | PixelPlay`,
+    title: HOME_METADATA_TITLE,
     description: HOME_METADATA_DESCRIPTION,
     images: ["/og-home.webp"],
   },
