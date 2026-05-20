@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/constants/common/query-keys";
 import { resolveProfileQueryErrorCode, useUser } from "@/hooks/profile/use-profile";
 import { createClient } from "@/lib/supabase/client";
-import type { ChatRoomDetailData } from "@/utils/chat-room/chat-room-detail";
+import type { ChatRoomDetailData } from "@/types/chat-room/chat-room";
 import { EMPTY_CHAT_ROOM_DETAIL, parseChatRoomDetail } from "@/utils/chat-room/chat-room-detail";
 
 async function fetchChatRoomDetail(roomId: string): Promise<ChatRoomDetailData> {

@@ -9,7 +9,7 @@ import { SETTING_MENU } from "@/constants/setting/setting-menu";
 import { useLogout } from "@/hooks/auth/use-logout";
 import { cn } from "@/lib/utils";
 import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
-import type { CurrentProfileSnapshot } from "@/utils/profile/profile-server";
+import type { CurrentProfileSnapshot } from "@/types/profile/user";
 import Link from "next/link";
 import { useState } from "react";
 

@@ -20,6 +20,8 @@ export type AppActionResult<T = undefined> = {
   photoUrl?: string | null;
 };
 
+export type ActionResponse = AppActionResult;
+
 export type FieldActionResult<T = undefined> = AppActionResult<T> & {
   fieldMessage?: FormMessage;
 };

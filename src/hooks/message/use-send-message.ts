@@ -7,7 +7,12 @@ import { sendMessageAction } from "@/actions/message/message";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { QUERY_KEYS } from "@/constants/common/query-keys";
 import type { AppActionResult } from "@/types/common/action";
-import type { MessageListItem, MessageQuery, MessagesPage } from "@/types/message/message";
+import type {
+  MessageListItem,
+  MessageQuery,
+  MessagesPage,
+  SendMessageVariables,
+} from "@/types/message/message";
 import type { DBUser } from "@/types/profile/user";
 import { createOptimisticMessage, updateFirstMessagesPage } from "@/utils/message/message-cache";
 import {
@@ -17,11 +22,6 @@ import {
   updateMessageClientStatus,
 } from "@/utils/message/message";
 import { toastAppError } from "@/utils/common/toast-message";
-
-export interface SendMessageVariables {
-  content: string;
-  optimisticMessageId?: string;
-}
 
 type SendMessageResult = AppActionResult<{ message: MessageQuery }>;
 

@@ -1,7 +1,7 @@
-﻿"use server";
+"use server";
 // 프로필 수정 Server Action을 관리합니다.
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
-import type { ActionResponse } from "@/actions/auth/shared";
+import type { ActionResponse } from "@/types/common/action";
 import { createClient } from "@/lib/supabase/server";
 import { isAuthSessionMissingError } from "@/utils/auth/auth-error";
 import { revalidatePath } from "next/cache";

@@ -13,3 +13,11 @@ export type SettingMenuItem =
   | (SettingMenuItemBase & { type: "action" })
   | (SettingMenuItemBase & { type: "logout" })
   | (SettingMenuItemBase & { type: "changePassword" });
+
+export type SettingMenuHandlers = {
+  onClose?: () => void;
+  onLogout: () => Promise<void>;
+  isLogoutPending?: boolean;
+  isActive?: (href: string) => boolean;
+  actions?: Record<string, () => void | Promise<void>>;
+};

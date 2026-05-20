@@ -1,10 +1,5 @@
-﻿// Auth Server Action에서 공유하는 중복 확인 helper와 응답 타입을 관리합니다.
+// Auth Server Action에서 공유하는 중복 확인 helper와 응답 타입을 관리합니다.
 import { createAdminClient } from "@/lib/supabase/admin-client";
-import type { AppActionResult } from "@/types/common/action";
-
-export interface ActionResponse extends AppActionResult {
-  photoUrl?: string | null;
-}
 
 type DuplicateCheckResult =
   | {

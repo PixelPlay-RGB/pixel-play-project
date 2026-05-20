@@ -23,3 +23,8 @@ export interface MessagesPage {
   items: MessageListItem[];
   nextCursor?: string;
 }
+
+export interface SendMessageVariables {
+  content: string;
+  optimisticMessageId?: string;
+}

@@ -1,14 +1,7 @@
 // auth Zustand store를 관리합니다.
-import { AuthUser } from "@/types/profile/user";
+import type { UserState } from "@/types/auth/auth";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
-
-export interface UserState {
-  user: AuthUser | null;
-  loading: boolean;
-  setUser: (user: AuthUser | null) => void;
-  setLoading: (loading: boolean) => void;
-}
 
 /**
  * Supabase auth 기반 인증 유저 store.

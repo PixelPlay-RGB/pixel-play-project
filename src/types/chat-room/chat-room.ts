@@ -1,6 +1,7 @@
 // chat-room 도메인 타입을 정의합니다.
 import type { Database } from "@/types/database.types";
 import { GenericTables } from "@/types/common/supabase.types";
+import type { RoomMember, RoomMemberQuery } from "@/types/chat-room/chat-room-member";
 
 export type ChatRoomTab = "JOINED" | "NOT_JOINED" | "OWNED";
 export type ChatRoomSortOption = "CREATED_AT_DESC" | "LAST_MESSAGE_DESC" | "CURRENT_MEMBER_DESC";
@@ -23,6 +24,12 @@ export interface ChatRoomListItem {
   owner_nickname: string;
   created_at: string;
   unread_count: number;
+}
+
+export interface ChatRoomDetailData {
+  room: ChatRoom | null;
+  membership: RoomMember | null;
+  members: RoomMemberQuery[];
 }
 
 export type ChatRoomCardData = Pick<
