@@ -58,7 +58,7 @@ export default function SignupForm({ next }: Props) {
     getValues,
     setError,
     clearErrors,
-    formState: { errors, dirtyFields, isSubmitting },
+    formState: { errors, dirtyFields, isSubmitting, isValid },
   } = useForm<SignUpFormValues>({
     resolver: zodResolver(signUpSchema),
     mode: "onChange",
@@ -84,7 +84,7 @@ export default function SignupForm({ next }: Props) {
   });
 
   const isBusy = isFormBusy || isCheckingNickname;
-  const canSubmit = emailVerified && isNicknameAvailable && !isBusy;
+  const canSubmit = emailVerified && isNicknameAvailable && isValid && !isBusy;
 
   const handleCheckNickname = async () => {
     await checkNickname();

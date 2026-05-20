@@ -1,4 +1,5 @@
 import { Database } from "@/types/database.types";
+import { hasEmailProvider } from "@/utils/auth/auth-provider";
 import { createPathWithNext } from "@/utils/common/redirect";
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
@@ -75,6 +76,13 @@ export async function updateSession(request: NextRequest) {
     }
 
     // 닉네임(display_name)이 없다면 프로필 설정 페이지로 강제 이동
+    const isEmailSignupInProgress =
+      !profile?.nickname && hasEmailProvider(user.app_metadata?.providers);
+
+    if (!profile?.nickname && isEmailSignupInProgress && isPublicRoute(pathname)) {
+      return supabaseResponse;
+    }
+
     if (!profile?.nickname && !isCompleteProfilePage) {
       const url = request.nextUrl.clone();
       const completeProfilePath = createPathWithNext("/auth/complete-profile", currentPath);

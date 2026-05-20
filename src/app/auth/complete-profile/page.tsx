@@ -4,6 +4,7 @@ import Logo from "@/components/common/logo";
 import { Separator } from "@/components/ui/separator";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
+import { hasEmailProvider } from "@/utils/auth/auth-provider";
 import { createPathWithNext, sanitizeRedirectPath } from "@/utils/common/redirect";
 import { redirect } from "next/navigation";
 
@@ -38,6 +39,10 @@ export default async function Page({ searchParams }: Props) {
 
   if (profile?.nickname) {
     redirect(safeNext);
+  }
+
+  if (hasEmailProvider(user.app_metadata?.providers)) {
+    redirect(createPathWithNext("/auth/signup", safeNext));
   }
 
   return (

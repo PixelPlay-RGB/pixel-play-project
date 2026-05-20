@@ -2,6 +2,7 @@
 import { createClient } from "@/lib/supabase/server";
 import type { CurrentProfileSnapshotState } from "@/types/profile/user";
 import { isAuthSessionMissingError } from "@/utils/auth/auth-error";
+import { getAuthProviders } from "@/utils/auth/auth-provider";
 
 export async function getCurrentProfileSnapshot(): Promise<CurrentProfileSnapshotState> {
   const supabase = await createClient();
@@ -22,9 +23,7 @@ export async function getCurrentProfileSnapshot(): Promise<CurrentProfileSnapsho
     };
   }
 
-  const authProviders = ((user.app_metadata?.providers ?? []) as string[]).filter(
-    (provider): provider is string => typeof provider === "string",
-  );
+  const authProviders = getAuthProviders(user.app_metadata?.providers);
 
   const { data: profile, error: profileError } = await supabase
     .from("user")
