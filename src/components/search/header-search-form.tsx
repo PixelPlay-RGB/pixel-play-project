@@ -12,9 +12,35 @@ import { ArrowLeft, Search } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 
-function resolveSearchPath(query: string) {
+interface SearchRouteConfig {
+  path: "/chat/search" | "/live/search";
+  placeholder: string;
+  mobileAriaLabel: string;
+}
+
+function getSearchRouteConfig(pathname: string): SearchRouteConfig | null {
+  if (pathname === "/live" || pathname === "/live/search" || /^\/live\/[^/]+$/.test(pathname)) {
+    return {
+      path: "/live/search",
+      placeholder: "라이브 검색",
+      mobileAriaLabel: "라이브 검색 열기",
+    };
+  }
+
+  if (pathname === "/chat" || pathname.startsWith("/chat/")) {
+    return {
+      path: "/chat/search",
+      placeholder: "채팅방 전체 검색",
+      mobileAriaLabel: "채팅방 전체 검색 열기",
+    };
+  }
+
+  return null;
+}
+
+function resolveSearchPath(path: SearchRouteConfig["path"], query: string) {
   const searchParams = new URLSearchParams({ query });
-  return `/chat/search?${searchParams.toString()}`;
+  return `${path}?${searchParams.toString()}`;
 }
 
 export default function HeaderSearchForm() {
@@ -22,13 +48,13 @@ export default function HeaderSearchForm() {
   const pathname = usePathname();
   const [query, setQuery] = useState("");
   const [mobileOpen, setMobileOpen] = useState(false);
-  const isChatRoute = pathname === "/chat" || pathname.startsWith("/chat/");
-  const isMobileSearchOpen = mobileOpen && isChatRoute;
+  const searchConfig = getSearchRouteConfig(pathname);
+  const isMobileSearchOpen = mobileOpen && Boolean(searchConfig);
 
   const handleSearch = () => {
     const trimmedQuery = query.trim();
-    if (!trimmedQuery || !isChatRoute) return;
-    router.push(resolveSearchPath(trimmedQuery));
+    if (!trimmedQuery || !searchConfig) return;
+    router.push(resolveSearchPath(searchConfig.path, trimmedQuery));
     setQuery("");
     setMobileOpen(false);
   };
@@ -38,7 +64,7 @@ export default function HeaderSearchForm() {
     setQuery("");
   };
 
-  if (!isChatRoute) return null;
+  if (!searchConfig) return null;
 
   return (
     <>
@@ -47,7 +73,7 @@ export default function HeaderSearchForm() {
           variant="ghost"
           size="icon-sm"
           onClick={() => setMobileOpen(true)}
-          aria-label="채팅방 전체 검색"
+          aria-label={searchConfig.mobileAriaLabel}
           className="text-muted-foreground hover:text-foreground"
         >
           <Search className="size-5" />
@@ -79,7 +105,7 @@ export default function HeaderSearchForm() {
                 value={query}
                 onChange={setQuery}
                 onSubmit={handleSearch}
-                placeholder="채팅방 전체 검색"
+                placeholder={searchConfig.placeholder}
                 autoFocus
                 onKeyDown={(event) => {
                   if (event.key === "Escape") {
@@ -97,7 +123,7 @@ export default function HeaderSearchForm() {
         value={query}
         onChange={setQuery}
         onSubmit={handleSearch}
-        placeholder="채팅방 전체 검색"
+        placeholder={searchConfig.placeholder}
         className="hidden sm:block sm:w-48 md:w-64"
       />
     </>

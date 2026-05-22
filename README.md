@@ -132,6 +132,7 @@ npm run dev
 
 - `/`는 공개 랜딩 페이지이며 라이브 둘러보기, 채팅 시작하기, 로그인 CTA를 제공합니다.
 - `/live`는 비로그인 사용자도 접근할 수 있는 라이브 목록 페이지입니다.
+- `/live/search?query=검색어`는 비로그인 사용자도 접근할 수 있는 라이브 검색 페이지입니다. 현재는 placeholder 상태입니다.
 - `/live/[creatorId]`는 비로그인 사용자도 접근할 수 있는 라이브 시청 라우터입니다. 현재는 placeholder 상태입니다.
 - `/live/[creatorId]/chat`은 비로그인 사용자도 읽기 접근할 수 있는 라이브 채팅 팝아웃 라우터입니다. 현재는 placeholder 상태입니다.
 - `/chat`은 로그인 후 접근하는 채팅방 목록 페이지입니다.
@@ -140,11 +141,12 @@ npm run dev
 - `/user`는 `/user/profile`로 이동하며, `/user/profile`에서 프로필 설정을 관리합니다.
 - `/user/donations`는 로그인 후 접근하는 후원 라우터입니다. 후원 내역과 후원금 충전 진입은 `/user/donations`에서 함께 보여줍니다. 현재는 placeholder 상태입니다.
 - `/channel/live`, `/channel/chat`, `/channel/security`, `/channel/analytics`는 로그인 후 접근하는 크리에이터 채널 관리 라우터입니다. 현재는 placeholder 상태입니다.
-- 헤더 내비게이션은 라이브, 채팅 탭 순서로 제공하고, 검색 입력은 채팅 관련 라우터에서만 채팅방 검색으로 이동합니다.
+- 헤더 내비게이션은 라이브, 채팅 탭 순서로 제공하고, 검색 입력은 라이브 라우터에서는 라이브 검색으로, 채팅 관련 라우터에서는 채팅방 검색으로 이동합니다.
 
 ### 라이브 작업 준비
 
 - 라이브 목록 UI는 `src/components/live/live-list.tsx`에서 시청자 입장의 공개 목록으로 유지합니다.
+- 라이브 검색 라우터는 `/live/search?query=검색어`를 기준으로 준비했습니다.
 - 라이브 시청 라우터는 `/live/[creatorId]`를 기준으로 준비했습니다.
 - 라이브 채팅 팝아웃은 `/live/[creatorId]/chat`에서 채팅 전용 보조창 흐름으로 확장합니다.
 - 방송 운영과 설정은 공개 라이브 라우터와 분리해 `/channel/live`, `/channel/chat`, `/channel/security`, `/channel/analytics`에서 확장합니다.

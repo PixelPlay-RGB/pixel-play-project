@@ -22,7 +22,7 @@ export default async function Header() {
         <HeaderMainNav />
 
         <div className="flex items-center gap-2 sm:gap-3">
-          {profile && <HeaderSearchForm />}
+          <HeaderSearchForm />
           <ThemeToggleButton />
           {profile && <UserAccountMenu profile={profile} />}
           {!hasAuthUser && <LoginButton />}
