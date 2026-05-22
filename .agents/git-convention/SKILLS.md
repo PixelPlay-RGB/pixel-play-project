@@ -50,7 +50,8 @@
 
 ### 🎯 단독 테스트 결과
 
-- `npm run types` 정상 완료.
+- `npm run typecheck` 정상 완료.
+- DB 스키마 변경이 있다면 `npm run db:types` 정상 완료.
 - `npm run build` 정상 완료.
 - 직접 확인한 주요 시나리오를 작성한다.
 - 확인하지 못한 항목이 있다면 미확인 사유를 작성한다.

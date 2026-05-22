@@ -9,7 +9,8 @@
     "lint": "eslint",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "types": "npx supabase gen types typescript --project-id ftvoynnfpfzmblgrntqj --schema public > src/types/database.types.ts"
+    "typecheck": "tsc --noEmit --pretty false",
+    "db:types": "npx supabase gen types typescript --project-id ftvoynnfpfzmblgrntqj --schema public > src/types/database.types.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.0",

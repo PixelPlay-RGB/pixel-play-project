@@ -2,7 +2,7 @@
 
 실시간 채팅과 라이브 스트리밍을 함께 제공하는 웹 애플리케이션입니다.
 
-Next.js 16 App Router, React 19, Supabase Auth/Postgres/Realtime, TanStack Query, Zustand를 중심으로 공개 랜딩, 라이브 목록, 채팅방 목록, 채팅방 상세, 메시지, 참여자 관리, 채팅방 검색, 프로필 설정 기능을 제공합니다.
+Next.js 16 App Router, React 19, Supabase Auth/Postgres/Realtime, TanStack Query, Zustand를 중심으로 공개 랜딩, 라이브 목록, 채팅방 목록, 채팅방 상세, 메시지, 참여자 관리, 채팅방 검색, 프로필 설정 기능을 제공합니다. 라이브 시청, 라이브 검색, 채널 관리, 팔로우, 후원 영역은 App Router 기반 placeholder를 먼저 준비해둔 상태입니다.
 
 현재 쓰기 작업은 Server Action에서 인증 사용자를 확인한 뒤 Supabase `service_role` 경계로 RPC를 호출하는 방식으로 통일되어 있습니다. 클라이언트 컴포넌트는 TanStack Query mutation hook으로 pending 상태와 후처리를 관리합니다.
 
@@ -84,7 +84,7 @@ https://<supabase-project-id>.supabase.co/auth/v1/callback
 npm run dev
 ```
 
-브라우저에서 <http://localhost:3000>에 접속합니다. 비로그인 상태의 `/`, `/live`, `/chat/room/[roomId]`는 공개 화면을 표시하고, 보호 라우트는 `/auth/login?next=<현재경로>`로 이동합니다.
+브라우저에서 <http://localhost:3000>에 접속합니다. 비로그인 상태의 `/`, `/live`, `/live/*`, `/chat/room/[roomId]`는 공개 화면을 표시하고, 보호 라우트는 `/auth/login?next=<현재경로>`로 이동합니다.
 
 ---
 
@@ -98,7 +98,8 @@ npm run dev
 | `npm run lint`         | ESLint 검사                                            |
 | `npm run format`       | Prettier 포맷 적용                                     |
 | `npm run format:check` | Prettier 포맷 검사                                     |
-| `npm run types`        | Supabase 타입을 `src/types/database.types.ts`로 재생성 |
+| `npm run typecheck`    | TypeScript 타입 검사                                   |
+| `npm run db:types`     | Supabase 타입을 `src/types/database.types.ts`로 재생성 |
 
 ---
 
@@ -131,11 +132,23 @@ npm run dev
 
 - `/`는 공개 랜딩 페이지이며 라이브 둘러보기, 채팅 시작하기, 로그인 CTA를 제공합니다.
 - `/live`는 비로그인 사용자도 접근할 수 있는 라이브 목록 페이지입니다.
+- `/live/[creatorId]`는 비로그인 사용자도 접근할 수 있는 라이브 시청 라우터입니다. 현재는 placeholder 상태입니다.
+- `/live/search`는 비로그인 사용자도 접근할 수 있는 라이브 검색 라우터입니다. 현재는 placeholder 상태입니다.
 - `/chat`은 로그인 후 접근하는 채팅방 목록 페이지입니다.
 - `/chat/room/[roomId]`는 채팅방 상세 페이지이며 비로그인 사용자는 공유 preview를 보고, 로그인 사용자는 채팅방 상세로 진입합니다.
 - `/chat/search?query=검색어`는 채팅방 검색 결과 페이지입니다.
 - `/user`는 `/user/profile`로 이동하며, `/user/profile`에서 프로필 설정을 관리합니다.
+- `/user/follows`, `/user/donations`, `/user/donations/charge`, `/user/donations/history`는 로그인 후 접근하는 사용자 팔로우와 후원 라우터입니다. 현재는 placeholder 상태입니다.
+- `/channel`, `/channel/live`, `/channel/analytics`, `/channel/broadcast`, `/channel/chat`, `/channel/profile`은 로그인 후 접근하는 크리에이터 채널 관리 라우터입니다. 현재는 placeholder 상태입니다.
 - 헤더 내비게이션은 라이브, 채팅 탭 순서로 제공하고, 검색 입력은 채팅 관련 라우터에서만 채팅방 검색으로 이동합니다.
+
+### 라이브 작업 준비
+
+- 라이브 목록 UI는 `src/components/live/live-list.tsx`에서 시청자 입장의 공개 목록으로 유지합니다.
+- 라이브 시청 라우터는 `/live/[creatorId]`를 기준으로 준비했습니다.
+- 방송 운영과 설정은 공개 라이브 라우터와 분리해 `/channel/live`, `/channel/broadcast`, `/channel/chat`, `/channel/profile`에서 확장합니다.
+- 채널 관리 라우터는 현재 크리에이터 본인 설정과 운영 영역으로 사용하고, 공개 팬카페형 채널은 후속 후보로 분리합니다.
+- 후원 영역은 `/user/donations` 하위로 이름을 통일했습니다.
 
 ### SEO와 공유 미리보기
 
@@ -214,22 +227,30 @@ npm run dev
 src/
 ├── actions/               # Server Actions
 │   ├── auth/              # 로그인, 회원가입, 비밀번호, OAuth
+│   ├── channel/           # 채널 관리 Server Action 예약
 │   ├── chat-room/         # 채팅방 생성, 참여, 나가기, 멤버 액션
 │   ├── common/            # 인증 사용자 확인 등 공통 action helper
+│   ├── donations/         # 후원 Server Action 예약
+│   ├── follows/           # 팔로우 Server Action 예약
+│   ├── live/              # 라이브 Server Action 예약
 │   ├── message/           # 메시지 전송
 │   └── profile/           # 프로필 수정
 ├── app/                   # Next.js App Router
 │   ├── api/               # Route Handler
 │   ├── auth/              # 로그인, 회원가입, OAuth callback, 프로필 완성
+│   ├── channel/           # 채널 관리 placeholder 라우터
 │   ├── chat/              # 채팅방 목록, 상세, 검색
-│   ├── live/              # 라이브 목록
-│   ├── user/              # 사용자 설정
+│   ├── live/              # 라이브 목록, 시청, 검색 라우터
+│   ├── user/              # 사용자 설정, 팔로우, 후원 라우터
 │   └── page.tsx           # 공개 랜딩
 ├── components/
 │   ├── auth/              # 로그인, 회원가입, OAuth, 비밀번호 UI
+│   ├── channel/           # 채널 관리 UI 예약
 │   ├── chat-room/         # 채팅방 상세, 메시지, 참여자 관리 UI
 │   ├── chat-room-list/    # 채팅방 목록, 카드, 생성 Dialog
 │   ├── common/            # Header, Footer, Providers
+│   ├── donations/         # 후원 UI 예약
+│   ├── follows/           # 팔로우 UI 예약
 │   ├── live/              # 라이브 목록 UI
 │   ├── preview/           # 랜딩과 공유 preview UI
 │   ├── search/            # 검색 입력과 검색 결과
@@ -237,16 +258,24 @@ src/
 │   └── ui/                # shadcn / Base UI 기반 공통 컴포넌트
 ├── constants/             # 도메인별 상수와 Query Key Factory
 │   ├── auth/
+│   ├── channel/
 │   ├── chat-room/
 │   ├── common/
+│   ├── donations/
+│   ├── follows/
+│   ├── live/
 │   ├── message/
 │   ├── public/
 │   ├── search/
 │   └── setting/
 ├── hooks/
 │   ├── auth/              # 인증 mutation 훅
+│   ├── channel/           # 채널 관리 훅 예약
 │   ├── chat-room/         # 채팅방 조회, 참여, 멤버 액션, Realtime 훅
 │   ├── common/            # 반응형, observer, textarea resize 훅
+│   ├── donations/         # 후원 훅 예약
+│   ├── follows/           # 팔로우 훅 예약
+│   ├── live/              # 라이브 훅 예약
 │   ├── message/           # 메시지 조회, 전송, draft, viewport 훅
 │   ├── profile/           # 프로필 조회, 수정, 닉네임 확인 훅
 │   └── search/            # 검색 결과 조회 훅
@@ -258,8 +287,12 @@ src/
 ├── stores/                # Zustand stores
 ├── types/                 # 도메인 타입과 Supabase 생성 타입
 │   ├── auth/
+│   ├── channel/
 │   ├── chat-room/
 │   ├── common/
+│   ├── donations/
+│   ├── follows/
+│   ├── live/
 │   ├── message/
 │   ├── profile/
 │   ├── public/
@@ -268,8 +301,12 @@ src/
 │   └── database.types.ts
 └── utils/                 # 도메인 보조 유틸과 서버 snapshot helper
     ├── auth/
+    ├── channel/
     ├── chat-room/
     ├── common/
+    ├── donations/
+    ├── follows/
+    ├── live/
     ├── message/
     ├── profile/
     └── public/
@@ -378,7 +415,7 @@ src/
 Supabase 스키마나 RPC를 수정한 뒤에는 migration 파일을 추가하고 타입을 갱신합니다.
 
 ```bash
-npm run types
+npm run db:types
 ```
 
 현재 저장소의 `supabase/migrations/` 에 포함된 주요 migration 파일은 다음과 같습니다.
@@ -435,7 +472,7 @@ npm run types
 - Server Action 호출의 pending, toast, router 이동, query invalidation은 `src/hooks/{domain}`의 도메인별 mutation hook에서 관리합니다.
 - 헤더 사용자 계정 메뉴와 설정 사이드바는 표시용 프로필 snapshot을 Server Component 경계에서 받아 사용하며, 프로필 수정과 OAuth unlink 후에는 `router.refresh()`로 snapshot을 갱신합니다.
 - Query Key는 `src/constants/common/query-keys.ts`의 `QUERY_KEYS`를 기준으로 생성합니다.
-- Supabase 스키마 타입은 `src/types/database.types.ts`를 기준으로 사용합니다.
+- Supabase 스키마 타입은 `src/types/database.types.ts`를 기준으로 사용하며, DB 스키마 변경이 있을 때만 `npm run db:types`로 갱신합니다.
 
 ---
 

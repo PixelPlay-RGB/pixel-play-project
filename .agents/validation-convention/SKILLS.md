@@ -15,8 +15,9 @@
 
 아래 명령은 이 프로젝트에서 반복적으로 sandbox 또는 네트워크 제한에 걸린 이력이 있으므로 처음부터 권한 상승으로 실행합니다.
 
-- `npm run types`.
+- `npm run db:types`.
   - `npx supabase gen types`가 npm registry 또는 Supabase 원격 프로젝트에 접근합니다.
+  - DB 테이블, 컬럼, enum, RPC, trigger, migration 변경이 있을 때만 실행합니다.
 - `npm run build`.
   - Next.js `next/font`가 Google Fonts를 fetch합니다.
 - `git add`.
@@ -30,6 +31,7 @@
 
 - `npm run format:check`.
 - `npm run lint`.
+- `npm run typecheck`.
 - 특정 파일에 대한 `prettier --write`.
 - `git status`, `git diff`, `git log`, `git show`.
 
@@ -37,12 +39,20 @@
 
 ## 4. 검증 순서
 
-코드, 타입, hook, Server Action, Supabase 타입, 라우트, 공용 컴포넌트가 바뀐 경우 아래 순서로 검증합니다.
+코드, hook, Server Action, 라우트, 공용 컴포넌트가 바뀐 경우 아래 순서로 검증합니다.
 
-1. `npm run types`.
+1. `npm run typecheck`.
 2. `npm run format:check`.
 3. `npm run lint`.
 4. `npm run build`.
+
+DB 테이블, 컬럼, enum, RPC, trigger, migration처럼 Supabase 스키마 또는 DB 로직이 바뀐 경우에만 아래 순서로 검증합니다.
+
+1. `npm run db:types`.
+2. `npm run typecheck`.
+3. `npm run format:check`.
+4. `npm run lint`.
+5. `npm run build`.
 
 문서만 바뀐 경우에는 `npm run format:check`만 실행할 수 있습니다.
 
