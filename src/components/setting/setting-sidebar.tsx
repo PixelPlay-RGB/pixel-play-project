@@ -1,7 +1,7 @@
 "use client";
 // setting-sidebar 컴포넌트를 제공합니다.
 
-import SettingMenuItem from "@/components/setting/setting-menu-item";
+import UserAccountMenuItemRenderer from "@/components/common/user-account-menu-item";
 import {
   Sidebar,
   SidebarContent,
@@ -15,7 +15,10 @@ import {
 } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
-import { SETTING_MENU } from "@/constants/setting/setting-menu";
+import {
+  USER_ACCOUNT_PASSWORD_MENU_ITEM,
+  USER_ACCOUNT_SIDEBAR_MENU_ITEMS,
+} from "@/constants/common/user-account-menu";
 import { useLogout } from "@/hooks/auth/use-logout";
 import type { CurrentProfileSnapshot } from "@/types/profile/user";
 import { LogOut } from "lucide-react";
@@ -36,8 +39,6 @@ export default function SettingSidebar({ isMobile, profile }: Props) {
     await logoutMutation.mutateAsync().catch(() => undefined);
   };
 
-  const mainItems = SETTING_MENU.filter((item) => item.type !== "logout");
-
   return (
     <Sidebar
       collapsible={isMobile ? "offcanvas" : "none"}
@@ -48,16 +49,12 @@ export default function SettingSidebar({ isMobile, profile }: Props) {
           <SidebarGroupLabel>설정</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className={"gap-1.5"}>
-              {mainItems.map((item) =>
-                SettingMenuItem(
-                  item,
-                  {
-                    onLogout: handleLogout,
-                    isLogoutPending: logoutMutation.isPending,
-                    isActive: (href) => pathname === href,
-                  },
+              {USER_ACCOUNT_SIDEBAR_MENU_ITEMS.map((item) =>
+                UserAccountMenuItemRenderer(item, {
+                  context: "sidebar",
+                  isActive: (href) => pathname === href,
                   isCanChangePassword,
-                ),
+                }),
               )}
             </SidebarMenu>
           </SidebarGroupContent>
@@ -68,6 +65,10 @@ export default function SettingSidebar({ isMobile, profile }: Props) {
         <Separator />
         <div className="p-2">
           <SidebarMenu>
+            {UserAccountMenuItemRenderer(USER_ACCOUNT_PASSWORD_MENU_ITEM, {
+              context: "sidebar",
+              isCanChangePassword,
+            })}
             <SidebarMenuItem>
               <SidebarMenuButton
                 onClick={() => void handleLogout()}
