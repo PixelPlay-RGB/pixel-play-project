@@ -12,7 +12,12 @@ function getCurrentPathWithSearch(request: NextRequest) {
 }
 
 function isPublicRoute(pathname: string) {
-  return pathname === "/" || pathname === "/live" || pathname.startsWith("/chat/room/");
+  return (
+    pathname === "/" ||
+    pathname === "/live" ||
+    pathname.startsWith("/live/") ||
+    pathname.startsWith("/chat/room/")
+  );
 }
 
 function isPublicAuthRoute(pathname: string) {
