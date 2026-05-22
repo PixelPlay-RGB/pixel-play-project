@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 export default function LiveList() {
   return (
-    <div className="flex min-h-105 w-full flex-col items-center justify-center">
+    <div className="flex min-h-105 w-full flex-1 flex-col items-center justify-center">
       <div className="flex flex-col items-center gap-5 px-4 text-center">
         <div className="relative">
           <div

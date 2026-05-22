@@ -12,7 +12,7 @@ export default function ChatRoomCardGridSkeleton({ count }: Props) {
   const skeletonCount = count ?? CHAT_ROOM_PAGE_SIZE_BY_COLUMN_COUNT.four;
 
   return (
-    <div className={cn("grid grid-cols-1 gap-3", "sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4")}>
+    <div className={cn("grid grid-cols-1 gap-3", "sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4")}>
       {Array.from({ length: skeletonCount }).map((_, i) => (
         <div
           key={i}
@@ -21,7 +21,7 @@ export default function ChatRoomCardGridSkeleton({ count }: Props) {
             "border-border/60 bg-card dark:border-border/30",
             isResponsiveFallback &&
               i >= CHAT_ROOM_PAGE_SIZE_BY_COLUMN_COUNT.two &&
-              "hidden 2xl:flex",
+              "hidden xl:flex",
             isResponsiveFallback &&
               i >= CHAT_ROOM_PAGE_SIZE_BY_COLUMN_COUNT.one &&
               i < CHAT_ROOM_PAGE_SIZE_BY_COLUMN_COUNT.two &&

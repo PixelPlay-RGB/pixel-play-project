@@ -69,11 +69,15 @@ export default function ChatRoomListCreateDialog() {
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger
-        className={cn(
-          "flex items-center gap-1.5 self-end px-5 py-2",
-          "bg-brand shadow-brand/25 rounded-xl text-sm font-bold text-white shadow-sm",
-          "cursor-pointer transition-all hover:opacity-90 active:scale-95",
-        )}
+        render={
+          <Button
+            className={cn(
+              "h-9 w-auto shrink-0 gap-1.5 self-end rounded-xl px-4 sm:px-5",
+              "bg-brand shadow-brand/25 text-sm font-bold text-white shadow-sm",
+              "hover:opacity-90 active:scale-95",
+            )}
+          />
+        }
       >
         <Plus className="h-4 w-4" />
         채팅방 만들기

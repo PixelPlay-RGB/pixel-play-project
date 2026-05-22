@@ -1,5 +1,5 @@
 // 내부 redirect 경로 검증과 query 생성을 관리합니다.
-const DEFAULT_REDIRECT_PATH = "/";
+const DEFAULT_REDIRECT_PATH = "/live";
 
 export function sanitizeRedirectPath(value: string | null | undefined): string {
   if (!value) {

@@ -7,31 +7,28 @@ import {
   mobileHeaderSearchVariants,
 } from "@/lib/framer-motion/header-search";
 import { cn } from "@/lib/utils";
-import { useMainMenuStore } from "@/stores/main-menu";
-import type { MainMenuSidebarKey } from "@/types/common/main-menu-sidebar";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowLeft, Search } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 
-function resolveSearchPath(activeMenu: MainMenuSidebarKey, query: string) {
+function resolveSearchPath(query: string) {
   const searchParams = new URLSearchParams({ query });
-  if (activeMenu === "live") return `/search/live?${searchParams.toString()}`;
-  return `/search/chat?${searchParams.toString()}`;
+  return `/chat/search?${searchParams.toString()}`;
 }
 
 export default function HeaderSearchForm() {
   const router = useRouter();
-  const activeMenu = useMainMenuStore((state) => state.activeMenu);
+  const pathname = usePathname();
   const [query, setQuery] = useState("");
   const [mobileOpen, setMobileOpen] = useState(false);
-  const isLiveSearchDisabled = activeMenu === "live";
-  const isMobileSearchOpen = mobileOpen && !isLiveSearchDisabled;
+  const isChatRoute = pathname === "/chat" || pathname.startsWith("/chat/");
+  const isMobileSearchOpen = mobileOpen && isChatRoute;
 
   const handleSearch = () => {
     const trimmedQuery = query.trim();
-    if (!trimmedQuery || isLiveSearchDisabled) return;
-    router.push(resolveSearchPath(activeMenu, trimmedQuery));
+    if (!trimmedQuery || !isChatRoute) return;
+    router.push(resolveSearchPath(trimmedQuery));
     setQuery("");
     setMobileOpen(false);
   };
@@ -41,19 +38,17 @@ export default function HeaderSearchForm() {
     setQuery("");
   };
 
+  if (!isChatRoute) return null;
+
   return (
     <>
       <div className="sm:hidden">
         <Button
           variant="ghost"
           size="icon-sm"
-          onClick={() => !isLiveSearchDisabled && setMobileOpen(true)}
-          disabled={isLiveSearchDisabled}
+          onClick={() => setMobileOpen(true)}
           aria-label="채팅방 전체 검색"
-          className={cn(
-            "text-muted-foreground hover:text-foreground",
-            isLiveSearchDisabled && "cursor-not-allowed",
-          )}
+          className="text-muted-foreground hover:text-foreground"
         >
           <Search className="size-5" />
         </Button>
@@ -85,7 +80,6 @@ export default function HeaderSearchForm() {
                 onChange={setQuery}
                 onSubmit={handleSearch}
                 placeholder="채팅방 전체 검색"
-                disabled={isLiveSearchDisabled}
                 autoFocus
                 onKeyDown={(event) => {
                   if (event.key === "Escape") {
@@ -103,8 +97,7 @@ export default function HeaderSearchForm() {
         value={query}
         onChange={setQuery}
         onSubmit={handleSearch}
-        placeholder={isLiveSearchDisabled ? "라이브 검색 준비 중" : "채팅방 전체 검색"}
-        disabled={isLiveSearchDisabled}
+        placeholder="채팅방 전체 검색"
         className="hidden sm:block sm:w-48 md:w-64"
       />
     </>

@@ -9,8 +9,7 @@ export default function Footer() {
     <footer
       className={cn(
         "w-full border-t px-4 py-3 text-center text-sm sm:px-10 sm:py-5",
-        "border-brand/15 bg-brand/5 text-muted-foreground",
-        "dark:border-border dark:bg-muted/60",
+        "route-accent-chrome text-muted-foreground",
       )}
     >
       <div className="flex flex-wrap items-center justify-center gap-3">
@@ -20,7 +19,7 @@ export default function Footer() {
             href={`https://github.com/${github}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1 transition-opacity hover:opacity-70"
+            className="route-accent-text-hover flex items-center gap-1 transition-colors"
           >
             <Image src="/github.svg" alt="GitHub" width={16} height={16} className="dark:invert" />
             {name}

@@ -5,11 +5,14 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 function getCurrentPathWithSearch(request: NextRequest) {
-  return `${request.nextUrl.pathname}${request.nextUrl.search}`;
+  const pathname =
+    request.nextUrl.pathname === "/user" ? "/user/profile" : request.nextUrl.pathname;
+
+  return `${pathname}${request.nextUrl.search}`;
 }
 
 function isPublicRoute(pathname: string) {
-  return pathname === "/" || pathname.startsWith("/chat-room/");
+  return pathname === "/" || pathname === "/live" || pathname.startsWith("/chat/room/");
 }
 
 function isPublicAuthRoute(pathname: string) {

@@ -1,5 +1,6 @@
 // 라우트 레이아웃을 구성합니다.
 import Header from "@/components/common/header";
+import RouteAccentProvider from "@/components/common/route-accent-provider";
 import RouteFooter from "@/components/common/route-footer";
 import { Toaster } from "@/components/ui/sonner";
 import Providers from "@/components/common/providers";
@@ -62,13 +63,15 @@ export default function RootLayout({
       className={cn("h-full", "antialiased", notoSans.variable, geistMono.variable, "font-sans")}
       suppressHydrationWarning
     >
-      <body className="bg-brand/5 dark:bg-background flex min-h-full flex-col">
+      <body className="bg-background dark:bg-background flex min-h-full flex-col">
         <Providers>
-          <Toaster />
-          <Header />
-          <AuthToastHandler />
-          <main className="flex flex-1 flex-col">{children}</main>
-          <RouteFooter />
+          <RouteAccentProvider>
+            <Toaster />
+            <Header />
+            <AuthToastHandler />
+            <main className="flex flex-1 flex-col">{children}</main>
+            <RouteFooter />
+          </RouteAccentProvider>
         </Providers>
       </body>
     </html>
