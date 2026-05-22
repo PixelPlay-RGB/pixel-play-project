@@ -1,8 +1,8 @@
 # PixelPlay
 
-실시간 채팅 플랫폼으로 시작해 향후 라이브 스트리밍 서비스로 확장할 계획인 웹 애플리케이션입니다.
+실시간 채팅과 라이브 스트리밍을 함께 제공하는 웹 애플리케이션입니다.
 
-Next.js 16 App Router, React 19, Supabase Auth/Postgres/Realtime, TanStack Query, Zustand를 중심으로 인증, 채팅방 목록, 채팅방 상세, 메시지, 참여자 관리, 채팅방 검색 기능을 제공합니다.
+Next.js 16 App Router, React 19, Supabase Auth/Postgres/Realtime, TanStack Query, Zustand를 중심으로 공개 랜딩, 라이브 목록, 채팅방 목록, 채팅방 상세, 메시지, 참여자 관리, 채팅방 검색, 프로필 설정 기능을 제공합니다.
 
 현재 쓰기 작업은 Server Action에서 인증 사용자를 확인한 뒤 Supabase `service_role` 경계로 RPC를 호출하는 방식으로 통일되어 있습니다. 클라이언트 컴포넌트는 TanStack Query mutation hook으로 pending 상태와 후처리를 관리합니다.
 
@@ -84,7 +84,7 @@ https://<supabase-project-id>.supabase.co/auth/v1/callback
 npm run dev
 ```
 
-브라우저에서 <http://localhost:3000>에 접속합니다. 비로그인 상태의 `/`와 `/chat-room/[roomId]`는 공유 preview를 표시하고, 보호 라우트는 `/auth/login?next=<현재경로>`로 이동합니다.
+브라우저에서 <http://localhost:3000>에 접속합니다. 비로그인 상태의 `/`, `/live`, `/chat/room/[roomId]`는 공개 화면을 표시하고, 보호 라우트는 `/auth/login?next=<현재경로>`로 이동합니다.
 
 ---
 
@@ -118,8 +118,8 @@ npm run dev
 - OAuth 연동 계정 목록을 `linked_providers`로 관리합니다.
 - 운영 메일 발송은 Supabase Custom SMTP 설정으로 처리하며, 앱 코드에는 SMTP key를 저장하지 않습니다.
 - 로그인 상태는 Supabase 세션을 기준으로 검증하고 `AuthListener`가 Zustand store에 동기화합니다.
-- 로그인 완료 사용자가 `/auth/login`, `/auth/signup`에 직접 접근하면 홈으로 이동합니다.
-- Header 프로필 배지와 Settings sidebar의 표시용 프로필은 서버 snapshot으로 조회하고, profile mutation 성공 후 `router.refresh()`로 갱신합니다.
+- 로그인 완료 사용자가 `/auth/login`, `/auth/signup`에 직접 접근하면 `next` 경로로 이동하고, 유효한 `next`가 없으면 `/live`로 이동합니다.
+- 헤더 사용자 계정 메뉴와 설정 사이드바의 표시용 프로필은 서버 snapshot으로 조회하고, profile mutation 성공 후 `router.refresh()`로 갱신합니다.
 - 프로필이 없는 OAuth 로그인 유저는 `/auth/complete-profile`로 이동합니다. 이메일 OTP 회원가입 중간 세션은 `/auth/signup`에서 최종 가입 폼을 계속 작성합니다.
 - 비로그인 유저는 보호 라우트 접근 시 `/auth/login?next=<현재경로>`로 이동하고, 로그인 성공 후 원래 경로로 돌아갑니다.
 - 비밀번호 변경, 프로필 수정, 프로필 이미지 업로드와 삭제, 회원 탈퇴 API를 제공합니다.
@@ -127,19 +127,22 @@ npm run dev
 - 로그인, OAuth 로그인, 회원가입 OTP, 닉네임 확인, 프로필 완성, 프로필 수정, 로그아웃은 mutation hook으로 호출 상태와 toast, router 이동, query invalidation을 관리합니다.
 - 제출, 취소, 닫기, 링크 이동 같은 UI 동작은 같은 busy 상태를 기준으로 잠겨 중복 요청을 방지합니다.
 
-### 메인 화면
+### 라우터와 메인 화면
 
-- 좌측 사이드바에서 채팅과 라이브 메뉴를 전환합니다.
-- 현재 라이브 메뉴는 준비 상태 화면을 제공합니다.
-- 모바일에서는 사이드바가 offcanvas 형태로 동작합니다.
-- 헤더 검색 입력은 채팅 메뉴에서 채팅방 검색 페이지로 이동합니다. 모바일에서는 검색 아이콘 클릭 시 전체 폭 검색 모드 헤더로 전환됩니다.
+- `/`는 공개 랜딩 페이지이며 라이브 둘러보기, 채팅 시작하기, 로그인 CTA를 제공합니다.
+- `/live`는 비로그인 사용자도 접근할 수 있는 라이브 목록 페이지입니다.
+- `/chat`은 로그인 후 접근하는 채팅방 목록 페이지입니다.
+- `/chat/room/[roomId]`는 채팅방 상세 페이지이며 비로그인 사용자는 공유 preview를 보고, 로그인 사용자는 채팅방 상세로 진입합니다.
+- `/chat/search?query=검색어`는 채팅방 검색 결과 페이지입니다.
+- `/user`는 `/user/profile`로 이동하며, `/user/profile`에서 프로필 설정을 관리합니다.
+- 헤더 내비게이션은 라이브, 채팅 탭 순서로 제공하고, 검색 입력은 채팅 관련 라우터에서만 채팅방 검색으로 이동합니다.
 
 ### SEO와 공유 미리보기
 
 - production domain은 `https://pixel-play.studio`를 metadata base URL로 사용합니다.
 - 메인 페이지와 채팅방 상세 페이지는 Open Graph와 Twitter large image metadata를 제공합니다.
 - 공유 썸네일은 `public/og-home.webp`, `public/og-chat-room.webp` 정적 에셋을 사용합니다.
-- `/`와 `/chat-room/[roomId]`는 비로그인 상태에서도 public preview를 렌더링해 일반 링크 공유 크롤러가 metadata를 읽을 수 있습니다.
+- `/`와 `/chat/room/[roomId]`는 비로그인 상태에서도 public preview를 렌더링해 일반 링크 공유 크롤러가 metadata를 읽을 수 있습니다.
 - 비로그인 채팅방 preview는 `get_public_chat_room_metadata` RPC로 title과 description만 조회합니다. 메시지, 멤버, unread, presence는 공개하지 않습니다.
 
 ### 채팅방 목록
@@ -162,7 +165,7 @@ npm run dev
 
 ### 채팅방 상세
 
-- `/chat-room/[roomId]` 라우트에서 채팅방 상세 화면을 제공합니다.
+- `/chat/room/[roomId]` 라우트에서 채팅방 상세 화면을 제공합니다.
 - 비로그인 사용자가 공유 링크로 접근하면 채팅방 title, description, 로그인 CTA만 있는 public preview를 표시합니다. 로그인 후에는 같은 URL에서 기존 채팅방 상세 화면으로 전환됩니다.
 - 방 정보, 참여자 목록, 메시지 목록, 메시지 입력 영역을 렌더링합니다.
 - 방 정보, 현재 유저 멤버십, 활성 참여자 목록은 `get_chat_room_detail` RPC로 함께 조회합니다.
@@ -196,7 +199,7 @@ npm run dev
 
 ### 채팅방 검색
 
-- `/search/chat?query=검색어` 라우트에서 채팅방 검색 결과를 제공합니다.
+- `/chat/search?query=검색어` 라우트에서 채팅방 검색 결과를 제공합니다.
 - 제목 검색과 방장 닉네임 검색을 섹션으로 나누어 표시합니다.
 - 검색 결과는 `search_chat_rooms` RPC와 `useInfiniteQuery`로 페이지 단위 조회합니다.
 - 빈 검색어, 결과 없음, 검색 오류 상태는 서로 다른 안내 문구로 표시합니다.
@@ -216,18 +219,19 @@ src/
 │   ├── message/           # 메시지 전송
 │   └── profile/           # 프로필 수정
 ├── app/                   # Next.js App Router
-│   ├── (settings)/        # 설정 라우트 그룹
 │   ├── api/               # Route Handler
 │   ├── auth/              # 로그인, 회원가입, OAuth callback, 프로필 완성
-│   ├── chat-room/[roomId] # 채팅방 상세와 공유 preview
-│   └── search/chat/       # 채팅방 검색
+│   ├── chat/              # 채팅방 목록, 상세, 검색
+│   ├── live/              # 라이브 목록
+│   ├── user/              # 사용자 설정
+│   └── page.tsx           # 공개 랜딩
 ├── components/
 │   ├── auth/              # 로그인, 회원가입, OAuth, 비밀번호 UI
 │   ├── chat-room/         # 채팅방 상세, 메시지, 참여자 관리 UI
 │   ├── chat-room-list/    # 채팅방 목록, 카드, 생성 Dialog
-│   ├── common/            # Header, Footer, Providers, Sidebar
-│   ├── live/              # 라이브 준비 화면
-│   ├── public/            # 비로그인 public preview UI
+│   ├── common/            # Header, Footer, Providers
+│   ├── live/              # 라이브 목록 UI
+│   ├── preview/           # 랜딩과 공유 preview UI
 │   ├── search/            # 검색 입력과 검색 결과
 │   ├── setting/           # 프로필 설정
 │   └── ui/                # shadcn / Base UI 기반 공통 컴포넌트
@@ -425,11 +429,11 @@ npm run types
 ## 상태 관리와 캐싱
 
 - 인증 세션은 `useAuthStore`가 관리합니다.
-- 메인 메뉴 선택 상태는 `useMainMenuStore`가 관리합니다.
+- 헤더 내비게이션과 로고 이동 기준은 현재 pathname을 기준으로 계산합니다.
 - 채팅방 목록 탭, 정렬값, 검색어(`searchQuery`)는 `useChatRoomStore`가 관리합니다. 탭 변경 시 정렬값은 탭별 기본값으로, 검색어는 빈 값으로 초기화됩니다.
 - 서버 데이터는 TanStack Query로 관리합니다.
 - Server Action 호출의 pending, toast, router 이동, query invalidation은 `src/hooks/{domain}`의 도메인별 mutation hook에서 관리합니다.
-- Header 프로필 배지와 Settings sidebar는 표시용 프로필 snapshot을 Server Component 경계에서 받아 사용하며, 프로필 수정과 OAuth unlink 후에는 `router.refresh()`로 snapshot을 갱신합니다.
+- 헤더 사용자 계정 메뉴와 설정 사이드바는 표시용 프로필 snapshot을 Server Component 경계에서 받아 사용하며, 프로필 수정과 OAuth unlink 후에는 `router.refresh()`로 snapshot을 갱신합니다.
 - Query Key는 `src/constants/common/query-keys.ts`의 `QUERY_KEYS`를 기준으로 생성합니다.
 - Supabase 스키마 타입은 `src/types/database.types.ts`를 기준으로 사용합니다.
 
