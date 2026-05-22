@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 
 export default function RouteFooter() {
   const pathname = usePathname();
-  const isChatRoomRoute = pathname.startsWith("/chat-room");
+  const isChatRoomRoute = pathname.startsWith("/chat/room");
 
   if (isChatRoomRoute) {
     return null;

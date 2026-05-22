@@ -13,7 +13,7 @@ interface Props {
 }
 
 export default function PublicChatRoomPreview({ roomId, room }: Props) {
-  const next = `/chat-room/${roomId}`;
+  const next = `/chat/room/${roomId}`;
   const title = room?.title ?? "채팅방을 찾을 수 없습니다.";
   const description =
     room?.description || "로그인하면 PixelPlay 채팅방에 참여하고 메시지를 확인할 수 있습니다.";

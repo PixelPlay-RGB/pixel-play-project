@@ -84,7 +84,7 @@ https://<supabase-project-id>.supabase.co/auth/v1/callback
 npm run dev
 ```
 
-브라우저에서 <http://localhost:3000>에 접속합니다. 비로그인 상태의 `/`와 `/chat-room/[roomId]`는 공유 preview를 표시하고, 보호 라우트는 `/auth/login?next=<현재경로>`로 이동합니다.
+브라우저에서 <http://localhost:3000>에 접속합니다. 비로그인 상태의 `/`, `/live`, `/chat/room/[roomId]`는 접근 가능하며, 보호 라우트는 `/auth/login?next=<현재경로>`로 이동합니다.
 
 ---
 
@@ -127,19 +127,22 @@ npm run dev
 - 로그인, OAuth 로그인, 회원가입 OTP, 닉네임 확인, 프로필 완성, 프로필 수정, 로그아웃은 mutation hook으로 호출 상태와 toast, router 이동, query invalidation을 관리합니다.
 - 제출, 취소, 닫기, 링크 이동 같은 UI 동작은 같은 busy 상태를 기준으로 잠겨 중복 요청을 방지합니다.
 
-### 메인 화면
+### 메인 화면과 라우터
 
 - 좌측 사이드바에서 채팅과 라이브 메뉴를 전환합니다.
+- `/chat` 라우트에서 채팅방 목록을 제공합니다.
+- `/live` 라우트에서 현재 송출 중인 라이브 목록을 제공합니다.
 - 현재 라이브 메뉴는 준비 상태 화면을 제공합니다.
 - 모바일에서는 사이드바가 offcanvas 형태로 동작합니다.
-- 헤더 검색 입력은 채팅 메뉴에서 채팅방 검색 페이지로 이동합니다. 모바일에서는 검색 아이콘 클릭 시 전체 폭 검색 모드 헤더로 전환됩니다.
+- 헤더 검색 입력은 채팅 메뉴에서 `/chat/search` 채팅방 검색 페이지로 이동합니다. 모바일에서는 검색 아이콘 클릭 시 전체 폭 검색 모드 헤더로 전환됩니다.
 
 ### SEO와 공유 미리보기
 
 - production domain은 `https://pixel-play.studio`를 metadata base URL로 사용합니다.
 - 메인 페이지와 채팅방 상세 페이지는 Open Graph와 Twitter large image metadata를 제공합니다.
 - 공유 썸네일은 `public/og-home.webp`, `public/og-chat-room.webp` 정적 에셋을 사용합니다.
-- `/`와 `/chat-room/[roomId]`는 비로그인 상태에서도 public preview를 렌더링해 일반 링크 공유 크롤러가 metadata를 읽을 수 있습니다.
+- `/`와 `/chat/room/[roomId]`는 비로그인 상태에서도 public preview를 렌더링해 일반 링크 공유 크롤러가 metadata를 읽을 수 있습니다.
+- `/live`는 비로그인 상태에서도 접근 가능한 public 라이브 목록 라우트입니다.
 - 비로그인 채팅방 preview는 `get_public_chat_room_metadata` RPC로 title과 description만 조회합니다. 메시지, 멤버, unread, presence는 공개하지 않습니다.
 
 ### 채팅방 목록
@@ -162,7 +165,7 @@ npm run dev
 
 ### 채팅방 상세
 
-- `/chat-room/[roomId]` 라우트에서 채팅방 상세 화면을 제공합니다.
+- `/chat/room/[roomId]` 라우트에서 채팅방 상세 화면을 제공합니다.
 - 비로그인 사용자가 공유 링크로 접근하면 채팅방 title, description, 로그인 CTA만 있는 public preview를 표시합니다. 로그인 후에는 같은 URL에서 기존 채팅방 상세 화면으로 전환됩니다.
 - 방 정보, 참여자 목록, 메시지 목록, 메시지 입력 영역을 렌더링합니다.
 - 방 정보, 현재 유저 멤버십, 활성 참여자 목록은 `get_chat_room_detail` RPC로 함께 조회합니다.
@@ -196,7 +199,7 @@ npm run dev
 
 ### 채팅방 검색
 
-- `/search/chat?query=검색어` 라우트에서 채팅방 검색 결과를 제공합니다.
+- `/chat/search?query=검색어` 라우트에서 채팅방 검색 결과를 제공합니다.
 - 제목 검색과 방장 닉네임 검색을 섹션으로 나누어 표시합니다.
 - 검색 결과는 `search_chat_rooms` RPC와 `useInfiniteQuery`로 페이지 단위 조회합니다.
 - 빈 검색어, 결과 없음, 검색 오류 상태는 서로 다른 안내 문구로 표시합니다.
@@ -216,11 +219,11 @@ src/
 │   ├── message/           # 메시지 전송
 │   └── profile/           # 프로필 수정
 ├── app/                   # Next.js App Router
-│   ├── (settings)/        # 설정 라우트 그룹
 │   ├── api/               # Route Handler
 │   ├── auth/              # 로그인, 회원가입, OAuth callback, 프로필 완성
-│   ├── chat-room/[roomId] # 채팅방 상세와 공유 preview
-│   └── search/chat/       # 채팅방 검색
+│   ├── chat/              # 채팅방 목록, 상세, 검색
+│   ├── live/              # 라이브 목록
+│   └── user/              # 유저 설정
 ├── components/
 │   ├── auth/              # 로그인, 회원가입, OAuth, 비밀번호 UI
 │   ├── chat-room/         # 채팅방 상세, 메시지, 참여자 관리 UI

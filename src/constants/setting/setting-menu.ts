@@ -7,7 +7,7 @@ export const SETTING_MENU: SettingMenuItem[] = [
     id: "profile",
     type: "link",
     label: "프로필",
-    href: "/profile",
+    href: "/user/profile",
     icon: User,
     sidebarOnly: true,
   },

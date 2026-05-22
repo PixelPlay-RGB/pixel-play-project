@@ -54,7 +54,7 @@ export default function LinkedOAuthAlertDialog({
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=/profile`,
+        redirectTo: `${window.location.origin}/auth/callback?next=/user/profile`,
       },
     });
 

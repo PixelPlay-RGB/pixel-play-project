@@ -1,8 +1,5 @@
-// 라우트 레이아웃을 구성합니다.
-/**
- * 채팅 화면을 헤더 아래 뷰포트에 고정한다.
- */
-export default function ChatLayout({
+// 채팅방 상세 화면을 헤더 아래 뷰포트에 고정합니다.
+export default function ChatRoomLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;

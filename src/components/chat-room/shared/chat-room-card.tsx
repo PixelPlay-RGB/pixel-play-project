@@ -18,7 +18,7 @@ export default function ChatRoomCard({ chatRoom, unreadMessageCount = 0 }: Props
 
   return (
     <Link
-      href={`/chat-room/${chatRoom.id}`}
+      href={`/chat/room/${chatRoom.id}`}
       prefetch={false}
       className={cn(
         "group relative flex min-h-25 w-full items-stretch justify-between gap-3 overflow-hidden text-left",

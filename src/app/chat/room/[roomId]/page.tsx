@@ -1,4 +1,4 @@
-// 라우트 페이지를 렌더링합니다.
+// 채팅방 상세 페이지를 렌더링합니다.
 import { ChatRoom } from "@/components/chat-room/chat-room";
 import PublicChatRoomPreview from "@/components/public/public-chat-room-preview";
 import { getPublicChatRoomMetadata } from "@/utils/public/public-chat-room";
@@ -8,7 +8,7 @@ import type { Metadata } from "next";
 const CHAT_ROOM_METADATA_FALLBACK_TITLE = "채팅방";
 const CHAT_ROOM_METADATA_FALLBACK_DESCRIPTION = "PixelPlay 채팅방에서 실시간 메시지를 즐겨보세요.";
 
-export async function generateMetadata(props: PageProps<"/chat-room/[roomId]">): Promise<Metadata> {
+export async function generateMetadata(props: PageProps<"/chat/room/[roomId]">): Promise<Metadata> {
   const { roomId } = await props.params;
   const room = await getPublicChatRoomMetadata(roomId);
 
@@ -21,7 +21,7 @@ export async function generateMetadata(props: PageProps<"/chat-room/[roomId]">):
     openGraph: {
       title: `${title} | PixelPlay`,
       description,
-      url: `/chat-room/${roomId}`,
+      url: `/chat/room/${roomId}`,
       images: [
         {
           url: "/og-chat-room.webp",
@@ -40,7 +40,7 @@ export async function generateMetadata(props: PageProps<"/chat-room/[roomId]">):
   };
 }
 
-export default async function Page(props: PageProps<"/chat-room/[roomId]">) {
+export default async function Page(props: PageProps<"/chat/room/[roomId]">) {
   const { roomId } = await props.params;
   const [{ profile }, room] = await Promise.all([
     getCurrentProfileSnapshot(),

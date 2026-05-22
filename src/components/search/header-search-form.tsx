@@ -17,7 +17,7 @@ import { useState } from "react";
 function resolveSearchPath(activeMenu: MainMenuSidebarKey, query: string) {
   const searchParams = new URLSearchParams({ query });
   if (activeMenu === "live") return `/search/live?${searchParams.toString()}`;
-  return `/search/chat?${searchParams.toString()}`;
+  return `/chat/search?${searchParams.toString()}`;
 }
 
 export default function HeaderSearchForm() {

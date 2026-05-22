@@ -44,7 +44,7 @@ export default function HeaderProfileBadge({ profile }: Props) {
 
       <PopoverContent className="max-w-max min-w-60 overflow-hidden" align="end">
         <Link
-          href={"/profile"}
+          href={"/user/profile"}
           onClick={() => setOpen(false)}
           className="hover:bg-muted flex items-center gap-4 rounded-lg p-1"
         >
