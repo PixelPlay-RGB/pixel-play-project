@@ -140,7 +140,7 @@ export default function ChatRoomListTabs({ counts, isFetching = false }: Props) 
           <TabsList
             className={cn(
               "grid h-auto w-full min-w-0 grid-cols-3 items-center gap-1 p-1",
-              "bg-muted/50 dark:bg-muted/50 rounded-xl",
+              "bg-brand/10 rounded-xl dark:bg-white/5",
               "lg:w-150",
             )}
           >
@@ -159,7 +159,7 @@ export default function ChatRoomListTabs({ counts, isFetching = false }: Props) 
                     cn(
                       "relative flex h-auto min-w-0 cursor-pointer items-center justify-center gap-1 rounded-lg px-3 py-2 text-sm font-semibold transition-all duration-200 lg:gap-1.5 lg:px-4",
                       active
-                        ? "text-brand shadow-brand/10 bg-background dark:bg-card shadow-sm dark:shadow-none"
+                        ? "bg-background text-brand shadow-brand/10 data-active:bg-background! data-active:text-brand! dark:bg-card dark:text-brand dark:data-active:bg-card! shadow-sm dark:shadow-none"
                         : "text-muted-foreground hover:bg-background/50 hover:text-foreground dark:hover:bg-accent/50",
                     )
                   }

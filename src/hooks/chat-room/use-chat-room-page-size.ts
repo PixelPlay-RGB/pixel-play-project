@@ -13,11 +13,11 @@ interface UseChatRoomPageSizeOptions {
 }
 
 function resolveChatRoomPageSize(width: number) {
-  if (width >= CHAT_ROOM_GRID_BREAKPOINTS.twoXl) {
+  if (width >= CHAT_ROOM_GRID_BREAKPOINTS.xl) {
     return CHAT_ROOM_PAGE_SIZE_BY_COLUMN_COUNT.four;
   }
 
-  if (width >= CHAT_ROOM_GRID_BREAKPOINTS.xl) {
+  if (width >= CHAT_ROOM_GRID_BREAKPOINTS.lg) {
     return CHAT_ROOM_PAGE_SIZE_BY_COLUMN_COUNT.three;
   }
 

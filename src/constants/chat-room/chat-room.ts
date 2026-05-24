@@ -7,8 +7,8 @@ export const CHAT_ROOM_TITLE_MAX_LENGTH = 50;
 export const CHAT_ROOM_DESCRIPTION_MAX_LENGTH = 200;
 export const CHAT_ROOM_GRID_BREAKPOINTS = {
   sm: 640,
+  lg: 1024,
   xl: 1280,
-  twoXl: 1536,
 } as const;
 export const CHAT_ROOM_PAGE_SIZE_BY_COLUMN_COUNT = {
   one: 8,

@@ -30,7 +30,7 @@ export default function ChatRoomListSearchInput() {
       onChange={setLocalValue}
       onSubmit={handleSubmit}
       placeholder="현재 탭에서 채팅방 검색"
-      className="lg:w-80"
+      className="sm:w-100"
     />
   );
 }

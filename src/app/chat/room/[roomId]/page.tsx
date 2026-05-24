@@ -1,8 +1,8 @@
 // 채팅방 상세 페이지를 렌더링합니다.
 import { ChatRoom } from "@/components/chat-room/chat-room";
-import PublicChatRoomPreview from "@/components/public/public-chat-room-preview";
-import { getPublicChatRoomMetadata } from "@/utils/public/public-chat-room";
+import ChatRoomPreview from "@/components/preview/chat-room-preview";
 import { getCurrentProfileSnapshot } from "@/utils/profile/profile-server";
+import { getPublicChatRoomMetadata } from "@/utils/public/public-chat-room";
 import type { Metadata } from "next";
 
 const CHAT_ROOM_METADATA_FALLBACK_TITLE = "채팅방";
@@ -48,7 +48,7 @@ export default async function Page(props: PageProps<"/chat/room/[roomId]">) {
   ]);
 
   if (!profile) {
-    return <PublicChatRoomPreview roomId={roomId} room={room} />;
+    return <ChatRoomPreview roomId={roomId} room={room} />;
   }
 
   return <ChatRoom roomId={roomId} />;

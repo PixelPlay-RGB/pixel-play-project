@@ -39,7 +39,7 @@ export default function ChatRoomListSortMenu() {
             type="button"
             variant="outline"
             className={cn(
-              "h-9 min-w-34 justify-between rounded-xl px-3",
+              "h-9 min-w-34 shrink-0 justify-between rounded-xl px-3",
               "text-muted-foreground hover:text-foreground",
               "sm:min-w-38",
             )}
