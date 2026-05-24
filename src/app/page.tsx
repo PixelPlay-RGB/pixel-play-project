@@ -1,7 +1,5 @@
 // 라우트 페이지를 렌더링합니다.
-import MainMenuSidebar from "@/components/common/main-menu-sidebar";
-import PublicHomePreview from "@/components/public/public-home-preview";
-import { getCurrentProfileSnapshot } from "@/utils/profile/profile-server";
+import LandingPreview from "@/components/preview/landing-preview";
 import type { Metadata } from "next";
 
 const HOME_METADATA_TITLE = "PixelPlay - RGB";
@@ -35,11 +33,5 @@ export const metadata: Metadata = {
 };
 
 export default async function Home() {
-  const { profile } = await getCurrentProfileSnapshot();
-
-  if (!profile) {
-    return <PublicHomePreview />;
-  }
-
-  return <MainMenuSidebar />;
+  return <LandingPreview />;
 }

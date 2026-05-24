@@ -1,8 +1,8 @@
 # PixelPlay
 
-실시간 채팅 플랫폼으로 시작해 향후 라이브 스트리밍 서비스로 확장할 계획인 웹 애플리케이션입니다.
+실시간 채팅과 라이브 스트리밍을 함께 제공하는 웹 애플리케이션입니다.
 
-Next.js 16 App Router, React 19, Supabase Auth/Postgres/Realtime, TanStack Query, Zustand를 중심으로 인증, 채팅방 목록, 채팅방 상세, 메시지, 참여자 관리, 채팅방 검색 기능을 제공합니다.
+Next.js 16 App Router, React 19, Supabase Auth/Postgres/Realtime, TanStack Query, Zustand를 중심으로 공개 랜딩, 라이브 목록, 라이브 검색, 채팅방 목록, 채팅방 상세, 메시지, 참여자 관리, 채팅방 검색 기능을 제공합니다.
 
 현재 쓰기 작업은 Server Action에서 인증 사용자를 확인한 뒤 Supabase `service_role` 경계로 RPC를 호출하는 방식으로 통일되어 있습니다. 클라이언트 컴포넌트는 TanStack Query mutation hook으로 pending 상태와 후처리를 관리합니다.
 
@@ -84,7 +84,7 @@ https://<supabase-project-id>.supabase.co/auth/v1/callback
 npm run dev
 ```
 
-브라우저에서 <http://localhost:3000>에 접속합니다. 비로그인 상태의 `/`, `/live`, `/chat/room/[roomId]`는 접근 가능하며, 보호 라우트는 `/auth/login?next=<현재경로>`로 이동합니다.
+브라우저에서 <http://localhost:3000>에 접속합니다. 비로그인 상태의 `/`, `/live`, `/live/search`, `/chat/room/[roomId]`는 접근 가능하며, 보호 라우트는 `/auth/login?next=<현재경로>`로 이동합니다.
 
 ---
 
@@ -129,12 +129,15 @@ npm run dev
 
 ### 메인 화면과 라우터
 
-- 좌측 사이드바에서 채팅과 라이브 메뉴를 전환합니다.
-- `/chat` 라우트에서 채팅방 목록을 제공합니다.
+- `/`는 공개 랜딩 페이지이며 라이브 둘러보기, 채팅 시작하기, 로그인 CTA를 제공합니다.
+- 헤더 내비게이션은 라이브, 채팅 탭 순서로 제공합니다.
 - `/live` 라우트에서 현재 송출 중인 라이브 목록을 제공합니다.
-- 현재 라이브 메뉴는 준비 상태 화면을 제공합니다.
-- 모바일에서는 사이드바가 offcanvas 형태로 동작합니다.
-- 헤더 검색 입력은 채팅 메뉴에서 `/chat/search` 채팅방 검색 페이지로 이동합니다. 모바일에서는 검색 아이콘 클릭 시 전체 폭 검색 모드 헤더로 전환됩니다.
+- `/live/search?query=검색어` 라우트에서 라이브 검색 페이지를 제공합니다.
+- `/chat` 라우트에서 채팅방 목록을 제공합니다.
+- `/chat/room/[roomId]` 라우트에서 채팅방 상세와 비로그인 공유 preview를 제공합니다.
+- `/chat/search?query=검색어` 라우트에서 채팅방 검색 페이지를 제공합니다.
+- `/user`는 `/user/profile`로 이동하며, `/user/profile`에서 프로필 설정을 관리합니다.
+- 헤더 검색 입력은 라이브 라우터에서는 라이브 검색으로, 채팅 관련 라우터에서는 채팅방 검색으로 이동합니다. 모바일에서는 검색 아이콘 클릭 시 전체 폭 검색 모드 헤더로 전환됩니다.
 
 ### SEO와 공유 미리보기
 
@@ -142,7 +145,7 @@ npm run dev
 - 메인 페이지와 채팅방 상세 페이지는 Open Graph와 Twitter large image metadata를 제공합니다.
 - 공유 썸네일은 `public/og-home.webp`, `public/og-chat-room.webp` 정적 에셋을 사용합니다.
 - `/`와 `/chat/room/[roomId]`는 비로그인 상태에서도 public preview를 렌더링해 일반 링크 공유 크롤러가 metadata를 읽을 수 있습니다.
-- `/live`는 비로그인 상태에서도 접근 가능한 public 라이브 목록 라우트입니다.
+- `/live`와 `/live/search`는 비로그인 상태에서도 접근 가능한 public 라이브 라우트입니다.
 - 비로그인 채팅방 preview는 `get_public_chat_room_metadata` RPC로 title과 description만 조회합니다. 메시지, 멤버, unread, presence는 공개하지 않습니다.
 
 ### 채팅방 목록

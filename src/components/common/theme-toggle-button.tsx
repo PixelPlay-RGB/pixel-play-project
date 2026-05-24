@@ -26,9 +26,9 @@ export default function ThemeToggleButton() {
       onClick={() => setTheme(isDark ? "light" : "dark")}
       aria-label={isDark ? "라이트 모드로 전환" : "다크 모드로 전환"}
       className={cn(
-        "grid size-10 place-items-center rounded-md",
-        "hover:bg-muted cursor-pointer",
-        "text-foreground",
+        "grid size-10 place-items-center rounded-md border border-transparent bg-transparent",
+        "cursor-pointer",
+        "text-foreground hover:bg-muted hover:text-foreground dark:hover:bg-muted/50",
         "transition-all duration-200",
       )}
     >
