@@ -17,10 +17,10 @@ export default function ChatRoomListHeader({ counts, isFetching = false }: Props
       <div className="flex flex-col gap-1.5">
         <p className="text-brand text-sm font-black tracking-wide">채팅방</p>
         <h1 className="text-foreground text-2xl leading-tight font-black tracking-tight sm:text-3xl">
-          지금 떠있는 방들 둘러보기
+          채팅방 둘러보기
         </h1>
         <p className="text-muted-foreground max-w-2xl text-sm leading-6">
-          관심 가는 방에 들어가서 바로 대화를 시작하세요.
+          관심 있는 채팅방에 참여하거나, 직접 채팅방을 만들어 보세요.
         </p>
       </div>
 
