@@ -15,6 +15,13 @@
 - **컴포넌트 파일**: 컴포넌트 이름은 PascalCase이지만, 파일 이름은 kebab-case로 작성한다.
   - ex) `UserCard` 컴포넌트 → `user-card.tsx`
 
+## 기획 문서 파일명
+
+- 도메인별 디자인 프리뷰 HTML은 `{domain}-wireframes.html` 형식으로 작성한다.
+- 예시: `live-wireframes.html`, `chat-wireframes.html`
+- 신규 문서에서 `wireframes.html`처럼 도메인이 드러나지 않는 범용 이름은 사용하지 않는다.
+- 한 문서가 길어져 도메인이 섞이면 도메인별 HTML로 분리하고, 모든 문서의 공통 헤더 탭 링크도 함께 갱신한다.
+
 ## 훅 (Hooks)
 
 - 파일 이름: kebab-case → `use-auth.ts`
