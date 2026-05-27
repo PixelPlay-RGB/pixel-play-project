@@ -80,7 +80,7 @@ export default function ChannelLiveOperationPage() {
 
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="flex min-w-0 flex-col gap-4 lg:col-span-2">
-          <ChannelLivePreviewPanel liveState={liveState} />
+          <ChannelLivePreviewPanel liveState={liveState} title={title} />
           <ChannelLiveSettingsPanel
             title={title}
             tagInput={tagInput}
