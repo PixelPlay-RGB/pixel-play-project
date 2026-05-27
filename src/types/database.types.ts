@@ -753,6 +753,7 @@ export type Database = {
         Returns: Json
       }
       get_landing_snapshot: { Args: never; Returns: Json }
+      get_live_hero: { Args: never; Returns: Json }
       get_live_list: {
         Args: { p_limit?: number; p_offset?: number; p_query?: string }
         Returns: {
