@@ -61,10 +61,10 @@ export default function SettingSidebar({ isMobile, profile }: Props) {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-0">
+      <SidebarFooter className="gap-0 p-0">
         <Separator />
-        <div className="p-2">
-          <SidebarMenu>
+        <div className="px-2 py-2">
+          <SidebarMenu className="gap-1.5">
             {UserAccountMenuItemRenderer(USER_ACCOUNT_PASSWORD_MENU_ITEM, {
               context: "sidebar",
               isCanChangePassword,
