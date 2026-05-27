@@ -27,8 +27,8 @@ export default function ChannelLivePreviewPlayer({ src, title }: Props) {
 
     const hls = new Hls({
       backBufferLength: 5,
-      liveMaxLatencyDuration: 5,
-      liveSyncDuration: 3,
+      liveMaxLatencyDuration: 3,
+      liveSyncDuration: 1,
       liveSyncMode: "edge",
       lowLatencyMode: true,
       maxBufferLength: 5,
