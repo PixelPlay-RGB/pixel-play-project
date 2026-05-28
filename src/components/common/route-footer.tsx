@@ -7,9 +7,10 @@ import { usePathname } from "next/navigation";
 export default function RouteFooter() {
   const pathname = usePathname();
   const isChatRoomRoute = pathname.startsWith("/chat/room");
-  const isLiveChatPopoutRoute = /^\/live\/[^/]+\/chat(?:\/)?$/.test(pathname);
+  // /live/[creatorId] 및 하위 라우트 — 뷰포트 풀스크린 레이아웃이므로 푸터 불필요
+  const isLiveWatchRoute = /^\/live\/(?!search(?:\/|$))[^/]+/.test(pathname);
 
-  if (isChatRoomRoute || isLiveChatPopoutRoute) {
+  if (isChatRoomRoute || isLiveWatchRoute) {
     return null;
   }
 

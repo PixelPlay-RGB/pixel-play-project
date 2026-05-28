@@ -16,6 +16,13 @@ export const QUERY_KEYS = {
     profiles: () => [...QUERY_KEYS.auth.all, "profile"],
     profile: (userId?: string) => [...QUERY_KEYS.auth.all, "profile", userId ?? "session"],
   },
+  live: {
+    all: ["live"] as const,
+    watch: (creatorId?: string, userId?: string) =>
+      [...QUERY_KEYS.live.all, "watch", creatorId, userId].filter((v) => v !== undefined),
+    messages: (broadcastId?: string) =>
+      [...QUERY_KEYS.live.all, "messages", broadcastId].filter((v) => v !== undefined),
+  },
   chat: {
     all: ["chat"] as const,
     list: (
