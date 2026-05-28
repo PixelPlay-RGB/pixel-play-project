@@ -828,6 +828,29 @@ export type Database = {
           title: string
         }[]
       }
+      search_live_results: {
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_query: string
+          p_section?: string
+        }
+        Returns: {
+          broadcast_id: string
+          creator_id: string
+          creator_nickname: string
+          creator_photo_url: string
+          current_viewer_count: number
+          follower_count: number
+          has_more: boolean
+          is_live: boolean
+          section: string
+          started_at: string
+          tags: string[]
+          thumbnail_url: string
+          title: string
+        }[]
+      }
       send_chat_message: {
         Args: { p_actor_user_id: string; p_content: string; p_room_id: string }
         Returns: string
