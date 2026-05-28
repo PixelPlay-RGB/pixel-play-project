@@ -28,6 +28,10 @@ export const APP_MESSAGE_CODE = {
     oauth: {
       unlinked: "success.oauth.unlinked",
     },
+    follow: {
+      followed: "success.follow.followed",
+      unfollowed: "success.follow.unfollowed",
+    },
   },
   error: {
     common: {
@@ -106,6 +110,10 @@ export const APP_MESSAGE_CODE = {
       dbUpdateFailed: "error.oauth.dbUpdateFailed",
       actionFailed: "error.oauth.actionFailed",
       defaultAccountCannotUnlink: "error.oauth.defaultAccountCannotUnlink",
+    },
+    follow: {
+      failed: "error.follow.failed",
+      unfollowFailed: "error.follow.unfollowFailed",
     },
     supabase: {
       permissionDenied: "error.supabase.permissionDenied",

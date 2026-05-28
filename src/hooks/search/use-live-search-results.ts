@@ -1,7 +1,10 @@
 "use client";
 // 라이브 검색 결과 페이지에 필요한 섹션별 검색 상태를 제공합니다.
 import { QUERY_KEYS } from "@/constants/common/query-keys";
-import { LIVE_SEARCH_RESULT_LIMIT } from "@/constants/search/search";
+import {
+  LIVE_BROADCAST_SEARCH_RESULT_LIMIT,
+  LIVE_CREATOR_SEARCH_RESULT_LIMIT,
+} from "@/constants/search/search";
 import { createClient } from "@/lib/supabase/client";
 import type { LiveSearchResult, LiveSearchRpcRow, LiveSearchSection } from "@/types/search/search";
 import { useInfiniteQuery } from "@tanstack/react-query";
@@ -29,16 +32,23 @@ function flattenPages(pages?: LiveSearchResult[][]) {
   return pages?.flat() ?? [];
 }
 
+function getLiveSearchLimit(section: LiveSearchSection) {
+  return section === "broadcast"
+    ? LIVE_BROADCAST_SEARCH_RESULT_LIMIT
+    : LIVE_CREATOR_SEARCH_RESULT_LIMIT;
+}
+
 async function fetchLiveSearchResults(
   query: string,
   section: LiveSearchSection,
   offset: number,
 ): Promise<LiveSearchResult[]> {
   const supabase = createClient();
+  const limit = getLiveSearchLimit(section);
 
   const { data, error } = await supabase.rpc("search_live_results", {
     p_query: query,
-    p_limit: LIVE_SEARCH_RESULT_LIMIT,
+    p_limit: limit,
     p_section: section,
     p_offset: offset,
   });
@@ -55,13 +65,14 @@ async function fetchLiveSearchResults(
 
 function useLiveSearchSection(query: string, section: LiveSearchSection) {
   const trimmedQuery = query.trim();
+  const limit = getLiveSearchLimit(section);
 
   return useInfiniteQuery<LiveSearchResult[]>({
     queryKey: QUERY_KEYS.live.search(trimmedQuery, section),
     queryFn: ({ pageParam }) => fetchLiveSearchResults(trimmedQuery, section, Number(pageParam)),
     initialPageParam: 0,
     getNextPageParam: (lastPage, allPages) =>
-      lastPage.at(-1)?.has_more ? allPages.length * LIVE_SEARCH_RESULT_LIMIT : undefined,
+      lastPage.at(-1)?.has_more ? allPages.length * limit : undefined,
     enabled: trimmedQuery.length > 0,
   });
 }

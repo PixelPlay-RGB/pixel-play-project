@@ -1,9 +1,14 @@
+"use client";
 // 라이브 크리에이터 검색 결과 카드를 렌더링합니다.
 import { Avatar, AvatarBadge, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
+import { useToggleCreatorFollow } from "@/hooks/follows/use-toggle-creator-follow";
 import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/stores/auth";
 import type { LiveSearchResult } from "@/types/search/search";
 import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
-import { Radio, UsersRound } from "lucide-react";
+import { Heart, Radio, UsersRound } from "lucide-react";
 import Link from "next/link";
 
 interface Props {
@@ -13,58 +18,106 @@ interface Props {
 const numberFormatter = new Intl.NumberFormat("ko-KR");
 
 export default function LiveCreatorResultCard({ result }: Props) {
+  const currentUserId = useAuthStore((state) => state.user?.id);
+  const toggleCreatorFollow = useToggleCreatorFollow();
   const avatarSrc = getAvatarImageSrc(result.creator_photo_url);
   const fallbackText = getAvatarFallbackText(result.creator_nickname, 1);
+  const isOwnChannel = currentUserId === result.creator_id;
+  const isFollowPending =
+    toggleCreatorFollow.isPending && toggleCreatorFollow.variables?.creatorId === result.creator_id;
+  const followLabel = isOwnChannel ? "내 채널" : result.is_following ? "팔로잉" : "팔로우";
+
+  const handleFollowClick = () => {
+    if (isOwnChannel || isFollowPending) {
+      return;
+    }
+
+    toggleCreatorFollow.mutate({
+      creatorId: result.creator_id,
+      creatorNickname: result.creator_nickname,
+      nextFollowing: !result.is_following,
+    });
+  };
 
   return (
-    <Link
-      href={`/live/${result.creator_id}`}
-      prefetch={false}
+    <div
       className={cn(
-        "group flex min-h-26 items-center gap-4 rounded-2xl border p-4 text-left",
-        "border-border/60 bg-card shadow-sm transition-all duration-200",
-        "hover:border-brand/40 hover:shadow-brand/10 hover:-translate-y-0.5 hover:shadow-md",
-        "dark:border-border/40 dark:hover:border-brand/30 dark:hover:bg-accent/40",
+        "flex min-h-22 flex-col gap-3 rounded-xl border p-3 text-left sm:flex-row sm:items-center",
+        "border-border/55 bg-card/80 transition-colors duration-200",
+        "dark:border-border/35 dark:bg-card/70",
+        result.is_live && "border-brand/20 bg-brand/4 dark:border-brand/15 dark:bg-brand/6",
       )}
     >
-      <Avatar className="h-14 w-14">
-        <AvatarImage src={avatarSrc} alt={`${result.creator_nickname}의 프로필 사진`} />
-        <AvatarFallback className="text-base font-black">{fallbackText}</AvatarFallback>
-        {result.is_live && <AvatarBadge className="bg-live" />}
-      </Avatar>
+      <Link
+        href={`/live/${result.creator_id}`}
+        prefetch={false}
+        className="group/link flex min-w-0 flex-1 items-center gap-3"
+      >
+        <Avatar className="h-12 w-12">
+          <AvatarImage src={avatarSrc} alt={`${result.creator_nickname}의 프로필 사진`} />
+          <AvatarFallback className="text-sm font-black">{fallbackText}</AvatarFallback>
+          {result.is_live && <AvatarBadge className="bg-live" />}
+        </Avatar>
 
-      <div className="min-w-0 flex-1">
-        <div className="flex min-w-0 items-center gap-2">
-          <h3 className="text-foreground truncate text-sm font-black">{result.creator_nickname}</h3>
-          <span
-            className={cn(
-              "inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-xs font-black",
-              result.is_live
-                ? "bg-live text-white"
-                : "bg-muted text-muted-foreground dark:bg-muted/70",
-            )}
-          >
-            {result.is_live ? "LIVE" : "OFF"}
-          </span>
-        </div>
-
-        <p className="text-muted-foreground mt-1 line-clamp-1 text-xs">
-          {result.is_live && result.title ? result.title : "현재 진행 중인 방송이 없습니다."}
-        </p>
-
-        <div className="mt-2 flex flex-wrap items-center gap-2 text-xs font-semibold">
-          {result.is_live && (
-            <span className="text-live inline-flex items-center gap-1">
-              <Radio className="h-3 w-3" />
-              {numberFormatter.format(result.current_viewer_count)}명 시청 중
+        <div className="min-w-0 flex-1">
+          <div className="flex min-w-0 items-center gap-2">
+            <h3 className="text-foreground group-hover/link:text-brand truncate text-sm font-black transition-colors">
+              {result.creator_nickname}
+            </h3>
+            <span
+              className={cn(
+                "inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-black",
+                result.is_live
+                  ? "bg-live text-white"
+                  : "bg-muted text-muted-foreground dark:bg-muted/70",
+              )}
+            >
+              {result.is_live ? "방송 중" : "오프라인"}
             </span>
-          )}
-          <span className="text-muted-foreground inline-flex items-center gap-1">
-            <UsersRound className="h-3 w-3" />
-            팔로워 {numberFormatter.format(result.follower_count)}
-          </span>
+          </div>
+
+          <p className="text-muted-foreground mt-1 line-clamp-1 text-xs">
+            {result.is_live && result.title ? result.title : "현재 진행 중인 방송이 없습니다."}
+          </p>
+
+          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs font-semibold">
+            {result.is_live && (
+              <span className="text-live inline-flex items-center gap-1">
+                <Radio className="size-3" />
+                {numberFormatter.format(result.current_viewer_count)}명 시청 중
+              </span>
+            )}
+            <span className="text-muted-foreground inline-flex items-center gap-1">
+              <UsersRound className="size-3" />
+              팔로워 {numberFormatter.format(result.follower_count)}
+            </span>
+          </div>
         </div>
-      </div>
-    </Link>
+      </Link>
+
+      <Button
+        type="button"
+        size="sm"
+        variant={result.is_following || isOwnChannel ? "outline" : "default"}
+        className={cn(
+          "h-8 w-full shrink-0 rounded-full px-3 text-xs font-black transition-all active:scale-95 sm:ml-auto sm:w-auto",
+          result.is_following || isOwnChannel
+            ? "border-brand/25 bg-brand/10 text-brand hover:border-brand/50 hover:bg-brand/18 dark:border-brand/25 dark:bg-brand/15 dark:text-brand"
+            : "bg-brand hover:bg-brand/85 shadow-brand/25 text-white shadow-sm hover:shadow-md",
+        )}
+        disabled={isOwnChannel || isFollowPending}
+        aria-label={`${result.creator_nickname} ${followLabel}`}
+        onClick={handleFollowClick}
+      >
+        {isFollowPending ? (
+          <Spinner className="size-3.5" />
+        ) : (
+          <>
+            <Heart className={cn("size-3.5", result.is_following && "fill-current")} />
+            {followLabel}
+          </>
+        )}
+      </Button>
+    </div>
   );
 }

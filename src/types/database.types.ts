@@ -843,6 +843,7 @@ export type Database = {
           current_viewer_count: number
           follower_count: number
           has_more: boolean
+          is_following: boolean
           is_live: boolean
           section: string
           started_at: string

@@ -1,12 +1,6 @@
 // 라이브 검색 페이지를 렌더링합니다.
 import LiveSearchResults from "@/components/search/live-search-results";
-import { Separator } from "@/components/ui/separator";
 import type { Metadata } from "next";
-
-export const metadata: Metadata = {
-  title: "라이브 검색",
-  description: "PixelPlay에서 라이브 방송을 검색합니다.",
-};
 
 interface Props {
   searchParams: Promise<{
@@ -14,21 +8,40 @@ interface Props {
   }>;
 }
 
+export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
+  const { query = "" } = await searchParams;
+  const trimmedQuery = query.trim();
+
+  if (!trimmedQuery) {
+    return {
+      title: "라이브 검색",
+      description: "PixelPlay에서 진행 중인 라이브 방송과 크리에이터를 검색합니다.",
+    };
+  }
+
+  return {
+    title: `${trimmedQuery} 라이브 검색`,
+    description: `PixelPlay에서 ${trimmedQuery}와 관련된 라이브 방송과 크리에이터를 검색합니다.`,
+  };
+}
+
 export default async function LiveSearchPage({ searchParams }: Props) {
   const { query = "" } = await searchParams;
   const trimmedQuery = query.trim();
 
   return (
-    <div className="min-h-app-content mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 py-6 sm:px-5 md:px-6 md:py-8">
+    <div className="min-h-app-content mx-auto flex w-full max-w-400 flex-1 flex-col gap-7 px-4 pt-10 pb-6 sm:px-6 lg:px-8 lg:pt-12">
       {trimmedQuery && (
-        <div className="flex flex-col gap-1 px-1">
-          <p className="text-muted-foreground text-sm">라이브 검색 결과</p>
-          <h1 className="text-foreground text-xl font-bold">
-            <span className="text-live">&quot;{trimmedQuery}&quot;</span>으로 검색한 결과입니다.
+        <div className="flex flex-col gap-3 px-1">
+          <h1 className="text-foreground text-2xl leading-tight font-black">
+            <span className="text-live">{trimmedQuery}</span> 검색{" "}
+            <span className="text-brand">결과</span>
           </h1>
+          <p className="text-muted-foreground max-w-2xl text-sm leading-relaxed">
+            진행 중인 방송과 크리에이터 검색 결과입니다.
+          </p>
         </div>
       )}
-      <Separator />
       <LiveSearchResults query={query} />
     </div>
   );

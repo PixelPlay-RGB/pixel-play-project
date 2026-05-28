@@ -19,7 +19,7 @@ export default function LiveSearchResults({ query }: Props) {
     return (
       <LiveSearchEmptyState
         title="검색어를 입력해 주세요"
-        message="검색어를 입력하면 방송 중인 라이브와 크리에이터 결과가 표시됩니다."
+        message="검색어를 입력하면 방송 중인 라이브와 크리에이터를 찾아드릴게요."
         tone="brand"
       />
     );
@@ -39,12 +39,12 @@ export default function LiveSearchResults({ query }: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-10">
+    <div className="flex flex-col gap-9">
       {searchResults.broadcast.results.length > 0 && (
         <LiveSearchSection
           section="broadcast"
           title="라이브 방송"
-          description="방송 제목, 크리에이터, 태그가 검색어와 일치하는 결과입니다."
+          description="제목, 크리에이터, 태그에서 찾은 라이브 결과예요."
           results={searchResults.broadcast.results}
           hasMore={searchResults.broadcast.hasMore}
           isFetchingMore={searchResults.broadcast.isFetchingMore}
@@ -55,7 +55,7 @@ export default function LiveSearchResults({ query }: Props) {
         <LiveSearchSection
           section="creator"
           title="크리에이터"
-          description="닉네임이 검색어와 일치하는 크리에이터입니다."
+          description="닉네임에서 찾은 크리에이터 결과예요."
           results={searchResults.creator.results}
           hasMore={searchResults.creator.hasMore}
           isFetchingMore={searchResults.creator.isFetchingMore}
@@ -65,7 +65,7 @@ export default function LiveSearchResults({ query }: Props) {
       {searchResults.isEmptyResult && (
         <LiveSearchEmptyState
           title="검색 결과가 없습니다"
-          message="다른 검색어로 진행 중인 라이브와 크리에이터를 다시 찾아보세요."
+          message="다른 검색어로 방송 중인 라이브와 크리에이터를 다시 찾아보세요."
         />
       )}
     </div>
