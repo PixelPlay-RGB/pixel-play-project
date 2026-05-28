@@ -24,12 +24,17 @@ export function LiveDonationAlertOverlay({
   const formattedAmount = donation?.amount.toLocaleString("ko-KR");
 
   return (
-    <main className="live-overlay-root flex min-h-screen items-center justify-center overflow-hidden bg-transparent p-4 text-white">
+    <main
+      className={cn(
+        "live-overlay-root flex min-h-screen items-center justify-center overflow-hidden",
+        "bg-transparent p-4 text-white",
+      )}
+    >
       <AnimatePresence mode="wait">
         {donation && isVisible ? (
           <motion.section
             key={donation.id}
-            className="pointer-events-none flex aspect-video w-full max-w-144 items-center justify-center"
+            className="pointer-events-none flex aspect-video w-full max-w-220 items-center justify-center"
             variants={liveDonationAlertContainerVariants}
             initial="hidden"
             animate="visible"
@@ -37,13 +42,13 @@ export function LiveDonationAlertOverlay({
           >
             <div
               className={cn(
-                "flex w-full max-w-132 items-center justify-center overflow-hidden",
+                "flex w-full max-w-200 items-center justify-center overflow-hidden",
                 "border-brand/25 rounded-xl border bg-zinc-950/95 shadow-2xl",
-                "px-5 py-5 sm:px-8 sm:py-6",
+                "px-6 py-7 sm:px-12 sm:py-10",
               )}
             >
-              <div className="flex w-full flex-col items-center justify-center gap-4 sm:flex-row sm:gap-6">
-                <div className="relative flex size-20 shrink-0 items-center justify-center sm:size-24">
+              <div className="flex w-full flex-col items-center justify-center gap-5 sm:flex-row sm:gap-10">
+                <div className="relative flex size-24 shrink-0 items-center justify-center sm:size-32">
                   <motion.div
                     className="bg-brand/25 absolute inset-1 rounded-full blur-xl"
                     animate={{
@@ -63,16 +68,16 @@ export function LiveDonationAlertOverlay({
                     animate="visible"
                     className="relative z-10"
                   >
-                    <PixelPlayPlayIcon className="text-brand size-14 drop-shadow-lg sm:size-16" />
+                    <PixelPlayPlayIcon className="text-brand size-18 drop-shadow-lg sm:size-24" />
                   </motion.div>
                 </div>
 
-                <div className="flex min-w-0 flex-col items-center gap-2 text-center sm:items-start sm:text-left">
+                <div className="flex min-w-0 flex-col items-center gap-3 text-center sm:items-start sm:text-left">
                   <motion.span
                     variants={liveDonationAlertTextVariants}
                     initial="hidden"
                     animate="visible"
-                    className="text-brand text-4xl leading-none font-extrabold sm:text-5xl"
+                    className="text-brand text-5xl leading-none font-extrabold sm:text-7xl"
                   >
                     {formattedAmount}P
                   </motion.span>
@@ -80,7 +85,7 @@ export function LiveDonationAlertOverlay({
                     variants={liveDonationAlertTextVariants}
                     initial="hidden"
                     animate="visible"
-                    className="text-brand/85 max-w-full text-lg leading-6 font-bold wrap-break-word sm:text-xl"
+                    className="text-brand/85 max-w-full text-2xl leading-8 font-bold wrap-break-word sm:text-3xl sm:leading-9"
                   >
                     {donorLabel}의 후원
                   </motion.p>
@@ -88,7 +93,7 @@ export function LiveDonationAlertOverlay({
                     variants={liveDonationAlertTextVariants}
                     initial="hidden"
                     animate="visible"
-                    className="max-w-88 text-base leading-6 font-semibold wrap-break-word text-zinc-200 sm:max-w-96 sm:text-lg"
+                    className="max-w-112 text-xl leading-7 font-semibold wrap-break-word text-zinc-200 sm:max-w-120 sm:text-2xl sm:leading-8"
                   >
                     {donation.message}
                   </motion.p>
