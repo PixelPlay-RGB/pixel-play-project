@@ -66,10 +66,10 @@ export const APP_MESSAGE = {
     channel: {
       securityCopied: {
         title: "복사 완료",
-        description: "OBS 설정에 붙여 넣을 수 있습니다.",
+        description: "OBS에 바로 붙여 넣을 수 있습니다.",
       },
       securityTokenRotated: {
-        title: "새로 발급 완료",
+        title: "새 정보 생성 완료",
         description: "OBS에 새 정보를 다시 붙여 넣어주세요.",
       },
     },
@@ -338,7 +338,7 @@ export const APP_MESSAGE = {
         description: "브라우저 권한을 확인한 뒤 다시 시도해주세요.",
       },
       securityTokenRotateFailed: {
-        title: "새로 발급 실패",
+        title: "새 정보 생성 실패",
         description: "잠시 후 다시 시도해주세요.",
       },
     },

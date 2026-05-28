@@ -10,7 +10,7 @@ export const LIVE_CHAT_OVERLAY_NICKNAME_COLOR_PALETTE = [
   "#f472b6",
 ] as const;
 
-export const LIVE_DONATION_ALERT_VISIBLE_MS = 5000;
+export const LIVE_DONATION_ALERT_DEFAULT_VISIBLE_MS = 5000;
 export const LIVE_CHAT_OVERLAY_MESSAGE_LIMIT = 60;
 export const LIVE_SECURITY_DEFAULT_TOKEN_VERSION = 1;
 export const LIVE_STREAM_SERVER_URL = "rtmp://live.pixel-play.studio/live";

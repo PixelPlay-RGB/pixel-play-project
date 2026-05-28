@@ -36,7 +36,7 @@ export function ChannelSideTipCard({
       </div>
       <div className="space-y-2">
         <h2 className="text-brand text-sm font-extrabold">{title}</h2>
-        <p className="text-foreground/80 text-sm leading-6">{description}</p>
+        <p className="text-foreground/80 text-sm leading-6 text-pretty">{description}</p>
       </div>
       {children && (
         <div className="border-brand/15 grid gap-3 border-t pt-4 text-sm">{children}</div>
@@ -52,8 +52,8 @@ export function ChannelSideTipStep({ number, title, description }: ChannelSideTi
         {number}
       </span>
       <div className="min-w-0 space-y-1">
-        <strong className="text-foreground block text-sm leading-5">{title}</strong>
-        <p className="text-muted-foreground text-xs leading-5">{description}</p>
+        <strong className="text-foreground block text-sm leading-5 text-pretty">{title}</strong>
+        <p className="text-muted-foreground text-xs leading-5 text-pretty">{description}</p>
       </div>
     </div>
   );

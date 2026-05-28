@@ -106,6 +106,7 @@ export type Database = {
           creator_id: string;
           default_tags: string[];
           default_title: string;
+          donation_alert_duration_seconds: number;
           donation_alert_enabled: boolean;
           donation_alert_version: number;
           donation_amount_visible: boolean;
@@ -133,6 +134,7 @@ export type Database = {
           creator_id: string;
           default_tags?: string[];
           default_title?: string;
+          donation_alert_duration_seconds?: number;
           donation_alert_enabled?: boolean;
           donation_alert_version?: number;
           donation_amount_visible?: boolean;
@@ -160,6 +162,7 @@ export type Database = {
           creator_id?: string;
           default_tags?: string[];
           default_title?: string;
+          donation_alert_duration_seconds?: number;
           donation_alert_enabled?: boolean;
           donation_alert_version?: number;
           donation_amount_visible?: boolean;
@@ -774,6 +777,7 @@ export type Database = {
         Args: { p_creator_id: string; p_viewer_id?: string };
         Returns: Json;
       };
+      get_live_watch_count: { Args: { p_creator_id: string }; Returns: Json };
       get_public_chat_room_metadata: {
         Args: { p_room_id: string };
         Returns: {
@@ -907,6 +911,7 @@ export type Database = {
           p_chat_scope?: Database["public"]["Enums"]["live_chat_scope"];
           p_default_tags?: string[];
           p_default_title?: string;
+          p_donation_alert_duration_seconds?: number;
           p_donation_alert_enabled?: boolean;
           p_donation_amount_visible?: boolean;
           p_donation_enabled?: boolean;

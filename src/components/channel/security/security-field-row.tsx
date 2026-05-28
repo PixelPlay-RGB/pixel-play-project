@@ -16,17 +16,18 @@ export function SecurityFieldRow({
   return (
     <div
       className={cn(
-        "border-border bg-muted/40 flex flex-col gap-3 rounded-xl border p-4 lg:flex-row lg:items-center lg:justify-between",
+        "border-border bg-muted/40 flex flex-col gap-4 rounded-xl border p-4",
+        "lg:flex-row lg:items-center lg:justify-between",
         className,
       )}
     >
-      <div className="min-w-0 space-y-1">
+      <div className="min-w-0 flex-1 space-y-1.5">
         <span className="text-muted-foreground text-xs font-semibold">{label}</span>
         <code className="text-foreground block font-mono text-sm leading-6 break-all select-all">
           {value}
         </code>
       </div>
-      {action}
+      <div className="shrink-0">{action}</div>
     </div>
   );
 }

@@ -12,12 +12,12 @@ import { toastAppError, toastAppSuccess } from "@/utils/common/toast-message";
 import { useState, useTransition } from "react";
 
 const ROTATE_SUCCESS_DESCRIPTION = {
-  stream_key: "스트림 키가 새로 발급되었습니다.",
-  chat_overlay: "OBS 채팅창 URL이 새로 발급되었습니다.",
-  donation_alert: "OBS 후원 알림 URL이 새로 발급되었습니다.",
+  stream_key: "새 스트림 키를 만들었어요. OBS에 다시 붙여 넣어주세요.",
+  chat_overlay: "새 채팅창 주소를 만들었어요. OBS에 다시 붙여 넣어주세요.",
+  donation_alert: "새 후원 알림 주소를 만들었어요. OBS에 다시 붙여 넣어주세요.",
 } satisfies Record<ChannelSecurityTokenKind, string>;
 
-export function useChannelSecurityControls(initialSnapshot: ChannelSecuritySnapshot | null) {
+export function useChannelSecurityControls(initialSnapshot: ChannelSecuritySnapshot) {
   const [snapshot, setSnapshot] = useState(initialSnapshot);
   const [rotatingKind, setRotatingKind] = useState<ChannelSecurityTokenKind | null>(null);
   const [visibleKinds, setVisibleKinds] = useState<ChannelSecurityTokenKind[]>([]);

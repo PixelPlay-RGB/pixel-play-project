@@ -10,6 +10,7 @@ import type {
   LiveDonationAlertOverlayData,
   LiveDonationAlertOverlaySnapshot,
 } from "@/types/live/live-donation-alert-overlay";
+import { LIVE_DONATION_ALERT_DEFAULT_VISIBLE_MS } from "@/constants/live/live-overlay";
 
 export function parseLiveChatOverlaySnapshot(value: Json): LiveChatOverlaySnapshot | null {
   const object = readObject(value);
@@ -45,6 +46,8 @@ export function parseLiveDonationAlertOverlaySnapshot(
 
   const broadcastId = object.broadcastId === null ? null : readString(object.broadcastId);
   const creatorName = readString(object.creatorName) ?? "크리에이터";
+  const alertVisibleMs =
+    readNumber(object.alertVisibleMs) ?? LIVE_DONATION_ALERT_DEFAULT_VISIBLE_MS;
   const donation =
     object.donation === null ? null : parseLiveDonationAlertOverlayData(object.donation);
 
@@ -59,6 +62,7 @@ export function parseLiveDonationAlertOverlaySnapshot(
   return {
     broadcastId,
     creatorName,
+    alertVisibleMs,
     donation,
   };
 }

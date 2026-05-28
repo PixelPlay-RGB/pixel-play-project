@@ -1,7 +1,6 @@
 "use client";
 // OBS 후원 알림 오버레이의 실시간 후원 표시 상태를 관리합니다.
 
-import { LIVE_DONATION_ALERT_VISIBLE_MS } from "@/constants/live/live-overlay";
 import { createClient } from "@/lib/supabase/client";
 import type { LiveMessageRow } from "@/types/live/live";
 import type {
@@ -65,10 +64,10 @@ export function useLiveDonationAlertOverlay(initialSnapshot: LiveDonationAlertOv
 
     const timerId = window.setTimeout(() => {
       setIsVisible(false);
-    }, LIVE_DONATION_ALERT_VISIBLE_MS);
+    }, initialSnapshot.alertVisibleMs);
 
     return () => window.clearTimeout(timerId);
-  }, [donation, isVisible]);
+  }, [donation, initialSnapshot.alertVisibleMs, isVisible]);
 
   return {
     donation,

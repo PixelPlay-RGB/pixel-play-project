@@ -8,10 +8,8 @@ export function SecurityLoadFailedState() {
         <TriangleAlert className="size-6" />
       </div>
       <div className="space-y-2">
-        <h1 className="text-xl font-bold">보안 정보를 불러오지 못했습니다.</h1>
-        <p className="text-muted-foreground text-sm">
-          다시 로그인한 뒤 시도하거나 잠시 후 새로고침해주세요.
-        </p>
+        <h1 className="text-xl font-bold">방송 연결 정보를 불러오지 못했어요</h1>
+        <p className="text-muted-foreground text-sm">다시 로그인하거나 잠시 후 새로고침해주세요.</p>
       </div>
     </main>
   );
