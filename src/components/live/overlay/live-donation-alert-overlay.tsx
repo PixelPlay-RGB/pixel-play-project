@@ -80,7 +80,7 @@ export function LiveDonationAlertOverlay({
                     variants={liveDonationAlertTextVariants}
                     initial="hidden"
                     animate="visible"
-                    className="text-brand/85 max-w-full text-lg leading-6 font-bold break-words sm:text-xl"
+                    className="text-brand/85 max-w-full text-lg leading-6 font-bold wrap-break-word sm:text-xl"
                   >
                     {donorLabel}의 후원
                   </motion.p>
@@ -88,7 +88,7 @@ export function LiveDonationAlertOverlay({
                     variants={liveDonationAlertTextVariants}
                     initial="hidden"
                     animate="visible"
-                    className="max-w-88 text-base leading-6 font-semibold break-words text-zinc-200 sm:max-w-96 sm:text-lg"
+                    className="max-w-88 text-base leading-6 font-semibold wrap-break-word text-zinc-200 sm:max-w-96 sm:text-lg"
                   >
                     {donation.message}
                   </motion.p>

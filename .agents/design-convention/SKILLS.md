@@ -80,6 +80,7 @@
 
 1.  **임의 값([ ]) 지양**: Tailwind의 임의 값 표현식(예: `min-h-[100px]`, `w-[45px]`) 사용을 지양합니다.
 2.  **표준 단위 사용**: Tailwind의 기본 스페이싱 단위(4px = 1 unit)를 사용하여 수치를 계산합니다. (`100px` → `min-h-25`)
+3.  **텍스트 줄바꿈 유틸**: `overflow-wrap: break-word`가 필요할 때는 `break-words` 대신 Tailwind 최신 유틸인 `wrap-break-word`를 사용합니다.
 
 ---
 

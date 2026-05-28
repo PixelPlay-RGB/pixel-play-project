@@ -44,7 +44,7 @@ function ChatMessageItem({ message }: { message: LiveChatOverlayMessage }) {
     <p
       className={cn(
         "inline-block max-w-130 rounded-xl bg-black/50 px-3.5 py-2",
-        "text-3xl leading-9 font-normal break-words",
+        "text-3xl leading-9 font-normal wrap-break-word",
       )}
     >
       <MessagePrefix role={message.role} />
