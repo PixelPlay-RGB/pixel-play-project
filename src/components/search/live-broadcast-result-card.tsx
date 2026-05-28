@@ -55,7 +55,7 @@ export default function LiveBroadcastResultCard({ result }: Props) {
       href={`/live/${result.creator_id}`}
       prefetch={false}
       className={cn(
-        "group grid min-h-30 overflow-hidden rounded-xl border text-left sm:grid-cols-[11rem_minmax(0,1fr)]",
+        "group flex min-h-30 flex-col overflow-hidden rounded-xl border text-left sm:flex-row",
         "border-border/70 bg-card shadow-sm transition-all duration-200 active:translate-y-px",
         "hover:border-live/45 hover:shadow-live/10 hover:shadow-md",
         "dark:border-border/40 dark:bg-card/90 dark:hover:border-live/35 dark:hover:bg-accent/25 dark:hover:shadow-live/10",
@@ -64,6 +64,7 @@ export default function LiveBroadcastResultCard({ result }: Props) {
       <div
         className={cn(
           "relative flex min-h-34 items-center justify-center overflow-hidden sm:min-h-32",
+          "sm:w-44 sm:shrink-0",
           "bg-slate-950 text-white",
         )}
       >
@@ -73,50 +74,78 @@ export default function LiveBroadcastResultCard({ result }: Props) {
             alt={`${result.title ?? result.creator_nickname} 방송 썸네일`}
             fill
             sizes="(min-width: 1024px) 160px, 128px"
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            className={cn(
+              "object-cover transition-transform duration-300",
+              "group-hover:scale-105",
+            )}
           />
         ) : (
           <>
             <div
               className={cn("absolute inset-0 bg-linear-to-br", getFallbackTone(result.creator_id))}
             />
-            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.07)_1px,transparent_1px),linear-gradient(180deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:22px_22px] opacity-35" />
-            <div className="absolute inset-x-0 bottom-0 h-14 bg-linear-to-t from-black/70 to-transparent" />
-            <div className="relative flex flex-col items-center gap-2 text-center">
-              <div className="flex size-11 items-center justify-center rounded-xl border border-white/10 bg-black/35 shadow-lg shadow-black/20 backdrop-blur">
+            <div className="absolute inset-0 bg-white/5" />
+            <div
+              className={cn(
+                "absolute inset-x-0 bottom-0 h-14",
+                "bg-linear-to-t from-black/70 to-transparent",
+              )}
+            />
+            <div className={cn("relative flex flex-col items-center", "gap-2 text-center")}>
+              <div
+                className={cn(
+                  "flex size-11 items-center justify-center rounded-xl border",
+                  "border-white/10 bg-black/35 shadow-lg shadow-black/20 backdrop-blur",
+                )}
+              >
                 <Radio className="text-live size-5" />
               </div>
-              <span className="text-[10px] font-black tracking-wider text-white/80">
+              <span className={cn("text-xs font-black", "tracking-wider text-white/80")}>
                 LIVE SIGNAL
               </span>
             </div>
           </>
         )}
-        <span className="bg-live absolute top-2 left-2 inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[10px] font-black text-white shadow-sm">
-          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
+        <span
+          className={cn(
+            "bg-live absolute top-2 left-2 inline-flex items-center gap-1.5",
+            "rounded-md px-2 py-0.5 text-xs font-black text-white shadow-sm",
+          )}
+        >
+          <span className={cn("h-1.5 w-1.5 animate-pulse", "rounded-full bg-white")} />
           LIVE
         </span>
-        <span className="absolute right-2 bottom-2 inline-flex items-center gap-1 rounded-md bg-black/65 px-2 py-0.5 text-[10px] font-bold text-white shadow-sm backdrop-blur">
+        <span
+          className={cn(
+            "absolute right-2 bottom-2 inline-flex items-center gap-1 rounded-md",
+            "bg-black/65 px-2 py-0.5 text-xs font-bold text-white shadow-sm backdrop-blur",
+          )}
+        >
           <Users className="text-live size-3" />
           {numberFormatter.format(result.current_viewer_count)}
         </span>
       </div>
 
-      <div className="flex min-w-0 flex-col justify-between gap-2.5 p-3.5">
+      <div className={cn("flex min-w-0 flex-col justify-between", "gap-2.5 p-3.5")}>
         <div className="min-w-0">
-          <h3 className="text-foreground group-hover:text-live line-clamp-2 text-sm leading-snug font-black transition-colors">
+          <h3
+            className={cn(
+              "text-foreground group-hover:text-live line-clamp-2",
+              "text-sm leading-snug font-black transition-colors",
+            )}
+          >
             {result.title ?? "라이브 방송"}
           </h3>
           <div className="mt-2 flex min-w-0 items-center gap-2">
             <Avatar className="size-5">
               <AvatarImage src={avatarSrc} alt={`${result.creator_nickname}의 프로필 사진`} />
-              <AvatarFallback className="text-[10px]">{fallbackText}</AvatarFallback>
+              <AvatarFallback className="text-xs">{fallbackText}</AvatarFallback>
             </Avatar>
-            <p className="text-muted-foreground min-w-0 truncate text-xs font-medium">
+            <p className={cn("text-muted-foreground min-w-0 truncate", "text-xs font-medium")}>
               {result.creator_nickname}
             </p>
-            <span className="bg-muted-foreground/45 size-0.75 shrink-0 rounded-full" />
-            <span className="text-muted-foreground shrink-0 text-xs font-medium">
+            <span className={cn("bg-muted-foreground/45 size-0.75", "shrink-0 rounded-full")} />
+            <span className={cn("text-muted-foreground shrink-0", "text-xs font-medium")}>
               {liveDuration}
             </span>
           </div>
@@ -126,7 +155,10 @@ export default function LiveBroadcastResultCard({ result }: Props) {
           {result.tags.slice(0, 3).map((tag) => (
             <span
               key={`${result.broadcast_id}-${tag}`}
-              className="bg-live/10 text-live dark:bg-live/15 rounded-md px-2 py-0.5 text-[11px] font-black"
+              className={cn(
+                "bg-live/10 text-live dark:bg-live/15",
+                "rounded-md px-2 py-0.5 text-xs font-black",
+              )}
             >
               #{tag}
             </span>

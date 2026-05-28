@@ -37,8 +37,8 @@ function SkeletonSection({
         className={cn(
           "grid grid-cols-1 gap-3",
           compact
-            ? "sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"
-            : "lg:grid-cols-2 2xl:grid-cols-3",
+            ? "sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+            : "lg:grid-cols-2 xl:grid-cols-3",
         )}
       >
         {Array.from({ length: itemCount }).map((_, index) => (
@@ -59,7 +59,7 @@ function SkeletonSection({
               </>
             ) : (
               <>
-                <Skeleton className="h-full min-h-26 w-32 shrink-0 rounded-xl sm:w-40" />
+                <Skeleton className={cn("h-full min-h-26 w-32 shrink-0 rounded-xl sm:w-40")} />
                 <div className="flex flex-col gap-2">
                   <Skeleton className="h-5 w-4/5 rounded-md" />
                   <Skeleton className="h-4 w-3/5 rounded-md" />

@@ -32,7 +32,12 @@ export default function LiveSearchSection({
 
   return (
     <section className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
+      <div
+        className={cn(
+          "flex flex-col gap-3",
+          "sm:flex-row sm:items-end sm:justify-between sm:gap-4",
+        )}
+      >
         <div className="flex min-w-0 gap-3">
           <span
             className={cn(
@@ -43,7 +48,7 @@ export default function LiveSearchSection({
           />
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-foreground text-xl leading-tight font-black">{title}</h2>
+              <h2 className={cn("text-foreground text-xl", "leading-tight font-black")}>{title}</h2>
               <span
                 className={cn(
                   "rounded-full px-2.5 py-1 text-xs font-black",
@@ -58,7 +63,7 @@ export default function LiveSearchSection({
             <p className="text-muted-foreground mt-1 text-sm">{description}</p>
           </div>
         </div>
-        <span className="text-muted-foreground shrink-0 px-1 text-xs font-black">
+        <span className={cn("text-muted-foreground shrink-0 px-1", "text-xs font-black")}>
           {results.length}개 표시 중
         </span>
       </div>
@@ -67,8 +72,8 @@ export default function LiveSearchSection({
         className={cn(
           "grid grid-cols-1 gap-3",
           section === "broadcast"
-            ? "lg:grid-cols-2 2xl:grid-cols-3"
-            : "sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4",
+            ? "lg:grid-cols-2 xl:grid-cols-3"
+            : "sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
         )}
       >
         {results.map((result) =>

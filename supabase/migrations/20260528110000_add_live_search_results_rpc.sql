@@ -32,6 +32,8 @@ declare
   v_normalized_query text := regexp_replace(btrim(coalesce(p_query, '')), '\s+', '', 'g');
   v_limit integer := least(greatest(coalesce(p_limit, 6), 1), 24);
   v_offset integer := greatest(coalesce(p_offset, 0), 0);
+  v_broadcast_offset integer := case when p_section = 'broadcast' then v_offset else 0 end;
+  v_creator_offset integer := case when p_section = 'creator' then v_offset else 0 end;
 begin
   if v_query = '' then
     return;
@@ -66,7 +68,7 @@ begin
         )
       order by broadcast.current_viewer_count desc, broadcast.started_at desc, broadcast.id desc
       limit v_limit
-      offset case when p_section = 'broadcast' then v_offset else 0 end
+      offset v_broadcast_offset
     )
     select
       'broadcast'::text,
@@ -86,7 +88,7 @@ begin
         where relation.creator_id = matched_broadcasts.creator_id
           and relation.followed_at is not null
       ),
-      matched_broadcasts.total_count > v_offset + v_limit
+      matched_broadcasts.total_count > v_broadcast_offset + v_limit
     from matched_broadcasts;
   end if;
 
@@ -135,7 +137,7 @@ begin
       from creator_rows
       order by creator_rows.is_live desc, creator_rows.current_viewer_count desc, creator_rows.creator_nickname asc
       limit v_limit
-      offset case when p_section = 'creator' then v_offset else 0 end
+      offset v_creator_offset
     )
     select
       'creator'::text,
@@ -150,7 +152,7 @@ begin
       ranked_creators.started_at,
       ranked_creators.is_live,
       ranked_creators.follower_count,
-      ranked_creators.total_count > v_offset + v_limit
+      ranked_creators.total_count > v_creator_offset + v_limit
     from ranked_creators;
   end if;
 end;

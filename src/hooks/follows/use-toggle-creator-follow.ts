@@ -15,7 +15,6 @@ import {
 
 interface ToggleCreatorFollowInput {
   creatorId: string;
-  creatorNickname: string;
   nextFollowing: boolean;
 }
 
@@ -92,9 +91,6 @@ export function useToggleCreatorFollow() {
           (variables.nextFollowing
             ? APP_MESSAGE_CODE.success.follow.followed
             : APP_MESSAGE_CODE.success.follow.unfollowed),
-        variables.nextFollowing
-          ? `${variables.creatorNickname}님을 팔로우했습니다.`
-          : `${variables.creatorNickname}님 팔로우를 해제했습니다.`,
       );
     },
     onError: (error, variables, context) => {

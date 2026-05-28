@@ -34,7 +34,6 @@ export default function LiveCreatorResultCard({ result }: Props) {
 
     toggleCreatorFollow.mutate({
       creatorId: result.creator_id,
-      creatorNickname: result.creator_nickname,
       nextFollowing: !result.is_following,
     });
   };
@@ -51,7 +50,7 @@ export default function LiveCreatorResultCard({ result }: Props) {
       <Link
         href={`/live/${result.creator_id}`}
         prefetch={false}
-        className="group/link flex min-w-0 flex-1 items-center gap-3"
+        className={cn("group/link flex min-w-0 flex-1", "items-center gap-3")}
       >
         <Avatar className="h-12 w-12">
           <AvatarImage src={avatarSrc} alt={`${result.creator_nickname}의 프로필 사진`} />
@@ -61,12 +60,18 @@ export default function LiveCreatorResultCard({ result }: Props) {
 
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-center gap-2">
-            <h3 className="text-foreground group-hover/link:text-brand truncate text-sm font-black transition-colors">
+            <h3
+              className={cn(
+                "text-foreground group-hover/link:text-brand truncate",
+                "text-sm font-black transition-colors",
+              )}
+            >
               {result.creator_nickname}
             </h3>
             <span
               className={cn(
-                "inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-black",
+                "inline-flex shrink-0 items-center gap-1 rounded-md",
+                "px-2 py-0.5 text-xs font-black",
                 result.is_live
                   ? "bg-live text-white"
                   : "bg-muted text-muted-foreground dark:bg-muted/70",
@@ -76,18 +81,18 @@ export default function LiveCreatorResultCard({ result }: Props) {
             </span>
           </div>
 
-          <p className="text-muted-foreground mt-1 line-clamp-1 text-xs">
+          <p className={cn("text-muted-foreground mt-1", "line-clamp-1 text-xs")}>
             {result.is_live && result.title ? result.title : "현재 진행 중인 방송이 없습니다."}
           </p>
 
-          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs font-semibold">
+          <div className={cn("mt-2 flex flex-wrap items-center gap-2", "text-xs font-semibold")}>
             {result.is_live && (
-              <span className="text-live inline-flex items-center gap-1">
+              <span className={cn("text-live inline-flex", "items-center gap-1")}>
                 <Radio className="size-3" />
                 {numberFormatter.format(result.current_viewer_count)}명 시청 중
               </span>
             )}
-            <span className="text-muted-foreground inline-flex items-center gap-1">
+            <span className={cn("text-muted-foreground inline-flex", "items-center gap-1")}>
               <UsersRound className="size-3" />
               팔로워 {numberFormatter.format(result.follower_count)}
             </span>

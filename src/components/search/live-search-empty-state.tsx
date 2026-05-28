@@ -12,7 +12,9 @@ export default function LiveSearchEmptyState({ message, title, tone = "live" }: 
   const Icon = tone === "live" ? Radio : Search;
 
   return (
-    <div className="flex min-h-120 w-full items-center justify-center px-4 py-12 text-center">
+    <div
+      className={cn("flex min-h-120 w-full items-center justify-center", "px-4 py-12 text-center")}
+    >
       <div className="flex max-w-84 flex-col items-center">
         <div
           className={cn(
@@ -25,7 +27,7 @@ export default function LiveSearchEmptyState({ message, title, tone = "live" }: 
           <Icon className={cn("h-7 w-7", tone === "live" ? "text-live" : "text-brand")} />
         </div>
         <h2 className="text-foreground text-base font-bold">{title}</h2>
-        <p className="text-muted-foreground mt-1.5 text-sm leading-relaxed">{message}</p>
+        <p className={cn("text-muted-foreground mt-1.5", "text-sm leading-relaxed")}>{message}</p>
       </div>
     </div>
   );
