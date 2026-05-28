@@ -1,7 +1,8 @@
 // OBS 채팅창 URL의 보안 key 경로를 받는 화면을 렌더링합니다.
-import { getLiveChatOverlaySnapshot } from "@/actions/live/overlay";
 import { LiveChatOverlay } from "@/components/live/overlay/live-chat-overlay";
 import { notFound } from "next/navigation";
+
+import { getLiveChatOverlaySnapshot } from "../../_data/live-overlay-data";
 
 export const metadata = {
   title: "OBS 채팅창",

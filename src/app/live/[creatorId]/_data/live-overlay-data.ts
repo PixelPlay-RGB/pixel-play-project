@@ -1,5 +1,5 @@
-"use server";
 // OBS 오버레이 라우터에서 사용할 라이브 스냅샷을 조회합니다.
+import "server-only";
 
 import {
   LIVE_CHAT_OVERLAY_MESSAGE_LIMIT,

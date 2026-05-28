@@ -1,115 +1,17 @@
 "use client";
 // OBS 브라우저 소스에 붙이는 라이브 채팅 출력 화면을 렌더링합니다.
 import { Crown } from "lucide-react";
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 
-import { LIVE_CHAT_OVERLAY_NICKNAME_COLOR_PALETTE } from "@/constants/live/live-overlay";
+import { useLiveChatOverlay } from "@/hooks/live/use-live-chat-overlay";
 import { cn } from "@/lib/utils";
-import { createClient } from "@/lib/supabase/client";
-import type { LiveMessageRow } from "@/types/live/live";
 import type {
-  LiveChatOverlayItem,
   LiveChatOverlayMessage,
   LiveChatOverlaySnapshot,
 } from "@/types/live/live-chat-overlay";
-import { mapLiveMessageToChatOverlayItem } from "@/utils/live/live-overlay-message";
+import { getLiveChatOverlayNicknameColor } from "@/utils/live/live-chat-overlay-style";
 
 export function LiveChatOverlay({ initialSnapshot }: { initialSnapshot: LiveChatOverlaySnapshot }) {
-  const chatStackRef = useRef<HTMLDivElement>(null);
-  const [visibleItems, setVisibleItems] = useState<LiveChatOverlayItem[]>(initialSnapshot.items);
-  const broadcast = initialSnapshot.broadcast;
-
-  const fitItemsToHeight = useCallback(() => {
-    const chatStack = chatStackRef.current;
-
-    if (!chatStack) {
-      return;
-    }
-
-    setVisibleItems((currentItems) => {
-      const gap = Number.parseFloat(window.getComputedStyle(chatStack).rowGap) || 0;
-      const children = Array.from(chatStack.children) as HTMLElement[];
-      const overflowAllowance = children[0] ? children[0].offsetHeight + gap : 0;
-
-      if (
-        currentItems.length <= 1 ||
-        chatStack.scrollHeight <= chatStack.clientHeight + overflowAllowance
-      ) {
-        return currentItems;
-      }
-
-      const overflowHeight = chatStack.scrollHeight - chatStack.clientHeight - overflowAllowance;
-      let removedHeight = 0;
-      let removeCount = 0;
-
-      for (const child of children.slice(0, -1)) {
-        removedHeight += child.offsetHeight + gap;
-        removeCount += 1;
-
-        if (removedHeight >= overflowHeight) {
-          break;
-        }
-      }
-
-      return removeCount > 0 ? currentItems.slice(removeCount) : currentItems;
-    });
-  }, []);
-
-  useLayoutEffect(() => {
-    fitItemsToHeight();
-
-    const chatStack = chatStackRef.current;
-
-    if (!chatStack) {
-      return;
-    }
-
-    const resizeObserver = new ResizeObserver(fitItemsToHeight);
-    resizeObserver.observe(chatStack);
-
-    return () => resizeObserver.disconnect();
-  }, [fitItemsToHeight, visibleItems]);
-
-  useEffect(() => {
-    if (!broadcast) {
-      return;
-    }
-
-    const supabase = createClient();
-    const channel = supabase
-      .channel(`live-chat-overlay:${broadcast.id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "live_message",
-          filter: `broadcast_id=eq.${broadcast.id}`,
-        },
-        (payload) => {
-          const message = payload.new as LiveMessageRow;
-
-          if (message.message_type !== "chat") {
-            return;
-          }
-
-          const item = mapLiveMessageToChatOverlayItem(message, {
-            creatorId: broadcast.creatorId,
-          });
-
-          if (!item) {
-            return;
-          }
-
-          setVisibleItems((currentItems) => [...currentItems, item]);
-        },
-      )
-      .subscribe();
-
-    return () => {
-      void supabase.removeChannel(channel);
-    };
-  }, [broadcast]);
+  const { chatStackRef, visibleItems } = useLiveChatOverlay(initialSnapshot);
 
   return (
     <main className="live-overlay-root min-h-screen overflow-hidden bg-transparent p-0 text-white">
@@ -136,7 +38,7 @@ export function LiveChatOverlay({ initialSnapshot }: { initialSnapshot: LiveChat
 }
 
 function ChatMessageItem({ message }: { message: LiveChatOverlayMessage }) {
-  const nicknameColor = getNicknameColor(message.author, message.role);
+  const nicknameColor = getLiveChatOverlayNicknameColor(message.author, message.role);
 
   return (
     <p
@@ -155,18 +57,6 @@ function ChatMessageItem({ message }: { message: LiveChatOverlayMessage }) {
       {message.content}
     </p>
   );
-}
-
-function getNicknameColor(author: string, role?: LiveChatOverlayMessage["role"]) {
-  if (role === "creator") {
-    return "#46c6a9";
-  }
-
-  const hash = Array.from(author).reduce((acc, character) => acc + character.charCodeAt(0), 0);
-
-  return LIVE_CHAT_OVERLAY_NICKNAME_COLOR_PALETTE[
-    hash % LIVE_CHAT_OVERLAY_NICKNAME_COLOR_PALETTE.length
-  ];
 }
 
 function MessagePrefix({ role }: { role?: LiveChatOverlayMessage["role"] }) {

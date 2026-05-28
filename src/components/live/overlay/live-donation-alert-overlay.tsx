@@ -1,22 +1,16 @@
 "use client";
 // OBS 브라우저 소스에 붙이는 후원 알림 화면을 렌더링합니다.
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useState } from "react";
 
-import { createClient } from "@/lib/supabase/client";
-import { LIVE_DONATION_ALERT_VISIBLE_MS } from "@/constants/live/live-overlay";
-import { cn } from "@/lib/utils/cn";
+import { useLiveDonationAlertOverlay } from "@/hooks/live/use-live-donation-alert-overlay";
+import { cn } from "@/lib/utils";
 import {
   liveDonationAlertContainerVariants,
   liveDonationAlertIconVariants,
   liveDonationAlertTextVariants,
 } from "@/lib/framer-motion/live-overlay";
-import type { LiveMessageRow } from "@/types/live/live";
-import type {
-  LiveDonationAlertOverlayData,
-  LiveDonationAlertOverlaySnapshot,
-} from "@/types/live/live-donation-alert-overlay";
-import { mapLiveMessageToDonationAlert } from "@/utils/live/live-overlay-message";
+import type { LiveDonationAlertOverlaySnapshot } from "@/types/live/live-donation-alert-overlay";
+import { formatDonationDonorLabel } from "@/utils/live/live-donation-alert-format";
 
 import { PixelPlayPlayIcon } from "./pixel-play-play-icon";
 
@@ -25,64 +19,7 @@ export function LiveDonationAlertOverlay({
 }: {
   initialSnapshot: LiveDonationAlertOverlaySnapshot;
 }) {
-  const [donation, setDonation] = useState<LiveDonationAlertOverlayData | null>(
-    initialSnapshot.donation,
-  );
-  const [isVisible, setIsVisible] = useState(Boolean(initialSnapshot.donation));
-
-  useEffect(() => {
-    if (!initialSnapshot.broadcastId) {
-      return;
-    }
-
-    const supabase = createClient();
-    const channel = supabase
-      .channel(`live-donation-alert-overlay:${initialSnapshot.broadcastId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "live_message",
-          filter: `broadcast_id=eq.${initialSnapshot.broadcastId}`,
-        },
-        (payload) => {
-          const message = payload.new as LiveMessageRow;
-
-          if (message.message_type !== "donation") {
-            return;
-          }
-
-          const nextDonation = mapLiveMessageToDonationAlert(message, {
-            creatorId: "",
-            creatorName: initialSnapshot.creatorName,
-          });
-
-          if (nextDonation) {
-            setDonation(nextDonation);
-            setIsVisible(true);
-          }
-        },
-      )
-      .subscribe();
-
-    return () => {
-      void supabase.removeChannel(channel);
-    };
-  }, [initialSnapshot.broadcastId, initialSnapshot.creatorName]);
-
-  useEffect(() => {
-    if (!donation || !isVisible) {
-      return;
-    }
-
-    const timerId = window.setTimeout(() => {
-      setIsVisible(false);
-    }, LIVE_DONATION_ALERT_VISIBLE_MS);
-
-    return () => window.clearTimeout(timerId);
-  }, [donation, isVisible]);
-
+  const { donation, isVisible } = useLiveDonationAlertOverlay(initialSnapshot);
   const donorLabel = formatDonationDonorLabel(donation?.donorName);
   const formattedAmount = donation?.amount.toLocaleString("ko-KR");
 
@@ -163,12 +100,4 @@ export function LiveDonationAlertOverlay({
       </AnimatePresence>
     </main>
   );
-}
-
-function formatDonationDonorLabel(donorName: string | undefined) {
-  if (!donorName) {
-    return "시청자님";
-  }
-
-  return donorName.endsWith("님") ? donorName : `${donorName}님`;
 }
