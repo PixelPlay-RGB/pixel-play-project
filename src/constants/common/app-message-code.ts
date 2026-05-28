@@ -28,6 +28,10 @@ export const APP_MESSAGE_CODE = {
     oauth: {
       unlinked: "success.oauth.unlinked",
     },
+    channel: {
+      securityCopied: "success.channel.securityCopied",
+      securityTokenRotated: "success.channel.securityTokenRotated",
+    },
   },
   error: {
     common: {
@@ -106,6 +110,11 @@ export const APP_MESSAGE_CODE = {
       dbUpdateFailed: "error.oauth.dbUpdateFailed",
       actionFailed: "error.oauth.actionFailed",
       defaultAccountCannotUnlink: "error.oauth.defaultAccountCannotUnlink",
+    },
+    channel: {
+      securityLoadFailed: "error.channel.securityLoadFailed",
+      securityCopyFailed: "error.channel.securityCopyFailed",
+      securityTokenRotateFailed: "error.channel.securityTokenRotateFailed",
     },
     supabase: {
       permissionDenied: "error.supabase.permissionDenied",

@@ -63,6 +63,16 @@ export const APP_MESSAGE = {
         title: "연동 해제 완료",
       },
     },
+    channel: {
+      securityCopied: {
+        title: "복사 완료",
+        description: "OBS 설정에 붙여 넣을 수 있습니다.",
+      },
+      securityTokenRotated: {
+        title: "새로 발급 완료",
+        description: "OBS에 새 정보를 다시 붙여 넣어주세요.",
+      },
+    },
   },
   error: {
     common: {
@@ -316,6 +326,20 @@ export const APP_MESSAGE = {
       defaultAccountCannotUnlink: {
         title: "기본 계정 해제 불가",
         description: "로그인에 사용하는 기본 계정은 해제할 수 없습니다.",
+      },
+    },
+    channel: {
+      securityLoadFailed: {
+        title: "보안 정보 조회 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      securityCopyFailed: {
+        title: "복사 실패",
+        description: "브라우저 권한을 확인한 뒤 다시 시도해주세요.",
+      },
+      securityTokenRotateFailed: {
+        title: "새로 발급 실패",
+        description: "잠시 후 다시 시도해주세요.",
       },
     },
     supabase: {

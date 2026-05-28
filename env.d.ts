@@ -5,5 +5,7 @@ namespace NodeJS {
     NEXT_PUBLIC_ENABLE_REACT_QUERY_DEVTOOLS?: "true" | "false";
 
     SUPABASE_SERVICE_ROLE_KEY: string;
+    LIVE_OVERLAY_TOKEN_SECRET: string;
+    NEXTAUTH_SECRET?: string;
   }
 }
