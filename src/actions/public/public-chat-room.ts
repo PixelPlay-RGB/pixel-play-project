@@ -1,4 +1,6 @@
-// 공개 채팅방 preview와 metadata 조회를 관리합니다.
+"use server";
+// 공개 채팅방 preview와 metadata 조회를 처리합니다.
+
 import { createClient } from "@/lib/supabase/server";
 import type { ChatRoomMetadata } from "@/types/preview/preview";
 

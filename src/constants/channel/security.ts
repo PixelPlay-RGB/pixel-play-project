@@ -38,12 +38,12 @@ export const CHANNEL_SECURITY_URL_CARD_META: ChannelSecurityUrlCardMeta[] = [
     icon: BellRing,
     accent: "live",
     popup: {
-      width: 520,
-      height: 320,
+      width: 640,
+      height: 360,
     },
     tutorialItems: [
       "OBS에서 후원 알림용 브라우저 소스를 채팅창과 따로 추가해주세요.",
-      "너비 520, 높이 320으로 시작하면 알림 문구와 애니메이션이 안정적으로 보입니다.",
+      "너비 640, 높이 360으로 시작하면 16:9 방송 화면에서 알림이 자연스럽게 보입니다.",
       "후원이 들어오면 닉네임, 금액, 메시지가 방송 화면에 잠시 표시됩니다.",
       "소리와 읽어주기 설정은 후원 설정 페이지에서 바꿀 수 있습니다.",
     ],

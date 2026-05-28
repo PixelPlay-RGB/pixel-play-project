@@ -1,6 +1,6 @@
 // OBS 후원 알림 URL의 보안 key 경로를 받는 화면을 렌더링합니다.
+import { getLiveDonationAlertOverlaySnapshot } from "@/actions/live/overlay";
 import { LiveDonationAlertOverlay } from "@/components/live/overlay/live-donation-alert-overlay";
-import { getLiveDonationAlertOverlaySnapshot } from "@/utils/live/live-overlay-data";
 import { notFound } from "next/navigation";
 
 export const metadata = {
