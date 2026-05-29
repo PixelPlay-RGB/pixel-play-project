@@ -34,4 +34,13 @@ export const FORM_MESSAGE = {
     capacityMin: (min: number) => `최소 ${min}명 이상이어야 합니다.`,
     capacityMax: (max: number) => `최대 ${max}명까지 가능합니다.`,
   },
+  channelChat: {
+    chatScopeRequired: "채팅 참여 범위를 선택해주세요.",
+    followerWaitInvalid: "선택할 수 있는 대기 시간을 골라주세요.",
+    slowModeSecondsInvalid: "선택할 수 있는 채팅 간격을 골라주세요.",
+    chatRuleTextMax: (max: number) => `안내문은 ${max}자 이하여야 합니다.`,
+    forbiddenWordsMax: (max: number) => `금칙어는 최대 ${max}개까지 등록할 수 있습니다.`,
+    forbiddenWordRequired: "금칙어를 입력해주세요.",
+    forbiddenWordMax: (max: number) => `금칙어는 ${max}자 이하여야 합니다.`,
+  },
 } as const;
