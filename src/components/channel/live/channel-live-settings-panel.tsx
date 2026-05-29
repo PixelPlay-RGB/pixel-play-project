@@ -14,6 +14,10 @@ import { cn } from "@/lib/utils";
 import { CircleStop, MessageSquareText, Play, Radio, Save, Tag, X } from "lucide-react";
 
 interface Props {
+  broadcastActionError: string | null;
+  isBroadcastActionPending: boolean;
+  rtmpServerUrl: string;
+  streamKey: string;
   title: string;
   tagInput: string;
   tags: string[];
@@ -38,6 +42,10 @@ const VISIBILITY_OPTIONS: Array<{
 ];
 
 export default function ChannelLiveSettingsPanel({
+  broadcastActionError,
+  isBroadcastActionPending,
+  rtmpServerUrl,
+  streamKey,
   title,
   tagInput,
   tags,
@@ -65,6 +73,35 @@ export default function ChannelLiveSettingsPanel({
         </span>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
+        <div className="border-brand/15 bg-brand/5 grid gap-3 rounded-lg border p-3">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-sm font-semibold">OBS 송출 설정</span>
+            <span className="text-brand bg-brand/10 rounded-full px-2.5 py-1 text-xs font-semibold">
+              AWS MediaMTX
+            </span>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <div className="grid gap-1">
+              <span className="text-muted-foreground text-xs">서버</span>
+              <code className="border-border bg-background overflow-x-auto rounded-md border px-2.5 py-2 text-xs">
+                {rtmpServerUrl}
+              </code>
+            </div>
+            <div className="grid gap-1">
+              <span className="text-muted-foreground text-xs">스트림 키</span>
+              <code className="border-border bg-background overflow-x-auto rounded-md border px-2.5 py-2 text-xs">
+                {streamKey}
+              </code>
+            </div>
+          </div>
+        </div>
+
+        {broadcastActionError && (
+          <div className="border-destructive/20 bg-destructive/10 text-destructive rounded-lg border px-3 py-2 text-xs font-semibold">
+            {broadcastActionError}
+          </div>
+        )}
+
         <div className="grid gap-2">
           <Label htmlFor="channel-live-title">방송 제목</Label>
           <Input
@@ -201,7 +238,12 @@ export default function ChannelLiveSettingsPanel({
             설정 저장
           </Button>
           {liveState.isBroadcasting ? (
-            <Button type="button" variant="destructive" onClick={onEndBroadcast}>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={onEndBroadcast}
+              disabled={isBroadcastActionPending}
+            >
               <CircleStop className="size-4" />
               방송 종료
             </Button>
@@ -210,6 +252,7 @@ export default function ChannelLiveSettingsPanel({
               type="button"
               className="bg-live hover:bg-live/90 text-white"
               onClick={onStartBroadcast}
+              disabled={isBroadcastActionPending}
             >
               <Play className="size-4" />
               방송 시작

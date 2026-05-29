@@ -1,12 +1,14 @@
 "use client";
 // 방송 운영 UI의 설정, 상태, 채팅 패널을 조합합니다.
 
+import { endLiveBroadcastAction, startLiveBroadcastAction } from "@/actions/channel/live";
 import ChannelLiveChatPanel from "@/components/channel/live/channel-live-chat-panel";
 import ChannelLivePreviewPanel from "@/components/channel/live/channel-live-preview-panel";
 import ChannelLiveSettingsPanel from "@/components/channel/live/channel-live-settings-panel";
 import ChannelLiveStreamStatusPanel from "@/components/channel/live/channel-live-stream-status-panel";
+import { CHANNEL_LIVE_MEDIA_CONFIG } from "@/constants/channel/channel-live-media";
 import { BadgeCheck, Radio } from "lucide-react";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 
 export type ChannelLiveVisibility = "public" | "private" | "unlisted";
 
@@ -25,6 +27,9 @@ export default function ChannelLiveOperationPage() {
   const [isBroadcasting, setIsBroadcasting] = useState(false);
   const [hasEnded, setHasEnded] = useState(false);
   const [isChatPaused, setIsChatPaused] = useState(false);
+  const [broadcastId, setBroadcastId] = useState<string | null>(null);
+  const [broadcastActionError, setBroadcastActionError] = useState<string | null>(null);
+  const [isBroadcastActionPending, startBroadcastTransition] = useTransition();
 
   const liveState: ChannelLiveState = {
     isBroadcasting,
@@ -34,13 +39,40 @@ export default function ChannelLiveOperationPage() {
   };
 
   const handleStartBroadcast = () => {
-    setIsBroadcasting(true);
-    setHasEnded(false);
+    setBroadcastActionError(null);
+    startBroadcastTransition(async () => {
+      const result = await startLiveBroadcastAction({
+        tags,
+        title,
+      });
+
+      if (!result.success || !result.data?.broadcastId) {
+        setBroadcastActionError("방송 시작 정보를 저장하지 못했습니다.");
+        return;
+      }
+
+      setBroadcastId(result.data.broadcastId);
+      setIsBroadcasting(true);
+      setHasEnded(false);
+    });
   };
 
   const handleEndBroadcast = () => {
-    setIsBroadcasting(false);
-    setHasEnded(true);
+    setBroadcastActionError(null);
+    startBroadcastTransition(async () => {
+      if (broadcastId) {
+        const result = await endLiveBroadcastAction({ broadcastId });
+
+        if (!result.success) {
+          setBroadcastActionError("방송 종료 정보를 저장하지 못했습니다.");
+          return;
+        }
+      }
+
+      setBroadcastId(null);
+      setIsBroadcasting(false);
+      setHasEnded(true);
+    });
   };
 
   const handleAddTag = () => {
@@ -82,6 +114,10 @@ export default function ChannelLiveOperationPage() {
         <div className="flex min-w-0 flex-col gap-4 lg:col-span-2">
           <ChannelLivePreviewPanel liveState={liveState} title={title} />
           <ChannelLiveSettingsPanel
+            broadcastActionError={broadcastActionError}
+            isBroadcastActionPending={isBroadcastActionPending}
+            rtmpServerUrl={CHANNEL_LIVE_MEDIA_CONFIG.rtmpServerUrl}
+            streamKey={CHANNEL_LIVE_MEDIA_CONFIG.streamPath}
             title={title}
             tagInput={tagInput}
             tags={tags}

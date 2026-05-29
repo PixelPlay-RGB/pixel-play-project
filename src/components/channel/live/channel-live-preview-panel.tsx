@@ -2,6 +2,7 @@
 import ChannelLivePreviewPlayer from "@/components/channel/live/channel-live-preview-player";
 import type { ChannelLiveState } from "@/components/channel/live/channel-live-operation-page";
 import { Card, CardContent } from "@/components/ui/card";
+import { getChannelLiveHlsUrl } from "@/constants/channel/channel-live-media";
 import { Radio } from "lucide-react";
 
 interface Props {
@@ -10,7 +11,7 @@ interface Props {
 }
 
 export default function ChannelLivePreviewPanel({ liveState, title }: Props) {
-  const hlsUrl = "http://localhost:8888/mystream/index.m3u8";
+  const hlsUrl = getChannelLiveHlsUrl();
 
   return (
     <Card className="bg-brand/5 border-brand/10">

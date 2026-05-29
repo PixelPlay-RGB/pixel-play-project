@@ -220,6 +220,10 @@ export type Database = {
           total_count: number;
         }[];
       };
+      end_live_broadcast: {
+        Args: { p_actor_user_id: string; p_broadcast_id: string };
+        Returns: string;
+      };
       get_public_chat_room_metadata: {
         Args: { p_room_id: string };
         Returns: {
@@ -227,6 +231,15 @@ export type Database = {
           id: string;
           title: string;
         }[];
+      };
+      start_live_broadcast: {
+        Args: {
+          p_actor_user_id: string;
+          p_tags: string[];
+          p_thumbnail_url?: string | null;
+          p_title: string;
+        };
+        Returns: string;
       };
       join_chat_room: {
         Args: { p_actor_user_id: string; p_room_id: string };
