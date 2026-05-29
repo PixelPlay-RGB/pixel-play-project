@@ -48,7 +48,7 @@ export default function LiveHero({ hero }: LiveHeroProps) {
     <Link
       href={`/live/${hero.creatorId}`}
       className={cn(
-        "group relative block min-h-70 overflow-hidden rounded-lg bg-black ring-1 ring-white/10 outline-none",
+        "group hover:border-brand/70 relative block min-h-70 overflow-hidden rounded-lg border border-white/10 bg-black transition-colors outline-none",
         "focus-visible:ring-ring focus-visible:ring-3 md:min-h-86",
       )}
       aria-label={`${hero.title} 라이브 보기`}

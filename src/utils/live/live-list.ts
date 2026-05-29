@@ -174,6 +174,10 @@ export function formatViewerCount(count: number) {
   return `${VIEWER_COUNT_FORMATTER.format(count)}명 시청`;
 }
 
+export function formatViewerCountNumber(count: number) {
+  return VIEWER_COUNT_FORMATTER.format(count);
+}
+
 export function formatViewerCountLabel(count: number) {
   return `${VIEWER_COUNT_FORMATTER.format(count)}명`;
 }

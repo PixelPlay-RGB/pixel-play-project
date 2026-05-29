@@ -20,17 +20,18 @@ interface LiveCardProps {
 
 export default function LiveCard({ item }: LiveCardProps) {
   const tagLabels = getLiveTagLabels(item.tags);
+  const liveHref = `/live/${item.creatorId}`;
 
   return (
     <Link
-      href={`/live/${item.creatorId}`}
+      href={liveHref}
       className={cn(
         "group block min-w-0 outline-none",
         "focus-visible:ring-ring rounded-lg focus-visible:ring-3",
       )}
       aria-label={`${item.title} 라이브 보기`}
     >
-      <div className="border-border/70 relative aspect-video overflow-hidden rounded-lg border bg-black">
+      <div className="border-border/70 group-hover:border-brand/70 relative aspect-video overflow-hidden rounded-lg border bg-black transition-colors">
         <Image
           src={getLiveThumbnailSrc(item.id, item.thumbnailUrl)}
           alt={`${item.title} 라이브 썸네일`}

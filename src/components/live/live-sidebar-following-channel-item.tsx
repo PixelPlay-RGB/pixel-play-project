@@ -3,9 +3,10 @@
 import Link from "next/link";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import LiveSidebarLiveStatus from "@/components/live/live-sidebar-live-status";
 import { SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
+import { cn } from "@/lib/utils";
 import type { FollowingChannelItem } from "@/types/live/live";
-import { formatViewerCount } from "@/utils/live/live-list";
 import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
 
 interface LiveSidebarFollowingChannelItemProps {
@@ -21,21 +22,17 @@ export default function LiveSidebarFollowingChannelItem({
         render={<Link href={`/live/${item.creatorId}`} />}
         className="h-auto gap-2 py-2"
       >
-        <Avatar className="size-7" size="sm">
+        <Avatar className={cn("size-7", item.isLive && "ring-brand/70 ring-2")} size="sm">
           <AvatarImage
             src={getAvatarImageSrc(item.creatorPhotoUrl)}
             alt={`${item.creatorNickname} 프로필 이미지`}
           />
           <AvatarFallback>{getAvatarFallbackText(item.creatorNickname, 1)}</AvatarFallback>
         </Avatar>
-        <span className="flex min-w-0 flex-col gap-0.5">
-          <span className="text-sidebar-foreground truncate text-xs font-bold">
-            {item.creatorNickname}
-          </span>
-          <span className="text-muted-foreground truncate text-xs">
-            {item.isLive ? formatViewerCount(item.currentViewerCount) : "지금은 쉬는 중"}
-          </span>
+        <span className="text-sidebar-foreground min-w-0 flex-1 truncate text-xs font-bold">
+          {item.creatorNickname}
         </span>
+        <LiveSidebarLiveStatus isLive={item.isLive} viewerCount={item.currentViewerCount} />
       </SidebarMenuButton>
     </SidebarMenuItem>
   );

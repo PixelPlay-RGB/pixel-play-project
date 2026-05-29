@@ -5,6 +5,7 @@ import { Hash } from "lucide-react";
 
 import { SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import type { LivePopularKeywordItem } from "@/types/live/live";
+import { formatViewerCountLabel } from "@/utils/live/live-list";
 
 interface LiveSidebarKeywordItemProps {
   item: LivePopularKeywordItem;
@@ -19,7 +20,9 @@ export default function LiveSidebarKeywordItem({ item }: LiveSidebarKeywordItemP
         <Hash className="text-brand" />
         <span className="flex min-w-0 flex-col gap-0.5">
           <span className="text-sidebar-foreground truncate text-xs font-bold">{item.keyword}</span>
-          <span className="text-muted-foreground truncate text-xs">방송 {item.liveCount}개</span>
+          <span className="text-muted-foreground truncate text-xs">
+            방송 {item.liveCount}개 · {formatViewerCountLabel(item.viewerCount)}
+          </span>
         </span>
       </SidebarMenuButton>
     </SidebarMenuItem>

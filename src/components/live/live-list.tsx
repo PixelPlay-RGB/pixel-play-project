@@ -18,7 +18,6 @@ interface LiveListProps {
 }
 
 export default function LiveList({ heroSlot }: LiveListProps) {
-  const setFilter = useLiveStore((state) => state.setFilter);
   const setSort = useLiveStore((state) => state.setSort);
   const showMore = useLiveStore((state) => state.showMore);
   const query = useLiveList();
@@ -32,14 +31,6 @@ export default function LiveList({ heroSlot }: LiveListProps) {
       {heroSlot}
       <section className="flex min-w-0 flex-1 flex-col gap-4">
         <div className="flex flex-col gap-3">
-          <LiveListToolbar
-            filter={query.effectiveFilter}
-            sort={query.sort}
-            isFollowingVisible={query.isFollowingFilterVisible}
-            onFilterChange={setFilter}
-            onSortChange={setSort}
-          />
-
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div className="space-y-1">
               <h2 className="text-foreground text-xl font-bold md:text-2xl">지금 방송 중</h2>
@@ -47,9 +38,7 @@ export default function LiveList({ heroSlot }: LiveListProps) {
                 보고 싶은 방송을 바로 골라보세요.
               </p>
             </div>
-            <p className="text-muted-foreground text-sm">
-              전체 {snapshot.totalCount.toLocaleString("ko-KR")}개
-            </p>
+            <LiveListToolbar sort={query.sort} onSortChange={setSort} />
           </div>
         </div>
 
