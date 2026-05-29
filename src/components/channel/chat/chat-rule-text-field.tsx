@@ -23,16 +23,16 @@ export function ChatRuleTextField({ value, disabled, onChange }: Props) {
           className="min-h-28 resize-none border-0 bg-transparent p-0 leading-6 shadow-none focus-visible:ring-0"
           placeholder="채팅 규칙을 입력해주세요."
         />
+        <span className="text-muted-foreground text-xs">
+          {value.length} / {CHANNEL_CHAT_RULE_MAX_LENGTH}
+        </span>
       </label>
-      <div className="text-muted-foreground flex justify-between gap-3 text-xs">
-        <span>
+      <div className="bg-brand/10 text-muted-foreground rounded-xl p-3 text-xs leading-5">
+        <p>
           첫 채팅 전 규칙 확인은 항상 적용돼요.
           <br className="sm:hidden" />
           시청자는 확인 후 채팅할 수 있어요.
-        </span>
-        <span className="shrink-0">
-          {value.length} / {CHANNEL_CHAT_RULE_MAX_LENGTH}
-        </span>
+        </p>
       </div>
     </div>
   );

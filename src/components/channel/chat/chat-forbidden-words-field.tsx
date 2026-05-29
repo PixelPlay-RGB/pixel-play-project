@@ -92,7 +92,7 @@ export function ChatForbiddenWordsField({ value, disabled, error, onChange }: Pr
               type="button"
               disabled={disabled}
               onClick={() => handleRemove(item)}
-              className="bg-brand/10 text-brand hover:bg-brand hover:text-brand-foreground inline-flex h-8 items-center gap-1 rounded-full px-3 text-xs font-bold transition-colors disabled:pointer-events-none disabled:opacity-60"
+              className="bg-error/10 text-error hover:bg-error inline-flex h-8 items-center gap-1 rounded-full px-3 text-xs font-bold transition-colors hover:text-white disabled:pointer-events-none disabled:opacity-60"
             >
               <span>{item}</span>
               <X className="size-3" />

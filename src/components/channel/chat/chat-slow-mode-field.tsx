@@ -25,7 +25,7 @@ export function ChatSlowModeField({
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         <ChatToggleControl
           checked={enabled}
-          checkedLabel="사용 중"
+          checkedLabel="ON"
           uncheckedLabel="꺼짐"
           ariaLabel="저속 모드 사용"
           disabled={disabled}
