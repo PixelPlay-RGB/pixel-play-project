@@ -2,10 +2,7 @@
 // 채널 보안 설정 화면의 클라이언트 상호작용을 관리합니다.
 
 import { rotateChannelSecurityTokenAction } from "@/actions/channel/security";
-import {
-  CHANNEL_SECURITY_ROTATE_REFRESH_DESCRIPTION,
-  CHANNEL_SECURITY_ROTATE_SUCCESS_DESCRIPTION,
-} from "@/constants/channel/security";
+import { CHANNEL_SECURITY_ROTATE_SUCCESS_DESCRIPTION } from "@/constants/channel/security";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import type {
   ChannelSecuritySnapshot,
@@ -68,23 +65,13 @@ export function useChannelSecurityControls(initialSnapshot: ChannelSecuritySnaps
           return;
         }
 
-        const shouldReloadSnapshot = !result.data.snapshot;
-
-        if (result.data.snapshot) {
-          setSnapshot(result.data.snapshot);
-        }
+        setSnapshot(result.data.snapshot);
 
         toastAppSuccess(
           result.code ?? APP_MESSAGE_CODE.success.channel.securityTokenRotated,
-          shouldReloadSnapshot
-            ? CHANNEL_SECURITY_ROTATE_REFRESH_DESCRIPTION
-            : CHANNEL_SECURITY_ROTATE_SUCCESS_DESCRIPTION[result.data.tokenKind],
+          CHANNEL_SECURITY_ROTATE_SUCCESS_DESCRIPTION[result.data.tokenKind],
         );
         onSuccess?.();
-
-        if (shouldReloadSnapshot) {
-          window.setTimeout(() => window.location.reload(), 600);
-        }
       } catch (error) {
         console.error("채널 보안 토큰 재발급 요청 실패", error);
         toastAppError(APP_MESSAGE_CODE.error.channel.securityTokenRotateFailed);

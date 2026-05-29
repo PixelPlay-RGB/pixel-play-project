@@ -10,7 +10,7 @@ import type {
   ChannelSecurityVersionResult,
 } from "@/types/channel/security";
 import type { AppActionResult } from "@/types/common/action";
-import { buildChannelSecuritySnapshot } from "@/utils/channel/channel-security-snapshot";
+import { buildChannelSecurityVersionResult } from "@/utils/channel/channel-security-snapshot";
 
 const CHANNEL_SECURITY_ROTATE_FAILED_CODE =
   APP_MESSAGE_CODE.error.channel.securityTokenRotateFailed;
@@ -50,54 +50,23 @@ export async function rotateChannelSecurityTokenAction(
     };
   }
 
-  if (typeof data !== "number") {
-    console.error("채널 보안 토큰 재발급 응답 형식 오류", data);
-    return {
-      success: false,
-      code: CHANNEL_SECURITY_ROTATE_FAILED_CODE,
-    };
-  }
-
-  const { data: snapshotData, error: snapshotError } = await supabase.rpc(
-    "get_creator_studio_snapshot",
-    {
-      p_actor_user_id: actor.userId,
-    },
-  );
-
-  if (snapshotError) {
-    console.error("채널 보안 토큰 재발급 후 조회 실패", snapshotError);
-    return {
-      success: true,
-      data: {
-        tokenKind,
-        version: data,
-        snapshot: null,
-      },
-      code: APP_MESSAGE_CODE.success.channel.securityTokenRotated,
-    };
-  }
-
   try {
+    const result = buildChannelSecurityVersionResult(actor.userId, data);
+
+    if (result.tokenKind !== tokenKind) {
+      throw new Error("채널 보안 토큰 재발급 응답 종류 불일치");
+    }
+
     return {
       success: true,
-      data: {
-        tokenKind,
-        version: data,
-        snapshot: buildChannelSecuritySnapshot(actor.userId, snapshotData),
-      },
+      data: result,
       code: APP_MESSAGE_CODE.success.channel.securityTokenRotated,
     };
   } catch (error) {
-    console.error("채널 보안 토큰 재발급 후 표시값 생성 실패", error);
+    console.error("채널 보안 토큰 재발급 응답 표시값 생성 실패", error);
     return {
-      success: true,
-      data: {
-        tokenKind,
-        version: data,
-        snapshot: null,
-      },
-      code: APP_MESSAGE_CODE.success.channel.securityTokenRotated,
+      success: false,
+      code: CHANNEL_SECURITY_ROTATE_FAILED_CODE,
     };
   }
 }

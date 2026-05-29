@@ -7,6 +7,8 @@ import {
 } from "@/constants/live/live-overlay";
 import type {
   ChannelSecuritySnapshot,
+  ChannelSecurityTokenKind,
+  ChannelSecurityVersionResult,
   CreatorStudioSnapshotSettings,
 } from "@/types/channel/security";
 import type { Json } from "@/types/database.types";
@@ -24,6 +26,31 @@ export function buildChannelSecuritySnapshot(
   };
 
   return buildSnapshotFromVersions(creatorId, versions);
+}
+
+export function buildChannelSecurityVersionResult(
+  creatorId: string,
+  value: Json,
+): ChannelSecurityVersionResult {
+  const object = readObject(value);
+
+  if (!object) {
+    throw new Error("채널 보안 토큰 재발급 응답 형식 오류");
+  }
+
+  const tokenKind = readTokenKind(object.tokenKind);
+  const version = readStrictVersion(object.version);
+  const snapshot = object.snapshot;
+
+  if (!tokenKind || version === null || snapshot === undefined) {
+    throw new Error("채널 보안 토큰 재발급 응답 필드 오류");
+  }
+
+  return {
+    tokenKind,
+    version,
+    snapshot: buildChannelSecuritySnapshot(creatorId, snapshot),
+  };
 }
 
 function buildSnapshotFromVersions(
@@ -58,23 +85,39 @@ function buildSnapshotFromVersions(
 }
 
 function readSettings(snapshot: Json): CreatorStudioSnapshotSettings {
-  if (!snapshot || typeof snapshot !== "object" || Array.isArray(snapshot)) {
+  const snapshotObject = readObject(snapshot);
+
+  if (!snapshotObject) {
     return {};
   }
 
-  const settings = (snapshot as { settings?: unknown }).settings;
+  const settings = readObject(snapshotObject.settings);
 
-  if (!settings || typeof settings !== "object" || Array.isArray(settings)) {
-    return {};
-  }
-
-  return settings as CreatorStudioSnapshotSettings;
+  return settings ? (settings as CreatorStudioSnapshotSettings) : {};
 }
 
 function readVersion(version?: number): number {
   return typeof version === "number" && Number.isInteger(version) && version > 0
     ? version
     : LIVE_SECURITY_DEFAULT_TOKEN_VERSION;
+}
+
+function readStrictVersion(value: Json | undefined) {
+  return typeof value === "number" && Number.isInteger(value) && value > 0 ? value : null;
+}
+
+function readTokenKind(value: Json | undefined): ChannelSecurityTokenKind | null {
+  return value === "stream_key" || value === "chat_overlay" || value === "donation_alert"
+    ? value
+    : null;
+}
+
+function readObject(value: Json | undefined): Record<string, Json | undefined> | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+
+  return value as Record<string, Json | undefined>;
 }
 
 function resolvePublicBaseUrl() {

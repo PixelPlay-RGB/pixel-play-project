@@ -812,7 +812,7 @@ export type Database = {
       };
       rotate_live_security_token_version: {
         Args: { p_actor_user_id: string; p_token_kind: string };
-        Returns: number;
+        Returns: Json;
       };
       search_chat_rooms: {
         Args: {
