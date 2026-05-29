@@ -43,4 +43,11 @@ export const QUERY_KEYS = {
     search: (query?: string, section?: string) =>
       [...QUERY_KEYS.chat.all, "search", query, section].filter((v) => v !== undefined),
   },
+  live: {
+    all: ["live"] as const,
+    list: (userId?: string, filter?: string, sort?: string, visibleCount?: number) =>
+      [...QUERY_KEYS.live.all, "list", userId ?? "public", filter, sort, visibleCount].filter(
+        (v) => v !== undefined,
+      ),
+  },
 } as const;

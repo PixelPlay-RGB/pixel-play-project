@@ -212,6 +212,12 @@ export const APP_MESSAGE = {
         description: "채팅방 목록을 불러오지 못했습니다.",
       },
     },
+    liveList: {
+      loadFailed: {
+        title: "라이브 목록을 불러오지 못했어요.",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+    },
     search: {
       loadFailed: {
         title: "검색 결과 조회 실패",
