@@ -18,7 +18,7 @@ const MOCK_CHAT_MESSAGES = [
 
 export default function ChannelLiveChatPanel({ liveState, onToggleChatPaused }: Props) {
   return (
-    <Card className="min-h-128">
+    <Card className="flex min-h-128 flex-1 flex-col">
       <CardHeader className="has-data-[slot=card-action]:grid-cols-[1fr_auto]">
         <div className="flex flex-col gap-1">
           <CardTitle>방송 채팅</CardTitle>
@@ -31,7 +31,7 @@ export default function ChannelLiveChatPanel({ liveState, onToggleChatPaused }: 
           {liveState.isChatPaused ? "재개" : "일시정지"}
         </Button>
       </CardHeader>
-      <CardContent className="flex min-h-96 flex-col gap-3">
+      <CardContent className="flex min-h-96 flex-1 flex-col gap-3">
         <div
           className={cn(
             "rounded-lg px-3 py-2 text-xs font-semibold",

@@ -150,7 +150,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
           />
         </div>
 
-        <div className="flex min-w-0 flex-col gap-4">
+        <div className="flex min-w-0 flex-col gap-4 lg:h-full">
           <ChannelLiveStreamStatusPanel
             activeBroadcastStartedAt={broadcastStartedAt}
             liveState={liveState}
