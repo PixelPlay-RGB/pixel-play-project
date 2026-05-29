@@ -28,8 +28,8 @@ export default function LiveCard({ item }: LiveCardProps) {
       <Link
         href={liveHref}
         className={cn(
-          "group relative block aspect-video overflow-hidden rounded-lg border bg-black transition-colors outline-none",
-          "border-border/70 hover:border-live/70 focus-visible:ring-ring focus-visible:ring-3",
+          "group relative block aspect-video overflow-hidden rounded-lg bg-black outline-none",
+          "focus-visible:ring-ring focus-visible:ring-3",
         )}
         aria-label={`${item.title} 라이브 보기`}
       >
@@ -38,7 +38,7 @@ export default function LiveCard({ item }: LiveCardProps) {
           alt={`${item.title} 라이브 썸네일`}
           fill
           sizes="(min-width: 1280px) 20vw, (min-width: 1024px) 28vw, (min-width: 640px) 45vw, 92vw"
-          className="object-cover transition-transform duration-300 group-hover:scale-105"
+          className="object-cover transition duration-300 group-hover:scale-105 group-hover:opacity-75"
         />
         <div className="absolute inset-0 bg-linear-to-t from-black/55 to-transparent" />
         <LiveBadge className="absolute top-3 left-3" />
@@ -56,7 +56,7 @@ export default function LiveCard({ item }: LiveCardProps) {
           className="focus-visible:ring-ring mt-0.5 shrink-0 rounded-full outline-none focus-visible:ring-3"
           aria-label={`${item.creatorNickname} 채널로 이동`}
         >
-          <Avatar className="hover:ring-live/70 size-9 transition-shadow hover:ring-2" size="lg">
+          <Avatar className="size-9" size="lg">
             <AvatarImage
               src={getAvatarImageSrc(item.creatorPhotoUrl)}
               alt={`${item.creatorNickname} 프로필 이미지`}
@@ -70,7 +70,7 @@ export default function LiveCard({ item }: LiveCardProps) {
             <h3 className="line-clamp-2 text-sm leading-snug font-bold wrap-break-word">
               <Link
                 href={liveHref}
-                className="text-foreground hover:text-live focus-visible:ring-ring rounded-sm transition-colors outline-none focus-visible:ring-3"
+                className="text-foreground focus-visible:ring-ring rounded-sm outline-none focus-visible:ring-3"
               >
                 {item.title}
               </Link>

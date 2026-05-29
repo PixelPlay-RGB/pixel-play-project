@@ -24,7 +24,7 @@ interface LiveHeroProps {
 export default function LiveHero({ hero }: LiveHeroProps) {
   if (!hero) {
     return (
-      <section className="border-border bg-card flex min-h-52 flex-col justify-between rounded-lg border p-5 md:min-h-64 md:p-6">
+      <section className="border-border bg-card flex min-h-52 flex-col justify-between rounded-lg border-2 p-5 md:min-h-64 md:p-6">
         <div className="flex items-center gap-2">
           <span className="bg-live/10 text-live flex size-10 items-center justify-center rounded-lg">
             <Radio className="size-5" />
@@ -47,7 +47,7 @@ export default function LiveHero({ hero }: LiveHeroProps) {
   const liveHref = `/live/${hero.creatorId}`;
 
   return (
-    <article className="group hover:border-live/70 relative min-h-70 overflow-hidden rounded-lg border border-white/10 bg-black transition-colors md:min-h-86">
+    <article className="group hover:border-live/70 relative min-h-70 overflow-hidden rounded-lg border-2 border-white/10 bg-black transition-colors md:min-h-86">
       <Link
         href={liveHref}
         className={cn(
