@@ -89,7 +89,7 @@ export default function HeaderSearchForm() {
               transition={mobileHeaderSearchTransition}
               className={cn(
                 "border-brand/15 bg-background dark:border-border",
-                "fixed inset-x-0 top-0 z-[60] flex h-14 items-center gap-2 border-b px-3 shadow-sm",
+                "fixed inset-x-0 top-0 z-60 flex h-14 items-center gap-2 border-b px-3 shadow-sm",
               )}
             >
               <Button
