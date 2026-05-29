@@ -49,5 +49,20 @@ export const QUERY_KEYS = {
       [...QUERY_KEYS.live.all, "list", userId ?? "public", filter, sort, visibleCount].filter(
         (v) => v !== undefined,
       ),
+    sidebar: {
+      trending: (userId?: string) => [
+        ...QUERY_KEYS.live.all,
+        "sidebar",
+        "trending",
+        userId ?? "public",
+      ],
+      following: (userId?: string) => [
+        ...QUERY_KEYS.live.all,
+        "sidebar",
+        "following",
+        userId ?? "public",
+      ],
+      keywords: () => [...QUERY_KEYS.live.all, "sidebar", "keywords"],
+    },
   },
 } as const;

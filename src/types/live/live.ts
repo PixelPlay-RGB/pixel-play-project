@@ -26,3 +26,34 @@ export interface LiveListSnapshot {
   totalCount: number;
   hasMore: boolean;
 }
+
+export interface LivePopularKeywordItem {
+  keyword: string;
+  liveCount: number;
+  viewerCount: number;
+}
+
+export interface LivePopularKeywordSnapshot {
+  items: LivePopularKeywordItem[];
+  totalCount: number;
+  hasMore: boolean;
+}
+
+export interface FollowingChannelItem {
+  creatorId: string;
+  creatorNickname: string;
+  creatorPhotoUrl: string | null;
+  followedAt: string;
+  isLive: boolean;
+  liveId: string | null;
+  liveTitle: string | null;
+  thumbnailUrl: string | null;
+  currentViewerCount: number;
+  startedAt: string | null;
+}
+
+export interface FollowingChannelSnapshot {
+  items: FollowingChannelItem[];
+  totalCount: number;
+  hasMore: boolean;
+}

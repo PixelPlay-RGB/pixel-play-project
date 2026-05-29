@@ -1,4 +1,6 @@
-// 팔로우한 채널 placeholder 페이지를 렌더링합니다.
+// 기존 follows 경로를 팔로잉 경로로 이동시킵니다.
+import { redirect } from "next/navigation";
+
 export default function UserFollowsPage() {
-  return <div>팔로우 페이지</div>;
+  redirect("/user/following");
 }

@@ -749,6 +749,10 @@ export type Database = {
         Args: { p_actor_user_id: string };
         Returns: Json;
       };
+      get_following_channel_list: {
+        Args: { p_limit?: number; p_offset?: number };
+        Returns: Json;
+      };
       get_landing_snapshot: { Args: never; Returns: Json };
       get_live_chat_overlay_snapshot: {
         Args: { p_creator_id: string; p_limit?: number };
@@ -770,6 +774,7 @@ export type Database = {
         };
         Returns: Json;
       };
+      get_live_popular_keywords: { Args: { p_limit?: number }; Returns: Json };
       get_live_watch: {
         Args: { p_creator_id: string; p_viewer_id?: string };
         Returns: Json;

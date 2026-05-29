@@ -1,10 +1,8 @@
 // 채팅 검색 결과를 섹션 단위로 렌더링합니다.
 import ChatRoomCard from "@/components/chat-room/shared/chat-room-card";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
+import LoadMoreButton from "@/components/common/load-more-button";
 import { cn } from "@/lib/utils";
 import type { ChatSearchResult } from "@/types/search/search";
-import { ChevronDown, Loader2 } from "lucide-react";
 
 interface Props {
   title: string;
@@ -40,30 +38,7 @@ export default function ChatSearchSection({
         ))}
       </div>
 
-      {hasMore && (
-        <div className="flex items-center gap-4 pt-1">
-          <Separator className="flex-1" />
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={onLoadMore}
-            disabled={isFetchingMore}
-            className={cn(
-              "h-9 rounded-full border px-4 text-xs font-bold",
-              "border-border bg-background text-muted-foreground shadow-sm",
-              "hover:border-brand/40 hover:text-brand",
-            )}
-          >
-            {isFetchingMore ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <ChevronDown className="h-3.5 w-3.5" />
-            )}
-            더보기
-          </Button>
-          <Separator className="flex-1" />
-        </div>
-      )}
+      {hasMore && <LoadMoreButton isLoading={isFetchingMore} onClick={onLoadMore} accent="brand" />}
     </section>
   );
 }

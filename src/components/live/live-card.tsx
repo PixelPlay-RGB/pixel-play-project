@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { MessageCircle } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import LiveBadge from "@/components/live/live-badge";
@@ -10,9 +9,7 @@ import { cn } from "@/lib/utils";
 import type { LiveListItem } from "@/types/live/live";
 import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
 import {
-  formatLiveDuration,
-  formatRecentChatCount,
-  formatViewerCount,
+  formatViewerCountLabel,
   getLiveTagLabels,
   getLiveThumbnailSrc,
 } from "@/utils/live/live-list";
@@ -45,9 +42,9 @@ export default function LiveCard({ item }: LiveCardProps) {
         <LiveBadge className="absolute top-3 left-3" />
         <span
           className="absolute top-3 right-3 hidden rounded-full bg-black/60 px-2 py-1 text-xs font-semibold text-white backdrop-blur sm:inline-flex"
-          aria-label={formatViewerCount(item.currentViewerCount)}
+          aria-label={`${formatViewerCountLabel(item.currentViewerCount)} 시청 중`}
         >
-          {formatViewerCount(item.currentViewerCount)}
+          {formatViewerCountLabel(item.currentViewerCount)}
         </span>
       </div>
 
@@ -70,23 +67,12 @@ export default function LiveCard({ item }: LiveCardProps) {
             </p>
           </div>
 
-          <div className="text-muted-foreground flex flex-wrap items-center gap-1.5 text-xs">
-            <span>{formatLiveDuration(item.startedAt)}</span>
-            <span aria-hidden="true">·</span>
-            <span>{formatViewerCount(item.currentViewerCount)}</span>
-            <span aria-hidden="true">·</span>
-            <span className="inline-flex items-center gap-1">
-              <MessageCircle className="size-3.5" />
-              {formatRecentChatCount(item.recentChatCount)}
-            </span>
-          </div>
-
           {tagLabels.length > 0 ? (
             <div className="flex flex-wrap gap-1">
               {tagLabels.map((tag) => (
                 <span
                   key={tag}
-                  className="bg-muted/70 text-muted-foreground rounded-full px-2 py-0.5 text-xs"
+                  className="bg-brand/15 text-brand border-brand/20 rounded-full border px-2 py-0.5 text-xs font-bold"
                 >
                   #{tag}
                 </span>

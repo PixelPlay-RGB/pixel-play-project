@@ -2,7 +2,7 @@
 
 실시간 채팅과 라이브 스트리밍을 함께 제공하는 웹 애플리케이션입니다.
 
-Next.js 16 App Router, React 19, Supabase Auth/Postgres/Realtime, TanStack Query, Zustand를 중심으로 공개 랜딩, 라이브 목록, 채팅방 목록, 채팅방 상세, 메시지, 참여자 관리, 채팅방 검색, 프로필 설정 기능을 제공합니다. 라이브 시청, 라이브 검색, 채널 관리, 팔로우, 후원 영역은 App Router 기반 placeholder를 먼저 준비해둔 상태입니다.
+Next.js 16 App Router, React 19, Supabase Auth/Postgres/Realtime, TanStack Query, Zustand를 중심으로 공개 랜딩, 라이브 목록, 채팅방 목록, 채팅방 상세, 메시지, 참여자 관리, 채팅방 검색, 프로필 설정 기능을 제공합니다. 라이브 시청, 라이브 검색, 채널 관리, 팔로잉, 후원 영역은 App Router 기반 placeholder를 먼저 준비해둔 상태입니다.
 
 현재 쓰기 작업은 Server Action에서 인증 사용자를 확인한 뒤 Supabase `service_role` 경계로 RPC를 호출하는 방식으로 통일되어 있습니다. 클라이언트 컴포넌트는 TanStack Query mutation hook으로 pending 상태와 후처리를 관리합니다.
 
@@ -234,7 +234,7 @@ src/
 │   ├── chat-room/         # 채팅방 생성, 참여, 나가기, 멤버 액션
 │   ├── common/            # 인증 사용자 확인 등 공통 action helper
 │   ├── donations/         # 후원 Server Action 예약
-│   ├── follows/           # 팔로우 Server Action 예약
+│   ├── following/         # 팔로잉 Server Action 예약
 │   ├── live/              # 라이브 Server Action 예약
 │   ├── message/           # 메시지 전송
 │   └── profile/           # 프로필 수정
@@ -244,7 +244,7 @@ src/
 │   ├── channel/           # 채널 관리 placeholder 라우터
 │   ├── chat/              # 채팅방 목록, 상세, 검색
 │   ├── live/              # 라이브 목록, 시청, 검색 라우터
-│   ├── user/              # 사용자 설정, 팔로우, 후원 라우터
+│   ├── user/              # 사용자 설정, 팔로잉, 후원 라우터
 │   └── page.tsx           # 공개 랜딩
 ├── components/
 │   ├── auth/              # 로그인, 회원가입, OAuth, 비밀번호 UI
@@ -253,7 +253,7 @@ src/
 │   ├── chat-room-list/    # 채팅방 목록, 카드, 생성 Dialog
 │   ├── common/            # Header, Footer, Providers
 │   ├── donations/         # 후원 UI 예약
-│   ├── follows/           # 팔로우 UI 예약
+│   ├── following/         # 팔로잉 UI 예약
 │   ├── live/              # 라이브 목록 UI
 │   ├── preview/           # 랜딩과 공유 preview UI
 │   ├── search/            # 검색 입력과 검색 결과
@@ -265,7 +265,7 @@ src/
 │   ├── chat-room/
 │   ├── common/
 │   ├── donations/
-│   ├── follows/
+│   ├── following/
 │   ├── live/
 │   ├── message/
 │   ├── public/
@@ -277,7 +277,7 @@ src/
 │   ├── chat-room/         # 채팅방 조회, 참여, 멤버 액션, Realtime 훅
 │   ├── common/            # 반응형, observer, textarea resize 훅
 │   ├── donations/         # 후원 훅 예약
-│   ├── follows/           # 팔로우 훅 예약
+│   ├── following/         # 팔로잉 훅 예약
 │   ├── live/              # 라이브 훅 예약
 │   ├── message/           # 메시지 조회, 전송, draft, viewport 훅
 │   ├── profile/           # 프로필 조회, 수정, 닉네임 확인 훅
@@ -294,7 +294,7 @@ src/
 │   ├── chat-room/
 │   ├── common/
 │   ├── donations/
-│   ├── follows/
+│   ├── following/
 │   ├── live/
 │   ├── message/
 │   ├── profile/
@@ -308,7 +308,7 @@ src/
     ├── chat-room/
     ├── common/
     ├── donations/
-    ├── follows/
+    ├── following/
     ├── live/
     ├── message/
     ├── profile/

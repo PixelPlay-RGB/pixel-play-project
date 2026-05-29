@@ -174,6 +174,10 @@ export function formatViewerCount(count: number) {
   return `${VIEWER_COUNT_FORMATTER.format(count)}명 시청`;
 }
 
+export function formatViewerCountLabel(count: number) {
+  return `${VIEWER_COUNT_FORMATTER.format(count)}명`;
+}
+
 export function formatRecentChatCount(count: number) {
   if (count <= 0) {
     return "채팅 조용함";

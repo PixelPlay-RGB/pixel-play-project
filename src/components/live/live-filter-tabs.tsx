@@ -1,18 +1,8 @@
 // 라이브 목록 필터 칩을 렌더링합니다.
 
-import type { LucideIcon } from "lucide-react";
-import { Heart, MessageCircle, Radio, Sparkles } from "lucide-react";
-
-import { LIVE_LIST_FILTER_OPTIONS } from "@/constants/live/live-list";
+import { LIVE_LIST_FILTER_ICON, LIVE_LIST_FILTER_OPTIONS } from "@/constants/live/live-list";
 import { cn } from "@/lib/utils";
 import type { LiveListFilter } from "@/types/live/live";
-
-const FILTER_ICON: Record<LiveListFilter, LucideIcon> = {
-  ALL: Radio,
-  FOLLOWING: Heart,
-  RECENT: Sparkles,
-  ACTIVE_CHAT: MessageCircle,
-};
 
 interface LiveFilterTabsProps {
   filter: LiveListFilter;
@@ -33,7 +23,7 @@ export default function LiveFilterTabs({
     <div className="flex w-full max-w-full min-w-0 gap-2 overflow-x-auto pb-1">
       {visibleOptions.map((option) => {
         const isSelected = filter === option.value;
-        const Icon = FILTER_ICON[option.value];
+        const Icon = LIVE_LIST_FILTER_ICON[option.value];
 
         return (
           <button
@@ -46,8 +36,8 @@ export default function LiveFilterTabs({
               "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-3 text-sm font-bold transition-colors",
               "focus-visible:ring-ring outline-none focus-visible:ring-3",
               isSelected
-                ? "bg-brand text-primary-foreground border-brand"
-                : "border-border bg-background/60 text-foreground hover:bg-muted",
+                ? "bg-live border-live text-white"
+                : "border-border bg-background/60 text-foreground hover:border-live/40 hover:text-live",
             )}
           >
             <Icon className="size-4" />

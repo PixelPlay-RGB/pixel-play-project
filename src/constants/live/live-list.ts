@@ -1,5 +1,8 @@
 // 라이브 목록 화면의 필터, 정렬, 기본값을 관리합니다.
 
+import type { LucideIcon } from "lucide-react";
+import { Heart, MessageCircle, Radio, Sparkles } from "lucide-react";
+
 import type { LiveListFilter, LiveListSort } from "@/types/live/live";
 
 export const LIVE_LIST_PAGE_SIZE = 20;
@@ -9,6 +12,13 @@ export const LIVE_LIST_RECENT_CHAT_MINUTES = 5;
 export const LIVE_LIST_DEFAULT_FILTER: LiveListFilter = "ALL";
 export const LIVE_LIST_DEFAULT_SORT: LiveListSort = "VIEWER_COUNT_DESC";
 
+export const LIVE_LIST_FILTER_ICON = {
+  ALL: Radio,
+  FOLLOWING: Heart,
+  RECENT: Sparkles,
+  ACTIVE_CHAT: MessageCircle,
+} as const satisfies Record<LiveListFilter, LucideIcon>;
+
 export const LIVE_LIST_FILTER_OPTIONS = [
   {
     value: "ALL",
@@ -17,8 +27,8 @@ export const LIVE_LIST_FILTER_OPTIONS = [
   },
   {
     value: "FOLLOWING",
-    label: "팔로우 중",
-    description: "팔로우한 크리에이터의 라이브만 모아드려요.",
+    label: "팔로잉",
+    description: "팔로잉한 크리에이터의 라이브만 모아드려요.",
   },
   {
     value: "RECENT",
@@ -60,8 +70,8 @@ export const LIVE_LIST_EMPTY_MESSAGE = {
     description: "새 방송이 시작되면 이곳에서 바로 보여드릴게요.",
   },
   FOLLOWING: {
-    title: "팔로우한 채널의 라이브가 없어요.",
-    description: "관심 있는 크리에이터를 팔로우해두면 여기에서 바로 볼 수 있어요.",
+    title: "팔로잉한 채널의 라이브가 없어요.",
+    description: "관심 있는 크리에이터를 팔로잉해두면 여기에서 바로 볼 수 있어요.",
   },
   RECENT: {
     title: "방금 시작한 방송이 없어요.",

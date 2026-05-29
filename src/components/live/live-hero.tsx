@@ -102,7 +102,7 @@ export default function LiveHero({ hero }: LiveHeroProps) {
               {tagLabels.map((tag) => (
                 <span
                   key={tag}
-                  className="rounded-full bg-white/15 px-2 py-1 text-xs font-semibold text-white backdrop-blur"
+                  className="bg-brand/15 text-brand border-brand/20 rounded-full border px-2 py-1 text-xs font-bold backdrop-blur"
                 >
                   #{tag}
                 </span>

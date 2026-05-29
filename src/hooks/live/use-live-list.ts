@@ -5,40 +5,9 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 import { QUERY_KEYS } from "@/constants/common/query-keys";
 import { useNullableUser } from "@/hooks/profile/use-profile";
-import { createClient } from "@/lib/supabase/client";
+import { fetchLiveListSnapshot } from "@/hooks/live/live-list-query";
 import { useLiveStore } from "@/stores/live";
-import type { LiveListFilter, LiveListSnapshot, LiveListSort } from "@/types/live/live";
-import { parseLiveListSnapshot } from "@/utils/live/live-list";
-
-async function fetchLiveList({
-  filter,
-  sort,
-  viewerId,
-  limit,
-}: {
-  filter: LiveListFilter;
-  sort: LiveListSort;
-  viewerId?: string;
-  limit: number;
-}): Promise<LiveListSnapshot> {
-  const supabase = createClient();
-
-  const { data, error } = await supabase.rpc("get_live_list", {
-    p_filter: filter,
-    p_sort: sort,
-    p_viewer_id: viewerId,
-    p_query: undefined,
-    p_limit: limit,
-    p_offset: 0,
-  });
-
-  if (error) {
-    console.error("라이브 목록 조회 실패", error);
-    throw error;
-  }
-
-  return parseLiveListSnapshot(data);
-}
+import type { LiveListFilter, LiveListSnapshot } from "@/types/live/live";
 
 export function useLiveList() {
   const filter = useLiveStore((state) => state.filter);
@@ -52,7 +21,7 @@ export function useLiveList() {
   const query = useQuery<LiveListSnapshot>({
     queryKey: QUERY_KEYS.live.list(viewerId, effectiveFilter, sort, visibleCount),
     queryFn: () =>
-      fetchLiveList({
+      fetchLiveListSnapshot({
         filter: effectiveFilter,
         sort,
         viewerId,

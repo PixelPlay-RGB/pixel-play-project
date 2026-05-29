@@ -3,13 +3,12 @@
 
 import type { ReactNode } from "react";
 
+import LoadMoreButton from "@/components/common/load-more-button";
 import LiveCard from "@/components/live/live-card";
 import LiveListEmptyState from "@/components/live/live-list-empty-state";
 import LiveListErrorState from "@/components/live/live-list-error-state";
 import LiveListSkeleton from "@/components/live/live-list-skeleton";
 import LiveListToolbar from "@/components/live/live-list-toolbar";
-import LiveSideRail from "@/components/live/live-side-rail";
-import { Button } from "@/components/ui/button";
 import { useLiveList } from "@/hooks/live/use-live-list";
 import { useLiveStore } from "@/stores/live";
 import { EMPTY_LIVE_LIST_SNAPSHOT } from "@/utils/live/live-list";
@@ -29,69 +28,49 @@ export default function LiveList({ heroSlot }: LiveListProps) {
   const isFetchingMore = query.isFetching && query.isPlaceholderData;
 
   return (
-    <div className="flex min-h-full min-w-0 gap-5 lg:gap-6">
-      <LiveSideRail
-        filter={query.effectiveFilter}
-        items={snapshot.items}
-        isFollowingVisible={query.isFollowingFilterVisible}
-        onFilterChange={setFilter}
-      />
+    <div className="flex min-w-0 flex-col gap-5 md:gap-6">
+      {heroSlot}
+      <section className="flex min-w-0 flex-1 flex-col gap-4">
+        <div className="flex flex-col gap-3">
+          <LiveListToolbar
+            filter={query.effectiveFilter}
+            sort={query.sort}
+            isFollowingVisible={query.isFollowingFilterVisible}
+            onFilterChange={setFilter}
+            onSortChange={setSort}
+          />
 
-      <div className="flex min-w-0 flex-1 flex-col gap-5 md:gap-6">
-        {heroSlot}
-
-        <section className="flex min-w-0 flex-1 flex-col gap-4">
-          <div className="flex flex-col gap-3">
-            <LiveListToolbar
-              filter={query.effectiveFilter}
-              sort={query.sort}
-              isFollowingVisible={query.isFollowingFilterVisible}
-              onFilterChange={setFilter}
-              onSortChange={setSort}
-            />
-
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-              <div className="space-y-1">
-                <h2 className="text-foreground text-xl font-bold md:text-2xl">지금 방송 중</h2>
-                <p className="text-muted-foreground text-sm leading-relaxed">
-                  보고 싶은 방송을 바로 골라보세요.
-                </p>
-              </div>
-              <p className="text-muted-foreground text-sm">
-                전체 {snapshot.totalCount.toLocaleString("ko-KR")}개
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div className="space-y-1">
+              <h2 className="text-foreground text-xl font-bold md:text-2xl">지금 방송 중</h2>
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                보고 싶은 방송을 바로 골라보세요.
               </p>
             </div>
+            <p className="text-muted-foreground text-sm">
+              전체 {snapshot.totalCount.toLocaleString("ko-KR")}개
+            </p>
           </div>
+        </div>
 
-          {query.isError ? (
-            <LiveListErrorState onRetry={() => void query.refetch()} />
-          ) : isInitialLoading ? (
-            <LiveListSkeleton />
-          ) : isEmpty ? (
-            <LiveListEmptyState filter={query.effectiveFilter} />
-          ) : (
-            <div className="grid grid-cols-1 gap-x-4 gap-y-7 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-              {snapshot.items.map((item) => (
-                <LiveCard key={item.id} item={item} />
-              ))}
-            </div>
-          )}
+        {query.isError ? (
+          <LiveListErrorState onRetry={() => void query.refetch()} />
+        ) : isInitialLoading ? (
+          <LiveListSkeleton />
+        ) : isEmpty ? (
+          <LiveListEmptyState filter={query.effectiveFilter} />
+        ) : (
+          <div className="grid grid-cols-1 gap-x-4 gap-y-7 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+            {snapshot.items.map((item) => (
+              <LiveCard key={item.id} item={item} />
+            ))}
+          </div>
+        )}
 
-          {!query.isError && snapshot.hasMore ? (
-            <div className="flex justify-center pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="lg"
-                onClick={showMore}
-                disabled={query.isFetching}
-              >
-                {isFetchingMore ? "불러오는 중" : "더 보기"}
-              </Button>
-            </div>
-          ) : null}
-        </section>
-      </div>
+        {!query.isError && snapshot.hasMore ? (
+          <LoadMoreButton isLoading={isFetchingMore} onClick={showMore} accent="live" />
+        ) : null}
+      </section>
     </div>
   );
 }
