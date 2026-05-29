@@ -2,7 +2,6 @@
 // 라이브 크리에이터 검색 결과 카드를 렌더링합니다.
 import { Avatar, AvatarBadge, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/spinner";
 import { useToggleCreatorFollow } from "@/hooks/follows/use-toggle-creator-follow";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth";
@@ -114,14 +113,8 @@ export default function LiveCreatorResultCard({ result }: Props) {
         aria-label={`${result.creator_nickname} ${followLabel}`}
         onClick={handleFollowClick}
       >
-        {isFollowPending ? (
-          <Spinner className="size-3.5" />
-        ) : (
-          <>
-            <Heart className={cn("size-3.5", result.is_following && "fill-current")} />
-            {followLabel}
-          </>
-        )}
+        <Heart className={cn("size-3.5", result.is_following && "fill-current")} />
+        {followLabel}
       </Button>
     </div>
   );
