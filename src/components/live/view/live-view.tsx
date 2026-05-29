@@ -39,7 +39,9 @@ export function LiveView({ creatorId }: Props) {
   const { data: watchData, isLoading, refetch } = useLiveWatch(creatorId);
 
   // TODO [mock]: UUID 라우팅 연결 시 isMockMode 분기 제거, broadcast · messages · chatState 단순화
-  const isMockMode = watchData === null;
+  // creatorId가 UUID가 아니면 쿼리 자체가 disabled → watchData는 undefined (null이 아님)
+  const IS_UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const isMockMode = !IS_UUID_REGEX.test(creatorId);
   const broadcast = isMockMode
     ? (MOCK_LIVE_BROADCASTS[creatorId] ?? MOCK_DEFAULT_BROADCAST)
     : mapLiveWatchToBroadcast(watchData);
