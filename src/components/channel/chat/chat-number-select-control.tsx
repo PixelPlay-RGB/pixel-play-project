@@ -1,18 +1,17 @@
-// 채팅 설정에서 숫자 옵션을 선택하는 드롭다운 컨트롤입니다.
+// 채팅 설정에서 숫자 옵션을 선택하는 Select 컨트롤입니다.
 
-import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectIcon,
+  SelectItem,
+  SelectLabel,
+  SelectList,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { ChevronDown } from "lucide-react";
 
 interface NumberOption {
   value: number;
@@ -40,41 +39,31 @@ export function ChatNumberSelectControl({
   const selectedValue = String(selectedOption.value);
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        render={(props) => (
-          <Button
-            {...props}
-            type="button"
-            variant="outline"
-            disabled={disabled}
-            aria-label={ariaLabel}
-            className={cn(
-              "h-9 justify-between rounded-xl px-3 text-sm font-bold",
-              compact ? "w-full sm:w-23" : "w-full sm:w-25",
-            )}
-          >
-            <span className="truncate">{selectedOption.label}</span>
-            <ChevronDown className="text-muted-foreground size-3.5 shrink-0" />
-          </Button>
-        )}
-      />
-      <DropdownMenuContent align="end" sideOffset={6} className="w-36">
-        <DropdownMenuGroup>
-          <DropdownMenuLabel>{ariaLabel}</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuRadioGroup
-            value={selectedValue}
-            onValueChange={(nextValue) => onChange(Number(nextValue))}
-          >
+    <Select
+      value={selectedValue}
+      items={options.map((option) => ({ label: option.label, value: String(option.value) }))}
+      disabled={disabled}
+      onValueChange={(nextValue) => onChange(Number(nextValue))}
+    >
+      <SelectTrigger
+        aria-label={ariaLabel}
+        className={cn("w-full", compact ? "sm:w-28" : "sm:w-36")}
+      >
+        <SelectValue placeholder={selectedOption.label} />
+        <SelectIcon />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectGroup>
+          <SelectLabel>{ariaLabel}</SelectLabel>
+          <SelectList>
             {options.map((option) => (
-              <DropdownMenuRadioItem key={option.value} value={String(option.value)} closeOnClick>
+              <SelectItem key={option.value} value={String(option.value)} label={option.label}>
                 {option.label}
-              </DropdownMenuRadioItem>
+              </SelectItem>
             ))}
-          </DropdownMenuRadioGroup>
-        </DropdownMenuGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
+          </SelectList>
+        </SelectGroup>
+      </SelectContent>
+    </Select>
   );
 }
