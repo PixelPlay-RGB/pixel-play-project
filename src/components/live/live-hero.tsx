@@ -51,7 +51,7 @@ export default function LiveHero({ hero }: LiveHeroProps) {
       <Link
         href={liveHref}
         className={cn(
-          "absolute inset-0 rounded-lg outline-none",
+          "absolute inset-0 z-0 rounded-lg outline-none",
           "focus-visible:ring-ring focus-visible:ring-3",
         )}
         aria-label={`${hero.title} 라이브 보기`}
@@ -62,13 +62,13 @@ export default function LiveHero({ hero }: LiveHeroProps) {
           fill
           priority
           sizes="(min-width: 1280px) 72rem, 100vw"
-          className="object-cover transition-transform duration-300 group-hover:scale-105"
+          className="object-cover transition duration-300 group-hover:scale-105 group-hover:opacity-75"
         />
         <div className="absolute inset-0 bg-linear-to-r from-black/85 via-black/40 to-black/10" />
         <div className="absolute inset-x-0 bottom-0 h-2/3 bg-linear-to-t from-black/90 to-transparent" />
       </Link>
 
-      <div className="pointer-events-none absolute top-4 left-4 flex flex-wrap items-center gap-2">
+      <div className="pointer-events-none absolute top-4 left-4 z-10 flex flex-wrap items-center gap-2">
         <LiveBadge />
         <span className="inline-flex items-center gap-1 rounded-full bg-black/60 px-2 py-1 text-xs font-bold text-white backdrop-blur">
           <Play className="size-3 fill-white" />
@@ -76,13 +76,13 @@ export default function LiveHero({ hero }: LiveHeroProps) {
         </span>
       </div>
 
-      <div className="absolute right-4 bottom-4 left-4 flex flex-col gap-4 text-white md:right-6 md:bottom-6 md:left-6">
+      <div className="absolute right-4 bottom-4 left-4 z-10 flex flex-col gap-4 text-white md:right-6 md:bottom-6 md:left-6">
         <div className="max-w-170 space-y-2">
           <p className="text-live text-sm font-bold">지금 가장 많이 보는 방송</p>
           <h1 className="line-clamp-2 text-2xl leading-tight font-extrabold wrap-break-word md:text-4xl">
             <Link
               href={liveHref}
-              className="hover:text-live focus-visible:ring-ring rounded-sm transition-colors outline-none focus-visible:ring-3"
+              className="focus-visible:ring-ring rounded-sm outline-none focus-visible:ring-3"
             >
               {hero.title}
             </Link>
@@ -96,10 +96,7 @@ export default function LiveHero({ hero }: LiveHeroProps) {
               className="focus-visible:ring-ring shrink-0 rounded-full outline-none focus-visible:ring-3"
               aria-label={`${hero.creatorNickname} 채널로 이동`}
             >
-              <Avatar
-                className="hover:ring-live/70 size-9 ring-2 ring-white/25 transition-shadow"
-                size="lg"
-              >
+              <Avatar className="size-9 ring-2 ring-white/25" size="lg">
                 <AvatarImage
                   src={getAvatarImageSrc(hero.creatorPhotoUrl)}
                   alt={`${hero.creatorNickname} 프로필 이미지`}

@@ -24,11 +24,11 @@ export default function LiveCard({ item }: LiveCardProps) {
   const liveHref = `/live/${item.creatorId}`;
 
   return (
-    <article className="min-w-0">
+    <article className="group min-w-0">
       <Link
         href={liveHref}
         className={cn(
-          "group relative block aspect-video overflow-hidden rounded-lg bg-black outline-none",
+          "relative z-0 block aspect-video overflow-hidden rounded-lg bg-black outline-none",
           "focus-visible:ring-ring focus-visible:ring-3",
         )}
         aria-label={`${item.title} 라이브 보기`}
@@ -38,7 +38,7 @@ export default function LiveCard({ item }: LiveCardProps) {
           alt={`${item.title} 라이브 썸네일`}
           fill
           sizes="(min-width: 1280px) 20vw, (min-width: 1024px) 28vw, (min-width: 640px) 45vw, 92vw"
-          className="object-cover transition duration-300 group-hover:scale-105 group-hover:opacity-75"
+          className="object-cover transition duration-300 group-hover:scale-105 group-hover:opacity-60"
         />
         <div className="absolute inset-0 bg-linear-to-t from-black/55 to-transparent" />
         <LiveBadge className="absolute top-3 left-3" />
@@ -50,7 +50,7 @@ export default function LiveCard({ item }: LiveCardProps) {
         </span>
       </Link>
 
-      <div className="mt-3 flex gap-2.5">
+      <div className="relative z-10 mt-3 flex gap-2.5">
         <Link
           href={liveHref}
           className="focus-visible:ring-ring mt-0.5 shrink-0 rounded-full outline-none focus-visible:ring-3"
