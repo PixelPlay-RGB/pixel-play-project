@@ -1,5 +1,6 @@
 // 채널 채팅 설정 섹션 카드를 렌더링합니다.
 
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
 
@@ -12,19 +13,14 @@ interface Props {
 
 export function ChatSettingsCard({ title, description, children, className }: Props) {
   return (
-    <section
-      className={cn(
-        "bg-card text-card-foreground flex flex-col gap-5 rounded-xl border p-5 shadow-sm sm:p-6",
-        className,
-      )}
-    >
-      <div className="space-y-2">
-        <h2 className="text-foreground text-lg leading-7 font-extrabold">{title}</h2>
-        <p className="text-muted-foreground max-w-3xl text-sm leading-6 text-pretty whitespace-pre-line">
+    <Card className={cn("gap-5 shadow-sm", className)}>
+      <CardHeader className="gap-2 px-5 sm:px-6">
+        <CardTitle>{title}</CardTitle>
+        <CardDescription className="max-w-3xl leading-6 text-pretty whitespace-pre-line">
           {description}
-        </p>
-      </div>
-      <div className="flex flex-col gap-5">{children}</div>
-    </section>
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-5 px-5 sm:px-6">{children}</CardContent>
+    </Card>
   );
 }
