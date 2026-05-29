@@ -15,16 +15,21 @@ import { CircleStop, MessageSquareText, Play, Radio, Save, Tag, X } from "lucide
 
 interface Props {
   broadcastActionError: string | null;
+  chatRuleText: string;
   isBroadcastActionPending: boolean;
+  isSettingsActionPending: boolean;
+  settingsActionMessage: string | null;
   title: string;
   tagInput: string;
   tags: string[];
   visibility: ChannelLiveVisibility;
   liveState: ChannelLiveState;
+  onChatRuleTextChange: (chatRuleText: string) => void;
   onTitleChange: (title: string) => void;
   onTagInputChange: (tag: string) => void;
   onAddTag: () => void;
   onRemoveTag: (tag: string) => void;
+  onSaveSettings: () => void;
   onVisibilityChange: (visibility: ChannelLiveVisibility) => void;
   onStartBroadcast: () => void;
   onEndBroadcast: () => void;
@@ -41,16 +46,21 @@ const VISIBILITY_OPTIONS: Array<{
 
 export default function ChannelLiveSettingsPanel({
   broadcastActionError,
+  chatRuleText,
   isBroadcastActionPending,
+  isSettingsActionPending,
+  settingsActionMessage,
   title,
   tagInput,
   tags,
   visibility,
   liveState,
+  onChatRuleTextChange,
   onTitleChange,
   onTagInputChange,
   onAddTag,
   onRemoveTag,
+  onSaveSettings,
   onVisibilityChange,
   onStartBroadcast,
   onEndBroadcast,
@@ -72,6 +82,19 @@ export default function ChannelLiveSettingsPanel({
         {broadcastActionError && (
           <div className="border-destructive/20 bg-destructive/10 text-destructive rounded-lg border px-3 py-2 text-xs font-semibold">
             {broadcastActionError}
+          </div>
+        )}
+
+        {settingsActionMessage && (
+          <div
+            className={cn(
+              "rounded-lg border px-3 py-2 text-xs font-semibold",
+              settingsActionMessage.includes("못했습니다")
+                ? "border-destructive/20 bg-destructive/10 text-destructive"
+                : "border-brand/20 bg-brand/10 text-brand",
+            )}
+          >
+            {settingsActionMessage}
           </div>
         )}
 
@@ -187,7 +210,9 @@ export default function ChannelLiveSettingsPanel({
             <div className="mt-3 flex items-start gap-3">
               <MessageSquareText className="text-brand mt-0.5 size-4 shrink-0" />
               <div className="flex flex-col gap-1">
-                <strong className="text-sm">안내문 작성됨</strong>
+                <strong className="text-sm">
+                  {chatRuleText.trim() ? "안내문 작성됨" : "안내문 미작성"}
+                </strong>
                 <span className="text-muted-foreground text-xs">
                   채팅창 상단에 운영 안내를 고정합니다.
                 </span>
@@ -196,17 +221,25 @@ export default function ChannelLiveSettingsPanel({
           </div>
 
           <div className="border-border rounded-lg border p-3">
-            <Label htmlFor="channel-live-note">공지 메모</Label>
+            <Label htmlFor="channel-live-chat-rule">채팅 규칙 문구</Label>
             <Textarea
-              id="channel-live-note"
+              id="channel-live-chat-rule"
               className="mt-3 min-h-20"
-              defaultValue="시청자와 함께 편하게 소통하는 방송입니다."
+              value={chatRuleText}
+              maxLength={500}
+              onChange={(event) => onChatRuleTextChange(event.target.value)}
+              placeholder="채팅창에 고정할 운영 안내를 입력해주세요."
             />
           </div>
         </div>
 
         <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
-          <Button type="button" variant="outline">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onSaveSettings}
+            disabled={isSettingsActionPending}
+          >
             <Save className="size-4" />
             설정 저장
           </Button>

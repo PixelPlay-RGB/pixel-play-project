@@ -245,6 +245,31 @@ export type Database = {
         };
         Returns: string;
       };
+      upsert_creator_studio_setting: {
+        Args: {
+          p_actor_user_id: string;
+          p_alert_sound_enabled?: boolean | null;
+          p_alert_volume?: number | null;
+          p_chat_rule_text?: string | null;
+          p_chat_scope?: string | null;
+          p_default_tags?: string[] | null;
+          p_default_title?: string | null;
+          p_donation_alert_duration_seconds?: number | null;
+          p_donation_alert_enabled?: boolean | null;
+          p_donation_amount_visible?: boolean | null;
+          p_donation_enabled?: boolean | null;
+          p_donation_min_amount?: number | null;
+          p_forbidden_words?: string[] | null;
+          p_follower_wait_seconds?: number | null;
+          p_link_blocked?: boolean | null;
+          p_settlement_demo?: Json | null;
+          p_slow_mode_enabled?: boolean | null;
+          p_slow_mode_seconds?: number | null;
+          p_tts_enabled?: boolean | null;
+          p_tts_rate?: number | null;
+        };
+        Returns: Json;
+      };
       join_chat_room: {
         Args: { p_actor_user_id: string; p_room_id: string };
         Returns: undefined;

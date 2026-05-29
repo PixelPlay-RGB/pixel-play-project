@@ -8,4 +8,11 @@ export const startLiveBroadcastSchema = z.object({
   title: z.string().trim().min(1).max(100),
 });
 
+export const updateChannelLiveSettingsSchema = z.object({
+  chatRuleText: z.string().max(500),
+  defaultTags: z.array(z.string().trim().min(1).max(12)).max(5),
+  defaultTitle: z.string().trim().min(1).max(100),
+});
+
 export type StartLiveBroadcastInput = z.infer<typeof startLiveBroadcastSchema>;
+export type UpdateChannelLiveSettingsInput = z.infer<typeof updateChannelLiveSettingsSchema>;

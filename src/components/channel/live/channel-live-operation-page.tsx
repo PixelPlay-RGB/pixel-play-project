@@ -5,6 +5,7 @@ import {
   endLiveBroadcastAction,
   startLiveBroadcastAction,
   type ChannelLiveStudioSnapshot,
+  updateChannelLiveSettingsAction,
 } from "@/actions/channel/live";
 import ChannelLiveChatPanel from "@/components/channel/live/channel-live-chat-panel";
 import ChannelLivePreviewPanel from "@/components/channel/live/channel-live-preview-panel";
@@ -32,10 +33,17 @@ const DEFAULT_TAGS = ["랭크", "소통", "저지연"];
 
 export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
   const activeBroadcast = initialSnapshot?.activeBroadcast ?? null;
-  const [title, setTitle] = useState(activeBroadcast?.title || DEFAULT_TITLE);
+  const initialSettings = initialSnapshot?.settings;
+  const [title, setTitle] = useState(
+    activeBroadcast?.title || initialSettings?.defaultTitle || DEFAULT_TITLE,
+  );
   const [tagInput, setTagInput] = useState("");
   const [tags, setTags] = useState(
-    activeBroadcast?.tags.length ? activeBroadcast.tags : DEFAULT_TAGS,
+    activeBroadcast?.tags.length
+      ? activeBroadcast.tags
+      : initialSettings?.defaultTags.length
+        ? initialSettings.defaultTags
+        : DEFAULT_TAGS,
   );
   const [visibility, setVisibility] = useState<ChannelLiveVisibility>("public");
   const [isBroadcasting, setIsBroadcasting] = useState(Boolean(activeBroadcast));
@@ -46,7 +54,10 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
     activeBroadcast?.startedAt ?? null,
   );
   const [broadcastActionError, setBroadcastActionError] = useState<string | null>(null);
+  const [settingsActionMessage, setSettingsActionMessage] = useState<string | null>(null);
+  const [chatRuleText, setChatRuleText] = useState(initialSettings?.chatRuleText ?? "");
   const [isBroadcastActionPending, startBroadcastTransition] = useTransition();
+  const [isSettingsActionPending, startSettingsTransition] = useTransition();
 
   const liveState: ChannelLiveState = {
     isBroadcasting,
@@ -107,6 +118,25 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
     setTags((currentTags) => currentTags.filter((currentTag) => currentTag !== tag));
   };
 
+  const handleSaveSettings = () => {
+    setSettingsActionMessage(null);
+    startSettingsTransition(async () => {
+      const result = await updateChannelLiveSettingsAction({
+        chatRuleText,
+        defaultTags: tags,
+        defaultTitle: title,
+      });
+
+      if (!result.success || !result.data) {
+        setSettingsActionMessage("방송 설정을 저장하지 못했습니다.");
+        return;
+      }
+
+      setChatRuleText(result.data.settings.chatRuleText);
+      setSettingsActionMessage("방송 설정을 저장했습니다.");
+    });
+  };
+
   return (
     <div className="flex flex-col gap-4">
       <div className="border-border bg-card flex flex-col gap-3 rounded-xl border p-3 sm:flex-row sm:items-center sm:justify-between">
@@ -134,16 +164,21 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
           <ChannelLivePreviewPanel liveState={liveState} title={title} />
           <ChannelLiveSettingsPanel
             broadcastActionError={broadcastActionError}
+            chatRuleText={chatRuleText}
             isBroadcastActionPending={isBroadcastActionPending}
+            isSettingsActionPending={isSettingsActionPending}
+            settingsActionMessage={settingsActionMessage}
             title={title}
             tagInput={tagInput}
             tags={tags}
             visibility={visibility}
             liveState={liveState}
+            onChatRuleTextChange={setChatRuleText}
             onTitleChange={setTitle}
             onTagInputChange={setTagInput}
             onAddTag={handleAddTag}
             onRemoveTag={handleRemoveTag}
+            onSaveSettings={handleSaveSettings}
             onVisibilityChange={setVisibility}
             onStartBroadcast={handleStartBroadcast}
             onEndBroadcast={handleEndBroadcast}

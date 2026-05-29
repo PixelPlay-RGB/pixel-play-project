@@ -4,7 +4,12 @@
 import { getAuthenticatedActorId } from "@/actions/common/authenticated-actor";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { createAdminClient } from "@/lib/supabase/admin-client";
-import { startLiveBroadcastSchema, type StartLiveBroadcastInput } from "@/lib/zod/channel-live";
+import {
+  startLiveBroadcastSchema,
+  type StartLiveBroadcastInput,
+  updateChannelLiveSettingsSchema,
+  type UpdateChannelLiveSettingsInput,
+} from "@/lib/zod/channel-live";
 import type { AppActionResult } from "@/types/common/action";
 import type { Json } from "@/types/database.types";
 import { revalidatePath } from "next/cache";
@@ -28,6 +33,13 @@ export interface ChannelLiveActiveBroadcast {
 
 export interface ChannelLiveStudioSnapshot {
   activeBroadcast: ChannelLiveActiveBroadcast | null;
+  settings: ChannelLiveStudioSettings;
+}
+
+export interface ChannelLiveStudioSettings {
+  chatRuleText: string;
+  defaultTags: string[];
+  defaultTitle: string;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -50,13 +62,34 @@ function readStringArray(value: unknown) {
 
 function toChannelLiveStudioSnapshot(value: Json): ChannelLiveStudioSnapshot {
   if (!isRecord(value)) {
-    return { activeBroadcast: null };
+    return {
+      activeBroadcast: null,
+      settings: {
+        chatRuleText: "",
+        defaultTags: [],
+        defaultTitle: "",
+      },
+    };
   }
 
   const activeBroadcast = value.activeBroadcast;
+  const settings = value.settings;
 
   if (!isRecord(activeBroadcast)) {
-    return { activeBroadcast: null };
+    return {
+      activeBroadcast: null,
+      settings: isRecord(settings)
+        ? {
+            chatRuleText: readString(settings.chatRuleText),
+            defaultTags: readStringArray(settings.defaultTags),
+            defaultTitle: readString(settings.defaultTitle),
+          }
+        : {
+            chatRuleText: "",
+            defaultTags: [],
+            defaultTitle: "",
+          },
+    };
   }
 
   return {
@@ -73,6 +106,17 @@ function toChannelLiveStudioSnapshot(value: Json): ChannelLiveStudioSnapshot {
         typeof activeBroadcast.thumbnailUrl === "string" ? activeBroadcast.thumbnailUrl : null,
       title: readString(activeBroadcast.title),
     },
+    settings: isRecord(settings)
+      ? {
+          chatRuleText: readString(settings.chatRuleText),
+          defaultTags: readStringArray(settings.defaultTags),
+          defaultTitle: readString(settings.defaultTitle),
+        }
+      : {
+          chatRuleText: "",
+          defaultTags: [],
+          defaultTitle: "",
+        },
   };
 }
 
@@ -96,6 +140,44 @@ export async function getChannelLiveStudioSnapshotAction(): Promise<
     console.error("방송 운영 snapshot RPC 실패", error);
     return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
   }
+
+  return {
+    success: true,
+    data: toChannelLiveStudioSnapshot(data),
+  };
+}
+
+export async function updateChannelLiveSettingsAction(
+  input: UpdateChannelLiveSettingsInput,
+): Promise<AppActionResult<ChannelLiveStudioSnapshot>> {
+  const parsed = updateChannelLiveSettingsSchema.safeParse(input);
+
+  if (!parsed.success) {
+    return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
+  }
+
+  const actor = await getAuthenticatedActorId({
+    logLabel: "방송 설정 저장 중 인증 사용자 조회 실패",
+  });
+
+  if (!actor.success) {
+    return { success: false, code: actor.result.code };
+  }
+
+  const supabase = createAdminClient();
+  const { data, error } = await supabase.rpc("upsert_creator_studio_setting", {
+    p_actor_user_id: actor.userId,
+    p_chat_rule_text: parsed.data.chatRuleText,
+    p_default_tags: parsed.data.defaultTags,
+    p_default_title: parsed.data.defaultTitle,
+  });
+
+  if (error || !data) {
+    console.error("방송 설정 저장 RPC 실패", error);
+    return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
+  }
+
+  revalidatePath("/channel/live");
 
   return {
     success: true,
