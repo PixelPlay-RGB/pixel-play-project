@@ -66,13 +66,13 @@ export default function ChannelLiveSettingsPanel({
   onEndBroadcast,
 }: Props) {
   return (
-    <Card>
-      <CardHeader className="flex-row items-center justify-between gap-3">
+    <Card className="relative">
+      <CardHeader className="pr-20">
         <CardTitle>방송 시작 설정</CardTitle>
-        <span className="bg-brand/10 text-brand inline-flex w-fit shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold">
-          저장됨
-        </span>
       </CardHeader>
+      <span className="bg-brand/10 text-brand absolute top-4 right-4 inline-flex w-fit rounded-full px-2 py-0.5 text-xs font-semibold">
+        저장됨
+      </span>
       <CardContent className="flex flex-col gap-4">
         {broadcastActionError && (
           <div className="border-destructive/20 bg-destructive/10 text-destructive rounded-lg border px-3 py-2 text-xs font-semibold">

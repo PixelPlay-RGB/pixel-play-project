@@ -12,7 +12,8 @@ import ChannelLivePreviewPanel from "@/components/channel/live/channel-live-prev
 import ChannelLiveSettingsPanel from "@/components/channel/live/channel-live-settings-panel";
 import ChannelLiveStreamStatusPanel from "@/components/channel/live/channel-live-stream-status-panel";
 import { CHANNEL_LIVE_MEDIA_CONFIG } from "@/constants/channel/channel-live-media";
-import { BadgeCheck, Radio } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { BadgeCheck } from "lucide-react";
 import { useState, useTransition } from "react";
 
 export type ChannelLiveVisibility = "public" | "private" | "unlisted";
@@ -30,6 +31,25 @@ interface Props {
 
 const DEFAULT_TITLE = "";
 const DEFAULT_TAGS: string[] = [];
+
+function getBroadcastStatusLabel(liveState: ChannelLiveState) {
+  if (liveState.isBroadcasting) return "방송 중";
+  if (liveState.hasEnded) return "방송 종료";
+
+  return "방송 준비";
+}
+
+function getBroadcastStatusClassName(liveState: ChannelLiveState) {
+  if (liveState.isBroadcasting) {
+    return "bg-destructive/10 text-destructive";
+  }
+
+  if (liveState.hasEnded) {
+    return "bg-muted text-muted-foreground";
+  }
+
+  return "bg-warning/10 text-warning";
+}
 
 export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
   const activeBroadcast = initialSnapshot?.activeBroadcast ?? null;
@@ -139,28 +159,46 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="border-border bg-card flex flex-col gap-3 rounded-xl border p-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="bg-live/10 text-live inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold">
-            <Radio className="size-3.5" />
-            {isBroadcasting ? "방송 중" : hasEnded ? "방송 종료" : "방송 준비"}
-          </span>
-          <span className="text-foreground text-sm font-semibold">
-            {isBroadcasting ? "송출 중" : "송출 대기"}
-          </span>
-        </div>
-        <span className="bg-brand/10 text-brand inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold">
-          <BadgeCheck className="size-3.5" />
-          {visibility === "public"
-            ? "공개 예정"
-            : visibility === "private"
-              ? "비공개"
-              : "일부 공개"}
-        </span>
-      </div>
-
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="flex min-w-0 flex-col gap-4 lg:col-span-2">
+          <div className="border-border bg-card flex flex-col gap-3 rounded-xl border p-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap items-center gap-2">
+              <span
+                className={cn(
+                  "inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-xs font-semibold",
+                  getBroadcastStatusClassName(liveState),
+                )}
+              >
+                <span className="relative flex size-2.5">
+                  {liveState.isBroadcasting && (
+                    <span className="bg-destructive absolute inline-flex size-full animate-ping rounded-full opacity-75" />
+                  )}
+                  <span
+                    className={cn(
+                      "relative inline-flex size-2.5 rounded-full",
+                      liveState.isBroadcasting
+                        ? "bg-destructive"
+                        : liveState.hasEnded
+                          ? "bg-muted-foreground"
+                          : "bg-warning",
+                    )}
+                  />
+                </span>
+                {getBroadcastStatusLabel(liveState)}
+              </span>
+              <span className="text-foreground text-sm font-semibold">
+                {isBroadcasting ? "송출 중" : "송출 대기"}
+              </span>
+            </div>
+            <span className="bg-brand/10 text-brand inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold">
+              <BadgeCheck className="size-3.5" />
+              {visibility === "public"
+                ? "공개 예정"
+                : visibility === "private"
+                  ? "비공개"
+                  : "일부 공개"}
+            </span>
+          </div>
           <ChannelLivePreviewPanel liveState={liveState} title={title} />
           <ChannelLiveSettingsPanel
             broadcastActionError={broadcastActionError}
