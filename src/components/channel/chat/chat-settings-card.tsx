@@ -13,7 +13,7 @@ interface Props {
 
 export function ChatSettingsCard({ title, description, children, className }: Props) {
   return (
-    <Card className={cn("gap-5 shadow-sm", className)}>
+    <Card className={cn("gap-5 py-6 shadow-sm", className)}>
       <CardHeader className="gap-2 px-5 sm:px-6">
         <CardTitle>{title}</CardTitle>
         <CardDescription className="max-w-3xl leading-6 text-pretty whitespace-pre-line">

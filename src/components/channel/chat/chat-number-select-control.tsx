@@ -1,6 +1,18 @@
-// 채팅 설정에서 숫자 옵션을 선택하는 셀렉트 컨트롤입니다.
+// 채팅 설정에서 숫자 옵션을 선택하는 드롭다운 컨트롤입니다.
 
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { ChevronDown } from "lucide-react";
 
 interface NumberOption {
   value: number;
@@ -24,24 +36,45 @@ export function ChatNumberSelectControl({
   compact,
   onChange,
 }: Props) {
+  const selectedOption = options.find((option) => option.value === value) ?? options[0];
+  const selectedValue = String(selectedOption.value);
+
   return (
-    <select
-      aria-label={ariaLabel}
-      value={value}
-      disabled={disabled}
-      onChange={(event) => onChange(Number(event.target.value))}
-      className={cn(
-        "border-border bg-background text-foreground h-11 rounded-xl border px-4 text-sm font-bold shadow-sm transition-colors outline-none",
-        "focus-visible:border-brand focus-visible:ring-brand/15 focus-visible:ring-3",
-        "disabled:pointer-events-none disabled:opacity-50",
-        compact ? "w-full sm:w-32" : "w-full sm:w-56",
-      )}
-    >
-      {options.map((option) => (
-        <option key={option.value} value={option.value}>
-          {option.label}
-        </option>
-      ))}
-    </select>
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={(props) => (
+          <Button
+            {...props}
+            type="button"
+            variant="outline"
+            disabled={disabled}
+            aria-label={ariaLabel}
+            className={cn(
+              "h-9 justify-between rounded-xl px-3 text-sm font-bold",
+              compact ? "w-full sm:w-23" : "w-full sm:w-25",
+            )}
+          >
+            <span className="truncate">{selectedOption.label}</span>
+            <ChevronDown className="text-muted-foreground size-3.5 shrink-0" />
+          </Button>
+        )}
+      />
+      <DropdownMenuContent align="end" sideOffset={6} className="w-36">
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>{ariaLabel}</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuRadioGroup
+            value={selectedValue}
+            onValueChange={(nextValue) => onChange(Number(nextValue))}
+          >
+            {options.map((option) => (
+              <DropdownMenuRadioItem key={option.value} value={String(option.value)} closeOnClick>
+                {option.label}
+              </DropdownMenuRadioItem>
+            ))}
+          </DropdownMenuRadioGroup>
+        </DropdownMenuGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

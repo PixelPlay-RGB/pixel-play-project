@@ -22,7 +22,7 @@ export function ChatFieldRow({ label, description, children, isDimmed }: Props) 
         <span className="text-foreground text-sm font-bold">{label}</span>
         <span className="text-muted-foreground text-xs leading-5">{description}</span>
       </div>
-      <div className="min-w-0 flex-1">{children}</div>
+      <div className="min-w-0 flex-1 md:flex md:justify-end">{children}</div>
     </div>
   );
 }

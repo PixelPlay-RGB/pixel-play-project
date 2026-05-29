@@ -108,7 +108,7 @@ export function ChannelChatControls({ initialSnapshot }: Props) {
           </ChatSettingsCard>
         </div>
 
-        <div className="flex min-w-0 flex-col gap-5 xl:w-80 xl:shrink-0">
+        <div className="flex min-w-0 flex-col gap-5 xl:w-65 xl:shrink-0">
           <ChatSettingsCard
             title="채팅 규칙 안내문"
             description="시청자가 처음 채팅하려 할 때 입력창 위 안내 컴포넌트에 표시됩니다."

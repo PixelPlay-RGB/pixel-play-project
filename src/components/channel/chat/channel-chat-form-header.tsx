@@ -20,7 +20,7 @@ export function ChannelChatFormHeader({ isSaving, canSubmit }: Props) {
       <Button
         type="submit"
         disabled={isSaving || !canSubmit}
-        className="bg-brand hover:bg-brand/85 text-white sm:w-24"
+        className="bg-brand hover:bg-brand/85 text-white"
       >
         {isSaving ? <Spinner /> : "저장"}
       </Button>
