@@ -25,7 +25,7 @@ export interface ChannelSecuritySnapshot {
 export interface ChannelSecurityVersionResult {
   tokenKind: ChannelSecurityTokenKind;
   version: number;
-  snapshot: ChannelSecuritySnapshot;
+  snapshot: ChannelSecuritySnapshot | null;
 }
 
 export interface CreatorStudioSnapshotSettings {

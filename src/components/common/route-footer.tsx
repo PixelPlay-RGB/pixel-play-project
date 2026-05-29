@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 export default function RouteFooter() {
   const pathname = usePathname();
   const isChatRoomRoute = pathname.startsWith("/chat/room");
-  const isLiveOverlayRoute = /^\/live\/[^/]+\/(?:chat|alerts\/donation)(?:\/[^/]+)?$/.test(
+  const isLiveOverlayRoute = /^\/live\/[^/]+\/(?:chat|alerts\/donation)(?:\/[^/]+)?\/?$/.test(
     pathname,
   );
 

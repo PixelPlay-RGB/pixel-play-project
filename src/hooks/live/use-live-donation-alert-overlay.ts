@@ -40,7 +40,7 @@ export function useLiveDonationAlertOverlay(initialSnapshot: LiveDonationAlertOv
           }
 
           const nextDonation = mapLiveMessageToDonationAlert(message, {
-            creatorId: "",
+            creatorId: initialSnapshot.creatorId,
             creatorName: initialSnapshot.creatorName,
           });
 
@@ -55,7 +55,7 @@ export function useLiveDonationAlertOverlay(initialSnapshot: LiveDonationAlertOv
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [initialSnapshot.broadcastId, initialSnapshot.creatorName]);
+  }, [initialSnapshot.broadcastId, initialSnapshot.creatorId, initialSnapshot.creatorName]);
 
   useEffect(() => {
     if (!donation || !isVisible) {

@@ -12,6 +12,15 @@ export const CHANNEL_SECURITY_TOKEN_KIND_SET = new Set<ChannelSecurityTokenKind>
   "donation_alert",
 ]);
 
+export const CHANNEL_SECURITY_ROTATE_SUCCESS_DESCRIPTION = {
+  stream_key: "새 스트림 키를 만들었어요. OBS에 다시 붙여 넣어주세요.",
+  chat_overlay: "새 채팅창 주소를 만들었어요. OBS에 다시 붙여 넣어주세요.",
+  donation_alert: "새 후원 알림 주소를 만들었어요. OBS에 다시 붙여 넣어주세요.",
+} satisfies Record<ChannelSecurityTokenKind, string>;
+
+export const CHANNEL_SECURITY_ROTATE_REFRESH_DESCRIPTION =
+  "새 정보는 만들었어요. 최신 값을 다시 불러올게요.";
+
 export const CHANNEL_SECURITY_URL_CARD_META: ChannelSecurityUrlCardMeta[] = [
   {
     tokenKind: "chat_overlay",

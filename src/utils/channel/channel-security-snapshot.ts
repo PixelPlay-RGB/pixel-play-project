@@ -78,9 +78,27 @@ function readVersion(version?: number): number {
 }
 
 function resolvePublicBaseUrl() {
-  if (process.env.NODE_ENV === "production") {
-    return "https://pixel-play.studio";
+  const configuredUrl = normalizePublicBaseUrl(process.env.NEXT_PUBLIC_SITE_URL);
+
+  if (configuredUrl) {
+    return configuredUrl;
   }
 
-  return "http://localhost:3000";
+  const vercelUrl = normalizePublicBaseUrl(process.env.VERCEL_URL);
+
+  return vercelUrl ?? "http://localhost:3000";
+}
+
+function normalizePublicBaseUrl(value?: string) {
+  const trimmed = value?.trim();
+
+  if (!trimmed) {
+    return null;
+  }
+
+  try {
+    return new URL(trimmed.includes("://") ? trimmed : `https://${trimmed}`).origin;
+  } catch {
+    return null;
+  }
 }

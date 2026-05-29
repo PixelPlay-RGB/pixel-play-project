@@ -68,8 +68,13 @@ export async function rotateChannelSecurityTokenAction(
   if (snapshotError) {
     console.error("채널 보안 토큰 재발급 후 조회 실패", snapshotError);
     return {
-      success: false,
-      code: APP_MESSAGE_CODE.error.channel.securityLoadFailed,
+      success: true,
+      data: {
+        tokenKind,
+        version: data,
+        snapshot: null,
+      },
+      code: APP_MESSAGE_CODE.success.channel.securityTokenRotated,
     };
   }
 
@@ -86,8 +91,13 @@ export async function rotateChannelSecurityTokenAction(
   } catch (error) {
     console.error("채널 보안 토큰 재발급 후 표시값 생성 실패", error);
     return {
-      success: false,
-      code: CHANNEL_SECURITY_ROTATE_FAILED_CODE,
+      success: true,
+      data: {
+        tokenKind,
+        version: data,
+        snapshot: null,
+      },
+      code: APP_MESSAGE_CODE.success.channel.securityTokenRotated,
     };
   }
 }

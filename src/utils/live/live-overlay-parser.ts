@@ -1,4 +1,8 @@
 // OBS 오버레이 RPC 응답을 화면 타입으로 변환합니다.
+import {
+  LIVE_DONATION_ALERT_DEFAULT_VISIBLE_MS,
+  LIVE_OVERLAY_DEFAULT_CREATOR_NAME,
+} from "@/constants/live/live-overlay";
 import type { Json } from "@/types/database.types";
 import type { LiveBroadcastSummary } from "@/types/live/live";
 import type {
@@ -10,7 +14,6 @@ import type {
   LiveDonationAlertOverlayData,
   LiveDonationAlertOverlaySnapshot,
 } from "@/types/live/live-donation-alert-overlay";
-import { LIVE_DONATION_ALERT_DEFAULT_VISIBLE_MS } from "@/constants/live/live-overlay";
 
 export function parseLiveChatOverlaySnapshot(value: Json): LiveChatOverlaySnapshot | null {
   const object = readObject(value);
@@ -37,6 +40,7 @@ export function parseLiveChatOverlaySnapshot(value: Json): LiveChatOverlaySnapsh
 
 export function parseLiveDonationAlertOverlaySnapshot(
   value: Json,
+  fallbackCreatorId?: string,
 ): LiveDonationAlertOverlaySnapshot | null {
   const object = readObject(value);
 
@@ -44,12 +48,17 @@ export function parseLiveDonationAlertOverlaySnapshot(
     return null;
   }
 
+  const creatorId = readString(object.creatorId) ?? readString(fallbackCreatorId);
   const broadcastId = object.broadcastId === null ? null : readString(object.broadcastId);
-  const creatorName = readString(object.creatorName) ?? "크리에이터";
+  const creatorName = readString(object.creatorName) ?? LIVE_OVERLAY_DEFAULT_CREATOR_NAME;
   const alertVisibleMs =
-    readNumber(object.alertVisibleMs) ?? LIVE_DONATION_ALERT_DEFAULT_VISIBLE_MS;
+    readPositiveNumber(object.alertVisibleMs) ?? LIVE_DONATION_ALERT_DEFAULT_VISIBLE_MS;
   const donation =
     object.donation === null ? null : parseLiveDonationAlertOverlayData(object.donation);
+
+  if (!creatorId) {
+    return null;
+  }
 
   if (object.broadcastId !== null && !broadcastId) {
     return null;
@@ -60,6 +69,7 @@ export function parseLiveDonationAlertOverlaySnapshot(
   }
 
   return {
+    creatorId,
     broadcastId,
     creatorName,
     alertVisibleMs,
@@ -181,7 +191,9 @@ function readArray(value: Json | undefined): Json[] {
 }
 
 function readString(value: Json | undefined) {
-  return typeof value === "string" && value.trim().length > 0 ? value : null;
+  const trimmed = typeof value === "string" ? value.trim() : "";
+
+  return trimmed.length > 0 ? trimmed : null;
 }
 
 function readText(value: Json | undefined) {
@@ -190,6 +202,12 @@ function readText(value: Json | undefined) {
 
 function readNumber(value: Json | undefined) {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function readPositiveNumber(value: Json | undefined) {
+  const number = readNumber(value);
+
+  return number !== null && number > 0 ? number : null;
 }
 
 function readMessageTone(value: Json | undefined): LiveChatOverlayMessage["tone"] {

@@ -23,7 +23,7 @@ export function SecurityFieldRow({
     >
       <div className="min-w-0 flex-1 space-y-1.5">
         <span className="text-muted-foreground text-xs font-semibold">{label}</span>
-        <code className="text-foreground block font-mono text-sm leading-6 break-all select-all">
+        <code className="text-foreground block font-mono text-sm leading-6 wrap-break-word select-all">
           {value}
         </code>
       </div>

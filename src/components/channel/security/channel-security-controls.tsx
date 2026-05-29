@@ -25,7 +25,7 @@ export function ChannelSecurityControls({ initialSnapshot }: Props) {
   } = useChannelSecurityControls(initialSnapshot);
 
   return (
-    <section className="flex min-w-0 flex-col gap-5">
+    <section className="flex min-w-0 flex-col gap-5 xl:flex-1">
       <StreamKeyCard
         snapshot={snapshot}
         disabled={isRotating}

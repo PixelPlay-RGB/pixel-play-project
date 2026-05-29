@@ -30,10 +30,11 @@ export function ChannelSecurityPageContent({ initialSnapshot }: Props) {
         </div>
       </section>
 
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_fit-content(30rem)]">
+      <div className="flex flex-col gap-5 xl:flex-row xl:items-start">
         <ChannelSecurityControls initialSnapshot={initialSnapshot} />
 
         <ChannelSideTipCard
+          className="xl:w-fit xl:max-w-120 xl:shrink-0"
           icon={<ShieldCheck className="size-5" />}
           title="방송 전에 이것만 확인해요"
           description={`키와 주소는 방송에 바로 쓰이는 정보라 기본으로 숨겨져 있어요.\n새로 만들었다면 OBS에 저장된 값도 꼭 바꿔주세요.`}

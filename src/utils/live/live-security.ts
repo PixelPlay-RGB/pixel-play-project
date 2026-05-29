@@ -23,7 +23,7 @@ export function buildLiveOverlayKey(kind: "chat" | "donation", creatorId: string
 }
 
 function readLiveOverlayTokenSecret() {
-  const secret = process.env.LIVE_OVERLAY_TOKEN_SECRET ?? process.env.NEXTAUTH_SECRET;
+  const secret = process.env.LIVE_OVERLAY_TOKEN_SECRET;
 
   if (!secret) {
     throw new Error("LIVE_OVERLAY_TOKEN_SECRET 환경변수가 필요합니다.");

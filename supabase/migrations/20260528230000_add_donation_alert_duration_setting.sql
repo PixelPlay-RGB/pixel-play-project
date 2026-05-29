@@ -155,6 +155,11 @@ begin
   left join public.creator_studio_setting as setting on setting.creator_id = target_user.id
   where target_user.id = p_creator_id;
 
+  if not found then
+    v_creator_name := '크리에이터';
+    v_alert_duration_seconds := 5;
+  end if;
+
   select *
   into v_broadcast
   from public.live_broadcast as broadcast
@@ -165,6 +170,7 @@ begin
 
   if not found then
     return jsonb_build_object(
+      'creatorId', p_creator_id,
       'broadcastId', null,
       'creatorName', v_creator_name,
       'alertVisibleMs', v_alert_duration_seconds * 1000,
@@ -189,6 +195,7 @@ begin
   limit 1;
 
   return jsonb_build_object(
+    'creatorId', p_creator_id,
     'broadcastId', v_broadcast.id,
     'creatorName', v_creator_name,
     'alertVisibleMs', v_alert_duration_seconds * 1000,

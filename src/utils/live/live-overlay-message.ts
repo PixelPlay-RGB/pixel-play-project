@@ -1,4 +1,8 @@
 // 라이브 메시지 row를 OBS 오버레이 표시 데이터로 변환합니다.
+import {
+  LIVE_OVERLAY_DEFAULT_CREATOR_NAME,
+  LIVE_OVERLAY_DEFAULT_VIEWER_NAME,
+} from "@/constants/live/live-overlay";
 import type { Json } from "@/types/database.types";
 import type { LiveMessageRow } from "@/types/live/live";
 import type { LiveChatOverlayItem, LiveChatOverlayMessage } from "@/types/live/live-chat-overlay";
@@ -19,7 +23,10 @@ export function mapLiveMessageToChatOverlayItem(
   }
 
   const metadata = readJsonObject(message.metadata);
-  const author = readString(metadata.senderNickname) ?? options.authorFallback ?? "시청자";
+  const author =
+    readString(metadata.senderNickname) ??
+    options.authorFallback ??
+    LIVE_OVERLAY_DEFAULT_VIEWER_NAME;
 
   const overlayMessage: LiveChatOverlayMessage = {
     id: message.id,
@@ -53,8 +60,11 @@ export function mapLiveMessageToDonationAlert(
 
   return {
     id: message.donation_id ?? message.id,
-    creatorName: options.creatorName ?? "크리에이터",
-    donorName: readString(metadata.donorNickname) ?? options.authorFallback ?? "시청자",
+    creatorName: options.creatorName ?? LIVE_OVERLAY_DEFAULT_CREATOR_NAME,
+    donorName:
+      readString(metadata.donorNickname) ??
+      options.authorFallback ??
+      LIVE_OVERLAY_DEFAULT_VIEWER_NAME,
     amount,
     message: message.content,
     createdAt: message.created_at,
@@ -70,7 +80,9 @@ function readJsonObject(value: Json): Record<string, Json | undefined> {
 }
 
 function readString(value: Json | undefined) {
-  return typeof value === "string" && value.trim().length > 0 ? value : null;
+  const trimmed = typeof value === "string" ? value.trim() : "";
+
+  return trimmed.length > 0 ? trimmed : null;
 }
 
 function readNumber(value: Json | undefined) {

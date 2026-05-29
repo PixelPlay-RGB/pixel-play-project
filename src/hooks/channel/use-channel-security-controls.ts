@@ -2,6 +2,10 @@
 // 채널 보안 설정 화면의 클라이언트 상호작용을 관리합니다.
 
 import { rotateChannelSecurityTokenAction } from "@/actions/channel/security";
+import {
+  CHANNEL_SECURITY_ROTATE_REFRESH_DESCRIPTION,
+  CHANNEL_SECURITY_ROTATE_SUCCESS_DESCRIPTION,
+} from "@/constants/channel/security";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import type {
   ChannelSecuritySnapshot,
@@ -10,12 +14,6 @@ import type {
 } from "@/types/channel/security";
 import { toastAppError, toastAppSuccess } from "@/utils/common/toast-message";
 import { useState, useTransition } from "react";
-
-const ROTATE_SUCCESS_DESCRIPTION = {
-  stream_key: "새 스트림 키를 만들었어요. OBS에 다시 붙여 넣어주세요.",
-  chat_overlay: "새 채팅창 주소를 만들었어요. OBS에 다시 붙여 넣어주세요.",
-  donation_alert: "새 후원 알림 주소를 만들었어요. OBS에 다시 붙여 넣어주세요.",
-} satisfies Record<ChannelSecurityTokenKind, string>;
 
 export function useChannelSecurityControls(initialSnapshot: ChannelSecuritySnapshot) {
   const [snapshot, setSnapshot] = useState(initialSnapshot);
@@ -70,12 +68,23 @@ export function useChannelSecurityControls(initialSnapshot: ChannelSecuritySnaps
           return;
         }
 
-        setSnapshot(result.data.snapshot);
+        const shouldReloadSnapshot = !result.data.snapshot;
+
+        if (result.data.snapshot) {
+          setSnapshot(result.data.snapshot);
+        }
+
         toastAppSuccess(
           result.code ?? APP_MESSAGE_CODE.success.channel.securityTokenRotated,
-          ROTATE_SUCCESS_DESCRIPTION[result.data.tokenKind],
+          shouldReloadSnapshot
+            ? CHANNEL_SECURITY_ROTATE_REFRESH_DESCRIPTION
+            : CHANNEL_SECURITY_ROTATE_SUCCESS_DESCRIPTION[result.data.tokenKind],
         );
         onSuccess?.();
+
+        if (shouldReloadSnapshot) {
+          window.setTimeout(() => window.location.reload(), 600);
+        }
       } catch (error) {
         console.error("채널 보안 토큰 재발급 요청 실패", error);
         toastAppError(APP_MESSAGE_CODE.error.channel.securityTokenRotateFailed);

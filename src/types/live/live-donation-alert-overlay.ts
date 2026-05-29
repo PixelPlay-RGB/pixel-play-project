@@ -11,6 +11,7 @@ export interface LiveDonationAlertOverlayData {
 }
 
 export interface LiveDonationAlertOverlaySnapshot {
+  creatorId: LiveBroadcastRow["creator_id"];
   broadcastId: LiveBroadcastRow["id"] | null;
   creatorName: string;
   alertVisibleMs: number;

@@ -59,7 +59,7 @@ export async function getLiveDonationAlertOverlaySnapshot({
     return null;
   }
 
-  return parseLiveDonationAlertOverlaySnapshot(data);
+  return parseLiveDonationAlertOverlaySnapshot(data, creatorId);
 }
 
 async function validateOverlayKey({
