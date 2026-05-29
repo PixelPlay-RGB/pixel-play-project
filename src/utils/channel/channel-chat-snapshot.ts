@@ -29,7 +29,7 @@ export function buildChannelChatSnapshot(creatorId: string, snapshot: Json): Cha
     slowModeSeconds: readNumber(settings.slowModeSeconds, 3),
     linkBlocked: settings.linkBlocked ?? true,
     forbiddenWords: readForbiddenWords(settings.forbiddenWords),
-    chatRuleText: settings.chatRuleText ?? CHANNEL_CHAT_DEFAULT_RULE_TEXT,
+    chatRuleText: readText(settings.chatRuleText, CHANNEL_CHAT_DEFAULT_RULE_TEXT),
     chatRuleVersion: readNumber(settings.chatRuleVersion, 1),
   };
 }
@@ -64,6 +64,10 @@ function readForbiddenWords(value?: string[]) {
   return value
     .map((word) => word.trim())
     .filter((word, index, words) => word !== "" && words.indexOf(word) === index);
+}
+
+function readText(value: unknown, fallback: string) {
+  return typeof value === "string" && value.trim() !== "" ? value : fallback;
 }
 
 function readObject(value: Json | undefined): Record<string, Json | undefined> | null {

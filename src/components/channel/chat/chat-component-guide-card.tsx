@@ -1,18 +1,30 @@
 // 채팅 메시지와 안내 컴포넌트의 분리 원칙을 안내합니다.
 
-import { ChannelSideTipCard } from "@/components/channel/channel-side-tip-card";
+import { ChannelSideTipCard, ChannelSideTipStep } from "@/components/channel/channel-side-tip-card";
 import { MessageSquareText } from "lucide-react";
 
 export function ChatComponentGuideCard() {
   return (
     <ChannelSideTipCard
       icon={<MessageSquareText className="size-5" />}
-      title="메시지와 컴포넌트 분리"
-      description={`클린봇이 가린 채팅은 메시지 타입으로 남겨요.\n입장 안내와 규칙 확인 안내는 필요한 시청자에게만 보여주는 컴포넌트로 표시합니다.`}
+      title="채팅 전에 이것만 확인해요"
+      description={`안내문과 제한 규칙은 시청자가 채팅을 시작하기 전에 보여요.\n방송 분위기에 맞게 짧고 분명하게 적어주세요.`}
     >
-      <p className="text-muted-foreground text-xs leading-5 text-pretty">
-        로그인, 팔로우, 규칙 확인 안내는 DB 설정을 읽어 필요한 시청자에게만 보여주세요.
-      </p>
+      <ChannelSideTipStep
+        number="1"
+        title="참여 범위를 정해요"
+        description={`기본 채팅은 로그인한 시청자만 사용할 수 있어요.\n필요하면 팔로워만 채팅할 수 있게 바꿀 수 있어요.`}
+      />
+      <ChannelSideTipStep
+        number="2"
+        title="채팅 속도를 조절해요"
+        description={`저속 모드를 켜면 같은 시청자가 연속으로 보내는 채팅 간격을 둘 수 있어요.`}
+      />
+      <ChannelSideTipStep
+        number="3"
+        title="금칙어를 등록해요"
+        description={`등록한 단어가 포함된 메시지는 방송 채팅에서 자동으로 가려져요.`}
+      />
     </ChannelSideTipCard>
   );
 }

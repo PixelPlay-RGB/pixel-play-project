@@ -28,7 +28,7 @@ export function ChatSettingOptionButton({
       className={cn(
         "border-border bg-background text-foreground inline-flex min-h-9 items-center justify-center gap-1 rounded-full border px-4 py-2 text-left transition-colors",
         "hover:border-brand/40 hover:bg-brand/5 disabled:pointer-events-none disabled:opacity-50",
-        isSelected && "border-brand/50 bg-brand/10 text-brand ring-brand/15 ring-3",
+        isSelected && "border-brand/40 bg-brand/10 text-brand shadow-brand/10 shadow-sm",
         description && "flex-col items-start rounded-xl py-3",
       )}
     >

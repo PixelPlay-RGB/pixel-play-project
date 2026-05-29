@@ -10,11 +10,16 @@ interface Props {
 
 export function ChannelChatFormHeader({ isSaving, canSubmit }: Props) {
   return (
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-      <div className="min-w-0 space-y-1.5">
-        <h1 className="text-foreground text-2xl leading-8 font-bold tracking-tight">채팅 설정</h1>
-        <p className="text-muted-foreground text-sm leading-6 text-pretty">
-          방송 채팅의 기본 정책과 금칙어를 관리합니다.
+    <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <div className="flex max-w-3xl flex-col gap-2">
+        <span className="text-brand text-sm font-bold">방송 채팅 관리</span>
+        <h1 className="text-foreground text-3xl leading-tight font-bold tracking-tight">
+          채팅 규칙을 편하게 관리해요
+        </h1>
+        <p className="text-muted-foreground max-w-2xl text-sm leading-6 text-pretty">
+          시청자가 채팅을 시작하기 전에 필요한 기준을 정해요.
+          <br />
+          참여 범위, 채팅 속도, 금칙어를 한곳에서 관리할 수 있어요.
         </p>
       </div>
       <Button
@@ -24,6 +29,6 @@ export function ChannelChatFormHeader({ isSaving, canSubmit }: Props) {
       >
         {isSaving ? <Spinner /> : "저장"}
       </Button>
-    </div>
+    </section>
   );
 }
