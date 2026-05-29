@@ -16,7 +16,6 @@ import {
   LIVE_DONATION_AMOUNTS,
   LIVE_DONATION_LABEL,
   LIVE_LABEL,
-  LIVE_MOCK_BALANCE,
 } from "@/constants/live/live";
 import { cn } from "@/lib/utils";
 import { formatDonationAmount } from "@/utils/live/live-chat";
@@ -24,13 +23,23 @@ import { formatDonationAmount } from "@/utils/live/live-chat";
 interface Props {
   onLoginPrompt: () => void;
   isLoggedIn: boolean;
+  walletBalance: number;
+  isWalletLoading?: boolean;
+  isWalletError?: boolean;
+  onDonate: (params: {
+    amount: number;
+    message: string;
+    isAnonymous: boolean;
+    idempotencyKey: string;
+  }) => Promise<boolean>;
 }
 
-export function LiveDonationDialog({ onLoginPrompt, isLoggedIn }: Props) {
+export function LiveDonationDialog({ onLoginPrompt, isLoggedIn, walletBalance, isWalletLoading, isWalletError, onDonate }: Props) {
   const [open, setOpen] = useState(false);
   const [selectedAmount, setSelectedAmount] = useState<number>(LIVE_DONATION_AMOUNTS[0]);
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [message, setMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   function handleOpenChange(next: boolean) {
     if (next && !isLoggedIn) {
@@ -40,7 +49,7 @@ export function LiveDonationDialog({ onLoginPrompt, isLoggedIn }: Props) {
     setOpen(next);
   }
 
-  const remaining = LIVE_MOCK_BALANCE - selectedAmount;
+  const remaining = walletBalance - selectedAmount;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -118,8 +127,11 @@ export function LiveDonationDialog({ onLoginPrompt, isLoggedIn }: Props) {
             <div className="flex justify-between">
               <span>{LIVE_DONATION_LABEL.balance}</span>
               <span>
-                {formatDonationAmount(LIVE_MOCK_BALANCE)}
-                {LIVE_DONATION_LABEL.unit}
+                {isWalletLoading
+                  ? LIVE_DONATION_LABEL.balanceLoading
+                  : isWalletError
+                  ? LIVE_DONATION_LABEL.balanceError
+                  : `${formatDonationAmount(walletBalance)}${LIVE_DONATION_LABEL.unit}`}
               </span>
             </div>
             <div className="text-foreground flex justify-between font-medium">
@@ -133,14 +145,26 @@ export function LiveDonationDialog({ onLoginPrompt, isLoggedIn }: Props) {
         </div>
 
         <DialogFooter className="gap-2 sm:gap-0">
-          <Button variant="outline" onClick={() => setOpen(false)}>
+          <Button variant="outline" disabled={isSubmitting} onClick={() => setOpen(false)}>
             {LIVE_DONATION_LABEL.cancel}
           </Button>
-          {/* TODO: 후원 제출 RPC 연결 — 잔액 조회 및 실제 후원 처리 */}
           <Button
             type="button"
-            disabled={remaining < 0}
+            disabled={remaining < 0 || isSubmitting || !!isWalletLoading}
             className="bg-brand hover:bg-brand/90 text-brand-foreground"
+            onClick={() => {
+              void (async () => {
+                setIsSubmitting(true);
+                const success = await onDonate({
+                  amount: selectedAmount,
+                  message,
+                  isAnonymous,
+                  idempotencyKey: crypto.randomUUID(),
+                });
+                setIsSubmitting(false);
+                if (success) setOpen(false);
+              })();
+            }}
           >
             {LIVE_DONATION_LABEL.submit}
           </Button>

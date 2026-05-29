@@ -35,8 +35,8 @@ export const MOCK_LIVE_BROADCASTS: Record<string, LiveBroadcast> = {
   },
 };
 
-export function getMockLiveBroadcast(creatorId: string): LiveBroadcast | null {
-  return MOCK_LIVE_BROADCASTS[creatorId] ?? null;
+export function getMockLiveBroadcast(creatorId: string): LiveBroadcast {
+  return MOCK_LIVE_BROADCASTS[creatorId] ?? MOCK_LIVE_BROADCASTS["test123"];
 }
 
 export const MOCK_LIVE_CHAT_MESSAGES: LiveChatMessage[] = [

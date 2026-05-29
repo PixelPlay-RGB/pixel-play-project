@@ -33,6 +33,11 @@ export function LiveView({ creatorId }: Props) {
     messages,
     donations,
     polls,
+    walletBalance,
+    isWalletLoading,
+    isWalletError,
+    votePoll,
+    sendDonation,
     isFollowing,
     chatRuleText,
     isLoggedIn,
@@ -143,8 +148,13 @@ export function LiveView({ creatorId }: Props) {
               polls={polls}
               chatState={chatState}
               isLoggedIn={isLoggedIn}
+              walletBalance={walletBalance}
+              isWalletLoading={isWalletLoading}
+              isWalletError={isWalletError}
               onLoginPrompt={openLoginPrompt}
               onSendMessage={sendMessage}
+              onVote={votePoll}
+              onDonate={sendDonation}
               chatRuleText={chatRuleText}
               onAcceptChatRule={acceptChatRule}
             />

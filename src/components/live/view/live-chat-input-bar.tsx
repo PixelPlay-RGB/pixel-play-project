@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Smile } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import ChatEmojiPicker from "@/components/chat-room/chat-emoji-picker";
 import { Input } from "@/components/ui/input";
 import {
   Popover,
@@ -21,8 +21,18 @@ interface Props {
   polls: LivePoll[];
   chatState: LiveViewerChatState;
   isLoggedIn: boolean;
+  walletBalance: number;
+  isWalletLoading?: boolean;
+  isWalletError?: boolean;
   onLoginPrompt: () => void;
   onSendMessage: (content: string) => Promise<boolean>;
+  onVote?: (pollId: string, optionId: string) => Promise<boolean>;
+  onDonate?: (params: {
+    amount: number;
+    message: string;
+    isAnonymous: boolean;
+    idempotencyKey: string;
+  }) => Promise<boolean>;
   chatRuleText?: string;
   showActions?: boolean;
   onAcceptChatRule?: () => Promise<boolean>;
@@ -51,8 +61,13 @@ export function LiveChatInputBar({
   polls,
   chatState,
   isLoggedIn,
+  walletBalance,
+  isWalletLoading,
+  isWalletError,
   onLoginPrompt,
   onSendMessage,
+  onVote,
+  onDonate,
   chatRuleText,
   showActions = true,
   onAcceptChatRule,
@@ -107,19 +122,13 @@ export function LiveChatInputBar({
   return (
     <div className="border-border flex flex-col gap-2 border-t px-3 py-3">
       <div className="flex items-center gap-2">
-        <Button
-          size="sm"
-          variant="ghost"
-          aria-label="이모티콘"
-          className="size-8 shrink-0 p-0"
-          onClick={() => {
-            // TODO: 이모티콘 피커 구현
-          }}
-        >
-          <Smile className="text-muted-foreground size-5" />
-        </Button>
+        <ChatEmojiPicker
+          onEmojiSelect={(emoji) => setDraft((prev) => prev + emoji)}
+          disabled={!isInputActive}
+        />
         <Popover open={isRuleOpen} onOpenChange={setIsRuleOpen}>
           <PopoverTrigger
+            nativeButton={false}
             render={
               <Input
                 value={isInputActive ? draft : ""}
@@ -159,10 +168,22 @@ export function LiveChatInputBar({
         </Popover>
       </div>
 
-      {showActions ? (
+      {showActions && onVote && onDonate ? (
         <div className="flex items-center gap-2">
-          <LiveDonationDialog isLoggedIn={isLoggedIn} onLoginPrompt={onLoginPrompt} />
-          <LiveVotePopover polls={polls} isLoggedIn={isLoggedIn} onLoginPrompt={onLoginPrompt} />
+          <LiveDonationDialog
+            isLoggedIn={isLoggedIn}
+            walletBalance={walletBalance}
+            isWalletLoading={isWalletLoading}
+            isWalletError={isWalletError}
+            onLoginPrompt={onLoginPrompt}
+            onDonate={onDonate}
+          />
+          <LiveVotePopover
+            polls={polls}
+            isLoggedIn={isLoggedIn}
+            onLoginPrompt={onLoginPrompt}
+            onVote={onVote}
+          />
         </div>
       ) : null}
     </div>

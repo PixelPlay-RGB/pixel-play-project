@@ -25,8 +25,18 @@ interface Props {
   polls: LivePoll[];
   chatState: LiveViewerChatState;
   isLoggedIn: boolean;
+  walletBalance: number;
+  isWalletLoading?: boolean;
+  isWalletError?: boolean;
   onLoginPrompt: () => void;
   onSendMessage: (content: string) => Promise<boolean>;
+  onVote?: (pollId: string, optionId: string) => Promise<boolean>;
+  onDonate?: (params: {
+    amount: number;
+    message: string;
+    isAnonymous: boolean;
+    idempotencyKey: string;
+  }) => Promise<boolean>;
   chatRuleText?: string;
   onAcceptChatRule?: () => Promise<boolean>;
 }
@@ -69,8 +79,13 @@ export function LiveChatPanel({
   polls,
   chatState,
   isLoggedIn,
+  walletBalance,
+  isWalletLoading,
+  isWalletError,
   onLoginPrompt,
   onSendMessage,
+  onVote,
+  onDonate,
   chatRuleText,
   onAcceptChatRule,
 }: Props) {
@@ -103,8 +118,13 @@ export function LiveChatPanel({
         polls={polls}
         chatState={chatState}
         isLoggedIn={isLoggedIn}
+        walletBalance={walletBalance}
+        isWalletLoading={isWalletLoading}
+        isWalletError={isWalletError}
         onLoginPrompt={onLoginPrompt}
         onSendMessage={onSendMessage}
+        onVote={onVote}
+        onDonate={onDonate}
         chatRuleText={chatRuleText}
         onAcceptChatRule={onAcceptChatRule}
       />

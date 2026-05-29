@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { cn } from "@/lib/utils";
 import { LIVE_LABEL } from "@/constants/live/live";
 import { formatDonationAmount } from "@/utils/live/live-chat";
 import type { LiveChatMessage } from "@/types/live/live";

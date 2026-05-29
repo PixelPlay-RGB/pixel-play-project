@@ -23,6 +23,11 @@ export const QUERY_KEYS = {
     messages: (broadcastId?: string) =>
       [...QUERY_KEYS.live.all, "messages", broadcastId].filter((v) => v !== undefined),
   },
+  donations: {
+    all: ["donations"] as const,
+    walletBalance: (userId?: string) =>
+      [...QUERY_KEYS.donations.all, "wallet-balance", userId].filter((v) => v !== undefined),
+  },
   chat: {
     all: ["chat"] as const,
     list: (

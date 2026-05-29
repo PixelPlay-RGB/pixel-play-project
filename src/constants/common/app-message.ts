@@ -324,6 +324,16 @@ export const APP_MESSAGE = {
         description: "로그인에 사용하는 기본 계정은 해제할 수 없습니다.",
       },
     },
+    live: {
+      donationFailed: {
+        title: "후원 실패",
+        description: "후원 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+      },
+      voteFailed: {
+        title: "투표 실패",
+        description: "투표 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+      },
+    },
     supabase: {
       permissionDenied: {
         title: "권한 없음",

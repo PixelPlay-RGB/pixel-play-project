@@ -55,6 +55,68 @@ export async function sendLiveMessageAction(
   return { success: true, data: { messageId } };
 }
 
+export async function voteLivePollAction(
+  pollId: string,
+  optionId: string,
+): Promise<boolean> {
+  if (!pollId || !optionId) return false;
+
+  const actor = await getAuthenticatedActorId({
+    logLabel: "라이브 투표 중 인증 사용자 조회 실패",
+  });
+
+  if (!actor.success) return false;
+
+  const supabase = createAdminClient();
+  const { error } = await supabase.rpc("vote_live_poll", {
+    p_actor_user_id: actor.userId,
+    p_poll_id: pollId,
+    p_option_id: optionId,
+  });
+
+  if (error) {
+    console.error("라이브 투표 RPC 실패", error);
+    return false;
+  }
+
+  return true;
+}
+
+export async function sendLiveDonationAction(params: {
+  broadcastId: string;
+  amount: number;
+  message: string;
+  isAnonymous: boolean;
+  idempotencyKey: string;
+}): Promise<boolean> {
+  const { broadcastId, amount, message, isAnonymous, idempotencyKey } = params;
+
+  if (!broadcastId || !idempotencyKey || amount <= 0 || message.length > 200) return false;
+
+  const actor = await getAuthenticatedActorId({
+    logLabel: "라이브 후원 중 인증 사용자 조회 실패",
+  });
+
+  if (!actor.success) return false;
+
+  const supabase = createAdminClient();
+  const { error } = await supabase.rpc("send_live_donation", {
+    p_actor_user_id: actor.userId,
+    p_broadcast_id: broadcastId,
+    p_amount: amount,
+    p_message: message,
+    p_is_anonymous: isAnonymous,
+    p_idempotency_key: idempotencyKey,
+  });
+
+  if (error) {
+    console.error("라이브 후원 RPC 실패", error);
+    return false;
+  }
+
+  return true;
+}
+
 export async function acceptLiveChatRuleAction(
   creatorId: string,
 ): Promise<AppActionResult<{ acceptedVersion: number }>> {

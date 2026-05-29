@@ -110,6 +110,10 @@ export const APP_MESSAGE_CODE = {
       actionFailed: "error.oauth.actionFailed",
       defaultAccountCannotUnlink: "error.oauth.defaultAccountCannotUnlink",
     },
+    live: {
+      donationFailed: "error.live.donationFailed",
+      voteFailed: "error.live.voteFailed",
+    },
     supabase: {
       permissionDenied: "error.supabase.permissionDenied",
       dataNotFound: "error.supabase.dataNotFound",

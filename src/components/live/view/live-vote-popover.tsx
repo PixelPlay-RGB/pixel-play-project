@@ -1,5 +1,5 @@
 "use client";
-// 투표 참여 mock Popover — 없음·진행·완료·종료 상태를 제공합니다.
+// 투표 참여 Popover — 없음·진행·종료 상태를 제공합니다.
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -12,11 +12,13 @@ interface Props {
   polls: LivePoll[];
   onLoginPrompt: () => void;
   isLoggedIn: boolean;
+  onVote: (pollId: string, optionId: string) => Promise<boolean>;
 }
 
-export function LiveVotePopover({ polls, onLoginPrompt, isLoggedIn }: Props) {
+export function LiveVotePopover({ polls, onLoginPrompt, isLoggedIn, onVote }: Props) {
   const [open, setOpen] = useState(false);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  const [isVoting, setIsVoting] = useState(false);
 
   const activePoll = polls.find((p) => p.status === "active") ?? null;
 
@@ -32,10 +34,12 @@ export function LiveVotePopover({ polls, onLoginPrompt, isLoggedIn }: Props) {
     setOpen(next);
   }
 
-  function handleVote() {
-    if (!selectedOption) return;
-    // TODO: 투표 제출 RPC 연결 후 실제 제출 처리
-    setOpen(false);
+  async function handleVote() {
+    if (!selectedOption || !activePoll || isVoting) return;
+    setIsVoting(true);
+    const success = await onVote(activePoll.id, selectedOption);
+    setIsVoting(false);
+    if (success) setOpen(false);
   }
 
   return (
@@ -80,8 +84,8 @@ export function LiveVotePopover({ polls, onLoginPrompt, isLoggedIn }: Props) {
               </span>
               <Button
                 size="sm"
-                disabled={!selectedOption}
-                onClick={handleVote}
+                disabled={!selectedOption || isVoting}
+                onClick={() => void handleVote()}
                 className="bg-brand hover:bg-brand/90 text-brand-foreground"
               >
                 {LIVE_VOTE_LABEL.submit}
