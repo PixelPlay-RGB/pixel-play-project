@@ -24,11 +24,11 @@ export default function LiveCard({ item }: LiveCardProps) {
   const liveHref = `/live/${item.creatorId}`;
 
   return (
-    <article className="group min-w-0">
+    <article className="min-w-0">
       <Link
         href={liveHref}
         className={cn(
-          "relative z-0 block aspect-video overflow-hidden rounded-lg bg-black outline-none",
+          "group relative z-0 block aspect-video overflow-hidden rounded-lg bg-black outline-none",
           "focus-visible:ring-ring focus-visible:ring-3",
         )}
         aria-label={`${item.title} 라이브 보기`}

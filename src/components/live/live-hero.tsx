@@ -76,13 +76,13 @@ export default function LiveHero({ hero }: LiveHeroProps) {
         </span>
       </div>
 
-      <div className="absolute right-4 bottom-4 left-4 z-10 flex flex-col gap-4 text-white md:right-6 md:bottom-6 md:left-6">
+      <div className="pointer-events-none absolute right-4 bottom-4 left-4 z-10 flex flex-col gap-4 text-white md:right-6 md:bottom-6 md:left-6">
         <div className="max-w-170 space-y-2">
           <p className="text-live text-sm font-bold">지금 가장 많이 보는 방송</p>
           <h1 className="line-clamp-2 text-2xl leading-tight font-extrabold wrap-break-word md:text-4xl">
             <Link
               href={liveHref}
-              className="focus-visible:ring-ring rounded-sm outline-none focus-visible:ring-3"
+              className="focus-visible:ring-ring pointer-events-auto rounded-sm outline-none focus-visible:ring-3"
             >
               {hero.title}
             </Link>
@@ -93,7 +93,7 @@ export default function LiveHero({ hero }: LiveHeroProps) {
           <div className="flex min-w-0 items-center gap-2">
             <Link
               href={liveHref}
-              className="focus-visible:ring-ring shrink-0 rounded-full outline-none focus-visible:ring-3"
+              className="focus-visible:ring-ring pointer-events-auto shrink-0 rounded-full outline-none focus-visible:ring-3"
               aria-label={`${hero.creatorNickname} 채널로 이동`}
             >
               <Avatar className="size-9 ring-2 ring-white/25" size="lg">

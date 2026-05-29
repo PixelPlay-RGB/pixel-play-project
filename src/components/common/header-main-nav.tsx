@@ -44,7 +44,6 @@ export default function HeaderMainNav() {
       <nav className="flex shrink-0 items-center gap-1 sm:gap-2" aria-label="주요 메뉴">
         {HEADER_MAIN_TABS.map((tab) => {
           const active = isTabActive(pathname, tab.href);
-          const activeUnderlineClass = tab.href === "/live" ? "after:bg-live" : "after:bg-brand";
 
           return (
             <Link
@@ -55,9 +54,9 @@ export default function HeaderMainNav() {
                 active
                   ? cn(
                       "text-foreground border-transparent after:absolute after:right-2 after:bottom-1 after:left-2 after:h-0.5 after:rounded-full",
-                      activeUnderlineClass,
+                      "after:bg-foreground",
                     )
-                  : "text-muted-foreground border-transparent",
+                  : "text-muted-foreground hover:text-foreground border-transparent",
               )}
             >
               {tab.label}

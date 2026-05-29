@@ -20,7 +20,7 @@ export default function LiveTagLink({ tag, variant = "default" }: LiveTagLinkPro
     <Link
       href={createLiveSearchHref(tag)}
       className={cn(
-        "bg-brand/15 text-brand border-brand/20 hover:bg-brand hover:text-brand-foreground focus-visible:ring-ring rounded-full border text-xs font-bold transition-colors outline-none focus-visible:ring-3",
+        "bg-brand/15 text-brand border-brand/20 hover:bg-brand hover:text-brand-foreground focus-visible:ring-ring pointer-events-auto rounded-full border text-xs font-bold transition-colors outline-none focus-visible:ring-3",
         LIVE_TAG_LINK_VARIANT_CLASS[variant],
       )}
     >
