@@ -6,6 +6,7 @@ import { Play, Radio } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import LiveBadge from "@/components/live/live-badge";
+import LiveTagLink from "@/components/live/live-tag-link";
 import { cn } from "@/lib/utils";
 import type { LiveHeroItem } from "@/types/live/live";
 import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
@@ -43,28 +44,31 @@ export default function LiveHero({ hero }: LiveHeroProps) {
   }
 
   const tagLabels = getLiveTagLabels(hero.tags, 3);
+  const liveHref = `/live/${hero.creatorId}`;
 
   return (
-    <Link
-      href={`/live/${hero.creatorId}`}
-      className={cn(
-        "group hover:border-brand/70 relative block min-h-70 overflow-hidden rounded-lg border border-white/10 bg-black transition-colors outline-none",
-        "focus-visible:ring-ring focus-visible:ring-3 md:min-h-86",
-      )}
-      aria-label={`${hero.title} 라이브 보기`}
-    >
-      <Image
-        src={getLiveThumbnailSrc(hero.id, hero.thumbnailUrl)}
-        alt={`${hero.title} 라이브 썸네일`}
-        fill
-        priority
-        sizes="(min-width: 1280px) 72rem, 100vw"
-        className="object-cover transition-transform duration-300 group-hover:scale-105"
-      />
-      <div className="absolute inset-0 bg-linear-to-r from-black/85 via-black/40 to-black/10" />
-      <div className="absolute inset-x-0 bottom-0 h-2/3 bg-linear-to-t from-black/90 to-transparent" />
+    <article className="group hover:border-live/70 relative min-h-70 overflow-hidden rounded-lg border border-white/10 bg-black transition-colors md:min-h-86">
+      <Link
+        href={liveHref}
+        className={cn(
+          "absolute inset-0 rounded-lg outline-none",
+          "focus-visible:ring-ring focus-visible:ring-3",
+        )}
+        aria-label={`${hero.title} 라이브 보기`}
+      >
+        <Image
+          src={getLiveThumbnailSrc(hero.id, hero.thumbnailUrl)}
+          alt={`${hero.title} 라이브 썸네일`}
+          fill
+          priority
+          sizes="(min-width: 1280px) 72rem, 100vw"
+          className="object-cover transition-transform duration-300 group-hover:scale-105"
+        />
+        <div className="absolute inset-0 bg-linear-to-r from-black/85 via-black/40 to-black/10" />
+        <div className="absolute inset-x-0 bottom-0 h-2/3 bg-linear-to-t from-black/90 to-transparent" />
+      </Link>
 
-      <div className="absolute top-4 left-4 flex flex-wrap items-center gap-2">
+      <div className="pointer-events-none absolute top-4 left-4 flex flex-wrap items-center gap-2">
         <LiveBadge />
         <span className="inline-flex items-center gap-1 rounded-full bg-black/60 px-2 py-1 text-xs font-bold text-white backdrop-blur">
           <Play className="size-3 fill-white" />
@@ -76,19 +80,33 @@ export default function LiveHero({ hero }: LiveHeroProps) {
         <div className="max-w-170 space-y-2">
           <p className="text-live text-sm font-bold">지금 가장 많이 보는 방송</p>
           <h1 className="line-clamp-2 text-2xl leading-tight font-extrabold wrap-break-word md:text-4xl">
-            {hero.title}
+            <Link
+              href={liveHref}
+              className="hover:text-live focus-visible:ring-ring rounded-sm transition-colors outline-none focus-visible:ring-3"
+            >
+              {hero.title}
+            </Link>
           </h1>
         </div>
 
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div className="flex min-w-0 items-center gap-2">
-            <Avatar className="size-9 ring-2 ring-white/25" size="lg">
-              <AvatarImage
-                src={getAvatarImageSrc(hero.creatorPhotoUrl)}
-                alt={`${hero.creatorNickname} 프로필 이미지`}
-              />
-              <AvatarFallback>{getAvatarFallbackText(hero.creatorNickname)}</AvatarFallback>
-            </Avatar>
+            <Link
+              href={liveHref}
+              className="focus-visible:ring-ring shrink-0 rounded-full outline-none focus-visible:ring-3"
+              aria-label={`${hero.creatorNickname} 채널로 이동`}
+            >
+              <Avatar
+                className="hover:ring-live/70 size-9 ring-2 ring-white/25 transition-shadow"
+                size="lg"
+              >
+                <AvatarImage
+                  src={getAvatarImageSrc(hero.creatorPhotoUrl)}
+                  alt={`${hero.creatorNickname} 프로필 이미지`}
+                />
+                <AvatarFallback>{getAvatarFallbackText(hero.creatorNickname)}</AvatarFallback>
+              </Avatar>
+            </Link>
             <div className="min-w-0">
               <p className="truncate text-sm font-bold">{hero.creatorNickname}</p>
               <p className="text-xs font-semibold text-white/70">
@@ -100,17 +118,12 @@ export default function LiveHero({ hero }: LiveHeroProps) {
           {tagLabels.length > 0 ? (
             <div className="flex flex-wrap gap-1.5">
               {tagLabels.map((tag) => (
-                <span
-                  key={tag}
-                  className="bg-brand/15 text-brand border-brand/20 rounded-full border px-2 py-1 text-xs font-bold backdrop-blur"
-                >
-                  #{tag}
-                </span>
+                <LiveTagLink key={tag} tag={tag} variant="overlay" />
               ))}
             </div>
           ) : null}
         </div>
       </div>
-    </Link>
+    </article>
   );
 }

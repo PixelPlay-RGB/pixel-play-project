@@ -13,8 +13,10 @@ interface LiveState {
   filter: LiveListFilter;
   sort: LiveListSort;
   visibleCount: number;
+  pageSize: number;
   setFilter: (filter: LiveListFilter) => void;
   setSort: (sort: LiveListSort) => void;
+  setPageSize: (pageSize: number) => void;
   showMore: () => void;
   reset: () => void;
 }
@@ -37,40 +39,50 @@ export const useLiveStore = create<LiveState>()(
       filter: LIVE_LIST_DEFAULT_FILTER,
       sort: LIVE_LIST_DEFAULT_SORT,
       visibleCount: LIVE_LIST_PAGE_SIZE,
+      pageSize: LIVE_LIST_PAGE_SIZE,
       setFilter: (filter) =>
         set(
-          {
+          (state) => ({
             filter,
             sort: getDefaultSortByFilter(filter),
-            visibleCount: LIVE_LIST_PAGE_SIZE,
-          },
+            visibleCount: state.pageSize,
+          }),
           false,
           "live/setFilter",
         ),
       setSort: (sort) =>
         set(
-          {
+          (state) => ({
             sort,
-            visibleCount: LIVE_LIST_PAGE_SIZE,
-          },
+            visibleCount: state.pageSize,
+          }),
           false,
           "live/setSort",
+        ),
+      setPageSize: (pageSize) =>
+        set(
+          {
+            pageSize,
+            visibleCount: pageSize,
+          },
+          false,
+          "live/setPageSize",
         ),
       showMore: () =>
         set(
           (state) => ({
-            visibleCount: state.visibleCount + LIVE_LIST_PAGE_SIZE,
+            visibleCount: state.visibleCount + state.pageSize,
           }),
           false,
           "live/showMore",
         ),
       reset: () =>
         set(
-          {
+          (state) => ({
             filter: LIVE_LIST_DEFAULT_FILTER,
             sort: LIVE_LIST_DEFAULT_SORT,
-            visibleCount: LIVE_LIST_PAGE_SIZE,
-          },
+            visibleCount: state.pageSize,
+          }),
           false,
           "live/reset",
         ),

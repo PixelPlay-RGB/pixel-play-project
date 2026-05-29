@@ -6,6 +6,17 @@ import { Heart, MessageCircle, Radio, Sparkles } from "lucide-react";
 import type { LiveListFilter, LiveListSort } from "@/types/live/live";
 
 export const LIVE_LIST_PAGE_SIZE = 20;
+export const LIVE_LIST_GRID_BREAKPOINTS = {
+  sm: 640,
+  xl: 1280,
+  "2xl": 1536,
+} as const;
+export const LIVE_LIST_PAGE_SIZE_BY_COLUMN_COUNT = {
+  one: 8,
+  two: 12,
+  three: 12,
+  four: 20,
+} as const;
 export const LIVE_LIST_RECENT_STARTED_MINUTES = 30;
 export const LIVE_LIST_RECENT_CHAT_MINUTES = 5;
 
@@ -63,6 +74,12 @@ export const LIVE_LIST_SORT_OPTIONS = [
   value: LiveListSort;
   label: string;
 }>;
+
+export const LIVE_LIST_SORT_TITLE = {
+  VIEWER_COUNT_DESC: "시청자가 많은 방송",
+  STARTED_AT_DESC: "최근 시작한 방송",
+  RECENT_CHAT_DESC: "채팅이 활발한 방송",
+} as const satisfies Record<LiveListSort, string>;
 
 export const LIVE_LIST_EMPTY_MESSAGE = {
   ALL: {

@@ -170,6 +170,12 @@ export function getLiveTagLabels(tags: string[], limit = 2) {
     .slice(0, limit);
 }
 
+export function createLiveSearchHref(query: string) {
+  const searchParams = new URLSearchParams({ query });
+
+  return `/live/search?${searchParams.toString()}`;
+}
+
 export function formatViewerCount(count: number) {
   return `${VIEWER_COUNT_FORMATTER.format(count)}명 시청`;
 }

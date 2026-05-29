@@ -5,6 +5,7 @@ import Link from "next/link";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import LiveBadge from "@/components/live/live-badge";
+import LiveTagLink from "@/components/live/live-tag-link";
 import { cn } from "@/lib/utils";
 import type { LiveListItem } from "@/types/live/live";
 import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
@@ -23,15 +24,15 @@ export default function LiveCard({ item }: LiveCardProps) {
   const liveHref = `/live/${item.creatorId}`;
 
   return (
-    <Link
-      href={liveHref}
-      className={cn(
-        "group block min-w-0 outline-none",
-        "focus-visible:ring-ring rounded-lg focus-visible:ring-3",
-      )}
-      aria-label={`${item.title} 라이브 보기`}
-    >
-      <div className="border-border/70 group-hover:border-brand/70 relative aspect-video overflow-hidden rounded-lg border bg-black transition-colors">
+    <article className="min-w-0">
+      <Link
+        href={liveHref}
+        className={cn(
+          "group relative block aspect-video overflow-hidden rounded-lg border bg-black transition-colors outline-none",
+          "border-border/70 hover:border-live/70 focus-visible:ring-ring focus-visible:ring-3",
+        )}
+        aria-label={`${item.title} 라이브 보기`}
+      >
         <Image
           src={getLiveThumbnailSrc(item.id, item.thumbnailUrl)}
           alt={`${item.title} 라이브 썸네일`}
@@ -47,21 +48,32 @@ export default function LiveCard({ item }: LiveCardProps) {
         >
           {formatViewerCountLabel(item.currentViewerCount)}
         </span>
-      </div>
+      </Link>
 
       <div className="mt-3 flex gap-2.5">
-        <Avatar className="mt-0.5 size-9" size="lg">
-          <AvatarImage
-            src={getAvatarImageSrc(item.creatorPhotoUrl)}
-            alt={`${item.creatorNickname} 프로필 이미지`}
-          />
-          <AvatarFallback>{getAvatarFallbackText(item.creatorNickname)}</AvatarFallback>
-        </Avatar>
+        <Link
+          href={liveHref}
+          className="focus-visible:ring-ring mt-0.5 shrink-0 rounded-full outline-none focus-visible:ring-3"
+          aria-label={`${item.creatorNickname} 채널로 이동`}
+        >
+          <Avatar className="hover:ring-live/70 size-9 transition-shadow hover:ring-2" size="lg">
+            <AvatarImage
+              src={getAvatarImageSrc(item.creatorPhotoUrl)}
+              alt={`${item.creatorNickname} 프로필 이미지`}
+            />
+            <AvatarFallback>{getAvatarFallbackText(item.creatorNickname)}</AvatarFallback>
+          </Avatar>
+        </Link>
 
         <div className="min-w-0 flex-1 space-y-2">
           <div className="min-w-0 space-y-1">
-            <h3 className="text-foreground group-hover:text-brand line-clamp-2 text-sm leading-snug font-bold wrap-break-word">
-              {item.title}
+            <h3 className="line-clamp-2 text-sm leading-snug font-bold wrap-break-word">
+              <Link
+                href={liveHref}
+                className="text-foreground hover:text-live focus-visible:ring-ring rounded-sm transition-colors outline-none focus-visible:ring-3"
+              >
+                {item.title}
+              </Link>
             </h3>
             <p className="text-muted-foreground truncate text-xs font-medium">
               {item.creatorNickname}
@@ -71,17 +83,12 @@ export default function LiveCard({ item }: LiveCardProps) {
           {tagLabels.length > 0 ? (
             <div className="flex flex-wrap gap-1">
               {tagLabels.map((tag) => (
-                <span
-                  key={tag}
-                  className="bg-brand/15 text-brand border-brand/20 rounded-full border px-2 py-0.5 text-xs font-bold"
-                >
-                  #{tag}
-                </span>
+                <LiveTagLink key={tag} tag={tag} />
               ))}
             </div>
           ) : null}
         </div>
       </div>
-    </Link>
+    </article>
   );
 }

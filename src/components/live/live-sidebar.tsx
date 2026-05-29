@@ -104,7 +104,7 @@ export default function LiveSidebar({ isMobile }: LiveSidebarProps) {
                           type="button"
                           onClick={() => void fetchMoreFollowing()}
                           disabled={isFetchingMoreFollowing}
-                          className="border-border text-muted-foreground hover:border-brand/40 hover:text-brand mx-auto mt-1 inline-flex h-8 items-center gap-1 rounded-full border px-3 text-xs font-bold transition-colors disabled:pointer-events-none disabled:opacity-60"
+                          className="border-border text-muted-foreground hover:border-live/40 hover:text-live mx-auto mt-1 inline-flex h-8 items-center gap-1 rounded-full border px-3 text-xs font-bold transition-colors disabled:pointer-events-none disabled:opacity-60"
                         >
                           <ChevronDown className="size-3.5" />
                           <span>{isFetchingMoreFollowing ? "불러오는 중" : "더보기"}</span>
@@ -114,7 +114,7 @@ export default function LiveSidebar({ isMobile }: LiveSidebarProps) {
                       <SidebarMenuItem>
                         <Link
                           href="/user/following"
-                          className="border-border text-muted-foreground hover:border-brand/40 hover:text-brand mx-auto mt-1 inline-flex h-8 items-center gap-1 rounded-full border px-3 text-xs font-bold transition-colors"
+                          className="border-border text-muted-foreground hover:border-live/40 hover:text-live mx-auto mt-1 inline-flex h-8 items-center gap-1 rounded-full border px-3 text-xs font-bold transition-colors"
                         >
                           <ExternalLink className="size-3.5" />
                           <span>전체보기</span>

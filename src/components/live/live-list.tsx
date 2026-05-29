@@ -9,9 +9,12 @@ import LiveListEmptyState from "@/components/live/live-list-empty-state";
 import LiveListErrorState from "@/components/live/live-list-error-state";
 import LiveListSkeleton from "@/components/live/live-list-skeleton";
 import LiveListToolbar from "@/components/live/live-list-toolbar";
+import { LIVE_LIST_SORT_TITLE } from "@/constants/live/live-list";
+import { useLiveListPageSize } from "@/hooks/live/use-live-list-page-size";
 import { useLiveList } from "@/hooks/live/use-live-list";
 import { useLiveStore } from "@/stores/live";
 import { EMPTY_LIVE_LIST_SNAPSHOT } from "@/utils/live/live-list";
+import { useCallback } from "react";
 
 interface LiveListProps {
   heroSlot: ReactNode;
@@ -19,25 +22,30 @@ interface LiveListProps {
 
 export default function LiveList({ heroSlot }: LiveListProps) {
   const setSort = useLiveStore((state) => state.setSort);
+  const setPageSize = useLiveStore((state) => state.setPageSize);
   const showMore = useLiveStore((state) => state.showMore);
-  const query = useLiveList();
+  const handlePageSizeChange = useCallback(
+    (pageSize: number) => {
+      setPageSize(pageSize);
+    },
+    [setPageSize],
+  );
+  const pageSize = useLiveListPageSize({ onPageSizeChange: handlePageSizeChange });
+  const query = useLiveList(pageSize !== null);
   const snapshot = query.data ?? EMPTY_LIVE_LIST_SNAPSHOT;
-  const isInitialLoading = !query.isFetched && (!query.isUserFetched || query.isLoading);
+  const isInitialLoading =
+    pageSize === null || (!query.isFetched && (!query.isUserFetched || query.isLoading));
   const isEmpty = !isInitialLoading && !query.isError && snapshot.items.length === 0;
   const isFetchingMore = query.isFetching && query.isPlaceholderData;
+  const listTitle = LIVE_LIST_SORT_TITLE[query.sort];
 
   return (
     <div className="flex min-w-0 flex-col gap-5 md:gap-6">
       {heroSlot}
       <section className="flex min-w-0 flex-1 flex-col gap-4">
         <div className="flex flex-col gap-3">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-            <div className="space-y-1">
-              <h2 className="text-foreground text-xl font-bold md:text-2xl">지금 방송 중</h2>
-              <p className="text-muted-foreground text-sm leading-relaxed">
-                보고 싶은 방송을 바로 골라보세요.
-              </p>
-            </div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <h2 className="text-foreground text-xl font-bold md:text-2xl">{listTitle}</h2>
             <LiveListToolbar sort={query.sort} onSortChange={setSort} />
           </div>
         </div>
@@ -45,7 +53,7 @@ export default function LiveList({ heroSlot }: LiveListProps) {
         {query.isError ? (
           <LiveListErrorState onRetry={() => void query.refetch()} />
         ) : isInitialLoading ? (
-          <LiveListSkeleton />
+          <LiveListSkeleton count={pageSize ?? undefined} />
         ) : isEmpty ? (
           <LiveListEmptyState filter={query.effectiveFilter} />
         ) : (

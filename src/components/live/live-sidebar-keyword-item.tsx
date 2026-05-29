@@ -5,14 +5,14 @@ import { Hash } from "lucide-react";
 
 import { SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import type { LivePopularKeywordItem } from "@/types/live/live";
-import { formatViewerCountLabel } from "@/utils/live/live-list";
+import { createLiveSearchHref, formatViewerCountLabel } from "@/utils/live/live-list";
 
 interface LiveSidebarKeywordItemProps {
   item: LivePopularKeywordItem;
 }
 
 export default function LiveSidebarKeywordItem({ item }: LiveSidebarKeywordItemProps) {
-  const href = `/live/search?${new URLSearchParams({ query: item.keyword }).toString()}`;
+  const href = createLiveSearchHref(item.keyword);
 
   return (
     <SidebarMenuItem>

@@ -9,7 +9,7 @@ import { fetchLiveListSnapshot } from "@/hooks/live/live-list-query";
 import { useLiveStore } from "@/stores/live";
 import type { LiveListFilter, LiveListSnapshot } from "@/types/live/live";
 
-export function useLiveList() {
+export function useLiveList(isPageSizeReady = true) {
   const filter = useLiveStore((state) => state.filter);
   const sort = useLiveStore((state) => state.sort);
   const visibleCount = useLiveStore((state) => state.visibleCount);
@@ -27,7 +27,7 @@ export function useLiveList() {
         viewerId,
         limit: visibleCount,
       }),
-    enabled: userQuery.isFetched,
+    enabled: userQuery.isFetched && isPageSizeReady,
     placeholderData: keepPreviousData,
     refetchOnMount: "always",
   });
@@ -38,6 +38,7 @@ export function useLiveList() {
     effectiveFilter,
     sort,
     visibleCount,
+    isPageSizeReady,
     isUserFetched: userQuery.isFetched,
     isFollowingFilterVisible: Boolean(viewerId),
     userError: userQuery.error,
