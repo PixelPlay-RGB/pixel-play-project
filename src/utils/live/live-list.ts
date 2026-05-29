@@ -166,7 +166,7 @@ export function getLiveThumbnailSrc(liveId: string, thumbnailUrl?: string | null
 export function getLiveTagLabels(tags: string[], limit = 2) {
   return tags
     .map((tag) => tag.trim())
-    .filter(Boolean)
+    .filter((tag) => tag !== "")
     .slice(0, limit);
 }
 
@@ -186,14 +186,6 @@ export function formatViewerCountNumber(count: number) {
 
 export function formatViewerCountLabel(count: number) {
   return `${VIEWER_COUNT_FORMATTER.format(count)}명`;
-}
-
-export function formatRecentChatCount(count: number) {
-  if (count <= 0) {
-    return "채팅 조용함";
-  }
-
-  return `최근 채팅 ${VIEWER_COUNT_FORMATTER.format(count)}개`;
 }
 
 export function formatLiveDuration(startedAt: string) {

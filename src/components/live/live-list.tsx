@@ -1,7 +1,7 @@
 "use client";
 // 라이브 목록 화면의 클라이언트 상호작용을 조립합니다.
 
-import type { ReactNode } from "react";
+import { useCallback, type ReactNode } from "react";
 
 import LoadMoreButton from "@/components/common/load-more-button";
 import LiveCard from "@/components/live/live-card";
@@ -15,7 +15,6 @@ import { useLiveListPageSize } from "@/hooks/live/use-live-list-page-size";
 import { useLiveList } from "@/hooks/live/use-live-list";
 import { useLiveStore } from "@/stores/live";
 import { EMPTY_LIVE_LIST_SNAPSHOT } from "@/utils/live/live-list";
-import { useCallback } from "react";
 
 interface LiveListProps {
   heroSlot: ReactNode;

@@ -45,8 +45,9 @@ export const QUERY_KEYS = {
   },
   live: {
     all: ["live"] as const,
+    listAll: () => [...QUERY_KEYS.live.all, "list"],
     list: (userId?: string, filter?: string, sort?: string, visibleCount?: number) =>
-      [...QUERY_KEYS.live.all, "list", userId ?? "public", filter, sort, visibleCount].filter(
+      [...QUERY_KEYS.live.listAll(), userId ?? "public", filter, sort, visibleCount].filter(
         (v) => v !== undefined,
       ),
     sidebar: {

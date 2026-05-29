@@ -21,8 +21,6 @@ interface ToggleCreatorFollowingContext {
   snapshot: LiveListSnapshotCache;
 }
 
-const LIVE_LIST_QUERY_KEY = [...QUERY_KEYS.live.all, "list"] as const;
-
 function updateLiveListFollowingState(
   data: LiveListSnapshot | undefined,
   creatorId: string,
@@ -47,6 +45,7 @@ function updateLiveListFollowingState(
 
 export function useToggleCreatorFollowing() {
   const queryClient = useQueryClient();
+  const liveListQueryKey = QUERY_KEYS.live.listAll();
 
   return useMutation<
     AppActionResult,
@@ -57,13 +56,13 @@ export function useToggleCreatorFollowing() {
     mutationFn: ({ creatorId, nextFollowing }) =>
       nextFollowing ? followCreatorAction({ creatorId }) : unfollowCreatorAction({ creatorId }),
     onMutate: async ({ creatorId, nextFollowing }) => {
-      await queryClient.cancelQueries({ queryKey: LIVE_LIST_QUERY_KEY });
+      await queryClient.cancelQueries({ queryKey: liveListQueryKey });
 
       const snapshot = queryClient.getQueriesData<LiveListSnapshot>({
-        queryKey: LIVE_LIST_QUERY_KEY,
+        queryKey: liveListQueryKey,
       });
 
-      queryClient.setQueriesData<LiveListSnapshot>({ queryKey: LIVE_LIST_QUERY_KEY }, (data) =>
+      queryClient.setQueriesData<LiveListSnapshot>({ queryKey: liveListQueryKey }, (data) =>
         updateLiveListFollowingState(data, creatorId, nextFollowing),
       );
 
