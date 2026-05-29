@@ -2,7 +2,7 @@
 
 import { Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { LIVE_CHANNEL_MENU_LABEL, LIVE_LABEL } from "@/constants/live/live";
+import { LIVE_LABEL } from "@/constants/live/live";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { toastAppSuccess, toastAppError } from "@/utils/common/toast-message";
 import { cn } from "@/lib/utils";
