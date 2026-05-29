@@ -20,11 +20,6 @@ export const CHANNEL_CHAT_SCOPE_OPTIONS = [
     label: "팔로잉한 시청자",
     description: "채널을 팔로잉한 시청자에게만 채팅을 열어요.",
   },
-  {
-    value: "manager",
-    label: "방장만",
-    description: "채팅을 잠시 닫고 방장만 입력할 수 있어요.",
-  },
 ] as const satisfies ReadonlyArray<{
   value: LiveChatScope;
   label: string;
