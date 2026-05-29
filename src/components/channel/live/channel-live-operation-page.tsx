@@ -28,8 +28,8 @@ interface Props {
   initialSnapshot?: ChannelLiveStudioSnapshot;
 }
 
-const DEFAULT_TITLE = "오늘은 랭크 위주로 갑니다.";
-const DEFAULT_TAGS = ["랭크", "소통", "저지연"];
+const DEFAULT_TITLE = "";
+const DEFAULT_TAGS: string[] = [];
 
 export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
   const activeBroadcast = initialSnapshot?.activeBroadcast ?? null;

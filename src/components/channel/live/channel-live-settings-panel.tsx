@@ -67,14 +67,9 @@ export default function ChannelLiveSettingsPanel({
 }: Props) {
   return (
     <Card>
-      <CardHeader className="has-data-[slot=card-action]:grid-cols-[1fr_auto]">
-        <div className="flex flex-col gap-1">
-          <CardTitle>방송 시작 설정</CardTitle>
-          <p className="text-muted-foreground text-xs">
-            방송 목록과 시청 화면에 보여지는 내용을 입력합니다.
-          </p>
-        </div>
-        <span className="bg-brand/10 text-brand rounded-full px-2.5 py-1 text-xs font-semibold">
+      <CardHeader className="flex-row items-center justify-between gap-3">
+        <CardTitle>방송 시작 설정</CardTitle>
+        <span className="bg-brand/10 text-brand inline-flex w-fit shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold">
           저장됨
         </span>
       </CardHeader>
