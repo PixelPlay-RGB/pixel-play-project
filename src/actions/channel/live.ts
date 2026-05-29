@@ -37,9 +37,28 @@ export interface ChannelLiveStudioSnapshot {
 }
 
 export interface ChannelLiveStudioSettings {
+  alertSoundEnabled: boolean;
+  alertVolume: number;
   chatRuleText: string;
+  chatRuleVersion: number;
+  chatScope: "authenticated" | "follower" | "manager";
+  donationAlertDurationSeconds: number;
+  donationAlertEnabled: boolean;
+  donationAlertVersion: number;
+  donationAmountVisible: boolean;
+  donationEnabled: boolean;
+  donationMinAmount: number;
+  forbiddenWords: string[];
   defaultTags: string[];
   defaultTitle: string;
+  followerWaitSeconds: number;
+  linkBlocked: boolean;
+  slowModeEnabled: boolean;
+  slowModeSeconds: number;
+  streamKeyVersion: number;
+  chatOverlayVersion: number;
+  ttsEnabled: boolean;
+  ttsRate: number;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -54,21 +73,87 @@ function readNumber(value: unknown) {
   return typeof value === "number" ? value : 0;
 }
 
+function readBoolean(value: unknown, fallback = false) {
+  return typeof value === "boolean" ? value : fallback;
+}
+
+function readNumberWithFallback(value: unknown, fallback: number) {
+  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
+}
+
+function readChatScope(value: unknown): ChannelLiveStudioSettings["chatScope"] {
+  if (value === "follower" || value === "manager") return value;
+
+  return "authenticated";
+}
+
 function readStringArray(value: unknown) {
   return Array.isArray(value)
     ? value.filter((item): item is string => typeof item === "string")
     : [];
 }
 
+function createDefaultSettings(): ChannelLiveStudioSettings {
+  return {
+    alertSoundEnabled: true,
+    alertVolume: 32,
+    chatOverlayVersion: 1,
+    chatRuleText: "",
+    chatRuleVersion: 1,
+    chatScope: "authenticated",
+    defaultTags: [],
+    defaultTitle: "",
+    donationAlertDurationSeconds: 5,
+    donationAlertEnabled: true,
+    donationAlertVersion: 1,
+    donationAmountVisible: true,
+    donationEnabled: true,
+    donationMinAmount: 1000,
+    forbiddenWords: [],
+    followerWaitSeconds: 0,
+    linkBlocked: true,
+    slowModeEnabled: false,
+    slowModeSeconds: 3,
+    streamKeyVersion: 1,
+    ttsEnabled: true,
+    ttsRate: 1,
+  };
+}
+
+function createSettingsFromRecord(settings: unknown): ChannelLiveStudioSettings {
+  if (!isRecord(settings)) return createDefaultSettings();
+
+  return {
+    alertSoundEnabled: readBoolean(settings.alertSoundEnabled, true),
+    alertVolume: readNumberWithFallback(settings.alertVolume, 32),
+    chatOverlayVersion: readNumberWithFallback(settings.chatOverlayVersion, 1),
+    chatRuleText: readString(settings.chatRuleText),
+    chatRuleVersion: readNumberWithFallback(settings.chatRuleVersion, 1),
+    chatScope: readChatScope(settings.chatScope),
+    defaultTags: readStringArray(settings.defaultTags),
+    defaultTitle: readString(settings.defaultTitle),
+    donationAlertDurationSeconds: readNumberWithFallback(settings.donationAlertDurationSeconds, 5),
+    donationAlertEnabled: readBoolean(settings.donationAlertEnabled, true),
+    donationAlertVersion: readNumberWithFallback(settings.donationAlertVersion, 1),
+    donationAmountVisible: readBoolean(settings.donationAmountVisible, true),
+    donationEnabled: readBoolean(settings.donationEnabled, true),
+    donationMinAmount: readNumberWithFallback(settings.donationMinAmount, 1000),
+    forbiddenWords: readStringArray(settings.forbiddenWords),
+    followerWaitSeconds: readNumberWithFallback(settings.followerWaitSeconds, 0),
+    linkBlocked: readBoolean(settings.linkBlocked, true),
+    slowModeEnabled: readBoolean(settings.slowModeEnabled),
+    slowModeSeconds: readNumberWithFallback(settings.slowModeSeconds, 3),
+    streamKeyVersion: readNumberWithFallback(settings.streamKeyVersion, 1),
+    ttsEnabled: readBoolean(settings.ttsEnabled, true),
+    ttsRate: readNumberWithFallback(settings.ttsRate, 1),
+  };
+}
+
 function toChannelLiveStudioSnapshot(value: Json): ChannelLiveStudioSnapshot {
   if (!isRecord(value)) {
     return {
       activeBroadcast: null,
-      settings: {
-        chatRuleText: "",
-        defaultTags: [],
-        defaultTitle: "",
-      },
+      settings: createDefaultSettings(),
     };
   }
 
@@ -78,17 +163,7 @@ function toChannelLiveStudioSnapshot(value: Json): ChannelLiveStudioSnapshot {
   if (!isRecord(activeBroadcast)) {
     return {
       activeBroadcast: null,
-      settings: isRecord(settings)
-        ? {
-            chatRuleText: readString(settings.chatRuleText),
-            defaultTags: readStringArray(settings.defaultTags),
-            defaultTitle: readString(settings.defaultTitle),
-          }
-        : {
-            chatRuleText: "",
-            defaultTags: [],
-            defaultTitle: "",
-          },
+      settings: createSettingsFromRecord(settings),
     };
   }
 
@@ -106,17 +181,7 @@ function toChannelLiveStudioSnapshot(value: Json): ChannelLiveStudioSnapshot {
         typeof activeBroadcast.thumbnailUrl === "string" ? activeBroadcast.thumbnailUrl : null,
       title: readString(activeBroadcast.title),
     },
-    settings: isRecord(settings)
-      ? {
-          chatRuleText: readString(settings.chatRuleText),
-          defaultTags: readStringArray(settings.defaultTags),
-          defaultTitle: readString(settings.defaultTitle),
-        }
-      : {
-          chatRuleText: "",
-          defaultTags: [],
-          defaultTitle: "",
-        },
+    settings: createSettingsFromRecord(settings),
   };
 }
 
@@ -167,9 +232,24 @@ export async function updateChannelLiveSettingsAction(
   const supabase = createAdminClient();
   const { data, error } = await supabase.rpc("upsert_creator_studio_setting", {
     p_actor_user_id: actor.userId,
+    p_alert_sound_enabled: parsed.data.alertSoundEnabled,
+    p_alert_volume: parsed.data.alertVolume,
     p_chat_rule_text: parsed.data.chatRuleText,
+    p_chat_scope: parsed.data.chatScope,
     p_default_tags: parsed.data.defaultTags,
     p_default_title: parsed.data.defaultTitle,
+    p_donation_alert_duration_seconds: parsed.data.donationAlertDurationSeconds,
+    p_donation_alert_enabled: parsed.data.donationAlertEnabled,
+    p_donation_amount_visible: parsed.data.donationAmountVisible,
+    p_donation_enabled: parsed.data.donationEnabled,
+    p_donation_min_amount: parsed.data.donationMinAmount,
+    p_forbidden_words: parsed.data.forbiddenWords,
+    p_follower_wait_seconds: parsed.data.followerWaitSeconds,
+    p_link_blocked: parsed.data.linkBlocked,
+    p_slow_mode_enabled: parsed.data.slowModeEnabled,
+    p_slow_mode_seconds: parsed.data.slowModeSeconds,
+    p_tts_enabled: parsed.data.ttsEnabled,
+    p_tts_rate: parsed.data.ttsRate,
   });
 
   if (error || !data) {

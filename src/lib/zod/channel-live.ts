@@ -2,6 +2,21 @@
 
 import { z } from "zod";
 
+const FOLLOWER_WAIT_SECONDS = [
+  0, 300, 600, 1800, 3600, 86400, 604800, 2592000, 5184000, 7776000, 10368000, 12960000, 15552000,
+];
+const SLOW_MODE_SECONDS = [3, 5, 10, 30, 60, 120, 300];
+
+const followerWaitSecondsSchema = z
+  .number()
+  .int()
+  .refine((value) => FOLLOWER_WAIT_SECONDS.includes(value));
+
+const slowModeSecondsSchema = z
+  .number()
+  .int()
+  .refine((value) => SLOW_MODE_SECONDS.includes(value));
+
 export const startLiveBroadcastSchema = z.object({
   tags: z.array(z.string().trim().min(1).max(12)).max(5),
   thumbnailUrl: z.string().url().nullable().optional(),
@@ -9,9 +24,24 @@ export const startLiveBroadcastSchema = z.object({
 });
 
 export const updateChannelLiveSettingsSchema = z.object({
-  chatRuleText: z.string().max(500),
+  alertSoundEnabled: z.boolean(),
+  alertVolume: z.number().int().min(0).max(100),
+  chatRuleText: z.string().max(300),
+  chatScope: z.enum(["authenticated", "follower", "manager"]),
+  donationAlertDurationSeconds: z.number().int().min(3).max(30),
+  donationAlertEnabled: z.boolean(),
+  donationAmountVisible: z.boolean(),
+  donationEnabled: z.boolean(),
+  donationMinAmount: z.number().int().min(1000).max(1000000),
+  forbiddenWords: z.array(z.string().trim().min(1).max(30)).max(100),
   defaultTags: z.array(z.string().trim().min(1).max(12)).max(5),
-  defaultTitle: z.string().trim().min(1).max(100),
+  defaultTitle: z.string().trim().max(100),
+  followerWaitSeconds: followerWaitSecondsSchema,
+  linkBlocked: z.boolean(),
+  slowModeEnabled: z.boolean(),
+  slowModeSeconds: slowModeSecondsSchema,
+  ttsEnabled: z.boolean(),
+  ttsRate: z.number().min(0.5).max(2),
 });
 
 export type StartLiveBroadcastInput = z.infer<typeof startLiveBroadcastSchema>;

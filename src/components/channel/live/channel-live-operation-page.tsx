@@ -17,7 +17,7 @@ import { BadgeCheck } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
 
 export type ChannelLiveVisibility = "public" | "private" | "unlisted";
-export type ChannelLiveChatScope = "all" | "followers" | "moderators";
+export type ChannelLiveChatScope = "authenticated" | "follower" | "manager";
 
 export interface ChannelLiveState {
   isBroadcasting: boolean;
@@ -81,10 +81,40 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
     activeBroadcast?.thumbnailUrl ?? "",
   );
   const [thumbnailPreviewName, setThumbnailPreviewName] = useState("");
-  const [isAdultOnly, setIsAdultOnly] = useState(false);
-  const [isDonationEnabled, setIsDonationEnabled] = useState(false);
-  const [chatScope, setChatScope] = useState<ChannelLiveChatScope>("all");
-  const [isSlowModeEnabled, setIsSlowModeEnabled] = useState(false);
+  const [chatScope, setChatScope] = useState<ChannelLiveChatScope>(
+    initialSettings?.chatScope ?? "authenticated",
+  );
+  const [followerWaitSeconds, setFollowerWaitSeconds] = useState(
+    initialSettings?.followerWaitSeconds ?? 0,
+  );
+  const [isSlowModeEnabled, setIsSlowModeEnabled] = useState(
+    initialSettings?.slowModeEnabled ?? false,
+  );
+  const [slowModeSeconds, setSlowModeSeconds] = useState(initialSettings?.slowModeSeconds ?? 3);
+  const [isLinkBlocked, setIsLinkBlocked] = useState(initialSettings?.linkBlocked ?? true);
+  const [forbiddenWords, setForbiddenWords] = useState(initialSettings?.forbiddenWords ?? []);
+  const [forbiddenWordInput, setForbiddenWordInput] = useState("");
+  const [isDonationEnabled, setIsDonationEnabled] = useState(
+    initialSettings?.donationEnabled ?? true,
+  );
+  const [donationMinAmount, setDonationMinAmount] = useState(
+    initialSettings?.donationMinAmount ?? 1000,
+  );
+  const [isDonationAmountVisible, setIsDonationAmountVisible] = useState(
+    initialSettings?.donationAmountVisible ?? true,
+  );
+  const [isDonationAlertEnabled, setIsDonationAlertEnabled] = useState(
+    initialSettings?.donationAlertEnabled ?? true,
+  );
+  const [donationAlertDurationSeconds, setDonationAlertDurationSeconds] = useState(
+    initialSettings?.donationAlertDurationSeconds ?? 5,
+  );
+  const [isAlertSoundEnabled, setIsAlertSoundEnabled] = useState(
+    initialSettings?.alertSoundEnabled ?? true,
+  );
+  const [alertVolume, setAlertVolume] = useState(initialSettings?.alertVolume ?? 32);
+  const [isTtsEnabled, setIsTtsEnabled] = useState(initialSettings?.ttsEnabled ?? true);
+  const [ttsRate, setTtsRate] = useState(initialSettings?.ttsRate ?? 1);
   const [isBroadcastActionPending, startBroadcastTransition] = useTransition();
   const [isSettingsActionPending, startSettingsTransition] = useTransition();
 
@@ -171,13 +201,41 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
     setTags((currentTags) => currentTags.filter((currentTag) => currentTag !== tag));
   };
 
+  const handleAddForbiddenWord = () => {
+    const nextWord = forbiddenWordInput.trim();
+
+    if (!nextWord || forbiddenWords.includes(nextWord) || forbiddenWords.length >= 100) return;
+
+    setForbiddenWords((currentWords) => [...currentWords, nextWord]);
+    setForbiddenWordInput("");
+  };
+
+  const handleRemoveForbiddenWord = (word: string) => {
+    setForbiddenWords((currentWords) => currentWords.filter((currentWord) => currentWord !== word));
+  };
+
   const handleSaveSettings = () => {
     setSettingsActionMessage(null);
     startSettingsTransition(async () => {
       const result = await updateChannelLiveSettingsAction({
+        alertSoundEnabled: isAlertSoundEnabled,
+        alertVolume,
         chatRuleText,
+        chatScope,
         defaultTags: tags,
         defaultTitle: title,
+        donationAlertDurationSeconds,
+        donationAlertEnabled: isDonationAlertEnabled,
+        donationAmountVisible: isDonationAmountVisible,
+        donationEnabled: isDonationEnabled,
+        donationMinAmount,
+        forbiddenWords,
+        followerWaitSeconds,
+        linkBlocked: isLinkBlocked,
+        slowModeEnabled: isSlowModeEnabled,
+        slowModeSeconds,
+        ttsEnabled: isTtsEnabled,
+        ttsRate,
       });
 
       if (!result.success || !result.data) {
@@ -186,6 +244,21 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
       }
 
       setChatRuleText(result.data.settings.chatRuleText);
+      setChatScope(result.data.settings.chatScope);
+      setFollowerWaitSeconds(result.data.settings.followerWaitSeconds);
+      setIsSlowModeEnabled(result.data.settings.slowModeEnabled);
+      setSlowModeSeconds(result.data.settings.slowModeSeconds);
+      setIsLinkBlocked(result.data.settings.linkBlocked);
+      setForbiddenWords(result.data.settings.forbiddenWords);
+      setIsDonationEnabled(result.data.settings.donationEnabled);
+      setDonationMinAmount(result.data.settings.donationMinAmount);
+      setIsDonationAmountVisible(result.data.settings.donationAmountVisible);
+      setIsDonationAlertEnabled(result.data.settings.donationAlertEnabled);
+      setDonationAlertDurationSeconds(result.data.settings.donationAlertDurationSeconds);
+      setIsAlertSoundEnabled(result.data.settings.alertSoundEnabled);
+      setAlertVolume(result.data.settings.alertVolume);
+      setIsTtsEnabled(result.data.settings.ttsEnabled);
+      setTtsRate(result.data.settings.ttsRate);
       setSettingsActionMessage("방송 설정을 저장했습니다.");
     });
   };
@@ -235,26 +308,53 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
           <ChannelLivePreviewPanel liveState={liveState} title={title} />
           <ChannelLiveSettingsPanel
             broadcastActionError={broadcastActionError}
+            alertVolume={alertVolume}
             chatScope={chatScope}
-            isAdultOnly={isAdultOnly}
+            chatRuleText={chatRuleText}
+            donationAlertDurationSeconds={donationAlertDurationSeconds}
+            donationMinAmount={donationMinAmount}
+            followerWaitSeconds={followerWaitSeconds}
+            forbiddenWordInput={forbiddenWordInput}
+            forbiddenWords={forbiddenWords}
+            isAlertSoundEnabled={isAlertSoundEnabled}
             isBroadcastActionPending={isBroadcastActionPending}
+            isDonationAlertEnabled={isDonationAlertEnabled}
+            isDonationAmountVisible={isDonationAmountVisible}
             isDonationEnabled={isDonationEnabled}
+            isLinkBlocked={isLinkBlocked}
             isSlowModeEnabled={isSlowModeEnabled}
             isSettingsActionPending={isSettingsActionPending}
+            isTtsEnabled={isTtsEnabled}
             settingsActionMessage={settingsActionMessage}
+            slowModeSeconds={slowModeSeconds}
             thumbnailPreviewName={thumbnailPreviewName}
             thumbnailPreviewUrl={thumbnailPreviewUrl}
             title={title}
+            ttsRate={ttsRate}
             tagInput={tagInput}
             tags={tags}
             liveState={liveState}
-            onAdultOnlyChange={setIsAdultOnly}
+            onAddForbiddenWord={handleAddForbiddenWord}
+            onAlertSoundEnabledChange={setIsAlertSoundEnabled}
+            onAlertVolumeChange={setAlertVolume}
             onChatScopeChange={setChatScope}
+            onChatRuleTextChange={setChatRuleText}
+            onDonationAlertDurationSecondsChange={setDonationAlertDurationSeconds}
+            onDonationAlertEnabledChange={setIsDonationAlertEnabled}
+            onDonationAmountVisibleChange={setIsDonationAmountVisible}
             onDonationEnabledChange={setIsDonationEnabled}
+            onDonationMinAmountChange={setDonationMinAmount}
+            onFollowerWaitSecondsChange={setFollowerWaitSeconds}
+            onForbiddenWordInputChange={setForbiddenWordInput}
+            onLinkBlockedChange={setIsLinkBlocked}
+            onRemoveForbiddenWord={handleRemoveForbiddenWord}
             onSlowModeEnabledChange={setIsSlowModeEnabled}
+            onSlowModeSecondsChange={setSlowModeSeconds}
             onThumbnailFileChange={handleThumbnailFileChange}
             onThumbnailRemove={handleThumbnailRemove}
             onTitleChange={setTitle}
+            onTtsEnabledChange={setIsTtsEnabled}
+            onTtsRateChange={setTtsRate}
             onTagInputChange={setTagInput}
             onAddTag={handleAddTag}
             onRemoveTag={handleRemoveTag}
