@@ -19,13 +19,15 @@ interface BitrateSample {
 }
 
 const STREAM_STATUS_POLL_INTERVAL_MS = 3000;
+const STREAM_DURATION_TICK_INTERVAL_MS = 1000;
+const DEFAULT_STREAM_DURATION = "00:00:00";
 
 function formatDuration(startedAt?: string | null) {
-  if (!startedAt) return "00:00:00";
+  if (!startedAt) return DEFAULT_STREAM_DURATION;
 
   const startedAtTime = new Date(startedAt).getTime();
 
-  if (!Number.isFinite(startedAtTime)) return "00:00:00";
+  if (!Number.isFinite(startedAtTime)) return DEFAULT_STREAM_DURATION;
 
   const totalSeconds = Math.max(Math.floor((Date.now() - startedAtTime) / 1000), 0);
   const hours = Math.floor(totalSeconds / 3600);
@@ -70,6 +72,7 @@ export default function ChannelLiveStreamStatusPanel({
 }: Props) {
   const [streamStatus, setStreamStatus] = useState<ChannelLiveStreamStatusResponse | null>(null);
   const [bitrateKbps, setBitrateKbps] = useState<number | null>(null);
+  const [durationLabel, setDurationLabel] = useState(DEFAULT_STREAM_DURATION);
   const previousSampleRef = useRef<BitrateSample | null>(null);
 
   useEffect(() => {
@@ -130,11 +133,26 @@ export default function ChannelLiveStreamStatusPanel({
     };
   }, [streamPath]);
 
+  useEffect(() => {
+    const startedAt = streamStatus?.onlineTime ?? activeBroadcastStartedAt;
+
+    const updateDuration = () => {
+      setDurationLabel(formatDuration(startedAt));
+    };
+
+    updateDuration();
+    const interval = setInterval(updateDuration, STREAM_DURATION_TICK_INTERVAL_MS);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [activeBroadcastStartedAt, streamStatus?.onlineTime]);
+
   const isOnline = streamStatus?.state === "online";
   const streamStats = [
     {
       label: "방송 시간",
-      value: formatDuration(streamStatus?.onlineTime ?? activeBroadcastStartedAt),
+      value: durationLabel,
     },
     { label: "해상도", value: formatResolution(streamStatus) },
     { label: "비트레이트", value: isOnline ? formatBitrate(bitrateKbps) : "-" },
