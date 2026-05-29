@@ -12,23 +12,24 @@ interface Props {
 export function ChatRuleTextField({ value, disabled, onChange }: Props) {
   return (
     <div className="flex flex-col gap-3">
-      <div className="space-y-1">
-        <h3 className="text-foreground text-sm font-bold">첫 채팅 전 안내문</h3>
-        <p className="text-muted-foreground text-xs leading-5">
-          시청자가 처음 채팅하려 할 때 입력창 위에 보여줄 문장이에요.
-        </p>
-      </div>
-      <Textarea
-        value={value}
-        disabled={disabled}
-        maxLength={CHANNEL_CHAT_RULE_MAX_LENGTH}
-        rows={4}
-        onChange={(event) => onChange(event.target.value)}
-        className="min-h-28 resize-none leading-6"
-        placeholder="채팅 규칙을 입력해주세요."
-      />
+      <label className="border-border bg-background flex flex-col gap-3 rounded-xl border p-4">
+        <span className="text-foreground text-sm font-bold">안내문</span>
+        <Textarea
+          value={value}
+          disabled={disabled}
+          maxLength={CHANNEL_CHAT_RULE_MAX_LENGTH}
+          rows={4}
+          onChange={(event) => onChange(event.target.value)}
+          className="min-h-28 resize-none border-0 bg-transparent p-0 leading-6 shadow-none focus-visible:ring-0"
+          placeholder="채팅 규칙을 입력해주세요."
+        />
+      </label>
       <div className="text-muted-foreground flex justify-between gap-3 text-xs">
-        <span>짧고 분명한 문장이 시청자에게 가장 잘 전달돼요.</span>
+        <span>
+          첫 채팅 전 규칙 확인은 항상 적용돼요.
+          <br className="sm:hidden" />
+          시청자는 확인 후 채팅할 수 있어요.
+        </span>
         <span className="shrink-0">
           {value.length} / {CHANNEL_CHAT_RULE_MAX_LENGTH}
         </span>

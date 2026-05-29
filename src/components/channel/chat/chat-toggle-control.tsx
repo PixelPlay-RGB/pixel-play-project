@@ -1,0 +1,49 @@
+// 채팅 설정에서 이진 옵션을 바꾸는 스위치형 버튼입니다.
+
+import { cn } from "@/lib/utils";
+
+interface Props {
+  checked: boolean;
+  checkedLabel: string;
+  uncheckedLabel: string;
+  disabled?: boolean;
+  onChange: (checked: boolean) => void;
+}
+
+export function ChatToggleControl({
+  checked,
+  checkedLabel,
+  uncheckedLabel,
+  disabled,
+  onChange,
+}: Props) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      disabled={disabled}
+      onClick={() => onChange(!checked)}
+      className={cn(
+        "border-border bg-background text-muted-foreground inline-flex h-11 items-center gap-3 rounded-full border px-3 text-sm font-bold shadow-sm transition-colors",
+        "hover:border-brand/40 hover:bg-brand/5 disabled:pointer-events-none disabled:opacity-50",
+        checked && "border-brand/40 bg-brand/10 text-brand",
+      )}
+    >
+      <span
+        className={cn(
+          "relative h-5 w-9 rounded-full transition-colors",
+          checked ? "bg-brand/80" : "bg-muted-foreground/30",
+        )}
+      >
+        <span
+          className={cn(
+            "bg-background absolute top-0.5 size-4 rounded-full shadow transition-transform",
+            checked ? "translate-x-4" : "translate-x-0.5",
+          )}
+        />
+      </span>
+      <span>{checked ? checkedLabel : uncheckedLabel}</span>
+    </button>
+  );
+}

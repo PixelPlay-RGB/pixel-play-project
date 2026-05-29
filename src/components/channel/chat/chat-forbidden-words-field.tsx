@@ -58,13 +58,7 @@ export function ChatForbiddenWordsField({ value, disabled, error, onChange }: Pr
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="space-y-1">
-        <h3 className="text-foreground text-sm font-bold">금칙어</h3>
-        <p className="text-muted-foreground text-xs leading-5">
-          등록된 단어가 포함된 채팅은 자동으로 가려져요.
-        </p>
-      </div>
-      <div className="flex flex-col gap-2 sm:flex-row">
+      <div className="border-border bg-background flex flex-col gap-2 rounded-xl border p-3 sm:flex-row sm:items-center">
         <Input
           value={word}
           disabled={disabled}
@@ -80,20 +74,18 @@ export function ChatForbiddenWordsField({ value, disabled, error, onChange }: Pr
             }
           }}
           placeholder="금칙어를 입력해주세요."
+          className="h-10 border-0 bg-transparent shadow-none focus-visible:ring-0"
         />
+        <span className="text-muted-foreground px-1 text-xs whitespace-nowrap">
+          {value.length} / {CHANNEL_CHAT_FORBIDDEN_WORD_MAX_COUNT}
+        </span>
         <Button type="button" disabled={disabled} onClick={handleAdd} className="sm:w-24">
           추가
         </Button>
       </div>
-      <div className="text-muted-foreground flex justify-between gap-3 text-xs">
-        <span>한 단어씩 입력하고 추가해주세요.</span>
-        <span className="shrink-0">
-          {value.length} / {CHANNEL_CHAT_FORBIDDEN_WORD_MAX_COUNT}
-        </span>
-      </div>
       <FieldError errors={[inputError ? { message: inputError } : undefined, { message: error }]} />
       {value.length > 0 ? (
-        <div className="flex flex-wrap gap-2">
+        <div className="border-border/70 bg-muted/20 flex min-h-16 flex-wrap gap-2 rounded-xl border p-3">
           {value.map((item) => (
             <button
               key={item}
@@ -112,6 +104,9 @@ export function ChatForbiddenWordsField({ value, disabled, error, onChange }: Pr
           아직 등록한 금칙어가 없어요.
         </p>
       )}
+      <p className="text-muted-foreground text-xs leading-5">
+        등록된 단어가 포함된 메시지는 방송 채팅에서 자동으로 가려져요.
+      </p>
     </div>
   );
 }

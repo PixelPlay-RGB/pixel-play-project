@@ -24,9 +24,10 @@ export function ChatSettingOptionButton({
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        "border-border bg-background text-foreground flex min-h-11 flex-col items-start justify-center gap-1 rounded-xl border px-4 py-3 text-left transition-colors",
+        "border-border bg-background text-foreground inline-flex min-h-10 items-center justify-center gap-1 rounded-full border px-4 py-2 text-left transition-colors",
         "hover:border-brand/40 hover:bg-brand/5 disabled:pointer-events-none disabled:opacity-50",
         isSelected && "border-brand/50 bg-brand/10 text-brand ring-brand/15 ring-3",
+        description && "flex-col items-start rounded-xl py-3",
       )}
     >
       <span className="text-sm font-bold">{label}</span>
