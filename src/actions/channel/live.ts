@@ -6,10 +6,101 @@ import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { createAdminClient } from "@/lib/supabase/admin-client";
 import { startLiveBroadcastSchema, type StartLiveBroadcastInput } from "@/lib/zod/channel-live";
 import type { AppActionResult } from "@/types/common/action";
+import type { Json } from "@/types/database.types";
 import { revalidatePath } from "next/cache";
 
 interface EndLiveBroadcastInput {
   broadcastId: string;
+}
+
+export interface ChannelLiveActiveBroadcast {
+  id: string;
+  title: string;
+  tags: string[];
+  thumbnailUrl: string | null;
+  startedAt: string;
+  currentViewerCount: number;
+  peakViewerCount: number;
+  chatMessageCount: number;
+  donationCount: number;
+  donationAmountTotal: number;
+}
+
+export interface ChannelLiveStudioSnapshot {
+  activeBroadcast: ChannelLiveActiveBroadcast | null;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function readString(value: unknown) {
+  return typeof value === "string" ? value : "";
+}
+
+function readNumber(value: unknown) {
+  return typeof value === "number" ? value : 0;
+}
+
+function readStringArray(value: unknown) {
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === "string")
+    : [];
+}
+
+function toChannelLiveStudioSnapshot(value: Json): ChannelLiveStudioSnapshot {
+  if (!isRecord(value)) {
+    return { activeBroadcast: null };
+  }
+
+  const activeBroadcast = value.activeBroadcast;
+
+  if (!isRecord(activeBroadcast)) {
+    return { activeBroadcast: null };
+  }
+
+  return {
+    activeBroadcast: {
+      chatMessageCount: readNumber(activeBroadcast.chatMessageCount),
+      currentViewerCount: readNumber(activeBroadcast.currentViewerCount),
+      donationAmountTotal: readNumber(activeBroadcast.donationAmountTotal),
+      donationCount: readNumber(activeBroadcast.donationCount),
+      id: readString(activeBroadcast.id),
+      peakViewerCount: readNumber(activeBroadcast.peakViewerCount),
+      startedAt: readString(activeBroadcast.startedAt),
+      tags: readStringArray(activeBroadcast.tags),
+      thumbnailUrl:
+        typeof activeBroadcast.thumbnailUrl === "string" ? activeBroadcast.thumbnailUrl : null,
+      title: readString(activeBroadcast.title),
+    },
+  };
+}
+
+export async function getChannelLiveStudioSnapshotAction(): Promise<
+  AppActionResult<ChannelLiveStudioSnapshot>
+> {
+  const actor = await getAuthenticatedActorId({
+    logLabel: "방송 운영 snapshot 조회 중 인증 사용자 조회 실패",
+  });
+
+  if (!actor.success) {
+    return { success: false, code: actor.result.code };
+  }
+
+  const supabase = createAdminClient();
+  const { data, error } = await supabase.rpc("get_creator_studio_snapshot", {
+    p_actor_user_id: actor.userId,
+  });
+
+  if (error || !data) {
+    console.error("방송 운영 snapshot RPC 실패", error);
+    return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
+  }
+
+  return {
+    success: true,
+    data: toChannelLiveStudioSnapshot(data),
+  };
 }
 
 export async function startLiveBroadcastAction(

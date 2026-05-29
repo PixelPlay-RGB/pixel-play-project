@@ -1,7 +1,11 @@
 "use client";
 // 방송 운영 UI의 설정, 상태, 채팅 패널을 조합합니다.
 
-import { endLiveBroadcastAction, startLiveBroadcastAction } from "@/actions/channel/live";
+import {
+  endLiveBroadcastAction,
+  startLiveBroadcastAction,
+  type ChannelLiveStudioSnapshot,
+} from "@/actions/channel/live";
 import ChannelLiveChatPanel from "@/components/channel/live/channel-live-chat-panel";
 import ChannelLivePreviewPanel from "@/components/channel/live/channel-live-preview-panel";
 import ChannelLiveSettingsPanel from "@/components/channel/live/channel-live-settings-panel";
@@ -19,15 +23,25 @@ export interface ChannelLiveState {
   visibility: ChannelLiveVisibility;
 }
 
-export default function ChannelLiveOperationPage() {
-  const [title, setTitle] = useState("오늘은 랭크 위주로 갑니다.");
+interface Props {
+  initialSnapshot?: ChannelLiveStudioSnapshot;
+}
+
+const DEFAULT_TITLE = "오늘은 랭크 위주로 갑니다.";
+const DEFAULT_TAGS = ["랭크", "소통", "저지연"];
+
+export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
+  const activeBroadcast = initialSnapshot?.activeBroadcast ?? null;
+  const [title, setTitle] = useState(activeBroadcast?.title || DEFAULT_TITLE);
   const [tagInput, setTagInput] = useState("");
-  const [tags, setTags] = useState(["랭크", "소통", "저지연"]);
+  const [tags, setTags] = useState(
+    activeBroadcast?.tags.length ? activeBroadcast.tags : DEFAULT_TAGS,
+  );
   const [visibility, setVisibility] = useState<ChannelLiveVisibility>("public");
-  const [isBroadcasting, setIsBroadcasting] = useState(false);
+  const [isBroadcasting, setIsBroadcasting] = useState(Boolean(activeBroadcast));
   const [hasEnded, setHasEnded] = useState(false);
   const [isChatPaused, setIsChatPaused] = useState(false);
-  const [broadcastId, setBroadcastId] = useState<string | null>(null);
+  const [broadcastId, setBroadcastId] = useState<string | null>(activeBroadcast?.id ?? null);
   const [broadcastActionError, setBroadcastActionError] = useState<string | null>(null);
   const [isBroadcastActionPending, startBroadcastTransition] = useTransition();
 

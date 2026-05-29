@@ -220,6 +220,10 @@ export type Database = {
           total_count: number;
         }[];
       };
+      get_creator_studio_snapshot: {
+        Args: { p_actor_user_id: string };
+        Returns: Json;
+      };
       end_live_broadcast: {
         Args: { p_actor_user_id: string; p_broadcast_id: string };
         Returns: string;
