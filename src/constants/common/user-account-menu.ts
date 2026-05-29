@@ -55,11 +55,11 @@ export const USER_ACCOUNT_DONATION_MENU_ITEM: UserAccountLinkMenuItem = {
   icon: Heart,
 };
 
-export const USER_ACCOUNT_FOLLOWS_MENU_ITEM: UserAccountLinkMenuItem = {
+export const USER_ACCOUNT_FOLLOWING_MENU_ITEM: UserAccountLinkMenuItem = {
   type: "link",
-  id: "follows",
-  label: "팔로우",
-  href: "/user/follows",
+  id: "following",
+  label: "팔로잉",
+  href: "/user/following",
   icon: UserRoundCheck,
 };
 
@@ -79,7 +79,7 @@ export const USER_ACCOUNT_LOGOUT_MENU_ITEM: UserAccountLogoutMenuItem = {
 
 export const USER_ACCOUNT_HEADER_PRIMARY_MENU_ITEMS: UserAccountMenuItem[] = [
   ...USER_ACCOUNT_PRIMARY_MENU_ITEMS,
-  USER_ACCOUNT_FOLLOWS_MENU_ITEM,
+  USER_ACCOUNT_FOLLOWING_MENU_ITEM,
   USER_ACCOUNT_DONATION_MENU_ITEM,
 ];
 
@@ -96,6 +96,6 @@ export const USER_ACCOUNT_HEADER_MENU_ITEMS: UserAccountMenuItem[] = [
 export const USER_ACCOUNT_SIDEBAR_MENU_ITEMS: UserAccountMenuItem[] = [
   USER_ACCOUNT_PROFILE_MENU_ITEM,
   ...USER_ACCOUNT_PRIMARY_MENU_ITEMS,
-  USER_ACCOUNT_FOLLOWS_MENU_ITEM,
+  USER_ACCOUNT_FOLLOWING_MENU_ITEM,
   USER_ACCOUNT_DONATION_MENU_ITEM,
 ];

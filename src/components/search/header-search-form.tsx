@@ -22,8 +22,8 @@ function getSearchRouteConfig(pathname: string): SearchRouteConfig | null {
   if (pathname === "/live" || pathname === "/live/search" || /^\/live\/[^/]+$/.test(pathname)) {
     return {
       path: "/live/search",
-      placeholder: "라이브 검색",
-      mobileAriaLabel: "라이브 검색 열기",
+      placeholder: "방송 제목·크리에이터 검색",
+      mobileAriaLabel: "방송 제목·크리에이터 검색 열기",
     };
   }
 
@@ -89,7 +89,7 @@ export default function HeaderSearchForm() {
               transition={mobileHeaderSearchTransition}
               className={cn(
                 "border-brand/15 bg-background dark:border-border",
-                "fixed inset-x-0 top-0 z-[60] flex h-14 items-center gap-2 border-b px-3 shadow-sm",
+                "fixed inset-x-0 top-0 z-60 flex h-14 items-center gap-2 border-b px-3 shadow-sm",
               )}
             >
               <Button

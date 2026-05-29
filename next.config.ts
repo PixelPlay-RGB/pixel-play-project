@@ -13,6 +13,10 @@ const nextConfig: NextConfig = {
         hostname: "pixel-play.studio",
       },
       {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+      },
+      {
         protocol: "http",
         hostname: "localhost",
       },
