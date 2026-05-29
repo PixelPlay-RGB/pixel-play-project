@@ -45,7 +45,8 @@ export const QUERY_KEYS = {
   },
   live: {
     all: ["live"] as const,
+    searchAll: () => [...QUERY_KEYS.live.all, "search"],
     search: (query?: string, section?: string) =>
-      [...QUERY_KEYS.live.all, "search", query, section].filter((v) => v !== undefined),
+      [...QUERY_KEYS.live.searchAll(), query, section].filter((v) => v !== undefined),
   },
 } as const;

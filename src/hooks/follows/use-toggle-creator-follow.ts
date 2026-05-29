@@ -56,20 +56,20 @@ function updateLiveSearchFollowState(
 
 export function useToggleCreatorFollow() {
   const queryClient = useQueryClient();
+  const liveSearchQueryKey = QUERY_KEYS.live.searchAll();
 
   return useMutation<AppActionResult, Error, ToggleCreatorFollowInput, ToggleCreatorFollowContext>({
     mutationFn: ({ creatorId, nextFollowing }) =>
       nextFollowing ? followCreatorAction({ creatorId }) : unfollowCreatorAction({ creatorId }),
     onMutate: async ({ creatorId, nextFollowing }) => {
-      await queryClient.cancelQueries({ queryKey: QUERY_KEYS.live.all });
+      await queryClient.cancelQueries({ queryKey: liveSearchQueryKey });
 
       const snapshot = queryClient.getQueriesData<LiveSearchInfiniteData>({
-        queryKey: QUERY_KEYS.live.all,
+        queryKey: liveSearchQueryKey,
       });
 
-      queryClient.setQueriesData<LiveSearchInfiniteData>(
-        { queryKey: QUERY_KEYS.live.all },
-        (data) => updateLiveSearchFollowState(data, creatorId, nextFollowing),
+      queryClient.setQueriesData<LiveSearchInfiniteData>({ queryKey: liveSearchQueryKey }, (data) =>
+        updateLiveSearchFollowState(data, creatorId, nextFollowing),
       );
 
       return { snapshot };
@@ -103,7 +103,7 @@ export function useToggleCreatorFollow() {
       );
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.live.all });
+      queryClient.invalidateQueries({ queryKey: liveSearchQueryKey });
     },
   });
 }
