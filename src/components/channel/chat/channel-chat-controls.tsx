@@ -7,11 +7,18 @@ import { ChatRuleTextField } from "@/components/channel/chat/chat-rule-text-fiel
 import { ChatScopeField } from "@/components/channel/chat/chat-scope-field";
 import { ChatSettingsCard } from "@/components/channel/chat/chat-settings-card";
 import { ChatSlowModeField } from "@/components/channel/chat/chat-slow-mode-field";
+import { ChatSummaryCard } from "@/components/channel/chat/chat-summary-card";
 import { ChatWaitTimeField } from "@/components/channel/chat/chat-wait-time-field";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import {
+  CHANNEL_CHAT_FOLLOWER_WAIT_OPTIONS,
+  CHANNEL_CHAT_SCOPE_OPTIONS,
+  CHANNEL_CHAT_SLOW_MODE_OPTIONS,
+} from "@/constants/channel/chat";
 import { useChannelChatSettingsForm } from "@/hooks/channel/use-channel-chat-settings-form";
 import type { ChannelChatSnapshot } from "@/types/channel/chat";
+import { Gauge, MessageCircle, ShieldCheck } from "lucide-react";
 import { Controller, useWatch } from "react-hook-form";
 
 interface Props {
@@ -19,15 +26,31 @@ interface Props {
 }
 
 export function ChannelChatControls({ initialSnapshot }: Props) {
-  const { form, handleSubmit, isSaving } = useChannelChatSettingsForm(initialSnapshot);
+  const { form, snapshot, handleSubmit, isSaving } = useChannelChatSettingsForm(initialSnapshot);
   const {
     control,
     setValue,
     formState: { isDirty },
   } = form;
-  const chatScope = useWatch({ control, name: "chatScope" });
+  const chatScope = useWatch({ control, name: "chatScope" }) ?? initialSnapshot.chatScope;
   const slowModeSeconds =
     useWatch({ control, name: "slowModeSeconds" }) ?? initialSnapshot.slowModeSeconds;
+  const slowModeEnabled =
+    useWatch({ control, name: "slowModeEnabled" }) ?? initialSnapshot.slowModeEnabled;
+  const forbiddenWords =
+    useWatch({ control, name: "forbiddenWords" }) ?? initialSnapshot.forbiddenWords;
+  const linkBlocked = useWatch({ control, name: "linkBlocked" }) ?? initialSnapshot.linkBlocked;
+  const followerWaitSeconds =
+    useWatch({ control, name: "followerWaitSeconds" }) ?? initialSnapshot.followerWaitSeconds;
+  const scopeLabel =
+    CHANNEL_CHAT_SCOPE_OPTIONS.find((option) => option.value === chatScope)?.label ??
+    "모든 로그인 유저";
+  const waitLabel =
+    CHANNEL_CHAT_FOLLOWER_WAIT_OPTIONS.find((option) => option.value === followerWaitSeconds)
+      ?.label ?? "바로 가능";
+  const slowModeLabel =
+    CHANNEL_CHAT_SLOW_MODE_OPTIONS.find((option) => option.value === slowModeSeconds)?.label ??
+    `${slowModeSeconds}초`;
 
   return (
     <form onSubmit={handleSubmit} className="flex min-w-0 flex-col gap-5">
@@ -45,6 +68,29 @@ export function ChannelChatControls({ initialSnapshot }: Props) {
         >
           {isSaving ? <Spinner /> : "저장"}
         </Button>
+      </div>
+
+      <div className="grid gap-3 md:grid-cols-3">
+        <ChatSummaryCard
+          label="참여 범위"
+          value={scopeLabel}
+          description={chatScope === "follower" ? `${waitLabel} 뒤 채팅 가능` : "현재 참여 조건"}
+          icon={<MessageCircle className="size-4" />}
+          tone="brand"
+        />
+        <ChatSummaryCard
+          label="저속 모드"
+          value={slowModeEnabled ? slowModeLabel : "꺼짐"}
+          description={slowModeEnabled ? "채팅 간격을 두고 받아요" : "연속 채팅을 바로 받아요"}
+          icon={<Gauge className="size-4" />}
+          tone={slowModeEnabled ? "live" : "default"}
+        />
+        <ChatSummaryCard
+          label="채팅 보호"
+          value={linkBlocked ? "링크 차단" : "링크 허용"}
+          description={`금칙어 ${forbiddenWords.length}개 등록`}
+          icon={<ShieldCheck className="size-4" />}
+        />
       </div>
 
       <ChatSettingsCard
@@ -99,7 +145,7 @@ export function ChannelChatControls({ initialSnapshot }: Props) {
 
       <ChatSettingsCard
         title="채팅 규칙 안내문"
-        description="시청자가 처음 채팅하려 할 때 입력창 위 안내 컴포넌트에 표시됩니다."
+        description={`시청자가 처음 채팅하려 할 때 입력창 위 안내 컴포넌트에 표시됩니다.\n현재 규칙 버전은 v${snapshot.chatRuleVersion}이에요.`}
       >
         <Controller
           name="chatRuleText"

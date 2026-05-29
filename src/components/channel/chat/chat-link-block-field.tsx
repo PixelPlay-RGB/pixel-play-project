@@ -13,11 +13,12 @@ export function ChatLinkBlockField({ value, disabled, onChange }: Props) {
   return (
     <ChatFieldRow label="링크 허용" description="외부 URL">
       <ChatToggleControl
-        checked={value}
-        checkedLabel="링크 차단"
-        uncheckedLabel="링크 허용"
+        checked={!value}
+        checkedLabel="링크 허용"
+        uncheckedLabel="링크 차단"
+        ariaLabel="외부 링크 허용"
         disabled={disabled}
-        onChange={onChange}
+        onChange={(isAllowed) => onChange(!isAllowed)}
       />
     </ChatFieldRow>
   );

@@ -14,7 +14,7 @@ export function ChatFieldRow({ label, description, children, isDimmed }: Props) 
   return (
     <div
       className={cn(
-        "border-border/70 grid gap-3 border-t pt-5 first:border-t-0 first:pt-0 lg:grid-cols-[10rem_minmax(0,1fr)] lg:items-center",
+        "border-border/70 grid gap-3 border-t pt-5 first:border-t-0 first:pt-0 md:grid-cols-[11rem_minmax(0,1fr)] md:items-center",
         isDimmed && "opacity-60",
       )}
     >
