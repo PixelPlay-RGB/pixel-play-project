@@ -18,7 +18,7 @@ const MOCK_CHAT_MESSAGES = [
 
 export default function ChannelLiveChatPanel({ liveState, onToggleChatPaused }: Props) {
   return (
-    <Card className="min-h-128">
+    <Card className="min-h-128 xl:h-[calc(100vh-2rem)]">
       <CardHeader className="has-data-[slot=card-action]:grid-cols-[1fr_auto]">
         <div className="flex flex-col gap-1">
           <CardTitle>방송 채팅</CardTitle>
@@ -31,7 +31,7 @@ export default function ChannelLiveChatPanel({ liveState, onToggleChatPaused }: 
           {liveState.isChatPaused ? "재개" : "일시정지"}
         </Button>
       </CardHeader>
-      <CardContent className="flex min-h-96 flex-col gap-3">
+      <CardContent className="flex min-h-96 flex-1 flex-col gap-3 overflow-hidden">
         <div
           className={cn(
             "rounded-lg px-3 py-2 text-xs font-semibold",
@@ -43,7 +43,7 @@ export default function ChannelLiveChatPanel({ liveState, onToggleChatPaused }: 
             : "채팅이 정상적으로 열려 있습니다."}
         </div>
 
-        <div className="border-border flex flex-1 flex-col gap-3 rounded-lg border p-3">
+        <div className="border-border flex flex-1 flex-col gap-3 overflow-y-auto rounded-lg border p-3">
           {!liveState.isBroadcasting && (
             <div className="text-muted-foreground flex flex-1 flex-col items-center justify-center gap-3 text-center text-sm">
               <MessageCircle className="size-8" />
