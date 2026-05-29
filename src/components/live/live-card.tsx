@@ -3,12 +3,11 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import LiveBadge from "@/components/live/live-badge";
+import LiveCreatorPopover from "@/components/live/live-creator-popover";
 import LiveTagLink from "@/components/live/live-tag-link";
 import { cn } from "@/lib/utils";
 import type { LiveListItem } from "@/types/live/live";
-import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
 import {
   formatViewerCountLabel,
   getLiveTagLabels,
@@ -51,19 +50,12 @@ export default function LiveCard({ item }: LiveCardProps) {
       </Link>
 
       <div className="relative z-10 mt-3 flex gap-2.5">
-        <Link
-          href={liveHref}
-          className="focus-visible:ring-ring mt-0.5 shrink-0 rounded-full outline-none focus-visible:ring-3"
-          aria-label={`${item.creatorNickname} 채널로 이동`}
-        >
-          <Avatar className="size-9" size="lg">
-            <AvatarImage
-              src={getAvatarImageSrc(item.creatorPhotoUrl)}
-              alt={`${item.creatorNickname} 프로필 이미지`}
-            />
-            <AvatarFallback>{getAvatarFallbackText(item.creatorNickname)}</AvatarFallback>
-          </Avatar>
-        </Link>
+        <LiveCreatorPopover
+          creatorId={item.creatorId}
+          creatorNickname={item.creatorNickname}
+          creatorPhotoUrl={item.creatorPhotoUrl}
+          isFollowing={item.isFollowing}
+        />
 
         <div className="min-w-0 flex-1 space-y-2">
           <div className="min-w-0 space-y-1">

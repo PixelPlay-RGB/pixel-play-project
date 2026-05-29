@@ -63,6 +63,16 @@ export const APP_MESSAGE = {
         title: "연동 해제 완료",
       },
     },
+    following: {
+      followed: {
+        title: "팔로잉 완료",
+        description: "다시 보고 싶은 크리에이터로 저장했어요.",
+      },
+      unfollowed: {
+        title: "팔로잉 해제 완료",
+        description: "팔로잉 목록에서 제외했어요.",
+      },
+    },
   },
   error: {
     common: {
@@ -322,6 +332,16 @@ export const APP_MESSAGE = {
       defaultAccountCannotUnlink: {
         title: "기본 계정 해제 불가",
         description: "로그인에 사용하는 기본 계정은 해제할 수 없습니다.",
+      },
+    },
+    following: {
+      failed: {
+        title: "팔로잉 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      unfollowFailed: {
+        title: "팔로잉 해제 실패",
+        description: "잠시 후 다시 시도해주세요.",
       },
     },
     supabase: {

@@ -9,6 +9,7 @@ import LiveListEmptyState from "@/components/live/live-list-empty-state";
 import LiveListErrorState from "@/components/live/live-list-error-state";
 import LiveListSkeleton from "@/components/live/live-list-skeleton";
 import LiveListToolbar from "@/components/live/live-list-toolbar";
+import LiveMobileFilterChips from "@/components/live/live-mobile-filter-chips";
 import { LIVE_LIST_SORT_TITLE } from "@/constants/live/live-list";
 import { useLiveListPageSize } from "@/hooks/live/use-live-list-page-size";
 import { useLiveList } from "@/hooks/live/use-live-list";
@@ -18,9 +19,11 @@ import { useCallback } from "react";
 
 interface LiveListProps {
   heroSlot: ReactNode;
+  heroId?: string | null;
 }
 
-export default function LiveList({ heroSlot }: LiveListProps) {
+export default function LiveList({ heroSlot, heroId }: LiveListProps) {
+  const setFilter = useLiveStore((state) => state.setFilter);
   const setSort = useLiveStore((state) => state.setSort);
   const setPageSize = useLiveStore((state) => state.setPageSize);
   const showMore = useLiveStore((state) => state.showMore);
@@ -33,15 +36,26 @@ export default function LiveList({ heroSlot }: LiveListProps) {
   const pageSize = useLiveListPageSize({ onPageSizeChange: handlePageSizeChange });
   const query = useLiveList(pageSize !== null);
   const snapshot = query.data ?? EMPTY_LIVE_LIST_SNAPSHOT;
+  const visibleItems = heroId
+    ? snapshot.items.filter((item) => item.id !== heroId)
+    : snapshot.items;
   const isInitialLoading =
     pageSize === null || (!query.isFetched && (!query.isUserFetched || query.isLoading));
-  const isEmpty = !isInitialLoading && !query.isError && snapshot.items.length === 0;
+  const isHeroOnlyList = snapshot.items.length > 0 && visibleItems.length === 0;
+  const isEmpty =
+    !isInitialLoading && !query.isError && visibleItems.length === 0 && !isHeroOnlyList;
   const isFetchingMore = query.isFetching && query.isPlaceholderData;
   const listTitle = LIVE_LIST_SORT_TITLE[query.sort];
 
   return (
     <div className="flex min-w-0 flex-col gap-5 md:gap-6">
       {heroSlot}
+      <LiveMobileFilterChips
+        activeFilter={query.effectiveFilter}
+        isFollowingVisible={query.isFollowingFilterVisible}
+        isFetching={query.isFetching}
+        onFilterChange={setFilter}
+      />
       <section className="flex min-w-0 flex-1 flex-col gap-4">
         <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -56,13 +70,13 @@ export default function LiveList({ heroSlot }: LiveListProps) {
           <LiveListSkeleton count={pageSize ?? undefined} />
         ) : isEmpty ? (
           <LiveListEmptyState filter={query.effectiveFilter} />
-        ) : (
+        ) : visibleItems.length > 0 ? (
           <div className="grid grid-cols-1 gap-x-4 gap-y-7 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-            {snapshot.items.map((item) => (
+            {visibleItems.map((item) => (
               <LiveCard key={item.id} item={item} />
             ))}
           </div>
-        )}
+        ) : null}
 
         {!query.isError && snapshot.hasMore ? (
           <LoadMoreButton isLoading={isFetchingMore} onClick={showMore} accent="live" />

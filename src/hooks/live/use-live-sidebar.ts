@@ -64,6 +64,7 @@ export function useLiveSidebar() {
   const followingTotalCount = followingQuery.data?.pages[0]?.totalCount ?? 0;
 
   return {
+    viewerId,
     isSignedIn: Boolean(viewerId),
     trendingItems: trendingQuery.data?.items ?? [],
     followingItems,

@@ -2,6 +2,7 @@
 
 import type { LucideIcon } from "lucide-react";
 
+import { Spinner } from "@/components/ui/spinner";
 import { SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import type { LiveListFilter } from "@/types/live/live";
 
@@ -10,6 +11,7 @@ interface LiveSidebarCategoryItemProps {
   label: string;
   value: LiveListFilter;
   isActive: boolean;
+  isLoading?: boolean;
   onSelect: (filter: LiveListFilter) => void;
 }
 
@@ -18,6 +20,7 @@ export default function LiveSidebarCategoryItem({
   label,
   value,
   isActive,
+  isLoading = false,
   onSelect,
 }: LiveSidebarCategoryItemProps) {
   return (
@@ -30,7 +33,13 @@ export default function LiveSidebarCategoryItem({
       >
         <Icon className={isActive ? "text-live" : "text-muted-foreground"} />
         <span>{label}</span>
-        {isActive && <span className="bg-live ml-auto size-1.5 rounded-full" />}
+        {isActive ? (
+          isLoading ? (
+            <Spinner className="text-live ml-auto size-3" />
+          ) : (
+            <span className="bg-live ml-auto size-1.5 rounded-full" />
+          )
+        ) : null}
       </SidebarMenuButton>
     </SidebarMenuItem>
   );

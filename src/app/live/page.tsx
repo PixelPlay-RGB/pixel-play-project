@@ -34,7 +34,7 @@ export default async function LivePage() {
 
   return (
     <LiveShell>
-      <LiveList heroSlot={<LiveHero hero={hero} />} />
+      <LiveList heroSlot={<LiveHero hero={hero} />} heroId={hero?.id ?? null} />
     </LiveShell>
   );
 }

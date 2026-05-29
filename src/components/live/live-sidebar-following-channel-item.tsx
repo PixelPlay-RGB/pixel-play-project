@@ -20,9 +20,9 @@ export default function LiveSidebarFollowingChannelItem({
     <SidebarMenuItem>
       <SidebarMenuButton
         render={<Link href={`/live/${item.creatorId}`} />}
-        className="h-auto gap-2 py-2"
+        className="h-auto gap-4 py-2"
       >
-        <Avatar className={cn("size-7", item.isLive && "ring-brand/70 ring-2")} size="sm">
+        <Avatar className={cn("size-7", item.isLive && "ring-live/80 ring-2")} size="sm">
           <AvatarImage
             src={getAvatarImageSrc(item.creatorPhotoUrl)}
             alt={`${item.creatorNickname} 프로필 이미지`}

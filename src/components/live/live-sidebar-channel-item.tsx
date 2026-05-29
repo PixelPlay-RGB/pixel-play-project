@@ -17,9 +17,9 @@ export default function LiveSidebarChannelItem({ item }: LiveSidebarChannelItemP
     <SidebarMenuItem>
       <SidebarMenuButton
         render={<Link href={`/live/${item.creatorId}`} />}
-        className="h-auto gap-2 py-2"
+        className="h-auto gap-4 py-2"
       >
-        <Avatar className="ring-brand/70 size-7 ring-2" size="sm">
+        <Avatar className="ring-live/80 size-7 ring-2" size="sm">
           <AvatarImage
             src={getAvatarImageSrc(item.creatorPhotoUrl)}
             alt={`${item.creatorNickname} 프로필 이미지`}

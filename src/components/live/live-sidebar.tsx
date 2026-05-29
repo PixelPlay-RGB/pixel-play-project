@@ -2,6 +2,7 @@
 // 라이브 탐색 Sidebar를 기존 Sidebar 컴포넌트 계층으로 렌더링합니다.
 
 import Link from "next/link";
+import { useIsFetching } from "@tanstack/react-query";
 import { ChevronDown, ExternalLink } from "lucide-react";
 
 import LiveSidebarCategoryItem from "@/components/live/live-sidebar-category-item";
@@ -20,6 +21,7 @@ import {
   SidebarMenuSkeleton,
   SidebarSeparator,
 } from "@/components/ui/sidebar";
+import { QUERY_KEYS } from "@/constants/common/query-keys";
 import {
   LIVE_LIST_DEFAULT_FILTER,
   LIVE_LIST_FILTER_ICON,
@@ -34,6 +36,7 @@ interface LiveSidebarProps {
 
 export default function LiveSidebar({ isMobile }: LiveSidebarProps) {
   const {
+    viewerId,
     isSignedIn,
     trendingItems,
     followingItems,
@@ -47,11 +50,17 @@ export default function LiveSidebar({ isMobile }: LiveSidebarProps) {
     isKeywordLoading,
   } = useLiveSidebar();
   const filter = useLiveStore((state) => state.filter);
+  const sort = useLiveStore((state) => state.sort);
+  const visibleCount = useLiveStore((state) => state.visibleCount);
   const setFilter = useLiveStore((state) => state.setFilter);
   const filterItems = LIVE_LIST_FILTER_OPTIONS.filter(
     (item) => item.value !== "FOLLOWING" || isSignedIn,
   );
   const activeFilter = !isSignedIn && filter === "FOLLOWING" ? LIVE_LIST_DEFAULT_FILTER : filter;
+  const activeFilterFetchCount = useIsFetching({
+    queryKey: QUERY_KEYS.live.list(viewerId, activeFilter, sort, visibleCount),
+  });
+  const isNavigationVisible = !isMobile;
   const isFollowingOverviewVisible =
     !canFetchMoreFollowing && followingItems.length < followingTotalCount;
 
@@ -61,34 +70,37 @@ export default function LiveSidebar({ isMobile }: LiveSidebarProps) {
       className="bg-background h-full shrink-0 border-r"
     >
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>탐색</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu className="gap-1.5">
-              {filterItems.map((item) => (
-                <LiveSidebarCategoryItem
-                  key={item.value}
-                  icon={LIVE_LIST_FILTER_ICON[item.value]}
-                  label={item.label}
-                  value={item.value}
-                  isActive={item.value === activeFilter}
-                  onSelect={setFilter}
-                />
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {isNavigationVisible ? (
+          <SidebarGroup>
+            <SidebarGroupLabel>탐색</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu className="gap-1.5">
+                {filterItems.map((item) => (
+                  <LiveSidebarCategoryItem
+                    key={item.value}
+                    icon={LIVE_LIST_FILTER_ICON[item.value]}
+                    label={item.label}
+                    value={item.value}
+                    isActive={item.value === activeFilter}
+                    isLoading={item.value === activeFilter && activeFilterFetchCount > 0}
+                    onSelect={setFilter}
+                  />
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ) : null}
 
         {isSignedIn ? (
           <>
-            <SidebarSeparator />
+            {isNavigationVisible ? <SidebarSeparator /> : null}
             <LiveSidebarSection title="팔로잉 채널">
               <SidebarMenu className="gap-1.5">
                 {isFollowingLoading ? (
                   <>
-                    <SidebarMenuSkeleton showIcon />
-                    <SidebarMenuSkeleton showIcon />
-                    <SidebarMenuSkeleton showIcon />
+                    <SidebarMenuSkeleton showIcon className="gap-4" />
+                    <SidebarMenuSkeleton showIcon className="gap-4" />
+                    <SidebarMenuSkeleton showIcon className="gap-4" />
                   </>
                 ) : followingItems.length > 0 ? (
                   <>
@@ -132,14 +144,14 @@ export default function LiveSidebar({ isMobile }: LiveSidebarProps) {
           </>
         ) : null}
 
-        <SidebarSeparator />
+        {isNavigationVisible || isSignedIn ? <SidebarSeparator /> : null}
         <LiveSidebarSection title="지금 뜨는 채널">
           <SidebarMenu className="gap-1.5">
             {isTrendingLoading ? (
               <>
-                <SidebarMenuSkeleton showIcon />
-                <SidebarMenuSkeleton showIcon />
-                <SidebarMenuSkeleton showIcon />
+                <SidebarMenuSkeleton showIcon className="gap-4" />
+                <SidebarMenuSkeleton showIcon className="gap-4" />
+                <SidebarMenuSkeleton showIcon className="gap-4" />
               </>
             ) : trendingItems.length > 0 ? (
               trendingItems.map((item) => (

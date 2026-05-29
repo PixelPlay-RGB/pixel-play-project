@@ -16,7 +16,7 @@ export default function LiveSidebarKeywordItem({ item }: LiveSidebarKeywordItemP
 
   return (
     <SidebarMenuItem>
-      <SidebarMenuButton render={<Link href={href} />} className="h-auto gap-2 py-2">
+      <SidebarMenuButton render={<Link href={href} />} className="h-auto gap-5 py-2">
         <Hash className="text-brand" />
         <span className="flex min-w-0 flex-col gap-0.5">
           <span className="text-sidebar-foreground truncate text-xs font-bold">{item.keyword}</span>
