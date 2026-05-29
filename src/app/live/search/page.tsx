@@ -51,8 +51,7 @@ export default async function LiveSearchPage({ searchParams }: Props) {
       {trimmedQuery && (
         <div className="flex flex-col gap-3 px-1">
           <h1 className={cn("text-foreground text-2xl", "leading-tight font-black")}>
-            <span className="text-live">{trimmedQuery}</span> 검색{" "}
-            <span className="text-brand">결과</span>
+            <span className="text-live">{trimmedQuery}</span> 검색 결과
           </h1>
           <p className={cn("text-muted-foreground max-w-2xl", "text-sm leading-relaxed")}>
             진행 중인 방송과 크리에이터 검색 결과입니다.
