@@ -224,7 +224,7 @@ export const APP_MESSAGE = {
     },
     liveList: {
       loadFailed: {
-        title: "라이브 목록을 불러오지 못했어요.",
+        title: "라이브 목록 조회 실패",
         description: "잠시 후 다시 시도해주세요.",
       },
     },
