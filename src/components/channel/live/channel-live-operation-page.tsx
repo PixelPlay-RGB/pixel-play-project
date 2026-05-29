@@ -65,7 +65,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
         ? initialSettings.defaultTags
         : DEFAULT_TAGS,
   );
-  const [visibility, setVisibility] = useState<ChannelLiveVisibility>("public");
+  const visibility: ChannelLiveVisibility = "public";
   const [isBroadcasting, setIsBroadcasting] = useState(Boolean(activeBroadcast));
   const [hasEnded, setHasEnded] = useState(false);
   const [isChatPaused, setIsChatPaused] = useState(false);
@@ -76,6 +76,11 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
   const [broadcastActionError, setBroadcastActionError] = useState<string | null>(null);
   const [settingsActionMessage, setSettingsActionMessage] = useState<string | null>(null);
   const [chatRuleText, setChatRuleText] = useState(initialSettings?.chatRuleText ?? "");
+  const [thumbnailPreviewUrl, setThumbnailPreviewUrl] = useState(
+    activeBroadcast?.thumbnailUrl ?? "",
+  );
+  const [isAdultOnly, setIsAdultOnly] = useState(false);
+  const [isDonationEnabled, setIsDonationEnabled] = useState(false);
   const [isBroadcastActionPending, startBroadcastTransition] = useTransition();
   const [isSettingsActionPending, startSettingsTransition] = useTransition();
 
@@ -91,6 +96,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
     startBroadcastTransition(async () => {
       const result = await startLiveBroadcastAction({
         tags,
+        thumbnailUrl: thumbnailPreviewUrl.trim() || null,
         title,
       });
 
@@ -202,22 +208,24 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
           <ChannelLivePreviewPanel liveState={liveState} title={title} />
           <ChannelLiveSettingsPanel
             broadcastActionError={broadcastActionError}
-            chatRuleText={chatRuleText}
+            isAdultOnly={isAdultOnly}
             isBroadcastActionPending={isBroadcastActionPending}
+            isDonationEnabled={isDonationEnabled}
             isSettingsActionPending={isSettingsActionPending}
             settingsActionMessage={settingsActionMessage}
+            thumbnailPreviewUrl={thumbnailPreviewUrl}
             title={title}
             tagInput={tagInput}
             tags={tags}
-            visibility={visibility}
             liveState={liveState}
-            onChatRuleTextChange={setChatRuleText}
+            onAdultOnlyChange={setIsAdultOnly}
+            onDonationEnabledChange={setIsDonationEnabled}
+            onThumbnailPreviewUrlChange={setThumbnailPreviewUrl}
             onTitleChange={setTitle}
             onTagInputChange={setTagInput}
             onAddTag={handleAddTag}
             onRemoveTag={handleRemoveTag}
             onSaveSettings={handleSaveSettings}
-            onVisibilityChange={setVisibility}
             onStartBroadcast={handleStartBroadcast}
             onEndBroadcast={handleEndBroadcast}
           />

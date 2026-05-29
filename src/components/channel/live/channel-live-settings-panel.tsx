@@ -1,70 +1,120 @@
 "use client";
-// 방송 제목, 태그, 공개 상태와 시작·종료 버튼을 제공하는 설정 패널입니다.
+// 방송 제목, 태그, 미리보기와 시작·종료 버튼을 제공하는 설정 패널입니다.
 
-import type {
-  ChannelLiveState,
-  ChannelLiveVisibility,
-} from "@/components/channel/live/channel-live-operation-page";
+import type { ChannelLiveState } from "@/components/channel/live/channel-live-operation-page";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { CircleStop, MessageSquareText, Play, Radio, Save, Tag, X } from "lucide-react";
+import { CircleStop, HandCoins, ImageIcon, Play, Save, ShieldAlert, Tag, X } from "lucide-react";
+import type { ComponentType } from "react";
 
 interface Props {
   broadcastActionError: string | null;
-  chatRuleText: string;
+  isAdultOnly: boolean;
   isBroadcastActionPending: boolean;
+  isDonationEnabled: boolean;
   isSettingsActionPending: boolean;
   settingsActionMessage: string | null;
+  thumbnailPreviewUrl: string;
   title: string;
   tagInput: string;
   tags: string[];
-  visibility: ChannelLiveVisibility;
   liveState: ChannelLiveState;
-  onChatRuleTextChange: (chatRuleText: string) => void;
+  onAdultOnlyChange: (isAdultOnly: boolean) => void;
+  onDonationEnabledChange: (isDonationEnabled: boolean) => void;
+  onThumbnailPreviewUrlChange: (thumbnailPreviewUrl: string) => void;
   onTitleChange: (title: string) => void;
   onTagInputChange: (tag: string) => void;
   onAddTag: () => void;
   onRemoveTag: (tag: string) => void;
   onSaveSettings: () => void;
-  onVisibilityChange: (visibility: ChannelLiveVisibility) => void;
   onStartBroadcast: () => void;
   onEndBroadcast: () => void;
 }
 
-const VISIBILITY_OPTIONS: Array<{
-  value: ChannelLiveVisibility;
+interface SettingToggleButtonProps {
+  checked: boolean;
+  description: string;
+  icon: ComponentType<{ className?: string }>;
   label: string;
-}> = [
-  { value: "public", label: "공개" },
-  { value: "private", label: "비공개" },
-  { value: "unlisted", label: "일부 공개" },
-];
+  onChange: (checked: boolean) => void;
+}
+
+function SettingToggleButton({
+  checked,
+  description,
+  icon: Icon,
+  label,
+  onChange,
+}: SettingToggleButtonProps) {
+  return (
+    <button
+      type="button"
+      className={cn(
+        "border-border flex min-h-24 items-start justify-between gap-3 rounded-lg border p-3 text-left transition-colors",
+        checked ? "border-brand/40 bg-brand/10" : "hover:bg-muted/50",
+      )}
+      aria-pressed={checked}
+      onClick={() => onChange(!checked)}
+    >
+      <span className="flex min-w-0 gap-3">
+        <span
+          className={cn(
+            "flex size-9 shrink-0 items-center justify-center rounded-full",
+            checked ? "bg-brand text-white" : "bg-muted text-muted-foreground",
+          )}
+        >
+          <Icon className="size-4" />
+        </span>
+        <span className="flex min-w-0 flex-col gap-1">
+          <strong className="text-sm">{label}</strong>
+          <span className="text-muted-foreground text-xs">{description}</span>
+        </span>
+      </span>
+      <span
+        className={cn(
+          "mt-1 flex h-5 w-9 shrink-0 items-center rounded-full p-0.5 transition-colors",
+          checked ? "bg-brand" : "bg-muted-foreground/30",
+        )}
+      >
+        <span
+          className={cn(
+            "bg-background size-4 rounded-full transition-transform",
+            checked && "translate-x-4",
+          )}
+        />
+      </span>
+    </button>
+  );
+}
 
 export default function ChannelLiveSettingsPanel({
   broadcastActionError,
-  chatRuleText,
+  isAdultOnly,
   isBroadcastActionPending,
+  isDonationEnabled,
   isSettingsActionPending,
   settingsActionMessage,
+  thumbnailPreviewUrl,
   title,
   tagInput,
   tags,
-  visibility,
   liveState,
-  onChatRuleTextChange,
+  onAdultOnlyChange,
+  onDonationEnabledChange,
+  onThumbnailPreviewUrlChange,
   onTitleChange,
   onTagInputChange,
   onAddTag,
   onRemoveTag,
   onSaveSettings,
-  onVisibilityChange,
   onStartBroadcast,
   onEndBroadcast,
 }: Props) {
+  const trimmedThumbnailPreviewUrl = thumbnailPreviewUrl.trim();
+
   return (
     <Card className="relative">
       <CardHeader className="pr-20">
@@ -144,86 +194,50 @@ export default function ChannelLiveSettingsPanel({
               </button>
             ))}
           </div>
-          <span className="text-muted-foreground text-xs">
-            최대 5개까지 검색과 추천에 사용됩니다.
-          </span>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3">
           <div className="border-border rounded-lg border p-3">
-            <span className="text-sm font-semibold">공개 상태</span>
-            <div className="bg-muted mt-3 grid grid-cols-3 rounded-lg p-1">
-              {VISIBILITY_OPTIONS.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  className={cn(
-                    "h-8 rounded-md text-xs font-semibold transition-colors",
-                    visibility === option.value
-                      ? "bg-background text-brand shadow-sm"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                  aria-pressed={visibility === option.value}
-                  onClick={() => onVisibilityChange(option.value)}
-                >
-                  {option.label}
-                </button>
-              ))}
+            <div className="flex items-center gap-2">
+              <ImageIcon className="text-brand size-4" />
+              <Label htmlFor="channel-live-thumbnail">미리보기 이미지</Label>
             </div>
-          </div>
-
-          <div className="border-border rounded-lg border p-3">
-            <span className="text-sm font-semibold">송출 상태</span>
-            <div className="mt-3 flex items-center gap-3">
-              <span
-                className={cn(
-                  "flex size-9 items-center justify-center rounded-full",
-                  liveState.isBroadcasting
-                    ? "bg-live/10 text-live"
-                    : "bg-muted text-muted-foreground",
-                )}
+            <div className="mt-3 grid gap-3 sm:grid-cols-[minmax(0,1fr)_9rem]">
+              <Input
+                id="channel-live-thumbnail"
+                value={thumbnailPreviewUrl}
+                onChange={(event) => onThumbnailPreviewUrlChange(event.target.value)}
+                placeholder="이미지 URL을 입력하세요"
+              />
+              <div
+                className="border-border bg-muted flex aspect-video items-center justify-center overflow-hidden rounded-lg border bg-cover bg-center"
+                style={
+                  trimmedThumbnailPreviewUrl
+                    ? { backgroundImage: `url(${trimmedThumbnailPreviewUrl})` }
+                    : undefined
+                }
               >
-                <Radio className="size-4" />
-              </span>
-              <div className="flex flex-col gap-1">
-                <strong className="text-sm">
-                  {liveState.isBroadcasting ? "송출 중" : "대기 중"}
-                </strong>
-                <span className="text-muted-foreground text-xs">
-                  {liveState.isBroadcasting
-                    ? "목업 상태에서 방송 중으로 표시합니다."
-                    : "방송 시작 후 연결 상태를 확인합니다."}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="border-border rounded-lg border p-3">
-            <span className="text-sm font-semibold">채팅 규칙</span>
-            <div className="mt-3 flex items-start gap-3">
-              <MessageSquareText className="text-brand mt-0.5 size-4 shrink-0" />
-              <div className="flex flex-col gap-1">
-                <strong className="text-sm">
-                  {chatRuleText.trim() ? "안내문 작성됨" : "안내문 미작성"}
-                </strong>
-                <span className="text-muted-foreground text-xs">
-                  채팅창 상단에 운영 안내를 고정합니다.
-                </span>
+                {!trimmedThumbnailPreviewUrl && (
+                  <ImageIcon className="text-muted-foreground size-6" />
+                )}
               </div>
             </div>
           </div>
 
-          <div className="border-border rounded-lg border p-3">
-            <Label htmlFor="channel-live-chat-rule">채팅 규칙 문구</Label>
-            <Textarea
-              id="channel-live-chat-rule"
-              className="mt-3 min-h-20"
-              value={chatRuleText}
-              maxLength={500}
-              onChange={(event) => onChatRuleTextChange(event.target.value)}
-              placeholder="채팅창에 고정할 운영 안내를 입력해주세요."
+          <div className="grid gap-3 sm:grid-cols-2">
+            <SettingToggleButton
+              checked={isAdultOnly}
+              description="19세 이상 연령 제한을 적용합니다."
+              icon={ShieldAlert}
+              label="성인 방송 설정"
+              onChange={onAdultOnlyChange}
+            />
+            <SettingToggleButton
+              checked={isDonationEnabled}
+              description="시청자 후원을 받을 수 있게 설정합니다."
+              icon={HandCoins}
+              label="후원 설정"
+              onChange={onDonationEnabledChange}
             />
           </div>
         </div>
