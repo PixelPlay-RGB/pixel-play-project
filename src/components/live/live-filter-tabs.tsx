@@ -30,7 +30,7 @@ export default function LiveFilterTabs({
   );
 
   return (
-    <div className="flex gap-2 overflow-x-auto pb-1">
+    <div className="flex w-full max-w-full min-w-0 gap-2 overflow-x-auto pb-1">
       {visibleOptions.map((option) => {
         const isSelected = filter === option.value;
         const Icon = FILTER_ICON[option.value];
@@ -43,11 +43,11 @@ export default function LiveFilterTabs({
             title={option.description}
             onClick={() => onFilterChange(option.value)}
             className={cn(
-              "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-3 text-sm font-semibold transition-colors",
+              "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-3 text-sm font-bold transition-colors",
               "focus-visible:ring-ring outline-none focus-visible:ring-3",
               isSelected
-                ? "bg-foreground text-background border-foreground"
-                : "border-border bg-card text-foreground hover:bg-muted",
+                ? "bg-brand text-primary-foreground border-brand"
+                : "border-border bg-background/60 text-foreground hover:bg-muted",
             )}
           >
             <Icon className="size-4" />

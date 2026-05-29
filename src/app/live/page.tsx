@@ -1,5 +1,6 @@
 // 라이브 목록 페이지를 렌더링합니다.
 import { getLiveHero } from "@/app/live/data";
+import LiveHero from "@/components/live/live-hero";
 import LiveList from "@/components/live/live-list";
 import type { Metadata } from "next";
 
@@ -31,8 +32,8 @@ export default async function LivePage() {
   const hero = await getLiveHero();
 
   return (
-    <div className="min-h-app-content mx-auto flex w-full max-w-7xl flex-1 flex-col px-4 py-6 sm:px-5 md:px-6 md:py-8">
-      <LiveList initialHero={hero} />
+    <div className="min-h-app-content mx-auto flex w-full max-w-screen-2xl flex-1 flex-col px-4 py-5 sm:px-5 md:px-6 md:py-7">
+      <LiveList heroSlot={<LiveHero hero={hero} />} />
     </div>
   );
 }

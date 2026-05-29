@@ -34,12 +34,14 @@ export default function LiveSortMenu({ sort, onSortChange }: LiveSortMenuProps) 
             type="button"
             variant="outline"
             className={cn(
-              "h-9 w-full justify-between rounded-lg px-3",
+              "h-9 w-full min-w-0 justify-start rounded-lg px-3 sm:justify-between",
               "text-muted-foreground hover:text-foreground sm:w-auto sm:min-w-36",
             )}
           >
             <ArrowUpDown data-icon="inline-start" className="size-4" />
-            <span className="truncate text-sm font-semibold">{selectedSort?.label ?? "정렬"}</span>
+            <span className="min-w-0 flex-1 truncate text-left text-sm font-semibold">
+              {selectedSort?.label ?? "정렬"}
+            </span>
           </Button>
         )}
       />
