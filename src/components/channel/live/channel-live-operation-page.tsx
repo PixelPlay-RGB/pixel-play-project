@@ -129,43 +129,38 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
         </span>
       </div>
 
-      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_22rem] 2xl:grid-cols-[minmax(0,1fr)_24rem]">
-        <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_20rem] 2xl:grid-cols-[minmax(0,1fr)_22rem]">
-          <div className="flex min-w-0 flex-col gap-4">
-            <ChannelLivePreviewPanel liveState={liveState} title={title} />
-            <ChannelLiveSettingsPanel
-              broadcastActionError={broadcastActionError}
-              isBroadcastActionPending={isBroadcastActionPending}
-              title={title}
-              tagInput={tagInput}
-              tags={tags}
-              visibility={visibility}
-              liveState={liveState}
-              onTitleChange={setTitle}
-              onTagInputChange={setTagInput}
-              onAddTag={handleAddTag}
-              onRemoveTag={handleRemoveTag}
-              onVisibilityChange={setVisibility}
-              onStartBroadcast={handleStartBroadcast}
-              onEndBroadcast={handleEndBroadcast}
-            />
-          </div>
-
-          <div className="min-w-0">
-            <ChannelLiveStreamStatusPanel
-              activeBroadcastStartedAt={broadcastStartedAt}
-              liveState={liveState}
-              streamPath={CHANNEL_LIVE_MEDIA_CONFIG.streamPath}
-            />
-          </div>
+      <div className="grid gap-4 lg:grid-cols-3">
+        <div className="flex min-w-0 flex-col gap-4 lg:col-span-2">
+          <ChannelLivePreviewPanel liveState={liveState} title={title} />
+          <ChannelLiveSettingsPanel
+            broadcastActionError={broadcastActionError}
+            isBroadcastActionPending={isBroadcastActionPending}
+            title={title}
+            tagInput={tagInput}
+            tags={tags}
+            visibility={visibility}
+            liveState={liveState}
+            onTitleChange={setTitle}
+            onTagInputChange={setTagInput}
+            onAddTag={handleAddTag}
+            onRemoveTag={handleRemoveTag}
+            onVisibilityChange={setVisibility}
+            onStartBroadcast={handleStartBroadcast}
+            onEndBroadcast={handleEndBroadcast}
+          />
         </div>
 
-        <aside className="min-w-0 xl:sticky xl:top-4 xl:max-h-[calc(100vh-2rem)]">
+        <div className="flex min-w-0 flex-col gap-4">
+          <ChannelLiveStreamStatusPanel
+            activeBroadcastStartedAt={broadcastStartedAt}
+            liveState={liveState}
+            streamPath={CHANNEL_LIVE_MEDIA_CONFIG.streamPath}
+          />
           <ChannelLiveChatPanel
             liveState={liveState}
             onToggleChatPaused={() => setIsChatPaused((currentValue) => !currentValue)}
           />
-        </aside>
+        </div>
       </div>
     </div>
   );
