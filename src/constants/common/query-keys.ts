@@ -43,4 +43,10 @@ export const QUERY_KEYS = {
     search: (query?: string, section?: string) =>
       [...QUERY_KEYS.chat.all, "search", query, section].filter((v) => v !== undefined),
   },
+  live: {
+    all: ["live"] as const,
+    searchAll: () => [...QUERY_KEYS.live.all, "search"],
+    search: (query?: string, section?: string) =>
+      [...QUERY_KEYS.live.searchAll(), query, section].filter((v) => v !== undefined),
+  },
 } as const;
