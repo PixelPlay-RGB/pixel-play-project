@@ -9,7 +9,7 @@ import { fetchLiveListSnapshot } from "@/hooks/live/live-list-query";
 import { useLiveStore } from "@/stores/live";
 import type { LiveListFilter, LiveListSnapshot } from "@/types/live/live";
 
-export function useLiveList(isPageSizeReady = true) {
+export function useLiveList(isPageSizeReady = true, excludedLiveId?: string | null) {
   const filter = useLiveStore((state) => state.filter);
   const sort = useLiveStore((state) => state.sort);
   const visibleCount = useLiveStore((state) => state.visibleCount);
@@ -19,12 +19,13 @@ export function useLiveList(isPageSizeReady = true) {
   const effectiveFilter: LiveListFilter = viewerId || filter !== "FOLLOWING" ? filter : "ALL";
 
   const query = useQuery<LiveListSnapshot>({
-    queryKey: QUERY_KEYS.live.list(viewerId, effectiveFilter, sort, visibleCount),
+    queryKey: QUERY_KEYS.live.list(viewerId, effectiveFilter, sort, visibleCount, excludedLiveId),
     queryFn: () =>
       fetchLiveListSnapshot({
         filter: effectiveFilter,
         sort,
         limit: visibleCount,
+        excludedLiveId,
       }),
     enabled: isPageSizeReady,
     placeholderData: keepPreviousData,
