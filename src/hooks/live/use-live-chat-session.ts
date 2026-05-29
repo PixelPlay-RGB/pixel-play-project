@@ -11,7 +11,6 @@ interface UseLiveChatSessionParams {
   creatorId: string;
   broadcastId: string | null | undefined;
   viewerChatState: LiveViewerChatState | null | undefined;
-  allowMockChat?: boolean;
   onChatRuleAccepted?: () => Promise<unknown>;
 }
 
@@ -26,18 +25,13 @@ export function useLiveChatSession({
   creatorId,
   broadcastId,
   viewerChatState,
-  allowMockChat = false,
   onChatRuleAccepted,
 }: UseLiveChatSessionParams) {
   const user = useAuthStore((state) => state.user);
   const isAuthLoading = useAuthStore((state) => state.loading);
   const isLoggedIn = Boolean(user);
 
-  const chatState =
-    viewerChatState ??
-    (allowMockChat && isLoggedIn
-      ? { ...DEFAULT_CHAT_STATE, canChat: true, chatUnavailableReason: null }
-      : DEFAULT_CHAT_STATE);
+  const chatState = viewerChatState ?? DEFAULT_CHAT_STATE;
 
   async function sendMessage(content: string): Promise<boolean> {
     if (!broadcastId) return false;

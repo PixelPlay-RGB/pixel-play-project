@@ -6,6 +6,7 @@ import { getAuthenticatedActorId } from "@/actions/common/authenticated-actor";
 import { createAdminClient } from "@/lib/supabase/admin-client";
 import type { AppActionResult } from "@/types/common/action";
 import { isKnownMessageRpcError, resolveMessageRpcErrorCode } from "@/utils/common/app-message";
+import { isUuid } from "@/utils/common/uuid";
 
 export async function sendLiveMessageAction(
   broadcastId: string,
@@ -13,8 +14,8 @@ export async function sendLiveMessageAction(
 ): Promise<AppActionResult<{ messageId: string }>> {
   const trimmed = content.trim();
 
-  if (!broadcastId) {
-    return { success: false, code: APP_MESSAGE_CODE.error.message.invalidInput };
+  if (!broadcastId || !isUuid(broadcastId)) {
+    return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
   }
 
   if (!trimmed || trimmed.length > 200) {
@@ -59,7 +60,7 @@ export async function voteLivePollAction(
   pollId: string,
   optionId: string,
 ): Promise<boolean> {
-  if (!pollId || !optionId) return false;
+  if (!pollId || !isUuid(pollId) || !optionId) return false;
 
   const actor = await getAuthenticatedActorId({
     logLabel: "라이브 투표 중 인증 사용자 조회 실패",
@@ -91,7 +92,7 @@ export async function sendLiveDonationAction(params: {
 }): Promise<boolean> {
   const { broadcastId, amount, message, isAnonymous, idempotencyKey } = params;
 
-  if (!broadcastId || !idempotencyKey || amount <= 0 || message.length > 200) return false;
+  if (!broadcastId || !isUuid(broadcastId) || !idempotencyKey || !Number.isFinite(amount) || amount <= 0 || message.length > 200) return false;
 
   const actor = await getAuthenticatedActorId({
     logLabel: "라이브 후원 중 인증 사용자 조회 실패",
@@ -120,8 +121,8 @@ export async function sendLiveDonationAction(params: {
 export async function acceptLiveChatRuleAction(
   creatorId: string,
 ): Promise<AppActionResult<{ acceptedVersion: number }>> {
-  if (!creatorId) {
-    return { success: false, code: APP_MESSAGE_CODE.error.message.invalidInput };
+  if (!creatorId || !isUuid(creatorId)) {
+    return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
   }
 
   const actor = await getAuthenticatedActorId({

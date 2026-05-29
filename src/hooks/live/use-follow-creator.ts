@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { followCreatorAction, unfollowCreatorAction } from "@/actions/follows/follow";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
-import { toastAppError } from "@/utils/common/toast-message";
+import { toastAppError, toastAppSuccess } from "@/utils/common/toast-message";
 
 export function useFollowCreator(
   creatorId: string,
@@ -23,6 +23,7 @@ export function useFollowCreator(
       if (!result.success) {
         toastAppError(result.code ?? APP_MESSAGE_CODE.error.common.unknown);
       } else {
+        toastAppSuccess(isFollowing ? APP_MESSAGE_CODE.success.live.unfollowed : APP_MESSAGE_CODE.success.live.followed);
         onSuccess();
       }
     } finally {

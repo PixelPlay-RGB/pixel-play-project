@@ -23,6 +23,8 @@ interface Props {
   messages: LiveChatMessage[];
   donations: LiveDonation[];
   polls: LivePoll[];
+  isPollsLoading?: boolean;
+  isPollsError?: boolean;
   chatState: LiveViewerChatState;
   isLoggedIn: boolean;
   walletBalance: number;
@@ -77,6 +79,8 @@ export function LiveChatPanel({
   messages,
   donations,
   polls,
+  isPollsLoading,
+  isPollsError,
   chatState,
   isLoggedIn,
   walletBalance,
@@ -116,6 +120,8 @@ export function LiveChatPanel({
       <ParticipationNotice chatUnavailableReason={chatState.chatUnavailableReason} />
       <LiveChatInputBar
         polls={polls}
+        isPollsLoading={isPollsLoading}
+        isPollsError={isPollsError}
         chatState={chatState}
         isLoggedIn={isLoggedIn}
         walletBalance={walletBalance}

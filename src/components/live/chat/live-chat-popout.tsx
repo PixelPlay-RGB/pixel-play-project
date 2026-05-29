@@ -1,7 +1,6 @@
 "use client";
 // 별도 탭으로 열리는 채팅 전용 팝아웃 화면입니다.
 
-import { useEffect, useState } from "react";
 import { Radio } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -20,7 +19,6 @@ export function LiveChatPopout({ creatorId }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [open, setOpen] = useState(false);
 
   const {
     chatRuleText,
@@ -35,10 +33,6 @@ export function LiveChatPopout({ creatorId }: Props) {
     acceptChatRule,
   } = useLiveBroadcastView(creatorId);
 
-  useEffect(() => {
-    setOpen(true);
-  }, []);
-
   function moveToLogin() {
     const query = searchParams.toString();
     const next = `${pathname}${query ? `?${query}` : ""}`;
@@ -51,7 +45,7 @@ export function LiveChatPopout({ creatorId }: Props) {
   if (isAuthLoading || isLoading) {
     return (
       <div className="bg-background min-h-screen">
-        <Sheet open={open} modal={false}>
+        <Sheet open onOpenChange={() => {}} modal={false}>
           <SheetContent side="bottom" showCloseButton={false} className={sheetContentClass}>
             <div className="flex flex-1 items-center justify-center">
               <div className="border-brand/30 border-t-brand h-8 w-8 animate-spin rounded-full border-2" />
@@ -65,7 +59,7 @@ export function LiveChatPopout({ creatorId }: Props) {
   if (!broadcast) {
     return (
       <div className="bg-background min-h-screen">
-        <Sheet open={open} modal={false}>
+        <Sheet open onOpenChange={() => {}} modal={false}>
           <SheetContent side="bottom" showCloseButton={false} className={sheetContentClass}>
             <div className="flex flex-1 items-center justify-center">
               <p className="text-muted-foreground text-sm">{LIVE_LABEL.broadcastOffline}</p>
@@ -78,7 +72,7 @@ export function LiveChatPopout({ creatorId }: Props) {
 
   return (
     <div className="bg-background min-h-screen">
-      <Sheet open={open} modal={false}>
+      <Sheet open onOpenChange={() => {}} modal={false}>
         <SheetContent side="bottom" showCloseButton={false} className={sheetContentClass}>
           <div className="border-border flex items-center gap-2 border-b px-4 py-3">
             <span className="bg-live flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-bold text-white">

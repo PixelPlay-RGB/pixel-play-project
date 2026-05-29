@@ -21,10 +21,11 @@ export function useLiveMessages(broadcastId: string | null | undefined) {
     enabled,
     staleTime: Infinity,
     queryFn: async () => {
+      if (!broadcastId) throw new Error("broadcastId is required");
       const { data, error } = await supabase
         .from("live_message")
         .select(LIVE_MESSAGE_SELECT)
-        .eq("broadcast_id", broadcastId!)
+        .eq("broadcast_id", broadcastId)
         .order("created_at", { ascending: false })
         .limit(LIVE_MESSAGE_LIMIT)
         .returns<LiveMessageRow[]>();

@@ -6,7 +6,6 @@ import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth";
 import { QUERY_KEYS } from "@/constants/common/query-keys";
 import { normalizeLiveViewData } from "@/utils/live/live-view-data";
-import { isUuid } from "@/utils/common/uuid";
 import type { LiveWatchData } from "@/types/live/live";
 
 export function useLiveViewData(creatorId: string) {
@@ -17,8 +16,7 @@ export function useLiveViewData(creatorId: string) {
 
   const query = useQuery<LiveWatchData | null>({
     queryKey: QUERY_KEYS.live.watch(creatorId, user?.id),
-    // TODO [mock] real 모드 전환 시 UUID 조건 제거
-    enabled: !isAuthLoading && isUuid(creatorId),
+    enabled: !isAuthLoading,
     staleTime: 1000 * 30,
     queryFn: async () => {
       const [watchResult, countResult] = await Promise.all([

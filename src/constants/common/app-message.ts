@@ -68,6 +68,12 @@ export const APP_MESSAGE = {
         title: "URL 복사 완료",
         description: "URL 복사가 완료되었습니다.",
       },
+      followed: {
+        title: "팔로우 완료",
+      },
+      unfollowed: {
+        title: "팔로우 취소 완료",
+      },
     },
   },
   error: {
@@ -332,6 +338,14 @@ export const APP_MESSAGE = {
       voteFailed: {
         title: "투표 실패",
         description: "투표 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+      },
+      followFailed: {
+        title: "팔로우 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      unfollowFailed: {
+        title: "팔로우 취소 실패",
+        description: "잠시 후 다시 시도해주세요.",
       },
     },
     supabase: {

@@ -19,6 +19,8 @@ import type { LivePoll, LiveViewerChatState } from "@/types/live/live";
 
 interface Props {
   polls: LivePoll[];
+  isPollsLoading?: boolean;
+  isPollsError?: boolean;
   chatState: LiveViewerChatState;
   isLoggedIn: boolean;
   walletBalance: number;
@@ -59,6 +61,8 @@ function getChatPlaceholder(chatState: LiveViewerChatState, isLoggedIn: boolean)
 
 export function LiveChatInputBar({
   polls,
+  isPollsLoading,
+  isPollsError,
   chatState,
   isLoggedIn,
   walletBalance,
@@ -180,6 +184,8 @@ export function LiveChatInputBar({
           />
           <LiveVotePopover
             polls={polls}
+            isLoading={isPollsLoading}
+            isError={isPollsError}
             isLoggedIn={isLoggedIn}
             onLoginPrompt={onLoginPrompt}
             onVote={onVote}

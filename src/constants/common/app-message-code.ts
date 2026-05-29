@@ -30,6 +30,8 @@ export const APP_MESSAGE_CODE = {
     },
     live: {
       urlCopied: "success.live.urlCopied",
+      followed: "success.live.followed",
+      unfollowed: "success.live.unfollowed",
     },
   },
   error: {
@@ -113,6 +115,8 @@ export const APP_MESSAGE_CODE = {
     live: {
       donationFailed: "error.live.donationFailed",
       voteFailed: "error.live.voteFailed",
+      followFailed: "error.live.followFailed",
+      unfollowFailed: "error.live.unfollowFailed",
     },
     supabase: {
       permissionDenied: "error.supabase.permissionDenied",

@@ -22,6 +22,8 @@ export const QUERY_KEYS = {
       [...QUERY_KEYS.live.all, "watch", creatorId, userId].filter((v) => v !== undefined),
     messages: (broadcastId?: string) =>
       [...QUERY_KEYS.live.all, "messages", broadcastId].filter((v) => v !== undefined),
+    polls: (broadcastId?: string) =>
+      [...QUERY_KEYS.live.all, "polls", broadcastId].filter((v) => v !== undefined),
   },
   donations: {
     all: ["donations"] as const,

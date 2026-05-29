@@ -10,6 +10,10 @@ export const LIVE_LABEL = {
   chat: "라이브 채팅",
   follow: "팔로우",
   following: "팔로잉",
+  unfollow: "팔로우 취소",
+  unfollowConfirmTitle: "팔로우를 취소하시겠습니까?",
+  unfollowConfirmDescription: "팔로우를 취소하면 팔로워 전용 채팅에 참여할 수 없게 됩니다.",
+  confirm: "확인",
   share: "공유",
   more: "더보기",
   donate: "후원하기",
@@ -28,6 +32,7 @@ export const LIVE_LABEL = {
   loginButton: "로그인",
   cancel: "취소",
   close: "닫기",
+  anonymousAuthor: "익명",
   shareCopy: "복사",
   broadcastOffline: "방송이 종료되었거나 준비 중입니다.",
   chatFollowerPlaceholder: "팔로우 후 채팅할 수 있습니다.",
@@ -59,6 +64,9 @@ export const LIVE_DONATION_LABEL = {
 
 export const LIVE_VOTE_LABEL = {
   title: "투표 참여",
+  description: "진행 중인 투표 항목을 선택하고 참여할 수 있습니다.",
+  loading: "투표를 불러오는 중입니다.",
+  error: "투표를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.",
   empty: "현재 진행 중인 투표가 없습니다.",
   submit: "참여하기",
   participated: "참여 완료",

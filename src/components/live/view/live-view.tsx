@@ -28,17 +28,19 @@ export function LiveView({ creatorId }: Props) {
 
   const {
     isLoading,
-    refetch,
     broadcast,
     messages,
     donations,
     polls,
+    isPollsLoading,
+    isPollsError,
     walletBalance,
     isWalletLoading,
     isWalletError,
     votePoll,
     sendDonation,
     isFollowing,
+    onFollowToggled,
     chatRuleText,
     isLoggedIn,
     isAuthLoading,
@@ -49,7 +51,7 @@ export function LiveView({ creatorId }: Props) {
   const { toggleFollow, isPending: isFollowPending } = useFollowCreator(
     creatorId,
     isFollowing,
-    () => void refetch(),
+    onFollowToggled,
   );
 
   const [isLoginPromptOpen, setIsLoginPromptOpen] = useState(false);
@@ -146,6 +148,8 @@ export function LiveView({ creatorId }: Props) {
               messages={messages}
               donations={donations}
               polls={polls}
+              isPollsLoading={isPollsLoading}
+              isPollsError={isPollsError}
               chatState={chatState}
               isLoggedIn={isLoggedIn}
               walletBalance={walletBalance}
