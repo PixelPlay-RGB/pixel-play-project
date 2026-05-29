@@ -1,8 +1,10 @@
 "use client";
 
+import { Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { LiveChannelMenu } from "@/components/live/view/live-channel-menu";
-import { LIVE_LABEL } from "@/constants/live/live";
+import { LIVE_CHANNEL_MENU_LABEL, LIVE_LABEL } from "@/constants/live/live";
+import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
+import { toastAppSuccess, toastAppError } from "@/utils/common/toast-message";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -12,6 +14,15 @@ interface Props {
 }
 
 export function LiveCreatorActions({ isFollowing, isPending, onFollow }: Props) {
+  async function handleShare() {
+    const url = typeof window !== "undefined" ? window.location.href : "";
+    try {
+      await navigator.clipboard.writeText(url);
+      toastAppSuccess(APP_MESSAGE_CODE.success.live.urlCopied);
+    } catch {
+      toastAppError(APP_MESSAGE_CODE.error.common.unknown);
+    }
+  }
 
   return (
     <div className="flex shrink-0 items-center gap-2">
@@ -29,7 +40,14 @@ export function LiveCreatorActions({ isFollowing, isPending, onFollow }: Props) 
         {isFollowing ? LIVE_LABEL.following : LIVE_LABEL.follow}
       </Button>
 
-      <LiveChannelMenu />
+      <Button
+        size="sm"
+        variant="outline"
+        onClick={handleShare}
+        className="gap-1.5 text-xs font-semibold"
+      >
+        <Share2 className="size-4" />
+      </Button>
     </div>
   );
 }
