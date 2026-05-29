@@ -12,7 +12,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import {
-  Ban,
   Bell,
   CircleStop,
   HandCoins,
@@ -37,7 +36,6 @@ interface Props {
   chatRuleText: string;
   donationAlertDurationSeconds: number;
   donationMinAmount: number;
-  followerWaitSeconds: number;
   forbiddenWordInput: string;
   forbiddenWords: string[];
   isAlertSoundEnabled: boolean;
@@ -68,7 +66,6 @@ interface Props {
   onDonationAmountVisibleChange: (isDonationAmountVisible: boolean) => void;
   onDonationEnabledChange: (isDonationEnabled: boolean) => void;
   onDonationMinAmountChange: (donationMinAmount: number) => void;
-  onFollowerWaitSecondsChange: (followerWaitSeconds: number) => void;
   onForbiddenWordInputChange: (forbiddenWordInput: string) => void;
   onLinkBlockedChange: (isLinkBlocked: boolean) => void;
   onRemoveForbiddenWord: (word: string) => void;
@@ -94,16 +91,6 @@ const CHAT_SCOPE_OPTIONS: Array<{
   { label: "모든 사람", value: "authenticated" },
   { label: "팔로워 전용", value: "follower" },
   { label: "운영자 전용", value: "manager" },
-];
-
-const FOLLOWER_WAIT_OPTIONS = [
-  { label: "바로", value: 0 },
-  { label: "5분", value: 300 },
-  { label: "10분", value: 600 },
-  { label: "30분", value: 1800 },
-  { label: "1시간", value: 3600 },
-  { label: "1일", value: 86400 },
-  { label: "7일", value: 604800 },
 ];
 
 const SLOW_MODE_OPTIONS = [3, 5, 10, 30, 60, 120, 300];
@@ -173,7 +160,6 @@ export default function ChannelLiveSettingsPanel({
   chatRuleText,
   donationAlertDurationSeconds,
   donationMinAmount,
-  followerWaitSeconds,
   forbiddenWordInput,
   forbiddenWords,
   isAlertSoundEnabled,
@@ -204,7 +190,6 @@ export default function ChannelLiveSettingsPanel({
   onDonationAmountVisibleChange,
   onDonationEnabledChange,
   onDonationMinAmountChange,
-  onFollowerWaitSecondsChange,
   onForbiddenWordInputChange,
   onLinkBlockedChange,
   onRemoveForbiddenWord,
@@ -394,143 +379,116 @@ export default function ChannelLiveSettingsPanel({
                 <Users className="text-brand size-4" />
                 <span className="text-sm font-semibold">채팅 설정</span>
               </div>
-              <div className="bg-muted mt-3 grid grid-cols-3 gap-1 rounded-lg p-1">
-                {CHAT_SCOPE_OPTIONS.map((option) => (
-                  <button
-                    key={option.value}
-                    type="button"
-                    className={cn(
-                      "h-9 rounded-md px-1 text-xs font-semibold transition-colors",
-                      chatScope === option.value
-                        ? "bg-background text-brand shadow-sm"
-                        : "text-muted-foreground hover:text-foreground",
+              <div className="mt-3 grid gap-4">
+                <div className="grid gap-2">
+                  <Label>채팅 권한</Label>
+                  <div className="bg-muted grid grid-cols-3 gap-1 rounded-lg p-1">
+                    {CHAT_SCOPE_OPTIONS.map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        className={cn(
+                          "h-9 rounded-md px-1 text-xs font-semibold transition-colors",
+                          chatScope === option.value
+                            ? "bg-background text-brand shadow-sm"
+                            : "text-muted-foreground hover:text-foreground",
+                        )}
+                        aria-pressed={chatScope === option.value}
+                        onClick={() => onChatScopeChange(option.value)}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid gap-3">
+                  <SettingToggleButton
+                    checked={isSlowModeEnabled}
+                    description="채팅 입력 간격을 제한합니다."
+                    icon={Timer}
+                    label="저속모드"
+                    onChange={onSlowModeEnabledChange}
+                  />
+                  <div className="flex flex-wrap gap-1">
+                    {SLOW_MODE_OPTIONS.map((seconds) => (
+                      <button
+                        key={seconds}
+                        type="button"
+                        className={cn(
+                          "border-border h-8 rounded-md border px-2 text-xs font-semibold transition-colors",
+                          slowModeSeconds === seconds
+                            ? "bg-brand text-white"
+                            : "text-muted-foreground hover:text-foreground",
+                        )}
+                        onClick={() => onSlowModeSecondsChange(seconds)}
+                      >
+                        {seconds}초
+                      </button>
+                    ))}
+                  </div>
+                  <SettingToggleButton
+                    checked={isLinkBlocked}
+                    description="채팅에서 URL 공유를 차단합니다."
+                    icon={Link2}
+                    label="채팅 보호"
+                    onChange={onLinkBlockedChange}
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="channel-live-forbidden-word">금지어 설정</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="channel-live-forbidden-word"
+                      value={forbiddenWordInput}
+                      maxLength={30}
+                      onChange={(event) => onForbiddenWordInputChange(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") {
+                          event.preventDefault();
+                          onAddForbiddenWord();
+                        }
+                      }}
+                      placeholder="금지어를 입력하세요"
+                    />
+                    <Button type="button" variant="outline" onClick={onAddForbiddenWord}>
+                      추가
+                    </Button>
+                  </div>
+                  <div className="border-border flex min-h-12 flex-wrap items-center gap-2 rounded-lg border p-2">
+                    {forbiddenWords.length ? (
+                      forbiddenWords.map((word) => (
+                        <button
+                          key={word}
+                          type="button"
+                          className="bg-destructive/10 text-destructive inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold"
+                          onClick={() => onRemoveForbiddenWord(word)}
+                        >
+                          {word}
+                          <X className="size-3" />
+                        </button>
+                      ))
+                    ) : (
+                      <span className="text-muted-foreground text-xs">
+                        등록된 금지어가 없습니다.
+                      </span>
                     )}
-                    aria-pressed={chatScope === option.value}
-                    onClick={() => onChatScopeChange(option.value)}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-              <div className="mt-3 grid gap-2">
-                <Label htmlFor="channel-live-follower-wait">팔로워 채팅 대기 시간</Label>
-                <select
-                  id="channel-live-follower-wait"
-                  className="border-input bg-background h-9 rounded-md border px-3 text-sm"
-                  value={followerWaitSeconds}
-                  onChange={(event) => onFollowerWaitSecondsChange(Number(event.target.value))}
-                >
-                  {FOLLOWER_WAIT_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
+                  </div>
+                </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="border-border rounded-lg border p-3">
-              <div className="flex items-center gap-2">
-                <Timer className="text-brand size-4" />
-                <span className="text-sm font-semibold">저속모드</span>
+                <div className="grid gap-2">
+                  <Label htmlFor="channel-live-chat-rule">채팅 규칙</Label>
+                  <Textarea
+                    id="channel-live-chat-rule"
+                    className="min-h-28"
+                    value={chatRuleText}
+                    maxLength={300}
+                    onChange={(event) => onChatRuleTextChange(event.target.value)}
+                    placeholder="시청자가 채팅 전에 확인할 안내를 입력하세요."
+                  />
+                </div>
               </div>
-              <SettingToggleButton
-                checked={isSlowModeEnabled}
-                description="채팅 입력 간격을 제한합니다."
-                icon={Timer}
-                label="저속모드 사용"
-                onChange={onSlowModeEnabledChange}
-              />
-              <div className="mt-3 flex flex-wrap gap-1">
-                {SLOW_MODE_OPTIONS.map((seconds) => (
-                  <button
-                    key={seconds}
-                    type="button"
-                    className={cn(
-                      "border-border h-8 rounded-md border px-2 text-xs font-semibold transition-colors",
-                      slowModeSeconds === seconds
-                        ? "bg-brand text-white"
-                        : "text-muted-foreground hover:text-foreground",
-                    )}
-                    onClick={() => onSlowModeSecondsChange(seconds)}
-                  >
-                    {seconds}초
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="border-border rounded-lg border p-3">
-              <div className="flex items-center gap-2">
-                <Link2 className="text-brand size-4" />
-                <span className="text-sm font-semibold">채팅 보호</span>
-              </div>
-              <SettingToggleButton
-                checked={isLinkBlocked}
-                description="채팅에서 URL 공유를 차단합니다."
-                icon={Link2}
-                label="링크 차단"
-                onChange={onLinkBlockedChange}
-              />
-            </div>
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="border-border rounded-lg border p-3">
-              <div className="flex items-center gap-2">
-                <Ban className="text-brand size-4" />
-                <span className="text-sm font-semibold">금지어 설정</span>
-              </div>
-              <div className="mt-3 flex gap-2">
-                <Input
-                  value={forbiddenWordInput}
-                  maxLength={30}
-                  onChange={(event) => onForbiddenWordInputChange(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") {
-                      event.preventDefault();
-                      onAddForbiddenWord();
-                    }
-                  }}
-                  placeholder="금지어를 입력하세요"
-                />
-                <Button type="button" variant="outline" onClick={onAddForbiddenWord}>
-                  추가
-                </Button>
-              </div>
-              <div className="border-border mt-3 flex min-h-12 flex-wrap items-center gap-2 rounded-lg border p-2">
-                {forbiddenWords.length ? (
-                  forbiddenWords.map((word) => (
-                    <button
-                      key={word}
-                      type="button"
-                      className="bg-destructive/10 text-destructive inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold"
-                      onClick={() => onRemoveForbiddenWord(word)}
-                    >
-                      {word}
-                      <X className="size-3" />
-                    </button>
-                  ))
-                ) : (
-                  <span className="text-muted-foreground text-xs">등록된 금지어가 없습니다.</span>
-                )}
-              </div>
-            </div>
-
-            <div className="border-border rounded-lg border p-3">
-              <div className="flex items-center gap-2">
-                <Users className="text-brand size-4" />
-                <span className="text-sm font-semibold">채팅 규칙</span>
-              </div>
-              <Textarea
-                className="mt-3 min-h-28"
-                value={chatRuleText}
-                maxLength={300}
-                onChange={(event) => onChatRuleTextChange(event.target.value)}
-                placeholder="시청자가 채팅 전에 확인할 안내를 입력하세요."
-              />
             </div>
           </div>
 

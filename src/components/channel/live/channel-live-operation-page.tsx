@@ -313,7 +313,6 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
             chatRuleText={chatRuleText}
             donationAlertDurationSeconds={donationAlertDurationSeconds}
             donationMinAmount={donationMinAmount}
-            followerWaitSeconds={followerWaitSeconds}
             forbiddenWordInput={forbiddenWordInput}
             forbiddenWords={forbiddenWords}
             isAlertSoundEnabled={isAlertSoundEnabled}
@@ -344,7 +343,6 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
             onDonationAmountVisibleChange={setIsDonationAmountVisible}
             onDonationEnabledChange={setIsDonationEnabled}
             onDonationMinAmountChange={setDonationMinAmount}
-            onFollowerWaitSecondsChange={setFollowerWaitSeconds}
             onForbiddenWordInputChange={setForbiddenWordInput}
             onLinkBlockedChange={setIsLinkBlocked}
             onRemoveForbiddenWord={handleRemoveForbiddenWord}
