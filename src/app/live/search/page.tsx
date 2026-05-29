@@ -1,6 +1,7 @@
 // 라이브 검색 페이지를 렌더링합니다.
 import LiveSearchResults from "@/components/search/live-search-results";
 import { cn } from "@/lib/utils";
+import { normalizeLiveSearchQuery } from "@/utils/search/live-search";
 import type { Metadata } from "next";
 
 interface Props {
@@ -20,7 +21,7 @@ function normalizeQueryParam(value?: string | string[]) {
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
   const { query } = await searchParams;
   const rawQuery = normalizeQueryParam(query);
-  const trimmedQuery = rawQuery.trim();
+  const trimmedQuery = normalizeLiveSearchQuery(rawQuery);
 
   if (!trimmedQuery) {
     return {
@@ -38,7 +39,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 export default async function LiveSearchPage({ searchParams }: Props) {
   const { query } = await searchParams;
   const rawQuery = normalizeQueryParam(query);
-  const trimmedQuery = rawQuery.trim();
+  const trimmedQuery = normalizeLiveSearchQuery(rawQuery);
 
   return (
     <div

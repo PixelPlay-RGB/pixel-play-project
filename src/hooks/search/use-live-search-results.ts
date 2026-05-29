@@ -7,6 +7,7 @@ import {
 } from "@/constants/search/search";
 import { createClient } from "@/lib/supabase/client";
 import type { LiveSearchResult, LiveSearchRpcRow, LiveSearchSection } from "@/types/search/search";
+import { normalizeLiveSearchQuery } from "@/utils/search/live-search";
 import { useInfiniteQuery } from "@tanstack/react-query";
 
 function isLiveSearchSection(section: string): section is LiveSearchSection {
@@ -64,7 +65,7 @@ async function fetchLiveSearchResults(
 }
 
 function useLiveSearchSection(query: string, section: LiveSearchSection) {
-  const trimmedQuery = query.trim();
+  const trimmedQuery = normalizeLiveSearchQuery(query);
   const limit = getLiveSearchLimit(section);
 
   return useInfiniteQuery<LiveSearchResult[]>({
@@ -78,7 +79,7 @@ function useLiveSearchSection(query: string, section: LiveSearchSection) {
 }
 
 export function useLiveSearchResults(query: string) {
-  const trimmedQuery = query.trim();
+  const trimmedQuery = normalizeLiveSearchQuery(query);
   const broadcastSearch = useLiveSearchSection(trimmedQuery, "broadcast");
   const creatorSearch = useLiveSearchSection(trimmedQuery, "creator");
   const broadcastResults = flattenPages(broadcastSearch.data?.pages);

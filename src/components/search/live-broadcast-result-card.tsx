@@ -1,8 +1,10 @@
 // 라이브 방송 검색 결과 카드를 렌더링합니다.
+import LiveSearchTagLink from "@/components/search/live-search-tag-link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import type { LiveSearchResult } from "@/types/search/search";
 import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
+import { getLiveSearchTagLabels } from "@/utils/search/live-search";
 import { Radio, Users } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -49,24 +51,27 @@ export default function LiveBroadcastResultCard({ result }: Props) {
   const avatarSrc = getAvatarImageSrc(result.creator_photo_url);
   const fallbackText = getAvatarFallbackText(result.creator_nickname, 1);
   const liveDuration = formatLiveDuration(result.started_at);
+  const tagLabels = getLiveSearchTagLabels(result.tags);
 
   return (
-    <Link
-      href={`/live/${result.creator_id}`}
-      prefetch={false}
+    <article
       className={cn(
-        "group flex min-h-30 flex-col overflow-hidden rounded-xl border text-left sm:flex-row",
+        "flex min-h-30 flex-col overflow-hidden rounded-xl border text-left sm:flex-row",
         "border-border/70 bg-card shadow-sm transition-all duration-200 active:translate-y-px",
         "hover:border-live/45 hover:shadow-live/10 hover:shadow-md",
         "dark:border-border/40 dark:bg-card/90 dark:hover:border-live/35 dark:hover:bg-accent/25 dark:hover:shadow-live/10",
       )}
     >
-      <div
+      <Link
+        href={`/live/${result.creator_id}`}
+        prefetch={false}
         className={cn(
-          "relative flex min-h-34 items-center justify-center overflow-hidden sm:min-h-32",
+          "group/thumbnail relative flex min-h-34 items-center justify-center overflow-hidden sm:min-h-32",
           "sm:w-44 sm:shrink-0",
           "bg-slate-950 text-white",
+          "focus-visible:ring-ring outline-none focus-visible:ring-3",
         )}
+        aria-label={`${result.title ?? result.creator_nickname} 라이브 보기`}
       >
         {result.thumbnail_url ? (
           <Image
@@ -76,7 +81,7 @@ export default function LiveBroadcastResultCard({ result }: Props) {
             sizes="(min-width: 1024px) 160px, 128px"
             className={cn(
               "object-cover transition-transform duration-300",
-              "group-hover:scale-105",
+              "group-hover/thumbnail:scale-105",
             )}
           />
         ) : (
@@ -124,17 +129,21 @@ export default function LiveBroadcastResultCard({ result }: Props) {
           <Users className="text-live size-3" />
           {numberFormatter.format(result.current_viewer_count)}
         </span>
-      </div>
+      </Link>
 
       <div className={cn("flex min-w-0 flex-col justify-between", "gap-2.5 p-3.5")}>
         <div className="min-w-0">
-          <h3
-            className={cn(
-              "text-foreground group-hover:text-live line-clamp-2",
-              "text-sm leading-snug font-black transition-colors",
-            )}
-          >
-            {result.title ?? "라이브 방송"}
+          <h3 className="line-clamp-2 text-sm leading-snug font-black">
+            <Link
+              href={`/live/${result.creator_id}`}
+              prefetch={false}
+              className={cn(
+                "text-foreground transition-colors",
+                "hover:text-live focus-visible:ring-ring rounded-sm outline-none focus-visible:ring-3",
+              )}
+            >
+              {result.title ?? "라이브 방송"}
+            </Link>
           </h3>
           <div className="mt-2 flex min-w-0 items-center gap-2">
             <Avatar className="size-5">
@@ -151,20 +160,14 @@ export default function LiveBroadcastResultCard({ result }: Props) {
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-1.5">
-          {result.tags.slice(0, 3).map((tag) => (
-            <span
-              key={`${result.broadcast_id}-${tag}`}
-              className={cn(
-                "bg-live/10 text-live dark:bg-live/15",
-                "rounded-md px-2 py-0.5 text-xs font-black",
-              )}
-            >
-              #{tag}
-            </span>
-          ))}
-        </div>
+        {tagLabels.length > 0 ? (
+          <div className="flex flex-wrap gap-1.5">
+            {tagLabels.map((tag) => (
+              <LiveSearchTagLink key={`${result.broadcast_id}-${tag}`} tag={tag} />
+            ))}
+          </div>
+        ) : null}
       </div>
-    </Link>
+    </article>
   );
 }
