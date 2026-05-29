@@ -2,22 +2,6 @@
 
 import type { LiveBroadcast, LiveChatMessage, LiveDonation, LivePoll } from "@/types/live/live";
 
-export const MOCK_DEFAULT_BROADCAST: LiveBroadcast = {
-  id: "mock-default",
-  creatorId: "default",
-  title: "오늘도 즐거운 방송! 같이 게임해요 🎮",
-  tags: ["솔로랭크", "다이아", "탑라인"],
-  viewerCount: 1284,
-  elapsedSeconds: 4523,
-  creator: {
-    id: "default-creator",
-    name: "픽셀플레이어",
-    avatarUrl: null,
-    followerCount: 38400,
-    broadcastCount: 312,
-  },
-};
-
 export const MOCK_LIVE_BROADCASTS: Record<string, LiveBroadcast> = {
   test123: {
     id: "mock-test123",
@@ -50,6 +34,10 @@ export const MOCK_LIVE_BROADCASTS: Record<string, LiveBroadcast> = {
     },
   },
 };
+
+export function getMockLiveBroadcast(creatorId: string): LiveBroadcast | null {
+  return MOCK_LIVE_BROADCASTS[creatorId] ?? null;
+}
 
 export const MOCK_LIVE_CHAT_MESSAGES: LiveChatMessage[] = [
   {

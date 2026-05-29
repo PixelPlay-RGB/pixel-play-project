@@ -1,5 +1,4 @@
 "use client";
-// 팔로우·언팔로우 토글 훅입니다. pending 상태와 에러 토스트를 포함합니다.
 
 import { useState } from "react";
 import { followCreatorAction, unfollowCreatorAction } from "@/actions/follows/follow";

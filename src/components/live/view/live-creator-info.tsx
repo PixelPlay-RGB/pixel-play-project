@@ -1,7 +1,7 @@
 // 크리에이터 아바타, 이름, 팔로워 수, 방송 횟수를 표시합니다.
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { formatFollowerCount } from "@/utils/live/live-chat";
+import { formatCount } from "@/utils/live/live-chat";
 import { LIVE_LABEL } from "@/constants/live/live";
 import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
 import type { LiveBroadcast } from "@/types/live/live";
@@ -26,7 +26,7 @@ export function LiveCreatorInfo({ broadcast }: Props) {
         <span className="text-foreground text-sm font-semibold">{creator.name}</span>
         <div className="text-muted-foreground flex items-center gap-2 text-xs">
           <span>
-            {formatFollowerCount(creator.followerCount)} {LIVE_LABEL.followers}
+            {formatCount(creator.followerCount)} {LIVE_LABEL.followers}
           </span>
           <span>·</span>
           <span>

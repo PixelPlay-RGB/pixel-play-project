@@ -1,8 +1,12 @@
 // 라이브 시청 화면에서 사용하는 상수를 정의합니다.
 
 export const LIVE_LABEL = {
+  chatRulePlaceholder: "채팅 규칙을 확인해주세요.",
+  chatRuleTitle: "채팅 규칙 안내",
+  chatRuleDescription: "첫 채팅 전에 한 번만 확인합니다.",
+  chatRuleDefaultText: "서로를 존중하며 대화해주세요. 반복 도배, 비방, 홍보성 메시지는 제한될 수 있습니다.",
+  chatRuleAccept: "규칙 확인하고 채팅하기",
   live: "LIVE",
-  lowLatency: "저지연",
   chat: "라이브 채팅",
   follow: "팔로우",
   following: "팔로잉",
@@ -11,16 +15,12 @@ export const LIVE_LABEL = {
   donate: "후원하기",
   vote: "투표 참여",
   chatMenu: "채팅 메뉴",
-  donationList: "최근 후원",
-  pollList: "진행 중 투표",
   viewers: "명 시청 중",
   followers: "팔로워",
   broadcasts: "방송",
-  emptyDonation: "아직 후원 내역이 없습니다.",
-  emptyPoll: "진행 중인 투표가 없습니다.",
   filteredMessage: "클린봇이 부적절한 표현을 감지해 메시지를 가렸습니다.",
-  participationNoticeTitle: "팔로우 전용 채팅",
-  participationNotice: "이 방송은 팔로우한 시청자만 채팅할 수 있습니다.",
+  donationRankingTitle: "이번 주 후원 랭킹",
+  emptyWeeklyDonation: "아직 이번 주 후원 내역이 없습니다.",
   chatLoginPlaceholder: "로그인 후 채팅할 수 있습니다.",
   chatPlaceholder: "채팅 입력...",
   loginRequired: "로그인이 필요합니다.",
@@ -28,8 +28,8 @@ export const LIVE_LABEL = {
   loginButton: "로그인",
   cancel: "취소",
   close: "닫기",
+  shareCopy: "복사",
   broadcastOffline: "방송이 종료되었거나 준비 중입니다.",
-  creatorNotFound: "크리에이터를 찾을 수 없습니다.",
   chatFollowerPlaceholder: "팔로우 후 채팅할 수 있습니다.",
   chatWaitPlaceholder: "잠시 후 채팅할 수 있습니다.",
   chatManagerOnlyPlaceholder: "매니저만 채팅할 수 있습니다.",
@@ -71,6 +71,7 @@ export const LIVE_CHANNEL_MENU_LABEL = {
 
 export const LIVE_CHAT_MENU_LABEL = {
   cleanbot: "클린봇 켜짐",
+  cleanbotOff: "클린봇 꺼짐",
   rules: "채팅 규칙",
   popout: "채팅창 팝업",
 } as const;

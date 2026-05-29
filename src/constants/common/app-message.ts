@@ -63,6 +63,12 @@ export const APP_MESSAGE = {
         title: "연동 해제 완료",
       },
     },
+    live: {
+      urlCopied: {
+        title: "URL 복사 완료",
+        description: "URL 복사가 완료되었습니다.",
+      },
+    },
   },
   error: {
     common: {

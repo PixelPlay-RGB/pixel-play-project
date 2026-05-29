@@ -1,5 +1,4 @@
 "use client";
-// 후원하기 mock Dialog — 금액 선택, 메시지 입력, 잔액 요약을 제공합니다.
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -46,7 +45,12 @@ export function LiveDonationDialog({ onLoginPrompt, isLoggedIn }: Props) {
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger
-        render={<Button className="bg-brand hover:bg-brand/90 flex-1 text-xs text-brand-foreground" size="sm" />}
+        render={
+          <Button
+            className="bg-brand hover:bg-brand/90 text-brand-foreground flex-1 text-xs"
+            size="sm"
+          />
+        }
       >
         {LIVE_LABEL.donate}
       </DialogTrigger>
@@ -56,7 +60,6 @@ export function LiveDonationDialog({ onLoginPrompt, isLoggedIn }: Props) {
         </DialogHeader>
 
         <div className="flex flex-col gap-4">
-          {/* 익명 토글 */}
           <label className="flex cursor-pointer items-center gap-2 text-sm">
             <input
               type="checkbox"
@@ -67,17 +70,18 @@ export function LiveDonationDialog({ onLoginPrompt, isLoggedIn }: Props) {
             {LIVE_DONATION_LABEL.anonymous}
           </label>
 
-          {/* 금액 선택 */}
           <div className="flex flex-col gap-2">
             <span className="text-sm font-medium">{LIVE_DONATION_LABEL.amountLabel}</span>
             <div className="grid grid-cols-3 gap-2">
               {LIVE_DONATION_AMOUNTS.map((amount) => (
-                <button
+                <Button
                   key={amount}
                   type="button"
+                  size="sm"
+                  variant="outline"
                   onClick={() => setSelectedAmount(amount)}
                   className={cn(
-                    "rounded-lg border px-2 py-2 text-sm font-medium transition-colors",
+                    "h-auto px-2 py-2 text-sm",
                     selectedAmount === amount
                       ? "border-brand bg-brand/10 text-brand"
                       : "border-border text-foreground hover:border-brand/50",
@@ -85,7 +89,7 @@ export function LiveDonationDialog({ onLoginPrompt, isLoggedIn }: Props) {
                 >
                   {formatDonationAmount(amount)}
                   {LIVE_DONATION_LABEL.unit}
-                </button>
+                </Button>
               ))}
             </div>
             <Input
@@ -99,7 +103,6 @@ export function LiveDonationDialog({ onLoginPrompt, isLoggedIn }: Props) {
             />
           </div>
 
-          {/* 메시지 */}
           <div className="flex flex-col gap-2">
             <span className="text-sm font-medium">{LIVE_DONATION_LABEL.messageLabel}</span>
             <Textarea
@@ -111,7 +114,6 @@ export function LiveDonationDialog({ onLoginPrompt, isLoggedIn }: Props) {
             />
           </div>
 
-          {/* 잔액 요약 */}
           <div className="bg-muted/50 text-muted-foreground flex flex-col gap-1 rounded-lg px-3 py-2 text-xs">
             <div className="flex justify-between">
               <span>{LIVE_DONATION_LABEL.balance}</span>
@@ -134,7 +136,12 @@ export function LiveDonationDialog({ onLoginPrompt, isLoggedIn }: Props) {
           <Button variant="outline" onClick={() => setOpen(false)}>
             {LIVE_DONATION_LABEL.cancel}
           </Button>
-          <Button disabled={remaining < 0} className="bg-brand hover:bg-brand/90 text-brand-foreground">
+          {/* TODO: 후원 제출 RPC 연결 — 잔액 조회 및 실제 후원 처리 */}
+          <Button
+            type="button"
+            disabled={remaining < 0}
+            className="bg-brand hover:bg-brand/90 text-brand-foreground"
+          >
             {LIVE_DONATION_LABEL.submit}
           </Button>
         </DialogFooter>

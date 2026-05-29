@@ -1,7 +1,7 @@
 "use client";
 // 투표 참여 mock Popover — 없음·진행·완료·종료 상태를 제공합니다.
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { LIVE_LABEL, LIVE_VOTE_LABEL } from "@/constants/live/live";
@@ -20,6 +20,10 @@ export function LiveVotePopover({ polls, onLoginPrompt, isLoggedIn }: Props) {
 
   const activePoll = polls.find((p) => p.status === "active") ?? null;
 
+  useEffect(() => {
+    setSelectedOption(null);
+  }, [activePoll?.id]);
+
   function handleOpenChange(next: boolean) {
     if (next && !isLoggedIn) {
       onLoginPrompt();
@@ -30,6 +34,7 @@ export function LiveVotePopover({ polls, onLoginPrompt, isLoggedIn }: Props) {
 
   function handleVote() {
     if (!selectedOption) return;
+    // TODO: 투표 제출 RPC 연결 후 실제 제출 처리
     setOpen(false);
   }
 
@@ -50,18 +55,20 @@ export function LiveVotePopover({ polls, onLoginPrompt, isLoggedIn }: Props) {
             <ul className="flex flex-col gap-2">
               {activePoll.options.map((option) => (
                 <li key={option.id}>
-                  <button
+                  <Button
                     type="button"
+                    size="sm"
+                    variant="outline"
                     onClick={() => setSelectedOption(option.id)}
                     className={cn(
-                      "w-full rounded-lg border px-3 py-2 text-left text-sm transition-colors",
+                      "h-auto w-full justify-start px-3 py-2 text-left text-sm",
                       selectedOption === option.id
                         ? "border-brand bg-brand/10 text-brand"
                         : "border-border text-foreground hover:border-brand/40",
                     )}
                   >
                     {option.label}
-                  </button>
+                  </Button>
                 </li>
               ))}
             </ul>

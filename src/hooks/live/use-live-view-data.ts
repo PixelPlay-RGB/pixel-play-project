@@ -1,30 +1,24 @@
 "use client";
-// get_live_watch + get_live_watch_count RPC 병렬 조회 + live_broadcast Realtime 시청자 수 갱신 훅입니다.
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth";
 import { QUERY_KEYS } from "@/constants/common/query-keys";
+import { normalizeLiveViewData } from "@/utils/live/live-view-data";
+import { isUuid } from "@/utils/common/uuid";
 import type { LiveWatchData } from "@/types/live/live";
 
-const IS_UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-interface LiveWatchCountResult {
-  followerCount: number;
-  broadcastCount: number;
-}
-
-export function useLiveWatch(creatorId: string) {
-  const supabase = createClient();
+export function useLiveViewData(creatorId: string) {
+  const supabase = useMemo(() => createClient(), []);
   const queryClient = useQueryClient();
   const user = useAuthStore((s) => s.user);
   const isAuthLoading = useAuthStore((s) => s.loading);
 
   const query = useQuery<LiveWatchData | null>({
     queryKey: QUERY_KEYS.live.watch(creatorId, user?.id),
-    // TODO [mock] real 모드 전환 시 IS_UUID_REGEX 조건 제거
-    enabled: !isAuthLoading && IS_UUID_REGEX.test(creatorId),
+    // TODO [mock] real 모드 전환 시 UUID 조건 제거
+    enabled: !isAuthLoading && isUuid(creatorId),
     staleTime: 1000 * 30,
     queryFn: async () => {
       const [watchResult, countResult] = await Promise.all([
@@ -42,44 +36,14 @@ export function useLiveWatch(creatorId: string) {
         return null;
       }
 
-      const raw = watchResult.data;
-      if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+      if (countResult.error) {
+        console.error("get_live_watch_count 실패", countResult.error);
+      }
 
-      // RPC 응답의 JSON 키를 앱 타입으로 매핑
-      // - creator: followerCount/broadcastCount는 get_live_watch_count에서 병합
-      // - viewerChatState: blockedReason(JSON 키) → chatUnavailableReason(앱 타입)
-      type RawWatchData = Omit<LiveWatchData, "creator" | "viewerChatState"> & {
-        creator: Omit<LiveWatchData["creator"], "followerCount" | "broadcastCount">;
-        viewerChatState: Omit<LiveWatchData["viewerChatState"], "chatUnavailableReason"> & {
-          blockedReason: LiveWatchData["viewerChatState"]["chatUnavailableReason"];
-        };
-      };
-
-      const watchData = raw as unknown as RawWatchData;
-
-      const count =
-        countResult.data && typeof countResult.data === "object" && !Array.isArray(countResult.data)
-          ? (countResult.data as unknown as LiveWatchCountResult)
-          : { followerCount: 0, broadcastCount: 0 };
-
-      const { blockedReason, ...restChatState } = watchData.viewerChatState;
-
-      return {
-        ...watchData,
-        creator: {
-          ...watchData.creator,
-          followerCount: count.followerCount,
-          broadcastCount: count.broadcastCount,
-        },
-        viewerChatState: {
-          ...restChatState,
-          chatUnavailableReason: blockedReason,
-        },
-      } as LiveWatchData;
+      return normalizeLiveViewData(watchResult.data, countResult.data);
     },
   });
 
-  // live_broadcast Realtime — 시청자 수 실시간 갱신
   const broadcastId = query.data?.broadcast?.id;
 
   useEffect(() => {

@@ -28,6 +28,9 @@ export const APP_MESSAGE_CODE = {
     oauth: {
       unlinked: "success.oauth.unlinked",
     },
+    live: {
+      urlCopied: "success.live.urlCopied",
+    },
   },
   error: {
     common: {

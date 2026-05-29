@@ -1,5 +1,4 @@
 "use client";
-// 팔로우, 공유, 더보기 액션 버튼 행을 렌더링합니다.
 
 import { Button } from "@/components/ui/button";
 import { LiveChannelMenu } from "@/components/live/view/live-channel-menu";
@@ -10,7 +9,6 @@ interface Props {
   isFollowing: boolean;
   isPending: boolean;
   onFollow: () => void;
-  isLoggedIn: boolean;
 }
 
 export function LiveCreatorActions({ isFollowing, isPending, onFollow }: Props) {
