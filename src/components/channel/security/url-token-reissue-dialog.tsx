@@ -26,6 +26,7 @@ export function UrlTokenReissueDialog({
   onRotate: (tokenKind: ChannelSecurityTokenKind, onSuccess?: () => void) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const visibleTargetLabel = tokenKind === "chat_overlay" ? "채팅창" : "후원 알림";
 
   return (
     <AlertDialog open={open} onOpenChange={(next) => !isRotating && setOpen(next)}>
@@ -39,11 +40,12 @@ export function UrlTokenReissueDialog({
       <SecurityReissueDialogContent
         icon={icon}
         title={`${title}를 새로 만들까요?`}
-        description="새 주소를 만들면 OBS에 넣어둔 기존 주소는 더 이상 표시되지 않습니다. 만든 뒤에는 새 주소를 다시 붙여 넣어주세요."
+        description={`새 주소를 만들면 지금 OBS에 넣어둔 주소는 더 이상 쓸 수 없어요.\n새 주소를 복사해서 OBS 브라우저 소스에 다시 붙여 넣어주세요.`}
         warnings={[
-          "방송 중이라면 해당 화면이 잠시 사라질 수 있습니다.",
-          "새 주소를 복사해 OBS 브라우저 소스에 다시 넣어주세요.",
+          `방송 중이라면 ${visibleTargetLabel}이 잠시 사라질 수 있어요.`,
+          `새 주소를 넣기 전까지 ${visibleTargetLabel}을 다시 띄울 수 없어요.`,
         ]}
+        confirmLabel="새 주소 만들기"
         isRotating={isRotating}
         onConfirm={() => onRotate(tokenKind, () => setOpen(false))}
       />

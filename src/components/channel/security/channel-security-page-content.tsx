@@ -20,37 +20,38 @@ export function ChannelSecurityPageContent({ initialSnapshot }: Props) {
         <div className="flex max-w-3xl flex-col gap-2">
           <span className="text-brand text-sm font-bold">방송 연결 보안</span>
           <h1 className="text-foreground text-3xl leading-tight font-bold tracking-tight">
-            방송 연결 정보를 관리해요
+            방송 연결 정보를 안전하게 관리해요
           </h1>
           <p className="text-muted-foreground max-w-2xl text-sm leading-6 text-pretty">
-            스트림 키와 채팅창, 후원 알림 주소를 한곳에서 관리합니다. 필요한 순간에만 열어 보고,
-            새로 만든 정보는 OBS에 다시 붙여 넣어주세요.
+            방송에 필요한 키와 주소를 한곳에서 관리해요.
+            <br />
+            필요할 때만 확인하고, 새로 만들었다면 OBS에 다시 붙여 넣어주세요.
           </p>
         </div>
       </section>
 
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_20rem] 2xl:grid-cols-[minmax(0,1fr)_22rem]">
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_fit-content(30rem)]">
         <ChannelSecurityControls initialSnapshot={initialSnapshot} />
 
         <ChannelSideTipCard
           icon={<ShieldCheck className="size-5" />}
-          title="처음 설정할 때"
-          description="키와 주소는 방송에 바로 쓰이는 정보라 기본으로 숨겨둡니다. 새로 만들면 OBS에 넣어둔 값도 함께 바꿔주세요."
+          title="방송 전에 이것만 확인해요"
+          description={`키와 주소는 방송에 바로 쓰이는 정보라 기본으로 숨겨져 있어요.\n새로 만들었다면 OBS에 저장된 값도 꼭 바꿔주세요.`}
         >
           <ChannelSideTipStep
             number="1"
-            title="방송 설정에 서버 주소와 스트림 키 넣기"
-            description="OBS 설정의 방송 메뉴에서 서버와 스트림 키 입력란에 각각 붙여 넣습니다."
+            title="서버 주소와 스트림 키를 넣어요"
+            description={`OBS 설정 > 방송에서 서비스를 사용자 지정으로 바꿔주세요.\n그다음 서버 주소와 스트림 키를 각각 붙여 넣으면 돼요.`}
           />
           <ChannelSideTipStep
             number="2"
-            title="채팅창 주소를 브라우저 소스로 추가하기"
-            description="OBS 소스 목록에서 브라우저를 추가하고 채팅창 주소를 붙여 넣습니다."
+            title="채팅창 주소를 추가해요"
+            description={`OBS 소스에서 브라우저를 추가하고 채팅창 주소를 붙여 넣어주세요.\n권장 크기는 520 x 600이에요.`}
           />
           <ChannelSideTipStep
             number="3"
-            title="후원 알림 주소를 따로 추가하기"
-            description="후원 알림은 채팅창과 다른 브라우저 소스로 분리하면 위치 조절이 쉽습니다."
+            title="후원 알림 주소를 추가해요"
+            description={`채팅창과 별도의 브라우저 소스로 추가해주세요.\n권장 크기는 640 x 360이고, 기본으로 5초 동안 보여요.`}
           />
         </ChannelSideTipCard>
       </div>

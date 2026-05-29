@@ -20,6 +20,7 @@ interface Props {
   title: string;
   description: string;
   warnings: string[];
+  confirmLabel: string;
   isRotating: boolean;
   onConfirm: () => void;
 }
@@ -29,6 +30,7 @@ export function SecurityReissueDialogContent({
   title,
   description,
   warnings,
+  confirmLabel,
   isRotating,
   onConfirm,
 }: Props) {
@@ -42,7 +44,7 @@ export function SecurityReissueDialogContent({
           <AlertDialogTitle className="text-xl leading-7 font-bold text-pretty">
             {title}
           </AlertDialogTitle>
-          <AlertDialogDescription className="text-base leading-6 text-pretty">
+          <AlertDialogDescription className="text-base leading-6 text-pretty whitespace-pre-line">
             {description}
           </AlertDialogDescription>
         </div>
@@ -67,7 +69,7 @@ export function SecurityReissueDialogContent({
           className="h-11 min-w-28"
           onClick={onConfirm}
         >
-          {isRotating ? <Spinner /> : "새로 만들기"}
+          {isRotating ? <Spinner /> : confirmLabel}
         </AlertDialogAction>
       </AlertDialogFooter>
     </AlertDialogContent>

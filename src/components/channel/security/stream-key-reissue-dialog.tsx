@@ -32,11 +32,12 @@ export function StreamKeyReissueDialog({
       <SecurityReissueDialogContent
         icon={KeyRound}
         title="스트림 키를 새로 만들까요?"
-        description="새 키를 만들면 OBS에 저장된 기존 키는 바로 사용할 수 없습니다. 만든 뒤에는 새 키를 다시 붙여 넣어주세요."
+        description={`새 키를 만들면 지금 OBS에 저장된 키는 더 이상 쓸 수 없어요.\n새 키를 복사해서 OBS에 다시 붙여 넣어주세요.`}
         warnings={[
-          "방송 중이라면 송출이 끊길 수 있습니다.",
-          "새 키를 복사하기 전까지 기존 설정으로는 방송을 시작할 수 없습니다.",
+          "방송 중이라면 송출이 끊길 수 있어요.",
+          "새 키를 OBS에 넣기 전까지는 방송을 시작할 수 없어요.",
         ]}
+        confirmLabel="새 키 만들기"
         isRotating={isRotating}
         onConfirm={() => onRotate("stream_key", () => setOpen(false))}
       />

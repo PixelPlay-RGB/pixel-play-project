@@ -40,7 +40,7 @@ export function StreamKeyCard({
           방송 연결 정보
         </CardTitle>
         <CardDescription className="max-w-xl leading-6 text-pretty">
-          OBS 방송 설정에 넣는 서버 주소와 스트림 키입니다.
+          OBS 방송 설정에 붙여 넣는 서버 주소와 스트림 키예요.
         </CardDescription>
         <CardAction className="col-start-1 row-start-3 justify-self-start pt-2 sm:col-start-2 sm:row-span-2 sm:row-start-1 sm:justify-self-end sm:pt-0">
           <StreamKeyReissueDialog disabled={disabled} isRotating={isRotating} onRotate={onRotate} />
