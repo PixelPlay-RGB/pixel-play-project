@@ -1,5 +1,6 @@
 "use server";
-// 크리에이터 팔로우 상태를 변경하는 서버 액션입니다.
+// 크리에이터 팔로잉 상태를 변경하는 서버 액션입니다.
+
 import { getAuthenticatedActorId } from "@/actions/common/authenticated-actor";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import type { AppMessageCode } from "@/constants/common/app-message-code";
@@ -7,11 +8,11 @@ import { createAdminClient } from "@/lib/supabase/admin-client";
 import type { AppActionResult } from "@/types/common/action";
 import { resolveSupabaseErrorCode } from "@/utils/common/app-message";
 
-interface FollowCreatorActionInput {
+interface ToggleCreatorFollowingActionInput {
   creatorId: string;
 }
 
-function createFollowFailureResult(
+function createFollowingFailureResult(
   error: unknown,
   fallbackCode: AppMessageCode,
   logLabel: string,
@@ -26,9 +27,16 @@ function createFollowFailureResult(
 
 export async function followCreatorAction({
   creatorId,
-}: FollowCreatorActionInput): Promise<AppActionResult> {
+}: ToggleCreatorFollowingActionInput): Promise<AppActionResult> {
+  if (!creatorId) {
+    return {
+      success: false,
+      code: APP_MESSAGE_CODE.error.following.failed,
+    };
+  }
+
   const actor = await getAuthenticatedActorId({
-    logLabel: "크리에이터 팔로우 중 인증 유저 조회 실패",
+    logLabel: "크리에이터 팔로잉 중 인증 유저 조회 실패",
   });
 
   if (!actor.success) {
@@ -42,24 +50,31 @@ export async function followCreatorAction({
   });
 
   if (error) {
-    return createFollowFailureResult(
+    return createFollowingFailureResult(
       error,
-      APP_MESSAGE_CODE.error.follow.failed,
-      "크리에이터 팔로우 RPC 실패",
+      APP_MESSAGE_CODE.error.following.failed,
+      "크리에이터 팔로잉 RPC 실패",
     );
   }
 
   return {
     success: true,
-    code: APP_MESSAGE_CODE.success.follow.followed,
+    code: APP_MESSAGE_CODE.success.following.followed,
   };
 }
 
 export async function unfollowCreatorAction({
   creatorId,
-}: FollowCreatorActionInput): Promise<AppActionResult> {
+}: ToggleCreatorFollowingActionInput): Promise<AppActionResult> {
+  if (!creatorId) {
+    return {
+      success: false,
+      code: APP_MESSAGE_CODE.error.following.unfollowFailed,
+    };
+  }
+
   const actor = await getAuthenticatedActorId({
-    logLabel: "크리에이터 팔로우 해제 중 인증 유저 조회 실패",
+    logLabel: "크리에이터 팔로잉 해제 중 인증 유저 조회 실패",
   });
 
   if (!actor.success) {
@@ -73,15 +88,15 @@ export async function unfollowCreatorAction({
   });
 
   if (error) {
-    return createFollowFailureResult(
+    return createFollowingFailureResult(
       error,
-      APP_MESSAGE_CODE.error.follow.unfollowFailed,
-      "크리에이터 팔로우 해제 RPC 실패",
+      APP_MESSAGE_CODE.error.following.unfollowFailed,
+      "크리에이터 팔로잉 해제 RPC 실패",
     );
   }
 
   return {
     success: true,
-    code: APP_MESSAGE_CODE.success.follow.unfollowed,
+    code: APP_MESSAGE_CODE.success.following.unfollowed,
   };
 }

@@ -1,31 +1,20 @@
 "use client";
-// 검색 결과에서 크리에이터 팔로우 상태를 토글합니다.
-import { followCreatorAction, unfollowCreatorAction } from "@/actions/follows/follow";
+// 라이브 검색 결과에서 크리에이터 팔로잉 상태를 토글합니다.
+
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+
+import { followCreatorAction, unfollowCreatorAction } from "@/actions/following/following";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { QUERY_KEYS } from "@/constants/common/query-keys";
 import type { AppActionResult } from "@/types/common/action";
-import type { LiveSearchResult } from "@/types/search/search";
+import type {
+  LiveSearchInfiniteData,
+  ToggleLiveSearchFollowingContext,
+  ToggleLiveSearchFollowingInput,
+} from "@/types/following/live-search-following";
 import { toastAppError, toastAppSuccess } from "@/utils/common/toast-message";
-import {
-  useMutation,
-  useQueryClient,
-  type InfiniteData,
-  type QueryKey,
-} from "@tanstack/react-query";
 
-interface ToggleCreatorFollowInput {
-  creatorId: string;
-  nextFollowing: boolean;
-}
-
-type LiveSearchInfiniteData = InfiniteData<LiveSearchResult[]>;
-type LiveSearchSnapshot = Array<[QueryKey, LiveSearchInfiniteData | undefined]>;
-
-interface ToggleCreatorFollowContext {
-  snapshot: LiveSearchSnapshot;
-}
-
-function updateLiveSearchFollowState(
+function updateLiveSearchFollowingState(
   data: LiveSearchInfiniteData | undefined,
   creatorId: string,
   nextFollowing: boolean,
@@ -54,11 +43,16 @@ function updateLiveSearchFollowState(
   };
 }
 
-export function useToggleCreatorFollow() {
+export function useToggleLiveSearchFollowing() {
   const queryClient = useQueryClient();
   const liveSearchQueryKey = QUERY_KEYS.live.searchAll();
 
-  return useMutation<AppActionResult, Error, ToggleCreatorFollowInput, ToggleCreatorFollowContext>({
+  return useMutation<
+    AppActionResult,
+    Error,
+    ToggleLiveSearchFollowingInput,
+    ToggleLiveSearchFollowingContext
+  >({
     mutationFn: ({ creatorId, nextFollowing }) =>
       nextFollowing ? followCreatorAction({ creatorId }) : unfollowCreatorAction({ creatorId }),
     onMutate: async ({ creatorId, nextFollowing }) => {
@@ -69,7 +63,7 @@ export function useToggleCreatorFollow() {
       });
 
       queryClient.setQueriesData<LiveSearchInfiniteData>({ queryKey: liveSearchQueryKey }, (data) =>
-        updateLiveSearchFollowState(data, creatorId, nextFollowing),
+        updateLiveSearchFollowingState(data, creatorId, nextFollowing),
       );
 
       return { snapshot };
@@ -80,8 +74,8 @@ export function useToggleCreatorFollow() {
         toastAppError(
           result.code ??
             (variables.nextFollowing
-              ? APP_MESSAGE_CODE.error.follow.failed
-              : APP_MESSAGE_CODE.error.follow.unfollowFailed),
+              ? APP_MESSAGE_CODE.error.following.failed
+              : APP_MESSAGE_CODE.error.following.unfollowFailed),
         );
         return;
       }
@@ -89,21 +83,21 @@ export function useToggleCreatorFollow() {
       toastAppSuccess(
         result.code ??
           (variables.nextFollowing
-            ? APP_MESSAGE_CODE.success.follow.followed
-            : APP_MESSAGE_CODE.success.follow.unfollowed),
+            ? APP_MESSAGE_CODE.success.following.followed
+            : APP_MESSAGE_CODE.success.following.unfollowed),
       );
     },
     onError: (error, variables, context) => {
-      console.error("크리에이터 팔로우 상태 변경 실패", error);
+      console.error("크리에이터 팔로잉 상태 변경 실패", error);
       context?.snapshot.forEach(([queryKey, data]) => queryClient.setQueryData(queryKey, data));
       toastAppError(
         variables.nextFollowing
-          ? APP_MESSAGE_CODE.error.follow.failed
-          : APP_MESSAGE_CODE.error.follow.unfollowFailed,
+          ? APP_MESSAGE_CODE.error.following.failed
+          : APP_MESSAGE_CODE.error.following.unfollowFailed,
       );
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: liveSearchQueryKey });
+      void queryClient.invalidateQueries({ queryKey: liveSearchQueryKey });
     },
   });
 }

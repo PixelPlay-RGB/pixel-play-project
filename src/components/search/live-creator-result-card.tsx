@@ -1,13 +1,13 @@
 "use client";
 // 라이브 크리에이터 검색 결과 카드를 렌더링합니다.
+import CreatorFollowingButton from "@/components/following/creator-following-button";
 import { Avatar, AvatarBadge, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { useToggleCreatorFollow } from "@/hooks/follows/use-toggle-creator-follow";
+import { useToggleLiveSearchFollowing } from "@/hooks/following/use-toggle-live-search-following";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth";
 import type { LiveSearchResult } from "@/types/search/search";
 import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
-import { Heart, Radio, UsersRound } from "lucide-react";
+import { Radio, UsersRound } from "lucide-react";
 import Link from "next/link";
 
 interface Props {
@@ -18,20 +18,20 @@ const numberFormatter = new Intl.NumberFormat("ko-KR");
 
 export default function LiveCreatorResultCard({ result }: Props) {
   const currentUserId = useAuthStore((state) => state.user?.id);
-  const toggleCreatorFollow = useToggleCreatorFollow();
+  const toggleLiveSearchFollowing = useToggleLiveSearchFollowing();
   const avatarSrc = getAvatarImageSrc(result.creator_photo_url);
   const fallbackText = getAvatarFallbackText(result.creator_nickname, 1);
   const isOwnChannel = currentUserId === result.creator_id;
-  const isFollowPending =
-    toggleCreatorFollow.isPending && toggleCreatorFollow.variables?.creatorId === result.creator_id;
-  const followLabel = isOwnChannel ? "내 채널" : result.is_following ? "팔로잉" : "팔로우";
+  const isFollowingPending =
+    toggleLiveSearchFollowing.isPending &&
+    toggleLiveSearchFollowing.variables?.creatorId === result.creator_id;
 
-  const handleFollowClick = () => {
-    if (isOwnChannel || isFollowPending) {
+  const handleFollowingClick = () => {
+    if (isOwnChannel || isFollowingPending) {
       return;
     }
 
-    toggleCreatorFollow.mutate({
+    toggleLiveSearchFollowing.mutate({
       creatorId: result.creator_id,
       nextFollowing: !result.is_following,
     });
@@ -99,23 +99,14 @@ export default function LiveCreatorResultCard({ result }: Props) {
         </div>
       </Link>
 
-      <Button
-        type="button"
-        size="sm"
-        variant={result.is_following || isOwnChannel ? "outline" : "default"}
-        className={cn(
-          "h-8 w-full shrink-0 rounded-full px-3 text-xs font-black transition-all active:scale-95 sm:ml-auto sm:w-auto",
-          result.is_following || isOwnChannel
-            ? "border-brand/25 bg-brand/10 text-brand hover:border-brand/50 hover:bg-brand/18 dark:border-brand/25 dark:bg-brand/15 dark:text-brand"
-            : "bg-brand hover:bg-brand/85 shadow-brand/25 text-white shadow-sm hover:shadow-md",
-        )}
-        disabled={isOwnChannel || isFollowPending}
-        aria-label={`${result.creator_nickname} ${followLabel}`}
-        onClick={handleFollowClick}
-      >
-        <Heart className={cn("size-3.5", result.is_following && "fill-current")} />
-        {followLabel}
-      </Button>
+      <CreatorFollowingButton
+        creatorNickname={result.creator_nickname}
+        isFollowing={result.is_following}
+        isOwnChannel={isOwnChannel}
+        isPending={isFollowingPending}
+        onClick={handleFollowingClick}
+        className="w-full sm:ml-auto sm:w-auto"
+      />
     </div>
   );
 }
