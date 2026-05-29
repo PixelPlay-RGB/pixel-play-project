@@ -42,6 +42,9 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
   const [hasEnded, setHasEnded] = useState(false);
   const [isChatPaused, setIsChatPaused] = useState(false);
   const [broadcastId, setBroadcastId] = useState<string | null>(activeBroadcast?.id ?? null);
+  const [broadcastStartedAt, setBroadcastStartedAt] = useState<string | null>(
+    activeBroadcast?.startedAt ?? null,
+  );
   const [broadcastActionError, setBroadcastActionError] = useState<string | null>(null);
   const [isBroadcastActionPending, startBroadcastTransition] = useTransition();
 
@@ -66,6 +69,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
       }
 
       setBroadcastId(result.data.broadcastId);
+      setBroadcastStartedAt(new Date().toISOString());
       setIsBroadcasting(true);
       setHasEnded(false);
     });
@@ -84,6 +88,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
       }
 
       setBroadcastId(null);
+      setBroadcastStartedAt(null);
       setIsBroadcasting(false);
       setHasEnded(true);
     });
@@ -148,7 +153,11 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
         </div>
 
         <div className="flex min-w-0 flex-col gap-4">
-          <ChannelLiveStreamStatusPanel liveState={liveState} />
+          <ChannelLiveStreamStatusPanel
+            activeBroadcastStartedAt={broadcastStartedAt}
+            liveState={liveState}
+            streamPath={CHANNEL_LIVE_MEDIA_CONFIG.streamPath}
+          />
           <ChannelLiveChatPanel
             liveState={liveState}
             onToggleChatPaused={() => setIsChatPaused((currentValue) => !currentValue)}
