@@ -14,9 +14,10 @@ import ChannelLiveStreamStatusPanel from "@/components/channel/live/channel-live
 import { CHANNEL_LIVE_MEDIA_CONFIG } from "@/constants/channel/channel-live-media";
 import { cn } from "@/lib/utils";
 import { BadgeCheck } from "lucide-react";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 
 export type ChannelLiveVisibility = "public" | "private" | "unlisted";
+export type ChannelLiveChatScope = "all" | "followers" | "moderators";
 
 export interface ChannelLiveState {
   isBroadcasting: boolean;
@@ -79,8 +80,11 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
   const [thumbnailPreviewUrl, setThumbnailPreviewUrl] = useState(
     activeBroadcast?.thumbnailUrl ?? "",
   );
+  const [thumbnailPreviewName, setThumbnailPreviewName] = useState("");
   const [isAdultOnly, setIsAdultOnly] = useState(false);
   const [isDonationEnabled, setIsDonationEnabled] = useState(false);
+  const [chatScope, setChatScope] = useState<ChannelLiveChatScope>("all");
+  const [isSlowModeEnabled, setIsSlowModeEnabled] = useState(false);
   const [isBroadcastActionPending, startBroadcastTransition] = useTransition();
   const [isSettingsActionPending, startSettingsTransition] = useTransition();
 
@@ -91,12 +95,35 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
     visibility,
   };
 
+  useEffect(() => {
+    if (!thumbnailPreviewUrl.startsWith("blob:")) return;
+
+    return () => {
+      URL.revokeObjectURL(thumbnailPreviewUrl);
+    };
+  }, [thumbnailPreviewUrl]);
+
+  const handleThumbnailFileChange = (file: File) => {
+    if (!file.type.startsWith("image/")) return;
+
+    setThumbnailPreviewUrl(URL.createObjectURL(file));
+    setThumbnailPreviewName(file.name);
+  };
+
+  const handleThumbnailRemove = () => {
+    setThumbnailPreviewUrl("");
+    setThumbnailPreviewName("");
+  };
+
   const handleStartBroadcast = () => {
     setBroadcastActionError(null);
     startBroadcastTransition(async () => {
+      const persistedThumbnailUrl = /^https?:\/\//.test(thumbnailPreviewUrl.trim())
+        ? thumbnailPreviewUrl.trim()
+        : null;
       const result = await startLiveBroadcastAction({
         tags,
-        thumbnailUrl: thumbnailPreviewUrl.trim() || null,
+        thumbnailUrl: persistedThumbnailUrl,
         title,
       });
 
@@ -208,19 +235,25 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
           <ChannelLivePreviewPanel liveState={liveState} title={title} />
           <ChannelLiveSettingsPanel
             broadcastActionError={broadcastActionError}
+            chatScope={chatScope}
             isAdultOnly={isAdultOnly}
             isBroadcastActionPending={isBroadcastActionPending}
             isDonationEnabled={isDonationEnabled}
+            isSlowModeEnabled={isSlowModeEnabled}
             isSettingsActionPending={isSettingsActionPending}
             settingsActionMessage={settingsActionMessage}
+            thumbnailPreviewName={thumbnailPreviewName}
             thumbnailPreviewUrl={thumbnailPreviewUrl}
             title={title}
             tagInput={tagInput}
             tags={tags}
             liveState={liveState}
             onAdultOnlyChange={setIsAdultOnly}
+            onChatScopeChange={setChatScope}
             onDonationEnabledChange={setIsDonationEnabled}
-            onThumbnailPreviewUrlChange={setThumbnailPreviewUrl}
+            onSlowModeEnabledChange={setIsSlowModeEnabled}
+            onThumbnailFileChange={handleThumbnailFileChange}
+            onThumbnailRemove={handleThumbnailRemove}
             onTitleChange={setTitle}
             onTagInputChange={setTagInput}
             onAddTag={handleAddTag}

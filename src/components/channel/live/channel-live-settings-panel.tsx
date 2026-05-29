@@ -1,30 +1,51 @@
 "use client";
-// 방송 제목, 태그, 미리보기와 시작·종료 버튼을 제공하는 설정 패널입니다.
+// 방송 제목, 태그, 미리보기와 채팅 설정을 제공하는 설정 패널입니다.
 
-import type { ChannelLiveState } from "@/components/channel/live/channel-live-operation-page";
+import type {
+  ChannelLiveChatScope,
+  ChannelLiveState,
+} from "@/components/channel/live/channel-live-operation-page";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { CircleStop, HandCoins, ImageIcon, Play, Save, ShieldAlert, Tag, X } from "lucide-react";
-import type { ComponentType } from "react";
+import {
+  CircleStop,
+  HandCoins,
+  ImageIcon,
+  Play,
+  Save,
+  ShieldAlert,
+  Tag,
+  Timer,
+  Upload,
+  Users,
+  X,
+} from "lucide-react";
+import { type ChangeEvent, type ComponentType, type DragEvent, useRef } from "react";
 
 interface Props {
   broadcastActionError: string | null;
+  chatScope: ChannelLiveChatScope;
   isAdultOnly: boolean;
   isBroadcastActionPending: boolean;
   isDonationEnabled: boolean;
+  isSlowModeEnabled: boolean;
   isSettingsActionPending: boolean;
   settingsActionMessage: string | null;
+  thumbnailPreviewName: string;
   thumbnailPreviewUrl: string;
   title: string;
   tagInput: string;
   tags: string[];
   liveState: ChannelLiveState;
   onAdultOnlyChange: (isAdultOnly: boolean) => void;
+  onChatScopeChange: (chatScope: ChannelLiveChatScope) => void;
   onDonationEnabledChange: (isDonationEnabled: boolean) => void;
-  onThumbnailPreviewUrlChange: (thumbnailPreviewUrl: string) => void;
+  onSlowModeEnabledChange: (isSlowModeEnabled: boolean) => void;
+  onThumbnailFileChange: (file: File) => void;
+  onThumbnailRemove: () => void;
   onTitleChange: (title: string) => void;
   onTagInputChange: (tag: string) => void;
   onAddTag: () => void;
@@ -33,6 +54,15 @@ interface Props {
   onStartBroadcast: () => void;
   onEndBroadcast: () => void;
 }
+
+const CHAT_SCOPE_OPTIONS: Array<{
+  label: string;
+  value: ChannelLiveChatScope;
+}> = [
+  { label: "모든 사람", value: "all" },
+  { label: "팔로워 전용", value: "followers" },
+  { label: "운영자 전용", value: "moderators" },
+];
 
 interface SettingToggleButtonProps {
   checked: boolean;
@@ -92,19 +122,25 @@ function SettingToggleButton({
 
 export default function ChannelLiveSettingsPanel({
   broadcastActionError,
+  chatScope,
   isAdultOnly,
   isBroadcastActionPending,
   isDonationEnabled,
+  isSlowModeEnabled,
   isSettingsActionPending,
   settingsActionMessage,
+  thumbnailPreviewName,
   thumbnailPreviewUrl,
   title,
   tagInput,
   tags,
   liveState,
   onAdultOnlyChange,
+  onChatScopeChange,
   onDonationEnabledChange,
-  onThumbnailPreviewUrlChange,
+  onSlowModeEnabledChange,
+  onThumbnailFileChange,
+  onThumbnailRemove,
   onTitleChange,
   onTagInputChange,
   onAddTag,
@@ -114,6 +150,25 @@ export default function ChannelLiveSettingsPanel({
   onEndBroadcast,
 }: Props) {
   const trimmedThumbnailPreviewUrl = thumbnailPreviewUrl.trim();
+  const thumbnailInputRef = useRef<HTMLInputElement>(null);
+
+  const handleThumbnailInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+
+    if (!file) return;
+
+    onThumbnailFileChange(file);
+    event.target.value = "";
+  };
+
+  const handleThumbnailDrop = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    const file = event.dataTransfer.files[0];
+
+    if (!file) return;
+
+    onThumbnailFileChange(file);
+  };
 
   return (
     <Card className="relative">
@@ -197,30 +252,132 @@ export default function ChannelLiveSettingsPanel({
         </div>
 
         <div className="grid gap-3">
-          <div className="border-border rounded-lg border p-3">
-            <div className="flex items-center gap-2">
-              <ImageIcon className="text-brand size-4" />
-              <Label htmlFor="channel-live-thumbnail">미리보기 이미지</Label>
-            </div>
-            <div className="mt-3 grid gap-3 sm:grid-cols-[minmax(0,1fr)_9rem]">
-              <Input
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="border-border rounded-lg border p-3">
+              <div className="flex items-center gap-2">
+                <ImageIcon className="text-brand size-4" />
+                <span className="text-sm font-semibold">미리보기 이미지</span>
+              </div>
+              <input
+                ref={thumbnailInputRef}
+                className="sr-only"
                 id="channel-live-thumbnail"
-                value={thumbnailPreviewUrl}
-                onChange={(event) => onThumbnailPreviewUrlChange(event.target.value)}
-                placeholder="이미지 URL을 입력하세요"
+                type="file"
+                accept="image/*"
+                onChange={handleThumbnailInputChange}
               />
               <div
-                className="border-border bg-muted flex aspect-video items-center justify-center overflow-hidden rounded-lg border bg-cover bg-center"
+                className={cn(
+                  "border-border bg-muted mt-3 flex aspect-video flex-col items-center justify-center overflow-hidden rounded-lg border border-dashed bg-cover bg-center p-3 text-center",
+                  trimmedThumbnailPreviewUrl && "border-solid",
+                )}
+                role="button"
+                tabIndex={0}
                 style={
                   trimmedThumbnailPreviewUrl
                     ? { backgroundImage: `url(${trimmedThumbnailPreviewUrl})` }
                     : undefined
                 }
+                onClick={() => thumbnailInputRef.current?.click()}
+                onDragOver={(event) => event.preventDefault()}
+                onDrop={handleThumbnailDrop}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    thumbnailInputRef.current?.click();
+                  }
+                }}
               >
                 {!trimmedThumbnailPreviewUrl && (
-                  <ImageIcon className="text-muted-foreground size-6" />
+                  <div className="text-muted-foreground flex flex-col items-center gap-2 text-xs">
+                    <Upload className="size-6" />
+                    <span>이미지를 끌어오거나 추가하세요.</span>
+                  </div>
                 )}
               </div>
+              <div className="mt-3 flex items-center justify-between gap-2">
+                <span className="text-muted-foreground min-w-0 truncate text-xs">
+                  {thumbnailPreviewName || "이미지 없음"}
+                </span>
+                {trimmedThumbnailPreviewUrl ? (
+                  <Button type="button" size="sm" variant="outline" onClick={onThumbnailRemove}>
+                    삭제
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => thumbnailInputRef.current?.click()}
+                  >
+                    추가
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            <div className="border-border rounded-lg border p-3">
+              <div className="flex items-center gap-2">
+                <Users className="text-brand size-4" />
+                <span className="text-sm font-semibold">채팅 설정</span>
+              </div>
+              <div className="bg-muted mt-3 grid grid-cols-3 gap-1 rounded-lg p-1">
+                {CHAT_SCOPE_OPTIONS.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    className={cn(
+                      "h-9 rounded-md px-1 text-xs font-semibold transition-colors",
+                      chatScope === option.value
+                        ? "bg-background text-brand shadow-sm"
+                        : "text-muted-foreground hover:text-foreground",
+                    )}
+                    aria-pressed={chatScope === option.value}
+                    onClick={() => onChatScopeChange(option.value)}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                className={cn(
+                  "border-border mt-3 flex min-h-16 w-full items-center justify-between gap-3 rounded-lg border p-3 text-left transition-colors",
+                  isSlowModeEnabled ? "border-brand/40 bg-brand/10" : "hover:bg-muted/50",
+                )}
+                aria-pressed={isSlowModeEnabled}
+                onClick={() => onSlowModeEnabledChange(!isSlowModeEnabled)}
+              >
+                <span className="flex min-w-0 items-center gap-3">
+                  <span
+                    className={cn(
+                      "flex size-9 shrink-0 items-center justify-center rounded-full",
+                      isSlowModeEnabled ? "bg-brand text-white" : "bg-muted text-muted-foreground",
+                    )}
+                  >
+                    <Timer className="size-4" />
+                  </span>
+                  <span className="flex min-w-0 flex-col gap-1">
+                    <strong className="text-sm">저속모드</strong>
+                    <span className="text-muted-foreground text-xs">
+                      채팅 입력 간격을 제한합니다.
+                    </span>
+                  </span>
+                </span>
+                <span
+                  className={cn(
+                    "flex h-5 w-9 shrink-0 items-center rounded-full p-0.5 transition-colors",
+                    isSlowModeEnabled ? "bg-brand" : "bg-muted-foreground/30",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "bg-background size-4 rounded-full transition-transform",
+                      isSlowModeEnabled && "translate-x-4",
+                    )}
+                  />
+                </span>
+              </button>
             </div>
           </div>
 
