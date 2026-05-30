@@ -1,6 +1,7 @@
 "use client";
 // OBS 채팅 오버레이의 실시간 메시지와 높이 보정 상태를 관리합니다.
 
+import { LIVE_CHAT_OVERLAY_MESSAGE_LIMIT } from "@/constants/live/live-overlay";
 import { createClient } from "@/lib/supabase/client";
 import type { LiveMessageRow } from "@/types/live/live";
 import type { LiveChatOverlayItem, LiveChatOverlaySnapshot } from "@/types/live/live-chat-overlay";
@@ -94,7 +95,13 @@ export function useLiveChatOverlay(initialSnapshot: LiveChatOverlaySnapshot) {
             return;
           }
 
-          setVisibleItems((currentItems) => [...currentItems, item]);
+          setVisibleItems((currentItems) => {
+            const nextItems = [...currentItems, item];
+
+            return nextItems.length > LIVE_CHAT_OVERLAY_MESSAGE_LIMIT
+              ? nextItems.slice(-LIVE_CHAT_OVERLAY_MESSAGE_LIMIT)
+              : nextItems;
+          });
         },
       )
       .subscribe();

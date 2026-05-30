@@ -35,6 +35,10 @@ export function ChatNumberSelectControl({
   compact,
   onChange,
 }: Props) {
+  if (options.length === 0) {
+    return null;
+  }
+
   const selectedOption = options.find((option) => option.value === value) ?? options[0];
   const selectedValue = String(selectedOption.value);
 

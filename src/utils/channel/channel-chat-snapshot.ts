@@ -62,6 +62,7 @@ function readForbiddenWords(value?: string[]) {
   }
 
   return value
+    .filter((word): word is string => typeof word === "string")
     .map((word) => word.trim())
     .filter((word, index, words) => word !== "" && words.indexOf(word) === index);
 }

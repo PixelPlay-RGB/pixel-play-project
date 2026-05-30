@@ -12,13 +12,25 @@ interface Props {
   onChange: (value: LiveChatScope) => void;
 }
 
+const CHAT_SCOPE_VALUES: readonly string[] = CHANNEL_CHAT_SCOPE_OPTIONS.map(
+  (option) => option.value,
+);
+
+function isLiveChatScope(value: string): value is LiveChatScope {
+  return CHAT_SCOPE_VALUES.includes(value);
+}
+
 export function ChatScopeField({ value, disabled, onChange }: Props) {
   return (
     <ChatFieldRow label="참여 범위" description="입력 권한">
       <RadioGroup
         value={value}
         className="flex w-auto flex-wrap gap-2"
-        onValueChange={(nextValue) => onChange(nextValue as LiveChatScope)}
+        onValueChange={(nextValue) => {
+          if (isLiveChatScope(nextValue)) {
+            onChange(nextValue);
+          }
+        }}
       >
         {CHANNEL_CHAT_SCOPE_OPTIONS.map((option) => (
           <ChatSettingOptionButton
