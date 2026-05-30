@@ -25,9 +25,9 @@ export function buildChannelChatSnapshot(creatorId: string, snapshot: Json): Cha
     creatorId,
     chatScope: readChatScope(settings.chatScope),
     followerWaitSeconds: readNumber(settings.followerWaitSeconds, 0),
-    slowModeEnabled: settings.slowModeEnabled ?? false,
+    slowModeEnabled: readBoolean(settings.slowModeEnabled, false),
     slowModeSeconds: readNumber(settings.slowModeSeconds, 3),
-    linkBlocked: settings.linkBlocked ?? true,
+    linkBlocked: readBoolean(settings.linkBlocked, true),
     forbiddenWords: readForbiddenWords(settings.forbiddenWords),
     chatRuleText: readText(settings.chatRuleText, CHANNEL_CHAT_DEFAULT_RULE_TEXT),
     chatRuleVersion: readNumber(settings.chatRuleVersion, 1),
@@ -54,6 +54,10 @@ function readChatScope(value?: string): LiveChatScope {
 
 function readNumber(value: unknown, fallback: number) {
   return typeof value === "number" && Number.isFinite(value) ? value : fallback;
+}
+
+function readBoolean(value: unknown, fallback: boolean) {
+  return typeof value === "boolean" ? value : fallback;
 }
 
 function readForbiddenWords(value?: string[]) {
