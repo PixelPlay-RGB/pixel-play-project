@@ -2,6 +2,7 @@
 "use client";
 
 import SettingSidebar from "@/components/setting/setting-sidebar";
+import { SidebarAutoClose } from "@/components/common/sidebar-auto-close";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/common/use-mobile";
 import type { CurrentProfileSnapshot } from "@/types/profile/user";
@@ -22,11 +23,12 @@ export function SettingShell({ children, profile }: Props) {
   }, []);
 
   if (!isMounted) {
-    return <div className="h-app-content min-h-0 overflow-auto p-6 md:p-10">{children}</div>;
+    return <div className="h-chat-content min-h-0 overflow-auto p-6 md:p-10">{children}</div>;
   }
 
   return (
-    <SidebarProvider className="h-app-content min-h-0 overflow-hidden">
+    <SidebarProvider className="h-chat-content min-h-0 overflow-hidden">
+      <SidebarAutoClose />
       <SettingSidebar isMobile={isMobile} profile={profile} />
       <SidebarInset className="min-w-0 overflow-hidden">
         {isMobile && (

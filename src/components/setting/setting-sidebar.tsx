@@ -2,6 +2,7 @@
 // setting-sidebar 컴포넌트를 제공합니다.
 
 import UserAccountMenuItemRenderer from "@/components/common/user-account-menu-item";
+import { SidebarCredits } from "@/components/common/sidebar-credits";
 import {
   Sidebar,
   SidebarContent,
@@ -81,6 +82,7 @@ export default function SettingSidebar({ isMobile, profile }: Props) {
             </SidebarMenuItem>
           </SidebarMenu>
         </div>
+        <SidebarCredits />
       </SidebarFooter>
     </Sidebar>
   );
