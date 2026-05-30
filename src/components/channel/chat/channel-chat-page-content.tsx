@@ -13,9 +13,5 @@ export function ChannelChatPageContent({ initialSnapshot }: Props) {
     return <ChatSettingsLoadFailedState />;
   }
 
-  return (
-    <main className="flex w-full flex-col gap-5">
-      <ChannelChatControls initialSnapshot={initialSnapshot} />
-    </main>
-  );
+  return <ChannelChatControls initialSnapshot={initialSnapshot} />;
 }

@@ -337,7 +337,7 @@
     background-color: color-mix(in oklch, var(--route-accent) 11%, transparent);
   }
 
-  .channel-side-tip-card {
+  .side-tip-card {
     border-color: color-mix(in oklch, var(--brand) 20%, transparent);
     background: linear-gradient(
       135deg,
@@ -346,7 +346,7 @@
     );
   }
 
-  .dark .channel-side-tip-card {
+  .dark .side-tip-card {
     border-color: color-mix(in oklch, var(--brand) 30%, transparent);
     background: linear-gradient(
       135deg,

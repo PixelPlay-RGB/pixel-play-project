@@ -26,7 +26,7 @@ export function ChatSlowModeField({
         <ChatToggleControl
           checked={enabled}
           checkedLabel="ON"
-          uncheckedLabel="꺼짐"
+          uncheckedLabel="OFF"
           ariaLabel="저속 모드 사용"
           disabled={disabled}
           onChange={onEnabledChange}

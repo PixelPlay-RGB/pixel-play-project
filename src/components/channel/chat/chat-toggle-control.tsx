@@ -38,14 +38,14 @@ export function ChatToggleControl({
       <span>{checked ? checkedLabel : uncheckedLabel}</span>
       <span
         className={cn(
-          "relative h-5 w-10 rounded-full transition-colors",
-          checked ? "bg-brand/80" : "bg-muted-foreground/30",
+          "relative inline-flex h-5 w-9 shrink-0 rounded-full transition-colors",
+          checked ? "bg-brand" : "bg-muted-foreground/30",
         )}
       >
         <span
           className={cn(
-            "bg-background absolute top-0.5 size-4 rounded-full shadow transition-transform",
-            checked ? "translate-x-5" : "translate-x-0.5",
+            "absolute top-0.5 left-0.5 size-4 rounded-full bg-white shadow-sm transition-transform",
+            checked ? "translate-x-4" : "translate-x-0",
           )}
         />
       </span>
