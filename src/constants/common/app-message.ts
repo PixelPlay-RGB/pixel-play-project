@@ -63,6 +63,20 @@ export const APP_MESSAGE = {
         title: "연동 해제 완료",
       },
     },
+    channel: {
+      securityCopied: {
+        title: "복사 완료",
+        description: "OBS에 바로 붙여 넣을 수 있습니다.",
+      },
+      securityTokenRotated: {
+        title: "새 정보 생성 완료",
+        description: "OBS에 새 정보를 다시 붙여 넣어주세요.",
+      },
+      chatSettingsSaved: {
+        title: "저장 완료",
+        description: "새 채팅 설정을 다음 채팅부터 적용합니다.",
+      },
+    },
   },
   error: {
     common: {
@@ -316,6 +330,28 @@ export const APP_MESSAGE = {
       defaultAccountCannotUnlink: {
         title: "기본 계정 해제 불가",
         description: "로그인에 사용하는 기본 계정은 해제할 수 없습니다.",
+      },
+    },
+    channel: {
+      chatSettingsLoadFailed: {
+        title: "채팅 설정 조회 실패",
+        description: "다시 로그인하거나 잠시 후 새로고침해주세요.",
+      },
+      chatSettingsSaveFailed: {
+        title: "채팅 설정 저장 실패",
+        description: "입력값을 확인한 뒤 다시 시도해주세요.",
+      },
+      securityLoadFailed: {
+        title: "방송 연결 정보 조회 실패",
+        description: "다시 로그인하거나 잠시 후 새로고침해주세요.",
+      },
+      securityCopyFailed: {
+        title: "복사 실패",
+        description: "브라우저 권한을 확인한 뒤 다시 시도해주세요.",
+      },
+      securityTokenRotateFailed: {
+        title: "새 정보 생성 실패",
+        description: "잠시 후 다시 시도해주세요.",
       },
     },
     supabase: {
