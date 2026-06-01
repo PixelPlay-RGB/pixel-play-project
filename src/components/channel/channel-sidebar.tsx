@@ -16,6 +16,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import UserAccountMenuItemRenderer from "@/components/common/user-account-menu-item";
+import { SidebarCredits } from "@/components/common/sidebar-credits";
 import { CHANNEL_MENU_ITEMS } from "@/constants/channel/channel-menu";
 import { USER_ACCOUNT_PROFILE_MENU_ITEM } from "@/constants/common/user-account-menu";
 import { useLogout } from "@/hooks/auth/use-logout";
@@ -77,6 +78,7 @@ export default function ChannelSidebar({ isMobile }: Props) {
             </SidebarMenuItem>
           </SidebarMenu>
         </div>
+        <SidebarCredits />
       </SidebarFooter>
     </Sidebar>
   );

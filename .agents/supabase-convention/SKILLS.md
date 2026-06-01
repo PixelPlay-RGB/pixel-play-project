@@ -26,3 +26,30 @@
 - 비즈니스 로직이 데이터베이스 계층에서 처리되는 것이 효율적일 경우(예: 복잡한 필터링, 트랜잭션 처리) PostgreSQL 함수(RPC)를 적극 활용하십시오.
 - 동시성 문제가 발생될 것 같은 부분은 사용자에게 상의후에 적용할지 말지 결정하십시오.
 - `src/lib/supabase/client.ts` 및 `server.ts`를 통해 생성된 클라이언트를 사용하여 데이터에 접근하십시오.
+
+## 4. 데이터 read 전략과 RPC 실행 권한
+
+read(조회)를 **어디서 실행할지는 RPC의 실행 권한(grant)과 보안 모델에 따라 결정**합니다. 모든 read를 무조건 TanStack Query로 통일하지 않습니다.
+
+### 4.1 브라우저 client read — TanStack Query 훅
+
+- 대상 RPC/테이블이 `authenticated`에 `grant`되어 있고, RLS로 본인 데이터만 접근하도록 보호되는 경우 사용합니다.
+- 브라우저 client(`src/lib/supabase/client.ts`)로 `useQuery`의 `queryFn`에서 직접 `.rpc()` 또는 `.from()`을 호출합니다.
+- 예: `useUser`(public.user 조회), `useChatRoomList`(`get_chat_room_list`).
+- 장점: 캐시 공유로 props drilling 회피, mutation 후 `invalidateQueries`로 즉시 갱신.
+
+### 4.2 서버 전용 read — Server Component 페칭 (SSR)
+
+- 대상 RPC가 `authenticated`/`anon`에서 `revoke`되고 `service_role`에만 `grant`된 경우, **브라우저에서 호출 자체가 불가능**합니다.
+- 이런 RPC는 보통 `security definer`이고 `p_actor_user_id` 같은 **신뢰 파라미터**를 받습니다. 브라우저에 열면 다른 유저 id를 넣어 조회할 수 있어, **의도적으로 서버 전용으로 잠근 보안 설계**입니다.
+  - 예: `get_creator_studio_snapshot`은 `revoke ... from authenticated` + `grant ... to service_role`로 잠겨 있음.
+- 따라서 admin client(`createAdminClient`)로 **서버에서** 호출하고, `auth.getUser()`로 검증한 실제 user id를 파라미터로 넘깁니다.
+- 이 read는 Server Component에서 수행하며 **TanStack Query 훅으로 옮기지 마십시오.** 옮기려면 RPC를 `auth.uid()` 기반으로 재설계하고 grant/RLS를 바꿔야 하므로, 보안 재검토가 선행되지 않으면 보안이 약화됩니다.
+
+### 4.3 서버 read 파일 위치
+
+- 특정 라우트 전용 서버 데이터 페칭 함수는 해당 라우트의 **`_data/` 프라이빗 폴더**에 둡니다. (`_` 접두사라 Next.js 라우팅 대상에서 제외됨)
+  - 예: `app/channel/chat/_data/channel-chat-data.ts`, `app/live/[creatorId]/_data/live-overlay-data.ts`.
+- 라우트에 종속되지 않고 여러 곳에서 재사용하는 서버 read 헬퍼는 `utils/{domain}/`에 둡니다.
+  - 예: `utils/profile/profile-server.ts`(`getCurrentProfileSnapshot`).
+- 라우트 폴더에 `data.ts`를 그대로 노출하지 않습니다.

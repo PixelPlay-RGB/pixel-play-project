@@ -72,6 +72,10 @@ export const APP_MESSAGE = {
         title: "새 정보 생성 완료",
         description: "OBS에 새 정보를 다시 붙여 넣어주세요.",
       },
+      chatSettingsSaved: {
+        title: "저장 완료",
+        description: "새 채팅 설정을 다음 채팅부터 적용합니다.",
+      },
     },
     following: {
       followed: {
@@ -345,6 +349,14 @@ export const APP_MESSAGE = {
       },
     },
     channel: {
+      chatSettingsLoadFailed: {
+        title: "채팅 설정 조회 실패",
+        description: "다시 로그인하거나 잠시 후 새로고침해주세요.",
+      },
+      chatSettingsSaveFailed: {
+        title: "채팅 설정 저장 실패",
+        description: "입력값을 확인한 뒤 다시 시도해주세요.",
+      },
       securityLoadFailed: {
         title: "방송 연결 정보 조회 실패",
         description: "다시 로그인하거나 잠시 후 새로고침해주세요.",
