@@ -146,55 +146,50 @@ export default function ChannelChatSettingsPage({ initialSnapshot }: Props) {
       <div className="mx-auto grid w-full max-w-3xl gap-4">
         <Card>
           <CardHeader>
-            <CardTitle>채팅 접근</CardTitle>
+            <CardTitle>채팅권한</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-3">
-            <div className="grid gap-2">
-              <Label>채팅 권한</Label>
-              <div className="grid gap-2 md:grid-cols-3">
-                {CHAT_SCOPE_OPTIONS.map((option) => {
-                  const Icon = option.icon;
-                  const selected = chatScope === option.value;
+            <div className="grid gap-2 md:grid-cols-3">
+              {CHAT_SCOPE_OPTIONS.map((option) => {
+                const Icon = option.icon;
+                const selected = chatScope === option.value;
 
-                  return (
-                    <button
-                      key={option.value}
-                      type="button"
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    className={cn(
+                      "border-border relative min-h-24 overflow-hidden rounded-lg border p-3 text-left transition-all duration-200",
+                      selected
+                        ? "border-brand bg-brand/10 ring-brand/20 shadow-sm ring-2"
+                        : "hover:bg-muted/50",
+                    )}
+                    aria-pressed={selected}
+                    onClick={() => handleChatScopeChange(option.value)}
+                  >
+                    <span
                       className={cn(
-                        "border-border relative min-h-24 overflow-hidden rounded-lg border p-3 text-left transition-all duration-200",
-                        selected
-                          ? "border-brand bg-brand/10 ring-brand/20 shadow-sm ring-2"
-                          : "hover:bg-muted/50",
+                        "absolute inset-x-3 top-0 h-1 rounded-b-full transition-transform duration-200",
+                        selected ? "bg-brand translate-y-0" : "-translate-y-1 bg-transparent",
                       )}
-                      aria-pressed={selected}
-                      onClick={() => handleChatScopeChange(option.value)}
-                    >
+                    />
+                    <span className="flex items-start gap-2">
                       <span
                         className={cn(
-                          "absolute inset-x-3 top-0 h-1 rounded-b-full transition-transform duration-200",
-                          selected ? "bg-brand translate-y-0" : "-translate-y-1 bg-transparent",
+                          "flex size-8 shrink-0 items-center justify-center rounded-full transition-colors",
+                          selected ? "bg-brand text-white" : "bg-muted text-muted-foreground",
                         )}
-                      />
-                      <span className="flex items-start gap-2">
-                        <span
-                          className={cn(
-                            "flex size-8 shrink-0 items-center justify-center rounded-full transition-colors",
-                            selected ? "bg-brand text-white" : "bg-muted text-muted-foreground",
-                          )}
-                        >
-                          <Icon className="size-4" />
-                        </span>
-                        <span className="grid gap-1">
-                          <strong className="text-sm">{option.label}</strong>
-                          <span className="text-muted-foreground text-xs">
-                            {option.description}
-                          </span>
-                        </span>
+                      >
+                        <Icon className="size-4" />
                       </span>
-                    </button>
-                  );
-                })}
-              </div>
+                      <span className="grid gap-1">
+                        <strong className="text-sm">{option.label}</strong>
+                        <span className="text-muted-foreground text-xs">{option.description}</span>
+                      </span>
+                    </span>
+                  </button>
+                );
+              })}
             </div>
 
             {chatScope === "follower" && (
@@ -215,12 +210,19 @@ export default function ChannelChatSettingsPage({ initialSnapshot }: Props) {
                 </div>
               </div>
             )}
+          </CardContent>
+        </Card>
 
+        <Card>
+          <CardHeader>
+            <CardTitle>저속모드</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-3">
             <ChannelSettingToggle
               checked={slowModeEnabled}
               description="시청자 채팅 입력 간격을 제한합니다."
               icon={Timer}
-              label="저속모드"
+              label="사용 여부"
               onChange={setSlowModeEnabled}
             />
             <div className="grid gap-2">
@@ -239,11 +241,19 @@ export default function ChannelChatSettingsPage({ initialSnapshot }: Props) {
                 ))}
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>링크차단</CardTitle>
+          </CardHeader>
+          <CardContent>
             <ChannelSettingToggle
               checked={linkBlocked}
               description="채팅에서 URL 공유를 차단합니다."
               icon={Link2}
-              label="링크 차단"
+              label="사용 여부"
               onChange={setLinkBlocked}
             />
           </CardContent>
@@ -251,59 +261,61 @@ export default function ChannelChatSettingsPage({ initialSnapshot }: Props) {
 
         <Card>
           <CardHeader>
-            <CardTitle>금지어와 규칙</CardTitle>
+            <CardTitle>금지어</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-3">
-            <div className="grid gap-2">
-              <Label htmlFor="channel-chat-forbidden-word">금지어</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="channel-chat-forbidden-word"
-                  value={forbiddenWordInput}
-                  maxLength={30}
-                  onChange={(event) => setForbiddenWordInput(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") {
-                      event.preventDefault();
-                      handleAddForbiddenWord();
-                    }
-                  }}
-                  placeholder="금지어를 입력하세요."
-                />
-                <Button type="button" variant="outline" onClick={handleAddForbiddenWord}>
-                  추가
-                </Button>
-              </div>
-              <div className="border-border flex min-h-16 flex-wrap items-center gap-2 rounded-lg border p-2">
-                {forbiddenWords.length ? (
-                  forbiddenWords.map((word) => (
-                    <button
-                      key={word}
-                      type="button"
-                      className="bg-destructive/10 text-destructive inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold"
-                      onClick={() => handleRemoveForbiddenWord(word)}
-                    >
-                      {word}
-                      <X className="size-3" />
-                    </button>
-                  ))
-                ) : (
-                  <span className="text-muted-foreground text-xs">등록된 금지어가 없습니다.</span>
-                )}
-              </div>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="channel-chat-rule">채팅 규칙</Label>
-              <Textarea
-                id="channel-chat-rule"
-                className="min-h-36"
-                value={chatRuleText}
-                maxLength={300}
-                onChange={(event) => setChatRuleText(event.target.value)}
-                placeholder="시청자가 채팅 전에 확인할 안내를 입력하세요."
+            <div className="flex gap-2">
+              <Input
+                id="channel-chat-forbidden-word"
+                value={forbiddenWordInput}
+                maxLength={30}
+                onChange={(event) => setForbiddenWordInput(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    handleAddForbiddenWord();
+                  }
+                }}
+                placeholder="금지어를 입력하세요."
               />
-              <span className="text-muted-foreground text-xs">{chatRuleText.length} / 300</span>
+              <Button type="button" variant="outline" onClick={handleAddForbiddenWord}>
+                추가
+              </Button>
             </div>
+            <div className="border-border flex min-h-16 flex-wrap items-center gap-2 rounded-lg border p-2">
+              {forbiddenWords.length ? (
+                forbiddenWords.map((word) => (
+                  <button
+                    key={word}
+                    type="button"
+                    className="bg-destructive/10 text-destructive inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold"
+                    onClick={() => handleRemoveForbiddenWord(word)}
+                  >
+                    {word}
+                    <X className="size-3" />
+                  </button>
+                ))
+              ) : (
+                <span className="text-muted-foreground text-xs">등록된 금지어가 없습니다.</span>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>채팅규칙</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-2">
+            <Textarea
+              id="channel-chat-rule"
+              className="min-h-36"
+              value={chatRuleText}
+              maxLength={300}
+              onChange={(event) => setChatRuleText(event.target.value)}
+              placeholder="시청자가 채팅 전에 확인할 안내를 입력하세요."
+            />
+            <span className="text-muted-foreground text-xs">{chatRuleText.length} / 300</span>
           </CardContent>
         </Card>
       </div>
