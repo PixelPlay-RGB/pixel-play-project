@@ -26,6 +26,7 @@ const LIVE_THUMBNAIL_EXTENSION_BY_TYPE: Record<string, string> = {
   "image/png": "png",
   "image/webp": "webp",
 };
+const CHANNEL_LIVE_CHAT_MESSAGE_LIMIT = 50;
 
 export interface ChannelLiveActiveBroadcast {
   id: string;
@@ -42,7 +43,16 @@ export interface ChannelLiveActiveBroadcast {
 
 export interface ChannelLiveStudioSnapshot {
   activeBroadcast: ChannelLiveActiveBroadcast | null;
+  chatMessages: ChannelLiveChatMessage[];
   settings: ChannelLiveStudioSettings;
+}
+
+export interface ChannelLiveChatMessage {
+  authorName: string;
+  content: string;
+  createdAt: string;
+  id: string;
+  isCreator: boolean;
 }
 
 export interface ChannelLiveStudioSettings {
@@ -100,6 +110,18 @@ function readStringArray(value: unknown) {
   return Array.isArray(value)
     ? value.filter((item): item is string => typeof item === "string")
     : [];
+}
+
+function readJsonObject(value: Json): Record<string, Json | undefined> {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, Json | undefined>)
+    : {};
+}
+
+function readMetadataString(value: Json | undefined) {
+  const trimmed = typeof value === "string" ? value.trim() : "";
+
+  return trimmed.length > 0 ? trimmed : null;
 }
 
 function getLiveThumbnailExtension(file: File) {
@@ -166,6 +188,7 @@ function toChannelLiveStudioSnapshot(value: Json): ChannelLiveStudioSnapshot {
   if (!isRecord(value)) {
     return {
       activeBroadcast: null,
+      chatMessages: [],
       settings: createDefaultSettings(),
     };
   }
@@ -176,6 +199,7 @@ function toChannelLiveStudioSnapshot(value: Json): ChannelLiveStudioSnapshot {
   if (!isRecord(activeBroadcast)) {
     return {
       activeBroadcast: null,
+      chatMessages: [],
       settings: createSettingsFromRecord(settings),
     };
   }
@@ -194,8 +218,51 @@ function toChannelLiveStudioSnapshot(value: Json): ChannelLiveStudioSnapshot {
         typeof activeBroadcast.thumbnailUrl === "string" ? activeBroadcast.thumbnailUrl : null,
       title: readString(activeBroadcast.title),
     },
+    chatMessages: [],
     settings: createSettingsFromRecord(settings),
   };
+}
+
+function toChannelLiveChatMessage(
+  message: {
+    content: string;
+    created_at: string;
+    id: string;
+    metadata: Json;
+    sender_id: string | null;
+  },
+  creatorId: string,
+): ChannelLiveChatMessage {
+  const metadata = readJsonObject(message.metadata);
+
+  return {
+    authorName: readMetadataString(metadata.senderNickname) ?? "시청자",
+    content: message.content,
+    createdAt: message.created_at,
+    id: message.id,
+    isCreator: message.sender_id === creatorId,
+  };
+}
+
+async function getChannelLiveChatMessagesByBroadcastId(
+  supabase: ReturnType<typeof createAdminClient>,
+  broadcastId: string,
+  creatorId: string,
+) {
+  const { data, error } = await supabase
+    .from("live_message")
+    .select("content, created_at, id, metadata, sender_id")
+    .eq("broadcast_id", broadcastId)
+    .eq("message_type", "chat")
+    .order("created_at", { ascending: false })
+    .limit(CHANNEL_LIVE_CHAT_MESSAGE_LIMIT);
+
+  if (error) {
+    console.error("방송 운영 채팅 메시지 조회 실패", error);
+    return [];
+  }
+
+  return [...(data ?? [])].reverse().map((message) => toChannelLiveChatMessage(message, creatorId));
 }
 
 export async function getChannelLiveStudioSnapshotAction(): Promise<
@@ -219,9 +286,19 @@ export async function getChannelLiveStudioSnapshotAction(): Promise<
     return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
   }
 
+  const snapshot = toChannelLiveStudioSnapshot(data);
+
+  if (snapshot.activeBroadcast) {
+    snapshot.chatMessages = await getChannelLiveChatMessagesByBroadcastId(
+      supabase,
+      snapshot.activeBroadcast.id,
+      actor.userId,
+    );
+  }
+
   return {
     success: true,
-    data: toChannelLiveStudioSnapshot(data),
+    data: snapshot,
   };
 }
 

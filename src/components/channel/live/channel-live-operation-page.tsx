@@ -358,6 +358,9 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
             streamPath={CHANNEL_LIVE_MEDIA_CONFIG.streamPath}
           />
           <ChannelLiveChatPanel
+            key={broadcastId ?? "channel-live-chat-idle"}
+            broadcastId={broadcastId}
+            initialMessages={initialSnapshot?.chatMessages ?? []}
             liveState={liveState}
             onToggleChatPaused={() => setIsChatPaused((currentValue) => !currentValue)}
           />
