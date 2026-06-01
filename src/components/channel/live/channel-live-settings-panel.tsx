@@ -254,125 +254,147 @@ export default function ChannelLiveSettingsPanel({
           </div>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="border-border rounded-lg border p-3">
-            <div className="flex items-center gap-2">
-              <ImageIcon className="text-brand size-4" />
-              <span className="text-sm font-semibold">미리보기 이미지</span>
-            </div>
-            <input
-              ref={thumbnailInputRef}
-              className="sr-only"
-              id="channel-live-thumbnail"
-              type="file"
-              accept="image/*"
-              onChange={handleThumbnailInputChange}
-            />
-            <div
-              className={cn(
-                "border-border bg-muted mt-3 flex aspect-video flex-col items-center justify-center overflow-hidden rounded-lg border border-dashed bg-cover bg-center p-3 text-center",
-                trimmedThumbnailPreviewUrl && "border-solid",
-              )}
-              role="button"
-              tabIndex={0}
-              style={
-                trimmedThumbnailPreviewUrl
-                  ? { backgroundImage: `url(${trimmedThumbnailPreviewUrl})` }
-                  : undefined
-              }
-              onClick={() => thumbnailInputRef.current?.click()}
-              onDragOver={(event) => event.preventDefault()}
-              onDrop={handleThumbnailDrop}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") {
-                  event.preventDefault();
-                  thumbnailInputRef.current?.click();
+        <div className="grid items-start gap-3 sm:grid-cols-2">
+          <div className="grid gap-3">
+            <div className="border-border rounded-lg border p-3">
+              <div className="flex items-center gap-2">
+                <ImageIcon className="text-brand size-4" />
+                <span className="text-sm font-semibold">미리보기 이미지</span>
+              </div>
+              <input
+                ref={thumbnailInputRef}
+                className="sr-only"
+                id="channel-live-thumbnail"
+                type="file"
+                accept="image/*"
+                onChange={handleThumbnailInputChange}
+              />
+              <div
+                className={cn(
+                  "border-border bg-muted mt-3 flex h-36 flex-col items-center justify-center overflow-hidden rounded-lg border border-dashed bg-cover bg-center p-3 text-center sm:h-40",
+                  trimmedThumbnailPreviewUrl && "border-solid",
+                )}
+                role="button"
+                tabIndex={0}
+                style={
+                  trimmedThumbnailPreviewUrl
+                    ? { backgroundImage: `url(${trimmedThumbnailPreviewUrl})` }
+                    : undefined
                 }
-              }}
-            >
-              {!trimmedThumbnailPreviewUrl && (
-                <div className="text-muted-foreground flex flex-col items-center gap-2 text-xs">
-                  <Upload className="size-6" />
-                  <span>이미지를 끌어오거나 추가하세요.</span>
-                </div>
-              )}
+                onClick={() => thumbnailInputRef.current?.click()}
+                onDragOver={(event) => event.preventDefault()}
+                onDrop={handleThumbnailDrop}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    thumbnailInputRef.current?.click();
+                  }
+                }}
+              >
+                {!trimmedThumbnailPreviewUrl && (
+                  <div className="text-muted-foreground flex flex-col items-center gap-2 text-xs">
+                    <Upload className="size-6" />
+                    <span>이미지를 끌어오거나 추가하세요.</span>
+                  </div>
+                )}
+              </div>
+              <div className="mt-3 flex items-center justify-between gap-2">
+                <span className="text-muted-foreground min-w-0 truncate text-xs">
+                  {thumbnailPreviewName || "이미지 없음"}
+                </span>
+                {trimmedThumbnailPreviewUrl ? (
+                  <Button type="button" size="sm" variant="outline" onClick={onThumbnailRemove}>
+                    삭제
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => thumbnailInputRef.current?.click()}
+                  >
+                    추가
+                  </Button>
+                )}
+              </div>
             </div>
-            <div className="mt-3 flex items-center justify-between gap-2">
-              <span className="text-muted-foreground min-w-0 truncate text-xs">
-                {thumbnailPreviewName || "이미지 없음"}
-              </span>
-              {trimmedThumbnailPreviewUrl ? (
-                <Button type="button" size="sm" variant="outline" onClick={onThumbnailRemove}>
-                  삭제
-                </Button>
-              ) : (
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={() => thumbnailInputRef.current?.click()}
-                >
-                  추가
-                </Button>
-              )}
+
+            <div className="border-border rounded-lg border p-3">
+              <div className="flex items-center gap-2">
+                <Users className="text-brand size-4" />
+                <span className="text-sm font-semibold">채팅 빠른 설정</span>
+              </div>
+              <div className="mt-3 grid gap-3">
+                <SettingToggleButton
+                  checked={isSlowModeEnabled}
+                  description="채팅 입력 간격을 제한합니다."
+                  icon={Timer}
+                  label="저속모드"
+                  onChange={onSlowModeEnabledChange}
+                />
+                <SettingToggleButton
+                  checked={isLinkBlocked}
+                  description="채팅에서 URL 공유를 차단합니다."
+                  icon={Link2}
+                  label="링크 차단"
+                  onChange={onLinkBlockedChange}
+                />
+              </div>
             </div>
           </div>
 
-          <div className="border-border rounded-lg border p-3">
-            <div className="flex items-center gap-2">
-              <Users className="text-brand size-4" />
-              <span className="text-sm font-semibold">간단 설정</span>
+          <div className="grid gap-3">
+            <div className="border-border rounded-lg border p-3">
+              <div className="flex items-center gap-2">
+                <HandCoins className="text-brand size-4" />
+                <span className="text-sm font-semibold">후원 빠른 설정</span>
+              </div>
+              <div className="mt-3 grid gap-3">
+                <SettingToggleButton
+                  checked={isDonationEnabled}
+                  description="시청자 후원을 받을 수 있게 설정합니다."
+                  icon={HandCoins}
+                  label="후원 받기"
+                  onChange={onDonationEnabledChange}
+                />
+                <SettingToggleButton
+                  checked={isDonationAmountVisible}
+                  description="후원 금액 표시 여부를 설정합니다."
+                  icon={HandCoins}
+                  label="후원 금액 공개"
+                  onChange={onDonationAmountVisibleChange}
+                />
+                <SettingToggleButton
+                  checked={isDonationAlertEnabled}
+                  description="후원 발생 시 방송 알림을 표시합니다."
+                  icon={Bell}
+                  label="후원 알림"
+                  onChange={onDonationAlertEnabledChange}
+                />
+              </div>
             </div>
-            <div className="mt-3 grid gap-3">
-              <SettingToggleButton
-                checked={isSlowModeEnabled}
-                description="채팅 입력 간격을 제한합니다."
-                icon={Timer}
-                label="저속모드"
-                onChange={onSlowModeEnabledChange}
-              />
-              <SettingToggleButton
-                checked={isLinkBlocked}
-                description="채팅에서 URL 공유를 차단합니다."
-                icon={Link2}
-                label="링크 차단"
-                onChange={onLinkBlockedChange}
-              />
-              <SettingToggleButton
-                checked={isDonationEnabled}
-                description="시청자 후원을 받을 수 있게 설정합니다."
-                icon={HandCoins}
-                label="후원 받기"
-                onChange={onDonationEnabledChange}
-              />
-              <SettingToggleButton
-                checked={isDonationAmountVisible}
-                description="후원 금액 표시 여부를 설정합니다."
-                icon={HandCoins}
-                label="후원 금액 공개"
-                onChange={onDonationAmountVisibleChange}
-              />
-              <SettingToggleButton
-                checked={isDonationAlertEnabled}
-                description="후원 발생 시 방송 알림을 표시합니다."
-                icon={Bell}
-                label="후원 알림"
-                onChange={onDonationAlertEnabledChange}
-              />
-              <SettingToggleButton
-                checked={isAlertSoundEnabled}
-                description="후원 알림 사운드를 재생합니다."
-                icon={Volume2}
-                label="알림 사운드"
-                onChange={onAlertSoundEnabledChange}
-              />
-              <SettingToggleButton
-                checked={isTtsEnabled}
-                description="후원 메시지를 음성으로 읽습니다."
-                icon={Mic2}
-                label="TTS 사용"
-                onChange={onTtsEnabledChange}
-              />
+
+            <div className="border-border rounded-lg border p-3">
+              <div className="flex items-center gap-2">
+                <Bell className="text-brand size-4" />
+                <span className="text-sm font-semibold">알림 빠른 설정</span>
+              </div>
+              <div className="mt-3 grid gap-3">
+                <SettingToggleButton
+                  checked={isAlertSoundEnabled}
+                  description="후원 알림 사운드를 재생합니다."
+                  icon={Volume2}
+                  label="알림 사운드"
+                  onChange={onAlertSoundEnabledChange}
+                />
+                <SettingToggleButton
+                  checked={isTtsEnabled}
+                  description="후원 메시지를 음성으로 읽습니다."
+                  icon={Mic2}
+                  label="TTS 사용"
+                  onChange={onTtsEnabledChange}
+                />
+              </div>
             </div>
           </div>
         </div>
