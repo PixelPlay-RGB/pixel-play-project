@@ -12,7 +12,7 @@ export const EMPTY_FOLLOWING_CHANNEL_PAGE_SNAPSHOT: FollowingChannelPageSnapshot
   totalCount: 0,
   liveCount: 0,
   recentBroadcastCount: 0,
-  hasMore: false,
+  filteredCount: 0,
 };
 
 function isJsonObject(value: unknown): value is JsonObject {
@@ -99,6 +99,6 @@ export function parseFollowingChannelPageSnapshot(value: unknown): FollowingChan
     totalCount: readNumber(value, "totalCount"),
     liveCount: readNumber(value, "liveCount"),
     recentBroadcastCount: readNumber(value, "recentBroadcastCount"),
-    hasMore: readBoolean(value, "hasMore"),
+    filteredCount: readNumber(value, "filteredCount"),
   };
 }

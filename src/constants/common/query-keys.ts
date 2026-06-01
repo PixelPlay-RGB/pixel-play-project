@@ -82,6 +82,9 @@ export const QUERY_KEYS = {
   },
   following: {
     all: ["following"] as const,
-    page: (userId?: string) => [...QUERY_KEYS.following.all, "page", userId ?? "public"],
+    page: (userId?: string, filter?: string, page?: number) =>
+      [...QUERY_KEYS.following.all, "page", userId ?? "public", filter, page].filter(
+        (v) => v !== undefined,
+      ),
   },
 } as const;

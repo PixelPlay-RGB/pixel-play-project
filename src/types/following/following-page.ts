@@ -12,8 +12,10 @@ export interface FollowingChannelPageItem extends FollowingChannelItem {
 
 export interface FollowingChannelPageSnapshot {
   items: FollowingChannelPageItem[];
+  // 통계는 필터와 무관하게 전체 팔로잉 기준으로 계산합니다.
   totalCount: number;
   liveCount: number;
   recentBroadcastCount: number;
-  hasMore: boolean;
+  // 현재 필터 기준 항목 수 (페이지 수 계산용).
+  filteredCount: number;
 }

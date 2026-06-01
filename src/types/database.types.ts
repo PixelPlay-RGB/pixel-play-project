@@ -760,7 +760,7 @@ export type Database = {
         Returns: Json
       }
       get_following_channel_page: {
-        Args: { p_limit?: number; p_offset?: number }
+        Args: { p_filter?: string; p_limit?: number; p_offset?: number }
         Returns: Json
       }
       get_landing_snapshot: { Args: never; Returns: Json }

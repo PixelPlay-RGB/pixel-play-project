@@ -1,9 +1,10 @@
 "use client";
 // 팔로잉 채널 페이지의 데이터 조회·필터·목록 렌더링을 담당하는 클라이언트 섹션입니다.
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { UserRoundCheck } from "lucide-react";
 
+import ListPagination from "@/components/common/list-pagination";
 import FollowingChannelListSkeleton from "@/components/following/following-channel-list-skeleton";
 import FollowingChannelRow from "@/components/following/following-channel-row";
 import FollowingEmptyState from "@/components/following/following-empty-state";
@@ -12,7 +13,6 @@ import { SettingsCard } from "@/components/common/settings-card";
 import { SettingsPage } from "@/components/common/settings-page";
 import { SideTipCard, SideTipStep } from "@/components/common/side-tip-card";
 import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/spinner";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FOLLOWING_FILTER_TABS } from "@/constants/following/following-page";
 import { useFollowingChannelPage } from "@/hooks/following/use-following-channel-page";
@@ -26,24 +26,40 @@ const FOLLOWING_PAGE_HEADER = {
 
 export default function FollowingChannelSection() {
   const [filter, setFilter] = useState<FollowingChannelFilter>("ALL");
+  const [page, setPage] = useState(1);
+
   const {
     items,
     totalCount,
     liveCount,
     recentBroadcastCount,
+    filteredCount,
+    totalPages,
     isLoading,
     isError,
+    isFetching,
+    isPlaceholderData,
     refetch,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
     isSignedIn,
     isUserFetched,
-  } = useFollowingChannelPage();
+  } = useFollowingChannelPage(filter, page);
 
-  const visibleItems = filter === "LIVE" ? items.filter((item) => item.isLive) : items;
+  // 언팔로우 등으로 현재 페이지가 전체 페이지 수를 넘기면 마지막 페이지로 보정합니다.
+  useEffect(() => {
+    if (page > totalPages) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
+
+  const handleFilterChange = (value: FollowingChannelFilter) => {
+    if (value === filter) return;
+    setFilter(value);
+    setPage(1);
+  };
+
   const isInitialLoading = !isUserFetched || (isSignedIn && isLoading);
-  const filteredTotal = filter === "LIVE" ? liveCount : totalCount;
+  const isPageFetching = isFetching && isPlaceholderData;
   const hasChannels = totalCount > 0;
 
   return (
@@ -58,7 +74,7 @@ export default function FollowingChannelSection() {
             <div className="flex items-center justify-between gap-3">
               <Tabs
                 value={filter}
-                onValueChange={(value) => setFilter(value as FollowingChannelFilter)}
+                onValueChange={(value) => handleFilterChange(value as FollowingChannelFilter)}
               >
                 <TabsList>
                   {FOLLOWING_FILTER_TABS.map((tab) => (
@@ -71,7 +87,7 @@ export default function FollowingChannelSection() {
 
               {hasChannels && !isInitialLoading && (
                 <span className="text-muted-foreground shrink-0 text-xs font-medium tabular-nums">
-                  {filteredTotal}명
+                  {filteredCount}명
                 </span>
               )}
             </div>
@@ -101,13 +117,13 @@ export default function FollowingChannelSection() {
             />
             <SideTipStep
               number="2"
-              title="방송으로 바로 이동해요"
-              description={`채널이나 보러가기 버튼을 누르면 방송 페이지로 바로 이동해요.`}
+              title="채널을 빠르게 살펴봐요"
+              description={`아바타를 누르면 채널 요약과 이동·팔로우 관리를 바로 할 수 있어요.`}
             />
             <SideTipStep
               number="3"
               title="팔로우를 정리해요"
-              description={`팔로잉 버튼을 누르면 언제든 팔로우를 해제할 수 있어요.`}
+              description={`아바타 메뉴의 팔로잉 버튼으로 언제든 팔로우를 해제할 수 있어요.`}
             />
           </SideTipCard>
         </div>
@@ -141,7 +157,7 @@ export default function FollowingChannelSection() {
       );
     }
 
-    if (visibleItems.length === 0) {
+    if (filteredCount === 0) {
       return (
         <FollowingEmptyState
           title="지금 라이브 중인 채널이 없어요"
@@ -153,22 +169,17 @@ export default function FollowingChannelSection() {
     return (
       <div className="flex flex-col gap-4">
         <ul className="flex flex-col gap-1">
-          {visibleItems.map((item) => (
+          {items.map((item) => (
             <FollowingChannelRow key={item.creatorId} item={item} />
           ))}
         </ul>
 
-        {hasNextPage && (
-          <div className="flex justify-center pt-1">
-            <Button
-              variant="outline"
-              onClick={() => void fetchNextPage()}
-              disabled={isFetchingNextPage}
-            >
-              {isFetchingNextPage ? <Spinner /> : null}더 보기
-            </Button>
-          </div>
-        )}
+        <ListPagination
+          currentPage={page}
+          totalPages={totalPages}
+          isFetching={isPageFetching}
+          onPageChange={setPage}
+        />
       </div>
     );
   }

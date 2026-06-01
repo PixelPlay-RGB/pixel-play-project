@@ -2,8 +2,8 @@
 
 import type { FollowingChannelFilter } from "@/types/following/following-page";
 
-// RPC가 한 번에 반환하는 페이지 크기 (서버 캡은 48).
-export const FOLLOWING_PAGE_SIZE = 24;
+// 한 페이지에 보여줄 팔로잉 채널 수 (서버 캡은 50).
+export const FOLLOWING_PAGE_SIZE = 10;
 
 interface FollowingFilterTab {
   value: FollowingChannelFilter;
