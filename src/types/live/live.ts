@@ -1,4 +1,82 @@
-// 라이브 시청 화면에서 사용하는 타입을 정의합니다.
+// 라이브 목록 화면에서 사용하는 도메인 타입을 정의합니다.
+
+import type { GenericTables } from "@/types/common/supabase.types";
+
+export type LiveListFilter = "ALL" | "FOLLOWING" | "RECENT" | "ACTIVE_CHAT";
+
+export type LiveListSort = "VIEWER_COUNT_DESC" | "STARTED_AT_DESC" | "RECENT_CHAT_DESC";
+
+export interface LiveHeroItem {
+  id: string;
+  creatorId: string;
+  creatorNickname: string;
+  creatorPhotoUrl: string | null;
+  title: string;
+  tags: string[];
+  thumbnailUrl: string | null;
+  currentViewerCount: number;
+  startedAt: string;
+}
+
+export interface LiveListItem extends LiveHeroItem {
+  recentChatCount: number;
+  isFollowing: boolean;
+}
+
+export interface LiveListSnapshot {
+  items: LiveListItem[];
+  totalCount: number;
+  hasMore: boolean;
+}
+
+export interface LivePopularKeywordItem {
+  keyword: string;
+  liveCount: number;
+  viewerCount: number;
+}
+
+export interface LivePopularKeywordSnapshot {
+  items: LivePopularKeywordItem[];
+  totalCount: number;
+  hasMore: boolean;
+}
+
+export interface FollowingChannelItem {
+  creatorId: string;
+  creatorNickname: string;
+  creatorPhotoUrl: string | null;
+  followedAt: string;
+  isLive: boolean;
+  liveId: string | null;
+  liveTitle: string | null;
+  thumbnailUrl: string | null;
+  currentViewerCount: number;
+  startedAt: string | null;
+}
+
+export interface FollowingChannelSnapshot {
+  items: FollowingChannelItem[];
+  totalCount: number;
+  hasMore: boolean;
+}
+
+export type LiveBroadcastRow = GenericTables<"live_broadcast">;
+export type LiveMessageRow = GenericTables<"live_message">;
+export type DonationRow = GenericTables<"donation">;
+export type LiveOverlayKind = "chat" | "donation";
+
+export interface LiveBroadcastSummary {
+  id: LiveBroadcastRow["id"];
+  title: LiveBroadcastRow["title"];
+  creatorId: LiveBroadcastRow["creator_id"];
+  currentViewerCount: LiveBroadcastRow["current_viewer_count"];
+  startedAt: LiveBroadcastRow["started_at"];
+}
+
+export interface LiveOverlayRouteParams {
+  creatorId: string;
+  overlayKey: string;
+}
 
 export type LiveChatMessageType = "text" | "donation" | "system" | "filtered";
 
@@ -53,7 +131,6 @@ export interface LiveBroadcast {
 }
 
 // --- get_live_watch RPC 응답 타입 ---
-
 export interface LiveWatchCreator {
   id: string;
   nickname: string;

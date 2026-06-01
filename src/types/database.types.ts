@@ -112,6 +112,7 @@ export type Database = {
           creator_id: string
           default_tags: string[]
           default_title: string
+          donation_alert_duration_seconds: number
           donation_alert_enabled: boolean
           donation_alert_version: number
           donation_amount_visible: boolean
@@ -139,6 +140,7 @@ export type Database = {
           creator_id: string
           default_tags?: string[]
           default_title?: string
+          donation_alert_duration_seconds?: number
           donation_alert_enabled?: boolean
           donation_alert_version?: number
           donation_amount_visible?: boolean
@@ -166,6 +168,7 @@ export type Database = {
           creator_id?: string
           default_tags?: string[]
           default_title?: string
+          donation_alert_duration_seconds?: number
           donation_alert_enabled?: boolean
           donation_alert_version?: number
           donation_amount_visible?: boolean
@@ -752,6 +755,10 @@ export type Database = {
         Args: { p_actor_user_id: string }
         Returns: Json
       }
+      get_following_channel_list: {
+        Args: { p_limit?: number; p_offset?: number }
+        Returns: Json
+      }
       get_landing_snapshot: { Args: never; Returns: Json }
       get_live_chat_overlay_snapshot: {
         Args: { p_creator_id: string; p_limit?: number }
@@ -763,19 +770,18 @@ export type Database = {
       }
       get_live_hero: { Args: never; Returns: Json }
       get_live_list: {
-        Args: { p_limit?: number; p_offset?: number; p_query?: string }
-        Returns: {
-          creator_id: string
-          creator_nickname: string
-          creator_photo_url: string
-          current_viewer_count: number
-          id: string
-          started_at: string
-          tags: string[]
-          thumbnail_url: string
-          title: string
-        }[]
+        Args: {
+          p_excluded_live_id?: string
+          p_filter?: string
+          p_limit?: number
+          p_offset?: number
+          p_query?: string
+          p_sort?: string
+          p_viewer_id?: string
+        }
+        Returns: Json
       }
+      get_live_popular_keywords: { Args: { p_limit?: number }; Returns: Json }
       get_live_watch: {
         Args: { p_creator_id: string; p_viewer_id?: string }
         Returns: Json
@@ -815,7 +821,7 @@ export type Database = {
       }
       rotate_live_security_token_version: {
         Args: { p_actor_user_id: string; p_token_kind: string }
-        Returns: number
+        Returns: Json
       }
       search_chat_rooms: {
         Args: {
@@ -914,6 +920,7 @@ export type Database = {
           p_chat_scope?: Database["public"]["Enums"]["live_chat_scope"]
           p_default_tags?: string[]
           p_default_title?: string
+          p_donation_alert_duration_seconds?: number
           p_donation_alert_enabled?: boolean
           p_donation_amount_visible?: boolean
           p_donation_enabled?: boolean

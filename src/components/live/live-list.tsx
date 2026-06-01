@@ -1,43 +1,86 @@
-// live-list 컴포넌트를 제공합니다.
-import { Radio } from "lucide-react";
-import { cn } from "@/lib/utils";
+"use client";
+// 라이브 목록 화면의 클라이언트 상호작용을 조립합니다.
 
-export default function LiveList() {
+import { useCallback, type ReactNode } from "react";
+
+import LoadMoreButton from "@/components/common/load-more-button";
+import LiveCard from "@/components/live/live-card";
+import LiveListEmptyState from "@/components/live/live-list-empty-state";
+import LiveListErrorState from "@/components/live/live-list-error-state";
+import LiveListSkeleton from "@/components/live/live-list-skeleton";
+import LiveListToolbar from "@/components/live/live-list-toolbar";
+import LiveMobileFilterChips from "@/components/live/live-mobile-filter-chips";
+import { LIVE_LIST_SORT_TITLE } from "@/constants/live/live-list";
+import { useLiveListPageSize } from "@/hooks/live/use-live-list-page-size";
+import { useLiveList } from "@/hooks/live/use-live-list";
+import { useLiveStore } from "@/stores/live";
+import { EMPTY_LIVE_LIST_SNAPSHOT } from "@/utils/live/live-list";
+
+interface LiveListProps {
+  heroSlot: ReactNode;
+  heroId?: string | null;
+}
+
+export default function LiveList({ heroSlot, heroId }: LiveListProps) {
+  const setFilter = useLiveStore((state) => state.setFilter);
+  const setSort = useLiveStore((state) => state.setSort);
+  const setPageSize = useLiveStore((state) => state.setPageSize);
+  const showMore = useLiveStore((state) => state.showMore);
+  const handlePageSizeChange = useCallback(
+    (pageSize: number) => {
+      setPageSize(pageSize);
+    },
+    [setPageSize],
+  );
+  const pageSize = useLiveListPageSize({ onPageSizeChange: handlePageSizeChange });
+  const query = useLiveList(pageSize !== null);
+  const snapshot = query.data ?? EMPTY_LIVE_LIST_SNAPSHOT;
+  const visibleItems = heroId
+    ? snapshot.items.filter((item) => item.id !== heroId)
+    : snapshot.items;
+  const isInitialLoading =
+    pageSize === null || (!query.isFetched && (!query.isUserFetched || query.isLoading));
+  const isHeroOnlyList = snapshot.items.length > 0 && visibleItems.length === 0;
+  const isEmpty =
+    !isInitialLoading && !query.isError && visibleItems.length === 0 && !isHeroOnlyList;
+  const isFetchingMore = query.isFetching && query.isPlaceholderData;
+  const listTitle = LIVE_LIST_SORT_TITLE[query.sort];
+
   return (
-    <div className="flex min-h-105 w-full flex-1 flex-col items-center justify-center">
-      <div className="flex flex-col items-center gap-5 px-4 text-center">
-        <div className="relative">
-          <div
-            className={cn(
-              "flex h-20 w-20 items-center justify-center rounded-2xl ring-1",
-              "bg-live/10 ring-live/20 dark:bg-live/15",
-            )}
-          >
-            <Radio className="text-live h-9 w-9" />
+    <div className="flex min-w-0 flex-col gap-5 md:gap-6">
+      {heroSlot}
+      <LiveMobileFilterChips
+        activeFilter={query.effectiveFilter}
+        isFollowingVisible={query.isFollowingFilterVisible}
+        isFetching={query.isFetching}
+        onFilterChange={setFilter}
+      />
+      <section className="flex min-w-0 flex-1 flex-col gap-4">
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <h2 className="text-foreground text-xl font-bold md:text-2xl">{listTitle}</h2>
+            <LiveListToolbar sort={query.sort} onSortChange={setSort} />
           </div>
-          <span className="border-live/20 absolute -inset-2 animate-ping rounded-3xl border opacity-40" />
-          <span className="border-live/10 absolute -inset-4 animate-ping rounded-3xl border opacity-20 delay-300" />
         </div>
 
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-center gap-2">
-            <span
-              className={cn(
-                "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5",
-                "bg-live text-xs font-black tracking-widest text-white shadow-xs",
-              )}
-            >
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white/80" />
-              LIVE
-            </span>
+        {query.isError ? (
+          <LiveListErrorState onRetry={() => void query.refetch()} />
+        ) : isInitialLoading ? (
+          <LiveListSkeleton count={pageSize ?? undefined} />
+        ) : isEmpty ? (
+          <LiveListEmptyState filter={query.effectiveFilter} />
+        ) : visibleItems.length > 0 ? (
+          <div className="grid grid-cols-1 gap-x-4 gap-y-7 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+            {visibleItems.map((item) => (
+              <LiveCard key={item.id} item={item} />
+            ))}
           </div>
-          <h2 className="text-foreground text-xl font-bold">현재 라이브 기능은 준비 중입니다.</h2>
-          <p className="text-muted-foreground max-w-70 text-sm leading-relaxed">
-            곧 라이브 방송 기능이 시작됩니다. <br className="hidden sm:block" />
-            조금만 기다려주세요!
-          </p>
-        </div>
-      </div>
+        ) : null}
+
+        {!query.isError && snapshot.hasMore ? (
+          <LoadMoreButton isLoading={isFetchingMore} onClick={showMore} accent="live" />
+        ) : null}
+      </section>
     </div>
   );
 }

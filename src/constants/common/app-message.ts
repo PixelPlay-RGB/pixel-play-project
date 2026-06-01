@@ -63,16 +63,34 @@ export const APP_MESSAGE = {
         title: "연동 해제 완료",
       },
     },
+    channel: {
+      securityCopied: {
+        title: "복사 완료",
+        description: "OBS에 바로 붙여 넣을 수 있습니다.",
+      },
+      securityTokenRotated: {
+        title: "새 정보 생성 완료",
+        description: "OBS에 새 정보를 다시 붙여 넣어주세요.",
+      },
+      chatSettingsSaved: {
+        title: "저장 완료",
+        description: "새 채팅 설정을 다음 채팅부터 적용합니다.",
+      },
+    },
+    following: {
+      followed: {
+        title: "팔로잉 완료",
+        description: "다시 보고 싶은 크리에이터로 저장했어요.",
+      },
+      unfollowed: {
+        title: "팔로잉 해제 완료",
+        description: "팔로잉 목록에서 제외했어요.",
+      },
+    },
     live: {
       urlCopied: {
         title: "URL 복사 완료",
         description: "URL 복사가 완료되었습니다.",
-      },
-      followed: {
-        title: "팔로우 완료",
-      },
-      unfollowed: {
-        title: "팔로우 취소 완료",
       },
     },
   },
@@ -224,6 +242,12 @@ export const APP_MESSAGE = {
         description: "채팅방 목록을 불러오지 못했습니다.",
       },
     },
+    liveList: {
+      loadFailed: {
+        title: "라이브 목록 조회 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+    },
     search: {
       loadFailed: {
         title: "검색 결과 조회 실패",
@@ -330,6 +354,38 @@ export const APP_MESSAGE = {
         description: "로그인에 사용하는 기본 계정은 해제할 수 없습니다.",
       },
     },
+    channel: {
+      chatSettingsLoadFailed: {
+        title: "채팅 설정 조회 실패",
+        description: "다시 로그인하거나 잠시 후 새로고침해주세요.",
+      },
+      chatSettingsSaveFailed: {
+        title: "채팅 설정 저장 실패",
+        description: "입력값을 확인한 뒤 다시 시도해주세요.",
+      },
+      securityLoadFailed: {
+        title: "방송 연결 정보 조회 실패",
+        description: "다시 로그인하거나 잠시 후 새로고침해주세요.",
+      },
+      securityCopyFailed: {
+        title: "복사 실패",
+        description: "브라우저 권한을 확인한 뒤 다시 시도해주세요.",
+      },
+      securityTokenRotateFailed: {
+        title: "새 정보 생성 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+    },
+    following: {
+      failed: {
+        title: "팔로잉 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      unfollowFailed: {
+        title: "팔로잉 해제 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+    },
     live: {
       donationFailed: {
         title: "후원 실패",
@@ -350,14 +406,6 @@ export const APP_MESSAGE = {
       voteAlreadyVoted: {
         title: "이미 참여한 투표",
         description: "한 투표에는 한 번만 참여할 수 있습니다.",
-      },
-      followFailed: {
-        title: "팔로우 실패",
-        description: "잠시 후 다시 시도해주세요.",
-      },
-      unfollowFailed: {
-        title: "팔로우 취소 실패",
-        description: "잠시 후 다시 시도해주세요.",
       },
     },
     supabase: {

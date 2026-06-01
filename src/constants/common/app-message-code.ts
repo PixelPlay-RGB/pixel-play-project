@@ -28,10 +28,17 @@ export const APP_MESSAGE_CODE = {
     oauth: {
       unlinked: "success.oauth.unlinked",
     },
+    channel: {
+      securityCopied: "success.channel.securityCopied",
+      securityTokenRotated: "success.channel.securityTokenRotated",
+      chatSettingsSaved: "success.channel.chatSettingsSaved",
+    },
+    following: {
+      followed: "success.following.followed",
+      unfollowed: "success.following.unfollowed",
+    },
     live: {
       urlCopied: "success.live.urlCopied",
-      followed: "success.live.followed",
-      unfollowed: "success.live.unfollowed",
     },
   },
   error: {
@@ -78,6 +85,9 @@ export const APP_MESSAGE_CODE = {
     chatRoomList: {
       loadFailed: "error.chatRoomList.loadFailed",
     },
+    liveList: {
+      loadFailed: "error.liveList.loadFailed",
+    },
     search: {
       loadFailed: "error.search.loadFailed",
     },
@@ -112,14 +122,23 @@ export const APP_MESSAGE_CODE = {
       actionFailed: "error.oauth.actionFailed",
       defaultAccountCannotUnlink: "error.oauth.defaultAccountCannotUnlink",
     },
+    channel: {
+      chatSettingsLoadFailed: "error.channel.chatSettingsLoadFailed",
+      chatSettingsSaveFailed: "error.channel.chatSettingsSaveFailed",
+      securityLoadFailed: "error.channel.securityLoadFailed",
+      securityCopyFailed: "error.channel.securityCopyFailed",
+      securityTokenRotateFailed: "error.channel.securityTokenRotateFailed",
+    },
+    following: {
+      failed: "error.following.failed",
+      unfollowFailed: "error.following.unfollowFailed",
+    },
     live: {
       donationFailed: "error.live.donationFailed",
       voteFailed: "error.live.voteFailed",
       voteNoActivePoll: "error.live.voteNoActivePoll",
       voteInvalidOption: "error.live.voteInvalidOption",
       voteAlreadyVoted: "error.live.voteAlreadyVoted",
-      followFailed: "error.live.followFailed",
-      unfollowFailed: "error.live.unfollowFailed",
     },
     supabase: {
       permissionDenied: "error.supabase.permissionDenied",

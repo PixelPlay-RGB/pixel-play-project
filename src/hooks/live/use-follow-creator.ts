@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { followCreatorAction, unfollowCreatorAction } from "@/actions/follows/follow";
+import { followCreatorAction, unfollowCreatorAction } from "@/actions/following/following";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { toastAppError, toastAppSuccess } from "@/utils/common/toast-message";
 
@@ -13,16 +13,16 @@ export function useFollowCreator(creatorId: string, isFollowing: boolean, onSucc
     setIsPending(true);
     try {
       const result = isFollowing
-        ? await unfollowCreatorAction(creatorId)
-        : await followCreatorAction(creatorId);
+        ? await unfollowCreatorAction({ creatorId })
+        : await followCreatorAction({ creatorId });
 
       if (!result.success) {
         toastAppError(result.code ?? APP_MESSAGE_CODE.error.common.unknown);
       } else {
         toastAppSuccess(
           isFollowing
-            ? APP_MESSAGE_CODE.success.live.unfollowed
-            : APP_MESSAGE_CODE.success.live.followed,
+            ? APP_MESSAGE_CODE.success.following.unfollowed
+            : APP_MESSAGE_CODE.success.following.followed,
         );
         onSuccess();
       }
@@ -30,8 +30,8 @@ export function useFollowCreator(creatorId: string, isFollowing: boolean, onSucc
       console.error("라이브 팔로우 처리 실패", error);
       toastAppError(
         isFollowing
-          ? APP_MESSAGE_CODE.error.live.unfollowFailed
-          : APP_MESSAGE_CODE.error.live.followFailed,
+          ? APP_MESSAGE_CODE.error.following.unfollowFailed
+          : APP_MESSAGE_CODE.error.following.failed,
       );
     } finally {
       setIsPending(false);

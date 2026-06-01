@@ -2,8 +2,9 @@
 import { ChatRoom } from "@/components/chat-room/chat-room";
 import ChatRoomPreview from "@/components/preview/chat-room-preview";
 import { getCurrentProfileSnapshot } from "@/utils/profile/profile-server";
-import { getPublicChatRoomMetadata } from "@/utils/public/public-chat-room";
 import type { Metadata } from "next";
+
+import { getPublicChatRoomMetadata } from "./data";
 
 const CHAT_ROOM_METADATA_FALLBACK_TITLE = "채팅방";
 const CHAT_ROOM_METADATA_FALLBACK_DESCRIPTION = "PixelPlay 채팅방에서 실시간 메시지를 즐겨보세요.";

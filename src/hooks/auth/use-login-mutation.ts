@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth";
 import type { LoginFormValues, OAuthProvider } from "@/types/auth/auth";
 import { isAuthSessionMissingError } from "@/utils/auth/auth-error";
+import { setOAuthNextCookie } from "@/utils/auth/oauth-next";
 import { appendSearchParam, sanitizeRedirectPath } from "@/utils/common/redirect";
 import { toastAppError } from "@/utils/common/toast-message";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -61,10 +62,13 @@ export function useOAuthLoginMutation(next = "/") {
 
   return useMutation({
     mutationFn: async (provider: OAuthProvider) => {
+      // next는 redirectTo 쿼리 대신 쿠키로 전달해 Redirect URL을 정확 일치로 유지합니다.
+      setOAuthNextCookie(safeNext);
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(safeNext)}`,
+          redirectTo: `${window.location.origin}/auth/callback`,
         },
       });
 
