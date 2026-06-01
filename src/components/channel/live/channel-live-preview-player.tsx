@@ -85,7 +85,6 @@ export default function ChannelLivePreviewPlayer({ src, title }: Props) {
       ref={videoRef}
       className="size-full bg-black object-contain"
       autoPlay
-      controls
       muted
       playsInline
       title={title}
