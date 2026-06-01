@@ -274,7 +274,7 @@ export default function ChannelLiveSettingsPanel({
               />
               <div
                 className={cn(
-                  "border-border bg-muted mt-3 flex h-36 flex-col items-center justify-center overflow-hidden rounded-lg border border-dashed bg-cover bg-center p-3 text-center sm:h-40",
+                  "border-border bg-muted mt-3 flex aspect-video w-full flex-col items-center justify-center overflow-hidden rounded-lg border border-dashed bg-cover bg-center p-3 text-center",
                   trimmedThumbnailPreviewUrl && "border-solid",
                 )}
                 role="button"
