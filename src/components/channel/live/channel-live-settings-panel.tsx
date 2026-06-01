@@ -259,7 +259,7 @@ export default function ChannelLiveSettingsPanel({
 
         <div className="grid items-start gap-3 sm:grid-cols-2">
           <div className="grid gap-3">
-            <div className="border-border rounded-lg border p-3 sm:min-h-72">
+            <div className="border-border flex flex-col rounded-lg border p-3 sm:min-h-72">
               <div className="flex items-center gap-2">
                 <ImageIcon className="text-brand size-4" />
                 <span className="text-sm font-semibold">미리보기 이미지</span>
@@ -275,7 +275,7 @@ export default function ChannelLiveSettingsPanel({
               <div className="mt-3 flex justify-center">
                 <div
                   className={cn(
-                    "border-border bg-muted inline-flex aspect-video h-36 max-w-full flex-col items-center justify-center overflow-hidden rounded-lg border border-dashed bg-cover bg-center p-3 text-center sm:h-40",
+                    "border-border bg-muted inline-flex aspect-video h-40 max-w-full flex-col items-center justify-center overflow-hidden rounded-lg border border-dashed bg-cover bg-center p-3 text-center sm:h-44",
                     trimmedThumbnailPreviewUrl && "border-solid",
                   )}
                   role="button"
@@ -303,7 +303,7 @@ export default function ChannelLiveSettingsPanel({
                   )}
                 </div>
               </div>
-              <div className="mt-3 flex items-center justify-between gap-2">
+              <div className="mt-auto flex items-center justify-between gap-2 pt-4">
                 <span className="text-muted-foreground min-w-0 truncate text-xs">
                   {thumbnailPreviewName || "이미지 없음"}
                 </span>
