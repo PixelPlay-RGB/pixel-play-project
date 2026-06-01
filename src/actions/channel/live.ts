@@ -258,9 +258,6 @@ export async function updateChannelLiveSettingsAction(
   }
 
   revalidatePath("/channel/live");
-  revalidatePath("/channel/donation");
-  revalidatePath("/channel/chat");
-  revalidatePath("/channel/security");
 
   return {
     success: true,
