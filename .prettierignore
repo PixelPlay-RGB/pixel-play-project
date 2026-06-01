@@ -8,3 +8,6 @@ package-lock.json
 pnpm-lock.yaml
 yarn.lock
 supabase/.temp/
+
+# Supabase가 생성하는 DB 타입 파일 (npm run db:types) — 포맷 검사 대상에서 제외
+src/types/database.types.ts
