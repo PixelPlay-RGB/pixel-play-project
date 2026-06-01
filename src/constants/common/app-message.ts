@@ -71,6 +71,8 @@ export const APP_MESSAGE = {
       securityTokenRotated: {
         title: "새 정보 생성 완료",
         description: "OBS에 새 정보를 다시 붙여 넣어주세요.",
+      },
+    },
     following: {
       followed: {
         title: "팔로잉 완료",
@@ -353,6 +355,9 @@ export const APP_MESSAGE = {
       },
       securityTokenRotateFailed: {
         title: "새 정보 생성 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+    },
     following: {
       failed: {
         title: "팔로잉 실패",
