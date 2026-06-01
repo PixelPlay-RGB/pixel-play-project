@@ -58,3 +58,6 @@ context-notes.md
 
 # Supabase CLI local state
 supabase/.temp/
+
+# Playwright MCP artifacts
+.playwright-mcp/

@@ -14,6 +14,7 @@ interface Props {
   ttsRate: number;
   alertVolume: number;
   disabled?: boolean;
+  className?: string;
 }
 
 export default function DonationTestAlertButton({
@@ -22,11 +23,19 @@ export default function DonationTestAlertButton({
   ttsRate,
   alertVolume,
   disabled,
+  className,
 }: Props) {
   const { isSupported, speak } = useSpeechSynthesis();
 
-  // TTS 미지원 브라우저이거나 알림/TTS가 꺼져 있으면 미리듣기를 막습니다.
   const isPlayable = alertEnabled && ttsEnabled && isSupported && !disabled;
+
+  const title = !isSupported
+    ? "이 브라우저는 음성 읽기를 지원하지 않아요."
+    : !alertEnabled
+      ? "알림을 켜면 미리 들어볼 수 있어요."
+      : !ttsEnabled
+        ? "음성 읽기를 켜면 미리 들어볼 수 있어요."
+        : undefined;
 
   const handleTest = () => {
     if (!isPlayable) {
@@ -41,30 +50,20 @@ export default function DonationTestAlertButton({
     });
   };
 
-  const helperText = !isSupported
-    ? "이 브라우저는 음성 읽기를 지원하지 않아요."
-    : !alertEnabled
-      ? "알림을 켜면 미리 들어볼 수 있어요."
-      : !ttsEnabled
-        ? "음성 읽기를 켜면 미리 들어볼 수 있어요."
-        : "현재 설정한 속도·볼륨으로 후원 알림을 들어봐요.";
-
   return (
-    <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
-      <p className="text-muted-foreground text-xs leading-5">{helperText}</p>
-      <Button
-        type="button"
-        variant="outline"
-        disabled={!isPlayable}
-        onClick={handleTest}
-        className={cn(
-          "h-9 shrink-0 rounded-full px-4 text-sm font-bold",
-          "border-brand/40 text-brand",
-        )}
-      >
-        <Volume2 className="size-4" />
-        테스트 알림 보내기
-      </Button>
-    </div>
+    <Button
+      type="button"
+      disabled={!isPlayable}
+      onClick={handleTest}
+      title={title}
+      className={cn(
+        "h-10 rounded-xl px-5 font-bold",
+        "bg-brand hover:bg-brand/90 shadow-brand/20 text-white shadow-sm",
+        className,
+      )}
+    >
+      <Volume2 className="size-4" />
+      테스트 알림 보내기
+    </Button>
   );
 }

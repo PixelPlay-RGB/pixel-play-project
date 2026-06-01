@@ -751,12 +751,31 @@ export type Database = {
         }
         Returns: Json
       }
+      get_creator_settlement_donations: {
+        Args: {
+          p_actor_user_id: string
+          p_limit?: number
+          p_offset?: number
+          p_sort?: string
+          p_status?: string
+          p_year: number
+        }
+        Returns: Json
+      }
+      get_creator_settlement_yearly_summary: {
+        Args: { p_actor_user_id: string }
+        Returns: Json
+      }
       get_creator_studio_snapshot: {
         Args: { p_actor_user_id: string }
         Returns: Json
       }
       get_following_channel_list: {
         Args: { p_limit?: number; p_offset?: number }
+        Returns: Json
+      }
+      get_following_channel_page: {
+        Args: { p_filter?: string; p_limit?: number; p_offset?: number }
         Returns: Json
       }
       get_landing_snapshot: { Args: never; Returns: Json }
@@ -937,6 +956,14 @@ export type Database = {
         Returns: Json
       }
       vote_live_poll: {
+        Args: {
+          p_actor_user_id: string
+          p_option_id: string
+          p_poll_id: string
+        }
+        Returns: undefined
+      }
+      vote_live_poll_2: {
         Args: {
           p_actor_user_id: string
           p_option_id: string

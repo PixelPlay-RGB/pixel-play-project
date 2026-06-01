@@ -33,3 +33,28 @@ export const DONATION_TEST_ALERT_SAMPLE = {
   amount: 5000,
   message: "방송 항상 잘 보고 있어요! 오늘도 화이팅!",
 } as const;
+
+// 정산 수수료율 (데모). 정산 예정액 = 후원 합계 - 수수료.
+export const DONATION_SETTLEMENT_FEE_RATE = 0.1;
+
+// 정산 지급 기준일(데모): 전월 후원분을 매월 N일에 지급한다고 가정합니다.
+export const SETTLEMENT_PAYOUT_DAY = 10;
+
+// 정산 내역 조회: 페이지당 건수.
+export const SETTLEMENT_PAGE_SIZE = 10;
+
+// 정산 상세 내역 상태 필터 옵션.
+export const SETTLEMENT_STATUS_OPTIONS = [
+  { value: "all", label: "전체" },
+  { value: "completed", label: "정산 완료" },
+  { value: "scheduled", label: "정산 예정" },
+] as const;
+
+// 정산 상세 내역 정렬 옵션.
+export const SETTLEMENT_SORT_OPTIONS = [
+  { value: "latest", label: "최신순" },
+  { value: "amount", label: "금액순" },
+] as const;
+
+export type SettlementStatusFilter = (typeof SETTLEMENT_STATUS_OPTIONS)[number]["value"];
+export type SettlementSortOption = (typeof SETTLEMENT_SORT_OPTIONS)[number]["value"];

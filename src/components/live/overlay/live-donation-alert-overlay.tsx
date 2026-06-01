@@ -50,10 +50,10 @@ export function LiveDonationAlertOverlay({
               <div className="flex w-full flex-col items-center justify-center gap-5 sm:flex-row sm:gap-10">
                 <div className="relative flex size-24 shrink-0 items-center justify-center sm:size-32">
                   <motion.div
-                    className="bg-live/25 absolute inset-1 rounded-full blur-xl"
+                    className="bg-live/45 absolute inset-1 rounded-full blur-xl"
                     animate={{
-                      scale: [1, 1.35, 1],
-                      opacity: [0.3, 0.12, 0.3],
+                      scale: [1, 1.4, 1],
+                      opacity: [0.55, 0.25, 0.55],
                     }}
                     transition={{
                       duration: 1.5,
@@ -68,7 +68,7 @@ export function LiveDonationAlertOverlay({
                     animate="visible"
                     className="relative z-10"
                   >
-                    <PixelPlayPlayIcon className="text-live size-18 drop-shadow-lg sm:size-24" />
+                    <PixelPlayPlayIcon className="text-live size-18 drop-shadow-[0_0_16px_rgba(255,96,87,0.6)] sm:size-24" />
                   </motion.div>
                 </div>
 
@@ -85,9 +85,9 @@ export function LiveDonationAlertOverlay({
                     variants={liveDonationAlertTextVariants}
                     initial="hidden"
                     animate="visible"
-                    className="text-live/85 max-w-full text-2xl leading-8 font-bold wrap-break-word sm:text-3xl sm:leading-9"
+                    className="max-w-full text-2xl leading-8 font-bold wrap-break-word text-zinc-100 sm:text-3xl sm:leading-9"
                   >
-                    {donorLabel}의 후원
+                    <span className="text-live">{donorLabel}</span>의 후원
                   </motion.p>
                   <motion.p
                     variants={liveDonationAlertTextVariants}

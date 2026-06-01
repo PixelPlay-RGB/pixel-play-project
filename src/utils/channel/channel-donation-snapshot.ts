@@ -5,6 +5,10 @@ import { DONATION_MIN_AMOUNT_FLOOR } from "@/constants/channel/donation";
 import type {
   ChannelDonationSnapshot,
   RecentDonationItem,
+  SettlementDonationItem,
+  SettlementDonationsResult,
+  SettlementStatus,
+  SettlementYearSummary,
 } from "@/types/channel/donation";
 import type { Json } from "@/types/database.types";
 
@@ -44,6 +48,66 @@ export function buildChannelDonationSnapshot(
     },
     recentDonations: readRecentDonations(root?.recentDonations),
   };
+}
+
+export function buildSettlementDonations(data: Json): SettlementDonationsResult {
+  const root = readObject(data);
+
+  return {
+    items: readSettlementDonations(root?.items),
+    totalCount: readNumber(root?.totalCount, 0),
+  };
+}
+
+export function buildSettlementYearlySummary(data: Json): SettlementYearSummary[] {
+  if (!Array.isArray(data)) {
+    return [];
+  }
+
+  return data.flatMap((raw) => {
+    const item = readObject(raw);
+
+    if (!item || typeof item.year !== "number") {
+      return [];
+    }
+
+    return [
+      {
+        year: item.year,
+        donationTotal: readNumber(item.donationTotal, 0),
+        donationCount: readNumber(item.donationCount, 0),
+      },
+    ];
+  });
+}
+
+function readSettlementDonations(value: Json | undefined): SettlementDonationItem[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.flatMap((raw) => {
+    const item = readObject(raw);
+
+    if (!item || typeof item.id !== "string") {
+      return [];
+    }
+
+    return [
+      {
+        id: item.id,
+        donorNickname: readString(item.donorNickname, "익명"),
+        amount: readNumber(item.amount, 0),
+        message: readString(item.message, ""),
+        createdAt: readString(item.createdAt, ""),
+        status: readSettlementStatus(item.status),
+      },
+    ];
+  });
+}
+
+function readSettlementStatus(value: Json | undefined): SettlementStatus {
+  return value === "completed" ? "completed" : "scheduled";
 }
 
 function readRecentDonations(value: Json | undefined): RecentDonationItem[] {

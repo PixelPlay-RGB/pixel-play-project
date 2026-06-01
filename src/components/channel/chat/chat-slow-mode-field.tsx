@@ -1,6 +1,6 @@
 // 저속 모드와 채팅 간격 선택 필드를 렌더링합니다.
 
-import { ChatFieldRow } from "@/components/channel/chat/chat-field-row";
+import { SettingFieldRow } from "@/components/common/setting-field-row";
 import { SettingNumberSelectControl } from "@/components/common/setting-number-select-control";
 import { SettingToggleControl } from "@/components/common/setting-toggle-control";
 import { CHANNEL_CHAT_SLOW_MODE_OPTIONS } from "@/constants/channel/chat";
@@ -21,7 +21,7 @@ export function ChatSlowModeField({
   onSecondsChange,
 }: Props) {
   return (
-    <ChatFieldRow label="저속 모드" description="채팅 간격">
+    <SettingFieldRow label="저속 모드" description="채팅 간격">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         <SettingToggleControl
           checked={enabled}
@@ -40,6 +40,6 @@ export function ChatSlowModeField({
           onChange={onSecondsChange}
         />
       </div>
-    </ChatFieldRow>
+    </SettingFieldRow>
   );
 }

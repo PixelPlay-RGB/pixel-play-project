@@ -1,6 +1,6 @@
 // 채팅 링크 차단 여부 선택 필드를 렌더링합니다.
 
-import { ChatFieldRow } from "@/components/channel/chat/chat-field-row";
+import { SettingFieldRow } from "@/components/common/setting-field-row";
 import { SettingToggleControl } from "@/components/common/setting-toggle-control";
 
 interface Props {
@@ -11,7 +11,7 @@ interface Props {
 
 export function ChatLinkBlockField({ value, disabled, onChange }: Props) {
   return (
-    <ChatFieldRow label="링크 허용" description="외부 URL">
+    <SettingFieldRow label="링크 허용" description="외부 URL">
       <SettingToggleControl
         checked={value}
         checkedLabel="ON"
@@ -20,6 +20,6 @@ export function ChatLinkBlockField({ value, disabled, onChange }: Props) {
         disabled={disabled}
         onChange={onChange}
       />
-    </ChatFieldRow>
+    </SettingFieldRow>
   );
 }

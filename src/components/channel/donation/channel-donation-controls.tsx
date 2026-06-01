@@ -2,14 +2,14 @@
 // 채널 후원 설정 화면의 폼 상호작용을 관리합니다.
 
 import { Controller, useWatch } from "react-hook-form";
-import { HandCoins } from "lucide-react";
+import { ChevronDown, ChevronUp, HandCoins } from "lucide-react";
 
-import DonationRecentList from "@/components/channel/donation/donation-recent-list";
-import DonationStatsSummary from "@/components/channel/donation/donation-stats-summary";
+import DonationAlertPreview from "@/components/channel/donation/donation-alert-preview";
 import DonationTestAlertButton from "@/components/channel/donation/donation-test-alert-button";
-import { DonationFieldRow } from "@/components/channel/donation/donation-field-row";
 import { DonationVolumeSlider } from "@/components/channel/donation/donation-volume-slider";
+import { SettingFieldRow } from "@/components/common/setting-field-row";
 import { SettingNumberSelectControl } from "@/components/common/setting-number-select-control";
+import { SettingSegmentedControl } from "@/components/common/setting-segmented-control";
 import { SettingToggleControl } from "@/components/common/setting-toggle-control";
 import { SettingsCard } from "@/components/common/settings-card";
 import { SettingsPage } from "@/components/common/settings-page";
@@ -21,7 +21,6 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/in
 import { Spinner } from "@/components/ui/spinner";
 import {
   DONATION_ALERT_DURATION_OPTIONS,
-  DONATION_MIN_AMOUNT_CEILING,
   DONATION_MIN_AMOUNT_FLOOR,
   DONATION_MIN_AMOUNT_STEP,
   DONATION_TTS_RATE_OPTIONS,
@@ -45,6 +44,7 @@ export function ChannelDonationControls({ initialSnapshot }: Props) {
   const { sentinelRef, show } = useStickyActionBar(isDirty);
 
   const donationEnabled = useWatch({ control, name: "donationEnabled" });
+  const amountVisible = useWatch({ control, name: "donationAmountVisible" });
   const alertEnabled = useWatch({ control, name: "donationAlertEnabled" });
   const ttsEnabled = useWatch({ control, name: "ttsEnabled" });
   const ttsRate = useWatch({ control, name: "ttsRate" });
@@ -54,13 +54,7 @@ export function ChannelDonationControls({ initialSnapshot }: Props) {
     <SettingsPage
       kicker="방송 후원 관리"
       title="후원 설정을 관리해요"
-      description={
-        <>
-          후원 수신 조건과 알림, 음성 읽기를 한 곳에서 설정해요.
-          <br />
-          시청자에게 보여질 후원 알림을 현재 설정으로 미리 들어볼 수 있어요.
-        </>
-      }
+      description="채팅 후원 수신 조건과 방송 화면 알림, 음성 읽기를 한 곳에서 관리해요."
       action={
         <Button
           type="button"
@@ -78,127 +72,57 @@ export function ChannelDonationControls({ initialSnapshot }: Props) {
     >
       <div ref={sentinelRef} aria-hidden />
 
-      <DonationStatsSummary
-        monthlyDonation={initialSnapshot.monthlyDonation}
-        settlement={initialSnapshot.settlement}
-      />
-
       <form onSubmit={handleSubmit} className="flex min-w-0 flex-col gap-5">
         <div className="flex flex-col gap-5 xl:flex-row xl:items-start">
+          {/* 메인 컬럼: 후원 알림 설정 + 채팅 후원 설정 */}
           <div className="flex min-w-0 flex-1 flex-col gap-5">
-            <SettingsCard title="후원 받기" description="시청자가 보낼 수 있는 후원 조건을 정해요.">
-              <Controller
-                name="donationEnabled"
-                control={control}
-                render={({ field }) => (
-                  <DonationFieldRow label="후원 받기" description="후원 수신 사용 여부">
-                    <SettingToggleControl
-                      checked={field.value}
-                      checkedLabel="받는 중"
-                      uncheckedLabel="받지 않음"
-                      ariaLabel="후원 받기 사용"
-                      disabled={isSaving}
-                      onChange={field.onChange}
-                    />
-                  </DonationFieldRow>
-                )}
-              />
-              <Controller
-                name="donationMinAmount"
-                control={control}
-                render={({ field }) => (
-                  <DonationFieldRow
-                    label="최소 후원 금액"
-                    description="이 금액 이상부터 후원을 받아요."
-                    isDimmed={!donationEnabled}
-                  >
-                    <div className="flex w-full flex-col items-end gap-1 sm:w-48">
-                      <InputGroup>
-                        <InputGroupInput
-                          type="number"
-                          inputMode="numeric"
-                          min={DONATION_MIN_AMOUNT_FLOOR}
-                          max={DONATION_MIN_AMOUNT_CEILING}
-                          step={DONATION_MIN_AMOUNT_STEP}
-                          value={field.value}
-                          disabled={isSaving || !donationEnabled}
-                          aria-label="최소 후원 금액"
-                          onChange={(event) => field.onChange(event.target.valueAsNumber || 0)}
-                          className="text-right"
-                        />
-                        <InputGroupAddon align="inline-end">P</InputGroupAddon>
-                      </InputGroup>
-                      <FieldError errors={[errors.donationMinAmount]} />
-                    </div>
-                  </DonationFieldRow>
-                )}
-              />
-              <Controller
-                name="donationAmountVisible"
-                control={control}
-                render={({ field }) => (
-                  <DonationFieldRow
-                    label="후원 금액 표시"
-                    description="채팅과 알림에 후원 금액을 보여줘요."
-                    isDimmed={!donationEnabled}
-                  >
-                    <SettingToggleControl
-                      checked={field.value}
-                      checkedLabel="표시"
-                      uncheckedLabel="숨김"
-                      ariaLabel="후원 금액 표시"
-                      disabled={isSaving || !donationEnabled}
-                      onChange={field.onChange}
-                    />
-                  </DonationFieldRow>
-                )}
-              />
-            </SettingsCard>
-
-            <SettingsCard title="후원 알림" description="OBS 오버레이에 표시할 후원 알림이에요.">
+            <SettingsCard
+              title="후원 알림 설정"
+              description="후원 시 방송 화면에 뜨는 알림과 메시지 음성 읽기를 설정해요."
+            >
               <Controller
                 name="donationAlertEnabled"
                 control={control}
                 render={({ field }) => (
-                  <DonationFieldRow label="알림 표시" description="후원 시 오버레이 알림">
+                  <SettingFieldRow label="알림 사용" description="후원 시 오버레이 알림 표시">
                     <SettingToggleControl
                       checked={field.value}
                       checkedLabel="ON"
                       uncheckedLabel="OFF"
-                      ariaLabel="후원 알림 표시"
+                      ariaLabel="후원 알림 사용"
                       disabled={isSaving}
                       onChange={field.onChange}
                     />
-                  </DonationFieldRow>
+                  </SettingFieldRow>
                 )}
               />
               <Controller
                 name="alertSoundEnabled"
                 control={control}
                 render={({ field }) => (
-                  <DonationFieldRow
-                    label="알림 사운드"
-                    description="알림과 함께 효과음을 재생해요."
+                  <SettingFieldRow
+                    label="알림 효과음"
+                    description="알림이 뜰 때 효과음 재생"
                     isDimmed={!alertEnabled}
                   >
                     <SettingToggleControl
                       checked={field.value}
-                      checkedLabel="ON"
-                      uncheckedLabel="OFF"
-                      ariaLabel="알림 사운드 사용"
+                      checkedLabel="기본음"
+                      uncheckedLabel="끔"
+                      ariaLabel="알림 효과음 사용"
                       disabled={isSaving || !alertEnabled}
                       onChange={field.onChange}
                     />
-                  </DonationFieldRow>
+                  </SettingFieldRow>
                 )}
               />
               <Controller
                 name="alertVolume"
                 control={control}
                 render={({ field }) => (
-                  <DonationFieldRow
+                  <SettingFieldRow
                     label="알림 볼륨"
-                    description="알림 사운드와 음성 크기예요."
+                    description="효과음·음성 읽기 크기"
                     isDimmed={!alertEnabled}
                   >
                     <DonationVolumeSlider
@@ -206,16 +130,16 @@ export function ChannelDonationControls({ initialSnapshot }: Props) {
                       disabled={isSaving || !alertEnabled}
                       onChange={field.onChange}
                     />
-                  </DonationFieldRow>
+                  </SettingFieldRow>
                 )}
               />
               <Controller
                 name="donationAlertDurationSeconds"
                 control={control}
                 render={({ field }) => (
-                  <DonationFieldRow
+                  <SettingFieldRow
                     label="알림 표시 시간"
-                    description="오버레이에 알림이 보이는 시간이에요."
+                    description="효과음·음성 재생 뒤 유지"
                     isDimmed={!alertEnabled}
                   >
                     <SettingNumberSelectControl
@@ -223,73 +147,181 @@ export function ChannelDonationControls({ initialSnapshot }: Props) {
                       value={field.value}
                       options={DONATION_ALERT_DURATION_OPTIONS}
                       disabled={isSaving || !alertEnabled}
-                      compact
                       onChange={field.onChange}
                     />
-                  </DonationFieldRow>
+                  </SettingFieldRow>
                 )}
               />
-              <div className="border-border/70 border-t pt-5">
-                <DonationTestAlertButton
-                  alertEnabled={Boolean(alertEnabled)}
-                  ttsEnabled={Boolean(ttsEnabled)}
-                  ttsRate={ttsRate ?? 1}
-                  alertVolume={alertVolume ?? 0}
-                  disabled={isSaving}
-                />
-              </div>
-            </SettingsCard>
-
-            <SettingsCard
-              title="음성 읽기 (TTS)"
-              description="후원 메시지를 브라우저 음성으로 읽어줘요."
-            >
               <Controller
                 name="ttsEnabled"
                 control={control}
                 render={({ field }) => (
-                  <DonationFieldRow label="후원 메시지 읽기" description="Web Speech API 사용">
+                  <SettingFieldRow
+                    label="메시지 음성 읽기"
+                    description="후원 메시지를 음성으로 읽기 (TTS)"
+                  >
                     <SettingToggleControl
                       checked={field.value}
                       checkedLabel="ON"
                       uncheckedLabel="OFF"
-                      ariaLabel="후원 메시지 음성 읽기"
+                      ariaLabel="후원 메시지 음성 읽기 사용"
                       disabled={isSaving}
                       onChange={field.onChange}
                     />
-                  </DonationFieldRow>
+                  </SettingFieldRow>
                 )}
               />
               <Controller
                 name="ttsRate"
                 control={control}
                 render={({ field }) => (
-                  <DonationFieldRow
+                  <SettingFieldRow
                     label="읽기 속도"
-                    description="음성으로 읽는 속도예요."
+                    description="메시지 음성 읽기 속도"
                     isDimmed={!ttsEnabled}
                   >
-                    <SettingNumberSelectControl
+                    <SettingSegmentedControl
                       ariaLabel="음성 읽기 속도"
                       value={field.value}
                       options={DONATION_TTS_RATE_OPTIONS}
                       disabled={isSaving || !ttsEnabled}
-                      compact
                       onChange={field.onChange}
                     />
-                  </DonationFieldRow>
+                  </SettingFieldRow>
+                )}
+              />
+            </SettingsCard>
+
+            <SettingsCard
+              title="채팅 후원 설정"
+              description="시청자가 라이브 채팅에서 보낼 수 있는 후원의 기본 조건이에요."
+            >
+              <Controller
+                name="donationEnabled"
+                control={control}
+                render={({ field }) => (
+                  <SettingFieldRow label="후원 받기" description="채팅 후원 수신 사용 여부">
+                    <SettingToggleControl
+                      checked={field.value}
+                      checkedLabel="ON"
+                      uncheckedLabel="OFF"
+                      ariaLabel="채팅 후원 사용"
+                      disabled={isSaving}
+                      onChange={field.onChange}
+                    />
+                  </SettingFieldRow>
+                )}
+              />
+              <Controller
+                name="donationAmountVisible"
+                control={control}
+                render={({ field }) => (
+                  <SettingFieldRow
+                    label="후원 금액 표시"
+                    description="채팅·알림에 금액 표시"
+                    isDimmed={!donationEnabled}
+                  >
+                    <SettingToggleControl
+                      checked={field.value}
+                      checkedLabel="ON"
+                      uncheckedLabel="OFF"
+                      ariaLabel="후원 금액 표시"
+                      disabled={isSaving || !donationEnabled}
+                      onChange={field.onChange}
+                    />
+                  </SettingFieldRow>
+                )}
+              />
+              <Controller
+                name="donationMinAmount"
+                control={control}
+                render={({ field }) => (
+                  <SettingFieldRow
+                    label="최소 후원 금액"
+                    description="이 금액 이상부터 후원을 받아요."
+                    isDimmed={!donationEnabled}
+                  >
+                    <div className="flex w-full flex-col gap-1 sm:w-44">
+                      <InputGroup>
+                        <InputGroupInput
+                          type="number"
+                          inputMode="numeric"
+                          min={DONATION_MIN_AMOUNT_FLOOR}
+                          step={DONATION_MIN_AMOUNT_STEP}
+                          value={field.value}
+                          disabled={isSaving || !donationEnabled}
+                          aria-label="최소 후원 금액"
+                          onChange={(event) => field.onChange(event.target.valueAsNumber || 0)}
+                          className="[appearance:textfield] text-right [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                        />
+                        <InputGroupAddon align="inline-end" className="gap-1.5">
+                          <div className="flex flex-col">
+                            <button
+                              type="button"
+                              tabIndex={-1}
+                              aria-label="금액 올리기"
+                              disabled={isSaving || !donationEnabled}
+                              onClick={() =>
+                                field.onChange((field.value || 0) + DONATION_MIN_AMOUNT_STEP)
+                              }
+                              className="text-muted-foreground hover:text-brand hover:bg-muted flex h-3.5 w-4 items-center justify-center rounded-sm transition-colors disabled:opacity-30"
+                            >
+                              <ChevronUp className="size-3" />
+                            </button>
+                            <button
+                              type="button"
+                              tabIndex={-1}
+                              aria-label="금액 내리기"
+                              disabled={
+                                isSaving ||
+                                !donationEnabled ||
+                                (field.value || 0) <= DONATION_MIN_AMOUNT_FLOOR
+                              }
+                              onClick={() =>
+                                field.onChange(
+                                  Math.max(
+                                    (field.value || 0) - DONATION_MIN_AMOUNT_STEP,
+                                    DONATION_MIN_AMOUNT_FLOOR,
+                                  ),
+                                )
+                              }
+                              className="text-muted-foreground hover:text-brand hover:bg-muted flex h-3.5 w-4 items-center justify-center rounded-sm transition-colors disabled:opacity-30"
+                            >
+                              <ChevronDown className="size-3" />
+                            </button>
+                          </div>
+                          P
+                        </InputGroupAddon>
+                      </InputGroup>
+                      <FieldError errors={[errors.donationMinAmount]} />
+                    </div>
+                  </SettingFieldRow>
                 )}
               />
             </SettingsCard>
           </div>
 
+          {/* 사이드 컬럼: 알림 미리보기 + 가이드 */}
           <div className="flex min-w-0 flex-col gap-5 xl:w-120 xl:shrink-0">
-            <DonationRecentList items={initialSnapshot.recentDonations} />
+            <SettingsCard
+              title="알림 미리보기"
+              description="실제 후원 알림 화면과 같은 모습이에요. 현재 설정한 속도·볼륨으로 미리 들어볼 수 있어요."
+            >
+              <DonationAlertPreview amountVisible={Boolean(amountVisible)} />
+              <DonationTestAlertButton
+                alertEnabled={Boolean(alertEnabled)}
+                ttsEnabled={Boolean(ttsEnabled)}
+                ttsRate={ttsRate ?? 1}
+                alertVolume={alertVolume ?? 0}
+                disabled={isSaving}
+                className="w-full"
+              />
+            </SettingsCard>
 
             <SideTipCard
               icon={<HandCoins className="size-5" />}
               title="후원 설정을 적용하기 전에 확인해요"
-              description={`후원 설정은 다음 방송부터 적용돼요.\n알림은 OBS 후원 알림 오버레이에서 그대로 보여집니다.`}
+              description={`후원 설정은 다음 방송부터 적용돼요.\n알림은 OBS 후원 알림 화면에 그대로 보여집니다.`}
             >
               <SideTipStep
                 number="1"
@@ -298,13 +330,13 @@ export function ChannelDonationControls({ initialSnapshot }: Props) {
               />
               <SideTipStep
                 number="2"
-                title="알림을 미리 들어봐요"
-                description={`테스트 알림으로 현재 속도·볼륨을 바로 확인할 수 있어요.\n음성 읽기는 브라우저 기본 TTS를 사용해요.`}
+                title="효과음과 음성 읽기는 달라요"
+                description={`효과음은 알림이 뜰 때 나는 소리예요.\n음성 읽기는 후원 메시지를 TTS로 읽어줘요.`}
               />
               <SideTipStep
                 number="3"
-                title="오버레이에 반영해요"
-                description={`알림 오버레이 주소는 채널 보안 설정에서 확인할 수 있어요.\n표시 시간은 오버레이에 그대로 적용돼요.`}
+                title="알림 주소를 연결해요"
+                description={`OBS 후원 알림 오버레이 주소는 채널 보안 설정에서 확인할 수 있어요.\n표시 시간은 오버레이에 그대로 적용돼요.`}
               />
             </SideTipCard>
           </div>
