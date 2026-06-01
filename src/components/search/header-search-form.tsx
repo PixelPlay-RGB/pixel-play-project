@@ -22,8 +22,8 @@ function getSearchRouteConfig(pathname: string): SearchRouteConfig | null {
   if (pathname === "/live" || pathname === "/live/search" || /^\/live\/[^/]+$/.test(pathname)) {
     return {
       path: "/live/search",
-      placeholder: "라이브 검색",
-      mobileAriaLabel: "라이브 검색 열기",
+      placeholder: "방송 제목·크리에이터 검색",
+      mobileAriaLabel: "방송 제목·크리에이터 검색 열기",
     };
   }
 

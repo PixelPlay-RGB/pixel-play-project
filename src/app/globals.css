@@ -279,13 +279,13 @@
   }
 
   .route-tab-link:hover {
-    background-color: rgb(70 198 169 / 10%);
-    color: #159a80;
+    background-color: transparent;
+    color: var(--foreground);
   }
 
   .dark .route-tab-link:hover {
-    background-color: rgb(70 198 169 / 18%);
-    color: var(--brand);
+    background-color: transparent;
+    color: var(--foreground);
   }
 
   .route-tab-link {
@@ -293,13 +293,13 @@
   }
 
   .route-tab-link-active {
-    background-color: rgb(70 198 169 / 14%);
-    color: #159a80;
+    background-color: transparent;
+    color: var(--foreground);
   }
 
   .dark .route-tab-link-active {
-    background-color: rgb(70 198 169 / 18%);
-    color: var(--brand);
+    background-color: transparent;
+    color: var(--foreground);
   }
 
   .route-accent-hover:hover {
