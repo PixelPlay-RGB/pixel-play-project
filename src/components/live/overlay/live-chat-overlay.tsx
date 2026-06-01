@@ -1,6 +1,6 @@
 "use client";
 // OBS 브라우저 소스에 붙이는 라이브 채팅 출력 화면을 렌더링합니다.
-import { Crown } from "lucide-react";
+import { Crown, HandCoins } from "lucide-react";
 
 import { useLiveChatOverlay } from "@/hooks/live/use-live-chat-overlay";
 import { cn } from "@/lib/utils";
@@ -38,6 +38,10 @@ export function LiveChatOverlay({ initialSnapshot }: { initialSnapshot: LiveChat
 }
 
 function ChatMessageItem({ message }: { message: LiveChatOverlayMessage }) {
+  if (message.kind === "donation") {
+    return <DonationMessageItem message={message} />;
+  }
+
   const nicknameColor = getLiveChatOverlayNicknameColor(message.author, message.role);
 
   return (
@@ -56,6 +60,30 @@ function ChatMessageItem({ message }: { message: LiveChatOverlayMessage }) {
       </span>
       {message.content}
     </p>
+  );
+}
+
+function DonationMessageItem({ message }: { message: LiveChatOverlayMessage }) {
+  return (
+    <div
+      className={cn(
+        "inline-block max-w-130 rounded-xl px-3.5 py-2 wrap-break-word",
+        "bg-live/20 ring-live/45 shadow-lg ring-1",
+        "text-3xl leading-9 font-normal",
+      )}
+    >
+      <span className="mr-1.5 inline-flex items-center gap-1.5 align-middle">
+        <HandCoins className="text-live size-6" aria-hidden />
+        <span className="text-live font-bold">{message.author}</span>
+        {typeof message.amount === "number" && (
+          <span className="text-live font-extrabold">
+            {message.amount.toLocaleString("ko-KR")}P
+          </span>
+        )}
+        <span className="text-white/80">후원</span>
+      </span>
+      {message.content && <span className="text-white">{message.content}</span>}
+    </div>
   );
 }
 

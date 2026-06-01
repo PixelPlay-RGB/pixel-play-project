@@ -14,4 +14,5 @@ export interface ChannelChatSnapshot {
   forbiddenWords: string[];
   chatRuleText: string;
   chatRuleVersion: number;
+  chatDonationMessageEnabled: boolean;
 }

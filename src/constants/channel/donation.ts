@@ -5,10 +5,27 @@ export const DONATION_MIN_AMOUNT_FLOOR = 1000;
 export const DONATION_MIN_AMOUNT_CEILING = 1000000;
 export const DONATION_MIN_AMOUNT_STEP = 100;
 
-// alert_volume CHECK: 0 ~ 100
+// alert_volume / tts_volume CHECK: 0 ~ 100
 export const DONATION_ALERT_VOLUME_MIN = 0;
 export const DONATION_ALERT_VOLUME_MAX = 100;
 export const DONATION_ALERT_VOLUME_STEP = 5;
+
+// 알림음 옵션(5종). src는 /public/sounds/donation/ 아래 파일을 가리키며, 자료 확정 시 파일만 교체하면 됩니다.
+export const DONATION_ALERT_SOUND_OPTIONS = [
+  { value: "classic", label: "클래식 차임", src: "/sounds/donation/classic.mp3" },
+  { value: "coin", label: "코인", src: "/sounds/donation/coin.mp3" },
+  { value: "bell", label: "벨", src: "/sounds/donation/bell.mp3" },
+  { value: "arcade", label: "아케이드", src: "/sounds/donation/arcade.mp3" },
+  { value: "fanfare", label: "팡파레", src: "/sounds/donation/fanfare.mp3" },
+] as const;
+
+export const DONATION_ALERT_SOUND_DEFAULT = "classic";
+export const DONATION_ALERT_SOUND_KEYS = DONATION_ALERT_SOUND_OPTIONS.map(
+  (option) => option.value,
+) as [string, ...string[]];
+
+// TTS 음성 식별자(voiceURI) 최대 길이 (Web Speech API).
+export const DONATION_TTS_VOICE_URI_MAX = 256;
 
 // donation_alert_duration_seconds CHECK: 3 ~ 30
 export const DONATION_ALERT_DURATION_OPTIONS = [

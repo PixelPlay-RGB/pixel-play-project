@@ -34,6 +34,8 @@ export function parseLiveChatOverlaySnapshot(value: Json): LiveChatOverlaySnapsh
 
   return {
     broadcast,
+    donationMessageEnabled: object.donationMessageEnabled === true,
+    donationAmountVisible: object.donationAmountVisible !== false,
     items,
   };
 }
@@ -129,20 +131,24 @@ function parseLiveChatOverlayMessage(value: Json | undefined): LiveChatOverlayMe
 
   const id = readString(object.id);
   const author = readString(object.author);
-  const content = readString(object.content);
+  const content = readText(object.content);
   const createdAt = readString(object.createdAt);
+  const kind = object.kind === "donation" ? "donation" : "chat";
+  const amount = readNumber(object.amount);
   const role = object.role === "creator" ? "creator" : undefined;
   const tone = readMessageTone(object.tone);
 
-  if (!id || !author || !content || !createdAt) {
+  if (!id || !author || content === null || !createdAt) {
     return null;
   }
 
   return {
     id,
+    kind,
     author,
     content,
     createdAt,
+    amount,
     role,
     tone,
   };

@@ -1,7 +1,10 @@
 // 채널 후원 설정 snapshot의 화면 표시값을 조립합니다.
 import "server-only";
 
-import { DONATION_MIN_AMOUNT_FLOOR } from "@/constants/channel/donation";
+import {
+  DONATION_ALERT_SOUND_DEFAULT,
+  DONATION_MIN_AMOUNT_FLOOR,
+} from "@/constants/channel/donation";
 import type {
   ChannelDonationSnapshot,
   RecentDonationItem,
@@ -29,12 +32,14 @@ export function buildChannelDonationSnapshot(
       donationEnabled: readBoolean(settings?.donationEnabled, true),
       donationMinAmount: readNumber(settings?.donationMinAmount, DONATION_MIN_AMOUNT_FLOOR),
       donationAmountVisible: readBoolean(settings?.donationAmountVisible, true),
-      donationAlertEnabled: readBoolean(settings?.donationAlertEnabled, true),
       donationAlertDurationSeconds: readNumber(settings?.donationAlertDurationSeconds, 5),
       alertSoundEnabled: readBoolean(settings?.alertSoundEnabled, true),
+      alertSoundKey: readString(settings?.alertSoundKey, DONATION_ALERT_SOUND_DEFAULT),
       alertVolume: readNumber(settings?.alertVolume, 32),
       ttsEnabled: readBoolean(settings?.ttsEnabled, true),
       ttsRate: readNumber(settings?.ttsRate, 1),
+      ttsVolume: readNumber(settings?.ttsVolume, 80),
+      ttsVoiceUri: readString(settings?.ttsVoiceUri, ""),
     },
     settlement: {
       status: readString(settlement?.status, "ready"),

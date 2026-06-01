@@ -5,12 +5,14 @@ export interface DonationSettings {
   donationEnabled: boolean;
   donationMinAmount: number;
   donationAmountVisible: boolean;
-  donationAlertEnabled: boolean;
   donationAlertDurationSeconds: number;
   alertSoundEnabled: boolean;
+  alertSoundKey: string;
   alertVolume: number;
   ttsEnabled: boolean;
   ttsRate: number;
+  ttsVolume: number;
+  ttsVoiceUri: string;
 }
 
 // 정산 데모 정보(읽기 전용 표시값)입니다.

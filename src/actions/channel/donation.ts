@@ -44,12 +44,14 @@ export async function updateChannelDonationSettingsAction(
     p_donation_enabled: values.donationEnabled,
     p_donation_min_amount: values.donationMinAmount,
     p_donation_amount_visible: values.donationAmountVisible,
-    p_donation_alert_enabled: values.donationAlertEnabled,
     p_donation_alert_duration_seconds: values.donationAlertDurationSeconds,
     p_alert_sound_enabled: values.alertSoundEnabled,
+    p_alert_sound_key: values.alertSoundKey,
     p_alert_volume: values.alertVolume,
     p_tts_enabled: values.ttsEnabled,
     p_tts_rate: values.ttsRate,
+    p_tts_volume: values.ttsVolume,
+    p_tts_voice_uri: values.ttsVoiceUri,
   });
 
   if (error) {

@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import type { ChannelMenuItem } from "@/types/channel/channel-menu";
+import { AnimatePresence, motion } from "motion/react";
 import { ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -58,20 +59,31 @@ function ChannelSidebarMenuGroup({ item, isActive, isChildActive }: Props) {
           className={cn("ml-auto size-4 transition-transform duration-200", open && "rotate-180")}
         />
       </SidebarMenuButton>
-      {open && (
-        <SidebarMenuSub>
-          {item.children?.map((child) => (
-            <SidebarMenuSubItem key={child.id}>
-              <SidebarMenuSubButton
-                render={<Link href={child.href} />}
-                isActive={isChildActive(child.href)}
-              >
-                <span>{child.label}</span>
-              </SidebarMenuSubButton>
-            </SidebarMenuSubItem>
-          ))}
-        </SidebarMenuSub>
-      )}
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            key="submenu"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+            className="overflow-hidden"
+          >
+            <SidebarMenuSub>
+              {item.children?.map((child) => (
+                <SidebarMenuSubItem key={child.id}>
+                  <SidebarMenuSubButton
+                    render={<Link href={child.href} />}
+                    isActive={isChildActive(child.href)}
+                  >
+                    <span>{child.label}</span>
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+              ))}
+            </SidebarMenuSub>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </SidebarMenuItem>
   );
 }

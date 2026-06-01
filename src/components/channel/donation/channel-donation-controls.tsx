@@ -5,6 +5,7 @@ import { Controller, useWatch } from "react-hook-form";
 import { ChevronDown, ChevronUp, HandCoins } from "lucide-react";
 
 import DonationAlertPreview from "@/components/channel/donation/donation-alert-preview";
+import { DonationPreviewButton } from "@/components/channel/donation/donation-preview-button";
 import DonationTestAlertButton from "@/components/channel/donation/donation-test-alert-button";
 import { DonationVolumeSlider } from "@/components/channel/donation/donation-volume-slider";
 import { SettingFieldRow } from "@/components/common/setting-field-row";
@@ -18,17 +19,31 @@ import { StickySaveBar } from "@/components/common/sticky-save-bar";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
+import {
+  Select,
+  SelectContent,
+  SelectIcon,
+  SelectItem,
+  SelectList,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import {
   DONATION_ALERT_DURATION_OPTIONS,
+  DONATION_ALERT_SOUND_OPTIONS,
   DONATION_MIN_AMOUNT_FLOOR,
   DONATION_MIN_AMOUNT_STEP,
+  DONATION_TEST_ALERT_SAMPLE,
   DONATION_TTS_RATE_OPTIONS,
 } from "@/constants/channel/donation";
 import { useChannelDonationSettingsForm } from "@/hooks/channel/use-channel-donation-settings-form";
+import { useSpeechSynthesis } from "@/hooks/common/use-speech-synthesis";
 import { useStickyActionBar } from "@/hooks/common/use-sticky-action-bar";
 import { cn } from "@/lib/utils";
 import type { ChannelDonationSnapshot } from "@/types/channel/donation";
+import { playDonationSound } from "@/utils/channel/donation-sound";
+import { buildDonationTtsText } from "@/utils/channel/donation-tts";
 
 interface Props {
   initialSnapshot: ChannelDonationSnapshot;
@@ -42,19 +57,47 @@ export function ChannelDonationControls({ initialSnapshot }: Props) {
     formState: { isDirty, errors },
   } = form;
   const { sentinelRef, show } = useStickyActionBar(isDirty);
+  const { voices, speak } = useSpeechSynthesis();
 
   const donationEnabled = useWatch({ control, name: "donationEnabled" });
   const amountVisible = useWatch({ control, name: "donationAmountVisible" });
-  const alertEnabled = useWatch({ control, name: "donationAlertEnabled" });
+  const alertSoundEnabled = useWatch({ control, name: "alertSoundEnabled" });
+  const alertSoundKey = useWatch({ control, name: "alertSoundKey" });
   const ttsEnabled = useWatch({ control, name: "ttsEnabled" });
   const ttsRate = useWatch({ control, name: "ttsRate" });
   const alertVolume = useWatch({ control, name: "alertVolume" });
+  const ttsVolume = useWatch({ control, name: "ttsVolume" });
+  const ttsVoiceUri = useWatch({ control, name: "ttsVoiceUri" });
+
+  // 사용 가능한 한국어 음성 목록(+ 브라우저 기본 음성).
+  const voiceItems = [
+    { value: "", label: "기본 음성" },
+    ...voices
+      .filter((voice) => voice.lang.toLowerCase().startsWith("ko"))
+      .map((voice) => ({ value: voice.voiceURI, label: voice.name })),
+  ];
+
+  // 알림음만 현재 볼륨으로 미리듣기.
+  const handlePreviewSound = () => {
+    playDonationSound(alertSoundKey ?? "", alertVolume ?? 0);
+  };
+
+  // TTS만 현재 속도·볼륨·음성으로 미리듣기.
+  const handlePreviewTts = () => {
+    const { donorNickname, amount, message } = DONATION_TEST_ALERT_SAMPLE;
+
+    speak(buildDonationTtsText({ donorNickname, amount, message, amountVisible: Boolean(amountVisible) }), {
+      rate: ttsRate ?? 1,
+      volume: (ttsVolume ?? 0) / 100,
+      voiceURI: ttsVoiceUri || undefined,
+    });
+  };
 
   return (
     <SettingsPage
       kicker="방송 후원 관리"
       title="후원 설정을 관리해요"
-      description="채팅 후원 수신 조건과 방송 화면 알림, 음성 읽기를 한 곳에서 관리해요."
+      description="채팅 후원 수신 조건과 방송 화면 알림, 알림 소리, TTS를 한 곳에서 관리해요."
       action={
         <Button
           type="button"
@@ -78,18 +121,18 @@ export function ChannelDonationControls({ initialSnapshot }: Props) {
           <div className="flex min-w-0 flex-1 flex-col gap-5">
             <SettingsCard
               title="후원 알림 설정"
-              description="후원 시 방송 화면에 뜨는 알림과 메시지 음성 읽기를 설정해요."
+              description="후원이 들어오면 방송 화면에 뜨는 알림과 알림 소리, TTS를 설정해요."
             >
               <Controller
-                name="donationAlertEnabled"
+                name="alertSoundEnabled"
                 control={control}
                 render={({ field }) => (
-                  <SettingFieldRow label="알림 사용" description="후원 시 오버레이 알림 표시">
+                  <SettingFieldRow label="알림 소리" description="알림이 뜰 때 효과음을 재생해요.">
                     <SettingToggleControl
                       checked={field.value}
                       checkedLabel="ON"
                       uncheckedLabel="OFF"
-                      ariaLabel="후원 알림 사용"
+                      ariaLabel="알림 소리 사용"
                       disabled={isSaving}
                       onChange={field.onChange}
                     />
@@ -97,22 +140,45 @@ export function ChannelDonationControls({ initialSnapshot }: Props) {
                 )}
               />
               <Controller
-                name="alertSoundEnabled"
+                name="alertSoundKey"
                 control={control}
                 render={({ field }) => (
                   <SettingFieldRow
-                    label="알림 효과음"
-                    description="알림이 뜰 때 효과음 재생"
-                    isDimmed={!alertEnabled}
+                    label="알림음 종류"
+                    description="재생할 효과음을 골라요."
+                    isDimmed={!alertSoundEnabled}
                   >
-                    <SettingToggleControl
-                      checked={field.value}
-                      checkedLabel="기본음"
-                      uncheckedLabel="끔"
-                      ariaLabel="알림 효과음 사용"
-                      disabled={isSaving || !alertEnabled}
-                      onChange={field.onChange}
-                    />
+                    <div className="flex items-center gap-2">
+                      <Select
+                        value={field.value}
+                        items={DONATION_ALERT_SOUND_OPTIONS}
+                        disabled={isSaving || !alertSoundEnabled}
+                        onValueChange={(value) => field.onChange(value as string)}
+                      >
+                        <SelectTrigger aria-label="알림음 종류" className="w-40">
+                          <SelectValue />
+                          <SelectIcon />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectList>
+                            {DONATION_ALERT_SOUND_OPTIONS.map((option) => (
+                              <SelectItem
+                                key={option.value}
+                                value={option.value}
+                                label={option.label}
+                              >
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectList>
+                        </SelectContent>
+                      </Select>
+                      <DonationPreviewButton
+                        ariaLabel="알림음 미리듣기"
+                        disabled={isSaving || !alertSoundEnabled}
+                        onPreview={handlePreviewSound}
+                      />
+                    </div>
                   </SettingFieldRow>
                 )}
               />
@@ -121,13 +187,13 @@ export function ChannelDonationControls({ initialSnapshot }: Props) {
                 control={control}
                 render={({ field }) => (
                   <SettingFieldRow
-                    label="알림 볼륨"
-                    description="효과음·음성 읽기 크기"
-                    isDimmed={!alertEnabled}
+                    label="알림 소리 볼륨"
+                    description="효과음 크기"
+                    isDimmed={!alertSoundEnabled}
                   >
                     <DonationVolumeSlider
                       value={field.value}
-                      disabled={isSaving || !alertEnabled}
+                      disabled={isSaving || !alertSoundEnabled}
                       onChange={field.onChange}
                     />
                   </SettingFieldRow>
@@ -137,16 +203,12 @@ export function ChannelDonationControls({ initialSnapshot }: Props) {
                 name="donationAlertDurationSeconds"
                 control={control}
                 render={({ field }) => (
-                  <SettingFieldRow
-                    label="알림 표시 시간"
-                    description="효과음·음성 재생 뒤 유지"
-                    isDimmed={!alertEnabled}
-                  >
+                  <SettingFieldRow label="알림 표시 시간" description="알림이 화면에 유지되는 시간">
                     <SettingNumberSelectControl
                       ariaLabel="알림 표시 시간"
                       value={field.value}
                       options={DONATION_ALERT_DURATION_OPTIONS}
-                      disabled={isSaving || !alertEnabled}
+                      disabled={isSaving}
                       onChange={field.onChange}
                     />
                   </SettingFieldRow>
@@ -156,15 +218,12 @@ export function ChannelDonationControls({ initialSnapshot }: Props) {
                 name="ttsEnabled"
                 control={control}
                 render={({ field }) => (
-                  <SettingFieldRow
-                    label="메시지 음성 읽기"
-                    description="후원 메시지를 음성으로 읽기 (TTS)"
-                  >
+                  <SettingFieldRow label="TTS" description="후원 메시지를 음성으로 읽어줘요.">
                     <SettingToggleControl
                       checked={field.value}
                       checkedLabel="ON"
                       uncheckedLabel="OFF"
-                      ariaLabel="후원 메시지 음성 읽기 사용"
+                      ariaLabel="TTS 사용"
                       disabled={isSaving}
                       onChange={field.onChange}
                     />
@@ -176,17 +235,69 @@ export function ChannelDonationControls({ initialSnapshot }: Props) {
                 control={control}
                 render={({ field }) => (
                   <SettingFieldRow
-                    label="읽기 속도"
-                    description="메시지 음성 읽기 속도"
+                    label="TTS 속도"
+                    description="음성 읽기 속도"
                     isDimmed={!ttsEnabled}
                   >
-                    <SettingSegmentedControl
-                      ariaLabel="음성 읽기 속도"
+                    <div className="flex items-center gap-2">
+                      <SettingSegmentedControl
+                        ariaLabel="TTS 속도"
+                        value={field.value}
+                        options={DONATION_TTS_RATE_OPTIONS}
+                        disabled={isSaving || !ttsEnabled}
+                        onChange={field.onChange}
+                      />
+                      <DonationPreviewButton
+                        ariaLabel="TTS 미리듣기"
+                        disabled={isSaving || !ttsEnabled}
+                        onPreview={handlePreviewTts}
+                      />
+                    </div>
+                  </SettingFieldRow>
+                )}
+              />
+              <Controller
+                name="ttsVolume"
+                control={control}
+                render={({ field }) => (
+                  <SettingFieldRow label="TTS 볼륨" description="음성 크기" isDimmed={!ttsEnabled}>
+                    <DonationVolumeSlider
                       value={field.value}
-                      options={DONATION_TTS_RATE_OPTIONS}
                       disabled={isSaving || !ttsEnabled}
                       onChange={field.onChange}
                     />
+                  </SettingFieldRow>
+                )}
+              />
+              <Controller
+                name="ttsVoiceUri"
+                control={control}
+                render={({ field }) => (
+                  <SettingFieldRow
+                    label="TTS 음성"
+                    description="기기에서 지원하는 한국어 음성"
+                    isDimmed={!ttsEnabled}
+                  >
+                    <Select
+                      value={field.value}
+                      items={voiceItems}
+                      disabled={isSaving || !ttsEnabled}
+                      onValueChange={(value) => field.onChange(value as string)}
+                    >
+                      <SelectTrigger aria-label="TTS 음성" className="w-52">
+                        <SelectValue />
+                        <SelectIcon />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectList>
+                          {voiceItems.map((option) => (
+                            <SelectItem key={option.value} value={option.value} label={option.label}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectList>
+                      </SelectContent>
+                    </Select>
                   </SettingFieldRow>
                 )}
               />
@@ -200,12 +311,15 @@ export function ChannelDonationControls({ initialSnapshot }: Props) {
                 name="donationEnabled"
                 control={control}
                 render={({ field }) => (
-                  <SettingFieldRow label="후원 받기" description="채팅 후원 수신 사용 여부">
+                  <SettingFieldRow
+                    label="후원 받기"
+                    description="끄면 시청자가 채팅에서 후원을 보낼 수 없어요."
+                  >
                     <SettingToggleControl
                       checked={field.value}
                       checkedLabel="ON"
                       uncheckedLabel="OFF"
-                      ariaLabel="채팅 후원 사용"
+                      ariaLabel="채팅 후원 받기"
                       disabled={isSaving}
                       onChange={field.onChange}
                     />
@@ -309,10 +423,14 @@ export function ChannelDonationControls({ initialSnapshot }: Props) {
             >
               <DonationAlertPreview amountVisible={Boolean(amountVisible)} />
               <DonationTestAlertButton
-                alertEnabled={Boolean(alertEnabled)}
+                alertSoundEnabled={Boolean(alertSoundEnabled)}
+                alertSoundKey={alertSoundKey ?? ""}
+                alertVolume={alertVolume ?? 0}
                 ttsEnabled={Boolean(ttsEnabled)}
                 ttsRate={ttsRate ?? 1}
-                alertVolume={alertVolume ?? 0}
+                ttsVolume={ttsVolume ?? 0}
+                ttsVoiceUri={ttsVoiceUri ?? ""}
+                amountVisible={Boolean(amountVisible)}
                 disabled={isSaving}
                 className="w-full"
               />
@@ -330,8 +448,8 @@ export function ChannelDonationControls({ initialSnapshot }: Props) {
               />
               <SideTipStep
                 number="2"
-                title="효과음과 음성 읽기는 달라요"
-                description={`효과음은 알림이 뜰 때 나는 소리예요.\n음성 읽기는 후원 메시지를 TTS로 읽어줘요.`}
+                title="알림 소리와 TTS는 달라요"
+                description={`알림 소리는 알림이 뜰 때 나는 효과음이에요.\nTTS는 후원 메시지를 음성으로 읽어줘요.`}
               />
               <SideTipStep
                 number="3"

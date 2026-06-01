@@ -14,6 +14,7 @@ interface CreatorStudioSnapshotSettings {
   forbiddenWords?: string[];
   chatRuleText?: string;
   chatRuleVersion?: number;
+  chatDonationMessageEnabled?: boolean;
 }
 
 const LIVE_CHAT_SCOPE_SET = new Set<LiveChatScope>(["authenticated", "follower", "manager"]);
@@ -31,6 +32,7 @@ export function buildChannelChatSnapshot(creatorId: string, snapshot: Json): Cha
     forbiddenWords: readForbiddenWords(settings.forbiddenWords),
     chatRuleText: readText(settings.chatRuleText, CHANNEL_CHAT_DEFAULT_RULE_TEXT),
     chatRuleVersion: readNumber(settings.chatRuleVersion, 1),
+    chatDonationMessageEnabled: readBoolean(settings.chatDonationMessageEnabled, false),
   };
 }
 

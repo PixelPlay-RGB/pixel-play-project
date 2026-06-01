@@ -7,6 +7,8 @@ interface SpeakOptions {
   rate?: number;
   volume?: number;
   lang?: string;
+  voiceURI?: string;
+  onEnd?: () => void;
 }
 
 function clamp(value: number, min: number, max: number) {
@@ -15,17 +17,29 @@ function clamp(value: number, min: number, max: number) {
 
 export function useSpeechSynthesis() {
   const [isSupported, setIsSupported] = useState(false);
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const synthRef = useRef<SpeechSynthesis | null>(null);
 
   useEffect(() => {
-    if (typeof window !== "undefined" && "speechSynthesis" in window) {
-      synthRef.current = window.speechSynthesis;
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setIsSupported(true);
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+      return;
     }
 
+    const synth = window.speechSynthesis;
+    synthRef.current = synth;
+
+    const loadVoices = () => {
+      setVoices(synth.getVoices());
+    };
+
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsSupported(true);
+    loadVoices();
+    synth.addEventListener("voiceschanged", loadVoices);
+
     return () => {
-      synthRef.current?.cancel();
+      synth.removeEventListener("voiceschanged", loadVoices);
+      synth.cancel();
     };
   }, []);
 
@@ -33,6 +47,7 @@ export function useSpeechSynthesis() {
     const synth = synthRef.current;
 
     if (!synth || !text.trim()) {
+      options?.onEnd?.();
       return;
     }
 
@@ -43,6 +58,18 @@ export function useSpeechSynthesis() {
     utterance.rate = clamp(options?.rate ?? 1, 0.5, 2);
     utterance.volume = clamp(options?.volume ?? 1, 0, 1);
 
+    if (options?.voiceURI) {
+      const matched = synth.getVoices().find((voice) => voice.voiceURI === options.voiceURI);
+      if (matched) {
+        utterance.voice = matched;
+      }
+    }
+
+    if (options?.onEnd) {
+      utterance.onend = options.onEnd;
+      utterance.onerror = options.onEnd;
+    }
+
     synth.speak(utterance);
   }, []);
 
@@ -50,5 +77,5 @@ export function useSpeechSynthesis() {
     synthRef.current?.cancel();
   }, []);
 
-  return { isSupported, speak, cancel };
+  return { isSupported, voices, speak, cancel };
 }

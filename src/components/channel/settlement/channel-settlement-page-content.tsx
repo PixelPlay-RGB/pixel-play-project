@@ -1,11 +1,12 @@
 // 채널 정산 내역 페이지의 서버 렌더링 영역을 구성합니다.
 
+import { CalendarCheck } from "lucide-react";
+
 import { DonationSettingsLoadFailedState } from "@/components/channel/donation/donation-settings-load-failed-state";
 import { SettlementHistoryCard } from "@/components/channel/settlement/settlement-history-card";
 import { SettlementSummaryCard } from "@/components/channel/settlement/settlement-summary-card";
 import { SettingsPage } from "@/components/common/settings-page";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { SETTLEMENT_PAYOUT_DAY } from "@/constants/channel/donation";
 import type { ChannelDonationSnapshot, SettlementYearSummary } from "@/types/channel/donation";
 
 interface Props {
@@ -23,23 +24,23 @@ export function ChannelSettlementPageContent({ initialSnapshot, yearlySummary }:
       kicker="후원 정산 관리"
       title="정산 내역을 확인해요"
       description="이번 달 정산 예정액과 연도별 정산 내역을 확인해요."
-      action={
-        <div className="flex items-center gap-2.5">
-          <span className="text-muted-foreground text-xs font-medium">(준비중)</span>
-          <Button
-            type="button"
-            disabled
-            title="실제 정산 신청은 후속 작업이에요."
-            className={cn(
-              "bg-brand hover:bg-brand/90 h-11 shrink-0 rounded-xl px-7 font-bold text-white",
-              "shadow-brand/20 shadow-sm transition-all active:scale-95",
-            )}
-          >
-            정산하기
-          </Button>
-        </div>
-      }
     >
+      {/* 자동 정산 안내 */}
+      <div className="border-brand/20 bg-brand/5 flex items-start gap-3 rounded-2xl border p-4">
+        <span className="bg-brand/15 text-brand flex size-9 shrink-0 items-center justify-center rounded-xl">
+          <CalendarCheck className="size-5" aria-hidden />
+        </span>
+        <div className="flex flex-col gap-0.5">
+          <p className="text-foreground text-sm font-bold">
+            정산은 매월 {SETTLEMENT_PAYOUT_DAY}일에 자동으로 처리돼요
+          </p>
+          <p className="text-muted-foreground text-sm leading-6">
+            전월 채팅 후원 합계에서 수수료(10%)를 제외한 금액이 등록된 정산 계좌로 자동 지급돼요.
+            별도의 정산 신청은 필요하지 않아요.
+          </p>
+        </div>
+      </div>
+
       <SettlementSummaryCard
         monthlyDonation={initialSnapshot.monthlyDonation}
         settlement={initialSnapshot.settlement}

@@ -2,11 +2,13 @@
 
 import {
   DONATION_ALERT_DURATION_OPTIONS,
+  DONATION_ALERT_SOUND_KEYS,
   DONATION_ALERT_VOLUME_MAX,
   DONATION_ALERT_VOLUME_MIN,
   DONATION_MIN_AMOUNT_CEILING,
   DONATION_MIN_AMOUNT_FLOOR,
   DONATION_TTS_RATE_OPTIONS,
+  DONATION_TTS_VOICE_URI_MAX,
 } from "@/constants/channel/donation";
 import { FORM_MESSAGE } from "@/constants/common/form-message";
 import { z } from "zod";
@@ -15,6 +17,7 @@ const durationValueSet = new Set<number>(
   DONATION_ALERT_DURATION_OPTIONS.map((option) => option.value),
 );
 const ttsRateValueSet = new Set<number>(DONATION_TTS_RATE_OPTIONS.map((option) => option.value));
+const alertSoundKeySet = new Set<string>(DONATION_ALERT_SOUND_KEYS);
 
 const minAmountMessage = FORM_MESSAGE.channelDonation.minAmountRange(
   DONATION_MIN_AMOUNT_FLOOR,
@@ -29,7 +32,6 @@ export const channelDonationSettingsSchema = z.object({
     .min(DONATION_MIN_AMOUNT_FLOOR, { error: minAmountMessage })
     .max(DONATION_MIN_AMOUNT_CEILING, { error: minAmountMessage }),
   donationAmountVisible: z.boolean(),
-  donationAlertEnabled: z.boolean(),
   donationAlertDurationSeconds: z
     .number()
     .int()
@@ -37,6 +39,9 @@ export const channelDonationSettingsSchema = z.object({
       error: FORM_MESSAGE.channelDonation.alertDurationInvalid,
     }),
   alertSoundEnabled: z.boolean(),
+  alertSoundKey: z.string().refine((value) => alertSoundKeySet.has(value), {
+    error: FORM_MESSAGE.channelDonation.alertSoundInvalid,
+  }),
   alertVolume: z
     .number()
     .int()
@@ -46,6 +51,12 @@ export const channelDonationSettingsSchema = z.object({
   ttsRate: z.number().refine((value) => ttsRateValueSet.has(value), {
     error: FORM_MESSAGE.channelDonation.ttsRateInvalid,
   }),
+  ttsVolume: z
+    .number()
+    .int()
+    .min(DONATION_ALERT_VOLUME_MIN, { error: FORM_MESSAGE.channelDonation.ttsVolumeRange })
+    .max(DONATION_ALERT_VOLUME_MAX, { error: FORM_MESSAGE.channelDonation.ttsVolumeRange }),
+  ttsVoiceUri: z.string().max(DONATION_TTS_VOICE_URI_MAX),
 });
 
 export type ChannelDonationSettingsInput = z.infer<typeof channelDonationSettingsSchema>;
