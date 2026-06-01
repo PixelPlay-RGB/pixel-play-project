@@ -69,13 +69,24 @@ export function ChannelDonationControls({ initialSnapshot }: Props) {
   const ttsVolume = useWatch({ control, name: "ttsVolume" });
   const ttsVoiceUri = useWatch({ control, name: "ttsVoiceUri" });
 
-  // 사용 가능한 한국어 음성 목록(+ 브라우저 기본 음성).
-  const voiceItems = [
-    { value: "", label: "기본 음성" },
-    ...voices
-      .filter((voice) => voice.lang.toLowerCase().startsWith("ko"))
-      .map((voice) => ({ value: voice.voiceURI, label: voice.name })),
-  ];
+  // 사용 가능한 한국어 음성 목록. 일반 사용자에겐 음성 엔진명이 낯설어 일반화된 라벨로 노출하고,
+  // 같은 이름(브라우저 기본 == OS 기본 등)으로 중복되는 음성은 합칩니다.
+  const seenVoiceNames = new Set<string>();
+  const voiceItems = voices
+    .filter((voice) => voice.lang.toLowerCase().startsWith("ko"))
+    .filter((voice) => {
+      if (seenVoiceNames.has(voice.name)) {
+        return false;
+      }
+      seenVoiceNames.add(voice.name);
+      return true;
+    })
+    .map((voice, index) => ({
+      value: voice.voiceURI,
+      label: `TTS 기본 음성 - ${String(index + 1).padStart(2, "0")}`,
+    }));
+  // 저장값이 비어 있으면(미선택) 첫 번째 음성을 기본 표시값으로 사용합니다.
+  const ttsVoiceValue = (ttsVoiceUri || voiceItems[0]?.value) ?? "";
 
   // 알림음만 현재 볼륨으로 미리듣기.
   const handlePreviewSound = () => {
@@ -124,6 +135,24 @@ export function ChannelDonationControls({ initialSnapshot }: Props) {
               description="후원이 들어오면 방송 화면에 뜨는 알림과 알림 소리, TTS를 설정해요."
             >
               <Controller
+                name="donationAlertDurationSeconds"
+                control={control}
+                render={({ field }) => (
+                  <SettingFieldRow
+                    label="알림 노출 유지 시간"
+                    description="후원 알림이 방송 화면에 표시된 뒤 사라지기까지의 시간이에요."
+                  >
+                    <SettingNumberSelectControl
+                      ariaLabel="알림 노출 유지 시간"
+                      value={field.value}
+                      options={DONATION_ALERT_DURATION_OPTIONS}
+                      disabled={isSaving}
+                      onChange={field.onChange}
+                    />
+                  </SettingFieldRow>
+                )}
+              />
+              <Controller
                 name="alertSoundEnabled"
                 control={control}
                 render={({ field }) => (
@@ -144,7 +173,7 @@ export function ChannelDonationControls({ initialSnapshot }: Props) {
                 control={control}
                 render={({ field }) => (
                   <SettingFieldRow
-                    label="알림음 종류"
+                    label="알림 효과음"
                     description="재생할 효과음을 골라요."
                     isDimmed={!alertSoundEnabled}
                   >
@@ -155,7 +184,7 @@ export function ChannelDonationControls({ initialSnapshot }: Props) {
                         disabled={isSaving || !alertSoundEnabled}
                         onValueChange={(value) => field.onChange(value as string)}
                       >
-                        <SelectTrigger aria-label="알림음 종류" className="w-40">
+                        <SelectTrigger aria-label="알림 효과음" className="w-40">
                           <SelectValue />
                           <SelectIcon />
                         </SelectTrigger>
@@ -194,21 +223,6 @@ export function ChannelDonationControls({ initialSnapshot }: Props) {
                     <DonationVolumeSlider
                       value={field.value}
                       disabled={isSaving || !alertSoundEnabled}
-                      onChange={field.onChange}
-                    />
-                  </SettingFieldRow>
-                )}
-              />
-              <Controller
-                name="donationAlertDurationSeconds"
-                control={control}
-                render={({ field }) => (
-                  <SettingFieldRow label="알림 표시 시간" description="알림이 화면에 유지되는 시간">
-                    <SettingNumberSelectControl
-                      ariaLabel="알림 표시 시간"
-                      value={field.value}
-                      options={DONATION_ALERT_DURATION_OPTIONS}
-                      disabled={isSaving}
                       onChange={field.onChange}
                     />
                   </SettingFieldRow>
@@ -279,7 +293,7 @@ export function ChannelDonationControls({ initialSnapshot }: Props) {
                     isDimmed={!ttsEnabled}
                   >
                     <Select
-                      value={field.value}
+                      value={ttsVoiceValue}
                       items={voiceItems}
                       disabled={isSaving || !ttsEnabled}
                       onValueChange={(value) => field.onChange(value as string)}

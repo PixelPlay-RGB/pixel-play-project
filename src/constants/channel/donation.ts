@@ -8,16 +8,21 @@ export const DONATION_MIN_AMOUNT_STEP = 100;
 // alert_volume / tts_volume CHECK: 0 ~ 100
 export const DONATION_ALERT_VOLUME_MIN = 0;
 export const DONATION_ALERT_VOLUME_MAX = 100;
-export const DONATION_ALERT_VOLUME_STEP = 5;
+export const DONATION_ALERT_VOLUME_STEP = 1;
 
-// 알림음 옵션(5종). src는 /public/sounds/donation/ 아래 파일을 가리키며, 자료 확정 시 파일만 교체하면 됩니다.
+// 알림음 옵션(5종). src는 /public/sounds/donation/ 아래 파일을 가리킵니다.
+// gain: 음원마다 체감 음량이 달라(최대 6배 차이), 같은 볼륨에서 비슷하게 들리도록 보정하는 배율입니다.
+//       (Web Audio 분석값 기반, 목표 RMS 0.045. 볼륨 100%에서도 피크가 0.7 미만이라 클리핑 없음)
 export const DONATION_ALERT_SOUND_OPTIONS = [
-  { value: "classic", label: "클래식 차임", src: "/sounds/donation/classic.mp3" },
-  { value: "coin", label: "코인", src: "/sounds/donation/coin.mp3" },
-  { value: "bell", label: "벨", src: "/sounds/donation/bell.mp3" },
-  { value: "arcade", label: "아케이드", src: "/sounds/donation/arcade.mp3" },
-  { value: "fanfare", label: "팡파레", src: "/sounds/donation/fanfare.mp3" },
+  { value: "classic", label: "밝은 차임", src: "/sounds/donation/classic.mp3", gain: 2.1 },
+  { value: "coin", label: "코인", src: "/sounds/donation/coin.mp3", gain: 1.5 },
+  { value: "bell", label: "벨", src: "/sounds/donation/bell.mp3", gain: 0.75 },
+  { value: "arcade", label: "레트로", src: "/sounds/donation/arcade.mp3", gain: 0.78 },
+  { value: "fanfare", label: "팝", src: "/sounds/donation/fanfare.mp3", gain: 4.7 },
 ] as const;
+
+// 알림음마다 원본 길이가 달라, 재생 길이를 이 값(ms)으로 통일합니다(초과분은 페이드아웃 후 정지).
+export const DONATION_ALERT_SOUND_MAX_MS = 2300;
 
 export const DONATION_ALERT_SOUND_DEFAULT = "classic";
 export const DONATION_ALERT_SOUND_KEYS = DONATION_ALERT_SOUND_OPTIONS.map(
@@ -38,10 +43,11 @@ export const DONATION_ALERT_DURATION_OPTIONS = [
 ] as const;
 
 // tts_rate CHECK: 0.50 ~ 2.00 (Web Speech API rate)
+// 원격 음성(Google 등)은 배속이 높으면 음이 깨지고 1.5배도 과해서, 자연스러운 1.3배를 상한으로 둡니다.
 export const DONATION_TTS_RATE_OPTIONS = [
   { value: 1.0, label: "보통" },
-  { value: 1.5, label: "빠름" },
-  { value: 2.0, label: "매우 빠름" },
+  { value: 1.15, label: "빠름" },
+  { value: 1.3, label: "매우 빠름" },
 ] as const;
 
 // 테스트 알림에서 사용할 샘플 후원 정보입니다.

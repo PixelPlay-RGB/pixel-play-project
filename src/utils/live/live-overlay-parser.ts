@@ -11,6 +11,7 @@ import type {
   LiveChatOverlaySnapshot,
 } from "@/types/live/live-chat-overlay";
 import type {
+  LiveDonationAlertAudioSettings,
   LiveDonationAlertOverlayData,
   LiveDonationAlertOverlaySnapshot,
 } from "@/types/live/live-donation-alert-overlay";
@@ -70,11 +71,23 @@ export function parseLiveDonationAlertOverlaySnapshot(
     return null;
   }
 
+  const audio: LiveDonationAlertAudioSettings = {
+    alertSoundEnabled: object.alertSoundEnabled !== false,
+    alertSoundKey: readString(object.alertSoundKey) ?? "classic",
+    alertVolume: readNumber(object.alertVolume) ?? 32,
+    ttsEnabled: object.ttsEnabled !== false,
+    ttsRate: readNumber(object.ttsRate) ?? 1,
+    ttsVolume: readNumber(object.ttsVolume) ?? 80,
+    ttsVoiceUri: readString(object.ttsVoiceUri) ?? "",
+    amountVisible: object.amountVisible !== false,
+  };
+
   return {
     creatorId,
     broadcastId,
     creatorName,
     alertVisibleMs,
+    audio,
     donation,
   };
 }

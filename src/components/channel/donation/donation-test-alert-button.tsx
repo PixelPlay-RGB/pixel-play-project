@@ -4,12 +4,10 @@
 import { Volume2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  DONATION_ALERT_SOUND_OPTIONS,
-  DONATION_TEST_ALERT_SAMPLE,
-} from "@/constants/channel/donation";
+import { DONATION_TEST_ALERT_SAMPLE } from "@/constants/channel/donation";
 import { useSpeechSynthesis } from "@/hooks/common/use-speech-synthesis";
 import { cn } from "@/lib/utils";
+import { playDonationSound } from "@/utils/channel/donation-sound";
 import { buildDonationTtsText } from "@/utils/channel/donation-tts";
 
 interface Props {
@@ -68,15 +66,9 @@ export default function DonationTestAlertButton({
       return;
     }
 
-    const sound = DONATION_ALERT_SOUND_OPTIONS.find((option) => option.value === alertSoundKey);
-
-    if (alertSoundEnabled && sound) {
-      const audio = new Audio(sound.src);
-      audio.volume = Math.min(Math.max(alertVolume / 100, 0), 1);
-      // 효과음 재생이 끝나면 TTS를 이어서 재생합니다. (파일 누락 시에도 TTS로 폴백)
-      audio.onended = playTts;
-      audio.onerror = playTts;
-      void audio.play().catch(playTts);
+    // 효과음 재생이 끝나면(또는 파일 누락 시) TTS를 이어서 재생합니다.
+    if (alertSoundEnabled) {
+      playDonationSound(alertSoundKey, alertVolume, playTts);
       return;
     }
 

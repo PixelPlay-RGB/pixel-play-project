@@ -5,6 +5,7 @@ import { CalendarCheck } from "lucide-react";
 import { DonationSettingsLoadFailedState } from "@/components/channel/donation/donation-settings-load-failed-state";
 import { SettlementHistoryCard } from "@/components/channel/settlement/settlement-history-card";
 import { SettlementSummaryCard } from "@/components/channel/settlement/settlement-summary-card";
+import { HintNote } from "@/components/common/hint-note";
 import { SettingsPage } from "@/components/common/settings-page";
 import { SETTLEMENT_PAYOUT_DAY } from "@/constants/channel/donation";
 import type { ChannelDonationSnapshot, SettlementYearSummary } from "@/types/channel/donation";
@@ -26,20 +27,10 @@ export function ChannelSettlementPageContent({ initialSnapshot, yearlySummary }:
       description="이번 달 정산 예정액과 연도별 정산 내역을 확인해요."
     >
       {/* 자동 정산 안내 */}
-      <div className="border-brand/20 bg-brand/5 flex items-start gap-3 rounded-2xl border p-4">
-        <span className="bg-brand/15 text-brand flex size-9 shrink-0 items-center justify-center rounded-xl">
-          <CalendarCheck className="size-5" aria-hidden />
-        </span>
-        <div className="flex flex-col gap-0.5">
-          <p className="text-foreground text-sm font-bold">
-            정산은 매월 {SETTLEMENT_PAYOUT_DAY}일에 자동으로 처리돼요
-          </p>
-          <p className="text-muted-foreground text-sm leading-6">
-            전월 채팅 후원 합계에서 수수료(10%)를 제외한 금액이 등록된 정산 계좌로 자동 지급돼요.
-            별도의 정산 신청은 필요하지 않아요.
-          </p>
-        </div>
-      </div>
+      <HintNote icon={CalendarCheck}>
+        정산은 매월 {SETTLEMENT_PAYOUT_DAY}일에 자동으로 처리돼요. 전월 채팅 후원 합계에서 수수료(10%)를
+        제외한 금액이 등록된 정산 계좌로 자동 지급되며, 별도의 정산 신청은 필요하지 않아요.
+      </HintNote>
 
       <SettlementSummaryCard
         monthlyDonation={initialSnapshot.monthlyDonation}

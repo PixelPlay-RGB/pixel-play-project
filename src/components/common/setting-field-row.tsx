@@ -18,9 +18,9 @@ export function SettingFieldRow({ label, description, children, isDimmed }: Prop
         isDimmed && "opacity-60",
       )}
     >
-      <div className="flex min-w-0 flex-col gap-1 md:w-44 md:shrink-0">
+      <div className="flex min-w-0 flex-col gap-1 md:w-72 md:shrink-0 lg:w-80">
         <span className="text-foreground text-sm font-bold">{label}</span>
-        <span className="text-muted-foreground text-xs leading-5">{description}</span>
+        <span className="text-muted-foreground text-xs leading-5 text-pretty">{description}</span>
       </div>
       <div className="min-w-0 flex-1 md:flex md:justify-end">{children}</div>
     </div>

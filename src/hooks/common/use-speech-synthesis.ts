@@ -55,11 +55,11 @@ export function useSpeechSynthesis() {
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = options?.lang ?? "ko-KR";
-    utterance.rate = clamp(options?.rate ?? 1, 0.5, 2);
     utterance.volume = clamp(options?.volume ?? 1, 0, 1);
+    utterance.rate = clamp(options?.rate ?? 1, 0.5, 2);
 
     if (options?.voiceURI) {
-      const matched = synth.getVoices().find((voice) => voice.voiceURI === options.voiceURI);
+      const matched = synth.getVoices().find((item) => item.voiceURI === options.voiceURI);
       if (matched) {
         utterance.voice = matched;
       }
