@@ -93,7 +93,6 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
   const [slowModeSeconds, setSlowModeSeconds] = useState(initialSettings?.slowModeSeconds ?? 3);
   const [isLinkBlocked, setIsLinkBlocked] = useState(initialSettings?.linkBlocked ?? true);
   const [forbiddenWords, setForbiddenWords] = useState(initialSettings?.forbiddenWords ?? []);
-  const [forbiddenWordInput, setForbiddenWordInput] = useState("");
   const [isDonationEnabled, setIsDonationEnabled] = useState(
     initialSettings?.donationEnabled ?? true,
   );
@@ -201,19 +200,6 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
     setTags((currentTags) => currentTags.filter((currentTag) => currentTag !== tag));
   };
 
-  const handleAddForbiddenWord = () => {
-    const nextWord = forbiddenWordInput.trim();
-
-    if (!nextWord || forbiddenWords.includes(nextWord) || forbiddenWords.length >= 100) return;
-
-    setForbiddenWords((currentWords) => [...currentWords, nextWord]);
-    setForbiddenWordInput("");
-  };
-
-  const handleRemoveForbiddenWord = (word: string) => {
-    setForbiddenWords((currentWords) => currentWords.filter((currentWord) => currentWord !== word));
-  };
-
   const handleSaveSettings = () => {
     setSettingsActionMessage(null);
     startSettingsTransition(async () => {
@@ -308,13 +294,6 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
           <ChannelLivePreviewPanel liveState={liveState} title={title} />
           <ChannelLiveSettingsPanel
             broadcastActionError={broadcastActionError}
-            alertVolume={alertVolume}
-            chatScope={chatScope}
-            chatRuleText={chatRuleText}
-            donationAlertDurationSeconds={donationAlertDurationSeconds}
-            donationMinAmount={donationMinAmount}
-            forbiddenWordInput={forbiddenWordInput}
-            forbiddenWords={forbiddenWords}
             isAlertSoundEnabled={isAlertSoundEnabled}
             isBroadcastActionPending={isBroadcastActionPending}
             isDonationAlertEnabled={isDonationAlertEnabled}
@@ -325,34 +304,22 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
             isSettingsActionPending={isSettingsActionPending}
             isTtsEnabled={isTtsEnabled}
             settingsActionMessage={settingsActionMessage}
-            slowModeSeconds={slowModeSeconds}
             thumbnailPreviewName={thumbnailPreviewName}
             thumbnailPreviewUrl={thumbnailPreviewUrl}
             title={title}
-            ttsRate={ttsRate}
             tagInput={tagInput}
             tags={tags}
             liveState={liveState}
-            onAddForbiddenWord={handleAddForbiddenWord}
             onAlertSoundEnabledChange={setIsAlertSoundEnabled}
-            onAlertVolumeChange={setAlertVolume}
-            onChatScopeChange={setChatScope}
-            onChatRuleTextChange={setChatRuleText}
-            onDonationAlertDurationSecondsChange={setDonationAlertDurationSeconds}
             onDonationAlertEnabledChange={setIsDonationAlertEnabled}
             onDonationAmountVisibleChange={setIsDonationAmountVisible}
             onDonationEnabledChange={setIsDonationEnabled}
-            onDonationMinAmountChange={setDonationMinAmount}
-            onForbiddenWordInputChange={setForbiddenWordInput}
             onLinkBlockedChange={setIsLinkBlocked}
-            onRemoveForbiddenWord={handleRemoveForbiddenWord}
             onSlowModeEnabledChange={setIsSlowModeEnabled}
-            onSlowModeSecondsChange={setSlowModeSeconds}
             onThumbnailFileChange={handleThumbnailFileChange}
             onThumbnailRemove={handleThumbnailRemove}
             onTitleChange={setTitle}
             onTtsEnabledChange={setIsTtsEnabled}
-            onTtsRateChange={setTtsRate}
             onTagInputChange={setTagInput}
             onAddTag={handleAddTag}
             onRemoveTag={handleRemoveTag}
