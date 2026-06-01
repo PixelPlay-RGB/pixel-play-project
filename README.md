@@ -56,8 +56,10 @@ cp .env.example .env.local
 | ----------------------------------------- | --------------------------------------------------------- |
 | `NEXT_PUBLIC_SUPABASE_URL`                | Supabase 프로젝트 URL                                     |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`    | Supabase publishable key                                  |
+| `NEXT_PUBLIC_SITE_URL`                    | OBS 오버레이 주소 생성에 사용할 공개 서비스 URL           |
 | `NEXT_PUBLIC_ENABLE_REACT_QUERY_DEVTOOLS` | 개발 중 React Query Devtools 표시 여부 (`true`일 때 표시) |
 | `SUPABASE_SERVICE_ROLE_KEY`               | 회원 탈퇴 등 관리자 작업에 사용하는 service role key      |
+| `LIVE_OVERLAY_TOKEN_SECRET`               | 스트림 키와 OBS 오버레이 key 생성에 사용하는 서버 secret  |
 
 환경 변수 키를 추가하거나 변경하면 루트의 `env.d.ts` 타입 선언도 함께 갱신합니다.
 
