@@ -1,15 +1,64 @@
 // 라이브 검색 페이지를 렌더링합니다.
+import LiveSearchResults from "@/components/search/live-search-results";
+import { cn } from "@/lib/utils";
+import { normalizeLiveSearchQuery } from "@/utils/search/live-search";
 import type { Metadata } from "next";
 
-export const metadata: Metadata = {
-  title: "라이브 검색",
-  description: "PixelPlay에서 라이브 방송을 검색합니다.",
-};
+interface Props {
+  searchParams: Promise<{
+    query?: string | string[];
+  }>;
+}
 
-export default function LiveSearchPage() {
+function normalizeQueryParam(value?: string | string[]) {
+  if (Array.isArray(value)) {
+    return value[0] ?? "";
+  }
+
+  return value ?? "";
+}
+
+export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
+  const { query } = await searchParams;
+  const rawQuery = normalizeQueryParam(query);
+  const trimmedQuery = normalizeLiveSearchQuery(rawQuery);
+
+  if (!trimmedQuery) {
+    return {
+      title: "라이브 검색",
+      description: "PixelPlay에서 진행 중인 라이브 방송과 크리에이터를 검색합니다.",
+    };
+  }
+
+  return {
+    title: `${trimmedQuery} 라이브 검색`,
+    description: `PixelPlay에서 ${trimmedQuery}와 관련된 라이브 방송과 크리에이터를 검색합니다.`,
+  };
+}
+
+export default async function LiveSearchPage({ searchParams }: Props) {
+  const { query } = await searchParams;
+  const rawQuery = normalizeQueryParam(query);
+  const trimmedQuery = normalizeLiveSearchQuery(rawQuery);
+
   return (
-    <div className="min-h-app-content mx-auto flex w-full max-w-7xl flex-1 flex-col px-4 py-6 sm:px-5 md:px-6 md:py-8">
-      <div>라이브 검색 페이지</div>
+    <div
+      className={cn(
+        "min-h-app-content mx-auto flex w-full max-w-400 flex-1 flex-col",
+        "gap-7 px-4 pt-10 pb-6 sm:px-6 lg:px-8 lg:pt-12",
+      )}
+    >
+      {trimmedQuery && (
+        <div className="flex flex-col gap-3 px-1">
+          <h1 className={cn("text-foreground text-2xl", "leading-tight font-black")}>
+            <span className="text-live">{trimmedQuery}</span> 검색 결과
+          </h1>
+          <p className={cn("text-muted-foreground max-w-2xl", "text-sm leading-relaxed")}>
+            진행 중인 방송과 크리에이터 검색 결과입니다.
+          </p>
+        </div>
+      )}
+      <LiveSearchResults query={trimmedQuery} />
     </div>
   );
 }

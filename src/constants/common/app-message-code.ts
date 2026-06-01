@@ -31,6 +31,9 @@ export const APP_MESSAGE_CODE = {
     channel: {
       securityCopied: "success.channel.securityCopied",
       securityTokenRotated: "success.channel.securityTokenRotated",
+    following: {
+      followed: "success.following.followed",
+      unfollowed: "success.following.unfollowed",
     },
   },
   error: {
@@ -115,6 +118,9 @@ export const APP_MESSAGE_CODE = {
       securityLoadFailed: "error.channel.securityLoadFailed",
       securityCopyFailed: "error.channel.securityCopyFailed",
       securityTokenRotateFailed: "error.channel.securityTokenRotateFailed",
+    following: {
+      failed: "error.following.failed",
+      unfollowFailed: "error.following.unfollowFailed",
     },
     supabase: {
       permissionDenied: "error.supabase.permissionDenied",
