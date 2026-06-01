@@ -24,7 +24,7 @@ export default function ChannelSettingToggle({
       type="button"
       className={cn(
         "border-border flex min-h-18 items-start justify-between gap-3 rounded-lg border p-3 text-left transition-colors",
-        checked ? "border-brand/40 bg-brand/10" : "hover:bg-muted/50",
+        "hover:bg-muted/50",
       )}
       aria-pressed={checked}
       onClick={() => onChange(!checked)}

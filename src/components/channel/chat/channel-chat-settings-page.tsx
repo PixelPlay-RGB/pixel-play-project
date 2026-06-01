@@ -9,6 +9,16 @@ import {
 import ChannelSettingToggle from "@/components/channel/channel-setting-toggle";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,11 +30,17 @@ import {
   formatSecondsLabel,
   SLOW_MODE_OPTIONS,
 } from "@/utils/channel/channel-studio-setting";
-import { Link2, Save, ShieldCheck, Timer, UserCheck, Users, X } from "lucide-react";
+import { ChevronDown, Link2, Save, ShieldCheck, Timer, UserCheck, Users, X } from "lucide-react";
+import type { ReactNode } from "react";
 import { useState, useTransition } from "react";
 
 interface Props {
   initialSnapshot?: ChannelLiveStudioSnapshot;
+}
+
+interface TimeOption {
+  label: string;
+  value: number;
 }
 
 const DEFAULT_FOLLOWER_WAIT_SECONDS = 300;
@@ -55,8 +71,79 @@ const CHAT_SCOPE_OPTIONS: Array<{
   },
 ];
 
+const SLOW_MODE_TIME_OPTIONS = SLOW_MODE_OPTIONS.map((seconds) => ({
+  label: formatSecondsLabel(seconds),
+  value: seconds,
+}));
+
 function getInitialSettings(snapshot?: ChannelLiveStudioSnapshot): ChannelLiveStudioSettings {
   return snapshot?.settings ?? CHANNEL_STUDIO_SETTINGS_FALLBACK;
+}
+
+function findOptionLabel(options: TimeOption[], value: number) {
+  return options.find((option) => option.value === value)?.label ?? formatSecondsLabel(value);
+}
+
+function TimeSelectMenu({
+  label,
+  onChange,
+  options,
+  value,
+}: {
+  label: string;
+  onChange: (value: number) => void;
+  options: TimeOption[];
+  value: number;
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={(props) => (
+          <Button
+            {...props}
+            type="button"
+            variant="outline"
+            className="h-9 min-w-40 justify-between px-3"
+          >
+            <span className="truncate text-sm font-semibold">
+              {findOptionLabel(options, value)}
+            </span>
+            <ChevronDown className="size-4" />
+          </Button>
+        )}
+      />
+      <DropdownMenuContent align="start" sideOffset={6} className="w-48">
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>{label}</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuRadioGroup
+            value={String(value)}
+            onValueChange={(next) => onChange(Number(next))}
+          >
+            {options.map((option) => (
+              <DropdownMenuRadioItem
+                key={option.value}
+                value={String(option.value)}
+                closeOnClick
+                className="py-2"
+              >
+                {option.label}
+              </DropdownMenuRadioItem>
+            ))}
+          </DropdownMenuRadioGroup>
+        </DropdownMenuGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+function SettingSection({ children, title }: { children: ReactNode; title: string }) {
+  return (
+    <section className="border-border grid gap-3 border-b pb-4 last:border-b-0 last:pb-0">
+      <h3 className="text-sm font-semibold">{title}</h3>
+      {children}
+    </section>
+  );
 }
 
 export default function ChannelChatSettingsPage({ initialSnapshot }: Props) {
@@ -143,13 +230,13 @@ export default function ChannelChatSettingsPage({ initialSnapshot }: Props) {
         </div>
       )}
 
-      <div className="mx-auto grid w-full max-w-3xl gap-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>채팅권한</CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-3">
-            <div className="grid gap-2 md:grid-cols-3">
+      <Card className="mx-auto w-full max-w-7xl">
+        <CardHeader>
+          <CardTitle>채팅 운영 설정</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-4">
+          <SettingSection title="채팅권한">
+            <div className="grid gap-2 lg:grid-cols-3">
               {CHAT_SCOPE_OPTIONS.map((option) => {
                 const Icon = option.icon;
                 const selected = chatScope === option.value;
@@ -193,62 +280,40 @@ export default function ChannelChatSettingsPage({ initialSnapshot }: Props) {
             </div>
 
             {chatScope === "follower" && (
-              <div className="grid gap-2">
-                <Label>팔로워 채팅 대기시간</Label>
-                <div className="grid grid-cols-2 gap-1 sm:grid-cols-3">
-                  {FOLLOWER_WAIT_OPTIONS.map((option) => (
-                    <Button
-                      key={option.value}
-                      type="button"
-                      size="sm"
-                      variant={followerWaitSeconds === option.value ? "default" : "outline"}
-                      onClick={() => setFollowerWaitSeconds(option.value)}
-                    >
-                      {option.label}
-                    </Button>
-                  ))}
-                </div>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="text-muted-foreground text-sm">팔로워 채팅 대기시간</span>
+                <TimeSelectMenu
+                  label="팔로워 채팅 대기시간"
+                  options={FOLLOWER_WAIT_OPTIONS}
+                  value={followerWaitSeconds}
+                  onChange={setFollowerWaitSeconds}
+                />
               </div>
             )}
-          </CardContent>
-        </Card>
+          </SettingSection>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>저속모드</CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-3">
-            <ChannelSettingToggle
-              checked={slowModeEnabled}
-              description="시청자 채팅 입력 간격을 제한합니다."
-              icon={Timer}
-              label="사용 여부"
-              onChange={setSlowModeEnabled}
-            />
-            <div className="grid gap-2">
-              <Label>저속모드 시간</Label>
-              <div className="flex flex-wrap gap-1">
-                {SLOW_MODE_OPTIONS.map((seconds) => (
-                  <Button
-                    key={seconds}
-                    type="button"
-                    size="sm"
-                    variant={slowModeSeconds === seconds ? "default" : "outline"}
-                    onClick={() => setSlowModeSeconds(seconds)}
-                  >
-                    {formatSecondsLabel(seconds)}
-                  </Button>
-                ))}
+          <SettingSection title="저속모드">
+            <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+              <ChannelSettingToggle
+                checked={slowModeEnabled}
+                description="시청자 채팅 입력 간격을 제한합니다."
+                icon={Timer}
+                label="사용 여부"
+                onChange={setSlowModeEnabled}
+              />
+              <div className="flex items-center justify-between gap-2 lg:justify-end">
+                <span className="text-muted-foreground text-sm">입력 간격</span>
+                <TimeSelectMenu
+                  label="저속모드 시간"
+                  options={SLOW_MODE_TIME_OPTIONS}
+                  value={slowModeSeconds}
+                  onChange={setSlowModeSeconds}
+                />
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </SettingSection>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>링크차단</CardTitle>
-          </CardHeader>
-          <CardContent>
+          <SettingSection title="링크차단">
             <ChannelSettingToggle
               checked={linkBlocked}
               description="채팅에서 URL 공유를 차단합니다."
@@ -256,14 +321,12 @@ export default function ChannelChatSettingsPage({ initialSnapshot }: Props) {
               label="사용 여부"
               onChange={setLinkBlocked}
             />
-          </CardContent>
-        </Card>
+          </SettingSection>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>금지어</CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-3">
+          <SettingSection title="금지어">
+            <Label htmlFor="channel-chat-forbidden-word" className="sr-only">
+              금지어
+            </Label>
             <div className="flex gap-2">
               <Input
                 id="channel-chat-forbidden-word"
@@ -299,14 +362,12 @@ export default function ChannelChatSettingsPage({ initialSnapshot }: Props) {
                 <span className="text-muted-foreground text-xs">등록된 금지어가 없습니다.</span>
               )}
             </div>
-          </CardContent>
-        </Card>
+          </SettingSection>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>채팅규칙</CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-2">
+          <SettingSection title="채팅규칙">
+            <Label htmlFor="channel-chat-rule" className="sr-only">
+              채팅규칙
+            </Label>
             <Textarea
               id="channel-chat-rule"
               className="min-h-36"
@@ -316,11 +377,11 @@ export default function ChannelChatSettingsPage({ initialSnapshot }: Props) {
               placeholder="시청자가 채팅 전에 확인할 안내를 입력하세요."
             />
             <span className="text-muted-foreground text-xs">{chatRuleText.length} / 300</span>
-          </CardContent>
-        </Card>
-      </div>
+          </SettingSection>
+        </CardContent>
+      </Card>
 
-      <div className="mx-auto flex w-full max-w-3xl justify-end">
+      <div className="mx-auto flex w-full max-w-7xl justify-end">
         <Button type="button" onClick={handleSave} disabled={isPending}>
           <Save className="size-4" />
           설정 저장
