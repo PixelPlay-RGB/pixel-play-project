@@ -3,6 +3,7 @@
 
 import { acceptLiveChatRuleAction, sendLiveMessageAction } from "@/actions/live/live";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
+import { LIVE_CHAT_MESSAGE_MAX_LENGTH } from "@/constants/live/live";
 import { useAuthStore } from "@/stores/auth";
 import { toastAppError } from "@/utils/common/toast-message";
 import type { LiveViewerChatState } from "@/types/live/live";
@@ -35,9 +36,14 @@ export function useLiveChatSession({
 
   async function sendMessage(content: string): Promise<boolean> {
     if (!broadcastId) return false;
+    const trimmed = content.trim();
+    if (!trimmed || trimmed.length > LIVE_CHAT_MESSAGE_MAX_LENGTH) {
+      toastAppError(APP_MESSAGE_CODE.error.message.invalidInput);
+      return false;
+    }
 
     try {
-      const result = await sendLiveMessageAction(broadcastId, content);
+      const result = await sendLiveMessageAction(broadcastId, trimmed);
       if (!result.success) {
         toastAppError(result.code ?? APP_MESSAGE_CODE.error.message.sendFailed);
       }
@@ -58,7 +64,11 @@ export function useLiveChatSession({
         return false;
       }
 
-      await onChatRuleAccepted?.();
+      if (onChatRuleAccepted) {
+        void onChatRuleAccepted().catch((error) => {
+          console.error("live chat rule accepted refetch failed", error);
+        });
+      }
       return true;
     } catch (error) {
       console.error("라이브 채팅 규칙 확인 실패", error);

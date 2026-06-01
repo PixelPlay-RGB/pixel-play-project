@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { LIVE_LABEL } from "@/constants/live/live";
+import { cn } from "@/lib/utils";
 import { formatDonationAmount } from "@/utils/live/live-chat";
 import type { LiveChatMessage } from "@/types/live/live";
 
 interface Props {
   messages: LiveChatMessage[];
+  fillHeight?: boolean;
 }
 
 function getScrollContainer(el: HTMLElement): HTMLElement | null {
@@ -19,11 +21,32 @@ function getScrollContainer(el: HTMLElement): HTMLElement | null {
   return null;
 }
 
-export function LiveChatMessageList({ messages }: Props) {
+export function LiveChatMessageList({ messages, fillHeight = false }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const isInitialMount = useRef(true);
+  const wasNearBottomRef = useRef(true);
 
   useEffect(() => {
+    const el = bottomRef.current;
+    if (!el) return;
+    const container = getScrollContainer(el);
+    if (!container) return;
+
+    const updateNearBottom = () => {
+      const distanceFromBottom =
+        container.scrollHeight - container.scrollTop - container.clientHeight;
+      wasNearBottomRef.current = distanceFromBottom < 60;
+    };
+
+    updateNearBottom();
+    container.addEventListener("scroll", updateNearBottom, { passive: true });
+
+    return () => {
+      container.removeEventListener("scroll", updateNearBottom);
+    };
+  }, []);
+
+  useLayoutEffect(() => {
     const el = bottomRef.current;
     if (!el) return;
 
@@ -39,15 +62,13 @@ export function LiveChatMessageList({ messages }: Props) {
       return;
     }
 
-    const distanceFromBottom =
-      container.scrollHeight - container.scrollTop - container.clientHeight;
-    if (distanceFromBottom < 60) {
+    if (wasNearBottomRef.current) {
       el.scrollIntoView({ block: "end" });
     }
   }, [messages]);
 
   return (
-    <>
+    <div className={cn(fillHeight && "flex min-h-full flex-col justify-end")}>
       <ul className="flex flex-col gap-1 px-3 py-2">
         {messages.map((msg) => (
           <li key={msg.id}>
@@ -56,7 +77,7 @@ export function LiveChatMessageList({ messages }: Props) {
         ))}
       </ul>
       <div ref={bottomRef} />
-    </>
+    </div>
   );
 }
 
@@ -67,7 +88,7 @@ interface MessageItemProps {
 function MessageItem({ message }: MessageItemProps) {
   if (message.type === "system") {
     return (
-      <p className="text-muted-foreground my-1 text-center text-xs">
+      <p className="text-muted-foreground my-1 text-center text-xs break-words">
         {message.content}
       </p>
     );
@@ -75,9 +96,7 @@ function MessageItem({ message }: MessageItemProps) {
 
   if (message.type === "filtered") {
     return (
-      <p className="text-muted-foreground my-1 text-center text-xs">
-        {LIVE_LABEL.filteredMessage}
-      </p>
+      <p className="text-muted-foreground my-1 text-center text-xs">{LIVE_LABEL.filteredMessage}</p>
     );
   }
 
@@ -90,15 +109,17 @@ function MessageItem({ message }: MessageItemProps) {
               ? `${formatDonationAmount(message.donationAmount)}P`
               : ""}
           </span>
-          <span className="text-foreground text-xs font-medium">{message.author}</span>
+          <span className="text-foreground min-w-0 text-xs font-medium break-words">
+            {message.author}
+          </span>
         </div>
-        {message.content ? <p className="text-foreground">{message.content}</p> : null}
+        {message.content ? <p className="text-foreground break-words">{message.content}</p> : null}
       </div>
     );
   }
 
   return (
-    <p className="py-0.5 text-sm leading-snug">
+    <p className="py-0.5 text-sm leading-snug break-words">
       <span className="text-brand mr-1.5 font-medium">{message.author}</span>
       <span className="text-foreground">{message.content}</span>
     </p>

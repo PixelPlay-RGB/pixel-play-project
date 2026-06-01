@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -15,6 +16,8 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   LIVE_DONATION_AMOUNTS,
   LIVE_DONATION_LABEL,
+  LIVE_DONATION_MESSAGE_MAX_LENGTH,
+  LIVE_DONATION_MIN_AMOUNT,
   LIVE_LABEL,
 } from "@/constants/live/live";
 import { cn } from "@/lib/utils";
@@ -26,6 +29,8 @@ interface Props {
   walletBalance: number;
   isWalletLoading?: boolean;
   isWalletError?: boolean;
+  donationEnabled: boolean;
+  donationMinAmount: number;
   onDonate: (params: {
     amount: number;
     message: string;
@@ -34,22 +39,57 @@ interface Props {
   }) => Promise<boolean>;
 }
 
-export function LiveDonationDialog({ onLoginPrompt, isLoggedIn, walletBalance, isWalletLoading, isWalletError, onDonate }: Props) {
+export function LiveDonationDialog({
+  onLoginPrompt,
+  isLoggedIn,
+  walletBalance,
+  isWalletLoading,
+  isWalletError,
+  donationEnabled,
+  donationMinAmount,
+  onDonate,
+}: Props) {
+  const minimumAmount = donationMinAmount > 0 ? donationMinAmount : LIVE_DONATION_MIN_AMOUNT;
+  const defaultAmount =
+    LIVE_DONATION_AMOUNTS.find((amount) => amount >= minimumAmount) ?? minimumAmount;
   const [open, setOpen] = useState(false);
-  const [selectedAmount, setSelectedAmount] = useState<number>(LIVE_DONATION_AMOUNTS[0]);
+  const [selectedAmount, setSelectedAmount] = useState<number>(() => defaultAmount);
+  const [customInput, setCustomInput] = useState("");
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  function resetForm() {
+    setSelectedAmount(defaultAmount);
+    setCustomInput("");
+    setIsAnonymous(false);
+    setMessage("");
+  }
+
   function handleOpenChange(next: boolean) {
+    if (!next) {
+      setOpen(false);
+      resetForm();
+      return;
+    }
+    if (next && !donationEnabled) {
+      return;
+    }
     if (next && !isLoggedIn) {
       onLoginPrompt();
       return;
+    }
+    if (next && (selectedAmount < minimumAmount || !Number.isInteger(selectedAmount))) {
+      setSelectedAmount(defaultAmount);
+      setCustomInput("");
     }
     setOpen(next);
   }
 
   const remaining = walletBalance - selectedAmount;
+  const isBelowMin = selectedAmount < minimumAmount;
+  const isInvalidAmount = !Number.isInteger(selectedAmount);
+  const minAmountLabel = `${formatDonationAmount(minimumAmount)}${LIVE_DONATION_LABEL.unit}`;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -58,14 +98,19 @@ export function LiveDonationDialog({ onLoginPrompt, isLoggedIn, walletBalance, i
           <Button
             className="bg-brand hover:bg-brand/90 text-brand-foreground flex-1 text-xs"
             size="sm"
+            disabled={!donationEnabled}
+            title={!donationEnabled ? LIVE_DONATION_LABEL.disabled : undefined}
           />
         }
       >
         {LIVE_LABEL.donate}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-sm">
+      <DialogContent className="max-h-[calc(100vh-1rem)] overflow-y-auto sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>{LIVE_DONATION_LABEL.title}</DialogTitle>
+          <DialogDescription>
+            {LIVE_DONATION_LABEL.description.replace("{amount}", minAmountLabel)}
+          </DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col gap-4">
@@ -88,7 +133,11 @@ export function LiveDonationDialog({ onLoginPrompt, isLoggedIn, walletBalance, i
                   type="button"
                   size="sm"
                   variant="outline"
-                  onClick={() => setSelectedAmount(amount)}
+                  disabled={amount < minimumAmount}
+                  onClick={() => {
+                    setSelectedAmount(amount);
+                    setCustomInput("");
+                  }}
                   className={cn(
                     "h-auto px-2 py-2 text-sm",
                     selectedAmount === amount
@@ -101,15 +150,31 @@ export function LiveDonationDialog({ onLoginPrompt, isLoggedIn, walletBalance, i
                 </Button>
               ))}
             </div>
-            <Input
-              type="number"
-              placeholder={LIVE_DONATION_LABEL.directInput}
-              className="text-sm"
-              onChange={(e) => {
-                const val = Number(e.target.value);
-                if (val > 0) setSelectedAmount(val);
-              }}
-            />
+            <div className="flex flex-col gap-1">
+              <Input
+                type="number"
+                min={minimumAmount}
+                step={1}
+                placeholder={LIVE_DONATION_LABEL.directInput.replace("{amount}", minAmountLabel)}
+                className="text-sm"
+                value={customInput}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  setCustomInput(raw);
+                  if (!raw) {
+                    setSelectedAmount(minimumAmount);
+                    return;
+                  }
+                  const val = Number(raw);
+                  if (Number.isFinite(val)) setSelectedAmount(val);
+                }}
+              />
+              {customInput !== "" && isBelowMin && (
+                <p className="text-destructive text-xs">
+                  {LIVE_DONATION_LABEL.minAmountError.replace("{amount}", minAmountLabel)}
+                </p>
+              )}
+            </div>
           </div>
 
           <div className="flex flex-col gap-2">
@@ -117,7 +182,10 @@ export function LiveDonationDialog({ onLoginPrompt, isLoggedIn, walletBalance, i
             <Textarea
               placeholder={LIVE_DONATION_LABEL.messagePlaceholder}
               value={message}
-              onChange={(e) => setMessage(e.target.value)}
+              maxLength={LIVE_DONATION_MESSAGE_MAX_LENGTH}
+              onChange={(e) =>
+                setMessage(e.target.value.slice(0, LIVE_DONATION_MESSAGE_MAX_LENGTH))
+              }
               className="resize-none text-sm"
               rows={2}
             />
@@ -130,8 +198,8 @@ export function LiveDonationDialog({ onLoginPrompt, isLoggedIn, walletBalance, i
                 {isWalletLoading
                   ? LIVE_DONATION_LABEL.balanceLoading
                   : isWalletError
-                  ? LIVE_DONATION_LABEL.balanceError
-                  : `${formatDonationAmount(walletBalance)}${LIVE_DONATION_LABEL.unit}`}
+                    ? LIVE_DONATION_LABEL.balanceError
+                    : `${formatDonationAmount(walletBalance)}${LIVE_DONATION_LABEL.unit}`}
               </span>
             </div>
             <div className="text-foreground flex justify-between font-medium">
@@ -145,24 +213,38 @@ export function LiveDonationDialog({ onLoginPrompt, isLoggedIn, walletBalance, i
         </div>
 
         <DialogFooter className="gap-2 sm:gap-0">
-          <Button variant="outline" disabled={isSubmitting} onClick={() => setOpen(false)}>
+          <Button variant="outline" disabled={isSubmitting} onClick={() => handleOpenChange(false)}>
             {LIVE_DONATION_LABEL.cancel}
           </Button>
           <Button
             type="button"
-            disabled={remaining < 0 || isSubmitting || !!isWalletLoading}
+            disabled={
+              !donationEnabled ||
+              isInvalidAmount ||
+              isBelowMin ||
+              remaining < 0 ||
+              isSubmitting ||
+              !!isWalletLoading ||
+              !!isWalletError
+            }
             className="bg-brand hover:bg-brand/90 text-brand-foreground"
             onClick={() => {
               void (async () => {
                 setIsSubmitting(true);
-                const success = await onDonate({
-                  amount: selectedAmount,
-                  message,
-                  isAnonymous,
-                  idempotencyKey: crypto.randomUUID(),
-                });
-                setIsSubmitting(false);
-                if (success) setOpen(false);
+                try {
+                  const success = await onDonate({
+                    amount: selectedAmount,
+                    message,
+                    isAnonymous,
+                    idempotencyKey: crypto.randomUUID(),
+                  });
+                  if (success) {
+                    setOpen(false);
+                    resetForm();
+                  }
+                } finally {
+                  setIsSubmitting(false);
+                }
               })();
             }}
           >

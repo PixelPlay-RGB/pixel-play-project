@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -17,19 +18,46 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LIVE_CHAT_MENU_LABEL, LIVE_LABEL } from "@/constants/live/live";
+import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
+import { LIVE_CHAT_MENU_LABEL, LIVE_CHAT_POPOUT_WINDOW, LIVE_LABEL } from "@/constants/live/live";
 import { cn } from "@/lib/utils";
+import { toastAppError } from "@/utils/common/toast-message";
 
 interface Props {
   creatorId: string;
   chatRuleText?: string;
   cleanbot: boolean;
   onCleanbot: () => void;
+  onPopoutOpen: (win: Window) => void;
 }
 
-export function LiveChatMenu({ creatorId, chatRuleText, cleanbot, onCleanbot }: Props) {
+export function LiveChatMenu({
+  creatorId,
+  chatRuleText,
+  cleanbot,
+  onCleanbot,
+  onPopoutOpen,
+}: Props) {
   const [isRulesOpen, setIsRulesOpen] = useState(false);
-  const popoutHref = `/live/${creatorId}/chat`;
+
+  function openChatPopout() {
+    const width = LIVE_CHAT_POPOUT_WINDOW.width;
+    const height = LIVE_CHAT_POPOUT_WINDOW.height;
+    const left = Math.max(0, window.screen.availWidth - width);
+
+    const win = window.open(
+      `/live/${creatorId}/chat`,
+      LIVE_CHAT_POPOUT_WINDOW.name,
+      `width=${width},height=${height},left=${left},top=0,resizable=yes,scrollbars=yes`,
+    );
+    if (!win) {
+      toastAppError(APP_MESSAGE_CODE.error.common.unknown, LIVE_LABEL.chatPopoutBlocked);
+      return;
+    }
+
+    win.opener = null;
+    onPopoutOpen(win);
+  }
 
   return (
     <>
@@ -59,12 +87,7 @@ export function LiveChatMenu({ creatorId, chatRuleText, cleanbot, onCleanbot }: 
               <ScrollText className="size-4" />
               {LIVE_CHAT_MENU_LABEL.rules}
             </DropdownMenuItem>
-            <DropdownMenuItem
-              render={
-                <a href={popoutHref} target="_blank" rel="noopener noreferrer" className="gap-2" />
-              }
-              className="gap-2"
-            >
+            <DropdownMenuItem className="gap-2" onClick={openChatPopout}>
               <ExternalLink className="size-4" />
               {LIVE_CHAT_MENU_LABEL.popout}
             </DropdownMenuItem>
@@ -76,8 +99,9 @@ export function LiveChatMenu({ creatorId, chatRuleText, cleanbot, onCleanbot }: 
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
             <DialogTitle>{LIVE_LABEL.chatRuleTitle}</DialogTitle>
+            <DialogDescription>{LIVE_LABEL.chatRuleDescription}</DialogDescription>
           </DialogHeader>
-          <p className="text-foreground whitespace-pre-wrap text-sm leading-relaxed">
+          <p className="text-foreground text-sm leading-relaxed whitespace-pre-wrap">
             {chatRuleText || LIVE_LABEL.chatRuleDefaultText}
           </p>
         </DialogContent>

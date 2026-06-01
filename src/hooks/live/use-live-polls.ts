@@ -24,15 +24,17 @@ function parsePollOptions(raw: unknown): LivePollOption[] {
   });
 }
 
-export function useLivePolls(
-  broadcastId: string | null | undefined,
-  userId?: string | null,
-) {
+function readVotePollId(row: unknown): string | null {
+  if (!row || typeof row !== "object" || !("poll_id" in row)) return null;
+  return typeof row.poll_id === "string" ? row.poll_id : null;
+}
+
+export function useLivePolls(broadcastId: string | null | undefined, userId?: string | null) {
   const supabase = useMemo(() => createClient(), []);
   const queryClient = useQueryClient();
 
   const query = useQuery<LivePoll[]>({
-    queryKey: [...QUERY_KEYS.live.polls(broadcastId ?? undefined), userId ?? null],
+    queryKey: QUERY_KEYS.live.pollsForViewer(broadcastId ?? undefined, userId),
     enabled: !!broadcastId,
     staleTime: Infinity,
     queryFn: async () => {
@@ -61,6 +63,7 @@ export function useLivePolls(
 
         if (voteError) {
           console.error("투표 참여 여부 조회 실패", voteError);
+          throw voteError;
         }
 
         for (const row of voteRows ?? []) {
@@ -86,6 +89,20 @@ export function useLivePolls(
   useEffect(() => {
     if (!broadcastId) return;
 
+    const invalidatePolls = () => {
+      void queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.live.polls(broadcastId),
+      });
+    };
+
+    const shouldInvalidateVote = (pollId: unknown) => {
+      if (typeof pollId !== "string") return false;
+      const polls = queryClient.getQueryData<LivePoll[]>(
+        QUERY_KEYS.live.pollsForViewer(broadcastId, userId),
+      );
+      return !polls || polls.some((poll) => poll.id === pollId);
+    };
+
     const channel = supabase
       .channel(`live-polls-${broadcastId}`)
       .on(
@@ -96,10 +113,19 @@ export function useLivePolls(
           table: "live_poll",
           filter: `broadcast_id=eq.${broadcastId}`,
         },
-        () => {
-          void queryClient.invalidateQueries({
-            queryKey: QUERY_KEYS.live.polls(broadcastId),
-          });
+        invalidatePolls,
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "live_poll_vote",
+        },
+        (payload) => {
+          const row = payload.new && typeof payload.new === "object" ? payload.new : payload.old;
+          const pollId = readVotePollId(row);
+          if (shouldInvalidateVote(pollId)) invalidatePolls();
         },
       )
       .subscribe();
@@ -107,7 +133,7 @@ export function useLivePolls(
     return () => {
       void channel.unsubscribe();
     };
-  }, [broadcastId, supabase, queryClient]);
+  }, [broadcastId, userId, supabase, queryClient]);
 
   return {
     polls: query.data ?? [],

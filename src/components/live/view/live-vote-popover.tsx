@@ -7,10 +7,17 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Popover,
+  PopoverContent,
+  PopoverDescription,
+  PopoverHeader,
+  PopoverTitle,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { LIVE_LABEL, LIVE_VOTE_LABEL } from "@/constants/live/live";
 import { cn } from "@/lib/utils";
 import type { LivePoll } from "@/types/live/live";
@@ -22,6 +29,7 @@ interface Props {
   onLoginPrompt: () => void;
   isLoggedIn: boolean;
   onVote: (pollId: string, optionId: string) => Promise<boolean>;
+  presentation?: "popover" | "dialog";
 }
 
 interface VoteContentProps {
@@ -51,17 +59,15 @@ function VoteContent({ activePoll, onVote, onClose }: VoteContentProps) {
         <p className="text-foreground text-sm font-medium">{activePoll.title}</p>
         <div className="flex flex-col gap-2">
           {activePoll.options.map((option, index) => {
-            const pct =
-              activePoll.totalCount > 0
-                ? Math.round((option.count / activePoll.totalCount) * 100)
-                : 0;
             const isSelected = selectedOption === option.id;
+            const isDisabledByVote = hasVoted && option.id !== activePoll.userVotedOptionId;
             return (
               <Button
                 key={option.id}
                 type="button"
                 variant="outline"
                 aria-pressed={isSelected}
+                disabled={isVoting || isDisabledByVote}
                 onClick={() => setSelectedOption(option.id)}
                 className={cn(
                   "h-auto w-full flex-col items-start gap-1.5 px-3 py-2.5",
@@ -70,50 +76,64 @@ function VoteContent({ activePoll, onVote, onClose }: VoteContentProps) {
                     : "hover:border-brand/40 hover:bg-muted/40",
                 )}
               >
-                <div className="flex w-full items-center justify-between text-sm">
-                  <span>{index + 1}. {option.label}</span>
-                  <span className={cn("tabular-nums text-xs", isSelected ? "text-brand/70" : "text-muted-foreground")}>
-                    {option.count.toLocaleString()}{LIVE_VOTE_LABEL.voteCountUnit} · {pct}%
+                <div className="flex w-full items-center gap-2 text-sm">
+                  <span className="min-w-0 flex-1 truncate text-left">
+                    {index + 1}. {option.label}
                   </span>
-                </div>
-                <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted/60">
-                  <div
-                    className={cn(
-                      "h-full rounded-full transition-all duration-500",
-                      isSelected ? "bg-brand" : "bg-foreground/20",
-                    )}
-                    style={{ width: `${pct}%` }}
-                  />
                 </div>
               </Button>
             );
           })}
         </div>
-        <span className="text-muted-foreground text-xs">
-          {activePoll.totalCount.toLocaleString()}
-          {LIVE_VOTE_LABEL.totalCount}
-        </span>
       </div>
-      <DialogFooter>
+      <div className="flex justify-end gap-2">
         <Button type="button" variant="outline" onClick={onClose}>
           {LIVE_LABEL.cancel}
         </Button>
         <Button
           type="button"
-          disabled={!selectedOption || isVoting || (hasVoted && selectedOption === activePoll.userVotedOptionId)}
+          disabled={!selectedOption || isVoting || hasVoted}
           onClick={() => void handleVote()}
           className="bg-brand hover:bg-brand/90 text-brand-foreground"
         >
           {isVoting
             ? LIVE_VOTE_LABEL.submitting
-            : hasVoted && selectedOption !== activePoll.userVotedOptionId
-            ? LIVE_VOTE_LABEL.change
             : hasVoted
-            ? LIVE_VOTE_LABEL.participated
-            : LIVE_VOTE_LABEL.submit}
+              ? LIVE_VOTE_LABEL.participated
+              : LIVE_VOTE_LABEL.submit}
         </Button>
-      </DialogFooter>
+      </div>
     </>
+  );
+}
+
+function VoteBody({
+  isLoading,
+  isError,
+  activePoll,
+  onVote,
+  onClose,
+}: {
+  isLoading?: boolean;
+  isError?: boolean;
+  activePoll: LivePoll | null;
+  onVote: (pollId: string, optionId: string) => Promise<boolean>;
+  onClose: () => void;
+}) {
+  if (isLoading) {
+    return <p className="text-muted-foreground text-sm">{LIVE_VOTE_LABEL.loading}</p>;
+  }
+
+  if (isError) {
+    return <p className="text-muted-foreground text-sm">{LIVE_VOTE_LABEL.error}</p>;
+  }
+
+  if (!activePoll) {
+    return <p className="text-muted-foreground text-sm">{LIVE_VOTE_LABEL.empty}</p>;
+  }
+
+  return (
+    <VoteContent key={activePoll.id} activePoll={activePoll} onVote={onVote} onClose={onClose} />
   );
 }
 
@@ -124,45 +144,70 @@ export function LiveVotePopover({
   onLoginPrompt,
   isLoggedIn,
   onVote,
+  presentation = "popover",
 }: Props) {
   const [open, setOpen] = useState(false);
   const activePoll = polls.find((p) => p.status === "active") ?? null;
 
-  function handleOpen() {
-    if (!isLoggedIn) {
+  function handleOpenChange(next: boolean) {
+    if (next && !isLoggedIn) {
       onLoginPrompt();
       return;
     }
-    setOpen(true);
+    setOpen(next);
   }
 
-  return (
-    <>
-      <Button size="sm" variant="outline" className="flex-1 text-xs" onClick={handleOpen}>
-        {LIVE_LABEL.vote}
-      </Button>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="gap-4" showCloseButton>
-          <DialogHeader>
-            <DialogTitle>{LIVE_VOTE_LABEL.title}</DialogTitle>
-            <DialogDescription>{LIVE_VOTE_LABEL.description}</DialogDescription>
-          </DialogHeader>
-          {isLoading ? (
-            <p className="text-muted-foreground text-sm">{LIVE_VOTE_LABEL.loading}</p>
-          ) : isError ? (
-            <p className="text-muted-foreground text-sm">{LIVE_VOTE_LABEL.error}</p>
-          ) : !activePoll ? (
-            <p className="text-muted-foreground text-sm">{LIVE_VOTE_LABEL.empty}</p>
-          ) : (
-            <VoteContent
-              key={activePoll.id}
+  function handleOpen() {
+    handleOpenChange(true);
+  }
+
+  if (presentation === "dialog") {
+    return (
+      <>
+        <Button size="sm" variant="outline" className="flex-1 text-xs" onClick={handleOpen}>
+          {LIVE_LABEL.vote}
+        </Button>
+        <Dialog open={open} onOpenChange={handleOpenChange}>
+          <DialogContent className="max-h-[calc(100vh-1rem)] gap-4 overflow-y-auto" showCloseButton>
+            <DialogHeader>
+              <DialogTitle>{LIVE_VOTE_LABEL.title}</DialogTitle>
+              <DialogDescription>{LIVE_VOTE_LABEL.description}</DialogDescription>
+            </DialogHeader>
+            <VoteBody
+              isLoading={isLoading}
+              isError={isError}
               activePoll={activePoll}
               onVote={onVote}
               onClose={() => setOpen(false)}
             />
-          )}
-        </DialogContent>
-      </Dialog>
-    </>
+          </DialogContent>
+        </Dialog>
+      </>
+    );
+  }
+
+  return (
+    <Popover open={open} onOpenChange={handleOpenChange}>
+      <PopoverTrigger render={<Button size="sm" variant="outline" className="flex-1 text-xs" />}>
+        {LIVE_LABEL.vote}
+      </PopoverTrigger>
+      <PopoverContent
+        align="end"
+        side="top"
+        className="max-h-[calc(100vh-1rem)] w-[calc((var(--anchor-width)*2)+0.5rem)] max-w-[calc(100vw-1rem)] gap-4 overflow-y-auto"
+      >
+        <PopoverHeader>
+          <PopoverTitle>{LIVE_VOTE_LABEL.title}</PopoverTitle>
+          <PopoverDescription>{LIVE_VOTE_LABEL.description}</PopoverDescription>
+        </PopoverHeader>
+        <VoteBody
+          isLoading={isLoading}
+          isError={isError}
+          activePoll={activePoll}
+          onVote={onVote}
+          onClose={() => setOpen(false)}
+        />
+      </PopoverContent>
+    </Popover>
   );
 }

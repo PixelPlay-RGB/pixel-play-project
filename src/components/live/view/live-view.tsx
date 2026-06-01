@@ -37,6 +37,8 @@ export function LiveView({ creatorId }: Props) {
     walletBalance,
     isWalletLoading,
     isWalletError,
+    donationEnabled,
+    donationMinAmount,
     votePoll,
     sendDonation,
     isFollowing,
@@ -155,6 +157,8 @@ export function LiveView({ creatorId }: Props) {
               walletBalance={walletBalance}
               isWalletLoading={isWalletLoading}
               isWalletError={isWalletError}
+              donationEnabled={donationEnabled}
+              donationMinAmount={donationMinAmount}
               onLoginPrompt={openLoginPrompt}
               onSendMessage={sendMessage}
               onVote={votePoll}

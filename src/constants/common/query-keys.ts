@@ -25,6 +25,8 @@ export const QUERY_KEYS = {
       [...QUERY_KEYS.live.all, "messages", broadcastId].filter((v) => v !== undefined),
     polls: (broadcastId?: string) =>
       [...QUERY_KEYS.live.all, "polls", broadcastId].filter((v) => v !== undefined),
+    pollsForViewer: (broadcastId?: string, userId?: string | null) =>
+      [...QUERY_KEYS.live.polls(broadcastId), userId ?? "public"].filter((v) => v !== undefined),
     // 라이브 목록
     listAll: () => [...QUERY_KEYS.live.all, "list"],
     list: (userId?: string, filter?: string, sort?: string, visibleCount?: number) =>
@@ -54,6 +56,8 @@ export const QUERY_KEYS = {
     all: ["donations"] as const,
     walletBalance: (userId?: string) =>
       [...QUERY_KEYS.donations.all, "wallet-balance", userId].filter((v) => v !== undefined),
+    liveRanking: (creatorId?: string) =>
+      [...QUERY_KEYS.donations.all, "live-ranking", creatorId].filter((v) => v !== undefined),
   },
   chat: {
     all: ["chat"] as const,

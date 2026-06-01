@@ -4,7 +4,8 @@ export const LIVE_LABEL = {
   chatRulePlaceholder: "채팅 규칙을 확인해주세요.",
   chatRuleTitle: "채팅 규칙 안내",
   chatRuleDescription: "첫 채팅 전에 한 번만 확인합니다.",
-  chatRuleDefaultText: "서로를 존중하며 대화해주세요. 반복 도배, 비방, 홍보성 메시지는 제한될 수 있습니다.",
+  chatRuleDefaultText:
+    "서로를 존중하며 대화해주세요. 반복 도배, 비방, 홍보성 메시지는 제한될 수 있습니다.",
   chatRuleAccept: "규칙 확인하고 채팅하기",
   live: "LIVE",
   chat: "라이브 채팅",
@@ -35,6 +36,7 @@ export const LIVE_LABEL = {
   anonymousAuthor: "익명",
   shareCopy: "복사",
   broadcastOffline: "방송이 종료되었거나 준비 중입니다.",
+  chatPopoutActive: "채팅창이 팝업으로 열려 있습니다.",
   chatFollowerPlaceholder: "팔로우 후 채팅할 수 있습니다.",
   chatWaitPlaceholder: "잠시 후 채팅할 수 있습니다.",
   chatManagerOnlyPlaceholder: "매니저만 채팅할 수 있습니다.",
@@ -42,15 +44,22 @@ export const LIVE_LABEL = {
   participationFollowerDesc: "이 방송은 팔로우한 시청자만 채팅할 수 있습니다.",
   participationWaitTitle: "팔로우 대기 중",
   participationWaitDesc: "팔로우 후 잠시 기다려야 채팅할 수 있습니다.",
+  openLiveWatch: "시청 화면에서 확인",
+  chatPopoutBlocked: "팝업 차단을 해제한 뒤 다시 열어주세요.",
 } as const;
 
-export const LIVE_DONATION_AMOUNTS = [100, 500, 1000, 5000, 10000] as const;
+export const LIVE_DONATION_MIN_AMOUNT = 1000;
+export const LIVE_DONATION_AMOUNTS = [1000, 3000, 5000, 10000, 50000] as const;
+export const LIVE_CHAT_MESSAGE_MAX_LENGTH = 2000;
+export const LIVE_DONATION_MESSAGE_MAX_LENGTH = 300;
 
 export const LIVE_DONATION_LABEL = {
   title: "후원하기",
+  description: "최소 {amount}부터 후원할 수 있습니다.",
   anonymous: "익명 후원",
   amountLabel: "후원 금액",
-  directInput: "직접 입력",
+  directInput: "직접 입력 (최소 {amount})",
+  minAmountError: "최소 {amount}부터 후원할 수 있습니다.",
   messageLabel: "후원 메시지",
   messagePlaceholder: "응원 메시지를 남겨주세요. (선택)",
   balance: "보유 후원금",
@@ -59,6 +68,7 @@ export const LIVE_DONATION_LABEL = {
   balanceError: "조회 실패",
   submit: "후원하기",
   cancel: "취소",
+  disabled: "후원이 비활성화된 방송입니다.",
   unit: "P",
 } as const;
 
@@ -70,7 +80,6 @@ export const LIVE_VOTE_LABEL = {
   empty: "현재 진행 중인 투표가 없습니다.",
   submit: "참여하기",
   participated: "참여 완료",
-  change: "변경하기",
   submitting: "처리 중...",
   voteCountUnit: "명",
   ended: "투표 종료",
@@ -87,6 +96,12 @@ export const LIVE_CHAT_MENU_LABEL = {
   cleanbotOff: "클린봇 꺼짐",
   rules: "채팅 규칙",
   popout: "채팅창 팝업",
+} as const;
+
+export const LIVE_CHAT_POPOUT_WINDOW = {
+  name: "pixelPlayLiveChatPopout",
+  width: 400,
+  height: 600,
 } as const;
 
 export const LIVE_MOCK_BALANCE = 12000;

@@ -14,7 +14,8 @@ import {
 } from "@/components/ui/popover";
 import { LiveDonationDialog } from "@/components/live/view/live-donation-dialog";
 import { LiveVotePopover } from "@/components/live/view/live-vote-popover";
-import { LIVE_LABEL } from "@/constants/live/live";
+import { LIVE_CHAT_MESSAGE_MAX_LENGTH, LIVE_LABEL } from "@/constants/live/live";
+import { cn } from "@/lib/utils";
 import type { LivePoll, LiveViewerChatState } from "@/types/live/live";
 
 interface Props {
@@ -26,6 +27,8 @@ interface Props {
   walletBalance: number;
   isWalletLoading?: boolean;
   isWalletError?: boolean;
+  donationEnabled: boolean;
+  donationMinAmount: number;
   onLoginPrompt: () => void;
   onSendMessage: (content: string) => Promise<boolean>;
   onVote?: (pollId: string, optionId: string) => Promise<boolean>;
@@ -37,6 +40,8 @@ interface Props {
   }) => Promise<boolean>;
   chatRuleText?: string;
   showActions?: boolean;
+  votePresentation?: "popover" | "dialog";
+  className?: string;
   onAcceptChatRule?: () => Promise<boolean>;
 }
 
@@ -59,6 +64,10 @@ function getChatPlaceholder(chatState: LiveViewerChatState, isLoggedIn: boolean)
   }
 }
 
+function clampChatDraft(value: string): string {
+  return value.slice(0, LIVE_CHAT_MESSAGE_MAX_LENGTH);
+}
+
 export function LiveChatInputBar({
   polls,
   isPollsLoading,
@@ -68,12 +77,16 @@ export function LiveChatInputBar({
   walletBalance,
   isWalletLoading,
   isWalletError,
+  donationEnabled,
+  donationMinAmount,
   onLoginPrompt,
   onSendMessage,
   onVote,
   onDonate,
   chatRuleText,
   showActions = true,
+  votePresentation = "popover",
+  className,
   onAcceptChatRule,
 }: Props) {
   const [draft, setDraft] = useState("");
@@ -100,12 +113,16 @@ export function LiveChatInputBar({
   async function handleSend() {
     const trimmed = draft.trim();
     if (!trimmed || isSending || !isInputActive) return;
+    if (trimmed.length > LIVE_CHAT_MESSAGE_MAX_LENGTH) {
+      setDraft(clampChatDraft(trimmed));
+      return;
+    }
 
     setIsSending(true);
     setDraft("");
     try {
       const isSuccess = await onSendMessage(trimmed);
-      if (!isSuccess) setDraft(trimmed);
+      if (!isSuccess) setDraft(clampChatDraft(trimmed));
     } finally {
       setIsSending(false);
     }
@@ -124,23 +141,27 @@ export function LiveChatInputBar({
   }
 
   return (
-    <div className="border-border flex flex-col gap-2 border-t px-3 py-3">
+    <div className={cn("border-border flex flex-col gap-2 border-t px-3 py-3", className)}>
       <div className="flex items-center gap-2">
         <ChatEmojiPicker
-          onEmojiSelect={(emoji) => setDraft((prev) => prev + emoji)}
+          onEmojiSelect={(emoji) => setDraft((prev) => clampChatDraft(prev + emoji))}
           disabled={!isInputActive}
         />
-        <Popover open={isRuleOpen} onOpenChange={setIsRuleOpen}>
+        <Popover
+          open={isRuleOpen}
+          onOpenChange={(next) => setIsRuleOpen(shouldShowRule && next)}
+        >
           <PopoverTrigger
             nativeButton={false}
             render={
               <Input
                 value={isInputActive ? draft : ""}
+                maxLength={LIVE_CHAT_MESSAGE_MAX_LENGTH}
                 placeholder={placeholder}
                 readOnly={!isInputActive}
                 disabled={isSending}
                 onClick={handleInputClick}
-                onChange={(e) => setDraft(e.target.value)}
+                onChange={(e) => setDraft(clampChatDraft(e.target.value))}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.nativeEvent.isComposing) {
                     e.preventDefault();
@@ -153,12 +174,16 @@ export function LiveChatInputBar({
             }
           />
           {shouldShowRule ? (
-            <PopoverContent align="start" side="top" className="w-80">
+            <PopoverContent
+              align="start"
+              side="top"
+              className="max-h-[calc(100vh-1rem)] w-80 overflow-y-auto"
+            >
               <PopoverHeader>
                 <PopoverTitle>{LIVE_LABEL.chatRuleTitle}</PopoverTitle>
                 <PopoverDescription>{LIVE_LABEL.chatRuleDescription}</PopoverDescription>
               </PopoverHeader>
-              <p className="text-foreground whitespace-pre-wrap text-sm leading-relaxed">
+              <p className="text-foreground text-sm leading-relaxed whitespace-pre-wrap">
                 {chatRuleText || LIVE_LABEL.chatRuleDefaultText}
               </p>
               <Button
@@ -181,6 +206,8 @@ export function LiveChatInputBar({
             walletBalance={walletBalance}
             isWalletLoading={isWalletLoading}
             isWalletError={isWalletError}
+            donationEnabled={donationEnabled}
+            donationMinAmount={donationMinAmount}
             onLoginPrompt={onLoginPrompt}
             onDonate={onDonate}
           />
@@ -191,6 +218,7 @@ export function LiveChatInputBar({
             isLoggedIn={isLoggedIn}
             onLoginPrompt={onLoginPrompt}
             onVote={onVote}
+            presentation={votePresentation}
           />
         </div>
       ) : null}

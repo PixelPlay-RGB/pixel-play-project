@@ -1,18 +1,18 @@
 "use client";
 // 채팅 패널 컨테이너 — 메시지 목록, 입력창, 참여 조건 안내, 클린봇 상태를 조합합니다.
 
-import { useState } from "react";
-import { UserRoundPlus } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ExternalLink } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { LiveChatInputBar } from "@/components/live/view/live-chat-input-bar";
 import { LiveChatMessageList } from "@/components/live/chat/live-chat-message-list";
+import { LiveChatParticipationNotice } from "@/components/live/chat/live-chat-participation-notice";
 import { LiveDonationBanner } from "@/components/live/view/live-donation-banner";
 import { LiveChatMenu } from "@/components/live/view/live-chat-menu";
 import { filterChatMessages } from "@/utils/live/live-chat";
 import { LIVE_LABEL } from "@/constants/live/live";
 import type {
   LiveChatMessage,
-  LiveChatUnavailableReason,
   LiveDonation,
   LivePoll,
   LiveViewerChatState,
@@ -30,6 +30,8 @@ interface Props {
   walletBalance: number;
   isWalletLoading?: boolean;
   isWalletError?: boolean;
+  donationEnabled: boolean;
+  donationMinAmount: number;
   onLoginPrompt: () => void;
   onSendMessage: (content: string) => Promise<boolean>;
   onVote?: (pollId: string, optionId: string) => Promise<boolean>;
@@ -41,37 +43,6 @@ interface Props {
   }) => Promise<boolean>;
   chatRuleText?: string;
   onAcceptChatRule?: () => Promise<boolean>;
-}
-
-function ParticipationNotice({
-  chatUnavailableReason,
-}: {
-  chatUnavailableReason: LiveChatUnavailableReason | null;
-}) {
-  if (
-    chatUnavailableReason !== "follower_required" &&
-    chatUnavailableReason !== "follower_wait_required"
-  ) {
-    return null;
-  }
-
-  const isWaiting = chatUnavailableReason === "follower_wait_required";
-
-  return (
-    <div className="border-border bg-card border-t px-3 py-3">
-      <div className="border-live/20 bg-live/5 flex items-start gap-2 rounded-lg border px-3 py-2.5">
-        <UserRoundPlus className="text-live mt-0.5 size-4 shrink-0" />
-        <div className="flex min-w-0 flex-col gap-0.5">
-          <p className="text-foreground text-xs font-semibold">
-            {isWaiting ? LIVE_LABEL.participationWaitTitle : LIVE_LABEL.participationFollowerTitle}
-          </p>
-          <p className="text-muted-foreground text-xs leading-snug">
-            {isWaiting ? LIVE_LABEL.participationWaitDesc : LIVE_LABEL.participationFollowerDesc}
-          </p>
-        </div>
-      </div>
-    </div>
-  );
 }
 
 export function LiveChatPanel({
@@ -86,6 +57,8 @@ export function LiveChatPanel({
   walletBalance,
   isWalletLoading,
   isWalletError,
+  donationEnabled,
+  donationMinAmount,
   onLoginPrompt,
   onSendMessage,
   onVote,
@@ -94,7 +67,33 @@ export function LiveChatPanel({
   onAcceptChatRule,
 }: Props) {
   const [cleanbot, setCleanbot] = useState(true);
+  const [isPopoutOpen, setIsPopoutOpen] = useState(false);
+  const popoutWindowRef = useRef<Window | null>(null);
+  const popoutCheckIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const displayMessages = cleanbot ? messages : filterChatMessages(messages);
+
+  function handlePopoutOpen(win: Window) {
+    popoutWindowRef.current = win;
+    setIsPopoutOpen(true);
+  }
+
+  useEffect(() => {
+    if (!isPopoutOpen) return;
+
+    popoutCheckIntervalRef.current = setInterval(() => {
+      if (!popoutWindowRef.current || popoutWindowRef.current.closed) {
+        popoutWindowRef.current = null;
+        setIsPopoutOpen(false);
+      }
+    }, 1000);
+
+    return () => {
+      if (popoutCheckIntervalRef.current) {
+        clearInterval(popoutCheckIntervalRef.current);
+        popoutCheckIntervalRef.current = null;
+      }
+    };
+  }, [isPopoutOpen]);
 
   return (
     <div className="border-border bg-card flex h-full min-h-96 flex-col overflow-hidden rounded-xl border md:min-h-0">
@@ -105,35 +104,46 @@ export function LiveChatPanel({
           chatRuleText={chatRuleText}
           cleanbot={cleanbot}
           onCleanbot={() => setCleanbot((prev) => !prev)}
+          onPopoutOpen={handlePopoutOpen}
         />
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col">
-        <div className="shrink-0 px-2 pt-2">
-          <LiveDonationBanner donations={donations} />
+      {isPopoutOpen ? (
+        <div className="flex flex-1 flex-col items-center justify-center gap-2 px-4 text-center">
+          <ExternalLink className="text-muted-foreground size-5" />
+          <p className="text-muted-foreground text-sm">{LIVE_LABEL.chatPopoutActive}</p>
         </div>
-        <ScrollArea className="min-h-0 flex-1">
-          <LiveChatMessageList messages={displayMessages} />
-        </ScrollArea>
-      </div>
-
-      <ParticipationNotice chatUnavailableReason={chatState.chatUnavailableReason} />
-      <LiveChatInputBar
-        polls={polls}
-        isPollsLoading={isPollsLoading}
-        isPollsError={isPollsError}
-        chatState={chatState}
-        isLoggedIn={isLoggedIn}
-        walletBalance={walletBalance}
-        isWalletLoading={isWalletLoading}
-        isWalletError={isWalletError}
-        onLoginPrompt={onLoginPrompt}
-        onSendMessage={onSendMessage}
-        onVote={onVote}
-        onDonate={onDonate}
-        chatRuleText={chatRuleText}
-        onAcceptChatRule={onAcceptChatRule}
-      />
+      ) : (
+        <>
+          <div className="flex min-h-0 flex-1 flex-col">
+            <div className="shrink-0 px-2 pt-2">
+              <LiveDonationBanner donations={donations} />
+            </div>
+            <ScrollArea className="min-h-0 flex-1">
+              <LiveChatMessageList messages={displayMessages} />
+            </ScrollArea>
+          </div>
+          <LiveChatParticipationNotice chatUnavailableReason={chatState.chatUnavailableReason} />
+          <LiveChatInputBar
+            polls={polls}
+            isPollsLoading={isPollsLoading}
+            isPollsError={isPollsError}
+            chatState={chatState}
+            isLoggedIn={isLoggedIn}
+            walletBalance={walletBalance}
+            isWalletLoading={isWalletLoading}
+            isWalletError={isWalletError}
+            donationEnabled={donationEnabled}
+            donationMinAmount={donationMinAmount}
+            onLoginPrompt={onLoginPrompt}
+            onSendMessage={onSendMessage}
+            onVote={onVote}
+            onDonate={onDonate}
+            chatRuleText={chatRuleText}
+            onAcceptChatRule={onAcceptChatRule}
+          />
+        </>
+      )}
     </div>
   );
 }
