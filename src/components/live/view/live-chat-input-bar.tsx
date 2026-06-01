@@ -152,23 +152,25 @@ export function LiveChatInputBar({
               />
             }
           />
-          <PopoverContent align="start" side="top" className="w-80">
-            <PopoverHeader>
-              <PopoverTitle>{LIVE_LABEL.chatRuleTitle}</PopoverTitle>
-              <PopoverDescription>{LIVE_LABEL.chatRuleDescription}</PopoverDescription>
-            </PopoverHeader>
-            <p className="text-foreground whitespace-pre-wrap text-sm leading-relaxed">
-              {chatRuleText || LIVE_LABEL.chatRuleDefaultText}
-            </p>
-            <Button
-              type="button"
-              className="bg-live hover:bg-live/90 text-white"
-              disabled={isAcceptingRule || !onAcceptChatRule}
-              onClick={() => void handleAcceptRule()}
-            >
-              {LIVE_LABEL.chatRuleAccept}
-            </Button>
-          </PopoverContent>
+          {shouldShowRule ? (
+            <PopoverContent align="start" side="top" className="w-80">
+              <PopoverHeader>
+                <PopoverTitle>{LIVE_LABEL.chatRuleTitle}</PopoverTitle>
+                <PopoverDescription>{LIVE_LABEL.chatRuleDescription}</PopoverDescription>
+              </PopoverHeader>
+              <p className="text-foreground whitespace-pre-wrap text-sm leading-relaxed">
+                {chatRuleText || LIVE_LABEL.chatRuleDefaultText}
+              </p>
+              <Button
+                type="button"
+                className="bg-live hover:bg-live/90 text-white"
+                disabled={isAcceptingRule || !onAcceptChatRule}
+                onClick={() => void handleAcceptRule()}
+              >
+                {LIVE_LABEL.chatRuleAccept}
+              </Button>
+            </PopoverContent>
+          ) : null}
         </Popover>
       </div>
 
