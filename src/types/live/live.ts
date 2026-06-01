@@ -1,5 +1,7 @@
 // 라이브 목록 화면에서 사용하는 도메인 타입을 정의합니다.
 
+import type { GenericTables } from "@/types/common/supabase.types";
+
 export type LiveListFilter = "ALL" | "FOLLOWING" | "RECENT" | "ACTIVE_CHAT";
 
 export type LiveListSort = "VIEWER_COUNT_DESC" | "STARTED_AT_DESC" | "RECENT_CHAT_DESC";
@@ -56,8 +58,7 @@ export interface FollowingChannelSnapshot {
   items: FollowingChannelItem[];
   totalCount: number;
   hasMore: boolean;
-// 라이브 도메인에서 공유하는 DB row와 표시 타입을 정의합니다.
-import type { GenericTables } from "@/types/common/supabase.types";
+}
 
 export type LiveBroadcastRow = GenericTables<"live_broadcast">;
 export type LiveMessageRow = GenericTables<"live_message">;
