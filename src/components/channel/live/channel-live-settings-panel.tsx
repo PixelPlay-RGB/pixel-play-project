@@ -63,6 +63,7 @@ interface Props {
 
 interface SettingToggleButtonProps {
   checked: boolean;
+  className?: string;
   description: string;
   icon: ComponentType<{ className?: string }>;
   label: string;
@@ -71,6 +72,7 @@ interface SettingToggleButtonProps {
 
 function SettingToggleButton({
   checked,
+  className,
   description,
   icon: Icon,
   label,
@@ -82,6 +84,7 @@ function SettingToggleButton({
       className={cn(
         "border-border flex min-h-18 items-start justify-between gap-3 rounded-lg border p-3 text-left transition-colors",
         checked ? "border-brand/40 bg-brand/10" : "hover:bg-muted/50",
+        className,
       )}
       aria-pressed={checked}
       onClick={() => onChange(!checked)}
@@ -256,7 +259,7 @@ export default function ChannelLiveSettingsPanel({
 
         <div className="grid items-start gap-3 sm:grid-cols-2">
           <div className="grid gap-3">
-            <div className="border-border rounded-lg border p-3">
+            <div className="border-border rounded-lg border p-3 sm:min-h-72">
               <div className="flex items-center gap-2">
                 <ImageIcon className="text-brand size-4" />
                 <span className="text-sm font-semibold">미리보기 이미지</span>
@@ -344,14 +347,15 @@ export default function ChannelLiveSettingsPanel({
           </div>
 
           <div className="grid gap-3">
-            <div className="border-border rounded-lg border p-3">
+            <div className="border-border rounded-lg border p-3 sm:min-h-72">
               <div className="flex items-center gap-2">
                 <HandCoins className="text-brand size-4" />
                 <span className="text-sm font-semibold">후원 빠른 설정</span>
               </div>
-              <div className="mt-3 grid gap-3">
+              <div className="mt-3 grid gap-2">
                 <SettingToggleButton
                   checked={isDonationEnabled}
+                  className="min-h-16"
                   description="시청자 후원을 받을 수 있게 설정합니다."
                   icon={HandCoins}
                   label="후원 받기"
@@ -359,6 +363,7 @@ export default function ChannelLiveSettingsPanel({
                 />
                 <SettingToggleButton
                   checked={isDonationAmountVisible}
+                  className="min-h-16"
                   description="후원 금액 표시 여부를 설정합니다."
                   icon={HandCoins}
                   label="후원 금액 공개"
@@ -366,6 +371,7 @@ export default function ChannelLiveSettingsPanel({
                 />
                 <SettingToggleButton
                   checked={isDonationAlertEnabled}
+                  className="min-h-16"
                   description="후원 발생 시 방송 알림을 표시합니다."
                   icon={Bell}
                   label="후원 알림"
