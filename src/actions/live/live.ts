@@ -2,8 +2,8 @@
 // 라이브 채팅 메시지와 채팅 규칙 동의 RPC를 호출하는 서버 액션입니다.
 
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
+import { createWriteClientForAction } from "@/actions/common/admin-client-action";
 import { getAuthenticatedActorId } from "@/actions/common/authenticated-actor";
-import { createAdminClient } from "@/lib/supabase/admin-client";
 import type { AppActionResult } from "@/types/common/action";
 import { isKnownMessageRpcError, resolveMessageRpcErrorCode } from "@/utils/common/app-message";
 import { isUuid } from "@/utils/common/uuid";
@@ -30,8 +30,16 @@ export async function sendLiveMessageAction(
     return { success: false, code: actor.result.code };
   }
 
-  const supabase = createAdminClient();
-  const { data: messageId, error } = await supabase.rpc("send_live_message", {
+  const client = await createWriteClientForAction<{ messageId: string }>(
+    "라이브 채팅 Admin Client 생성 실패",
+    APP_MESSAGE_CODE.error.message.sendFailed,
+  );
+
+  if (!client.success) {
+    return client.result;
+  }
+
+  const { data: messageId, error } = await client.supabase.rpc("send_live_message", {
     p_actor_user_id: actor.userId,
     p_broadcast_id: broadcastId,
     p_content: trimmed,
@@ -56,10 +64,7 @@ export async function sendLiveMessageAction(
   return { success: true, data: { messageId } };
 }
 
-export async function voteLivePollAction(
-  pollId: string,
-  optionId: string,
-): Promise<boolean> {
+export async function voteLivePollAction(pollId: string, optionId: string): Promise<boolean> {
   if (!pollId || !isUuid(pollId) || !optionId) return false;
 
   const actor = await getAuthenticatedActorId({
@@ -68,8 +73,11 @@ export async function voteLivePollAction(
 
   if (!actor.success) return false;
 
-  const supabase = createAdminClient();
-  const { error } = await supabase.rpc("vote_live_poll", {
+  const client = await createWriteClientForAction("라이브 투표 Admin Client 생성 실패");
+
+  if (!client.success) return false;
+
+  const { error } = await client.supabase.rpc("vote_live_poll", {
     p_actor_user_id: actor.userId,
     p_poll_id: pollId,
     p_option_id: optionId,
@@ -92,7 +100,15 @@ export async function sendLiveDonationAction(params: {
 }): Promise<boolean> {
   const { broadcastId, amount, message, isAnonymous, idempotencyKey } = params;
 
-  if (!broadcastId || !isUuid(broadcastId) || !idempotencyKey || !Number.isFinite(amount) || amount <= 0 || message.length > 200) return false;
+  if (
+    !broadcastId ||
+    !isUuid(broadcastId) ||
+    !idempotencyKey ||
+    !Number.isFinite(amount) ||
+    amount <= 0 ||
+    message.length > 200
+  )
+    return false;
 
   const actor = await getAuthenticatedActorId({
     logLabel: "라이브 후원 중 인증 사용자 조회 실패",
@@ -100,8 +116,11 @@ export async function sendLiveDonationAction(params: {
 
   if (!actor.success) return false;
 
-  const supabase = createAdminClient();
-  const { error } = await supabase.rpc("send_live_donation", {
+  const client = await createWriteClientForAction("라이브 후원 Admin Client 생성 실패");
+
+  if (!client.success) return false;
+
+  const { error } = await client.supabase.rpc("send_live_donation", {
     p_actor_user_id: actor.userId,
     p_broadcast_id: broadcastId,
     p_amount: amount,
@@ -133,8 +152,16 @@ export async function acceptLiveChatRuleAction(
     return { success: false, code: actor.result.code };
   }
 
-  const supabase = createAdminClient();
-  const { data: acceptedVersion, error } = await supabase.rpc("accept_live_chat_rule", {
+  const client = await createWriteClientForAction<{ acceptedVersion: number }>(
+    "라이브 채팅 규칙 Admin Client 생성 실패",
+    APP_MESSAGE_CODE.error.common.unknown,
+  );
+
+  if (!client.success) {
+    return client.result;
+  }
+
+  const { data: acceptedVersion, error } = await client.supabase.rpc("accept_live_chat_rule", {
     p_actor_user_id: actor.userId,
     p_creator_id: creatorId,
   });

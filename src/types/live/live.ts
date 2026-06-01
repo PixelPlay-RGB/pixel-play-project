@@ -31,6 +31,7 @@ export interface LivePoll {
   options: LivePollOption[];
   status: LivePollStatus;
   totalCount: number;
+  userVotedOptionId: string | null;
 }
 
 export interface LiveCreator {

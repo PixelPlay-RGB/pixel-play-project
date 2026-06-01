@@ -140,6 +140,7 @@ export const MOCK_LIVE_POLLS: LivePoll[] = [
       { id: "opt-3", label: "배틀그라운드", count: 61 },
     ],
     status: "active",
+    userVotedOptionId: null,
     totalCount: 283,
   },
 ];

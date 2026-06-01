@@ -3,7 +3,7 @@
 
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { getAuthenticatedActorId } from "@/actions/common/authenticated-actor";
-import { createAdminClient } from "@/lib/supabase/admin-client";
+import { createWriteClientForAction } from "@/actions/common/admin-client-action";
 import { isUuid } from "@/utils/common/uuid";
 import type { AppActionResult } from "@/types/common/action";
 
@@ -20,8 +20,16 @@ export async function followCreatorAction(creatorId: string): Promise<AppActionR
     return actor.result;
   }
 
-  const supabase = createAdminClient();
-  const { error } = await supabase.rpc("follow_creator", {
+  const client = await createWriteClientForAction(
+    "팔로우 Admin Client 생성 실패",
+    APP_MESSAGE_CODE.error.live.followFailed,
+  );
+
+  if (!client.success) {
+    return client.result;
+  }
+
+  const { error } = await client.supabase.rpc("follow_creator", {
     p_actor_user_id: actor.userId,
     p_creator_id: creatorId,
   });
@@ -47,8 +55,16 @@ export async function unfollowCreatorAction(creatorId: string): Promise<AppActio
     return actor.result;
   }
 
-  const supabase = createAdminClient();
-  const { error } = await supabase.rpc("unfollow_creator", {
+  const client = await createWriteClientForAction(
+    "언팔로우 Admin Client 생성 실패",
+    APP_MESSAGE_CODE.error.live.unfollowFailed,
+  );
+
+  if (!client.success) {
+    return client.result;
+  }
+
+  const { error } = await client.supabase.rpc("unfollow_creator", {
     p_actor_user_id: actor.userId,
     p_creator_id: creatorId,
   });

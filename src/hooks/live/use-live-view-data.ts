@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth";
 import { QUERY_KEYS } from "@/constants/common/query-keys";
 import { normalizeLiveViewData } from "@/utils/live/live-view-data";
+import { isUuid } from "@/utils/common/uuid";
 import type { LiveWatchData } from "@/types/live/live";
 
 export function useLiveViewData(creatorId: string) {
@@ -13,10 +14,11 @@ export function useLiveViewData(creatorId: string) {
   const queryClient = useQueryClient();
   const user = useAuthStore((s) => s.user);
   const isAuthLoading = useAuthStore((s) => s.loading);
+  const isValidCreatorId = isUuid(creatorId);
 
   const query = useQuery<LiveWatchData | null>({
     queryKey: QUERY_KEYS.live.watch(creatorId, user?.id),
-    enabled: !isAuthLoading,
+    enabled: !isAuthLoading && isValidCreatorId,
     staleTime: 1000 * 30,
     queryFn: async () => {
       const [watchResult, countResult] = await Promise.all([

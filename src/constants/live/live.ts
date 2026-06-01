@@ -70,6 +70,9 @@ export const LIVE_VOTE_LABEL = {
   empty: "현재 진행 중인 투표가 없습니다.",
   submit: "참여하기",
   participated: "참여 완료",
+  change: "변경하기",
+  submitting: "처리 중...",
+  voteCountUnit: "명",
   ended: "투표 종료",
   totalCount: "명 참여",
 } as const;

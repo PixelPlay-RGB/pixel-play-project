@@ -14,7 +14,11 @@ import { QUERY_KEYS } from "@/constants/common/query-keys";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { toastAppError } from "@/utils/common/toast-message";
 import { LIVE_LABEL } from "@/constants/live/live";
-import { mapLiveWatchToBroadcast, type LiveChatMessage, type LiveDonation } from "@/types/live/live";
+import {
+  mapLiveWatchToBroadcast,
+  type LiveChatMessage,
+  type LiveDonation,
+} from "@/types/live/live";
 
 export function useLiveBroadcastView(creatorId: string) {
   const user = useAuthStore((state) => state.user);
@@ -43,35 +47,50 @@ export function useLiveBroadcastView(creatorId: string) {
   const messagesQuery = useLiveMessages(broadcast?.id);
   const messages = messagesQuery.messages;
 
-  const pollsQuery = useLivePolls(broadcast?.id);
+  const pollsQuery = useLivePolls(broadcast?.id, user?.id);
 
   // donations: 현재 방송 세션 메시지(최대 100건)에서 파생 — 주간 랭킹이 필요하면 별도 RPC 추가 필요
-  // polls: live_poll.options에 count 필드가 없으면 0으로 표시됨 — vote_live_poll RPC가 역정규화하지 않는 경우
   const donations = useMemo<LiveDonation[]>(
     () =>
       messages
-        .filter((m): m is LiveChatMessage & { donationAmount: number } =>
-          m.type === "donation" && typeof m.donationAmount === "number" && m.donationAmount > 0
+        .filter(
+          (m): m is LiveChatMessage & { donationAmount: number } =>
+            m.type === "donation" && typeof m.donationAmount === "number" && m.donationAmount > 0,
         )
-        .map((m) => ({ id: m.id, author: m.author ?? LIVE_LABEL.anonymousAuthor, amount: m.donationAmount, message: m.content })),
+        .map((m) => ({
+          id: m.id,
+          author: m.author ?? LIVE_LABEL.anonymousAuthor,
+          amount: m.donationAmount,
+          message: m.content,
+        })),
     [messages],
   );
 
-  const { walletBalance, isLoading: isWalletLoading, isError: isWalletError } = useUserWalletBalance(user?.id);
+  const {
+    walletBalance,
+    isLoading: isWalletLoading,
+    isError: isWalletError,
+  } = useUserWalletBalance(user?.id);
 
   async function votePoll(pollId: string, optionId: string): Promise<boolean> {
     const broadcastId = broadcast?.id;
-    const success = await voteLivePollAction(pollId, optionId);
-    if (!success) {
+    try {
+      const success = await voteLivePollAction(pollId, optionId);
+      if (!success) {
+        toastAppError(APP_MESSAGE_CODE.error.live.voteFailed);
+        return false;
+      }
+      if (broadcastId) {
+        void queryClient.invalidateQueries({
+          queryKey: QUERY_KEYS.live.polls(broadcastId),
+        });
+      }
+      return true;
+    } catch (error) {
+      console.error("라이브 투표 처리 실패", error);
       toastAppError(APP_MESSAGE_CODE.error.live.voteFailed);
       return false;
     }
-    if (broadcastId) {
-      void queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.live.polls(broadcastId),
-      });
-    }
-    return true;
   }
 
   async function sendDonation(params: {
@@ -81,15 +100,21 @@ export function useLiveBroadcastView(creatorId: string) {
     idempotencyKey: string;
   }): Promise<boolean> {
     if (!broadcast?.id) return false;
-    const success = await sendLiveDonationAction({ broadcastId: broadcast.id, ...params });
-    if (success) {
-      void queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.donations.walletBalance(user?.id ?? undefined),
-      });
-    } else {
+    try {
+      const success = await sendLiveDonationAction({ broadcastId: broadcast.id, ...params });
+      if (success) {
+        void queryClient.invalidateQueries({
+          queryKey: QUERY_KEYS.donations.walletBalance(user?.id ?? undefined),
+        });
+      } else {
+        toastAppError(APP_MESSAGE_CODE.error.live.donationFailed);
+      }
+      return success;
+    } catch (error) {
+      console.error("라이브 후원 처리 실패", error);
       toastAppError(APP_MESSAGE_CODE.error.live.donationFailed);
+      return false;
     }
-    return success;
   }
 
   const chatSession = useLiveChatSession({
@@ -98,6 +123,27 @@ export function useLiveBroadcastView(creatorId: string) {
     viewerChatState: watchData?.viewerChatState,
     onChatRuleAccepted: refetch,
   });
+
+  async function sendMessage(content: string): Promise<boolean> {
+    const trimmed = content.trim();
+    const voteMatch = /^!([1-9]\d*)$/.exec(trimmed);
+
+    if (voteMatch) {
+      const activePoll = pollsQuery.polls.find((p) => p.status === "active") ?? null;
+      if (!activePoll) {
+        toastAppError(APP_MESSAGE_CODE.error.live.voteNoActivePoll);
+        return false;
+      }
+      const option = activePoll.options[parseInt(voteMatch[1]) - 1];
+      if (!option) {
+        toastAppError(APP_MESSAGE_CODE.error.live.voteInvalidOption);
+        return false;
+      }
+      return votePoll(activePoll.id, option.id);
+    }
+
+    return chatSession.sendMessage(content);
+  }
 
   return {
     isLoading,
@@ -116,5 +162,6 @@ export function useLiveBroadcastView(creatorId: string) {
     onFollowToggled,
     chatRuleText: watchData?.settings.chatRuleText,
     ...chatSession,
+    sendMessage,
   };
 }

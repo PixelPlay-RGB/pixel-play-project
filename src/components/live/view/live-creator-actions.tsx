@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Share2 } from "lucide-react";
+import { Check, Share2, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -25,11 +25,9 @@ interface Props {
 }
 
 export function LiveCreatorActions({ isFollowing, isPending, onFollow }: Props) {
-  const [isHovering, setIsHovering] = useState(false);
   const [isUnfollowDialogOpen, setIsUnfollowDialogOpen] = useState(false);
 
   function handleFollowClick() {
-    setIsHovering(false);
     if (isFollowing) {
       setIsUnfollowDialogOpen(true);
     } else {
@@ -54,7 +52,6 @@ export function LiveCreatorActions({ isFollowing, isPending, onFollow }: Props) 
 
   function getFollowLabel() {
     if (!isFollowing) return LIVE_LABEL.follow;
-    if (isHovering) return LIVE_LABEL.unfollow;
     return LIVE_LABEL.following;
   }
 
@@ -65,17 +62,14 @@ export function LiveCreatorActions({ isFollowing, isPending, onFollow }: Props) 
           size="sm"
           disabled={isPending}
           onClick={handleFollowClick}
-          onMouseEnter={() => setIsHovering(true)}
-          onMouseLeave={() => setIsHovering(false)}
           className={cn(
-            "min-w-20 text-xs font-semibold transition-colors",
-            isFollowing && isHovering
-              ? "border-destructive/30 bg-destructive/10 text-destructive hover:bg-destructive/15"
-              : isFollowing
-                ? "bg-muted text-foreground hover:bg-muted/80"
-                : "bg-brand text-brand-foreground hover:bg-brand/90",
+            "min-w-20 gap-1.5 rounded-full text-xs font-semibold transition-colors",
+            isFollowing
+              ? "bg-muted text-foreground hover:bg-muted/80"
+              : "bg-brand text-brand-foreground hover:bg-brand/90",
           )}
         >
+          {isFollowing ? <Check className="size-3.5" /> : <UserPlus className="size-3.5" />}
           {getFollowLabel()}
         </Button>
 

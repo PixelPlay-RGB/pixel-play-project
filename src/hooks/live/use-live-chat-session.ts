@@ -36,23 +36,35 @@ export function useLiveChatSession({
   async function sendMessage(content: string): Promise<boolean> {
     if (!broadcastId) return false;
 
-    const result = await sendLiveMessageAction(broadcastId, content);
-    if (!result.success) {
-      toastAppError(result.code ?? APP_MESSAGE_CODE.error.message.sendFailed);
-    }
+    try {
+      const result = await sendLiveMessageAction(broadcastId, content);
+      if (!result.success) {
+        toastAppError(result.code ?? APP_MESSAGE_CODE.error.message.sendFailed);
+      }
 
-    return result.success;
+      return result.success;
+    } catch (error) {
+      console.error("라이브 채팅 전송 실패", error);
+      toastAppError(APP_MESSAGE_CODE.error.message.sendFailed);
+      return false;
+    }
   }
 
   async function acceptChatRule(): Promise<boolean> {
-    const result = await acceptLiveChatRuleAction(creatorId);
-    if (!result.success) {
-      toastAppError(result.code ?? APP_MESSAGE_CODE.error.common.unknown);
+    try {
+      const result = await acceptLiveChatRuleAction(creatorId);
+      if (!result.success) {
+        toastAppError(result.code ?? APP_MESSAGE_CODE.error.common.unknown);
+        return false;
+      }
+
+      await onChatRuleAccepted?.();
+      return true;
+    } catch (error) {
+      console.error("라이브 채팅 규칙 확인 실패", error);
+      toastAppError(APP_MESSAGE_CODE.error.common.unknown);
       return false;
     }
-
-    await onChatRuleAccepted?.();
-    return true;
   }
 
   return {

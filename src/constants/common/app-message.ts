@@ -339,6 +339,18 @@ export const APP_MESSAGE = {
         title: "투표 실패",
         description: "투표 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
       },
+      voteNoActivePoll: {
+        title: "진행 중인 투표 없음",
+        description: "현재 진행 중인 투표가 없습니다.",
+      },
+      voteInvalidOption: {
+        title: "잘못된 투표 번호",
+        description: "유효하지 않은 투표 번호입니다.",
+      },
+      voteAlreadyVoted: {
+        title: "이미 참여한 투표",
+        description: "한 투표에는 한 번만 참여할 수 있습니다.",
+      },
       followFailed: {
         title: "팔로우 실패",
         description: "잠시 후 다시 시도해주세요.",
