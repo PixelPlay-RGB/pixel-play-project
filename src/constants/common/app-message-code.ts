@@ -28,6 +28,9 @@ export const APP_MESSAGE_CODE = {
     oauth: {
       unlinked: "success.oauth.unlinked",
     },
+    channel: {
+      securityCopied: "success.channel.securityCopied",
+      securityTokenRotated: "success.channel.securityTokenRotated",
     following: {
       followed: "success.following.followed",
       unfollowed: "success.following.unfollowed",
@@ -114,6 +117,10 @@ export const APP_MESSAGE_CODE = {
       actionFailed: "error.oauth.actionFailed",
       defaultAccountCannotUnlink: "error.oauth.defaultAccountCannotUnlink",
     },
+    channel: {
+      securityLoadFailed: "error.channel.securityLoadFailed",
+      securityCopyFailed: "error.channel.securityCopyFailed",
+      securityTokenRotateFailed: "error.channel.securityTokenRotateFailed",
     following: {
       failed: "error.following.failed",
       unfollowFailed: "error.following.unfollowFailed",

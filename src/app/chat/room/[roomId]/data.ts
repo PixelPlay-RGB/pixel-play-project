@@ -1,10 +1,10 @@
-// 공개 채팅방 preview와 metadata 조회를 관리합니다.
+// 채팅방 상세 페이지의 공개 preview metadata를 조회합니다.
+import "server-only";
+
 import { createClient } from "@/lib/supabase/server";
 import type { ChatRoomMetadata } from "@/types/preview/preview";
 
-export async function getPublicChatRoomMetadata(
-  roomId: string,
-): Promise<ChatRoomMetadata | null> {
+export async function getPublicChatRoomMetadata(roomId: string): Promise<ChatRoomMetadata | null> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .rpc("get_public_chat_room_metadata", { p_room_id: roomId })

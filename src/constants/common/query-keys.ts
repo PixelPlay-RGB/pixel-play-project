@@ -65,5 +65,8 @@ export const QUERY_KEYS = {
       ],
       keywords: () => [...QUERY_KEYS.live.all, "sidebar", "keywords"],
     },
+    searchAll: () => [...QUERY_KEYS.live.all, "search"],
+    search: (query?: string, section?: string) =>
+      [...QUERY_KEYS.live.searchAll(), query, section].filter((v) => v !== undefined),
   },
 } as const;
