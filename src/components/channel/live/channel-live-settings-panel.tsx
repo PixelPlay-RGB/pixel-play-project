@@ -272,34 +272,36 @@ export default function ChannelLiveSettingsPanel({
                 accept="image/*"
                 onChange={handleThumbnailInputChange}
               />
-              <div
-                className={cn(
-                  "border-border bg-muted mt-3 flex aspect-video w-full flex-col items-center justify-center overflow-hidden rounded-lg border border-dashed bg-cover bg-center p-3 text-center",
-                  trimmedThumbnailPreviewUrl && "border-solid",
-                )}
-                role="button"
-                tabIndex={0}
-                style={
-                  trimmedThumbnailPreviewUrl
-                    ? { backgroundImage: `url(${trimmedThumbnailPreviewUrl})` }
-                    : undefined
-                }
-                onClick={() => thumbnailInputRef.current?.click()}
-                onDragOver={(event) => event.preventDefault()}
-                onDrop={handleThumbnailDrop}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    thumbnailInputRef.current?.click();
+              <div className="mt-3 flex justify-center">
+                <div
+                  className={cn(
+                    "border-border bg-muted inline-flex aspect-video h-36 max-w-full flex-col items-center justify-center overflow-hidden rounded-lg border border-dashed bg-cover bg-center p-3 text-center sm:h-40",
+                    trimmedThumbnailPreviewUrl && "border-solid",
+                  )}
+                  role="button"
+                  tabIndex={0}
+                  style={
+                    trimmedThumbnailPreviewUrl
+                      ? { backgroundImage: `url(${trimmedThumbnailPreviewUrl})` }
+                      : undefined
                   }
-                }}
-              >
-                {!trimmedThumbnailPreviewUrl && (
-                  <div className="text-muted-foreground flex flex-col items-center gap-2 text-xs">
-                    <Upload className="size-6" />
-                    <span>이미지를 끌어오거나 추가하세요.</span>
-                  </div>
-                )}
+                  onClick={() => thumbnailInputRef.current?.click()}
+                  onDragOver={(event) => event.preventDefault()}
+                  onDrop={handleThumbnailDrop}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      thumbnailInputRef.current?.click();
+                    }
+                  }}
+                >
+                  {!trimmedThumbnailPreviewUrl && (
+                    <div className="text-muted-foreground flex flex-col items-center gap-2 text-xs">
+                      <Upload className="size-6" />
+                      <span>이미지를 끌어오거나 추가하세요.</span>
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="mt-3 flex items-center justify-between gap-2">
                 <span className="text-muted-foreground min-w-0 truncate text-xs">
