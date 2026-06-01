@@ -109,44 +109,52 @@ export default function CreatorAvatarPopover({
           )}
         </PopoverTrigger>
 
-        <PopoverContent className="w-64 gap-3 p-3" align="start" sideOffset={8}>
-          <div className="flex min-w-0 items-center gap-3">
-            <Avatar className="size-12" size="lg">
+        <PopoverContent className="w-72 gap-0 overflow-hidden p-0" align="start" sideOffset={10}>
+          <div className="flex min-w-0 items-center gap-3 px-4 pt-4 pb-3.5">
+            <Avatar className={cn("size-12 shrink-0", isLive && "ring-live/80 ring-2")} size="lg">
               <AvatarImage src={avatarSrc} alt={`${creatorNickname} 프로필 이미지`} />
               <AvatarFallback>{fallbackText}</AvatarFallback>
             </Avatar>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <p className="text-foreground truncate text-sm font-black">{creatorNickname}</p>
-              <p className="text-muted-foreground text-xs font-medium">
-                {isOwnChannel
-                  ? "내 라이브 채널이에요."
-                  : isLive
-                    ? "지금 방송 중이에요."
-                    : "다시 보고 싶은 채널로 저장해요."}
-              </p>
+              {isLive ? (
+                <span className="text-live mt-1 inline-flex items-center gap-1.5 text-xs font-bold">
+                  <span className="bg-live size-1.5 animate-pulse rounded-full" />
+                  지금 라이브 중
+                </span>
+              ) : (
+                <p className="text-muted-foreground mt-1 truncate text-xs font-medium">
+                  {isOwnChannel ? "내 라이브 채널" : "팔로우 중인 채널"}
+                </p>
+              )}
             </div>
           </div>
 
-          {/* 채널 페이지 도입 전까지는 라이브 시청 페이지로 이동합니다. */}
-          <Link
-            href={`/live/${creatorId}`}
-            className={cn(
-              buttonVariants({ variant: "outline", size: "sm" }),
-              "w-full justify-center gap-1.5 rounded-full font-bold",
-            )}
-          >
-            <Radio className="size-3.5" />
-            {isLive ? "라이브 보기" : "채널 보기"}
-          </Link>
+          <div className="border-border/60 bg-muted/30 flex flex-col gap-2 border-t px-3 py-3">
+            {/* 채널 페이지 도입 전까지는 라이브 시청 페이지로 이동합니다. */}
+            <Link
+              href={`/live/${creatorId}`}
+              className={cn(
+                buttonVariants({ size: "sm" }),
+                "h-8 w-full justify-center gap-1.5 rounded-full px-3 text-xs font-black",
+                isLive
+                  ? "bg-live hover:bg-live/85 shadow-live/25 text-white shadow-sm hover:shadow-md"
+                  : "border-border bg-background text-foreground hover:bg-muted border",
+              )}
+            >
+              <Radio className="size-3.5" />
+              {isLive ? "라이브 보기" : "채널 보기"}
+            </Link>
 
-          <CreatorFollowingButton
-            creatorNickname={creatorNickname}
-            isFollowing={isFollowing}
-            isOwnChannel={isOwnChannel}
-            isPending={isPending}
-            onClick={handleFollowingClick}
-            className="w-full"
-          />
+            <CreatorFollowingButton
+              creatorNickname={creatorNickname}
+              isFollowing={isFollowing}
+              isOwnChannel={isOwnChannel}
+              isPending={isPending}
+              onClick={handleFollowingClick}
+              className="w-full"
+            />
+          </div>
         </PopoverContent>
       </Popover>
 
