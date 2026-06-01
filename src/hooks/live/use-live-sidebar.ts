@@ -26,10 +26,8 @@ export function useLiveSidebar() {
       fetchLiveListSnapshot({
         filter: "ALL",
         sort: "VIEWER_COUNT_DESC",
-        viewerId,
         limit: LIVE_SIDEBAR_CHANNEL_LIMIT,
       }),
-    enabled: userQuery.isFetched,
   });
 
   const followingQuery = useInfiniteQuery({
@@ -49,7 +47,7 @@ export function useLiveSidebar() {
 
       return nextOffset;
     },
-    enabled: userQuery.isFetched && Boolean(viewerId),
+    enabled: Boolean(viewerId),
   });
 
   const keywordQuery = useQuery({

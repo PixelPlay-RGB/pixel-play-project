@@ -24,10 +24,9 @@ export function useLiveList(isPageSizeReady = true) {
       fetchLiveListSnapshot({
         filter: effectiveFilter,
         sort,
-        viewerId,
         limit: visibleCount,
       }),
-    enabled: userQuery.isFetched && isPageSizeReady,
+    enabled: isPageSizeReady,
     placeholderData: keepPreviousData,
     refetchOnMount: "always",
   });
