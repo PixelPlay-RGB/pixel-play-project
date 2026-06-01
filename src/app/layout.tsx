@@ -4,6 +4,7 @@ import RouteAccentProvider from "@/components/common/route-accent-provider";
 import RouteFooter from "@/components/common/route-footer";
 import { Toaster } from "@/components/ui/sonner";
 import Providers from "@/components/common/providers";
+import RouteOverlayChromeController from "@/components/common/route-overlay-chrome-controller";
 import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
 import { Geist_Mono, Noto_Sans_KR } from "next/font/google";
@@ -66,6 +67,7 @@ export default function RootLayout({
       <body className="bg-background dark:bg-background flex min-h-full flex-col">
         <Providers>
           <RouteAccentProvider>
+            <RouteOverlayChromeController />
             <Toaster />
             <Header />
             <AuthToastHandler />

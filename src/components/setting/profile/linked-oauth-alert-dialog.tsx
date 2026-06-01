@@ -21,6 +21,7 @@ import { QUERY_KEYS } from "@/constants/common/query-keys";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { OAuthProvider } from "@/types/auth/auth";
+import { setOAuthNextCookie } from "@/utils/auth/oauth-next";
 import { toastAppError, toastAppSuccess } from "@/utils/common/toast-message";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -51,10 +52,13 @@ export default function LinkedOAuthAlertDialog({
   const linkOAuthAction = async (provider: OAuthProvider) => {
     const supabase = createClient();
 
+    // next는 redirectTo 쿼리 대신 쿠키로 전달해 Redirect URL을 정확 일치로 유지합니다.
+    setOAuthNextCookie("/user/profile");
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=/user/profile`,
+        redirectTo: `${window.location.origin}/auth/callback`,
       },
     });
 

@@ -286,7 +286,7 @@ export async function startLiveBroadcastAction(
   const { data: broadcastId, error } = await supabase.rpc("start_live_broadcast", {
     p_actor_user_id: actor.userId,
     p_tags: parsed.data.tags,
-    p_thumbnail_url: parsed.data.thumbnailUrl ?? null,
+    p_thumbnail_url: parsed.data.thumbnailUrl ?? undefined,
     p_title: parsed.data.title,
   });
 

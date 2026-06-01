@@ -24,7 +24,7 @@ export const LANDING_LIVE_LABEL = "LIVE";
 export const LANDING_LIVE_VIEWER_TEXT = "1,240명 보는 중";
 export const LANDING_BROADCAST_TITLE = "오늘은 뭐해볼까?";
 export const LANDING_CREATOR_META = "하린 · 토크 · 32분째 방송 중";
-export const LANDING_CHAT_INPUT_PLACEHOLDER = "메시지를 입력하세요 · 5초 슬로우 모드";
+export const LANDING_CHAT_INPUT_PLACEHOLDER = "메시지를 입력하세요 · 5초 저속 모드";
 
 export const LANDING_DONATION_TEXT = {
   badge: "♥ 하린 · 5,000P",
@@ -82,14 +82,14 @@ export const LANDING_HERO_CHAT_LINES = [
 export const LANDING_TUTORIAL_STEPS = [
   {
     step: "1",
-    title: "제목과 공개 범위 확인",
-    description: "시청자에게 보일 제목과 공개 상태를 먼저 정해요.",
+    title: "제목과 태그 확인",
+    description: "시청자에게 보일 제목과 방송 태그를 먼저 정해요.",
     active: true,
   },
   {
     step: "2",
     title: "채팅 규칙 선택",
-    description: "슬로우 모드와 링크 허용 여부를 정해요.",
+    description: "저속 모드와 링크 허용 여부를 정해요.",
   },
   {
     step: "3",
@@ -118,11 +118,11 @@ export const LANDING_SECTION_TEXT = {
     kickerTone: "brand",
     titleLines: ["취향에 맞는 방송을 찾아,", "입장해보세요."],
     description:
-      "로그인은 요구하지 않아요.\n진행중인 방송을 먼저 보고,\n마음에 들면 팔로우하거나 채팅까지 이어갈수 있어요.",
+      "로그인은 요구하지 않아요.\n진행 중인 방송을 먼저 보고,\n마음에 들면 팔로잉하거나 채팅까지 이어갈 수 있어요.",
     bullets: [
       { strong: "라이브 목록", rest: "에서 지금 볼 수 있는 방송들을 한눈에 확인해요" },
       { strong: "비로그인 시청", rest: "으로 부담 없이 먼저 둘러봐요" },
-      { strong: "팔로우", rest: "로 다시 보고 싶은 크리에이터를 저장해요" },
+      { strong: "팔로잉", rest: "으로 다시 보고 싶은 크리에이터를 저장해요" },
     ],
   },
   chat: {
@@ -133,7 +133,7 @@ export const LANDING_SECTION_TEXT = {
       "방송을 보고 있는 시청자들과 소통하고,\n크리에이터는 투표를 생성할 수 있어요.\n대화를 이어가며 방송을 더 재미있게 즐겨보세요!",
     bullets: [
       { strong: "라이브 채팅방", rest: "에서 다른 시청자들과 실시간으로 소통해요" },
-      { strong: "공지 기능", rest: "으로 놓치기 쉬운 대화를 정리해요" },
+      { strong: "채팅 안내", rest: "로 입장 안내와 규칙 확인을 분리해요" },
       { strong: "투표 참여와 후원", rest: "으로 좋아하는 크리에이터를 응원해요" },
     ],
   },
@@ -144,7 +144,7 @@ export const LANDING_SECTION_TEXT = {
     description:
       "자주 쓰는 제목, 채팅 규칙을 미리 정해둘 수 있어요.\n방송을 켤 때마다 같은 설정을 다시 입력하지 않아도 됩니다.",
     bullets: [
-      { strong: "송출 기본값", rest: "으로 제목과 공개 범위를 미리 설정해요" },
+      { strong: "송출 기본값", rest: "으로 제목과 방송 태그를 미리 설정해요" },
       { strong: "스트림 키", rest: "를 사용해서 외부 서비스와 연동해요" },
       { strong: "채팅 규칙", rest: "은 저장하면 다음 메시지부터 바로 적용돼요" },
     ],
@@ -160,7 +160,7 @@ export const LANDING_SECTION_TEXT = {
     titleLines: ["라이브 중인 방송들을,", "가볍게 둘러보세요."],
     descriptionLines: [
       "당장에 보고 싶은 방송이 없어도 괜찮아요.",
-      "다양한 방송들을 둘러보다 보면 취향에 맞는 방송을 찾을 수 있을 거에요.",
+      "다양한 방송들을 둘러보다 보면 취향에 맞는 방송을 찾을 수 있을 거예요.",
     ],
   },
   finalCta: {

@@ -36,12 +36,12 @@ export default function HeaderMainNav() {
   const logoHref = resolveLogoHref(pathname, mainRoute);
 
   return (
-    <div className="flex min-w-0 items-center gap-4 sm:gap-6">
-      <Link href={logoHref} className="h-9 w-28 shrink-0 sm:w-38" aria-label="PixelPlay 홈">
+    <div className="flex min-w-0 items-center gap-2 sm:gap-6">
+      <Link href={logoHref} className="h-9 w-20 shrink-0 sm:w-38" aria-label="PixelPlay 홈">
         <Logo className="text-foreground h-full w-full [--logo-accent:var(--brand)]" />
       </Link>
 
-      <nav className="flex shrink-0 items-center gap-2" aria-label="주요 메뉴">
+      <nav className="flex shrink-0 items-center gap-1 sm:gap-2" aria-label="주요 메뉴">
         {HEADER_MAIN_TABS.map((tab) => {
           const active = isTabActive(pathname, tab.href);
 
@@ -50,10 +50,13 @@ export default function HeaderMainNav() {
               key={tab.href}
               href={tab.href}
               className={cn(
-                "route-tab-link inline-flex h-9 items-center rounded-md border px-4 text-sm font-bold transition-colors sm:px-5",
+                "route-tab-link relative inline-flex h-9 items-center rounded-md border px-2 text-sm font-bold transition-colors sm:px-5",
                 active
-                  ? "route-tab-link-active border-transparent"
-                  : "text-muted-foreground border-transparent",
+                  ? cn(
+                      "text-foreground border-transparent after:absolute after:right-2 after:bottom-1 after:left-2 after:h-0.5 after:rounded-full",
+                      "after:bg-foreground",
+                    )
+                  : "text-muted-foreground hover:text-foreground border-transparent",
               )}
             >
               {tab.label}

@@ -203,6 +203,44 @@
     background-color: #f7faf9;
   }
 
+  body.is-overlay-route {
+    background: transparent !important;
+  }
+
+  body:has(.live-overlay-root) {
+    background: transparent !important;
+  }
+
+  body.is-overlay-route .app-shell-background {
+    background: transparent !important;
+  }
+
+  body:has(.live-overlay-root) .app-shell-background {
+    background: transparent !important;
+  }
+
+  body.is-overlay-route header.sticky,
+  body.is-overlay-route footer {
+    display: none;
+  }
+
+  body:has(.live-overlay-root) header.sticky,
+  body:has(.live-overlay-root) footer {
+    display: none;
+  }
+
+  body.is-overlay-route main {
+    min-height: 100dvh;
+  }
+
+  body:has(.live-overlay-root) main {
+    min-height: 100dvh;
+  }
+
+  .live-chat-overlay-stack {
+    mask-image: linear-gradient(to bottom, transparent 0, black 42px, black 100%);
+  }
+
   .dark .app-shell-background {
     background-color: #0d1117;
   }
@@ -241,13 +279,13 @@
   }
 
   .route-tab-link:hover {
-    background-color: rgb(70 198 169 / 10%);
-    color: #159a80;
+    background-color: transparent;
+    color: var(--foreground);
   }
 
   .dark .route-tab-link:hover {
-    background-color: rgb(70 198 169 / 18%);
-    color: var(--brand);
+    background-color: transparent;
+    color: var(--foreground);
   }
 
   .route-tab-link {
@@ -255,13 +293,13 @@
   }
 
   .route-tab-link-active {
-    background-color: rgb(70 198 169 / 14%);
-    color: #159a80;
+    background-color: transparent;
+    color: var(--foreground);
   }
 
   .dark .route-tab-link-active {
-    background-color: rgb(70 198 169 / 18%);
-    color: var(--brand);
+    background-color: transparent;
+    color: var(--foreground);
   }
 
   .route-accent-hover:hover {
@@ -297,6 +335,24 @@
 
   .route-accent-surface:hover {
     background-color: color-mix(in oklch, var(--route-accent) 11%, transparent);
+  }
+
+  .side-tip-card {
+    border-color: color-mix(in oklch, var(--brand) 20%, transparent);
+    background: linear-gradient(
+      135deg,
+      color-mix(in oklch, var(--brand) 10%, transparent),
+      color-mix(in oklch, var(--live) 6%, transparent)
+    );
+  }
+
+  .dark .side-tip-card {
+    border-color: color-mix(in oklch, var(--brand) 30%, transparent);
+    background: linear-gradient(
+      135deg,
+      color-mix(in oklch, var(--brand) 14%, transparent),
+      color-mix(in oklch, var(--live) 10%, transparent)
+    );
   }
 
   .route-accent-border {
