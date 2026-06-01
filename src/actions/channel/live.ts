@@ -4,6 +4,7 @@
 import { getAuthenticatedActorId } from "@/actions/common/authenticated-actor";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { createAdminClient } from "@/lib/supabase/admin-client";
+import { createClient } from "@/lib/supabase/server";
 import {
   startLiveBroadcastSchema,
   type StartLiveBroadcastInput,
@@ -17,6 +18,14 @@ import { revalidatePath } from "next/cache";
 interface EndLiveBroadcastInput {
   broadcastId: string;
 }
+
+const LIVE_THUMBNAIL_BUCKET = "live-thumbnails";
+const LIVE_THUMBNAIL_MAX_BYTES = 5 * 1024 * 1024;
+const LIVE_THUMBNAIL_EXTENSION_BY_TYPE: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+};
 
 export interface ChannelLiveActiveBroadcast {
   id: string;
@@ -91,6 +100,10 @@ function readStringArray(value: unknown) {
   return Array.isArray(value)
     ? value.filter((item): item is string => typeof item === "string")
     : [];
+}
+
+function getLiveThumbnailExtension(file: File) {
+  return LIVE_THUMBNAIL_EXTENSION_BY_TYPE[file.type] ?? null;
 }
 
 function createDefaultSettings(): ChannelLiveStudioSettings {
@@ -300,6 +313,56 @@ export async function startLiveBroadcastAction(
   return {
     success: true,
     data: { broadcastId },
+  };
+}
+
+export async function uploadChannelLiveThumbnailAction(
+  file: File,
+): Promise<AppActionResult<{ thumbnailUrl: string }>> {
+  if (!file || file.size === 0 || file.size > LIVE_THUMBNAIL_MAX_BYTES) {
+    return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
+  }
+
+  const extension = getLiveThumbnailExtension(file);
+
+  if (!extension) {
+    return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
+  }
+
+  const actor = await getAuthenticatedActorId({
+    logLabel: "諛⑹넚 誘몃━蹂닿린 ?대?吏 ?낅줈??以??몄쬆 ?좎? 議고쉶 ?ㅽ뙣",
+  });
+
+  if (!actor.success) {
+    return { success: false, code: actor.result.code };
+  }
+
+  const supabase = await createClient();
+  const filePath = `${actor.userId}/${Date.now()}-${globalThis.crypto.randomUUID()}.${extension}`;
+  const { error: uploadError } = await supabase.storage
+    .from(LIVE_THUMBNAIL_BUCKET)
+    .upload(filePath, file, {
+      cacheControl: "3600",
+      contentType: file.type,
+      upsert: false,
+    });
+
+  if (uploadError) {
+    console.error("諛⑹넚 誘몃━蹂닿린 ?대?吏 Storage ?낅줈???ㅽ뙣", uploadError);
+    return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
+  }
+
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from(LIVE_THUMBNAIL_BUCKET).getPublicUrl(filePath);
+
+  if (!publicUrl) {
+    return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
+  }
+
+  return {
+    success: true,
+    data: { thumbnailUrl: publicUrl },
   };
 }
 

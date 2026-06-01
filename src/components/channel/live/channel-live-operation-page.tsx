@@ -6,6 +6,7 @@ import {
   startLiveBroadcastAction,
   type ChannelLiveStudioSnapshot,
   updateChannelLiveSettingsAction,
+  uploadChannelLiveThumbnailAction,
 } from "@/actions/channel/live";
 import ChannelLiveChatPanel from "@/components/channel/live/channel-live-chat-panel";
 import ChannelLivePreviewPanel from "@/components/channel/live/channel-live-preview-panel";
@@ -81,6 +82,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
     activeBroadcast?.thumbnailUrl ?? "",
   );
   const [thumbnailPreviewName, setThumbnailPreviewName] = useState("");
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [chatScope, setChatScope] = useState<ChannelLiveChatScope>(
     initialSettings?.chatScope ?? "authenticated",
   );
@@ -135,11 +137,13 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
   const handleThumbnailFileChange = (file: File) => {
     if (!file.type.startsWith("image/")) return;
 
+    setThumbnailFile(file);
     setThumbnailPreviewUrl(URL.createObjectURL(file));
     setThumbnailPreviewName(file.name);
   };
 
   const handleThumbnailRemove = () => {
+    setThumbnailFile(null);
     setThumbnailPreviewUrl("");
     setThumbnailPreviewName("");
   };
@@ -147,9 +151,21 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
   const handleStartBroadcast = () => {
     setBroadcastActionError(null);
     startBroadcastTransition(async () => {
-      const persistedThumbnailUrl = /^https?:\/\//.test(thumbnailPreviewUrl.trim())
+      let persistedThumbnailUrl = /^https?:\/\//.test(thumbnailPreviewUrl.trim())
         ? thumbnailPreviewUrl.trim()
         : null;
+
+      if (thumbnailFile) {
+        const uploadResult = await uploadChannelLiveThumbnailAction(thumbnailFile);
+
+        if (!uploadResult.success || !uploadResult.data?.thumbnailUrl) {
+          setBroadcastActionError("미리보기 이미지를 업로드하지 못했습니다.");
+          return;
+        }
+
+        persistedThumbnailUrl = uploadResult.data.thumbnailUrl;
+      }
+
       const result = await startLiveBroadcastAction({
         tags,
         thumbnailUrl: persistedThumbnailUrl,
@@ -165,6 +181,12 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
       setBroadcastStartedAt(new Date().toISOString());
       setIsBroadcasting(true);
       setHasEnded(false);
+      setThumbnailFile(null);
+
+      if (persistedThumbnailUrl) {
+        setThumbnailPreviewUrl(persistedThumbnailUrl);
+        setThumbnailPreviewName("");
+      }
     });
   };
 
