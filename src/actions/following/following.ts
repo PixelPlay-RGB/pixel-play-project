@@ -28,7 +28,7 @@ function createFollowingFailureResult(
 export async function followCreatorAction({
   creatorId,
 }: ToggleCreatorFollowingActionInput): Promise<AppActionResult> {
-  if (!creatorId) {
+  if (!creatorId.trim()) {
     return {
       success: false,
       code: APP_MESSAGE_CODE.error.following.failed,
@@ -66,7 +66,7 @@ export async function followCreatorAction({
 export async function unfollowCreatorAction({
   creatorId,
 }: ToggleCreatorFollowingActionInput): Promise<AppActionResult> {
-  if (!creatorId) {
+  if (!creatorId.trim()) {
     return {
       success: false,
       code: APP_MESSAGE_CODE.error.following.unfollowFailed,

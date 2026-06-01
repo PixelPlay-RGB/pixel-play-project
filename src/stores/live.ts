@@ -61,10 +61,10 @@ export const useLiveStore = create<LiveState>()(
         ),
       setPageSize: (pageSize) =>
         set(
-          {
+          (state) => ({
             pageSize,
-            visibleCount: pageSize,
-          },
+            visibleCount: Math.max(state.visibleCount, pageSize),
+          }),
           false,
           "live/setPageSize",
         ),

@@ -40,9 +40,9 @@ export function buildChannelSecurityVersionResult(
 
   const tokenKind = readTokenKind(object.tokenKind);
   const version = readStrictVersion(object.version);
-  const snapshot = object.snapshot;
+  const snapshot = readObject(object.snapshot);
 
-  if (!tokenKind || version === null || snapshot === undefined) {
+  if (!tokenKind || version === null || !snapshot) {
     throw new Error("채널 보안 토큰 재발급 응답 필드 오류");
   }
 

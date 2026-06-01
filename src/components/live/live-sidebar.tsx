@@ -30,6 +30,8 @@ import {
 import { useLiveSidebar } from "@/hooks/live/use-live-sidebar";
 import { useLiveStore } from "@/stores/live";
 
+const SIDEBAR_EMPTY_STATE_CLASS = "text-muted-foreground px-2 py-2 text-xs leading-relaxed";
+
 interface LiveSidebarProps {
   isMobile?: boolean;
 }
@@ -135,9 +137,7 @@ export default function LiveSidebar({ isMobile }: LiveSidebarProps) {
                     ) : null}
                   </>
                 ) : (
-                  <p className="text-muted-foreground px-2 py-2 text-xs leading-relaxed">
-                    아직 팔로잉한 채널이 없어요.
-                  </p>
+                  <p className={SIDEBAR_EMPTY_STATE_CLASS}>아직 팔로잉한 채널이 없어요.</p>
                 )}
               </SidebarMenu>
             </LiveSidebarSection>
@@ -158,9 +158,7 @@ export default function LiveSidebar({ isMobile }: LiveSidebarProps) {
                 <LiveSidebarChannelItem key={`trending-${item.id}`} item={item} />
               ))
             ) : (
-              <p className="text-muted-foreground px-2 py-2 text-xs leading-relaxed">
-                아직 뜨는 채널을 찾는 중이에요.
-              </p>
+              <p className={SIDEBAR_EMPTY_STATE_CLASS}>아직 뜨는 채널을 찾는 중이에요.</p>
             )}
           </SidebarMenu>
         </LiveSidebarSection>
@@ -177,9 +175,7 @@ export default function LiveSidebar({ isMobile }: LiveSidebarProps) {
             ) : keywordItems.length > 0 ? (
               keywordItems.map((item) => <LiveSidebarKeywordItem key={item.keyword} item={item} />)
             ) : (
-              <p className="text-muted-foreground px-2 py-2 text-xs leading-relaxed">
-                아직 인기 키워드가 없어요.
-              </p>
+              <p className={SIDEBAR_EMPTY_STATE_CLASS}>아직 인기 키워드가 없어요.</p>
             )}
           </SidebarMenu>
         </LiveSidebarSection>
