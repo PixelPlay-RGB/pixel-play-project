@@ -29,13 +29,18 @@ export const CHANNEL_STUDIO_SETTINGS_FALLBACK: ChannelLiveStudioSettings = {
 };
 
 export const FOLLOWER_WAIT_OPTIONS = [
-  { label: "바로", value: 0 },
   { label: "5분", value: 300 },
   { label: "10분", value: 600 },
   { label: "30분", value: 1800 },
   { label: "1시간", value: 3600 },
   { label: "1일", value: 86400 },
-  { label: "7일", value: 604800 },
+  { label: "1주일", value: 604800 },
+  { label: "1개월", value: 2592000 },
+  { label: "2개월", value: 5184000 },
+  { label: "3개월", value: 7776000 },
+  { label: "4개월", value: 10368000 },
+  { label: "5개월", value: 12960000 },
+  { label: "6개월", value: 15552000 },
 ];
 
 export const SLOW_MODE_OPTIONS = [3, 5, 10, 30, 60, 120, 300];
@@ -73,8 +78,9 @@ export function formatSecondsLabel(seconds: number) {
   if (seconds < 60) return `${seconds}초`;
   if (seconds < 3600) return `${seconds / 60}분`;
   if (seconds < 86400) return `${seconds / 3600}시간`;
+  if (seconds < 2592000) return `${seconds / 86400}일`;
 
-  return `${seconds / 86400}일`;
+  return `${seconds / 2592000}개월`;
 }
 
 export function formatWon(amount: number) {
