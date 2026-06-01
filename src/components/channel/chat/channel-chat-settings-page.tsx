@@ -143,7 +143,7 @@ export default function ChannelChatSettingsPage({ initialSnapshot }: Props) {
         </div>
       )}
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+      <div className="mx-auto grid w-full max-w-3xl gap-4">
         <Card>
           <CardHeader>
             <CardTitle>채팅 접근</CardTitle>
@@ -308,7 +308,7 @@ export default function ChannelChatSettingsPage({ initialSnapshot }: Props) {
         </Card>
       </div>
 
-      <div className="flex justify-end">
+      <div className="mx-auto flex w-full max-w-3xl justify-end">
         <Button type="button" onClick={handleSave} disabled={isPending}>
           <Save className="size-4" />
           설정 저장
