@@ -80,4 +80,8 @@ export const QUERY_KEYS = {
     search: (query?: string, section?: string) =>
       [...QUERY_KEYS.live.searchAll(), query, section].filter((v) => v !== undefined),
   },
+  following: {
+    all: ["following"] as const,
+    page: (userId?: string) => [...QUERY_KEYS.following.all, "page", userId ?? "public"],
+  },
 } as const;
