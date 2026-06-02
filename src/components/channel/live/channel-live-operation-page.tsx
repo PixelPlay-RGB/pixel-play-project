@@ -3,6 +3,7 @@
 
 import {
   endLiveBroadcastAction,
+  saveChannelLiveThumbnailAction,
   startLiveBroadcastAction,
   type ChannelLiveStudioSnapshot,
   updateChannelLiveSettingsAction,
@@ -83,6 +84,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
   );
   const [thumbnailPreviewName, setThumbnailPreviewName] = useState("");
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [isThumbnailRemoved, setIsThumbnailRemoved] = useState(false);
   const [chatScope, setChatScope] = useState<ChannelLiveChatScope>(
     initialSettings?.chatScope ?? "authenticated",
   );
@@ -138,12 +140,14 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
     if (!file.type.startsWith("image/")) return;
 
     setThumbnailFile(file);
+    setIsThumbnailRemoved(false);
     setThumbnailPreviewUrl(URL.createObjectURL(file));
     setThumbnailPreviewName(file.name);
   };
 
   const handleThumbnailRemove = () => {
     setThumbnailFile(null);
+    setIsThumbnailRemoved(true);
     setThumbnailPreviewUrl("");
     setThumbnailPreviewName("");
   };
@@ -182,6 +186,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
       setIsBroadcasting(true);
       setHasEnded(false);
       setThumbnailFile(null);
+      setIsThumbnailRemoved(false);
 
       if (persistedThumbnailUrl) {
         setThumbnailPreviewUrl(persistedThumbnailUrl);
@@ -249,6 +254,24 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
       if (!result.success || !result.data) {
         setSettingsActionMessage("방송 설정을 저장하지 못했습니다.");
         return;
+      }
+
+      if (broadcastId && (thumbnailFile || isThumbnailRemoved)) {
+        const thumbnailResult = await saveChannelLiveThumbnailAction({
+          broadcastId,
+          file: thumbnailFile,
+          shouldRemove: isThumbnailRemoved,
+        });
+
+        if (!thumbnailResult.success || !thumbnailResult.data) {
+          setSettingsActionMessage("미리보기 이미지를 저장하지 못했습니다.");
+          return;
+        }
+
+        setThumbnailPreviewUrl(thumbnailResult.data.thumbnailUrl ?? "");
+        setThumbnailPreviewName("");
+        setThumbnailFile(null);
+        setIsThumbnailRemoved(false);
       }
 
       setChatRuleText(result.data.settings.chatRuleText);

@@ -4,7 +4,6 @@
 import { getAuthenticatedActorId } from "@/actions/common/authenticated-actor";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { createAdminClient } from "@/lib/supabase/admin-client";
-import { createClient } from "@/lib/supabase/server";
 import {
   startLiveBroadcastSchema,
   type StartLiveBroadcastInput,
@@ -17,6 +16,12 @@ import { revalidatePath } from "next/cache";
 
 interface EndLiveBroadcastInput {
   broadcastId: string;
+}
+
+interface SaveLiveThumbnailInput {
+  broadcastId: string | null;
+  file?: File | null;
+  shouldRemove: boolean;
 }
 
 const LIVE_THUMBNAIL_BUCKET = "live-thumbnails";
@@ -126,6 +131,92 @@ function readMetadataString(value: Json | undefined) {
 
 function getLiveThumbnailExtension(file: File) {
   return LIVE_THUMBNAIL_EXTENSION_BY_TYPE[file.type] ?? null;
+}
+
+function isValidLiveThumbnailFile(file: File | null | undefined) {
+  return Boolean(
+    file &&
+    file.size > 0 &&
+    file.size <= LIVE_THUMBNAIL_MAX_BYTES &&
+    getLiveThumbnailExtension(file),
+  );
+}
+
+function getLiveThumbnailFilePath(userId: string, extension: string) {
+  return `${userId}/thumbnail.${extension}`;
+}
+
+function appendCacheBuster(url: string) {
+  return `${url}?t=${Date.now()}`;
+}
+
+async function removeLiveThumbnailFiles(
+  supabase: ReturnType<typeof createAdminClient>,
+  userId: string,
+) {
+  const { data: files, error: listError } = await supabase.storage
+    .from(LIVE_THUMBNAIL_BUCKET)
+    .list(userId);
+
+  if (listError) {
+    console.error("방송 미리보기 이미지 목록 조회 실패", listError);
+    return false;
+  }
+
+  const filePaths = (files ?? [])
+    .filter((file) => file.name)
+    .map((file) => `${userId}/${file.name}`);
+
+  if (filePaths.length === 0) {
+    return true;
+  }
+
+  const { error: removeError } = await supabase.storage
+    .from(LIVE_THUMBNAIL_BUCKET)
+    .remove(filePaths);
+
+  if (removeError) {
+    console.error("방송 미리보기 이미지 삭제 실패", removeError);
+    return false;
+  }
+
+  return true;
+}
+
+async function uploadLiveThumbnailFile(
+  supabase: ReturnType<typeof createAdminClient>,
+  userId: string,
+  file: File,
+) {
+  if (!isValidLiveThumbnailFile(file)) {
+    return null;
+  }
+
+  const extension = getLiveThumbnailExtension(file);
+
+  if (!extension) {
+    return null;
+  }
+
+  const filePath = getLiveThumbnailFilePath(userId, extension);
+  const { error: uploadError } = await supabase.storage
+    .from(LIVE_THUMBNAIL_BUCKET)
+    .upload(filePath, file, {
+      cacheControl: "3600",
+      contentType: file.type,
+      upsert: false,
+    });
+
+  if (uploadError) {
+    console.error("방송 미리보기 이미지 업로드 실패", uploadError);
+    return null;
+  }
+
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from(LIVE_THUMBNAIL_BUCKET).getPublicUrl(filePath);
+
+  return publicUrl ? appendCacheBuster(publicUrl) : null;
 }
 
 function createDefaultSettings(): ChannelLiveStudioSettings {
@@ -396,16 +487,6 @@ export async function startLiveBroadcastAction(
 export async function uploadChannelLiveThumbnailAction(
   file: File,
 ): Promise<AppActionResult<{ thumbnailUrl: string }>> {
-  if (!file || file.size === 0 || file.size > LIVE_THUMBNAIL_MAX_BYTES) {
-    return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
-  }
-
-  const extension = getLiveThumbnailExtension(file);
-
-  if (!extension) {
-    return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
-  }
-
   const actor = await getAuthenticatedActorId({
     logLabel: "諛⑹넚 誘몃━蹂닿린 ?대?吏 ?낅줈??以??몄쬆 ?좎? 議고쉶 ?ㅽ뙣",
   });
@@ -414,32 +495,90 @@ export async function uploadChannelLiveThumbnailAction(
     return { success: false, code: actor.result.code };
   }
 
-  const supabase = await createClient();
-  const filePath = `${actor.userId}/${Date.now()}-${globalThis.crypto.randomUUID()}.${extension}`;
-  const { error: uploadError } = await supabase.storage
-    .from(LIVE_THUMBNAIL_BUCKET)
-    .upload(filePath, file, {
-      cacheControl: "3600",
-      contentType: file.type,
-      upsert: false,
-    });
+  const supabase = createAdminClient();
+  const isValidFile = isValidLiveThumbnailFile(file);
 
-  if (uploadError) {
-    console.error("諛⑹넚 誘몃━蹂닿린 ?대?吏 Storage ?낅줈???ㅽ뙣", uploadError);
+  if (!isValidFile) {
     return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
   }
 
-  const {
-    data: { publicUrl },
-  } = supabase.storage.from(LIVE_THUMBNAIL_BUCKET).getPublicUrl(filePath);
+  const didRemoveExistingFiles = await removeLiveThumbnailFiles(supabase, actor.userId);
 
-  if (!publicUrl) {
+  if (!didRemoveExistingFiles) {
+    return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
+  }
+
+  const thumbnailUrl = await uploadLiveThumbnailFile(supabase, actor.userId, file);
+
+  if (!thumbnailUrl) {
     return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
   }
 
   return {
     success: true,
-    data: { thumbnailUrl: publicUrl },
+    data: { thumbnailUrl },
+  };
+}
+
+export async function saveChannelLiveThumbnailAction({
+  broadcastId,
+  file,
+  shouldRemove,
+}: SaveLiveThumbnailInput): Promise<AppActionResult<{ thumbnailUrl: string | null }>> {
+  if (!broadcastId) {
+    return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
+  }
+
+  const actor = await getAuthenticatedActorId({
+    logLabel: "방송 미리보기 이미지 저장 중 인증 사용자 조회 실패",
+  });
+
+  if (!actor.success) {
+    return { success: false, code: actor.result.code };
+  }
+
+  const supabase = createAdminClient();
+  let thumbnailUrl: string | null = null;
+
+  if (file && !isValidLiveThumbnailFile(file)) {
+    return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
+  }
+
+  if (shouldRemove || file) {
+    const didRemoveExistingFiles = await removeLiveThumbnailFiles(supabase, actor.userId);
+
+    if (!didRemoveExistingFiles) {
+      return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
+    }
+  }
+
+  if (!shouldRemove && file) {
+    thumbnailUrl = await uploadLiveThumbnailFile(supabase, actor.userId, file);
+
+    if (!thumbnailUrl) {
+      return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
+    }
+  }
+
+  const { data, error } = await supabase
+    .from("live_broadcast")
+    .update({ thumbnail_url: thumbnailUrl })
+    .eq("id", broadcastId)
+    .eq("creator_id", actor.userId)
+    .is("ended_at", null)
+    .select("thumbnail_url")
+    .maybeSingle();
+
+  if (error || !data) {
+    console.error("방송 미리보기 이미지 DB 저장 실패", error);
+    return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
+  }
+
+  revalidatePath("/channel/live");
+
+  return {
+    success: true,
+    data: { thumbnailUrl: data.thumbnail_url },
   };
 }
 
