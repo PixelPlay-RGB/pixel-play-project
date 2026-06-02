@@ -20,10 +20,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { useCommunityPostDetail } from "@/hooks/community/use-community-post-detail";
 import { useDeleteCommunityPost } from "@/hooks/community/use-delete-community-post";
+import { cn } from "@/lib/utils";
 import type { CommunityCommentsResult, CommunityPostDetail } from "@/types/community/community";
 import { formatRelativeTime } from "@/utils/common/format";
 import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
@@ -118,17 +119,16 @@ export default function CommunityPostDetailView({
 
         {isChannelOwner && (
           <div className="flex items-center gap-1.5">
-            <Button
-              variant="outline"
-              size="sm"
-              render={
-                <Link href={`${communityHref}/write?postId=${detail.id}`}>
-                  <Pencil className="size-3.5" />
-                  수정
-                </Link>
-              }
-              className="h-8 rounded-lg px-2.5 text-xs font-semibold"
-            />
+            <Link
+              href={`${communityHref}/write?postId=${detail.id}`}
+              className={cn(
+                buttonVariants({ variant: "outline", size: "sm" }),
+                "h-8 rounded-lg px-2.5 text-xs font-semibold",
+              )}
+            >
+              <Pencil className="size-3.5" />
+              수정
+            </Link>
             <Button
               variant="outline"
               size="sm"

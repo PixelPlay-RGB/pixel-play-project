@@ -8,10 +8,11 @@ import { useState } from "react";
 import ChatRoomListPagination from "@/components/chat-room-list/chat-room-list-pagination";
 import CommunityEmptyState from "@/components/community/community-empty-state";
 import CommunityPostList from "@/components/community/community-post-list";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { COMMUNITY_POST_PAGE_SIZE } from "@/constants/community/community";
 import { useCommunityPosts } from "@/hooks/community/use-community-posts";
+import { cn } from "@/lib/utils";
 import type { CommunityPostsResult } from "@/types/community/community";
 
 interface Props {
@@ -38,15 +39,16 @@ export default function CommunityBoard({ creatorId, isOwner, initialData }: Prop
         </h2>
 
         {isOwner && (
-          <Button
-            render={
-              <Link href={`/channel/${creatorId}/community/write`}>
-                <PenLine className="size-4" />
-                글쓰기
-              </Link>
-            }
-            className="bg-brand hover:bg-brand/85 h-9 rounded-xl px-4 text-sm font-bold text-white"
-          />
+          <Link
+            href={`/channel/${creatorId}/community/write`}
+            className={cn(
+              buttonVariants(),
+              "bg-brand hover:bg-brand/85 h-9 rounded-xl px-4 text-sm font-bold text-white",
+            )}
+          >
+            <PenLine className="size-4" />
+            글쓰기
+          </Link>
         )}
       </div>
 
