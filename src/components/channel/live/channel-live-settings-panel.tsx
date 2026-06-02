@@ -151,7 +151,7 @@ export default function ChannelLiveSettingsPanel({
           </div>
         </div>
 
-        <div className="grid items-start gap-4 lg:grid-cols-2">
+        <div className="grid items-stretch gap-4 lg:grid-cols-2">
           {secondaryPanel}
 
           <section className="flex min-w-0 flex-col gap-3">
@@ -159,7 +159,7 @@ export default function ChannelLiveSettingsPanel({
               <ImageIcon className="text-brand size-4" />
               <h3 className="text-foreground text-sm font-bold">미리보기 이미지</h3>
             </div>
-            <div className="border-border bg-muted/40 flex flex-col rounded-xl border p-4">
+            <div className="border-border bg-muted/40 flex flex-1 flex-col rounded-xl border p-4">
               <input
                 ref={thumbnailInputRef}
                 className="sr-only"
