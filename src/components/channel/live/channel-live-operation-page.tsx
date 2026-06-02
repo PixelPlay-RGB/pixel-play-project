@@ -369,7 +369,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
           />
         </div>
 
-        <div className="min-w-0 xl:sticky xl:top-4 xl:self-start">
+        <div className="min-w-0 xl:sticky xl:top-0 xl:self-start">
           <ChannelLiveChatPanel
             key={broadcastId ?? "channel-live-chat-idle"}
             broadcastId={broadcastId}
