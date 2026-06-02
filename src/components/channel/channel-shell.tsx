@@ -5,6 +5,8 @@ import ChannelSidebar from "@/components/channel/channel-sidebar";
 import { SidebarAutoClose } from "@/components/common/sidebar-auto-close";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/common/use-mobile";
+import { cn } from "@/lib/utils";
+import { usePathname } from "next/navigation";
 import { ReactNode, useEffect, useState } from "react";
 
 interface Props {
@@ -13,7 +15,9 @@ interface Props {
 
 export default function ChannelShell({ children }: Props) {
   const isMobile = useIsMobile();
+  const pathname = usePathname();
   const [isMounted, setIsMounted] = useState(false);
+  const isLiveOperationRoute = pathname === "/channel/live";
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -33,7 +37,14 @@ export default function ChannelShell({ children }: Props) {
             <span className="text-foreground text-sm font-semibold">채널 관리</span>
           </div>
         )}
-        <div className="h-full min-w-0 overflow-auto p-6 md:p-10">{children}</div>
+        <div
+          className={cn(
+            "h-full min-w-0 overflow-auto p-6 md:p-10",
+            isLiveOperationRoute && "xl:overflow-hidden",
+          )}
+        >
+          {children}
+        </div>
       </SidebarInset>
     </SidebarProvider>
   );

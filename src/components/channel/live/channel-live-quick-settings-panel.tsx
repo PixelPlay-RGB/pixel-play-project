@@ -103,7 +103,7 @@ export default function ChannelLiveQuickSettingsPanel({
   onTtsEnabledChange,
 }: Props) {
   return (
-    <Card className="flex min-h-144 flex-col gap-5 py-6 shadow-sm xl:h-full xl:min-h-0">
+    <Card className="flex min-h-144 flex-col gap-5 py-6 shadow-sm xl:min-h-full">
       <CardHeader className="gap-2 px-5 sm:px-6">
         <CardTitle>빠른 설정</CardTitle>
       </CardHeader>
