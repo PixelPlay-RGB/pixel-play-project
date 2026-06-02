@@ -53,7 +53,9 @@ export function useToggleCommunityPostLike(postId: string) {
       await queryClient.cancelQueries({ queryKey: postsKey });
 
       const postSnapshot = queryClient.getQueryData<CommunityPostDetail>(postKey);
-      const listSnapshots = queryClient.getQueriesData<CommunityPostsResult>({ queryKey: postsKey });
+      const listSnapshots = queryClient.getQueriesData<CommunityPostsResult>({
+        queryKey: postsKey,
+      });
 
       queryClient.setQueryData<CommunityPostDetail>(postKey, (data) =>
         applyLikeToPostDetail(data, postId, next),
