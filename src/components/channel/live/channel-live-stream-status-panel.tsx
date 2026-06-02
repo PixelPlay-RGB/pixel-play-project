@@ -3,7 +3,6 @@
 
 import type { ChannelLiveState } from "@/components/channel/live/channel-live-operation-page";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
 import type { ChannelLiveStreamStatusResponse } from "@/types/channel/channel-live-stream";
 import { Radio } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -225,17 +224,7 @@ export default function ChannelLiveStreamStatusPanel({
   if (variant === "embedded") {
     return (
       <section className="flex min-w-0 flex-col gap-3">
-        <div className="flex items-center justify-between gap-3">
-          <h3 className="text-foreground text-sm font-bold">스트림 상태</h3>
-          <span
-            className={cn(
-              "rounded-full px-2.5 py-1 text-xs font-bold",
-              isOnline ? "bg-brand/10 text-brand" : "bg-muted text-muted-foreground",
-            )}
-          >
-            {getStatusLabel(streamStatus)}
-          </span>
-        </div>
+        <h3 className="text-foreground text-sm font-bold">스트림 상태</h3>
         {content}
       </section>
     );

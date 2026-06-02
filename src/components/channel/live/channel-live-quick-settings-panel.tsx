@@ -101,11 +101,11 @@ export default function ChannelLiveQuickSettingsPanel({
   onTtsEnabledChange,
 }: Props) {
   return (
-    <Card className="gap-5 py-6 shadow-sm xl:sticky xl:top-4">
+    <Card className="flex min-h-160 flex-col gap-5 py-6 shadow-sm xl:sticky xl:top-4 xl:h-[calc(100vh-2rem)] xl:min-h-0">
       <CardHeader className="gap-2 px-5 sm:px-6">
         <CardTitle>빠른 설정</CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-col gap-5 px-5 sm:px-6">
+      <CardContent className="flex flex-1 flex-col gap-5 px-5 sm:px-6">
         <QuickSettingSection title="채팅">
           <QuickSettingRow
             checked={isSlowModeEnabled}
