@@ -8,6 +8,7 @@ export const dynamic = "force-dynamic";
 const DEFAULT_MEDIAMTX_API_BASE_URL = "http://3.34.211.173:9997";
 const MEDIAMTX_API_BASE_URL = process.env.MEDIAMTX_API_BASE_URL ?? DEFAULT_MEDIAMTX_API_BASE_URL;
 const REQUEST_TIMEOUT_MS = 3000;
+const DEFAULT_CONFIGURED_FPS = 30;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -117,7 +118,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       checkedAt: new Date().toISOString(),
-      fps: null,
+      // MediaMTX Control API does not expose live FPS, so show the baseline OBS setting.
+      fps: isOnline ? DEFAULT_CONFIGURED_FPS : null,
       height,
       inboundBytes: readNumber(pathData.inboundBytes),
       onlineTime: isOnline ? readString(pathData.onlineTime) : null,
