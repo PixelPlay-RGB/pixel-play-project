@@ -1,0 +1,32 @@
+"use client";
+// 게시글 삭제 mutation(하드 딜리트). 성공 시 목록 캐시를 무효화합니다.
+
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+
+import { deleteCommunityPostAction } from "@/actions/community/community";
+import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
+import { QUERY_KEYS } from "@/constants/common/query-keys";
+import type { AppActionResult } from "@/types/common/action";
+import { toastAppError, toastAppSuccess } from "@/utils/common/toast-message";
+
+export function useDeleteCommunityPost(postId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation<AppActionResult, Error, void>({
+    mutationFn: () => deleteCommunityPostAction(postId),
+    onSuccess: (result) => {
+      if (!result.success) {
+        toastAppError(result.code ?? APP_MESSAGE_CODE.error.community.postDeleteFailed);
+        return;
+      }
+
+      toastAppSuccess(APP_MESSAGE_CODE.success.community.postDeleted);
+      queryClient.removeQueries({ queryKey: QUERY_KEYS.community.post(postId) });
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.community.postsAll() });
+    },
+    onError: (error) => {
+      console.error("커뮤니티 게시글 삭제 실패", error);
+      toastAppError(APP_MESSAGE_CODE.error.community.postDeleteFailed);
+    },
+  });
+}

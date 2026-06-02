@@ -8,11 +8,16 @@ import { communityCommentContentSchema, communityPostContentSchema } from "@/lib
 import type { AppActionResult } from "@/types/common/action";
 import type {
   CommunityCommentsResult,
+  CommunityPostDetail,
   CommunityPostLikeResult,
   CommunityPostsResult,
 } from "@/types/community/community";
 import { parseCommunityPostLikeResult } from "@/utils/community/community-parser";
-import { getChannelCommunityPosts, getCommunityComments } from "@/utils/community/community-server";
+import {
+  getChannelCommunityPosts,
+  getCommunityComments,
+  getCommunityPostDetail,
+} from "@/utils/community/community-server";
 
 // 게시글 목록 페이지네이션(클라이언트 "더보기")
 export async function fetchChannelCommunityPostsAction(
@@ -20,6 +25,13 @@ export async function fetchChannelCommunityPostsAction(
   page: number,
 ): Promise<AppActionResult<CommunityPostsResult>> {
   return getChannelCommunityPosts(creatorId, page);
+}
+
+// 게시글 단건 조회(클라이언트 갱신용)
+export async function fetchCommunityPostDetailAction(
+  postId: string,
+): Promise<AppActionResult<CommunityPostDetail>> {
+  return getCommunityPostDetail(postId);
 }
 
 // 댓글 목록 페이지네이션
