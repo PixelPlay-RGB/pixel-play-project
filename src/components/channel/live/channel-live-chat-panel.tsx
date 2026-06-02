@@ -92,7 +92,7 @@ export default function ChannelLiveChatPanel({
   }, [broadcastId]);
 
   return (
-    <Card className="flex min-h-144 flex-1 flex-col xl:h-[calc(100vh-6rem)] xl:min-h-0">
+    <Card className="flex min-h-144 flex-1 flex-col xl:h-full xl:min-h-0">
       <CardHeader className="has-data-[slot=card-action]:grid-cols-[1fr_auto]">
         <div className="flex flex-col gap-1">
           <CardTitle>방송 채팅</CardTitle>
