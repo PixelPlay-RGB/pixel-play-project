@@ -16,10 +16,12 @@ import { PixelPlayPlayIcon } from "./pixel-play-play-icon";
 
 export function LiveDonationAlertOverlay({
   initialSnapshot,
+  isPreview = false,
 }: {
   initialSnapshot: LiveDonationAlertOverlaySnapshot;
+  isPreview?: boolean;
 }) {
-  const { donation, isVisible } = useLiveDonationAlertOverlay(initialSnapshot);
+  const { donation, isVisible } = useLiveDonationAlertOverlay(initialSnapshot, { isPreview });
   const donorLabel = formatDonationDonorLabel(donation?.donorName);
   const formattedAmount = donation?.amount.toLocaleString("ko-KR");
 
@@ -93,7 +95,7 @@ export function LiveDonationAlertOverlay({
                     variants={liveDonationAlertTextVariants}
                     initial="hidden"
                     animate="visible"
-                    className="max-w-112 text-xl leading-7 font-semibold wrap-break-word text-zinc-200 sm:max-w-120 sm:text-2xl sm:leading-8"
+                    className="max-w-md text-xl leading-7 font-semibold break-words whitespace-pre-line wrap-break-word text-zinc-200 sm:max-w-120 sm:text-2xl sm:leading-8"
                   >
                     {donation.message}
                   </motion.p>
@@ -103,6 +105,14 @@ export function LiveDonationAlertOverlay({
           </motion.section>
         ) : null}
       </AnimatePresence>
+
+      {isPreview && (
+        <div className="pointer-events-none fixed inset-x-0 bottom-5 flex justify-center px-4">
+          <span className="rounded-full bg-black/75 px-4 py-2 text-center text-sm font-medium text-white/85 ring-1 ring-white/10">
+            미리보기예요. 소리가 안 들리면 화면을 한 번 클릭하세요. OBS에서는 자동으로 재생돼요.
+          </span>
+        </div>
+      )}
     </main>
   );
 }

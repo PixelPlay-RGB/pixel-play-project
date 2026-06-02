@@ -43,7 +43,11 @@ export function useChannelSecurityControls(initialSnapshot: ChannelSecuritySnaps
       "noreferrer",
     ].join(",");
 
-    window.open(url, `pixelplay_obs_${popup.width}x${popup.height}`, features);
+    // 미리보기는 "직전 알림"을 그대로 한 번 재생(소리 포함)해 확인할 수 있게 preview 플래그를 붙입니다.
+    // (실제 OBS 소스는 plain URL을 쓰므로 새로고침마다 직전 알림이 다시 울리지 않습니다.)
+    const previewUrl = `${url}${url.includes("?") ? "&" : "?"}preview=1`;
+
+    window.open(previewUrl, `pixelplay_obs_${popup.width}x${popup.height}`, features);
   };
 
   const handleToggleVisible = (tokenKind: ChannelSecurityTokenKind) => {

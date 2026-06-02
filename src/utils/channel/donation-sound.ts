@@ -1,86 +1,82 @@
 // 알림음 미리듣기·재생을 위한 클라이언트 유틸입니다.
-// Web Audio API(GainNode)로 음원별 음량을 정규화하고, 재생 길이를 통일(페이드아웃)합니다.
+// OBS 브라우저 소스에서 Web Audio(AudioContext)는 첫 재생 후 suspend되는 문제가 있어,
+// 매 후원마다 안정적으로 재생되는 HTMLAudioElement를 사용합니다.
+// (HTMLAudio는 볼륨 상한이 1.0이라 음원별 보정 게인은 "감쇠"까지만 적용됩니다.)
 
 import {
   DONATION_ALERT_SOUND_MAX_MS,
   DONATION_ALERT_SOUND_OPTIONS,
 } from "@/constants/channel/donation";
 
-const FADE_OUT_SEC = 0.22;
-const MAX_GAIN = 8;
+const FADE_OUT_MS = 220;
+const FADE_TICK_MS = 20;
 
-let sharedContext: AudioContext | null = null;
-const bufferCache = new Map<string, AudioBuffer>();
-
-function getAudioContext(): AudioContext | null {
-  if (typeof window === "undefined" || !window.AudioContext) {
-    return null;
-  }
-
-  if (!sharedContext) {
-    sharedContext = new AudioContext();
-  }
-
-  return sharedContext;
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
 }
 
 // 선택한 알림음을 주어진 볼륨(0~100)으로 재생합니다.
-// - 음원별 보정 게인으로 체감 음량을 맞추고, DONATION_ALERT_SOUND_MAX_MS로 재생 길이를 통일합니다.
-// - 재생이 끝나면(또는 실패하면) onEnd를 호출해 후속 동작(TTS 등)을 이어갈 수 있습니다.
+// - 음원별 보정 게인으로 체감 음량을 맞추되, HTMLAudio 한계로 1.0을 넘기진 못합니다(감쇠 위주).
+// - DONATION_ALERT_SOUND_MAX_MS로 재생 길이를 통일하고, 끝나면(또는 실패하면) onEnd를 호출합니다.
 export function playDonationSound(soundKey: string, volume: number, onEnd?: () => void): void {
+  if (typeof window === "undefined") {
+    onEnd?.();
+    return;
+  }
+
   const sound = DONATION_ALERT_SOUND_OPTIONS.find((option) => option.value === soundKey);
-  const context = getAudioContext();
 
   let settled = false;
+  let cutTimer = 0;
+  let fadeTimer = 0;
+
+  const cleanup = () => {
+    window.clearTimeout(cutTimer);
+    window.clearInterval(fadeTimer);
+  };
+
   const finish = () => {
     if (settled) {
       return;
     }
     settled = true;
+    cleanup();
     onEnd?.();
   };
 
-  if (!sound || !context) {
+  if (!sound) {
     finish();
     return;
   }
 
-  const baseVolume = Math.min(Math.max(volume / 100, 0), 1);
-  const targetGain = Math.min(Math.max(baseVolume * sound.gain, 0), MAX_GAIN);
+  const targetVolume = clamp((volume / 100) * sound.gain, 0, 1);
+  const audio = new Audio(sound.src);
+  audio.volume = targetVolume;
+  audio.onended = finish;
+  audio.onerror = finish;
 
-  void (async () => {
-    try {
-      // 자동재생 정책으로 정지돼 있으면 재생(사용자 클릭 컨텍스트)에서 다시 활성화합니다.
-      if (context.state === "suspended") {
-        await context.resume();
+  const fadeOutAndStop = () => {
+    const steps = Math.max(Math.ceil(FADE_OUT_MS / FADE_TICK_MS), 1);
+    const decrement = targetVolume / steps;
+
+    fadeTimer = window.setInterval(() => {
+      const next = audio.volume - decrement;
+
+      if (next <= 0.01) {
+        audio.volume = 0;
+        audio.pause();
+        finish();
+        return;
       }
 
-      let buffer = bufferCache.get(sound.value);
-      if (!buffer) {
-        const response = await fetch(sound.src);
-        const arrayBuffer = await response.arrayBuffer();
-        buffer = await context.decodeAudioData(arrayBuffer);
-        bufferCache.set(sound.value, buffer);
-      }
+      audio.volume = next;
+    }, FADE_TICK_MS);
+  };
 
-      const source = context.createBufferSource();
-      source.buffer = buffer;
-
-      const gainNode = context.createGain();
-      const now = context.currentTime;
-      const playSeconds = Math.min(buffer.duration, DONATION_ALERT_SOUND_MAX_MS / 1000);
-      const fadeStart = Math.max(playSeconds - FADE_OUT_SEC, 0);
-
-      gainNode.gain.setValueAtTime(targetGain, now);
-      gainNode.gain.setValueAtTime(targetGain, now + fadeStart);
-      gainNode.gain.linearRampToValueAtTime(0.0001, now + playSeconds);
-
-      source.connect(gainNode).connect(context.destination);
-      source.onended = finish;
-      source.start(now);
-      source.stop(now + playSeconds + 0.02);
-    } catch {
-      finish();
-    }
-  })();
+  void audio
+    .play()
+    .then(() => {
+      cutTimer = window.setTimeout(fadeOutAndStop, DONATION_ALERT_SOUND_MAX_MS);
+    })
+    .catch(finish);
 }

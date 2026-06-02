@@ -46,8 +46,8 @@ export const DONATION_ALERT_DURATION_OPTIONS = [
 // 원격 음성(Google 등)은 배속이 높으면 음이 깨지고 1.5배도 과해서, 자연스러운 1.3배를 상한으로 둡니다.
 export const DONATION_TTS_RATE_OPTIONS = [
   { value: 1.0, label: "보통" },
-  { value: 1.15, label: "빠름" },
-  { value: 1.3, label: "매우 빠름" },
+  { value: 1.5, label: "빠름" },
+  { value: 2.0, label: "매우 빠름" },
 ] as const;
 
 // 테스트 알림에서 사용할 샘플 후원 정보입니다.

@@ -65,25 +65,23 @@ function ChatMessageItem({ message }: { message: LiveChatOverlayMessage }) {
 
 function DonationMessageItem({ message }: { message: LiveChatOverlayMessage }) {
   return (
-    <div
+    <p
       className={cn(
         "inline-block max-w-130 rounded-xl px-3.5 py-2 wrap-break-word",
-        "bg-live/20 ring-live/45 shadow-lg ring-1",
+        "bg-live/15 ring-live/35 ring-1",
         "text-3xl leading-9 font-normal",
       )}
     >
-      <span className="mr-1.5 inline-flex items-center gap-1.5 align-middle">
-        <HandCoins className="text-live size-6" aria-hidden />
-        <span className="text-live font-bold">{message.author}</span>
-        {typeof message.amount === "number" && (
-          <span className="text-live font-extrabold">
-            {message.amount.toLocaleString("ko-KR")}P
-          </span>
-        )}
-        <span className="text-white/80">후원</span>
-      </span>
+      <HandCoins className="text-live mr-1.5 inline size-[1em] align-[-0.12em]" aria-hidden />
+      <span className="text-live mr-1.5 font-medium">{message.author}</span>
+      {typeof message.amount === "number" && (
+        <span className="text-live mr-1.5 font-medium">
+          {message.amount.toLocaleString("ko-KR")}P
+        </span>
+      )}
+      <span className="mr-1.5 text-white/70">후원</span>
       {message.content && <span className="text-white">{message.content}</span>}
-    </div>
+    </p>
   );
 }
 

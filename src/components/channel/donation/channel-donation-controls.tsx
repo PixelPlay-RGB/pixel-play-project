@@ -1,8 +1,10 @@
 "use client";
 // 채널 후원 설정 화면의 폼 상호작용을 관리합니다.
 
+import { useState } from "react";
 import { Controller, useWatch } from "react-hook-form";
-import { ChevronDown, ChevronUp, HandCoins } from "lucide-react";
+import { ChevronDown, ChevronUp, HandCoins, Send } from "lucide-react";
+import { toast } from "sonner";
 
 import DonationAlertPreview from "@/components/channel/donation/donation-alert-preview";
 import { DonationPreviewButton } from "@/components/channel/donation/donation-preview-button";
@@ -44,6 +46,7 @@ import { cn } from "@/lib/utils";
 import type { ChannelDonationSnapshot } from "@/types/channel/donation";
 import { playDonationSound } from "@/utils/channel/donation-sound";
 import { buildDonationTtsText } from "@/utils/channel/donation-tts";
+import { sendTestDonationAlert } from "@/utils/live/donation-alert-test";
 
 interface Props {
   initialSnapshot: ChannelDonationSnapshot;
@@ -58,6 +61,7 @@ export function ChannelDonationControls({ initialSnapshot }: Props) {
   } = form;
   const { sentinelRef, show } = useStickyActionBar(isDirty);
   const { voices, speak } = useSpeechSynthesis();
+  const [isSendingTest, setIsSendingTest] = useState(false);
 
   const donationEnabled = useWatch({ control, name: "donationEnabled" });
   const amountVisible = useWatch({ control, name: "donationAmountVisible" });
@@ -69,11 +73,14 @@ export function ChannelDonationControls({ initialSnapshot }: Props) {
   const ttsVolume = useWatch({ control, name: "ttsVolume" });
   const ttsVoiceUri = useWatch({ control, name: "ttsVoiceUri" });
 
-  // 사용 가능한 한국어 음성 목록. 일반 사용자에겐 음성 엔진명이 낯설어 일반화된 라벨로 노출하고,
-  // 같은 이름(브라우저 기본 == OS 기본 등)으로 중복되는 음성은 합칩니다.
+  // 사용 가능한 한국어 음성 목록.
+  // OBS 브라우저 소스(CEF)에는 Google 클라우드 음성 같은 "원격 음성"이 없어 기본 음성으로 대체되므로,
+  // OS에 설치돼 OBS·Chrome 양쪽에서 동작하는 "로컬 음성"만 노출합니다.
+  // (엔진명이 낯설어 일반화된 라벨로 표시하고, 같은 이름으로 중복되는 음성은 합칩니다.)
   const seenVoiceNames = new Set<string>();
   const voiceItems = voices
     .filter((voice) => voice.lang.toLowerCase().startsWith("ko"))
+    .filter((voice) => voice.localService)
     .filter((voice) => {
       if (seenVoiceNames.has(voice.name)) {
         return false;
@@ -85,8 +92,10 @@ export function ChannelDonationControls({ initialSnapshot }: Props) {
       value: voice.voiceURI,
       label: `TTS 기본 음성 - ${String(index + 1).padStart(2, "0")}`,
     }));
-  // 저장값이 비어 있으면(미선택) 첫 번째 음성을 기본 표시값으로 사용합니다.
-  const ttsVoiceValue = (ttsVoiceUri || voiceItems[0]?.value) ?? "";
+  // 저장값이 현재 목록(로컬 음성)에 없으면(예: 기존에 저장된 원격 음성) Select를 비워 다시 고르도록 유도합니다.
+  // 폼 값 자체는 건드리지 않습니다(사용자가 직접 고른 값만 저장).
+  const voiceValueSet = new Set(voiceItems.map((item) => item.value));
+  const ttsVoiceValue = ttsVoiceUri && voiceValueSet.has(ttsVoiceUri) ? ttsVoiceUri : "";
 
   // 알림음만 현재 볼륨으로 미리듣기.
   const handlePreviewSound = () => {
@@ -97,11 +106,45 @@ export function ChannelDonationControls({ initialSnapshot }: Props) {
   const handlePreviewTts = () => {
     const { donorNickname, amount, message } = DONATION_TEST_ALERT_SAMPLE;
 
+    // 음성 선택은 준비 중이라 기본 음성으로 고정합니다(voiceURI 미지정).
     speak(buildDonationTtsText({ donorNickname, amount, message, amountVisible: Boolean(amountVisible) }), {
       rate: ttsRate ?? 1,
       volume: (ttsVolume ?? 0) / 100,
-      voiceURI: ttsVoiceUri || undefined,
     });
+  };
+
+  // 현재 설정 그대로 OBS 후원 알림 오버레이에 테스트 후원을 전송합니다(DB·방송 무관, 통계 미반영).
+  const handleSendTestToObs = async () => {
+    setIsSendingTest(true);
+
+    try {
+      const { donorNickname, amount, message } = DONATION_TEST_ALERT_SAMPLE;
+
+      await sendTestDonationAlert(initialSnapshot.creatorId, {
+        donorName: donorNickname,
+        amount,
+        message,
+        audio: {
+          alertSoundEnabled: Boolean(alertSoundEnabled),
+          alertSoundKey: alertSoundKey ?? "classic",
+          alertVolume: alertVolume ?? 0,
+          ttsEnabled: Boolean(ttsEnabled),
+          ttsRate: ttsRate ?? 1,
+          ttsVolume: ttsVolume ?? 0,
+          ttsVoiceUri: ttsVoiceUri ?? "",
+          amountVisible: Boolean(amountVisible),
+        },
+      });
+
+      toast.success("테스트 후원을 보냈어요", {
+        description: "OBS 후원 알림 화면에서 확인하세요.",
+      });
+    } catch (error) {
+      console.error("테스트 후원 전송 실패", error);
+      toast.error("테스트 후원 전송에 실패했어요");
+    } finally {
+      setIsSendingTest(false);
+    }
   };
 
   return (
@@ -289,17 +332,17 @@ export function ChannelDonationControls({ initialSnapshot }: Props) {
                 render={({ field }) => (
                   <SettingFieldRow
                     label="TTS 음성"
-                    description="기기에서 지원하는 한국어 음성"
+                    description="현재는 기본 TTS 음성만 지원해요. 음성 선택은 준비 중이에요."
                     isDimmed={!ttsEnabled}
                   >
                     <Select
                       value={ttsVoiceValue}
                       items={voiceItems}
-                      disabled={isSaving || !ttsEnabled}
+                      disabled
                       onValueChange={(value) => field.onChange(value as string)}
                     >
                       <SelectTrigger aria-label="TTS 음성" className="w-52">
-                        <SelectValue />
+                        <SelectValue placeholder="기본 음성 (준비중)" />
                         <SelectIcon />
                       </SelectTrigger>
                       <SelectContent>
@@ -443,11 +486,24 @@ export function ChannelDonationControls({ initialSnapshot }: Props) {
                 ttsEnabled={Boolean(ttsEnabled)}
                 ttsRate={ttsRate ?? 1}
                 ttsVolume={ttsVolume ?? 0}
-                ttsVoiceUri={ttsVoiceUri ?? ""}
                 amountVisible={Boolean(amountVisible)}
                 disabled={isSaving}
                 className="w-full"
               />
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isSendingTest}
+                onClick={handleSendTestToObs}
+                className="h-10 w-full rounded-xl font-semibold"
+              >
+                {isSendingTest ? <Spinner /> : <Send className="size-4" />}
+                OBS에 테스트 후원 보내기
+              </Button>
+              <p className="text-muted-foreground text-center text-xs leading-5">
+                현재 설정 그대로 OBS 후원 알림 화면에 한 번 띄워봐요. 방송에는 보이지 않고 통계에도
+                잡히지 않아요.
+              </p>
             </SettingsCard>
 
             <SideTipCard

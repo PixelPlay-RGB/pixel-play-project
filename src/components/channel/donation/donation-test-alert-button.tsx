@@ -17,7 +17,6 @@ interface Props {
   ttsEnabled: boolean;
   ttsRate: number;
   ttsVolume: number;
-  ttsVoiceUri: string;
   amountVisible: boolean;
   disabled?: boolean;
   className?: string;
@@ -30,7 +29,6 @@ export default function DonationTestAlertButton({
   ttsEnabled,
   ttsRate,
   ttsVolume,
-  ttsVoiceUri,
   amountVisible,
   disabled,
   className,
@@ -54,10 +52,10 @@ export default function DonationTestAlertButton({
 
     const { donorNickname, amount, message } = DONATION_TEST_ALERT_SAMPLE;
 
+    // 음성 선택은 준비 중이라 기본 음성으로 고정합니다(voiceURI 미지정).
     speak(buildDonationTtsText({ donorNickname, amount, message, amountVisible }), {
       rate: ttsRate,
       volume: ttsVolume / 100,
-      voiceURI: ttsVoiceUri || undefined,
     });
   };
 
