@@ -70,17 +70,28 @@ export default function CommunityPostDetailView({
       </Link>
 
       <div className="flex items-center gap-3">
-        <Avatar className="size-11">
-          <AvatarImage
-            src={getAvatarImageSrc(detail.creatorPhotoUrl)}
-            alt={`${detail.creatorNickname}의 프로필 사진`}
-          />
-          <AvatarFallback className="text-sm font-black">
-            {getAvatarFallbackText(detail.creatorNickname, 1)}
-          </AvatarFallback>
-        </Avatar>
+        <Link
+          href={`/channel/${detail.creatorId}`}
+          aria-label={`${detail.creatorNickname} 채널로 이동`}
+          className="focus-visible:ring-ring shrink-0 rounded-full outline-none focus-visible:ring-2"
+        >
+          <Avatar className="hover:ring-brand/40 size-11 transition-[box-shadow] hover:ring-2">
+            <AvatarImage
+              src={getAvatarImageSrc(detail.creatorPhotoUrl)}
+              alt={`${detail.creatorNickname}의 프로필 사진`}
+            />
+            <AvatarFallback className="text-sm font-black">
+              {getAvatarFallbackText(detail.creatorNickname, 1)}
+            </AvatarFallback>
+          </Avatar>
+        </Link>
         <div className="min-w-0">
-          <p className="text-foreground truncate text-sm font-bold">{detail.creatorNickname}</p>
+          <Link
+            href={`/channel/${detail.creatorId}`}
+            className="text-foreground block truncate text-sm font-bold hover:underline"
+          >
+            {detail.creatorNickname}
+          </Link>
           <p className="text-muted-foreground text-xs">
             {formatRelativeTime(detail.createdAt)}
             {detail.modifiedAt && " · 수정됨"}

@@ -1,6 +1,7 @@
 "use client";
 // 댓글 단건. 본인 댓글은 인라인 수정, 본인/채널주인은 삭제할 수 있습니다.
 
+import Link from "next/link";
 import { useState } from "react";
 import { Pencil, Trash2 } from "lucide-react";
 
@@ -75,21 +76,30 @@ export default function CommunityCommentItem({ postId, comment, isChannelOwner }
 
   return (
     <div className="flex gap-3 py-3">
-      <Avatar className="size-9 shrink-0">
-        <AvatarImage
-          src={getAvatarImageSrc(comment.authorPhotoUrl)}
-          alt={`${comment.authorNickname}의 프로필 사진`}
-        />
-        <AvatarFallback className="text-xs font-black">
-          {getAvatarFallbackText(comment.authorNickname, 1)}
-        </AvatarFallback>
-      </Avatar>
+      <Link
+        href={`/channel/${comment.authorId}`}
+        aria-label={`${comment.authorNickname} 채널로 이동`}
+        className="focus-visible:ring-ring shrink-0 rounded-full outline-none focus-visible:ring-2"
+      >
+        <Avatar className="hover:ring-brand/40 size-9 transition-[box-shadow] hover:ring-2">
+          <AvatarImage
+            src={getAvatarImageSrc(comment.authorPhotoUrl)}
+            alt={`${comment.authorNickname}의 프로필 사진`}
+          />
+          <AvatarFallback className="text-xs font-black">
+            {getAvatarFallbackText(comment.authorNickname, 1)}
+          </AvatarFallback>
+        </Avatar>
+      </Link>
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <span className="text-foreground truncate text-sm font-bold">
+          <Link
+            href={`/channel/${comment.authorId}`}
+            className="text-foreground truncate text-sm font-bold hover:underline"
+          >
             {comment.authorNickname}
-          </span>
+          </Link>
           <span className="text-muted-foreground shrink-0 text-xs">
             {formatRelativeTime(comment.createdAt)}
             {comment.modifiedAt && " · 수정됨"}
