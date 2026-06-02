@@ -27,7 +27,8 @@ export const LIVE_LABEL = {
   viewers: "명 시청 중",
   followers: "팔로워",
   broadcasts: "방송",
-  filteredMessage: "클린봇이 부적절한 표현을 감지해 메시지를 가렸습니다.",
+  cleanbotHidden: "클린봇이 가린 메시지입니다.",
+  cleanbotReveal: "보기",
   donationRankingTitle: "이번 주 후원 랭킹",
   emptyWeeklyDonation: "이번 주 첫 번째 팬이 되어보세요!",
   chatLoginPlaceholder: "로그인 후 채팅할 수 있습니다.",
@@ -49,6 +50,8 @@ export const LIVE_LABEL = {
   openLiveWatch: "시청 화면에서 확인",
   chatPopoutBlocked: "팝업 차단을 해제한 뒤 다시 열어주세요.",
   selfAuthorFallback: "나",
+  // 금칙어가 포함돼 메시지가 전송되지 않았을 때 작성자 본인에게만 보이는 안내.
+  bannedWordNotice: "금칙어가 포함되어 메시지가 전송되지 않았습니다.",
 } as const;
 
 export const LIVE_DONATION_MIN_AMOUNT = 1000;

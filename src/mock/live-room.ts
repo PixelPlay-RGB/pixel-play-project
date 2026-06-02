@@ -71,12 +71,6 @@ export const MOCK_LIVE_CHAT_MESSAGES: LiveChatMessage[] = [
     content: "방금 들어왔는데 무슨 게임 하는 중인가요?",
   },
   {
-    id: "msg-6",
-    type: "filtered",
-    author: "차단된유저",
-    content: "",
-  },
-  {
     id: "msg-7",
     type: "text",
     author: "단골시청자",

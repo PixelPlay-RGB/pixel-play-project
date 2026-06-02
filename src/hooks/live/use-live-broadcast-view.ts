@@ -44,7 +44,7 @@ export function useLiveBroadcastView(creatorId: string) {
       });
   }
 
-  const messagesQuery = useLiveMessages(broadcast?.id, creatorId);
+  const messagesQuery = useLiveMessages(broadcast?.id, creatorId, user?.id);
   const messages = messagesQuery.messages;
 
   const pollsQuery = useLivePolls(broadcast?.id, user?.id);

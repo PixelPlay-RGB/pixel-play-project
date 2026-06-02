@@ -9,13 +9,31 @@ import {
   LIVE_DONATION_MESSAGE_MAX_LENGTH,
 } from "@/constants/live/live";
 import type { AppActionResult } from "@/types/common/action";
+import type { SendLiveMessageResult } from "@/types/live/live";
 import { isKnownMessageRpcError, resolveMessageRpcErrorCode } from "@/utils/common/app-message";
+import { isRecord } from "@/utils/common/json";
 import { isUuid } from "@/utils/common/uuid";
+
+// send_live_message_v2의 jsonb 응답({ messageId, moderated })을 앱 타입으로 정규화한다.
+// 금칙어로 가려진 경우 messageId는 null, moderated는 true다.
+function normalizeSendLiveMessageResult(data: unknown): SendLiveMessageResult | null {
+  if (!isRecord(data)) return null;
+
+  const moderated = data.moderated;
+  const messageId = data.messageId;
+
+  if (typeof moderated !== "boolean") return null;
+  if (messageId !== null && typeof messageId !== "string") return null;
+  // 정상 전송인데 messageId가 없으면 RPC 응답이 깨진 것이다.
+  if (!moderated && !messageId) return null;
+
+  return { messageId: messageId ?? null, moderated };
+}
 
 export async function sendLiveMessageAction(
   broadcastId: string,
   content: string,
-): Promise<AppActionResult<{ messageId: string }>> {
+): Promise<AppActionResult<SendLiveMessageResult>> {
   const trimmed = content.trim();
 
   if (!broadcastId || !isUuid(broadcastId)) {
@@ -34,7 +52,7 @@ export async function sendLiveMessageAction(
     return { success: false, code: actor.result.code };
   }
 
-  const client = await createWriteClientForAction<{ messageId: string }>(
+  const client = await createWriteClientForAction<SendLiveMessageResult>(
     "라이브 채팅 Admin Client 생성 실패",
     APP_MESSAGE_CODE.error.message.sendFailed,
   );
@@ -43,7 +61,7 @@ export async function sendLiveMessageAction(
     return client.result;
   }
 
-  const { data: messageId, error } = await client.supabase.rpc("send_live_message", {
+  const { data, error } = await client.supabase.rpc("send_live_message_v2", {
     p_actor_user_id: actor.userId,
     p_broadcast_id: broadcastId,
     p_content: trimmed,
@@ -60,12 +78,14 @@ export async function sendLiveMessageAction(
     };
   }
 
-  if (!messageId) {
-    console.error("라이브 채팅 전송 RPC가 messageId를 반환하지 않음");
+  const result = normalizeSendLiveMessageResult(data);
+
+  if (!result) {
+    console.error("라이브 채팅 전송 RPC 응답 형식 오류", data);
     return { success: false, code: APP_MESSAGE_CODE.error.message.sendFailed };
   }
 
-  return { success: true, data: { messageId } };
+  return { success: true, data: result };
 }
 
 export async function voteLivePollAction(pollId: string, optionId: string): Promise<boolean> {

@@ -11,7 +11,6 @@ import { LiveChatMessageList } from "@/components/live/chat/live-chat-message-li
 import { LiveChatParticipationNotice } from "@/components/live/chat/live-chat-participation-notice";
 import { LiveDonationBanner } from "@/components/live/view/live-donation-banner";
 import { LiveChatMenu } from "@/components/live/view/live-chat-menu";
-import { filterChatMessages } from "@/utils/live/live-chat";
 import { LIVE_LABEL } from "@/constants/live/live";
 import type {
   LiveChatMessage,
@@ -76,7 +75,6 @@ export function LiveChatPanel({
   const [isPopoutOpen, setIsPopoutOpen] = useState(false);
   const popoutWindowRef = useRef<Window | null>(null);
   const popoutCheckIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const displayMessages = cleanbot ? messages : filterChatMessages(messages);
 
   function handlePopoutOpen(win: Window) {
     popoutWindowRef.current = win;
@@ -148,7 +146,7 @@ export function LiveChatPanel({
               <LiveDonationBanner donations={donations} />
             </div>
             <ScrollArea className="min-h-0 flex-1">
-              <LiveChatMessageList messages={displayMessages} />
+              <LiveChatMessageList messages={messages} cleanbotEnabled={cleanbot} />
             </ScrollArea>
           </div>
           <LiveChatParticipationNotice chatUnavailableReason={chatState.chatUnavailableReason} />

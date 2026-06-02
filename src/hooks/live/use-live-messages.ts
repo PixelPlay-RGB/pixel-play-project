@@ -10,11 +10,16 @@ import {
   mapLiveMessageRowToMessage,
   type LiveMessageJoinedRow,
 } from "@/utils/live/live-message";
+import { appendLiveMessage } from "@/utils/live/live-chat";
 import type { LiveChatMessage } from "@/types/live/live";
 const LIVE_MESSAGE_SELECT =
   "id, sender_id, message_type, content, metadata, sender:sender_id(nickname, photo_url), donation:donation_id(amount)" as const;
 
-export function useLiveMessages(broadcastId: string | null | undefined, creatorId?: string) {
+export function useLiveMessages(
+  broadcastId: string | null | undefined,
+  creatorId?: string,
+  viewerId?: string,
+) {
   const supabase = useMemo(() => createClient(), []);
   const queryClient = useQueryClient();
   const enabled = !!broadcastId;
@@ -35,7 +40,9 @@ export function useLiveMessages(broadcastId: string | null | undefined, creatorI
 
       if (error) throw error;
 
-      return (data ?? []).reverse().map((row) => mapLiveMessageRowToMessage(row, creatorId));
+      return (data ?? [])
+        .reverse()
+        .map((row) => mapLiveMessageRowToMessage(row, creatorId, viewerId));
     },
   });
 
@@ -55,7 +62,7 @@ export function useLiveMessages(broadcastId: string | null | undefined, creatorI
         },
         (payload) => {
           // Realtime payload의 metadata로 바로 매핑한다(추가 단건 조회 없음).
-          const nextMessage = mapLiveMessageRealtimePayload(payload.new, creatorId);
+          const nextMessage = mapLiveMessageRealtimePayload(payload.new, creatorId, viewerId);
           if (!nextMessage) return;
 
           queryClient.setQueryData<LiveChatMessage[]>(
@@ -63,7 +70,7 @@ export function useLiveMessages(broadcastId: string | null | undefined, creatorI
             (prev) => {
               if (!prev) return [nextMessage];
               if (prev.some((m) => m.id === nextMessage.id)) return prev;
-              return [...prev, nextMessage].slice(-LIVE_MESSAGE_LIMIT);
+              return appendLiveMessage(prev, nextMessage);
             },
           );
         },
@@ -77,7 +84,7 @@ export function useLiveMessages(broadcastId: string | null | undefined, creatorI
     return () => {
       void channel.unsubscribe();
     };
-  }, [broadcastId, creatorId, supabase, queryClient]);
+  }, [broadcastId, creatorId, viewerId, supabase, queryClient]);
 
   return {
     messages: query.data ?? [],

@@ -1,6 +1,8 @@
 // live_message 조인 조회 결과를 라이브 채팅 메시지 도메인 타입으로 변환합니다.
 
 import { LIVE_LABEL } from "@/constants/live/live";
+import { isCleanbotFlagged } from "@/utils/live/live-chat";
+import { readJsonObject, readNumber, readString } from "@/utils/common/json";
 import type { LiveChatMessage } from "@/types/live/live";
 import type { Json } from "@/types/database.types";
 
@@ -16,11 +18,14 @@ export interface LiveMessageJoinedRow {
 
 // creatorId(크리에이터 user UUID)와 sender_id가 같으면 호스트 메시지로 표시한다.
 // creatorId가 user UUID가 아니게 되면(예: 핸들) 매칭이 빗나가 호스트 강조만 사라지고 동작은 안전하게 유지된다.
+// viewerId(보는 사람 user UUID)와 sender_id가 같으면 본인 메시지이므로 클린봇으로 가리지 않는다.
 export function mapLiveMessageRowToMessage(
   row: LiveMessageJoinedRow,
   creatorId?: string,
+  viewerId?: string,
 ): LiveChatMessage {
   const isHost = !!creatorId && row.sender_id !== null && row.sender_id === creatorId;
+  const isOwnMessage = !!viewerId && row.sender_id !== null && row.sender_id === viewerId;
   const metadata = readJsonObject(row.metadata);
 
   if (row.message_type === "donation") {
@@ -50,6 +55,8 @@ export function mapLiveMessageRowToMessage(
     author: row.sender?.nickname ?? readString(metadata.senderNickname) ?? LIVE_LABEL.anonymousAuthor,
     content: row.content,
     isHost,
+    // 본인 메시지는 본인 화면에서 안 가린다. refetch 재매핑 시에도 일관 유지된다.
+    isCleanbotFlagged: !isOwnMessage && isCleanbotFlagged(row.content),
   };
 }
 
@@ -58,6 +65,7 @@ export function mapLiveMessageRowToMessage(
 export function mapLiveMessageRealtimePayload(
   raw: unknown,
   creatorId?: string,
+  viewerId?: string,
 ): LiveChatMessage | null {
   if (!raw || typeof raw !== "object") return null;
   const record = raw as Record<string, unknown>;
@@ -82,19 +90,7 @@ export function mapLiveMessageRealtimePayload(
       donation: null,
     },
     creatorId,
+    viewerId,
   );
 }
 
-function readJsonObject(value: Json): Record<string, Json | undefined> {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
-  return value as Record<string, Json | undefined>;
-}
-
-function readNumber(value: Json | undefined) {
-  return typeof value === "number" && Number.isFinite(value) ? value : null;
-}
-
-function readString(value: Json | undefined) {
-  const trimmed = typeof value === "string" ? value.trim() : "";
-  return trimmed.length > 0 ? trimmed : null;
-}

@@ -5,9 +5,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import { acceptLiveChatRuleAction, sendLiveMessageAction } from "@/actions/live/live";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { QUERY_KEYS } from "@/constants/common/query-keys";
-import { LIVE_CHAT_MESSAGE_MAX_LENGTH, LIVE_LABEL, LIVE_MESSAGE_LIMIT } from "@/constants/live/live";
+import { LIVE_CHAT_MESSAGE_MAX_LENGTH, LIVE_LABEL } from "@/constants/live/live";
 import { useNullableUser } from "@/hooks/profile/use-profile";
 import { useAuthStore } from "@/stores/auth";
+import { appendLiveMessage } from "@/utils/live/live-chat";
 import { toastAppError } from "@/utils/common/toast-message";
 import type { LiveChatMessage, LiveViewerChatState } from "@/types/live/live";
 
@@ -49,6 +50,8 @@ export function useLiveChatSession({
 
     const messagesKey = QUERY_KEYS.live.messages(broadcastId);
     const clientId = `optimistic-${crypto.randomUUID()}`;
+    // 본인이 보낸 메시지는 클린봇으로 가리지 않는다(isCleanbotFlagged 미부여).
+    // 자기 메시지는 본인 화면에서 항상 보이는 게 자연스럽다.
     const optimisticMessage: LiveChatMessage = {
       id: clientId,
       type: "text",
@@ -64,22 +67,43 @@ export function useLiveChatSession({
 
     // 낙관적 추가 — realtime echo를 기다리지 않고 즉시 표시한다.
     queryClient.setQueryData<LiveChatMessage[]>(messagesKey, (prev) =>
-      [...(prev ?? []), optimisticMessage].slice(-LIVE_MESSAGE_LIMIT),
+      appendLiveMessage(prev ?? [], optimisticMessage),
     );
 
     try {
       const result = await sendLiveMessageAction(broadcastId, trimmed);
 
-      if (!result.success) {
+      if (!result.success || !result.data) {
         removeOptimistic();
         toastAppError(result.code ?? APP_MESSAGE_CODE.error.message.sendFailed);
         return false;
       }
 
+      // 금칙어 감지: 서버는 어떤 행도 broadcast하지 않는다(타인 화면엔 아무것도 안 뜸).
+      // 작성자 본인 화면에서만 원문(낙관적)을 제거하고 로컬 시스템 안내로 대체한다.
+      // 이 안내는 DB/Realtime를 거치지 않는 로컬 전용 메시지다. Realtime 재구독(SUBSCRIBED) 시
+      // invalidate되면 사라지는 best-effort 안내이며, type:"system"은 본인 전용 안내로만 쓴다.
+      // false를 반환해 입력창에 원문을 복원한다 — 금칙어만 지우고 바로 재전송할 수 있게.
+      if (result.data.moderated) {
+        removeOptimistic();
+        const notice: LiveChatMessage = {
+          id: `local-system-${crypto.randomUUID()}`,
+          type: "system",
+          content: LIVE_LABEL.bannedWordNotice,
+        };
+        queryClient.setQueryData<LiveChatMessage[]>(messagesKey, (prev) => {
+          const list = prev ?? [];
+          // 동일 금칙어를 연속 전송하면 같은 안내가 쌓인다. 직전이 같은 안내면 중복 추가하지 않는다.
+          const last = list.at(-1);
+          if (last?.type === "system" && last.content === notice.content) return list;
+          return appendLiveMessage(list, notice);
+        });
+        return false;
+      }
+
       // 성공: temp id를 실제 messageId로 승격한다. realtime echo가 먼저 도착해
       // 실제 메시지를 넣었으면 중복을 피하려 낙관적 항목만 제거한다.
-      // TODO [cleanbot]: 금칙어로 moderation_notice가 반환되면 본인 화면엔 원문이 남는다(타인은 숨김 안내 정상 표시).
-      const realId = result.data?.messageId;
+      const realId = result.data.messageId;
       if (!realId) {
         // 정상 경로에선 도달하지 않지만, 방어적으로 echo가 채우도록 낙관적만 제거한다.
         removeOptimistic();

@@ -78,7 +78,7 @@ export interface LiveOverlayRouteParams {
   overlayKey: string;
 }
 
-export type LiveChatMessageType = "text" | "donation" | "system" | "filtered";
+export type LiveChatMessageType = "text" | "donation" | "system";
 
 export interface LiveChatMessage {
   id: string;
@@ -88,6 +88,15 @@ export interface LiveChatMessage {
   donationAmount?: number;
   // 작성자가 방송 진행자(크리에이터) 본인인지 여부. 채팅에서 호스트 메시지를 강조하는 데 쓴다.
   isHost?: boolean;
+  // 클린봇 자동 비속어 사전에 걸린 text 메시지. 클린봇 토글 ON이면 가리고 펼쳐볼 수 있다.
+  // 추후 서버 승격 시 이 값의 출처만 metadata 플래그로 교체한다.
+  isCleanbotFlagged?: boolean;
+}
+
+// send_live_message_v2 RPC 응답을 정규화한 결과. 금칙어로 가려지면 messageId는 null, moderated는 true.
+export interface SendLiveMessageResult {
+  messageId: string | null;
+  moderated: boolean;
 }
 
 export interface LiveDonation {

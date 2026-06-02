@@ -1,5 +1,6 @@
 // get_live_watch / get_live_watch_count RPC 응답을 시청 화면 도메인 데이터로 정규화합니다.
 
+import { isRecord } from "@/utils/common/json";
 import type { LiveWatchData } from "@/types/live/live";
 
 interface LiveWatchCountResult {
@@ -13,10 +14,6 @@ type RawLiveWatchData = Omit<LiveWatchData, "creator" | "viewerChatState"> & {
     blockedReason: LiveWatchData["viewerChatState"]["chatUnavailableReason"];
   };
 };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return !!value && typeof value === "object" && !Array.isArray(value);
-}
 
 function parseLiveWatchCount(raw: unknown): LiveWatchCountResult {
   if (!isRecord(raw)) {
