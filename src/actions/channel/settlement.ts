@@ -16,7 +16,7 @@ import {
   buildSettlementYearlySummary,
 } from "@/utils/channel/channel-donation-snapshot";
 
-const SETTLEMENT_LOAD_FAILED_CODE = APP_MESSAGE_CODE.error.channel.donationSettingsLoadFailed;
+const SETTLEMENT_LOAD_FAILED_CODE = APP_MESSAGE_CODE.error.channel.settlementLoadFailed;
 
 interface SettlementDonationsParams {
   year: number;

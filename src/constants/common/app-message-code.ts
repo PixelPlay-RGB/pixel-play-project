@@ -127,6 +127,7 @@ export const APP_MESSAGE_CODE = {
       donationSettingsLoadFailed: "error.channel.donationSettingsLoadFailed",
       donationSettingsSaveFailed: "error.channel.donationSettingsSaveFailed",
       donationTestFailed: "error.channel.donationTestFailed",
+      settlementLoadFailed: "error.channel.settlementLoadFailed",
       securityLoadFailed: "error.channel.securityLoadFailed",
       securityCopyFailed: "error.channel.securityCopyFailed",
       securityTokenRotateFailed: "error.channel.securityTokenRotateFailed",

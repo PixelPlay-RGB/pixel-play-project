@@ -5,7 +5,8 @@ export interface LiveDonationAlertOverlayData {
   id: DonationRow["id"] | LiveMessageRow["id"];
   creatorName: string;
   donorName: string;
-  amount: DonationRow["amount"];
+  // 금액 표시(amountVisible)가 꺼져 있으면 RPC에서 null로 내려와 화면에서 금액을 숨깁니다.
+  amount: DonationRow["amount"] | null;
   message: DonationRow["message"];
   createdAt: DonationRow["created_at"] | LiveMessageRow["created_at"];
 }

@@ -12,7 +12,7 @@ import type { ChannelMenuItem } from "@/types/channel/channel-menu";
 import { AnimatePresence, motion } from "motion/react";
 import { ChevronDown } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface Props {
   item: ChannelMenuItem;
@@ -44,6 +44,14 @@ export default function ChannelSidebarMenuItem({ item, isActive, isChildActive }
 function ChannelSidebarMenuGroup({ item, isActive, isChildActive }: Props) {
   const Icon = item.icon;
   const [open, setOpen] = useState(isActive);
+
+  // 사이드바는 라우트 이동 간 유지되므로, 활성 자식 경로로 직접 진입하면 그룹을 자동으로 펼칩니다.
+  useEffect(() => {
+    if (isActive) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setOpen(true);
+    }
+  }, [isActive]);
 
   return (
     <SidebarMenuItem>

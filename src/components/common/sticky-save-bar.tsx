@@ -40,6 +40,7 @@ export function StickySaveBar({
             drag
             dragMomentum={false}
             dragElastic={0.18}
+            dragConstraints={{ top: -320, bottom: 0, left: -160, right: 160 }}
             whileDrag={{ scale: 1.02, cursor: "grabbing" }}
             className={cn(
               "pointer-events-auto flex cursor-grab items-center gap-2 rounded-2xl border py-2.5 pr-3 pl-2.5 active:cursor-grabbing",

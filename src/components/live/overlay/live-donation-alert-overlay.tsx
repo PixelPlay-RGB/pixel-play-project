@@ -23,7 +23,7 @@ export function LiveDonationAlertOverlay({
 }) {
   const { donation, isVisible } = useLiveDonationAlertOverlay(initialSnapshot, { isPreview });
   const donorLabel = formatDonationDonorLabel(donation?.donorName);
-  const formattedAmount = donation?.amount.toLocaleString("ko-KR");
+  const formattedAmount = donation?.amount != null ? donation.amount.toLocaleString("ko-KR") : null;
 
   return (
     <main
@@ -70,19 +70,21 @@ export function LiveDonationAlertOverlay({
                     animate="visible"
                     className="relative z-10"
                   >
-                    <PixelPlayPlayIcon className="text-live size-18 drop-shadow-[0_0_16px_rgba(255,96,87,0.6)] sm:size-24" />
+                    <PixelPlayPlayIcon className="text-live size-18 drop-shadow-[0_0_16px_color-mix(in_oklab,var(--live)_60%,transparent)] sm:size-24" />
                   </motion.div>
                 </div>
 
                 <div className="flex min-w-0 flex-col items-center gap-3 text-center sm:items-start sm:text-left">
-                  <motion.span
-                    variants={liveDonationAlertTextVariants}
-                    initial="hidden"
-                    animate="visible"
-                    className="text-live text-5xl leading-none font-extrabold sm:text-7xl"
-                  >
-                    {formattedAmount}P
-                  </motion.span>
+                  {formattedAmount !== null && (
+                    <motion.span
+                      variants={liveDonationAlertTextVariants}
+                      initial="hidden"
+                      animate="visible"
+                      className="text-live text-5xl leading-none font-extrabold sm:text-7xl"
+                    >
+                      {formattedAmount}P
+                    </motion.span>
+                  )}
                   <motion.p
                     variants={liveDonationAlertTextVariants}
                     initial="hidden"

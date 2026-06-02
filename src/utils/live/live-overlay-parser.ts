@@ -1,4 +1,5 @@
 // OBS 오버레이 RPC 응답을 화면 타입으로 변환합니다.
+import { DONATION_ALERT_SOUND_DEFAULT } from "@/constants/channel/donation";
 import {
   LIVE_DONATION_ALERT_DEFAULT_VISIBLE_MS,
   LIVE_OVERLAY_DEFAULT_CREATOR_NAME,
@@ -73,7 +74,7 @@ export function parseLiveDonationAlertOverlaySnapshot(
 
   const audio: LiveDonationAlertAudioSettings = {
     alertSoundEnabled: object.alertSoundEnabled !== false,
-    alertSoundKey: readString(object.alertSoundKey) ?? "classic",
+    alertSoundKey: readString(object.alertSoundKey) ?? DONATION_ALERT_SOUND_DEFAULT,
     alertVolume: readNumber(object.alertVolume) ?? 32,
     ttsEnabled: object.ttsEnabled !== false,
     ttsRate: readNumber(object.ttsRate) ?? 1,
@@ -179,11 +180,12 @@ function parseLiveDonationAlertOverlayData(
   const id = readString(object.id);
   const creatorName = readString(object.creatorName);
   const donorName = readString(object.donorName);
+  // 금액 숨김(amountVisible=false) 시 amount는 null로 내려오므로 필수 검증에서 제외합니다.
   const amount = readNumber(object.amount);
   const message = readText(object.message);
   const createdAt = readString(object.createdAt);
 
-  if (!id || !creatorName || !donorName || amount === null || message === null || !createdAt) {
+  if (!id || !creatorName || !donorName || message === null || !createdAt) {
     return null;
   }
 

@@ -43,7 +43,7 @@ export const DONATION_ALERT_DURATION_OPTIONS = [
 ] as const;
 
 // tts_rate CHECK: 0.50 ~ 2.00 (Web Speech API rate)
-// 원격 음성(Google 등)은 배속이 높으면 음이 깨지고 1.5배도 과해서, 자연스러운 1.3배를 상한으로 둡니다.
+// 원격 음성(Google 등)은 배속이 높으면 음이 깨질 수 있지만, 보통/빠름/매우 빠름 선택 폭을 위해 2.0배까지 제공합니다.
 export const DONATION_TTS_RATE_OPTIONS = [
   { value: 1.0, label: "보통" },
   { value: 1.5, label: "빠름" },

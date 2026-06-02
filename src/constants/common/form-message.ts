@@ -51,5 +51,6 @@ export const FORM_MESSAGE = {
     alertVolumeRange: "알림 볼륨은 0부터 100 사이여야 합니다.",
     ttsRateInvalid: "선택할 수 있는 읽기 속도를 골라주세요.",
     ttsVolumeRange: "음성 볼륨은 0부터 100 사이여야 합니다.",
+    ttsVoiceUriMax: (max: number) => `음성 식별자는 ${max}자 이하여야 합니다.`,
   },
 } as const;

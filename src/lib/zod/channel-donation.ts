@@ -56,7 +56,9 @@ export const channelDonationSettingsSchema = z.object({
     .int()
     .min(DONATION_ALERT_VOLUME_MIN, { error: FORM_MESSAGE.channelDonation.ttsVolumeRange })
     .max(DONATION_ALERT_VOLUME_MAX, { error: FORM_MESSAGE.channelDonation.ttsVolumeRange }),
-  ttsVoiceUri: z.string().max(DONATION_TTS_VOICE_URI_MAX),
+  ttsVoiceUri: z.string().max(DONATION_TTS_VOICE_URI_MAX, {
+    error: FORM_MESSAGE.channelDonation.ttsVoiceUriMax(DONATION_TTS_VOICE_URI_MAX),
+  }),
 });
 
 export type ChannelDonationSettingsInput = z.infer<typeof channelDonationSettingsSchema>;
