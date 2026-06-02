@@ -1,7 +1,7 @@
 "use client";
 // LiveView와 LiveChatPopout에서 공통으로 쓰는 방송 데이터와 상호작용 상태를 조합합니다.
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useLiveViewData } from "@/hooks/live/use-live-view-data";
 import { useLiveMessages } from "@/hooks/live/use-live-messages";
 import { useLivePolls } from "@/hooks/live/use-live-polls";
@@ -13,15 +13,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import { voteLivePollAction, sendLiveDonationAction } from "@/actions/live/live";
 import { QUERY_KEYS } from "@/constants/common/query-keys";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
-import { toastAppError } from "@/utils/common/toast-message";
-import { LIVE_DONATION_MIN_AMOUNT, LIVE_LABEL } from "@/constants/live/live";
+import { toastAppError, toastAppInfo } from "@/utils/common/toast-message";
+import { LIVE_DONATION_MIN_AMOUNT } from "@/constants/live/live";
 import { parseLiveVoteCommand } from "@/utils/live/live-vote-command";
-import {
-  mapLiveWatchToBroadcast,
-  type LiveChatMessage,
-  type LiveDonation,
-  type LivePoll,
-} from "@/types/live/live";
+import { mapLiveWatchToBroadcast, type LivePoll } from "@/types/live/live";
 
 export function useLiveBroadcastView(creatorId: string) {
   const user = useAuthStore((state) => state.user);
@@ -49,7 +44,7 @@ export function useLiveBroadcastView(creatorId: string) {
       });
   }
 
-  const messagesQuery = useLiveMessages(broadcast?.id);
+  const messagesQuery = useLiveMessages(broadcast?.id, creatorId);
   const messages = messagesQuery.messages;
 
   const pollsQuery = useLivePolls(broadcast?.id, user?.id);
@@ -57,24 +52,7 @@ export function useLiveBroadcastView(creatorId: string) {
   const donationEnabled = watchData?.settings.donationEnabled ?? false;
   const donationMinAmount = watchData?.settings.donationMinAmount ?? LIVE_DONATION_MIN_AMOUNT;
 
-  const messageDonations = useMemo<LiveDonation[]>(
-    () =>
-      messages
-        .filter(
-          (m): m is LiveChatMessage & { donationAmount: number } =>
-            m.type === "donation" && typeof m.donationAmount === "number" && m.donationAmount > 0,
-        )
-        .map((m) => ({
-          id: m.id,
-          author: m.author ?? LIVE_LABEL.anonymousAuthor,
-          amount: m.donationAmount,
-          message: m.content,
-        })),
-    [messages],
-  );
-
-  const donations =
-    donationRankingQuery.donations.length > 0 ? donationRankingQuery.donations : messageDonations;
+  const donations = donationRankingQuery.donations;
 
   const {
     walletBalance,
@@ -165,6 +143,10 @@ export function useLiveBroadcastView(creatorId: string) {
       const option = activePoll.options[voteOptionNumber - 1];
       if (!option) {
         toastAppError(APP_MESSAGE_CODE.error.live.voteInvalidOption);
+        return false;
+      }
+      if (option.id === activePoll.userVotedOptionId) {
+        toastAppInfo(APP_MESSAGE_CODE.success.live.voteUnchanged);
         return false;
       }
       return votePoll(activePoll.id, option.id);

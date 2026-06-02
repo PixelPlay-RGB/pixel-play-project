@@ -92,6 +92,10 @@ export const APP_MESSAGE = {
         title: "URL 복사 완료",
         description: "URL 복사가 완료되었습니다.",
       },
+      voteUnchanged: {
+        title: "이미 선택한 항목",
+        description: "다른 항목 번호를 입력하면 투표가 변경됩니다.",
+      },
     },
   },
   error: {
@@ -402,10 +406,6 @@ export const APP_MESSAGE = {
       voteInvalidOption: {
         title: "잘못된 투표 번호",
         description: "유효하지 않은 투표 번호입니다.",
-      },
-      voteAlreadyVoted: {
-        title: "이미 참여한 투표",
-        description: "한 투표에는 한 번만 참여할 수 있습니다.",
       },
     },
     supabase: {

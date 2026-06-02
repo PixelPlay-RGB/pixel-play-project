@@ -42,7 +42,7 @@ export function useLivePolls(broadcastId: string | null | undefined, userId?: st
 
       const { data: pollRows, error } = await supabase
         .from("live_poll")
-        .select("id, title, options, ended_at")
+        .select("id, title, options, ends_at, ended_at")
         .eq("broadcast_id", broadcastId)
         .order("created_at", { ascending: true });
 
@@ -73,11 +73,14 @@ export function useLivePolls(broadcastId: string | null | undefined, userId?: st
 
       return polls.map((row) => {
         const options = parsePollOptions(row.options);
+        const hasEndedByTime =
+          row.ends_at !== null && new Date(row.ends_at).getTime() <= Date.now();
         return {
           id: row.id,
           title: row.title,
           options,
-          status: row.ended_at ? ("ended" as const) : ("active" as const),
+          status: row.ended_at || hasEndedByTime ? ("ended" as const) : ("active" as const),
+          endsAt: row.ends_at,
           totalCount: options.reduce((sum, o) => sum + o.count, 0),
           userVotedOptionId: userVoteMap.get(row.id) ?? null,
         };
@@ -134,6 +137,30 @@ export function useLivePolls(broadcastId: string | null | undefined, userId?: st
       void channel.unsubscribe();
     };
   }, [broadcastId, userId, supabase, queryClient]);
+
+  useEffect(() => {
+    if (!broadcastId || !query.data) return;
+
+    const nextEndsAt = query.data
+      .filter((poll) => poll.status === "active" && poll.endsAt)
+      .map((poll) => new Date(poll.endsAt as string).getTime())
+      .filter((time) => Number.isFinite(time) && time > Date.now())
+      .sort((a, b) => a - b)[0];
+
+    if (!nextEndsAt) return;
+
+    const timeoutId = window.setTimeout(
+      () => {
+        void queryClient.invalidateQueries({
+          queryKey: QUERY_KEYS.live.polls(broadcastId),
+        });
+      },
+      // 32비트 setTimeout 한계(약 24.8일)를 넘기면 즉시 발화 → invalidate 루프가 되므로 상한을 둔다.
+      Math.min(Math.max(nextEndsAt - Date.now() + 500, 0), 2_147_483_647),
+    );
+
+    return () => window.clearTimeout(timeoutId);
+  }, [broadcastId, query.data, queryClient]);
 
   return {
     polls: query.data ?? [],

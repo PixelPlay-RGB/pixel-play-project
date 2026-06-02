@@ -1,19 +1,19 @@
 "use client";
 // 라이브 시청 메인 화면 — 비디오, 방송 정보, 채팅 패널을 조합합니다.
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Timer, Users } from "lucide-react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { LiveVideoPlayer } from "@/components/live/view/live-video-player";
 import { LiveBroadcastInfo } from "@/components/live/view/live-broadcast-info";
 import { LiveCreatorActions } from "@/components/live/view/live-creator-actions";
 import { LiveCreatorInfo } from "@/components/live/view/live-creator-info";
 import { LiveChatPanel } from "@/components/live/view/live-chat-panel";
 import { LiveLoginPromptDialog } from "@/components/live/view/live-login-prompt-dialog";
+import { useIsMobile } from "@/hooks/common/use-mobile";
 import { useLiveBroadcastView } from "@/hooks/live/use-live-broadcast-view";
 import { useFollowCreator } from "@/hooks/live/use-follow-creator";
+import { useMoveToLogin } from "@/hooks/live/use-move-to-login";
 import { cn } from "@/lib/utils";
-import { createPathWithNext } from "@/utils/common/redirect";
 import { formatElapsedTime, formatCount } from "@/utils/live/live-chat";
 import { LIVE_LABEL } from "@/constants/live/live";
 
@@ -22,9 +22,10 @@ interface Props {
 }
 
 export function LiveView({ creatorId }: Props) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const moveToLogin = useMoveToLogin();
+  const isMobile = useIsMobile();
+  const openChatButtonRef = useRef<HTMLButtonElement>(null);
+  const collapseChatButtonRef = useRef<HTMLButtonElement>(null);
 
   const {
     isLoading,
@@ -57,16 +58,12 @@ export function LiveView({ creatorId }: Props) {
   );
 
   const [isLoginPromptOpen, setIsLoginPromptOpen] = useState(false);
+  const [isDesktopChatCollapsed, setIsDesktopChatCollapsed] = useState(false);
+  const isChatCollapsed = isDesktopChatCollapsed && !isMobile;
 
   function openLoginPrompt() {
     if (isAuthLoading) return;
     setIsLoginPromptOpen(true);
-  }
-
-  function moveToLogin() {
-    const query = searchParams.toString();
-    const next = `${pathname}${query ? `?${query}` : ""}`;
-    router.push(createPathWithNext("/auth/login", next));
   }
 
   function handleFollow() {
@@ -75,6 +72,20 @@ export function LiveView({ creatorId }: Props) {
       return;
     }
     void toggleFollow();
+  }
+
+  function collapseDesktopChat() {
+    setIsDesktopChatCollapsed(true);
+    requestAnimationFrame(() => {
+      openChatButtonRef.current?.focus();
+    });
+  }
+
+  function expandDesktopChat() {
+    setIsDesktopChatCollapsed(false);
+    requestAnimationFrame(() => {
+      collapseChatButtonRef.current?.focus();
+    });
   }
 
   if (isAuthLoading || isLoading) {
@@ -108,6 +119,7 @@ export function LiveView({ creatorId }: Props) {
             "mx-auto w-full max-w-screen-2xl px-4",
             "md:mx-0 md:max-w-none md:px-0",
             "md:flex md:flex-row md:gap-4",
+            isChatCollapsed && "md:gap-0",
           )}
         >
           <div
@@ -117,7 +129,12 @@ export function LiveView({ creatorId }: Props) {
               "md:overflow-y-auto",
             )}
           >
-            <LiveVideoPlayer broadcast={broadcast} />
+            <LiveVideoPlayer
+              broadcast={broadcast}
+              isChatCollapsed={isChatCollapsed}
+              openChatButtonRef={openChatButtonRef}
+              onOpenChat={expandDesktopChat}
+            />
 
             <div className="flex items-start justify-between gap-3">
               <LiveBroadcastInfo broadcast={broadcast} />
@@ -144,7 +161,15 @@ export function LiveView({ creatorId }: Props) {
             </div>
           </div>
 
-          <aside className="mt-4 md:mt-0 md:w-88 md:shrink-0 md:py-4 md:pr-4">
+          <aside
+            className={cn(
+              "mt-4 transition-all duration-200 ease-out",
+              "md:mt-0 md:w-88 md:shrink-0 md:overflow-hidden md:py-4 md:pr-4 md:opacity-100",
+              isChatCollapsed && "md:w-0 md:pr-0 md:opacity-0",
+            )}
+            aria-hidden={isChatCollapsed}
+            inert={isChatCollapsed ? true : undefined}
+          >
             <LiveChatPanel
               creatorId={creatorId}
               messages={messages}
@@ -165,6 +190,8 @@ export function LiveView({ creatorId }: Props) {
               onDonate={sendDonation}
               chatRuleText={chatRuleText}
               onAcceptChatRule={acceptChatRule}
+              onCollapse={collapseDesktopChat}
+              collapseButtonRef={collapseChatButtonRef}
             />
           </aside>
         </div>

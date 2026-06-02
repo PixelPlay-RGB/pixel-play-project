@@ -7,19 +7,23 @@ export const LIVE_LABEL = {
   chatRuleDefaultText:
     "서로를 존중하며 대화해주세요. 반복 도배, 비방, 홍보성 메시지는 제한될 수 있습니다.",
   chatRuleAccept: "규칙 확인하고 채팅하기",
+  chatVoteCommandPlaceholder: "채팅은 제한 중입니다. !1처럼 입력해 투표할 수 있습니다.",
   live: "LIVE",
   chat: "라이브 채팅",
   follow: "팔로우",
   following: "팔로잉",
-  unfollow: "팔로우 취소",
   unfollowConfirmTitle: "팔로우를 취소하시겠습니까?",
   unfollowConfirmDescription: "팔로우를 취소하면 팔로워 전용 채팅에 참여할 수 없게 됩니다.",
   confirm: "확인",
   share: "공유",
-  more: "더보기",
   donate: "후원하기",
   vote: "투표 참여",
   chatMenu: "채팅 메뉴",
+  chatCollapse: "채팅 접기",
+  chatExpand: "채팅 열기",
+  playerVolume: "음량 조절",
+  playerQuality: "화질 설정",
+  playerFullscreen: "전체화면",
   viewers: "명 시청 중",
   followers: "팔로워",
   broadcasts: "방송",
@@ -32,9 +36,7 @@ export const LIVE_LABEL = {
   loginDescription: "이 기능을 사용하려면 로그인이 필요합니다.",
   loginButton: "로그인",
   cancel: "취소",
-  close: "닫기",
   anonymousAuthor: "익명",
-  shareCopy: "복사",
   broadcastOffline: "방송이 종료되었거나 준비 중입니다.",
   chatPopoutActive: "채팅창이 팝업으로 열려 있습니다.",
   chatFollowerPlaceholder: "팔로우 후 채팅할 수 있습니다.",
@@ -46,12 +48,15 @@ export const LIVE_LABEL = {
   participationWaitDesc: "팔로우 후 잠시 기다려야 채팅할 수 있습니다.",
   openLiveWatch: "시청 화면에서 확인",
   chatPopoutBlocked: "팝업 차단을 해제한 뒤 다시 열어주세요.",
+  selfAuthorFallback: "나",
 } as const;
 
 export const LIVE_DONATION_MIN_AMOUNT = 1000;
 export const LIVE_DONATION_AMOUNTS = [1000, 3000, 5000, 10000, 50000] as const;
 export const LIVE_CHAT_MESSAGE_MAX_LENGTH = 2000;
 export const LIVE_DONATION_MESSAGE_MAX_LENGTH = 300;
+// 채팅 메시지 목록에 유지하는 최대 건수(쿼리 limit + 낙관적/realtime 추가 시 slice 기준).
+export const LIVE_MESSAGE_LIMIT = 100;
 
 export const LIVE_DONATION_LABEL = {
   title: "후원하기",
@@ -80,15 +85,9 @@ export const LIVE_VOTE_LABEL = {
   empty: "현재 진행 중인 투표가 없습니다.",
   submit: "참여하기",
   participated: "참여 완료",
+  changeVote: "투표 변경",
+  changeHint: "다른 항목을 선택하면 투표가 변경됩니다.",
   submitting: "처리 중...",
-  voteCountUnit: "명",
-  ended: "투표 종료",
-  totalCount: "명 참여",
-} as const;
-
-export const LIVE_CHANNEL_MENU_LABEL = {
-  share: "공유하기",
-  report: "신고하기",
 } as const;
 
 export const LIVE_CHAT_MENU_LABEL = {
@@ -103,5 +102,3 @@ export const LIVE_CHAT_POPOUT_WINDOW = {
   width: 400,
   height: 600,
 } as const;
-
-export const LIVE_MOCK_BALANCE = 12000;

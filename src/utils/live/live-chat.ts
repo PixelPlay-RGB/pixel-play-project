@@ -1,3 +1,5 @@
+// 라이브 채팅 메시지 필터링과 시청자 수·후원 금액·경과 시간 포맷 유틸을 제공합니다.
+
 import type { LiveChatMessage } from "@/types/live/live";
 
 export function filterChatMessages(messages: LiveChatMessage[]): LiveChatMessage[] {

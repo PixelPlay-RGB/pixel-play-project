@@ -4,14 +4,17 @@ import { useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { QUERY_KEYS } from "@/constants/common/query-keys";
-import { mapLiveMessageRowToMessage, type LiveMessageRow } from "@/utils/live/live-message";
+import { LIVE_MESSAGE_LIMIT } from "@/constants/live/live";
+import {
+  mapLiveMessageRealtimePayload,
+  mapLiveMessageRowToMessage,
+  type LiveMessageJoinedRow,
+} from "@/utils/live/live-message";
 import type { LiveChatMessage } from "@/types/live/live";
-
-const LIVE_MESSAGE_LIMIT = 100;
 const LIVE_MESSAGE_SELECT =
-  "id, message_type, content, sender:sender_id(nickname, photo_url), donation:donation_id(amount)" as const;
+  "id, sender_id, message_type, content, metadata, sender:sender_id(nickname, photo_url), donation:donation_id(amount)" as const;
 
-export function useLiveMessages(broadcastId: string | null | undefined) {
+export function useLiveMessages(broadcastId: string | null | undefined, creatorId?: string) {
   const supabase = useMemo(() => createClient(), []);
   const queryClient = useQueryClient();
   const enabled = !!broadcastId;
@@ -28,11 +31,11 @@ export function useLiveMessages(broadcastId: string | null | undefined) {
         .eq("broadcast_id", broadcastId)
         .order("created_at", { ascending: false })
         .limit(LIVE_MESSAGE_LIMIT)
-        .returns<LiveMessageRow[]>();
+        .returns<LiveMessageJoinedRow[]>();
 
       if (error) throw error;
 
-      return (data ?? []).reverse().map(mapLiveMessageRowToMessage);
+      return (data ?? []).reverse().map((row) => mapLiveMessageRowToMessage(row, creatorId));
     },
   });
 
@@ -50,23 +53,10 @@ export function useLiveMessages(broadcastId: string | null | undefined) {
           table: "live_message",
           filter: `broadcast_id=eq.${broadcastId}`,
         },
-        async (payload) => {
-          if (!payload.new || typeof payload.new !== "object") return;
-          const messageId = String((payload.new as Record<string, unknown>).id ?? "");
-          if (!messageId) return;
-
-          // TODO [perf]: Realtime payload에는 sender/donation join 데이터가 없어 INSERT마다 단건 조회가 필요하다.
-          // 트래픽이 늘면 sender 프로필 캐시 또는 별도 조회 전략으로 N+1 SELECT를 줄인다.
-          const { data: row, error } = await supabase
-            .from("live_message")
-            .select(LIVE_MESSAGE_SELECT)
-            .eq("id", messageId)
-            .single()
-            .returns<LiveMessageRow>();
-
-          if (error || !row) return;
-
-          const nextMessage = mapLiveMessageRowToMessage(row);
+        (payload) => {
+          // Realtime payload의 metadata로 바로 매핑한다(추가 단건 조회 없음).
+          const nextMessage = mapLiveMessageRealtimePayload(payload.new, creatorId);
+          if (!nextMessage) return;
 
           queryClient.setQueryData<LiveChatMessage[]>(
             QUERY_KEYS.live.messages(broadcastId),
@@ -87,7 +77,7 @@ export function useLiveMessages(broadcastId: string | null | undefined) {
     return () => {
       void channel.unsubscribe();
     };
-  }, [broadcastId, supabase, queryClient]);
+  }, [broadcastId, creatorId, supabase, queryClient]);
 
   return {
     messages: query.data ?? [],

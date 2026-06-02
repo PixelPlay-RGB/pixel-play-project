@@ -114,19 +114,16 @@ export const MOCK_LIVE_DONATIONS: LiveDonation[] = [
     id: "don-1",
     author: "열성팬",
     amount: 5000,
-    message: "오늘 퇴근하고 바로 달려왔어요 ㅎㅎ 화이팅!",
   },
   {
     id: "don-2",
     author: "익명의 후원자",
     amount: 1000,
-    message: "응원합니다! 오늘도 좋은 방송 기대할게요.",
   },
   {
     id: "don-3",
     author: "단골팬",
     amount: 10000,
-    message: "항상 재밌게 보고 있어요!",
   },
 ];
 
@@ -140,6 +137,7 @@ export const MOCK_LIVE_POLLS: LivePoll[] = [
       { id: "opt-3", label: "배틀그라운드", count: 61 },
     ],
     status: "active",
+    endsAt: null,
     userVotedOptionId: null,
     totalCount: 283,
   },

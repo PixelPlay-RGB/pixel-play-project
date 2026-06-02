@@ -2,7 +2,7 @@
 // 별도 탭으로 열리는 채팅 전용 팝아웃 화면입니다.
 
 import { Radio } from "lucide-react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { LiveChatInputBar } from "@/components/live/view/live-chat-input-bar";
 import { LiveChatMessageList } from "@/components/live/chat/live-chat-message-list";
@@ -10,7 +10,7 @@ import { LiveChatParticipationNotice } from "@/components/live/chat/live-chat-pa
 import { LiveDonationBanner } from "@/components/live/view/live-donation-banner";
 import { LIVE_LABEL } from "@/constants/live/live";
 import { useLiveBroadcastView } from "@/hooks/live/use-live-broadcast-view";
-import { createPathWithNext } from "@/utils/common/redirect";
+import { useMoveToLogin } from "@/hooks/live/use-move-to-login";
 
 interface Props {
   creatorId: string;
@@ -18,8 +18,7 @@ interface Props {
 
 export function LiveChatPopout({ creatorId }: Props) {
   const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const moveToLogin = useMoveToLogin();
 
   const {
     chatRuleText,
@@ -43,12 +42,6 @@ export function LiveChatPopout({ creatorId }: Props) {
     votePoll,
     sendDonation,
   } = useLiveBroadcastView(creatorId);
-
-  function moveToLogin() {
-    const query = searchParams.toString();
-    const next = `${pathname}${query ? `?${query}` : ""}`;
-    router.push(createPathWithNext("/auth/login", next));
-  }
 
   function moveToLiveWatch() {
     router.push(`/live/${creatorId}`);

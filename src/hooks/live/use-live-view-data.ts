@@ -1,4 +1,5 @@
 "use client";
+// 라이브 시청 화면의 방송·크리에이터·채팅 상태 데이터를 조회합니다.
 
 import { useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";

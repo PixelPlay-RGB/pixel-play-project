@@ -1,4 +1,4 @@
-// 라이브 목록 화면에서 사용하는 도메인 타입을 정의합니다.
+// 라이브 목록·시청 화면에서 사용하는 도메인 타입을 정의합니다.
 
 import type { GenericTables } from "@/types/common/supabase.types";
 
@@ -86,13 +86,14 @@ export interface LiveChatMessage {
   author?: string;
   content: string;
   donationAmount?: number;
+  // 작성자가 방송 진행자(크리에이터) 본인인지 여부. 채팅에서 호스트 메시지를 강조하는 데 쓴다.
+  isHost?: boolean;
 }
 
 export interface LiveDonation {
   id: string;
   author: string;
   amount: number;
-  message: string;
 }
 
 export type LivePollStatus = "active" | "ended";
@@ -108,6 +109,7 @@ export interface LivePoll {
   title: string;
   options: LivePollOption[];
   status: LivePollStatus;
+  endsAt: string | null;
   totalCount: number;
   userVotedOptionId: string | null;
 }
@@ -197,7 +199,9 @@ export interface LiveWatchData {
   viewerChatState: LiveViewerChatState;
 }
 
-export function mapLiveWatchToBroadcast(data: LiveWatchData | null | undefined): LiveBroadcast | null {
+export function mapLiveWatchToBroadcast(
+  data: LiveWatchData | null | undefined,
+): LiveBroadcast | null {
   if (!data?.broadcast) return null;
 
   const elapsedSeconds = Math.max(

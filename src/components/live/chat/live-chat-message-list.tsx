@@ -1,4 +1,5 @@
 "use client";
+// 라이브 채팅 메시지 목록을 렌더링하고 하단 근접 시 자동 스크롤을 처리합니다.
 
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { LIVE_LABEL } from "@/constants/live/live";
@@ -88,7 +89,7 @@ interface MessageItemProps {
 function MessageItem({ message }: MessageItemProps) {
   if (message.type === "system") {
     return (
-      <p className="text-muted-foreground my-1 text-center text-xs break-words">
+      <p className="text-muted-foreground my-1 text-center text-xs wrap-break-word">
         {message.content}
       </p>
     );
@@ -109,18 +110,20 @@ function MessageItem({ message }: MessageItemProps) {
               ? `${formatDonationAmount(message.donationAmount)}P`
               : ""}
           </span>
-          <span className="text-foreground min-w-0 text-xs font-medium break-words">
+          <span className="text-foreground min-w-0 text-xs font-medium wrap-break-word">
             {message.author}
           </span>
         </div>
-        {message.content ? <p className="text-foreground break-words">{message.content}</p> : null}
+        {message.content ? <p className="text-foreground wrap-break-word">{message.content}</p> : null}
       </div>
     );
   }
 
   return (
-    <p className="py-0.5 text-sm leading-snug break-words">
-      <span className="text-brand mr-1.5 font-medium">{message.author}</span>
+    <p className="py-0.5 text-sm leading-snug wrap-break-word">
+      <span className={cn("mr-1.5 font-medium", message.isHost ? "text-live" : "text-brand")}>
+        {message.author}
+      </span>
       <span className="text-foreground">{message.content}</span>
     </p>
   );

@@ -1,4 +1,5 @@
 "use client";
+// 크리에이터 팔로우/언팔로우와 공유 버튼을 담당하는 액션 영역입니다.
 
 import { useState } from "react";
 import { Check, Share2, UserPlus } from "lucide-react";

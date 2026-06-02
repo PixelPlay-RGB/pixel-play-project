@@ -3,43 +3,49 @@
 
 import { useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getLiveDonationRankingAction } from "@/actions/live/live";
 import { createClient } from "@/lib/supabase/client";
 import { QUERY_KEYS } from "@/constants/common/query-keys";
 import { LIVE_LABEL } from "@/constants/live/live";
+import { isUuid } from "@/utils/common/uuid";
 import type { LiveDonation } from "@/types/live/live";
 
-function normalizeDonationRanking(
-  donations: { id: string; author: string | null; amount: number; message: string }[],
-): LiveDonation[] {
-  return donations.map((donation) => ({
-    id: donation.id,
-    author: donation.author ?? LIVE_LABEL.anonymousAuthor,
-    amount: donation.amount,
-    message: donation.message,
-  }));
+function normalizeDonationRanking(raw: unknown): LiveDonation[] {
+  if (!Array.isArray(raw)) return [];
+
+  return raw.flatMap((item) => {
+    if (!item || typeof item !== "object") return [];
+    const record = item as Record<string, unknown>;
+    if (typeof record.id !== "string" || typeof record.amount !== "number") return [];
+
+    return [
+      {
+        id: record.id,
+        author: typeof record.author === "string" ? record.author : LIVE_LABEL.anonymousAuthor,
+        amount: record.amount,
+      },
+    ];
+  });
 }
 
-export function useLiveDonationRanking(
-  creatorId: string,
-  broadcastId: string | null | undefined,
-) {
+export function useLiveDonationRanking(creatorId: string, broadcastId: string | null | undefined) {
   const supabase = useMemo(() => createClient(), []);
   const queryClient = useQueryClient();
 
   const query = useQuery({
     queryKey: QUERY_KEYS.donations.liveRanking(creatorId),
-    enabled: !!creatorId,
+    enabled: isUuid(creatorId),
     staleTime: 1000 * 30,
     queryFn: async () => {
-      const result = await getLiveDonationRankingAction(creatorId);
+      const { data, error } = await supabase.rpc("get_live_donation_ranking", {
+        p_creator_id: creatorId,
+      });
 
-      if (!result.success || !result.data) {
-        console.error("라이브 후원 랭킹 조회 액션 실패", result.code);
+      if (error) {
+        console.error("get_live_donation_ranking 실패", error);
         return [];
       }
 
-      return normalizeDonationRanking(result.data.donations);
+      return normalizeDonationRanking(data);
     },
   });
 

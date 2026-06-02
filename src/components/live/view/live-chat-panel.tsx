@@ -1,9 +1,11 @@
 "use client";
 // 채팅 패널 컨테이너 — 메시지 목록, 입력창, 참여 조건 안내, 클린봇 상태를 조합합니다.
 
-import { useEffect, useRef, useState } from "react";
-import { ExternalLink } from "lucide-react";
+import { useEffect, useRef, useState, type Ref } from "react";
+import { ExternalLink, PanelRightClose } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { LiveChatInputBar } from "@/components/live/view/live-chat-input-bar";
 import { LiveChatMessageList } from "@/components/live/chat/live-chat-message-list";
 import { LiveChatParticipationNotice } from "@/components/live/chat/live-chat-participation-notice";
@@ -43,6 +45,8 @@ interface Props {
   }) => Promise<boolean>;
   chatRuleText?: string;
   onAcceptChatRule?: () => Promise<boolean>;
+  onCollapse?: () => void;
+  collapseButtonRef?: Ref<HTMLButtonElement>;
 }
 
 export function LiveChatPanel({
@@ -65,6 +69,8 @@ export function LiveChatPanel({
   onDonate,
   chatRuleText,
   onAcceptChatRule,
+  onCollapse,
+  collapseButtonRef,
 }: Props) {
   const [cleanbot, setCleanbot] = useState(true);
   const [isPopoutOpen, setIsPopoutOpen] = useState(false);
@@ -99,13 +105,35 @@ export function LiveChatPanel({
     <div className="border-border bg-card flex h-full min-h-96 flex-col overflow-hidden rounded-xl border md:min-h-0">
       <div className="border-border flex items-center justify-between border-b px-4 py-3">
         <span className="text-foreground text-sm font-semibold">{LIVE_LABEL.chat}</span>
-        <LiveChatMenu
-          creatorId={creatorId}
-          chatRuleText={chatRuleText}
-          cleanbot={cleanbot}
-          onCleanbot={() => setCleanbot((prev) => !prev)}
-          onPopoutOpen={handlePopoutOpen}
-        />
+        <div className="flex items-center gap-1">
+          {onCollapse ? (
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <Button
+                    ref={collapseButtonRef}
+                    type="button"
+                    size="icon-sm"
+                    variant="ghost"
+                    aria-label={LIVE_LABEL.chatCollapse}
+                    className="hidden md:inline-flex"
+                    onClick={onCollapse}
+                  />
+                }
+              >
+                <PanelRightClose className="size-4" />
+              </TooltipTrigger>
+              <TooltipContent>{LIVE_LABEL.chatCollapse}</TooltipContent>
+            </Tooltip>
+          ) : null}
+          <LiveChatMenu
+            creatorId={creatorId}
+            chatRuleText={chatRuleText}
+            cleanbot={cleanbot}
+            onCleanbot={() => setCleanbot((prev) => !prev)}
+            onPopoutOpen={handlePopoutOpen}
+          />
+        </div>
       </div>
 
       {isPopoutOpen ? (

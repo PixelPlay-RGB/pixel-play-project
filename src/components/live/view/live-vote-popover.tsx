@@ -1,7 +1,7 @@
 "use client";
 // 투표 참여 Dialog를 채팅 패널 액션으로 제공합니다.
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -39,14 +39,19 @@ interface VoteContentProps {
 }
 
 function VoteContent({ activePoll, onVote, onClose }: VoteContentProps) {
+  const titleId = useId();
+  const hintId = useId();
   const hasVoted = !!activePoll.userVotedOptionId;
   const [selectedOption, setSelectedOption] = useState<string | null>(
     activePoll.userVotedOptionId ?? null,
   );
   const [isVoting, setIsVoting] = useState(false);
 
+  // 이미 투표한 항목과 다른 항목을 골라야 제출할 수 있습니다(투표 변경).
+  const hasChanged = selectedOption !== (activePoll.userVotedOptionId ?? null);
+
   async function handleVote() {
-    if (!selectedOption || isVoting) return;
+    if (!selectedOption || isVoting || !hasChanged) return;
     setIsVoting(true);
     const success = await onVote(activePoll.id, selectedOption);
     setIsVoting(false);
@@ -56,18 +61,30 @@ function VoteContent({ activePoll, onVote, onClose }: VoteContentProps) {
   return (
     <>
       <div className="flex flex-col gap-3">
-        <p className="text-foreground text-sm font-medium">{activePoll.title}</p>
-        <div className="flex flex-col gap-2">
+        <p id={titleId} className="text-foreground text-sm font-medium">
+          {activePoll.title}
+        </p>
+        {hasVoted ? (
+          <p id={hintId} className="text-muted-foreground text-xs">
+            {LIVE_VOTE_LABEL.changeHint}
+          </p>
+        ) : null}
+        <div
+          role="radiogroup"
+          aria-labelledby={titleId}
+          aria-describedby={hasVoted ? hintId : undefined}
+          className="flex flex-col gap-2"
+        >
           {activePoll.options.map((option, index) => {
             const isSelected = selectedOption === option.id;
-            const isDisabledByVote = hasVoted && option.id !== activePoll.userVotedOptionId;
             return (
               <Button
                 key={option.id}
                 type="button"
+                role="radio"
                 variant="outline"
-                aria-pressed={isSelected}
-                disabled={isVoting || isDisabledByVote}
+                aria-checked={isSelected}
+                disabled={isVoting}
                 onClick={() => setSelectedOption(option.id)}
                 className={cn(
                   "h-auto w-full flex-col items-start gap-1.5 px-3 py-2.5",
@@ -92,14 +109,16 @@ function VoteContent({ activePoll, onVote, onClose }: VoteContentProps) {
         </Button>
         <Button
           type="button"
-          disabled={!selectedOption || isVoting || hasVoted}
+          disabled={!selectedOption || isVoting || !hasChanged}
           onClick={() => void handleVote()}
           className="bg-brand hover:bg-brand/90 text-brand-foreground"
         >
           {isVoting
             ? LIVE_VOTE_LABEL.submitting
             : hasVoted
-              ? LIVE_VOTE_LABEL.participated
+              ? hasChanged
+                ? LIVE_VOTE_LABEL.changeVote
+                : LIVE_VOTE_LABEL.participated
               : LIVE_VOTE_LABEL.submit}
         </Button>
       </div>
@@ -133,7 +152,12 @@ function VoteBody({
   }
 
   return (
-    <VoteContent key={activePoll.id} activePoll={activePoll} onVote={onVote} onClose={onClose} />
+    <VoteContent
+      key={`${activePoll.id}:${activePoll.userVotedOptionId ?? "none"}`}
+      activePoll={activePoll}
+      onVote={onVote}
+      onClose={onClose}
+    />
   );
 }
 

@@ -29,7 +29,7 @@ export function LiveLoginPromptDialog({ open, onOpenChange, onLogin }: Props) {
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             {LIVE_LABEL.cancel}
           </Button>
-          <Button onClick={onLogin} className="bg-live hover:bg-live/90 text-white">
+          <Button onClick={onLogin} className="bg-brand hover:bg-brand/90 text-brand-foreground">
             {LIVE_LABEL.loginButton}
           </Button>
         </DialogFooter>

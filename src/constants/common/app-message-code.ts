@@ -39,6 +39,7 @@ export const APP_MESSAGE_CODE = {
     },
     live: {
       urlCopied: "success.live.urlCopied",
+      voteUnchanged: "success.live.voteUnchanged",
     },
   },
   error: {
@@ -138,7 +139,6 @@ export const APP_MESSAGE_CODE = {
       voteFailed: "error.live.voteFailed",
       voteNoActivePoll: "error.live.voteNoActivePoll",
       voteInvalidOption: "error.live.voteInvalidOption",
-      voteAlreadyVoted: "error.live.voteAlreadyVoted",
     },
     supabase: {
       permissionDenied: "error.supabase.permissionDenied",

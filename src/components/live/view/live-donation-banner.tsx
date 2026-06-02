@@ -1,3 +1,5 @@
+// 이번 주 후원 랭킹을 채팅 영역 상단 배너로 표시합니다.
+
 import { Trophy } from "lucide-react";
 import { formatDonationAmount } from "@/utils/live/live-chat";
 import { LIVE_LABEL } from "@/constants/live/live";
@@ -15,7 +17,8 @@ const RANK_META = [
 ] as const;
 
 export function LiveDonationBanner({ donations }: Props) {
-  const top3 = [...donations].sort((a, b) => b.amount - a.amount).slice(0, 3);
+  // RPC가 이미 amount 내림차순으로 정렬·상위 3건만 내려준다.
+  const top3 = donations.slice(0, 3);
 
   return (
     <div className="border-border bg-card/95 shadow-xs rounded-lg border px-2.5 py-1.5 backdrop-blur-sm">

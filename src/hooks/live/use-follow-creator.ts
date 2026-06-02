@@ -1,4 +1,5 @@
 "use client";
+// 라이브 시청 화면에서 크리에이터 팔로우/언팔로우 서버 액션을 호출합니다.
 
 import { useState } from "react";
 import { followCreatorAction, unfollowCreatorAction } from "@/actions/following/following";

@@ -1,3 +1,5 @@
+// get_live_watch / get_live_watch_count RPC 응답을 시청 화면 도메인 데이터로 정규화합니다.
+
 import type { LiveWatchData } from "@/types/live/live";
 
 interface LiveWatchCountResult {
