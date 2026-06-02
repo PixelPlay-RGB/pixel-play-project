@@ -32,6 +32,7 @@ export const APP_MESSAGE_CODE = {
       securityCopied: "success.channel.securityCopied",
       securityTokenRotated: "success.channel.securityTokenRotated",
       chatSettingsSaved: "success.channel.chatSettingsSaved",
+      liveSettingsSaved: "success.channel.liveSettingsSaved",
     },
     following: {
       followed: "success.following.followed",
@@ -122,6 +123,7 @@ export const APP_MESSAGE_CODE = {
     channel: {
       chatSettingsLoadFailed: "error.channel.chatSettingsLoadFailed",
       chatSettingsSaveFailed: "error.channel.chatSettingsSaveFailed",
+      liveSettingsSaveFailed: "error.channel.liveSettingsSaveFailed",
       securityLoadFailed: "error.channel.securityLoadFailed",
       securityCopyFailed: "error.channel.securityCopyFailed",
       securityTokenRotateFailed: "error.channel.securityTokenRotateFailed",

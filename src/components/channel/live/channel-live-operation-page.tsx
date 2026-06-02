@@ -16,7 +16,9 @@ import ChannelLiveQuickSettingsPanel from "@/components/channel/live/channel-liv
 import ChannelLiveSettingsPanel from "@/components/channel/live/channel-live-settings-panel";
 import ChannelLiveStreamStatusPanel from "@/components/channel/live/channel-live-stream-status-panel";
 import { CHANNEL_LIVE_MEDIA_CONFIG } from "@/constants/channel/channel-live-media";
+import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { cn } from "@/lib/utils";
+import { toastAppError, toastAppSuccess } from "@/utils/common/toast-message";
 import { BadgeCheck } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
 
@@ -79,7 +81,6 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
     activeBroadcast?.startedAt ?? null,
   );
   const [broadcastActionError, setBroadcastActionError] = useState<string | null>(null);
-  const [settingsActionMessage, setSettingsActionMessage] = useState<string | null>(null);
   const [chatRuleText, setChatRuleText] = useState(initialSettings?.chatRuleText ?? "");
   const [thumbnailPreviewUrl, setThumbnailPreviewUrl] = useState(
     activeBroadcast?.thumbnailUrl ?? "",
@@ -230,7 +231,6 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
   };
 
   const handleSaveSettings = () => {
-    setSettingsActionMessage(null);
     startSettingsTransition(async () => {
       const result = await updateChannelLiveSettingsAction({
         alertSoundEnabled: isAlertSoundEnabled,
@@ -254,7 +254,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
       });
 
       if (!result.success || !result.data) {
-        setSettingsActionMessage("방송 설정을 저장하지 못했습니다.");
+        toastAppError(APP_MESSAGE_CODE.error.channel.liveSettingsSaveFailed);
         return;
       }
 
@@ -266,7 +266,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
         });
 
         if (!thumbnailResult.success || !thumbnailResult.data) {
-          setSettingsActionMessage("미리보기 이미지를 저장하지 못했습니다.");
+          toastAppError(APP_MESSAGE_CODE.error.channel.liveSettingsSaveFailed);
           return;
         }
 
@@ -292,7 +292,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
       setAlertVolume(result.data.settings.alertVolume);
       setIsTtsEnabled(result.data.settings.ttsEnabled);
       setTtsRate(result.data.settings.ttsRate);
-      setSettingsActionMessage("방송 설정을 저장했습니다.");
+      toastAppSuccess(APP_MESSAGE_CODE.success.channel.liveSettingsSaved);
     });
   };
 
@@ -343,7 +343,6 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
             broadcastActionError={broadcastActionError}
             isBroadcastActionPending={isBroadcastActionPending}
             isSettingsActionPending={isSettingsActionPending}
-            settingsActionMessage={settingsActionMessage}
             secondaryPanel={<ChannelLivePollPanel />}
             thumbnailPreviewName={thumbnailPreviewName}
             thumbnailPreviewUrl={thumbnailPreviewUrl}

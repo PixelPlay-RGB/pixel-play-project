@@ -14,7 +14,6 @@ interface Props {
   broadcastActionError: string | null;
   isBroadcastActionPending: boolean;
   isSettingsActionPending: boolean;
-  settingsActionMessage: string | null;
   secondaryPanel: ReactNode;
   thumbnailPreviewName: string;
   thumbnailPreviewUrl: string;
@@ -37,7 +36,6 @@ export default function ChannelLiveSettingsPanel({
   broadcastActionError,
   isBroadcastActionPending,
   isSettingsActionPending,
-  settingsActionMessage,
   secondaryPanel,
   thumbnailPreviewName,
   thumbnailPreviewUrl,
@@ -82,19 +80,6 @@ export default function ChannelLiveSettingsPanel({
         {broadcastActionError && (
           <div className="border-destructive/20 bg-destructive/10 text-destructive rounded-lg border px-3 py-2 text-xs font-semibold">
             {broadcastActionError}
-          </div>
-        )}
-
-        {settingsActionMessage && (
-          <div
-            className={cn(
-              "rounded-lg border px-3 py-2 text-xs font-semibold",
-              settingsActionMessage.includes("못했습니다")
-                ? "border-destructive/20 bg-destructive/10 text-destructive"
-                : "border-brand/20 bg-brand/10 text-brand",
-            )}
-          >
-            {settingsActionMessage}
           </div>
         )}
 

@@ -76,6 +76,10 @@ export const APP_MESSAGE = {
         title: "저장 완료",
         description: "새 채팅 설정을 다음 채팅부터 적용합니다.",
       },
+      liveSettingsSaved: {
+        title: "방송 설정 저장 완료",
+        description: "방송 운영 설정이 저장되었습니다.",
+      },
     },
     following: {
       followed: {
@@ -355,6 +359,10 @@ export const APP_MESSAGE = {
       },
       chatSettingsSaveFailed: {
         title: "채팅 설정 저장 실패",
+        description: "입력값을 확인한 뒤 다시 시도해주세요.",
+      },
+      liveSettingsSaveFailed: {
+        title: "방송 설정 저장 실패",
         description: "입력값을 확인한 뒤 다시 시도해주세요.",
       },
       securityLoadFailed: {
