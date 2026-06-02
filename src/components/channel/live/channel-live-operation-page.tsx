@@ -299,7 +299,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
   return (
     <div className="flex flex-col gap-4 xl:h-full xl:min-h-0 xl:overflow-hidden">
       <div className="grid gap-4 xl:h-full xl:min-h-0 xl:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)_minmax(16rem,0.85fr)] xl:overflow-hidden">
-        <div className="flex min-w-0 flex-col gap-4 xl:min-h-0 xl:overflow-y-auto xl:pr-1">
+        <div className="flex min-w-0 flex-col gap-4 xl:h-full xl:max-h-full xl:min-h-0 xl:overflow-y-auto xl:pr-2 xl:pb-2">
           <div className="border-border bg-card flex flex-col gap-3 rounded-xl border p-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-wrap items-center gap-2">
               <span
@@ -362,7 +362,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
           />
         </div>
 
-        <div className="min-w-0 xl:min-h-0 xl:overflow-y-auto xl:pr-1">
+        <div className="min-w-0 xl:h-full xl:min-h-0">
           <ChannelLiveChatPanel
             key={broadcastId ?? "channel-live-chat-idle"}
             broadcastId={broadcastId}
@@ -372,7 +372,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
           />
         </div>
 
-        <div className="min-w-0 xl:min-h-0 xl:overflow-y-auto xl:pr-1">
+        <div className="min-w-0 xl:h-full xl:min-h-0 xl:overflow-y-auto xl:pr-2 xl:pb-2">
           <ChannelLiveQuickSettingsPanel
             isAlertSoundEnabled={isAlertSoundEnabled}
             isDonationAlertEnabled={isDonationAlertEnabled}
