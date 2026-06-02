@@ -865,6 +865,10 @@ export type Database = {
         }
         Returns: Json
       }
+      get_channel_profile: {
+        Args: { p_creator_id: string; p_viewer_id?: string }
+        Returns: Json
+      }
       get_chat_room_detail: {
         Args: { p_room_id: string }
         Returns: {

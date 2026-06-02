@@ -7,34 +7,18 @@ import {
   COMMUNITY_POST_PAGE_SIZE,
 } from "@/constants/community/community";
 import { createAdminClient } from "@/lib/supabase/admin-client";
-import { createClient } from "@/lib/supabase/server";
 import type { AppActionResult } from "@/types/common/action";
 import type {
   CommunityCommentsResult,
   CommunityPostDetail,
   CommunityPostsResult,
 } from "@/types/community/community";
-import { isAuthSessionMissingError } from "@/utils/auth/auth-error";
+import { resolveViewerId } from "@/utils/auth/viewer";
 import {
   parseCommunityComments,
   parseCommunityPostDetail,
   parseCommunityPostsResult,
 } from "@/utils/community/community-parser";
-
-// 현재 시청자 id(비로그인이면 null). isLiked 계산에 사용합니다.
-export async function resolveViewerId(): Promise<string | null> {
-  const serverClient = await createClient();
-  const {
-    data: { user },
-    error,
-  } = await serverClient.auth.getUser();
-
-  if (error && !isAuthSessionMissingError(error)) {
-    console.error("커뮤니티 시청자 조회 실패", error);
-  }
-
-  return user?.id ?? null;
-}
 
 export async function getChannelCommunityPosts(
   creatorId: string,
