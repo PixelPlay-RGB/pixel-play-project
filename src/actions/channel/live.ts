@@ -420,7 +420,6 @@ export async function updateChannelLiveSettingsAction(
     p_default_tags: parsed.data.defaultTags,
     p_default_title: parsed.data.defaultTitle,
     p_donation_alert_duration_seconds: parsed.data.donationAlertDurationSeconds,
-    p_donation_alert_enabled: parsed.data.donationAlertEnabled,
     p_donation_amount_visible: parsed.data.donationAmountVisible,
     p_donation_enabled: parsed.data.donationEnabled,
     p_donation_min_amount: parsed.data.donationMinAmount,
