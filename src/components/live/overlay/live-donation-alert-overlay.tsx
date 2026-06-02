@@ -95,7 +95,7 @@ export function LiveDonationAlertOverlay({
                     variants={liveDonationAlertTextVariants}
                     initial="hidden"
                     animate="visible"
-                    className="max-w-md text-xl leading-7 font-semibold break-words whitespace-pre-line wrap-break-word text-zinc-200 sm:max-w-120 sm:text-2xl sm:leading-8"
+                    className="max-w-md text-xl leading-7 font-semibold wrap-break-word whitespace-pre-line text-zinc-200 sm:max-w-120 sm:text-2xl sm:leading-8"
                   >
                     {donation.message}
                   </motion.p>

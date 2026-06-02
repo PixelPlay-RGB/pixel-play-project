@@ -111,7 +111,9 @@ export function SettlementSummaryCard({ monthlyDonation, settlement }: Props) {
             ))}
             <div className="flex items-center justify-between pt-3">
               <dt className="text-foreground text-sm font-bold">정산 예정액</dt>
-              <dd className="text-brand text-base font-black tabular-nums">{formatPoint(payable)}</dd>
+              <dd className="text-brand text-base font-black tabular-nums">
+                {formatPoint(payable)}
+              </dd>
             </div>
           </dl>
 

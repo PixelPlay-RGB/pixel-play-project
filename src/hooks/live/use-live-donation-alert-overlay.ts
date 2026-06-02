@@ -84,7 +84,10 @@ export function useLiveDonationAlertOverlay(
   // 알림음을 재생한 뒤(끝나면) TTS를 이어서 읽어줍니다.
   // audioSettings를 넘기면 그 설정으로 재생합니다(테스트 후원: 현재 설정값으로 재생).
   const playAlert = useCallback(
-    (target: LiveDonationAlertOverlayData, audioSettings: LiveDonationAlertAudioSettings = audio) => {
+    (
+      target: LiveDonationAlertOverlayData,
+      audioSettings: LiveDonationAlertAudioSettings = audio,
+    ) => {
       const playTts = () => {
         if (!audioSettings.ttsEnabled) {
           return;

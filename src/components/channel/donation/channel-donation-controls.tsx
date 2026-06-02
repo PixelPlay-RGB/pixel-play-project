@@ -4,7 +4,6 @@
 import { useState } from "react";
 import { Controller, useWatch } from "react-hook-form";
 import { ChevronDown, ChevronUp, HandCoins, Send } from "lucide-react";
-import { toast } from "sonner";
 
 import DonationAlertPreview from "@/components/channel/donation/donation-alert-preview";
 import { DonationPreviewButton } from "@/components/channel/donation/donation-preview-button";
@@ -31,6 +30,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
+import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import {
   DONATION_ALERT_DURATION_OPTIONS,
   DONATION_ALERT_SOUND_OPTIONS,
@@ -44,6 +44,7 @@ import { useSpeechSynthesis } from "@/hooks/common/use-speech-synthesis";
 import { useStickyActionBar } from "@/hooks/common/use-sticky-action-bar";
 import { cn } from "@/lib/utils";
 import type { ChannelDonationSnapshot } from "@/types/channel/donation";
+import { toastAppError, toastAppSuccess } from "@/utils/common/toast-message";
 import { playDonationSound } from "@/utils/channel/donation-sound";
 import { buildDonationTtsText } from "@/utils/channel/donation-tts";
 import { sendTestDonationAlert } from "@/utils/live/donation-alert-test";
@@ -107,10 +108,18 @@ export function ChannelDonationControls({ initialSnapshot }: Props) {
     const { donorNickname, amount, message } = DONATION_TEST_ALERT_SAMPLE;
 
     // 음성 선택은 준비 중이라 기본 음성으로 고정합니다(voiceURI 미지정).
-    speak(buildDonationTtsText({ donorNickname, amount, message, amountVisible: Boolean(amountVisible) }), {
-      rate: ttsRate ?? 1,
-      volume: (ttsVolume ?? 0) / 100,
-    });
+    speak(
+      buildDonationTtsText({
+        donorNickname,
+        amount,
+        message,
+        amountVisible: Boolean(amountVisible),
+      }),
+      {
+        rate: ttsRate ?? 1,
+        volume: (ttsVolume ?? 0) / 100,
+      },
+    );
   };
 
   // 현재 설정 그대로 OBS 후원 알림 오버레이에 테스트 후원을 전송합니다(DB·방송 무관, 통계 미반영).
@@ -136,12 +145,10 @@ export function ChannelDonationControls({ initialSnapshot }: Props) {
         },
       });
 
-      toast.success("테스트 후원을 보냈어요", {
-        description: "OBS 후원 알림 화면에서 확인하세요.",
-      });
+      toastAppSuccess(APP_MESSAGE_CODE.success.channel.donationTestSent);
     } catch (error) {
       console.error("테스트 후원 전송 실패", error);
-      toast.error("테스트 후원 전송에 실패했어요");
+      toastAppError(APP_MESSAGE_CODE.error.channel.donationTestFailed);
     } finally {
       setIsSendingTest(false);
     }
@@ -348,7 +355,11 @@ export function ChannelDonationControls({ initialSnapshot }: Props) {
                       <SelectContent>
                         <SelectList>
                           {voiceItems.map((option) => (
-                            <SelectItem key={option.value} value={option.value} label={option.label}>
+                            <SelectItem
+                              key={option.value}
+                              value={option.value}
+                              label={option.label}
+                            >
                               {option.label}
                             </SelectItem>
                           ))}

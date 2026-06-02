@@ -28,8 +28,9 @@ export function ChannelSettlementPageContent({ initialSnapshot, yearlySummary }:
     >
       {/* 자동 정산 안내 */}
       <HintNote icon={CalendarCheck}>
-        정산은 매월 {SETTLEMENT_PAYOUT_DAY}일에 자동으로 처리돼요. 전월 채팅 후원 합계에서 수수료(10%)를
-        제외한 금액이 등록된 정산 계좌로 자동 지급되며, 별도의 정산 신청은 필요하지 않아요.
+        정산은 매월 {SETTLEMENT_PAYOUT_DAY}일에 자동으로 처리돼요. 전월 채팅 후원 합계에서
+        수수료(10%)를 제외한 금액이 등록된 정산 계좌로 자동 지급되며, 별도의 정산 신청은 필요하지
+        않아요.
       </HintNote>
 
       <SettlementSummaryCard

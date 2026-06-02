@@ -1,9 +1,6 @@
 // 후원 금액·날짜 표시용 포맷 헬퍼를 제공합니다.
 
-import {
-  DONATION_SETTLEMENT_FEE_RATE,
-  SETTLEMENT_PAYOUT_DAY,
-} from "@/constants/channel/donation";
+import { DONATION_SETTLEMENT_FEE_RATE, SETTLEMENT_PAYOUT_DAY } from "@/constants/channel/donation";
 import { addKstMonths, getKstDateParts, KST_TIME_ZONE } from "@/utils/common/kst";
 
 const POINT_FORMATTER = new Intl.NumberFormat("ko-KR");

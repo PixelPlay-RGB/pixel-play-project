@@ -27,14 +27,21 @@ import {
 } from "@/constants/channel/donation";
 import { cn } from "@/lib/utils";
 import type { SettlementStatus, SettlementYearSummary } from "@/types/channel/donation";
-import { calcSettlement, formatDonationFullDate, formatPoint } from "@/utils/channel/donation-format";
+import {
+  calcSettlement,
+  formatDonationFullDate,
+  formatPoint,
+} from "@/utils/channel/donation-format";
 
 const TH_CLASS = "text-muted-foreground px-4 py-3 text-xs font-semibold";
 const TD_CLASS = "px-4 py-3.5 align-middle";
 
 const STATUS_BADGE: Record<SettlementStatus, { label: string; className: string }> = {
   completed: { label: "정산 완료", className: "bg-brand/15 text-brand" },
-  scheduled: { label: "정산 예정", className: "bg-amber-400/15 text-amber-600 dark:text-amber-400" },
+  scheduled: {
+    label: "정산 예정",
+    className: "bg-amber-400/15 text-amber-600 dark:text-amber-400",
+  },
 };
 
 interface Props {
