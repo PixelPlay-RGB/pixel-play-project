@@ -62,6 +62,40 @@ export async function createCommunityPostAction(
   return { success: true, data: { postId: data } };
 }
 
+// 게시글 수정 (본인 글만)
+export async function updateCommunityPostAction(
+  postId: string,
+  content: string,
+): Promise<AppActionResult> {
+  const parsed = communityPostContentSchema.safeParse(content);
+
+  if (!parsed.success) {
+    return { success: false, code: APP_MESSAGE_CODE.error.community.postUpdateFailed };
+  }
+
+  const actor = await getAuthenticatedActorId({
+    logLabel: "커뮤니티 게시글 수정 중 인증 유저 조회 실패",
+  });
+
+  if (!actor.success) {
+    return { success: false, code: actor.result.code };
+  }
+
+  const supabase = createAdminClient();
+  const { error } = await supabase.rpc("update_community_post", {
+    p_actor_user_id: actor.userId,
+    p_post_id: postId,
+    p_content: parsed.data,
+  });
+
+  if (error) {
+    console.error("커뮤니티 게시글 수정 실패", error);
+    return { success: false, code: APP_MESSAGE_CODE.error.community.postUpdateFailed };
+  }
+
+  return { success: true };
+}
+
 // 게시글 삭제 (본인 글만)
 export async function deleteCommunityPostAction(postId: string): Promise<AppActionResult> {
   const actor = await getAuthenticatedActorId({
@@ -144,6 +178,40 @@ export async function createCommunityCommentAction(
   }
 
   return { success: true, data: { commentId: data } };
+}
+
+// 댓글 수정 (본인 댓글만)
+export async function updateCommunityCommentAction(
+  commentId: string,
+  content: string,
+): Promise<AppActionResult> {
+  const parsed = communityCommentContentSchema.safeParse(content);
+
+  if (!parsed.success) {
+    return { success: false, code: APP_MESSAGE_CODE.error.community.commentUpdateFailed };
+  }
+
+  const actor = await getAuthenticatedActorId({
+    logLabel: "커뮤니티 댓글 수정 중 인증 유저 조회 실패",
+  });
+
+  if (!actor.success) {
+    return { success: false, code: actor.result.code };
+  }
+
+  const supabase = createAdminClient();
+  const { error } = await supabase.rpc("update_community_comment", {
+    p_actor_user_id: actor.userId,
+    p_comment_id: commentId,
+    p_content: parsed.data,
+  });
+
+  if (error) {
+    console.error("커뮤니티 댓글 수정 실패", error);
+    return { success: false, code: APP_MESSAGE_CODE.error.community.commentUpdateFailed };
+  }
+
+  return { success: true };
 }
 
 // 댓글 삭제 (본인 댓글 또는 채널 주인)

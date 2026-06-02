@@ -42,6 +42,8 @@ export const APP_MESSAGE_CODE = {
       postDeleted: "success.community.postDeleted",
       commentCreated: "success.community.commentCreated",
       commentDeleted: "success.community.commentDeleted",
+      postUpdated: "success.community.postUpdated",
+      commentUpdated: "success.community.commentUpdated",
     },
   },
   error: {
@@ -143,6 +145,8 @@ export const APP_MESSAGE_CODE = {
       commentDeleteFailed: "error.community.commentDeleteFailed",
       likeFailed: "error.community.likeFailed",
       loadFailed: "error.community.loadFailed",
+      postUpdateFailed: "error.community.postUpdateFailed",
+      commentUpdateFailed: "error.community.commentUpdateFailed",
     },
     supabase: {
       permissionDenied: "error.supabase.permissionDenied",

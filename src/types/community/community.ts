@@ -13,6 +13,7 @@ export interface CommunityPost {
   likeCount: number;
   commentCount: number;
   createdAt: string;
+  modifiedAt: string | null;
   isLiked: boolean;
 }
 
@@ -33,6 +34,7 @@ export interface CommunityPostDetail {
   likeCount: number;
   commentCount: number;
   createdAt: string;
+  modifiedAt: string | null;
   isLiked: boolean;
 }
 
@@ -43,6 +45,7 @@ export interface CommunityComment {
   authorPhotoUrl: string | null;
   content: string;
   createdAt: string;
+  modifiedAt: string | null;
 }
 
 export interface CommunityCommentsResult {

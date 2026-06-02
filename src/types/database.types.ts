@@ -106,6 +106,7 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          modified_at: string | null
           post_id: string
         }
         Insert: {
@@ -113,6 +114,7 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          modified_at?: string | null
           post_id: string
         }
         Update: {
@@ -120,6 +122,7 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          modified_at?: string | null
           post_id?: string
         }
         Relationships: [
@@ -147,6 +150,7 @@ export type Database = {
           creator_id: string
           id: string
           like_count: number
+          modified_at: string | null
         }
         Insert: {
           comment_count?: number
@@ -155,6 +159,7 @@ export type Database = {
           creator_id: string
           id?: string
           like_count?: number
+          modified_at?: string | null
         }
         Update: {
           comment_count?: number
@@ -163,6 +168,7 @@ export type Database = {
           creator_id?: string
           id?: string
           like_count?: number
+          modified_at?: string | null
         }
         Relationships: [
           {
@@ -1095,6 +1101,18 @@ export type Database = {
       unfollow_creator: {
         Args: { p_actor_user_id: string; p_creator_id: string }
         Returns: undefined
+      }
+      update_community_comment: {
+        Args: {
+          p_actor_user_id: string
+          p_comment_id: string
+          p_content: string
+        }
+        Returns: boolean
+      }
+      update_community_post: {
+        Args: { p_actor_user_id: string; p_content: string; p_post_id: string }
+        Returns: boolean
       }
       upsert_creator_studio_setting: {
         Args: {

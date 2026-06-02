@@ -101,6 +101,12 @@ export const APP_MESSAGE = {
       commentDeleted: {
         title: "댓글 삭제 완료",
       },
+      postUpdated: {
+        title: "게시글 수정 완료",
+      },
+      commentUpdated: {
+        title: "댓글 수정 완료",
+      },
     },
   },
   error: {
@@ -418,6 +424,14 @@ export const APP_MESSAGE = {
       },
       loadFailed: {
         title: "커뮤니티 조회 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      postUpdateFailed: {
+        title: "게시글 수정 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      commentUpdateFailed: {
+        title: "댓글 수정 실패",
         description: "잠시 후 다시 시도해주세요.",
       },
     },

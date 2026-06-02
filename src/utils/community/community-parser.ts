@@ -81,6 +81,7 @@ function parsePostItem(value: Json | undefined): CommunityPost | null {
     likeCount: readNumber(object.likeCount),
     commentCount: readNumber(object.commentCount),
     createdAt,
+    modifiedAt: readString(object.modifiedAt),
     isLiked: readBoolean(object.isLiked),
   };
 }
@@ -108,6 +109,7 @@ function parseComment(value: Json | undefined): CommunityComment | null {
     authorPhotoUrl: readString(object.authorPhotoUrl),
     content,
     createdAt,
+    modifiedAt: readString(object.modifiedAt),
   };
 }
 
@@ -160,6 +162,7 @@ export function parseCommunityPostDetail(value: Json): CommunityPostDetail | nul
     likeCount: readNumber(object.likeCount),
     commentCount: readNumber(object.commentCount),
     createdAt,
+    modifiedAt: readString(object.modifiedAt),
     isLiked: readBoolean(object.isLiked),
   };
 }
