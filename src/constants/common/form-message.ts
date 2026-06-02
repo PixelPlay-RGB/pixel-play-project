@@ -43,4 +43,10 @@ export const FORM_MESSAGE = {
     forbiddenWordRequired: "금칙어를 입력해주세요.",
     forbiddenWordMax: (max: number) => `금칙어는 ${max}자 이하여야 합니다.`,
   },
+  community: {
+    postRequired: "내용을 입력해주세요.",
+    postMax: (max: number) => `게시글은 ${max}자 이하여야 합니다.`,
+    commentRequired: "댓글 내용을 입력해주세요.",
+    commentMax: (max: number) => `댓글은 ${max}자 이하여야 합니다.`,
+  },
 } as const;

@@ -37,6 +37,12 @@ export const APP_MESSAGE_CODE = {
       followed: "success.following.followed",
       unfollowed: "success.following.unfollowed",
     },
+    community: {
+      postCreated: "success.community.postCreated",
+      postDeleted: "success.community.postDeleted",
+      commentCreated: "success.community.commentCreated",
+      commentDeleted: "success.community.commentDeleted",
+    },
   },
   error: {
     common: {
@@ -129,6 +135,14 @@ export const APP_MESSAGE_CODE = {
     following: {
       failed: "error.following.failed",
       unfollowFailed: "error.following.unfollowFailed",
+    },
+    community: {
+      postCreateFailed: "error.community.postCreateFailed",
+      postDeleteFailed: "error.community.postDeleteFailed",
+      commentCreateFailed: "error.community.commentCreateFailed",
+      commentDeleteFailed: "error.community.commentDeleteFailed",
+      likeFailed: "error.community.likeFailed",
+      loadFailed: "error.community.loadFailed",
     },
     supabase: {
       permissionDenied: "error.supabase.permissionDenied",

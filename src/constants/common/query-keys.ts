@@ -69,4 +69,15 @@ export const QUERY_KEYS = {
     search: (query?: string, section?: string) =>
       [...QUERY_KEYS.live.searchAll(), query, section].filter((v) => v !== undefined),
   },
+  community: {
+    all: ["community"] as const,
+    postsAll: () => [...QUERY_KEYS.community.all, "posts"],
+    posts: (creatorId?: string, page?: number) =>
+      [...QUERY_KEYS.community.postsAll(), creatorId, page].filter((v) => v !== undefined),
+    post: (postId?: string) =>
+      [...QUERY_KEYS.community.all, "post", postId].filter((v) => v !== undefined),
+    commentsAll: () => [...QUERY_KEYS.community.all, "comments"],
+    comments: (postId?: string, page?: number) =>
+      [...QUERY_KEYS.community.commentsAll(), postId, page].filter((v) => v !== undefined),
+  },
 } as const;

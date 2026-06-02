@@ -87,6 +87,21 @@ export const APP_MESSAGE = {
         description: "팔로잉 목록에서 제외했어요.",
       },
     },
+    community: {
+      postCreated: {
+        title: "게시글 등록 완료",
+        description: "새 글이 채널 커뮤니티에 게시되었어요.",
+      },
+      postDeleted: {
+        title: "게시글 삭제 완료",
+      },
+      commentCreated: {
+        title: "댓글 등록 완료",
+      },
+      commentDeleted: {
+        title: "댓글 삭제 완료",
+      },
+    },
   },
   error: {
     common: {
@@ -377,6 +392,32 @@ export const APP_MESSAGE = {
       },
       unfollowFailed: {
         title: "팔로잉 해제 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+    },
+    community: {
+      postCreateFailed: {
+        title: "게시글 등록 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      postDeleteFailed: {
+        title: "게시글 삭제 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      commentCreateFailed: {
+        title: "댓글 등록 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      commentDeleteFailed: {
+        title: "댓글 삭제 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      likeFailed: {
+        title: "좋아요 처리 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      loadFailed: {
+        title: "커뮤니티 조회 실패",
         description: "잠시 후 다시 시도해주세요.",
       },
     },
