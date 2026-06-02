@@ -2,6 +2,7 @@
 // 방송 운영 화면의 채팅, 후원, 알림 빠른 설정을 오른쪽 패널로 렌더링합니다.
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import ChannelLivePollPanel from "@/components/channel/live/channel-live-poll-panel";
 import { cn } from "@/lib/utils";
 import { Bell, HandCoins, Link2, Mic2, Timer, Volume2 } from "lucide-react";
 import type { ComponentType, ReactNode } from "react";
@@ -156,6 +157,8 @@ export default function ChannelLiveQuickSettingsPanel({
             onChange={onTtsEnabledChange}
           />
         </QuickSettingSection>
+
+        <ChannelLivePollPanel />
       </CardContent>
     </Card>
   );
