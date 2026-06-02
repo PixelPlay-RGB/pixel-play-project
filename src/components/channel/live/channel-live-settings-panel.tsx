@@ -8,13 +8,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { CircleStop, ImageIcon, Play, Save, Tag, Upload, X } from "lucide-react";
-import { type ChangeEvent, type DragEvent, useRef } from "react";
+import { type ChangeEvent, type DragEvent, type ReactNode, useRef } from "react";
 
 interface Props {
   broadcastActionError: string | null;
   isBroadcastActionPending: boolean;
   isSettingsActionPending: boolean;
   settingsActionMessage: string | null;
+  streamStatusPanel: ReactNode;
   thumbnailPreviewName: string;
   thumbnailPreviewUrl: string;
   title: string;
@@ -37,6 +38,7 @@ export default function ChannelLiveSettingsPanel({
   isBroadcastActionPending,
   isSettingsActionPending,
   settingsActionMessage,
+  streamStatusPanel,
   thumbnailPreviewName,
   thumbnailPreviewUrl,
   title,
@@ -75,14 +77,14 @@ export default function ChannelLiveSettingsPanel({
   };
 
   return (
-    <Card className="relative">
-      <CardHeader className="pr-20">
+    <Card className="relative gap-5 py-6 shadow-sm">
+      <CardHeader className="gap-2 px-5 pr-20 sm:px-6">
         <CardTitle>방송 시작 설정</CardTitle>
       </CardHeader>
       <span className="bg-brand/10 text-brand absolute top-4 right-4 inline-flex w-fit rounded-full px-2 py-0.5 text-xs font-semibold">
         저장됨
       </span>
-      <CardContent className="flex flex-col gap-4">
+      <CardContent className="flex flex-col gap-5 px-5 sm:px-6">
         {broadcastActionError && (
           <div className="border-destructive/20 bg-destructive/10 text-destructive rounded-lg border px-3 py-2 text-xs font-semibold">
             {broadcastActionError}
@@ -155,69 +157,75 @@ export default function ChannelLiveSettingsPanel({
           </div>
         </div>
 
-        <div className="border-border flex flex-col rounded-lg border p-3">
-          <div className="flex items-center gap-2">
-            <ImageIcon className="text-brand size-4" />
-            <span className="text-sm font-semibold">미리보기 이미지</span>
-          </div>
-          <input
-            ref={thumbnailInputRef}
-            className="sr-only"
-            id="channel-live-thumbnail"
-            type="file"
-            accept="image/*"
-            onChange={handleThumbnailInputChange}
-          />
-          <div className="mt-3 flex justify-center">
-            <div
-              className={cn(
-                "border-border bg-muted inline-flex aspect-video h-40 max-w-full flex-col items-center justify-center overflow-hidden rounded-lg border border-dashed bg-cover bg-center p-3 text-center sm:h-44",
-                trimmedThumbnailPreviewUrl && "border-solid",
-              )}
-              role="button"
-              tabIndex={0}
-              style={
-                trimmedThumbnailPreviewUrl
-                  ? { backgroundImage: `url(${trimmedThumbnailPreviewUrl})` }
-                  : undefined
-              }
-              onClick={() => thumbnailInputRef.current?.click()}
-              onDragOver={(event) => event.preventDefault()}
-              onDrop={handleThumbnailDrop}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") {
-                  event.preventDefault();
-                  thumbnailInputRef.current?.click();
-                }
-              }}
-            >
-              {!trimmedThumbnailPreviewUrl && (
-                <div className="text-muted-foreground flex flex-col items-center gap-2 text-xs">
-                  <Upload className="size-6" />
-                  <span>이미지를 끌어오거나 추가하세요</span>
-                </div>
-              )}
+        <div className="grid items-start gap-4 lg:grid-cols-2">
+          {streamStatusPanel}
+
+          <section className="flex min-w-0 flex-col gap-3">
+            <div className="flex items-center gap-2">
+              <ImageIcon className="text-brand size-4" />
+              <h3 className="text-foreground text-sm font-bold">미리보기 이미지</h3>
             </div>
-          </div>
-          <div className="mt-auto flex items-center justify-between gap-2 pt-4">
-            <span className="text-muted-foreground min-w-0 truncate text-xs">
-              {thumbnailPreviewName || "이미지 없음"}
-            </span>
-            {trimmedThumbnailPreviewUrl ? (
-              <Button type="button" size="sm" variant="outline" onClick={onThumbnailRemove}>
-                삭제
-              </Button>
-            ) : (
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={() => thumbnailInputRef.current?.click()}
-              >
-                추가
-              </Button>
-            )}
-          </div>
+            <div className="border-border bg-muted/40 flex flex-col rounded-xl border p-4">
+              <input
+                ref={thumbnailInputRef}
+                className="sr-only"
+                id="channel-live-thumbnail"
+                type="file"
+                accept="image/*"
+                onChange={handleThumbnailInputChange}
+              />
+              <div className="flex justify-center">
+                <div
+                  className={cn(
+                    "border-border bg-background inline-flex aspect-video h-40 max-w-full flex-col items-center justify-center overflow-hidden rounded-xl border border-dashed bg-cover bg-center p-3 text-center sm:h-44",
+                    trimmedThumbnailPreviewUrl && "border-solid",
+                  )}
+                  role="button"
+                  tabIndex={0}
+                  style={
+                    trimmedThumbnailPreviewUrl
+                      ? { backgroundImage: `url(${trimmedThumbnailPreviewUrl})` }
+                      : undefined
+                  }
+                  onClick={() => thumbnailInputRef.current?.click()}
+                  onDragOver={(event) => event.preventDefault()}
+                  onDrop={handleThumbnailDrop}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      thumbnailInputRef.current?.click();
+                    }
+                  }}
+                >
+                  {!trimmedThumbnailPreviewUrl && (
+                    <div className="text-muted-foreground flex flex-col items-center gap-2 text-xs">
+                      <Upload className="size-6" />
+                      <span>이미지를 끌어오거나 추가하세요</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="mt-auto flex items-center justify-between gap-2 pt-4">
+                <span className="text-muted-foreground min-w-0 truncate text-xs font-semibold">
+                  {thumbnailPreviewName || "이미지 없음"}
+                </span>
+                {trimmedThumbnailPreviewUrl ? (
+                  <Button type="button" size="sm" variant="outline" onClick={onThumbnailRemove}>
+                    삭제
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => thumbnailInputRef.current?.click()}
+                  >
+                    추가
+                  </Button>
+                )}
+              </div>
+            </div>
+          </section>
         </div>
 
         <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
@@ -226,6 +234,7 @@ export default function ChannelLiveSettingsPanel({
             variant="outline"
             onClick={onSaveSettings}
             disabled={isSettingsActionPending}
+            className="h-11 rounded-xl px-7 font-bold shadow-sm transition-all active:scale-95"
           >
             <Save className="size-4" />
             설정 저장
@@ -236,6 +245,7 @@ export default function ChannelLiveSettingsPanel({
               variant="destructive"
               onClick={onEndBroadcast}
               disabled={isBroadcastActionPending}
+              className="h-11 rounded-xl px-7 font-bold shadow-sm transition-all active:scale-95"
             >
               <CircleStop className="size-4" />
               방송 종료
@@ -243,7 +253,7 @@ export default function ChannelLiveSettingsPanel({
           ) : (
             <Button
               type="button"
-              className="bg-live hover:bg-live/90 text-white"
+              className="bg-brand hover:bg-brand/90 shadow-brand/20 h-11 rounded-xl px-7 font-bold text-white shadow-sm transition-all active:scale-95"
               onClick={onStartBroadcast}
               disabled={isBroadcastActionPending}
             >

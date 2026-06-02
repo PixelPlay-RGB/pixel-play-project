@@ -343,6 +343,14 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
             isBroadcastActionPending={isBroadcastActionPending}
             isSettingsActionPending={isSettingsActionPending}
             settingsActionMessage={settingsActionMessage}
+            streamStatusPanel={
+              <ChannelLiveStreamStatusPanel
+                activeBroadcastStartedAt={broadcastStartedAt}
+                liveState={liveState}
+                streamPath={CHANNEL_LIVE_MEDIA_CONFIG.streamPath}
+                variant="embedded"
+              />
+            }
             thumbnailPreviewName={thumbnailPreviewName}
             thumbnailPreviewUrl={thumbnailPreviewUrl}
             title={title}
@@ -361,12 +369,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
           />
         </div>
 
-        <div className="flex min-w-0 flex-col gap-4 lg:h-full">
-          <ChannelLiveStreamStatusPanel
-            activeBroadcastStartedAt={broadcastStartedAt}
-            liveState={liveState}
-            streamPath={CHANNEL_LIVE_MEDIA_CONFIG.streamPath}
-          />
+        <div className="min-w-0 xl:sticky xl:top-4 xl:self-start">
           <ChannelLiveChatPanel
             key={broadcastId ?? "channel-live-chat-idle"}
             broadcastId={broadcastId}

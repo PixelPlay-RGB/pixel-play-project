@@ -37,8 +37,8 @@ interface QuickSettingSectionProps {
 
 function QuickSettingSection({ children, title }: QuickSettingSectionProps) {
   return (
-    <section className="flex flex-col gap-2">
-      <h3 className="text-muted-foreground px-1 text-xs font-semibold">{title}</h3>
+    <section className="flex flex-col gap-2.5">
+      <h3 className="text-muted-foreground px-1 text-xs font-bold">{title}</h3>
       <div className="grid gap-2">{children}</div>
     </section>
   );
@@ -48,20 +48,24 @@ function QuickSettingRow({ checked, icon: Icon, label, onChange }: QuickSettingR
   return (
     <button
       type="button"
-      className="border-border bg-background hover:bg-muted/40 flex min-h-14 items-center justify-between gap-3 rounded-lg border px-3 py-2 text-left transition-colors"
+      className={cn(
+        "border-border bg-muted/40 text-muted-foreground flex min-h-12 items-center justify-between gap-3 rounded-xl border px-3 py-2 text-left text-sm font-bold shadow-sm transition-colors",
+        "hover:border-brand/40 hover:bg-brand/5",
+        checked && "border-brand/40 bg-brand/10 text-brand",
+      )}
       aria-pressed={checked}
       onClick={() => onChange(!checked)}
     >
       <span className="flex min-w-0 items-center gap-2.5">
         <span
           className={cn(
-            "flex size-8 shrink-0 items-center justify-center rounded-full",
-            checked ? "bg-brand/10 text-brand" : "bg-muted text-muted-foreground",
+            "bg-background flex size-8 shrink-0 items-center justify-center rounded-full",
+            checked ? "text-brand" : "text-muted-foreground",
           )}
         >
           <Icon className="size-4" />
         </span>
-        <span className="text-sm font-semibold">{label}</span>
+        <span>{label}</span>
       </span>
       <span
         className={cn(
@@ -71,7 +75,7 @@ function QuickSettingRow({ checked, icon: Icon, label, onChange }: QuickSettingR
       >
         <span
           className={cn(
-            "bg-background size-4 rounded-full transition-transform",
+            "size-4 rounded-full bg-white shadow-sm transition-transform",
             checked && "translate-x-4",
           )}
         />
@@ -97,11 +101,11 @@ export default function ChannelLiveQuickSettingsPanel({
   onTtsEnabledChange,
 }: Props) {
   return (
-    <Card className="xl:sticky xl:top-4">
-      <CardHeader>
+    <Card className="gap-5 py-6 shadow-sm xl:sticky xl:top-4">
+      <CardHeader className="gap-2 px-5 sm:px-6">
         <CardTitle>빠른 설정</CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-col gap-4">
+      <CardContent className="flex flex-col gap-5 px-5 sm:px-6">
         <QuickSettingSection title="채팅">
           <QuickSettingRow
             checked={isSlowModeEnabled}

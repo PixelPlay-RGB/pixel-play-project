@@ -3,6 +3,7 @@
 
 import type { ChannelLiveState } from "@/components/channel/live/channel-live-operation-page";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import type { ChannelLiveStreamStatusResponse } from "@/types/channel/channel-live-stream";
 import { Radio } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -11,6 +12,7 @@ interface Props {
   activeBroadcastStartedAt?: string | null;
   liveState: ChannelLiveState;
   streamPath: string;
+  variant?: "card" | "embedded";
 }
 
 interface BitrateSample {
@@ -65,10 +67,71 @@ function getStatusClassName(status: ChannelLiveStreamStatusResponse | null) {
   return "bg-muted text-muted-foreground inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold";
 }
 
+function StreamStatusContent({
+  durationLabel,
+  isOnline,
+  liveState,
+  bitrateKbps,
+  streamStatus,
+}: {
+  durationLabel: string;
+  isOnline: boolean;
+  liveState: ChannelLiveState;
+  bitrateKbps: number | null;
+  streamStatus: ChannelLiveStreamStatusResponse | null;
+}) {
+  const streamStats = [
+    {
+      label: "방송 시간",
+      value: durationLabel,
+    },
+    { label: "해상도", value: formatResolution(streamStatus) },
+    { label: "비트레이트", value: isOnline ? formatBitrate(bitrateKbps) : "-" },
+    { label: "FPS", value: streamStatus?.fps ? String(streamStatus.fps) : "-" },
+  ];
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="border-border bg-muted/40 flex items-center justify-between rounded-xl border p-4">
+        <span className="text-muted-foreground text-sm font-semibold">온라인 상태</span>
+        <span className={getStatusClassName(streamStatus)}>
+          <Radio className="size-3.5" />
+          {getStatusLabel(streamStatus)}
+        </span>
+      </div>
+
+      <div className="grid gap-2">
+        {streamStats.map((stat) => (
+          <div
+            key={stat.label}
+            className="border-border bg-muted/40 flex items-center justify-between rounded-xl border px-4 py-3"
+          >
+            <span className="text-muted-foreground text-sm font-semibold">{stat.label}</span>
+            <strong className="text-foreground text-sm font-bold">{stat.value}</strong>
+          </div>
+        ))}
+      </div>
+
+      {streamStatus?.state === "unavailable" && (
+        <p className="text-muted-foreground text-xs">
+          {streamStatus.errorMessage ?? "MediaMTX API 상태를 확인할 수 없습니다."}
+        </p>
+      )}
+
+      {liveState.isBroadcasting && streamStatus?.state === "offline" && (
+        <p className="text-muted-foreground text-xs">
+          방송은 시작됐지만 OBS 송출 신호가 아직 확인되지 않았습니다.
+        </p>
+      )}
+    </div>
+  );
+}
+
 export default function ChannelLiveStreamStatusPanel({
   activeBroadcastStartedAt,
   liveState,
   streamPath,
+  variant = "card",
 }: Props) {
   const [streamStatus, setStreamStatus] = useState<ChannelLiveStreamStatusResponse | null>(null);
   const [bitrateKbps, setBitrateKbps] = useState<number | null>(null);
@@ -149,54 +212,41 @@ export default function ChannelLiveStreamStatusPanel({
   }, [activeBroadcastStartedAt, streamStatus?.onlineTime]);
 
   const isOnline = streamStatus?.state === "online";
-  const streamStats = [
-    {
-      label: "방송 시간",
-      value: durationLabel,
-    },
-    { label: "해상도", value: formatResolution(streamStatus) },
-    { label: "비트레이트", value: isOnline ? formatBitrate(bitrateKbps) : "-" },
-    { label: "FPS", value: streamStatus?.fps ? String(streamStatus.fps) : "-" },
-  ];
+  const content = (
+    <StreamStatusContent
+      durationLabel={durationLabel}
+      isOnline={isOnline}
+      liveState={liveState}
+      bitrateKbps={bitrateKbps}
+      streamStatus={streamStatus}
+    />
+  );
+
+  if (variant === "embedded") {
+    return (
+      <section className="flex min-w-0 flex-col gap-3">
+        <div className="flex items-center justify-between gap-3">
+          <h3 className="text-foreground text-sm font-bold">스트림 상태</h3>
+          <span
+            className={cn(
+              "rounded-full px-2.5 py-1 text-xs font-bold",
+              isOnline ? "bg-brand/10 text-brand" : "bg-muted text-muted-foreground",
+            )}
+          >
+            {getStatusLabel(streamStatus)}
+          </span>
+        </div>
+        {content}
+      </section>
+    );
+  }
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>스트림 상태</CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-col gap-3">
-        <div className="border-border flex items-center justify-between rounded-lg border p-3">
-          <span className="text-muted-foreground text-sm">온라인 상태</span>
-          <span className={getStatusClassName(streamStatus)}>
-            <Radio className="size-3.5" />
-            {getStatusLabel(streamStatus)}
-          </span>
-        </div>
-
-        <div className="grid gap-2">
-          {streamStats.map((stat) => (
-            <div
-              key={stat.label}
-              className="border-border flex items-center justify-between rounded-lg border px-3 py-2"
-            >
-              <span className="text-muted-foreground text-sm">{stat.label}</span>
-              <strong className="text-sm">{stat.value}</strong>
-            </div>
-          ))}
-        </div>
-
-        {streamStatus?.state === "unavailable" && (
-          <p className="text-muted-foreground text-xs">
-            {streamStatus.errorMessage ?? "MediaMTX API 상태를 확인할 수 없습니다."}
-          </p>
-        )}
-
-        {liveState.isBroadcasting && streamStatus?.state === "offline" && (
-          <p className="text-muted-foreground text-xs">
-            방송은 시작됐지만 OBS 송출 신호는 아직 확인되지 않았습니다.
-          </p>
-        )}
-      </CardContent>
+      <CardContent>{content}</CardContent>
     </Card>
   );
 }
