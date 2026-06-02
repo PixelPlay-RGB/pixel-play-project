@@ -3,7 +3,7 @@
 
 import type { ChannelLiveState } from "@/components/channel/live/channel-live-operation-page";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
@@ -77,13 +77,7 @@ export default function ChannelLiveSettingsPanel({
   };
 
   return (
-    <Card className="relative gap-5 py-6 shadow-sm">
-      <CardHeader className="gap-2 px-5 pr-20 sm:px-6">
-        <CardTitle>방송 시작 설정</CardTitle>
-      </CardHeader>
-      <span className="bg-brand/10 text-brand absolute top-4 right-4 inline-flex w-fit rounded-full px-2 py-0.5 text-xs font-semibold">
-        저장됨
-      </span>
+    <Card className="gap-5 py-6 shadow-sm">
       <CardContent className="flex flex-col gap-5 px-5 sm:px-6">
         {broadcastActionError && (
           <div className="border-destructive/20 bg-destructive/10 text-destructive rounded-lg border px-3 py-2 text-xs font-semibold">
@@ -135,7 +129,7 @@ export default function ChannelLiveSettingsPanel({
             />
             <Button
               type="button"
-              className="bg-brand hover:bg-brand/90 text-white"
+              className="bg-brand hover:bg-brand/90 h-10 shrink-0 px-4 text-white"
               onClick={onAddTag}
             >
               <Tag className="size-4" />
