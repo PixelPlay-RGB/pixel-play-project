@@ -30,9 +30,13 @@ function readString(object: JsonObject, key: string): string {
 }
 
 function readNullableString(object: JsonObject, key: string): string | null {
+  if (!(key in object)) {
+    throw new Error(`팔로잉 채널 데이터에 ${key} 키가 없습니다.`);
+  }
+
   const value = object[key];
 
-  if (value === null || value === undefined) {
+  if (value === null) {
     return null;
   }
 

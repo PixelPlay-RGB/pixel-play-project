@@ -22,7 +22,8 @@ export function formatLastBroadcastLabel(lastBroadcastAt: string | null): string
     return "방송 기록 없음";
   }
 
-  const diff = Date.now() - broadcastTime;
+  // 서버·클라이언트 시계 오차나 잘못된 데이터로 미래 시각이 들어와도 음수 차이로 오동작하지 않도록 0으로 보정합니다.
+  const diff = Math.max(0, Date.now() - broadcastTime);
 
   if (diff < HOUR) {
     return "방금 전 방송";

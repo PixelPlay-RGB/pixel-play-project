@@ -14,3 +14,15 @@ export const FOLLOWING_FILTER_TABS: FollowingFilterTab[] = [
   { value: "ALL", label: "전체" },
   { value: "LIVE", label: "라이브 중" },
 ];
+
+// 팔로잉 목록 빈 상태 안내 문구.
+export const FOLLOWING_EMPTY_MESSAGES = {
+  noFollowing: {
+    title: "아직 팔로우한 크리에이터가 없어요",
+    description: "관심 있는 채널을 팔로우하면 이곳에서 모아볼 수 있어요.",
+  },
+  noLive: {
+    title: "지금 라이브 중인 채널이 없어요",
+    description: "팔로우한 크리에이터가 방송을 시작하면 여기에 표시돼요.",
+  },
+} as const;

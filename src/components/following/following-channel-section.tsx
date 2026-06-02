@@ -14,9 +14,14 @@ import { SettingsPage } from "@/components/common/settings-page";
 import { SideTipCard, SideTipStep } from "@/components/common/side-tip-card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FOLLOWING_FILTER_TABS } from "@/constants/following/following-page";
+import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
+import {
+  FOLLOWING_EMPTY_MESSAGES,
+  FOLLOWING_FILTER_TABS,
+} from "@/constants/following/following-page";
 import { useFollowingChannelPage } from "@/hooks/following/use-following-channel-page";
 import type { FollowingChannelFilter } from "@/types/following/following-page";
+import { getAppMessage } from "@/utils/common/app-message";
 
 const FOLLOWING_PAGE_HEADER = {
   kicker: "팔로우 관리",
@@ -137,9 +142,11 @@ export default function FollowingChannelSection() {
     }
 
     if (isError) {
+      const errorMessage = getAppMessage(APP_MESSAGE_CODE.error.following.loadFailed);
+
       return (
         <div className="flex flex-col items-center gap-3 px-6 py-10 text-center">
-          <p className="text-foreground text-sm font-semibold">목록을 불러오지 못했어요.</p>
+          <p className="text-foreground text-sm font-semibold">{errorMessage.title}</p>
           <Button variant="outline" onClick={() => void refetch()}>
             다시 시도
           </Button>
@@ -150,8 +157,8 @@ export default function FollowingChannelSection() {
     if (totalCount === 0) {
       return (
         <FollowingEmptyState
-          title="아직 팔로우한 크리에이터가 없어요"
-          description="관심 있는 채널을 팔로우하면 이곳에서 모아볼 수 있어요."
+          title={FOLLOWING_EMPTY_MESSAGES.noFollowing.title}
+          description={FOLLOWING_EMPTY_MESSAGES.noFollowing.description}
           showBrowseCta
         />
       );
@@ -160,8 +167,8 @@ export default function FollowingChannelSection() {
     if (filteredCount === 0) {
       return (
         <FollowingEmptyState
-          title="지금 라이브 중인 채널이 없어요"
-          description="팔로우한 크리에이터가 방송을 시작하면 여기에 표시돼요."
+          title={FOLLOWING_EMPTY_MESSAGES.noLive.title}
+          description={FOLLOWING_EMPTY_MESSAGES.noLive.description}
         />
       );
     }

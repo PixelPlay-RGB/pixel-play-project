@@ -379,6 +379,10 @@ export const APP_MESSAGE = {
         title: "팔로잉 해제 실패",
         description: "잠시 후 다시 시도해주세요.",
       },
+      loadFailed: {
+        title: "팔로잉 목록 조회 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
     },
     supabase: {
       permissionDenied: {
