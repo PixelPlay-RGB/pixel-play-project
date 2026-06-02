@@ -11,6 +11,7 @@ import {
 } from "@/actions/channel/live";
 import ChannelLiveChatPanel from "@/components/channel/live/channel-live-chat-panel";
 import ChannelLivePreviewPanel from "@/components/channel/live/channel-live-preview-panel";
+import ChannelLiveQuickSettingsPanel from "@/components/channel/live/channel-live-quick-settings-panel";
 import ChannelLiveSettingsPanel from "@/components/channel/live/channel-live-settings-panel";
 import ChannelLiveStreamStatusPanel from "@/components/channel/live/channel-live-stream-status-panel";
 import { CHANNEL_LIVE_MEDIA_CONFIG } from "@/constants/channel/channel-live-media";
@@ -296,8 +297,8 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid gap-4 lg:grid-cols-3">
-        <div className="flex min-w-0 flex-col gap-4 lg:col-span-2">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)_minmax(16rem,0.85fr)]">
+        <div className="flex min-w-0 flex-col gap-4">
           <div className="border-border bg-card flex flex-col gap-3 rounded-xl border p-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-wrap items-center gap-2">
               <span
@@ -339,15 +340,8 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
           <ChannelLivePreviewPanel liveState={liveState} title={title} />
           <ChannelLiveSettingsPanel
             broadcastActionError={broadcastActionError}
-            isAlertSoundEnabled={isAlertSoundEnabled}
             isBroadcastActionPending={isBroadcastActionPending}
-            isDonationAlertEnabled={isDonationAlertEnabled}
-            isDonationAmountVisible={isDonationAmountVisible}
-            isDonationEnabled={isDonationEnabled}
-            isLinkBlocked={isLinkBlocked}
-            isSlowModeEnabled={isSlowModeEnabled}
             isSettingsActionPending={isSettingsActionPending}
-            isTtsEnabled={isTtsEnabled}
             settingsActionMessage={settingsActionMessage}
             thumbnailPreviewName={thumbnailPreviewName}
             thumbnailPreviewUrl={thumbnailPreviewUrl}
@@ -355,16 +349,9 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
             tagInput={tagInput}
             tags={tags}
             liveState={liveState}
-            onAlertSoundEnabledChange={setIsAlertSoundEnabled}
-            onDonationAlertEnabledChange={setIsDonationAlertEnabled}
-            onDonationAmountVisibleChange={setIsDonationAmountVisible}
-            onDonationEnabledChange={setIsDonationEnabled}
-            onLinkBlockedChange={setIsLinkBlocked}
-            onSlowModeEnabledChange={setIsSlowModeEnabled}
             onThumbnailFileChange={handleThumbnailFileChange}
             onThumbnailRemove={handleThumbnailRemove}
             onTitleChange={setTitle}
-            onTtsEnabledChange={setIsTtsEnabled}
             onTagInputChange={setTagInput}
             onAddTag={handleAddTag}
             onRemoveTag={handleRemoveTag}
@@ -386,6 +373,25 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
             initialMessages={initialSnapshot?.chatMessages ?? []}
             liveState={liveState}
             onToggleChatPaused={() => setIsChatPaused((currentValue) => !currentValue)}
+          />
+        </div>
+
+        <div className="min-w-0">
+          <ChannelLiveQuickSettingsPanel
+            isAlertSoundEnabled={isAlertSoundEnabled}
+            isDonationAlertEnabled={isDonationAlertEnabled}
+            isDonationAmountVisible={isDonationAmountVisible}
+            isDonationEnabled={isDonationEnabled}
+            isLinkBlocked={isLinkBlocked}
+            isSlowModeEnabled={isSlowModeEnabled}
+            isTtsEnabled={isTtsEnabled}
+            onAlertSoundEnabledChange={setIsAlertSoundEnabled}
+            onDonationAlertEnabledChange={setIsDonationAlertEnabled}
+            onDonationAmountVisibleChange={setIsDonationAmountVisible}
+            onDonationEnabledChange={setIsDonationEnabled}
+            onLinkBlockedChange={setIsLinkBlocked}
+            onSlowModeEnabledChange={setIsSlowModeEnabled}
+            onTtsEnabledChange={setIsTtsEnabled}
           />
         </div>
       </div>
