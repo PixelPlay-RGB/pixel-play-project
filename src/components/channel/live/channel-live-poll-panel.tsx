@@ -76,34 +76,20 @@ export default function ChannelLivePollPanel() {
       </div>
 
       <div className="border-border bg-muted/40 flex flex-1 flex-col gap-3 rounded-xl border p-4 shadow-sm">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-2.5">
-            <span className="bg-background text-brand flex size-9 shrink-0 items-center justify-center rounded-xl">
-              <BarChart3 className="size-4" />
-            </span>
-            <div className="min-w-0">
-              <h4 className="text-foreground text-sm font-bold">투표</h4>
-              <p className="text-muted-foreground text-xs font-semibold">
-                {activePoll ? "진행 중" : "대기 중"}
-              </p>
-            </div>
-          </div>
-          {activePoll && (
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              className="rounded-xl font-bold"
-              onClick={() => setActivePoll(null)}
-            >
-              종료
-            </Button>
-          )}
-        </div>
-
         {activePoll ? (
           <div className="flex flex-col gap-3">
-            <strong className="text-sm leading-5">{activePoll.title}</strong>
+            <div className="flex items-center justify-between gap-3">
+              <strong className="text-sm leading-5">{activePoll.title}</strong>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="rounded-xl font-bold"
+                onClick={() => setActivePoll(null)}
+              >
+                종료
+              </Button>
+            </div>
             <div className="grid gap-2">
               {activePoll.options.map((option, index) => (
                 <div
