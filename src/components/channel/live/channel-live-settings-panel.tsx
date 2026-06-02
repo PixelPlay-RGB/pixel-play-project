@@ -15,7 +15,7 @@ interface Props {
   isBroadcastActionPending: boolean;
   isSettingsActionPending: boolean;
   settingsActionMessage: string | null;
-  streamStatusPanel: ReactNode;
+  secondaryPanel: ReactNode;
   thumbnailPreviewName: string;
   thumbnailPreviewUrl: string;
   title: string;
@@ -38,7 +38,7 @@ export default function ChannelLiveSettingsPanel({
   isBroadcastActionPending,
   isSettingsActionPending,
   settingsActionMessage,
-  streamStatusPanel,
+  secondaryPanel,
   thumbnailPreviewName,
   thumbnailPreviewUrl,
   title,
@@ -158,7 +158,7 @@ export default function ChannelLiveSettingsPanel({
         </div>
 
         <div className="grid items-start gap-4 lg:grid-cols-2">
-          {streamStatusPanel}
+          {secondaryPanel}
 
           <section className="flex min-w-0 flex-col gap-3">
             <div className="flex items-center gap-2">

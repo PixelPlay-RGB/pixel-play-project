@@ -69,7 +69,7 @@ export default function ChannelLivePollPanel() {
   };
 
   return (
-    <section className="border-border bg-muted/40 mt-auto flex flex-col gap-3 rounded-xl border p-4 shadow-sm">
+    <section className="border-border bg-muted/40 flex flex-col gap-3 rounded-xl border p-4 shadow-sm">
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2.5">
           <span className="bg-background text-brand flex size-9 shrink-0 items-center justify-center rounded-xl">

@@ -10,6 +10,7 @@ import {
   uploadChannelLiveThumbnailAction,
 } from "@/actions/channel/live";
 import ChannelLiveChatPanel from "@/components/channel/live/channel-live-chat-panel";
+import ChannelLivePollPanel from "@/components/channel/live/channel-live-poll-panel";
 import ChannelLivePreviewPanel from "@/components/channel/live/channel-live-preview-panel";
 import ChannelLiveQuickSettingsPanel from "@/components/channel/live/channel-live-quick-settings-panel";
 import ChannelLiveSettingsPanel from "@/components/channel/live/channel-live-settings-panel";
@@ -343,14 +344,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
             isBroadcastActionPending={isBroadcastActionPending}
             isSettingsActionPending={isSettingsActionPending}
             settingsActionMessage={settingsActionMessage}
-            streamStatusPanel={
-              <ChannelLiveStreamStatusPanel
-                activeBroadcastStartedAt={broadcastStartedAt}
-                liveState={liveState}
-                streamPath={CHANNEL_LIVE_MEDIA_CONFIG.streamPath}
-                variant="embedded"
-              />
-            }
+            secondaryPanel={<ChannelLivePollPanel />}
             thumbnailPreviewName={thumbnailPreviewName}
             thumbnailPreviewUrl={thumbnailPreviewUrl}
             title={title}
@@ -388,6 +382,14 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
             isLinkBlocked={isLinkBlocked}
             isSlowModeEnabled={isSlowModeEnabled}
             isTtsEnabled={isTtsEnabled}
+            streamStatusPanel={
+              <ChannelLiveStreamStatusPanel
+                activeBroadcastStartedAt={broadcastStartedAt}
+                liveState={liveState}
+                streamPath={CHANNEL_LIVE_MEDIA_CONFIG.streamPath}
+                variant="embedded"
+              />
+            }
             onAlertSoundEnabledChange={setIsAlertSoundEnabled}
             onDonationAlertEnabledChange={setIsDonationAlertEnabled}
             onDonationAmountVisibleChange={setIsDonationAmountVisible}

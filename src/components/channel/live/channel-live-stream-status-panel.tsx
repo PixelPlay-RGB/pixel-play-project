@@ -91,19 +91,18 @@ function StreamStatusContent({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="border-border bg-muted/40 flex items-center justify-between rounded-xl border p-4">
-        <span className="text-muted-foreground text-sm font-semibold">온라인 상태</span>
-        <span className={getStatusClassName(streamStatus)}>
-          <Radio className="size-3.5" />
-          {getStatusLabel(streamStatus)}
-        </span>
-      </div>
-
-      <div className="grid gap-2">
+      <div className="border-border bg-muted/40 overflow-hidden rounded-xl border">
+        <div className="flex items-center justify-between gap-3 px-4 py-3">
+          <span className="text-muted-foreground text-sm font-semibold">온라인 상태</span>
+          <span className={getStatusClassName(streamStatus)}>
+            <Radio className="size-3.5" />
+            {getStatusLabel(streamStatus)}
+          </span>
+        </div>
         {streamStats.map((stat) => (
           <div
             key={stat.label}
-            className="border-border bg-muted/40 flex items-center justify-between rounded-xl border px-4 py-3"
+            className="border-border flex items-center justify-between gap-3 border-t px-4 py-3"
           >
             <span className="text-muted-foreground text-sm font-semibold">{stat.label}</span>
             <strong className="text-foreground text-sm font-bold">{stat.value}</strong>
