@@ -1,14 +1,21 @@
 "use client";
-// 방송 운영 화면에서 채팅 기반 투표, 추첨, 룰렛 도구를 렌더링합니다.
+// 방송 운영 화면에서 채팅 기반 투표, DB 기준 추첨, 룰렛 도구를 렌더링합니다.
 
-import type { ChannelLiveChatMessage } from "@/actions/channel/live";
+import {
+  getChannelLiveDrawParticipantsAction,
+  type ChannelLiveChatMessage,
+  type ChannelLiveDrawParticipant,
+} from "@/actions/channel/live";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { cn } from "@/lib/utils";
+import { toastAppError } from "@/utils/common/toast-message";
 import { ArrowLeft, FerrisWheel, Gift, Plus, RotateCw, Trophy, Users, Vote, X } from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
 interface Props {
+  broadcastId: string | null;
   messages: ChannelLiveChatMessage[];
 }
 
@@ -21,6 +28,7 @@ interface PollState {
 
 interface DrawState {
   endedAt: string | null;
+  participants: ChannelLiveDrawParticipant[];
   startedAt: string;
   winnerNames: string[];
 }
@@ -155,6 +163,10 @@ function getDrawParticipants(messages: ChannelLiveChatMessage[], drawSession: Dr
   return Array.from(participants);
 }
 
+function toDrawParticipantNames(participants: ChannelLiveDrawParticipant[]) {
+  return participants.map((participant) => participant.nickname);
+}
+
 function pickRandomItem<T>(items: T[]) {
   if (items.length === 0) {
     return null;
@@ -176,13 +188,14 @@ function getRouletteItemLabelStyle(index: number, itemCount: number) {
   };
 }
 
-export default function ChannelLivePollPanel({ messages }: Props) {
+export default function ChannelLivePollPanel({ broadcastId, messages }: Props) {
   const [selectedTool, setSelectedTool] = useState<InteractionTool | null>(null);
   const [activePoll, setActivePoll] = useState<PollState | null>(null);
   const [title, setTitle] = useState("");
   const [options, setOptions] = useState(DEFAULT_POLL_OPTIONS);
   const [drawSession, setDrawSession] = useState<DrawState | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
+  const [isDrawParticipantLoading, setIsDrawParticipantLoading] = useState(false);
   const [drawRollingName, setDrawRollingName] = useState<string | null>(null);
   const [rouletteInput, setRouletteInput] = useState("");
   const [rouletteItems, setRouletteItems] = useState(DEFAULT_ROULETTE_ITEMS);
@@ -197,10 +210,16 @@ export default function ChannelLivePollPanel({ messages }: Props) {
   const canCreatePoll = title.trim().length > 0 && trimmedOptions.length >= 2;
   const pollResults = useMemo(() => getPollResults(messages, activePoll), [activePoll, messages]);
   const totalVotes = pollResults.reduce((total, result) => total + result.count, 0);
-  const drawParticipants = useMemo(
+  const previewDrawParticipants = useMemo(
     () => getDrawParticipants(messages, drawSession),
     [drawSession, messages],
   );
+  const confirmedDrawParticipants = drawSession?.participants.length
+    ? toDrawParticipantNames(drawSession.participants)
+    : [];
+  const drawParticipants = confirmedDrawParticipants.length
+    ? confirmedDrawParticipants
+    : previewDrawParticipants;
   const drawableParticipants = drawParticipants.filter(
     (participant) => !drawSession?.winnerNames.includes(participant),
   );
@@ -284,21 +303,73 @@ export default function ChannelLivePollPanel({ messages }: Props) {
   const handleStartDraw = () => {
     setDrawSession({
       endedAt: null,
+      participants: [],
       startedAt: new Date().toISOString(),
       winnerNames: [],
     });
     setDrawRollingName(null);
   };
 
-  const handleEndDraw = () => {
+  const loadDrawParticipants = async (targetSession: DrawState, endedAt: string) => {
+    if (!broadcastId) {
+      toastAppError(APP_MESSAGE_CODE.error.common.unknown);
+      return null;
+    }
+
+    setIsDrawParticipantLoading(true);
+
+    try {
+      const result = await getChannelLiveDrawParticipantsAction({
+        broadcastId,
+        endedAt,
+        startedAt: targetSession.startedAt,
+      });
+
+      if (!result.success || !result.data) {
+        toastAppError(result.code ?? APP_MESSAGE_CODE.error.common.unknown);
+        return null;
+      }
+
+      return result.data.participants;
+    } finally {
+      setIsDrawParticipantLoading(false);
+    }
+  };
+
+  const handleEndDraw = async () => {
+    if (!drawSession || drawSession.endedAt) return;
+
+    const endedAt = new Date().toISOString();
+    const participants = await loadDrawParticipants(drawSession, endedAt);
+
+    if (!participants) return;
+
     setDrawSession((currentSession) =>
-      currentSession ? { ...currentSession, endedAt: new Date().toISOString() } : currentSession,
+      currentSession ? { ...currentSession, endedAt, participants } : currentSession,
     );
   };
 
-  const handlePickDrawWinner = () => {
+  const handlePickDrawWinner = async () => {
+    if (!drawSession) return;
+
+    let nextSession = drawSession;
+
+    if (!nextSession.endedAt || nextSession.participants.length === 0) {
+      const endedAt = nextSession.endedAt ?? new Date().toISOString();
+      const participants = await loadDrawParticipants(nextSession, endedAt);
+
+      if (!participants) return;
+
+      nextSession = { ...nextSession, endedAt, participants };
+      setDrawSession(nextSession);
+    }
+
+    const dbParticipantNames = toDrawParticipantNames(nextSession.participants);
+    const availableParticipants = dbParticipantNames.filter(
+      (participant) => !nextSession.winnerNames.includes(participant),
+    );
     const nextParticipants =
-      drawableParticipants.length > 0 ? drawableParticipants : drawParticipants;
+      availableParticipants.length > 0 ? availableParticipants : dbParticipantNames;
     const winnerName = pickRandomItem(nextParticipants);
 
     if (!winnerName || isDrawing) return;
@@ -551,10 +622,18 @@ export default function ChannelLivePollPanel({ messages }: Props) {
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
                     <Users className="text-brand size-4" />
-                    <span className="text-sm font-bold">참여자 {drawParticipants.length}명</span>
+                    <span className="text-sm font-bold">
+                      {isDrawParticipantLoading
+                        ? "참여자 조회 중"
+                        : `참여자 ${drawParticipants.length}명`}
+                    </span>
                   </div>
                   <span className="text-muted-foreground text-xs font-semibold">
-                    {drawSession ? (drawSession.endedAt ? "모집 종료" : "모집 중") : "모집 대기"}
+                    {drawSession
+                      ? drawSession.endedAt
+                        ? "DB 기준 모집 종료"
+                        : "모집 중"
+                      : "모집 대기"}
                   </span>
                 </div>
                 {drawParticipants.length > 0 ? (
@@ -620,6 +699,7 @@ export default function ChannelLivePollPanel({ messages }: Props) {
                   type="button"
                   variant="outline"
                   className="h-10 rounded-xl font-bold"
+                  disabled={!broadcastId || isDrawParticipantLoading || isDrawing}
                   onClick={handleStartDraw}
                 >
                   모집 시작
@@ -628,18 +708,24 @@ export default function ChannelLivePollPanel({ messages }: Props) {
                   type="button"
                   variant="outline"
                   className="h-10 rounded-xl font-bold"
-                  disabled={!drawSession || Boolean(drawSession.endedAt)}
+                  disabled={
+                    !broadcastId ||
+                    !drawSession ||
+                    Boolean(drawSession.endedAt) ||
+                    isDrawParticipantLoading ||
+                    isDrawing
+                  }
                   onClick={handleEndDraw}
                 >
-                  모집 종료
+                  {isDrawParticipantLoading ? "조회 중" : "모집 종료"}
                 </Button>
                 <Button
                   type="button"
                   className="bg-brand hover:bg-brand/90 h-10 rounded-xl font-bold text-white"
-                  disabled={!drawSession || drawParticipants.length === 0 || isDrawing}
+                  disabled={!broadcastId || !drawSession || isDrawing || isDrawParticipantLoading}
                   onClick={handlePickDrawWinner}
                 >
-                  {isDrawing ? "추첨 중" : "추첨"}
+                  {isDrawParticipantLoading ? "조회 중" : isDrawing ? "추첨 중" : "추첨"}
                 </Button>
               </div>
             </div>

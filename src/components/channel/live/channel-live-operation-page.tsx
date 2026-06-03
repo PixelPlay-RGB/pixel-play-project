@@ -373,7 +373,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
             />
           </div>
           <div className="shrink-0">
-            <ChannelLivePollPanel messages={liveChatMessages} />
+            <ChannelLivePollPanel broadcastId={broadcastId} messages={liveChatMessages} />
           </div>
         </div>
 

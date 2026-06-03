@@ -51,6 +51,17 @@ export const sendChannelLiveChatMessageSchema = z.object({
   content: messageContentSchema,
 });
 
+export const getChannelLiveDrawParticipantsSchema = z
+  .object({
+    broadcastId: z.string().uuid(),
+    endedAt: z.string().datetime(),
+    startedAt: z.string().datetime(),
+  })
+  .refine((value) => new Date(value.startedAt).getTime() <= new Date(value.endedAt).getTime());
+
+export type GetChannelLiveDrawParticipantsInput = z.infer<
+  typeof getChannelLiveDrawParticipantsSchema
+>;
 export type SendChannelLiveChatMessageInput = z.infer<typeof sendChannelLiveChatMessageSchema>;
 export type StartLiveBroadcastInput = z.infer<typeof startLiveBroadcastSchema>;
 export type UpdateChannelLiveSettingsInput = z.infer<typeof updateChannelLiveSettingsSchema>;

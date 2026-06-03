@@ -5,6 +5,8 @@ import { getAuthenticatedActorId } from "@/actions/common/authenticated-actor";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { createAdminClient } from "@/lib/supabase/admin-client";
 import {
+  getChannelLiveDrawParticipantsSchema,
+  type GetChannelLiveDrawParticipantsInput,
   sendChannelLiveChatMessageSchema,
   type SendChannelLiveChatMessageInput,
   startLiveBroadcastSchema,
@@ -35,6 +37,7 @@ const LIVE_THUMBNAIL_EXTENSION_BY_TYPE: Record<string, string> = {
   "image/webp": "webp",
 };
 const CHANNEL_LIVE_CHAT_MESSAGE_LIMIT = 50;
+const CHANNEL_LIVE_DRAW_PARTICIPANT_PAGE_SIZE = 1000;
 
 export interface ChannelLiveActiveBroadcast {
   id: string;
@@ -61,6 +64,12 @@ export interface ChannelLiveChatMessage {
   createdAt: string;
   id: string;
   isCreator: boolean;
+}
+
+export interface ChannelLiveDrawParticipant {
+  firstMessageAt: string;
+  nickname: string;
+  userId: string;
 }
 
 export interface ChannelLiveStudioSettings {
@@ -359,6 +368,61 @@ async function getChannelLiveChatMessagesByBroadcastId(
   return [...(data ?? [])].reverse().map((message) => toChannelLiveChatMessage(message, creatorId));
 }
 
+async function getChannelLiveDrawParticipantsByPeriod({
+  broadcastId,
+  endedAt,
+  startedAt,
+  supabase,
+}: {
+  broadcastId: string;
+  endedAt: string;
+  startedAt: string;
+  supabase: ReturnType<typeof createAdminClient>;
+}) {
+  const participantsByUserId = new Map<string, ChannelLiveDrawParticipant>();
+  let offset = 0;
+
+  while (true) {
+    const { data, error } = await supabase
+      .from("live_message")
+      .select("created_at, metadata, sender_id")
+      .eq("broadcast_id", broadcastId)
+      .eq("message_type", "chat")
+      .gte("created_at", startedAt)
+      .lte("created_at", endedAt)
+      .not("sender_id", "is", null)
+      .order("created_at", { ascending: true })
+      .range(offset, offset + CHANNEL_LIVE_DRAW_PARTICIPANT_PAGE_SIZE - 1);
+
+    if (error) {
+      console.error("방송 추첨 참여자 채팅 조회 실패", error);
+      return null;
+    }
+
+    (data ?? []).forEach((message) => {
+      if (!message.sender_id || participantsByUserId.has(message.sender_id)) {
+        return;
+      }
+
+      const metadata = readJsonObject(message.metadata);
+
+      participantsByUserId.set(message.sender_id, {
+        firstMessageAt: message.created_at,
+        nickname: readMetadataString(metadata.senderNickname) ?? "시청자",
+        userId: message.sender_id,
+      });
+    });
+
+    if (!data || data.length < CHANNEL_LIVE_DRAW_PARTICIPANT_PAGE_SIZE) {
+      break;
+    }
+
+    offset += CHANNEL_LIVE_DRAW_PARTICIPANT_PAGE_SIZE;
+  }
+
+  return Array.from(participantsByUserId.values());
+}
+
 export async function getChannelLiveStudioSnapshotAction(): Promise<
   AppActionResult<ChannelLiveStudioSnapshot>
 > {
@@ -638,6 +702,53 @@ export async function sendChannelLiveChatMessageAction(
   return {
     success: true,
     data: { message: toChannelLiveChatMessage(message, actor.userId) },
+  };
+}
+
+export async function getChannelLiveDrawParticipantsAction(
+  input: GetChannelLiveDrawParticipantsInput,
+): Promise<AppActionResult<{ participants: ChannelLiveDrawParticipant[] }>> {
+  const parsed = getChannelLiveDrawParticipantsSchema.safeParse(input);
+
+  if (!parsed.success) {
+    return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
+  }
+
+  const actor = await getAuthenticatedActorId({
+    logLabel: "방송 추첨 참여자 조회 중 인증 사용자 조회 실패",
+  });
+
+  if (!actor.success) {
+    return { success: false, code: actor.result.code };
+  }
+
+  const supabase = createAdminClient();
+  const { data: broadcast, error: broadcastError } = await supabase
+    .from("live_broadcast")
+    .select("id")
+    .eq("id", parsed.data.broadcastId)
+    .eq("creator_id", actor.userId)
+    .maybeSingle();
+
+  if (broadcastError || !broadcast) {
+    console.error("방송 추첨 대상 방송 조회 실패", broadcastError);
+    return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
+  }
+
+  const participants = await getChannelLiveDrawParticipantsByPeriod({
+    broadcastId: parsed.data.broadcastId,
+    endedAt: parsed.data.endedAt,
+    startedAt: parsed.data.startedAt,
+    supabase,
+  });
+
+  if (!participants) {
+    return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
+  }
+
+  return {
+    success: true,
+    data: { participants },
   };
 }
 
