@@ -69,13 +69,11 @@ function getStatusClassName(status: ChannelLiveStreamStatusResponse | null) {
 function StreamStatusContent({
   durationLabel,
   isOnline,
-  liveState,
   bitrateKbps,
   streamStatus,
 }: {
   durationLabel: string;
   isOnline: boolean;
-  liveState: ChannelLiveState;
   bitrateKbps: number | null;
   streamStatus: ChannelLiveStreamStatusResponse | null;
 }) {
@@ -89,9 +87,9 @@ function StreamStatusContent({
   ];
 
   return (
-    <div className="flex flex-1 flex-col gap-3">
-      <div className="border-border bg-muted/40 flex flex-1 flex-col overflow-hidden rounded-xl border">
-        <div className="flex items-center justify-between gap-3 px-4 py-3">
+    <div className="flex flex-1 flex-col">
+      <div className="border-border bg-muted/40 grid flex-1 grid-rows-4 overflow-hidden rounded-xl border">
+        <div className="flex min-h-0 items-center justify-between gap-3 px-4 py-3">
           <span className="text-muted-foreground text-sm font-semibold">온라인 상태</span>
           <span className={getStatusClassName(streamStatus)}>
             <Radio className="size-3.5" />
@@ -101,32 +99,19 @@ function StreamStatusContent({
         {streamStats.map((stat) => (
           <div
             key={stat.label}
-            className="border-border flex items-center justify-between gap-3 border-t px-4 py-3"
+            className="border-border flex min-h-0 items-center justify-between gap-3 border-t px-4 py-3"
           >
             <span className="text-muted-foreground text-sm font-semibold">{stat.label}</span>
             <strong className="text-foreground text-sm font-bold">{stat.value}</strong>
           </div>
         ))}
       </div>
-
-      {streamStatus?.state === "unavailable" && (
-        <p className="text-muted-foreground text-xs">
-          {streamStatus.errorMessage ?? "MediaMTX API 상태를 확인할 수 없습니다."}
-        </p>
-      )}
-
-      {liveState.isBroadcasting && streamStatus?.state === "offline" && (
-        <p className="text-muted-foreground text-xs">
-          방송은 시작됐지만 OBS 송출 신호가 아직 확인되지 않았습니다.
-        </p>
-      )}
     </div>
   );
 }
 
 export default function ChannelLiveStreamStatusPanel({
   activeBroadcastStartedAt,
-  liveState,
   streamPath,
   variant = "card",
 }: Props) {
@@ -213,7 +198,6 @@ export default function ChannelLiveStreamStatusPanel({
     <StreamStatusContent
       durationLabel={durationLabel}
       isOnline={isOnline}
-      liveState={liveState}
       bitrateKbps={bitrateKbps}
       streamStatus={streamStatus}
     />
