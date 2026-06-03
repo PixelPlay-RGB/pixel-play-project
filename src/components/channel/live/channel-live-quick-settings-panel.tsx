@@ -105,7 +105,7 @@ export default function ChannelLiveQuickSettingsPanel({
       <CardHeader className="gap-2 px-5 sm:px-6">
         <CardTitle>빠른 설정</CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-1 flex-col justify-evenly gap-4 px-5 sm:px-6">
+      <CardContent className="flex flex-1 flex-col gap-4 px-5 sm:px-6">
         <QuickSettingSection title="채팅">
           <QuickSettingRow
             checked={isSlowModeEnabled}
