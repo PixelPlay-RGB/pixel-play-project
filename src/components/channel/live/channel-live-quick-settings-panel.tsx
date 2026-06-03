@@ -31,11 +31,13 @@ interface QuickSettingRowProps {
 }
 
 function QuickSettingSectionTitle({ title }: { title: string }) {
-  return <h3 className="text-muted-foreground shrink-0 px-1 text-xs font-bold">{title}</h3>;
-}
-
-function QuickSettingDivider() {
-  return <div className="border-border shrink-0 border-t" />;
+  return (
+    <div className="text-muted-foreground flex shrink-0 items-center gap-2 px-1 text-xs font-bold">
+      <span className="border-border w-3 shrink-0 border-t" />
+      <h3 className="shrink-0">{title}</h3>
+      <span className="border-border min-w-0 flex-1 border-t" />
+    </div>
+  );
 }
 
 function QuickSettingRow({ checked, icon: Icon, label, onChange }: QuickSettingRowProps) {
@@ -43,7 +45,7 @@ function QuickSettingRow({ checked, icon: Icon, label, onChange }: QuickSettingR
     <button
       type="button"
       className={cn(
-        "text-muted-foreground flex min-h-12 items-center justify-start gap-3 rounded-xl px-1 py-2 text-left text-sm font-bold transition-colors",
+        "text-muted-foreground flex min-h-12 items-center justify-between gap-3 rounded-xl px-1 py-2 text-left text-sm font-bold transition-colors",
         "hover:text-foreground",
       )}
       aria-pressed={checked}
@@ -59,6 +61,19 @@ function QuickSettingRow({ checked, icon: Icon, label, onChange }: QuickSettingR
           <Icon className="size-4" />
         </span>
         <span>{label}</span>
+      </span>
+      <span
+        className={cn(
+          "flex h-5 w-9 shrink-0 items-center rounded-full p-0.5 transition-colors",
+          checked ? "bg-brand" : "bg-muted-foreground/30",
+        )}
+      >
+        <span
+          className={cn(
+            "size-4 rounded-full bg-white shadow-sm transition-transform",
+            checked && "translate-x-4",
+          )}
+        />
       </span>
     </button>
   );
@@ -100,8 +115,6 @@ export default function ChannelLiveQuickSettingsPanel({
           onChange={onLinkBlockedChange}
         />
 
-        <QuickSettingDivider />
-
         <QuickSettingSectionTitle title="후원" />
         <QuickSettingRow
           checked={isDonationEnabled}
@@ -121,8 +134,6 @@ export default function ChannelLiveQuickSettingsPanel({
           label="후원 알림"
           onChange={onDonationAlertEnabledChange}
         />
-
-        <QuickSettingDivider />
 
         <QuickSettingSectionTitle title="알림" />
         <QuickSettingRow
