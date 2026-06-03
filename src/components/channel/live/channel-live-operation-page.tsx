@@ -346,7 +346,14 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
               broadcastActionError={broadcastActionError}
               isBroadcastActionPending={isBroadcastActionPending}
               isSettingsActionPending={isSettingsActionPending}
-              secondaryPanel={<ChannelLivePollPanel />}
+              secondaryPanel={
+                <ChannelLiveStreamStatusPanel
+                  activeBroadcastStartedAt={broadcastStartedAt}
+                  liveState={liveState}
+                  streamPath={CHANNEL_LIVE_MEDIA_CONFIG.streamPath}
+                  variant="embedded"
+                />
+              }
               thumbnailPreviewName={thumbnailPreviewName}
               thumbnailPreviewUrl={thumbnailPreviewUrl}
               title={title}
@@ -363,6 +370,9 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
               onStartBroadcast={handleStartBroadcast}
               onEndBroadcast={handleEndBroadcast}
             />
+          </div>
+          <div className="shrink-0">
+            <ChannelLivePollPanel />
           </div>
         </div>
 
@@ -385,14 +395,6 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
             isLinkBlocked={isLinkBlocked}
             isSlowModeEnabled={isSlowModeEnabled}
             isTtsEnabled={isTtsEnabled}
-            streamStatusPanel={
-              <ChannelLiveStreamStatusPanel
-                activeBroadcastStartedAt={broadcastStartedAt}
-                liveState={liveState}
-                streamPath={CHANNEL_LIVE_MEDIA_CONFIG.streamPath}
-                variant="embedded"
-              />
-            }
             onAlertSoundEnabledChange={setIsAlertSoundEnabled}
             onDonationAlertEnabledChange={setIsDonationAlertEnabled}
             onDonationAmountVisibleChange={setIsDonationAmountVisible}

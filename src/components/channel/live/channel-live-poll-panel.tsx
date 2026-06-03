@@ -1,5 +1,5 @@
 "use client";
-// 방송 운영 빠른 설정 영역에서 투표 생성과 현재 투표 상태를 렌더링합니다.
+// 방송 운영 화면에서 투표 생성과 현재 투표 상태를 렌더링합니다.
 
 import { Button } from "@/components/ui/button";
 import {

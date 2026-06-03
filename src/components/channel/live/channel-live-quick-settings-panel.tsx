@@ -14,7 +14,6 @@ interface Props {
   isLinkBlocked: boolean;
   isSlowModeEnabled: boolean;
   isTtsEnabled: boolean;
-  streamStatusPanel: ReactNode;
   onAlertSoundEnabledChange: (isAlertSoundEnabled: boolean) => void;
   onDonationAlertEnabledChange: (isDonationAlertEnabled: boolean) => void;
   onDonationAmountVisibleChange: (isDonationAmountVisible: boolean) => void;
@@ -93,7 +92,6 @@ export default function ChannelLiveQuickSettingsPanel({
   isLinkBlocked,
   isSlowModeEnabled,
   isTtsEnabled,
-  streamStatusPanel,
   onAlertSoundEnabledChange,
   onDonationAlertEnabledChange,
   onDonationAmountVisibleChange,
@@ -158,8 +156,6 @@ export default function ChannelLiveQuickSettingsPanel({
             onChange={onTtsEnabledChange}
           />
         </QuickSettingSection>
-
-        <div className="mt-auto">{streamStatusPanel}</div>
       </CardContent>
     </Card>
   );
