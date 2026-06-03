@@ -3,14 +3,6 @@
 
 import type { ChannelLiveChatMessage } from "@/actions/channel/live";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import {
@@ -20,13 +12,12 @@ import {
   Gift,
   Plus,
   RotateCw,
-  Sparkles,
   Trophy,
   Users,
   Vote,
   X,
 } from "lucide-react";
-import { type FormEvent, useMemo, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
 interface Props {
   messages: ChannelLiveChatMessage[];
@@ -42,7 +33,7 @@ interface PollState {
 interface DrawState {
   endedAt: string | null;
   startedAt: string;
-  winnerName: string | null;
+  winnerNames: string[];
 }
 
 interface PollResult {
@@ -55,6 +46,14 @@ type InteractionTool = "poll" | "draw" | "roulette";
 
 const DEFAULT_POLL_OPTIONS = ["", ""];
 const DEFAULT_ROULETTE_ITEMS = ["당첨", "다시 뽑기", "꽝"];
+const ROULETTE_SEGMENT_COLORS = [
+  "var(--brand)",
+  "var(--live)",
+  "var(--info)",
+  "var(--warning)",
+  "var(--success)",
+  "var(--muted-foreground)",
+];
 const MAX_POLL_OPTION_COUNT = 4;
 const VOTE_COMMAND = "!투표";
 
@@ -177,14 +176,20 @@ function pickRandomItem<T>(items: T[]) {
 
 export default function ChannelLivePollPanel({ messages }: Props) {
   const [selectedTool, setSelectedTool] = useState<InteractionTool | null>(null);
-  const [open, setOpen] = useState(false);
   const [activePoll, setActivePoll] = useState<PollState | null>(null);
   const [title, setTitle] = useState("");
   const [options, setOptions] = useState(DEFAULT_POLL_OPTIONS);
   const [drawSession, setDrawSession] = useState<DrawState | null>(null);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [drawRollingName, setDrawRollingName] = useState<string | null>(null);
   const [rouletteInput, setRouletteInput] = useState("");
   const [rouletteItems, setRouletteItems] = useState(DEFAULT_ROULETTE_ITEMS);
   const [rouletteResult, setRouletteResult] = useState<string | null>(null);
+  const [rouletteRotation, setRouletteRotation] = useState(0);
+  const [isRouletteSpinning, setIsRouletteSpinning] = useState(false);
+  const drawIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const drawTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const rouletteTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const trimmedOptions = options.map((option) => option.trim()).filter(Boolean);
   const canCreatePoll = title.trim().length > 0 && trimmedOptions.length >= 2;
@@ -194,7 +199,42 @@ export default function ChannelLivePollPanel({ messages }: Props) {
     () => getDrawParticipants(messages, drawSession),
     [drawSession, messages],
   );
+  const drawableParticipants = drawParticipants.filter(
+    (participant) => !drawSession?.winnerNames.includes(participant),
+  );
   const selectedToolLabel = INTERACTION_TOOLS.find((tool) => tool.value === selectedTool)?.label;
+  const rouletteSegmentStyle = useMemo(() => {
+    if (rouletteItems.length === 0) {
+      return { background: "var(--muted)" };
+    }
+
+    const segmentSize = 100 / rouletteItems.length;
+    const stops = rouletteItems.map((_, index) => {
+      const color = ROULETTE_SEGMENT_COLORS[index % ROULETTE_SEGMENT_COLORS.length];
+      const start = index * segmentSize;
+      const end = (index + 1) * segmentSize;
+
+      return `${color} ${start}% ${end}%`;
+    });
+
+    return { background: `conic-gradient(${stops.join(", ")})` };
+  }, [rouletteItems]);
+
+  useEffect(() => {
+    return () => {
+      if (drawIntervalRef.current) {
+        clearInterval(drawIntervalRef.current);
+      }
+
+      if (drawTimeoutRef.current) {
+        clearTimeout(drawTimeoutRef.current);
+      }
+
+      if (rouletteTimeoutRef.current) {
+        clearTimeout(rouletteTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleOptionChange = (index: number, value: string) => {
     setOptions((currentOptions) =>
@@ -231,7 +271,6 @@ export default function ChannelLivePollPanel({ messages }: Props) {
     });
     setTitle("");
     setOptions(DEFAULT_POLL_OPTIONS);
-    setOpen(false);
   };
 
   const handleEndPoll = () => {
@@ -244,8 +283,9 @@ export default function ChannelLivePollPanel({ messages }: Props) {
     setDrawSession({
       endedAt: null,
       startedAt: new Date().toISOString(),
-      winnerName: null,
+      winnerNames: [],
     });
+    setDrawRollingName(null);
   };
 
   const handleEndDraw = () => {
@@ -255,13 +295,47 @@ export default function ChannelLivePollPanel({ messages }: Props) {
   };
 
   const handlePickDrawWinner = () => {
-    const winnerName = pickRandomItem(drawParticipants);
+    const nextParticipants =
+      drawableParticipants.length > 0 ? drawableParticipants : drawParticipants;
+    const winnerName = pickRandomItem(nextParticipants);
 
-    if (!winnerName) return;
+    if (!winnerName || isDrawing) return;
 
-    setDrawSession((currentSession) =>
-      currentSession ? { ...currentSession, winnerName } : currentSession,
-    );
+    setIsDrawing(true);
+
+    if (drawIntervalRef.current) {
+      clearInterval(drawIntervalRef.current);
+    }
+
+    if (drawTimeoutRef.current) {
+      clearTimeout(drawTimeoutRef.current);
+    }
+
+    drawIntervalRef.current = setInterval(() => {
+      const rollingName = pickRandomItem(nextParticipants);
+
+      if (rollingName) {
+        setDrawRollingName(rollingName);
+      }
+    }, 80);
+
+    drawTimeoutRef.current = setTimeout(() => {
+      if (drawIntervalRef.current) {
+        clearInterval(drawIntervalRef.current);
+        drawIntervalRef.current = null;
+      }
+
+      setDrawRollingName(winnerName);
+      setDrawSession((currentSession) =>
+        currentSession
+          ? {
+              ...currentSession,
+              winnerNames: [...currentSession.winnerNames, winnerName],
+            }
+          : currentSession,
+      );
+      setIsDrawing(false);
+    }, 1300);
   };
 
   const handleAddRouletteItem = () => {
@@ -282,7 +356,25 @@ export default function ChannelLivePollPanel({ messages }: Props) {
   };
 
   const handleSpinRoulette = () => {
-    setRouletteResult(pickRandomItem(rouletteItems));
+    if (rouletteItems.length === 0 || isRouletteSpinning) return;
+
+    const winnerIndex = Math.floor(Math.random() * rouletteItems.length);
+    const segmentDegree = 360 / rouletteItems.length;
+    const targetDegree = 360 - (winnerIndex * segmentDegree + segmentDegree / 2);
+    const nextRotation = rouletteRotation + 1440 + targetDegree;
+
+    setIsRouletteSpinning(true);
+    setRouletteResult(null);
+    setRouletteRotation(nextRotation);
+
+    if (rouletteTimeoutRef.current) {
+      clearTimeout(rouletteTimeoutRef.current);
+    }
+
+    rouletteTimeoutRef.current = setTimeout(() => {
+      setRouletteResult(rouletteItems[winnerIndex]);
+      setIsRouletteSpinning(false);
+    }, 1700);
   };
 
   return (
@@ -383,118 +475,76 @@ export default function ChannelLivePollPanel({ messages }: Props) {
                   </span>
                 </div>
               ) : (
-                <div className="text-muted-foreground bg-background flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold">
-                  <BarChart3 className="size-4 shrink-0" />
-                  <span>진행 중인 투표가 없습니다.</span>
-                </div>
-              )}
-
-              <Dialog open={open} onOpenChange={setOpen}>
-                <DialogTrigger
-                  render={
-                    <Button
-                      type="button"
-                      className={cn(
-                        "bg-brand hover:bg-brand/90 shadow-brand/20 h-10 rounded-xl text-sm font-bold text-white shadow-sm",
-                        "active:scale-95",
-                      )}
-                    />
-                  }
+                <form
+                  onSubmit={handleCreatePoll}
+                  className="bg-background border-border flex flex-1 flex-col gap-4 rounded-xl border p-4"
                 >
-                  <Plus className="size-4" />
-                  투표 만들기
-                </DialogTrigger>
-                <DialogContent className="max-w-md gap-0 overflow-hidden rounded-2xl p-0 shadow-xl">
-                  <DialogHeader className="bg-brand/5 border-brand/10 border-b px-5 pt-5 pb-4">
-                    <div className="flex items-center gap-3">
-                      <span className="bg-brand/10 text-brand ring-brand/20 flex size-10 shrink-0 items-center justify-center rounded-xl ring-1">
-                        <Vote className="size-5" />
-                      </span>
-                      <div className="min-w-0">
-                        <DialogTitle className="text-lg font-bold">투표 만들기</DialogTitle>
-                        <DialogDescription className="mt-1 leading-relaxed">
-                          방송 채팅 명령어로 집계할 투표를 시작합니다.
-                        </DialogDescription>
-                      </div>
-                    </div>
-                  </DialogHeader>
-                  <form onSubmit={handleCreatePoll} className="flex flex-col gap-5 px-5 py-5">
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-muted-foreground text-xs font-semibold">
-                        투표 제목
-                      </label>
-                      <Input
-                        value={title}
-                        maxLength={50}
-                        placeholder="투표 제목을 입력해주세요."
-                        className="border-border bg-muted/30 h-10 rounded-xl px-4 text-sm"
-                        onChange={(event) => setTitle(event.target.value)}
-                      />
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <BarChart3 className="text-brand size-4 shrink-0" />
+                    <span className="text-sm font-bold">투표 설정</span>
+                  </div>
 
-                    <div className="flex flex-col gap-2">
-                      <div className="flex items-center justify-between gap-3">
-                        <label className="text-muted-foreground text-xs font-semibold">
-                          선택지
-                        </label>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          className="rounded-xl font-bold"
-                          disabled={options.length >= MAX_POLL_OPTION_COUNT}
-                          onClick={handleAddOption}
-                        >
-                          <Plus className="size-3.5" />
-                          추가
-                        </Button>
-                      </div>
-                      <div className="grid gap-2">
-                        {options.map((option, index) => (
-                          <div key={index} className="flex gap-2">
-                            <Input
-                              value={option}
-                              maxLength={24}
-                              placeholder={`선택지 ${index + 1}`}
-                              className="border-border bg-muted/30 h-10 rounded-xl px-4 text-sm"
-                              onChange={(event) => handleOptionChange(index, event.target.value)}
-                            />
-                            <Button
-                              type="button"
-                              size="icon"
-                              variant="outline"
-                              className="rounded-xl"
-                              disabled={options.length <= 2}
-                              onClick={() => handleRemoveOption(index)}
-                            >
-                              <X className="size-4" />
-                              <span className="sr-only">선택지 삭제</span>
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-muted-foreground text-xs font-semibold">투표 제목</label>
+                    <Input
+                      value={title}
+                      maxLength={50}
+                      placeholder="투표 제목을 입력해주세요."
+                      className="border-border bg-muted/30 h-10 rounded-xl px-4 text-sm"
+                      onChange={(event) => setTitle(event.target.value)}
+                    />
+                  </div>
 
-                    <div className="flex gap-2.5">
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center justify-between gap-3">
+                      <label className="text-muted-foreground text-xs font-semibold">선택지</label>
                       <Button
                         type="button"
+                        size="sm"
                         variant="outline"
-                        className="h-10 flex-1 rounded-xl font-semibold"
-                        onClick={() => setOpen(false)}
+                        className="rounded-xl font-bold"
+                        disabled={options.length >= MAX_POLL_OPTION_COUNT}
+                        onClick={handleAddOption}
                       >
-                        취소
-                      </Button>
-                      <Button
-                        type="submit"
-                        disabled={!canCreatePoll}
-                        className="bg-brand hover:bg-brand/90 h-10 flex-1 rounded-xl font-bold text-white"
-                      >
-                        투표 시작
+                        <Plus className="size-3.5" />
+                        추가
                       </Button>
                     </div>
-                  </form>
-                </DialogContent>
-              </Dialog>
+                    <div className="grid gap-2">
+                      {options.map((option, index) => (
+                        <div key={index} className="flex gap-2">
+                          <Input
+                            value={option}
+                            maxLength={24}
+                            placeholder={`선택지 ${index + 1}`}
+                            className="border-border bg-muted/30 h-10 rounded-xl px-4 text-sm"
+                            onChange={(event) => handleOptionChange(index, event.target.value)}
+                          />
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="outline"
+                            className="rounded-xl"
+                            disabled={options.length <= 2}
+                            onClick={() => handleRemoveOption(index)}
+                          >
+                            <X className="size-4" />
+                            <span className="sr-only">선택지 삭제</span>
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    disabled={!canCreatePoll}
+                    className="bg-brand hover:bg-brand/90 mt-auto h-10 rounded-xl font-bold text-white"
+                  >
+                    투표 시작
+                  </Button>
+                </form>
+              )}
             </div>
           )}
 
@@ -533,12 +583,40 @@ export default function ChannelLivePollPanel({ messages }: Props) {
                 )}
               </div>
 
-              {drawSession?.winnerName && (
-                <div className="bg-brand/10 text-brand flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-bold">
-                  <Trophy className="size-4" />
-                  당첨자 {drawSession.winnerName}
+              <div
+                className={cn(
+                  "border-border bg-background flex min-h-20 items-center justify-center rounded-xl border px-4 py-3 text-center",
+                  isDrawing && "border-live/40 bg-live/10",
+                )}
+              >
+                <span
+                  className={cn(
+                    "text-lg font-black transition-all",
+                    isDrawing ? "text-live animate-pulse" : "text-foreground",
+                  )}
+                >
+                  {drawRollingName ?? "추첨 대기"}
+                </span>
+              </div>
+
+              {drawSession?.winnerNames.length ? (
+                <div className="bg-brand/10 text-brand flex flex-col gap-2 rounded-xl px-3 py-3 text-sm font-bold">
+                  <div className="flex items-center gap-2">
+                    <Trophy className="size-4" />
+                    당첨자
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {drawSession.winnerNames.map((winnerName, index) => (
+                      <span
+                        key={`${winnerName}-${index}`}
+                        className="bg-background text-brand rounded-full px-2.5 py-1 text-xs font-bold"
+                      >
+                        {index + 1}. {winnerName}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              )}
+              ) : null}
 
               <div className="grid grid-cols-3 gap-2">
                 <Button
@@ -561,10 +639,10 @@ export default function ChannelLivePollPanel({ messages }: Props) {
                 <Button
                   type="button"
                   className="bg-brand hover:bg-brand/90 h-10 rounded-xl font-bold text-white"
-                  disabled={!drawSession || drawParticipants.length === 0}
+                  disabled={!drawSession || drawParticipants.length === 0 || isDrawing}
                   onClick={handlePickDrawWinner}
                 >
-                  추첨
+                  {isDrawing ? "추첨 중" : "추첨"}
                 </Button>
               </div>
             </div>
@@ -572,12 +650,30 @@ export default function ChannelLivePollPanel({ messages }: Props) {
 
           {selectedTool === "roulette" && (
             <div className="flex flex-1 flex-col gap-3">
-              <div className="bg-background border-border flex min-h-28 flex-col items-center justify-center gap-2 rounded-xl border px-3 py-4 text-center">
-                <Sparkles className="text-brand size-5" />
-                <strong className="text-lg">{rouletteResult ?? "룰렛 대기"}</strong>
-                <span className="text-muted-foreground text-xs font-semibold">
-                  항목을 추가하고 룰렛을 돌립니다.
-                </span>
+              <div className="bg-background border-border flex flex-col items-center justify-center gap-3 rounded-xl border px-3 py-5 text-center">
+                <div className="relative flex size-56 items-center justify-center">
+                  <div className="bg-live absolute top-0 left-1/2 z-10 h-6 w-3 -translate-x-1/2 rounded-b-full shadow-sm" />
+                  <div
+                    className="border-background size-48 rounded-full border-8 shadow-lg transition-transform duration-1000 ease-out"
+                    style={{
+                      ...rouletteSegmentStyle,
+                      transform: `rotate(${rouletteRotation}deg)`,
+                      transitionDuration: isRouletteSpinning ? "1700ms" : "1000ms",
+                    }}
+                  />
+                  <div className="bg-background border-border absolute flex size-20 flex-col items-center justify-center rounded-full border shadow-sm">
+                    <FerrisWheel className="text-brand size-6" />
+                    <span className="text-muted-foreground text-xs font-bold">ROULETTE</span>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <strong className="text-lg">
+                    {isRouletteSpinning ? "돌리는 중" : (rouletteResult ?? "룰렛 대기")}
+                  </strong>
+                  <span className="text-muted-foreground text-xs font-semibold">
+                    항목을 추가하고 룰렛을 돌립니다.
+                  </span>
+                </div>
               </div>
 
               <div className="flex gap-2">
@@ -628,11 +724,11 @@ export default function ChannelLivePollPanel({ messages }: Props) {
               <Button
                 type="button"
                 className="bg-brand hover:bg-brand/90 h-10 rounded-xl font-bold text-white"
-                disabled={rouletteItems.length === 0}
+                disabled={rouletteItems.length === 0 || isRouletteSpinning}
                 onClick={handleSpinRoulette}
               >
                 <RotateCw className="size-4" />
-                룰렛 돌리기
+                {isRouletteSpinning ? "돌리는 중" : "룰렛 돌리기"}
               </Button>
             </div>
           )}
