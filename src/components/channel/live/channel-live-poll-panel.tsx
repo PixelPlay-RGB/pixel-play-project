@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import {
   ArrowLeft,
   BarChart3,
+  FerrisWheel,
   Gift,
   Plus,
   RotateCw,
@@ -60,7 +61,7 @@ const VOTE_COMMAND = "!투표";
 const INTERACTION_TOOLS = [
   { icon: Vote, label: "투표", value: "poll" },
   { icon: Gift, label: "추첨", value: "draw" },
-  { icon: RotateCw, label: "룰렛", value: "roulette" },
+  { icon: FerrisWheel, label: "룰렛", value: "roulette" },
 ] as const;
 
 function getMessageTime(message: ChannelLiveChatMessage) {
@@ -298,8 +299,8 @@ export default function ChannelLivePollPanel({ messages }: Props) {
               )}
               onClick={() => setSelectedTool(value)}
             >
-              <span className="bg-brand/10 text-brand flex size-12 items-center justify-center rounded-full">
-                <Icon className="size-6" />
+              <span className="bg-brand/10 text-brand flex size-16 items-center justify-center rounded-full">
+                <Icon className="size-8" />
               </span>
               {label}
             </button>
