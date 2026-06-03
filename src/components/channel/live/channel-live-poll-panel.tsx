@@ -53,6 +53,9 @@ const ROULETTE_SEGMENT_COLORS = [
 ];
 const MAX_POLL_OPTION_COUNT = 4;
 const VOTE_COMMAND = "!투표";
+const DRAW_REEL_ROW_HEIGHT_PX = 40;
+const DRAW_REEL_REPEAT_COUNT = 9;
+const DRAW_REEL_DURATION_MS = 2200;
 
 const INTERACTION_TOOLS = [
   { icon: Vote, label: "투표", value: "poll" },
@@ -209,12 +212,14 @@ export default function ChannelLivePollPanel({ broadcastId, messages }: Props) {
   const [isDrawing, setIsDrawing] = useState(false);
   const [isDrawParticipantLoading, setIsDrawParticipantLoading] = useState(false);
   const [drawRollingName, setDrawRollingName] = useState<string | null>(null);
+  const [drawReelNames, setDrawReelNames] = useState<string[]>([]);
+  const [drawReelTargetIndex, setDrawReelTargetIndex] = useState(0);
   const [rouletteInput, setRouletteInput] = useState("");
   const [rouletteItems, setRouletteItems] = useState(DEFAULT_ROULETTE_ITEMS);
   const [rouletteResult, setRouletteResult] = useState<string | null>(null);
   const [rouletteRotation, setRouletteRotation] = useState(0);
   const [isRouletteSpinning, setIsRouletteSpinning] = useState(false);
-  const drawIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const drawSpinStartTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const drawTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const rouletteTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -255,8 +260,8 @@ export default function ChannelLivePollPanel({ broadcastId, messages }: Props) {
 
   useEffect(() => {
     return () => {
-      if (drawIntervalRef.current) {
-        clearInterval(drawIntervalRef.current);
+      if (drawSpinStartTimeoutRef.current) {
+        clearTimeout(drawSpinStartTimeoutRef.current);
       }
 
       if (drawTimeoutRef.current) {
@@ -320,6 +325,8 @@ export default function ChannelLivePollPanel({ broadcastId, messages }: Props) {
       winnerNames: [],
     });
     setDrawRollingName(null);
+    setDrawReelNames([]);
+    setDrawReelTargetIndex(0);
   };
 
   const loadDrawParticipants = async (targetSession: DrawState, endedAt: string) => {
@@ -386,31 +393,41 @@ export default function ChannelLivePollPanel({ broadcastId, messages }: Props) {
 
     if (!winnerName || isDrawing) return;
 
-    setIsDrawing(true);
+    const winnerIndex = nextParticipants.findIndex((participant) => participant === winnerName);
+    const repeatedReelNames = Array.from(
+      { length: DRAW_REEL_REPEAT_COUNT },
+      () => nextParticipants,
+    ).flat();
+    const finalReelNames = [...repeatedReelNames, ...nextParticipants];
+    const nextTargetIndex =
+      repeatedReelNames.length + (winnerIndex >= 0 ? winnerIndex : nextParticipants.length - 1);
 
-    if (drawIntervalRef.current) {
-      clearInterval(drawIntervalRef.current);
+    setIsDrawing(true);
+    setDrawRollingName(null);
+    setDrawReelNames(finalReelNames);
+    setDrawReelTargetIndex(0);
+
+    if (drawSpinStartTimeoutRef.current) {
+      clearTimeout(drawSpinStartTimeoutRef.current);
     }
 
     if (drawTimeoutRef.current) {
       clearTimeout(drawTimeoutRef.current);
     }
 
-    drawIntervalRef.current = setInterval(() => {
-      const rollingName = pickRandomItem(nextParticipants);
-
-      if (rollingName) {
-        setDrawRollingName(rollingName);
-      }
-    }, 80);
+    drawSpinStartTimeoutRef.current = setTimeout(() => {
+      setDrawReelTargetIndex(nextTargetIndex);
+    }, 50);
 
     drawTimeoutRef.current = setTimeout(() => {
-      if (drawIntervalRef.current) {
-        clearInterval(drawIntervalRef.current);
-        drawIntervalRef.current = null;
+      if (drawSpinStartTimeoutRef.current) {
+        clearTimeout(drawSpinStartTimeoutRef.current);
+        drawSpinStartTimeoutRef.current = null;
       }
 
       setDrawRollingName(winnerName);
+      setDrawReelNames([]);
+      setDrawReelTargetIndex(0);
       setDrawSession((currentSession) =>
         currentSession
           ? {
@@ -420,7 +437,7 @@ export default function ChannelLivePollPanel({ broadcastId, messages }: Props) {
           : currentSession,
       );
       setIsDrawing(false);
-    }, 1300);
+    }, DRAW_REEL_DURATION_MS);
   };
 
   const handleAddRouletteItem = () => {
@@ -675,18 +692,37 @@ export default function ChannelLivePollPanel({ broadcastId, messages }: Props) {
 
               <div
                 className={cn(
-                  "border-border bg-background mt-auto flex min-h-20 items-center justify-center rounded-xl border px-4 py-3 text-center",
+                  "border-border bg-background mt-auto flex min-h-24 items-center justify-center overflow-hidden rounded-xl border px-4 py-3 text-center",
                   isDrawing && "border-live/40 bg-live/10",
                 )}
               >
-                <span
-                  className={cn(
-                    "text-lg font-black transition-all",
-                    isDrawing ? "text-live animate-pulse" : "text-foreground",
-                  )}
-                >
-                  {drawRollingName ?? "추첨 대기"}
-                </span>
+                {isDrawing && drawReelNames.length > 0 ? (
+                  <div className="relative h-10 w-full overflow-hidden">
+                    <div className="from-background pointer-events-none absolute inset-x-0 top-0 z-10 h-3 bg-linear-to-b to-transparent" />
+                    <div className="from-background pointer-events-none absolute inset-x-0 bottom-0 z-10 h-3 bg-linear-to-t to-transparent" />
+                    <div
+                      className="flex flex-col transition-transform ease-out"
+                      style={{
+                        transform: `translateY(-${drawReelTargetIndex * DRAW_REEL_ROW_HEIGHT_PX}px)`,
+                        transitionDuration: `${DRAW_REEL_DURATION_MS - 150}ms`,
+                        transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)",
+                      }}
+                    >
+                      {drawReelNames.map((name, index) => (
+                        <span
+                          key={`${name}-${index}`}
+                          className="text-live flex h-10 items-center justify-center text-lg font-black"
+                        >
+                          {name}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <span className="text-foreground text-lg font-black">
+                    {drawRollingName ?? "추첨 대기"}
+                  </span>
+                )}
               </div>
 
               {drawSession?.winnerNames.length ? (
