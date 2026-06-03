@@ -12,9 +12,10 @@ import { LiveLoginPromptDialog } from "@/components/live/view/live-login-prompt-
 import { useIsMobile } from "@/hooks/common/use-mobile";
 import { useLiveBroadcastView } from "@/hooks/live/use-live-broadcast-view";
 import { useFollowCreator } from "@/hooks/live/use-follow-creator";
+import { useLiveElapsed } from "@/hooks/live/use-live-elapsed";
 import { useMoveToLogin } from "@/hooks/live/use-move-to-login";
 import { cn } from "@/lib/utils";
-import { formatElapsedTime, formatCount } from "@/utils/live/live-chat";
+import { formatCount } from "@/utils/live/live-chat";
 import { LIVE_LABEL } from "@/constants/live/live";
 
 interface Props {
@@ -59,7 +60,9 @@ export function LiveView({ creatorId }: Props) {
 
   const [isLoginPromptOpen, setIsLoginPromptOpen] = useState(false);
   const [isDesktopChatCollapsed, setIsDesktopChatCollapsed] = useState(false);
+  const [isTheater, setIsTheater] = useState(false);
   const isChatCollapsed = isDesktopChatCollapsed && !isMobile;
+  const elapsedText = useLiveElapsed(broadcast?.elapsedSeconds ?? 0);
 
   function openLoginPrompt() {
     if (isAuthLoading) return;
@@ -86,6 +89,10 @@ export function LiveView({ creatorId }: Props) {
     requestAnimationFrame(() => {
       collapseChatButtonRef.current?.focus();
     });
+  }
+
+  function toggleTheater() {
+    setIsTheater((prev) => !prev);
   }
 
   if (isAuthLoading || isLoading) {
@@ -127,21 +134,27 @@ export function LiveView({ creatorId }: Props) {
               "flex min-w-0 flex-1 flex-col gap-4 py-4",
               "md:pl-4 2xl:pl-6",
               "md:overflow-y-auto",
+              isTheater && "md:gap-0 md:overflow-hidden md:py-0",
             )}
           >
-            <LiveVideoPlayer
-              broadcast={broadcast}
-              isChatCollapsed={isChatCollapsed}
-              openChatButtonRef={openChatButtonRef}
-              onOpenChat={expandDesktopChat}
-            />
+            <div className={cn(isTheater && "md:min-h-0 md:flex-1")}>
+              <LiveVideoPlayer
+                broadcast={broadcast}
+                elapsedText={elapsedText}
+                isChatCollapsed={isChatCollapsed}
+                isTheater={isTheater}
+                onToggleTheater={toggleTheater}
+                openChatButtonRef={openChatButtonRef}
+                onOpenChat={expandDesktopChat}
+              />
+            </div>
 
-            <div className="flex items-start justify-between gap-3">
+            <div className={cn("flex items-start justify-between gap-3", isTheater && "md:hidden")}>
               <LiveBroadcastInfo broadcast={broadcast} />
               <div className="text-muted-foreground flex shrink-0 flex-col items-end gap-1 pt-0.5 text-xs">
                 <span className="flex items-center gap-1">
                   <Timer className="size-3.5" />
-                  {formatElapsedTime(broadcast.elapsedSeconds)}
+                  {elapsedText}
                 </span>
                 <span className="flex items-center gap-1">
                   <Users className="size-3.5" />
@@ -151,7 +164,7 @@ export function LiveView({ creatorId }: Props) {
               </div>
             </div>
 
-            <div className="flex items-center justify-between gap-3">
+            <div className={cn("flex items-center justify-between gap-3", isTheater && "md:hidden")}>
               <LiveCreatorInfo broadcast={broadcast} />
               <LiveCreatorActions
                 isFollowing={isFollowing}

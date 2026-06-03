@@ -24,6 +24,13 @@ export const LIVE_LABEL = {
   playerVolume: "음량 조절",
   playerQuality: "화질 설정",
   playerFullscreen: "전체화면",
+  playerFullscreenExit: "전체화면 종료",
+  playerPlay: "재생",
+  playerPause: "일시정지",
+  playerMute: "음소거",
+  playerUnmute: "음소거 해제",
+  playerTheater: "극장 모드",
+  playerTheaterExit: "기본 모드",
   viewers: "명 시청 중",
   followers: "팔로워",
   broadcasts: "방송",
@@ -53,6 +60,9 @@ export const LIVE_LABEL = {
   // 금칙어가 포함돼 메시지가 전송되지 않았을 때 작성자 본인에게만 보이는 안내.
   bannedWordNotice: "금칙어가 포함되어 메시지가 전송되지 않았습니다.",
 } as const;
+
+// 어두운 플레이어 배경 위 아이콘 버튼 공통 스타일(컨트롤 바·음량·화질 공유).
+export const LIVE_PLAYER_ICON_BUTTON_CLASS = "text-white/80 hover:bg-white/10 hover:text-white";
 
 export const LIVE_DONATION_MIN_AMOUNT = 1000;
 export const LIVE_DONATION_AMOUNTS = [1000, 3000, 5000, 10000, 50000] as const;
