@@ -5,18 +5,7 @@ import type { ChannelLiveChatMessage } from "@/actions/channel/live";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import {
-  ArrowLeft,
-  BarChart3,
-  FerrisWheel,
-  Gift,
-  Plus,
-  RotateCw,
-  Trophy,
-  Users,
-  Vote,
-  X,
-} from "lucide-react";
+import { ArrowLeft, FerrisWheel, Gift, Plus, RotateCw, Trophy, Users, Vote, X } from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
 interface Props {
@@ -172,6 +161,19 @@ function pickRandomItem<T>(items: T[]) {
   }
 
   return items[Math.floor(Math.random() * items.length)];
+}
+
+function getRouletteItemLabelStyle(index: number, itemCount: number) {
+  if (itemCount === 0) {
+    return {};
+  }
+
+  const segmentDegree = 360 / itemCount;
+  const labelDegree = index * segmentDegree + segmentDegree / 2;
+
+  return {
+    transform: `translate(-50%, -50%) rotate(${labelDegree}deg) translateY(-72px)`,
+  };
 }
 
 export default function ChannelLivePollPanel({ messages }: Props) {
@@ -477,13 +479,8 @@ export default function ChannelLivePollPanel({ messages }: Props) {
               ) : (
                 <form
                   onSubmit={handleCreatePoll}
-                  className="bg-background border-border flex flex-1 flex-col gap-4 rounded-xl border p-4"
+                  className="border-border flex flex-1 flex-col gap-4 border-t pt-4"
                 >
-                  <div className="flex items-center gap-2">
-                    <BarChart3 className="text-brand size-4 shrink-0" />
-                    <span className="text-sm font-bold">투표 설정</span>
-                  </div>
-
                   <div className="flex flex-col gap-1.5">
                     <label className="text-muted-foreground text-xs font-semibold">투표 제목</label>
                     <Input
@@ -652,15 +649,38 @@ export default function ChannelLivePollPanel({ messages }: Props) {
             <div className="flex flex-1 flex-col gap-3">
               <div className="bg-background border-border flex flex-col items-center justify-center gap-3 rounded-xl border px-3 py-5 text-center">
                 <div className="relative flex size-56 items-center justify-center">
-                  <div className="bg-live absolute top-0 left-1/2 z-10 h-6 w-3 -translate-x-1/2 rounded-b-full shadow-sm" />
+                  <div className="absolute top-1 left-1/2 z-20 h-10 w-7 -translate-x-1/2 drop-shadow-md">
+                    <div
+                      className="bg-foreground absolute inset-0"
+                      style={{
+                        clipPath: "polygon(50% 100%, 0 0, 100% 0)",
+                      }}
+                    />
+                    <div
+                      className="bg-live absolute inset-1"
+                      style={{
+                        clipPath: "polygon(50% 100%, 0 0, 100% 0)",
+                      }}
+                    />
+                  </div>
                   <div
-                    className="border-background size-48 rounded-full border-8 shadow-lg transition-transform duration-1000 ease-out"
+                    className="border-background relative size-48 overflow-hidden rounded-full border-8 shadow-lg transition-transform duration-1000 ease-out"
                     style={{
                       ...rouletteSegmentStyle,
                       transform: `rotate(${rouletteRotation}deg)`,
                       transitionDuration: isRouletteSpinning ? "1700ms" : "1000ms",
                     }}
-                  />
+                  >
+                    {rouletteItems.map((item, index) => (
+                      <span
+                        key={`${item}-${index}-wheel`}
+                        className="absolute top-1/2 left-1/2 w-16 truncate text-center text-xs font-black text-white drop-shadow"
+                        style={getRouletteItemLabelStyle(index, rouletteItems.length)}
+                      >
+                        {item}
+                      </span>
+                    ))}
+                  </div>
                   <div className="bg-background border-border absolute flex size-20 flex-col items-center justify-center rounded-full border shadow-sm">
                     <FerrisWheel className="text-brand size-6" />
                     <span className="text-muted-foreground text-xs font-bold">ROULETTE</span>
