@@ -2,6 +2,7 @@
 // 방송 운영 페이지에서 사용하는 라이브 방송 RPC Server Action입니다.
 
 import { getAuthenticatedActorId } from "@/actions/common/authenticated-actor";
+import { getChannelLiveStreamPath } from "@/constants/channel/channel-live-media";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { createAdminClient } from "@/lib/supabase/admin-client";
 import {
@@ -17,6 +18,7 @@ import {
 import type { AppActionResult } from "@/types/common/action";
 import type { Json } from "@/types/database.types";
 import { isKnownMessageRpcError, resolveMessageRpcErrorCode } from "@/utils/common/app-message";
+import { buildLiveStreamKey } from "@/utils/live/live-security";
 import { revalidatePath } from "next/cache";
 
 interface EndLiveBroadcastInput {
@@ -56,6 +58,7 @@ export interface ChannelLiveStudioSnapshot {
   activeBroadcast: ChannelLiveActiveBroadcast | null;
   chatMessages: ChannelLiveChatMessage[];
   settings: ChannelLiveStudioSettings;
+  streamPath: string;
 }
 
 export interface ChannelLiveChatMessage {
@@ -287,23 +290,31 @@ function createSettingsFromRecord(settings: unknown): ChannelLiveStudioSettings 
   };
 }
 
-function toChannelLiveStudioSnapshot(value: Json): ChannelLiveStudioSnapshot {
+function createChannelLiveStreamPath(creatorId: string, settings: ChannelLiveStudioSettings) {
+  return getChannelLiveStreamPath(buildLiveStreamKey(creatorId, settings.streamKeyVersion));
+}
+
+function toChannelLiveStudioSnapshot(value: Json, creatorId: string): ChannelLiveStudioSnapshot {
   if (!isRecord(value)) {
+    const settings = createDefaultSettings();
+
     return {
       activeBroadcast: null,
       chatMessages: [],
-      settings: createDefaultSettings(),
+      settings,
+      streamPath: createChannelLiveStreamPath(creatorId, settings),
     };
   }
 
   const activeBroadcast = value.activeBroadcast;
-  const settings = value.settings;
+  const settings = createSettingsFromRecord(value.settings);
 
   if (!isRecord(activeBroadcast)) {
     return {
       activeBroadcast: null,
       chatMessages: [],
-      settings: createSettingsFromRecord(settings),
+      settings,
+      streamPath: createChannelLiveStreamPath(creatorId, settings),
     };
   }
 
@@ -322,7 +333,8 @@ function toChannelLiveStudioSnapshot(value: Json): ChannelLiveStudioSnapshot {
       title: readString(activeBroadcast.title),
     },
     chatMessages: [],
-    settings: createSettingsFromRecord(settings),
+    settings,
+    streamPath: createChannelLiveStreamPath(creatorId, settings),
   };
 }
 
@@ -444,7 +456,7 @@ export async function getChannelLiveStudioSnapshotAction(): Promise<
     return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
   }
 
-  const snapshot = toChannelLiveStudioSnapshot(data);
+  const snapshot = toChannelLiveStudioSnapshot(data, actor.userId);
 
   if (snapshot.activeBroadcast) {
     snapshot.chatMessages = await getChannelLiveChatMessagesByBroadcastId(
@@ -508,7 +520,7 @@ export async function updateChannelLiveSettingsAction(
 
   return {
     success: true,
-    data: toChannelLiveStudioSnapshot(data),
+    data: toChannelLiveStudioSnapshot(data, actor.userId),
   };
 }
 

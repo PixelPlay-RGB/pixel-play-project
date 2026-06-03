@@ -61,6 +61,7 @@ function getBroadcastStatusClassName(liveState: ChannelLiveState) {
 export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
   const activeBroadcast = initialSnapshot?.activeBroadcast ?? null;
   const initialSettings = initialSnapshot?.settings;
+  const streamPath = initialSnapshot?.streamPath ?? CHANNEL_LIVE_MEDIA_CONFIG.streamPath;
   const [title, setTitle] = useState(
     activeBroadcast?.title || initialSettings?.defaultTitle || DEFAULT_TITLE,
   );
@@ -340,7 +341,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
             </span>
           </div>
           <div className="shrink-0">
-            <ChannelLivePreviewPanel liveState={liveState} title={title} />
+            <ChannelLivePreviewPanel liveState={liveState} streamPath={streamPath} title={title} />
           </div>
           <div className="shrink-0">
             <ChannelLiveSettingsPanel
@@ -351,7 +352,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
                 <ChannelLiveStreamStatusPanel
                   activeBroadcastStartedAt={broadcastStartedAt}
                   liveState={liveState}
-                  streamPath={CHANNEL_LIVE_MEDIA_CONFIG.streamPath}
+                  streamPath={streamPath}
                   variant="embedded"
                 />
               }

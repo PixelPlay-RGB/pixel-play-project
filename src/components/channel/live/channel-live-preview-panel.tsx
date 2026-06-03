@@ -7,11 +7,12 @@ import { Radio } from "lucide-react";
 
 interface Props {
   liveState: ChannelLiveState;
+  streamPath: string;
   title: string;
 }
 
-export default function ChannelLivePreviewPanel({ liveState, title }: Props) {
-  const hlsUrl = getChannelLiveHlsUrl();
+export default function ChannelLivePreviewPanel({ liveState, streamPath, title }: Props) {
+  const hlsUrl = getChannelLiveHlsUrl(streamPath);
 
   return (
     <Card className="border-brand/10 from-brand/10 via-background to-live/10 aspect-video min-h-56 gap-0 overflow-hidden bg-linear-to-br py-0">
