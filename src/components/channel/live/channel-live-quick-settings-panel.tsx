@@ -37,7 +37,7 @@ interface QuickSettingSectionProps {
 
 function QuickSettingSection({ children, title }: QuickSettingSectionProps) {
   return (
-    <section className="border-border flex shrink-0 flex-col gap-3 border-b pb-5 last:border-b-0 last:pb-0">
+    <section className="flex shrink-0 flex-col gap-3">
       <h3 className="text-muted-foreground px-1 text-xs font-bold">{title}</h3>
       <div className="grid gap-3">{children}</div>
     </section>
@@ -105,7 +105,7 @@ export default function ChannelLiveQuickSettingsPanel({
       <CardHeader className="gap-2 px-5 sm:px-6">
         <CardTitle>빠른 설정</CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-1 flex-col justify-evenly gap-6 px-5 sm:px-6">
+      <CardContent className="flex flex-1 flex-col justify-evenly gap-3 px-5 sm:px-6">
         <QuickSettingSection title="채팅">
           <QuickSettingRow
             checked={isSlowModeEnabled}
@@ -120,6 +120,8 @@ export default function ChannelLiveQuickSettingsPanel({
             onChange={onLinkBlockedChange}
           />
         </QuickSettingSection>
+
+        <div className="border-border border-t" />
 
         <QuickSettingSection title="후원">
           <QuickSettingRow
@@ -141,6 +143,8 @@ export default function ChannelLiveQuickSettingsPanel({
             onChange={onDonationAlertEnabledChange}
           />
         </QuickSettingSection>
+
+        <div className="border-border border-t" />
 
         <QuickSettingSection title="알림">
           <QuickSettingRow
