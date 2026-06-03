@@ -1,15 +1,22 @@
 "use client";
 // 방송 운영의 실제 라이브 채팅과 채팅 일시정지 제어를 렌더링합니다.
-import type { ChannelLiveChatMessage } from "@/actions/channel/live";
+import {
+  sendChannelLiveChatMessageAction,
+  type ChannelLiveChatMessage,
+} from "@/actions/channel/live";
 import type { ChannelLiveState } from "@/components/channel/live/channel-live-operation-page";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
+import { MESSAGE_CONTENT_MAX_LENGTH } from "@/constants/message/message";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
+import { messageContentSchema } from "@/lib/zod/message";
 import type { Json } from "@/types/database.types";
 import type { LiveMessageRow } from "@/types/live/live";
-import { MessageCircle, Pause, Play } from "lucide-react";
-import { useEffect, useState } from "react";
+import { toastAppError } from "@/utils/common/toast-message";
+import { MessageCircle, Pause, Play, SendHorizontal } from "lucide-react";
+import { type FormEvent, useEffect, useState, useTransition } from "react";
 
 interface Props {
   broadcastId?: string | null;
@@ -55,6 +62,9 @@ export default function ChannelLiveChatPanel({
   onToggleChatPaused,
 }: Props) {
   const [messages, setMessages] = useState(initialMessages);
+  const [draft, setDraft] = useState("");
+  const [isSendPending, startSendTransition] = useTransition();
+  const isInputDisabled = !broadcastId || liveState.isChatPaused || isSendPending;
 
   useEffect(() => {
     onMessagesChange?.(messages);
@@ -96,6 +106,47 @@ export default function ChannelLiveChatPanel({
       void supabase.removeChannel(channel);
     };
   }, [broadcastId]);
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!broadcastId || isInputDisabled) {
+      return;
+    }
+
+    const parsed = messageContentSchema.safeParse(draft);
+
+    if (!parsed.success) {
+      toastAppError(APP_MESSAGE_CODE.error.message.invalidInput);
+      return;
+    }
+
+    const content = parsed.data;
+    setDraft("");
+
+    startSendTransition(async () => {
+      const result = await sendChannelLiveChatMessageAction({
+        broadcastId,
+        content,
+      });
+
+      if (!result.success || !result.data?.message) {
+        toastAppError(result.code ?? APP_MESSAGE_CODE.error.message.sendFailed);
+        setDraft(content);
+        return;
+      }
+
+      const sentMessage = result.data.message;
+
+      setMessages((currentMessages) => {
+        if (currentMessages.some((message) => message.id === sentMessage.id)) {
+          return currentMessages;
+        }
+
+        return [...currentMessages, sentMessage].slice(-50);
+      });
+    });
+  };
 
   return (
     <Card className="flex min-h-144 flex-1 flex-col xl:h-full xl:min-h-0">
@@ -151,6 +202,37 @@ export default function ChannelLiveChatPanel({
               </div>
             ))}
         </div>
+        <form
+          className="border-border bg-background flex shrink-0 items-center gap-2 rounded-lg border px-2 py-2"
+          onSubmit={handleSubmit}
+        >
+          <input
+            value={draft}
+            disabled={isInputDisabled}
+            maxLength={MESSAGE_CONTENT_MAX_LENGTH}
+            placeholder={
+              broadcastId
+                ? liveState.isChatPaused
+                  ? "채팅이 일시정지되었습니다."
+                  : "채팅 입력"
+                : "방송 시작 후 채팅 입력 가능"
+            }
+            className={cn(
+              "min-h-10 flex-1 rounded-md bg-transparent px-2 text-sm outline-none",
+              "placeholder:text-muted-foreground/70 disabled:cursor-not-allowed disabled:opacity-60",
+            )}
+            onChange={(event) => setDraft(event.target.value)}
+          />
+          <Button
+            type="submit"
+            size="icon"
+            className="bg-brand hover:bg-brand/90 shrink-0 rounded-lg text-white"
+            disabled={isInputDisabled}
+          >
+            <SendHorizontal className="size-4" />
+            <span className="sr-only">채팅 전송</span>
+          </Button>
+        </form>
       </CardContent>
     </Card>
   );

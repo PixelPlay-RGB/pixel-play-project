@@ -5,6 +5,8 @@ import { getAuthenticatedActorId } from "@/actions/common/authenticated-actor";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { createAdminClient } from "@/lib/supabase/admin-client";
 import {
+  sendChannelLiveChatMessageSchema,
+  type SendChannelLiveChatMessageInput,
   startLiveBroadcastSchema,
   type StartLiveBroadcastInput,
   updateChannelLiveSettingsSchema,
@@ -12,6 +14,7 @@ import {
 } from "@/lib/zod/channel-live";
 import type { AppActionResult } from "@/types/common/action";
 import type { Json } from "@/types/database.types";
+import { isKnownMessageRpcError, resolveMessageRpcErrorCode } from "@/utils/common/app-message";
 import { revalidatePath } from "next/cache";
 
 interface EndLiveBroadcastInput {
@@ -578,6 +581,63 @@ export async function saveChannelLiveThumbnailAction({
   return {
     success: true,
     data: { thumbnailUrl: data.thumbnail_url },
+  };
+}
+
+export async function sendChannelLiveChatMessageAction(
+  input: SendChannelLiveChatMessageInput,
+): Promise<AppActionResult<{ message: ChannelLiveChatMessage }>> {
+  const parsed = sendChannelLiveChatMessageSchema.safeParse(input);
+
+  if (!parsed.success) {
+    return { success: false, code: APP_MESSAGE_CODE.error.message.invalidInput };
+  }
+
+  const actor = await getAuthenticatedActorId({
+    logLabel: "방송 채팅 전송 중 인증 사용자 조회 실패",
+  });
+
+  if (!actor.success) {
+    return { success: false, code: actor.result.code };
+  }
+
+  const supabase = createAdminClient();
+  const { data: messageId, error } = await supabase.rpc("send_live_message", {
+    p_actor_user_id: actor.userId,
+    p_broadcast_id: parsed.data.broadcastId,
+    p_content: parsed.data.content,
+  });
+
+  if (error) {
+    if (!isKnownMessageRpcError(error)) {
+      console.error("방송 채팅 전송 RPC 실패", error);
+    }
+
+    return {
+      success: false,
+      code: resolveMessageRpcErrorCode(error, APP_MESSAGE_CODE.error.message.sendFailed),
+    };
+  }
+
+  if (!messageId) {
+    console.error("방송 채팅 전송 RPC가 생성 메시지 id를 반환하지 않음");
+    return { success: false, code: APP_MESSAGE_CODE.error.message.sendFailed };
+  }
+
+  const { data: message, error: messageError } = await supabase
+    .from("live_message")
+    .select("content, created_at, id, metadata, sender_id")
+    .eq("id", messageId)
+    .single();
+
+  if (messageError || !message) {
+    console.error("방송 채팅 전송 메시지 조회 실패", messageError);
+    return { success: false, code: APP_MESSAGE_CODE.error.message.sendFailed };
+  }
+
+  return {
+    success: true,
+    data: { message: toChannelLiveChatMessage(message, actor.userId) },
   };
 }
 

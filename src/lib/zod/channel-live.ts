@@ -2,6 +2,8 @@
 
 import { z } from "zod";
 
+import { messageContentSchema } from "@/lib/zod/message";
+
 const FOLLOWER_WAIT_SECONDS = [
   0, 300, 600, 1800, 3600, 86400, 604800, 2592000, 5184000, 7776000, 10368000, 12960000, 15552000,
 ];
@@ -44,5 +46,11 @@ export const updateChannelLiveSettingsSchema = z.object({
   ttsRate: z.number().min(0.5).max(2),
 });
 
+export const sendChannelLiveChatMessageSchema = z.object({
+  broadcastId: z.string().uuid(),
+  content: messageContentSchema,
+});
+
+export type SendChannelLiveChatMessageInput = z.infer<typeof sendChannelLiveChatMessageSchema>;
 export type StartLiveBroadcastInput = z.infer<typeof startLiveBroadcastSchema>;
 export type UpdateChannelLiveSettingsInput = z.infer<typeof updateChannelLiveSettingsSchema>;
