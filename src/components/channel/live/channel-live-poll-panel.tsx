@@ -184,7 +184,7 @@ function getRouletteItemLabelStyle(index: number, itemCount: number) {
   const labelDegree = index * segmentDegree + segmentDegree / 2;
 
   return {
-    transform: `translate(-50%, -50%) rotate(${labelDegree}deg) translateY(-72px)`,
+    transform: `translate(-50%, -50%) rotate(${labelDegree}deg) translateY(-58px)`,
   };
 }
 
@@ -434,7 +434,9 @@ export default function ChannelLivePollPanel({ broadcastId, messages }: Props) {
     const winnerIndex = Math.floor(Math.random() * rouletteItems.length);
     const segmentDegree = 360 / rouletteItems.length;
     const targetDegree = 360 - (winnerIndex * segmentDegree + segmentDegree / 2);
-    const nextRotation = rouletteRotation + 1440 + targetDegree;
+    const currentDegree = ((rouletteRotation % 360) + 360) % 360;
+    const remainingDegree = (targetDegree - currentDegree + 360) % 360;
+    const nextRotation = rouletteRotation + 1440 + remainingDegree;
 
     setIsRouletteSpinning(true);
     setRouletteResult(null);
@@ -661,7 +663,7 @@ export default function ChannelLivePollPanel({ broadcastId, messages }: Props) {
 
               <div
                 className={cn(
-                  "border-border bg-background flex min-h-20 items-center justify-center rounded-xl border px-4 py-3 text-center",
+                  "border-border bg-background mt-auto flex min-h-20 items-center justify-center rounded-xl border px-4 py-3 text-center",
                   isDrawing && "border-live/40 bg-live/10",
                 )}
               >
@@ -735,7 +737,7 @@ export default function ChannelLivePollPanel({ broadcastId, messages }: Props) {
             <div className="flex flex-1 flex-col gap-3">
               <div className="bg-background border-border flex flex-col items-center justify-center gap-3 rounded-xl border px-3 py-5 text-center">
                 <div className="relative flex size-56 items-center justify-center">
-                  <div className="absolute top-1 left-1/2 z-20 h-10 w-7 -translate-x-1/2 drop-shadow-md">
+                  <div className="absolute top-5 left-1/2 z-20 h-5 w-5 -translate-x-1/2 drop-shadow-md">
                     <div
                       className="bg-foreground absolute inset-0"
                       style={{
@@ -743,7 +745,7 @@ export default function ChannelLivePollPanel({ broadcastId, messages }: Props) {
                       }}
                     />
                     <div
-                      className="bg-live absolute inset-1"
+                      className="bg-live absolute inset-0.5"
                       style={{
                         clipPath: "polygon(50% 100%, 0 0, 100% 0)",
                       }}
