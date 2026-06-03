@@ -15,6 +15,7 @@ interface Props {
   broadcastId?: string | null;
   initialMessages: ChannelLiveChatMessage[];
   liveState: ChannelLiveState;
+  onMessagesChange?: (messages: ChannelLiveChatMessage[]) => void;
   onToggleChatPaused: () => void;
 }
 
@@ -50,9 +51,14 @@ export default function ChannelLiveChatPanel({
   broadcastId,
   initialMessages,
   liveState,
+  onMessagesChange,
   onToggleChatPaused,
 }: Props) {
   const [messages, setMessages] = useState(initialMessages);
+
+  useEffect(() => {
+    onMessagesChange?.(messages);
+  }, [messages, onMessagesChange]);
 
   useEffect(() => {
     if (!broadcastId) {

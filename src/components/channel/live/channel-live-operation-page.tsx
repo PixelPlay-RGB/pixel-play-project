@@ -121,6 +121,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
   const [alertVolume, setAlertVolume] = useState(initialSettings?.alertVolume ?? 32);
   const [isTtsEnabled, setIsTtsEnabled] = useState(initialSettings?.ttsEnabled ?? true);
   const [ttsRate, setTtsRate] = useState(initialSettings?.ttsRate ?? 1);
+  const [liveChatMessages, setLiveChatMessages] = useState(initialSnapshot?.chatMessages ?? []);
   const [isBroadcastActionPending, startBroadcastTransition] = useTransition();
   const [isSettingsActionPending, startSettingsTransition] = useTransition();
 
@@ -372,7 +373,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
             />
           </div>
           <div className="shrink-0">
-            <ChannelLivePollPanel />
+            <ChannelLivePollPanel messages={liveChatMessages} />
           </div>
         </div>
 
@@ -382,6 +383,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
             broadcastId={broadcastId}
             initialMessages={initialSnapshot?.chatMessages ?? []}
             liveState={liveState}
+            onMessagesChange={setLiveChatMessages}
             onToggleChatPaused={() => setIsChatPaused((currentValue) => !currentValue)}
           />
         </div>
