@@ -4,7 +4,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { Bell, HandCoins, Link2, Mic2, Timer, Volume2 } from "lucide-react";
-import type { ComponentType, ReactNode } from "react";
+import type { ComponentType } from "react";
 
 interface Props {
   isAlertSoundEnabled: boolean;
@@ -30,18 +30,12 @@ interface QuickSettingRowProps {
   onChange: (checked: boolean) => void;
 }
 
-interface QuickSettingSectionProps {
-  children: ReactNode;
-  title: string;
+function QuickSettingSectionTitle({ title }: { title: string }) {
+  return <h3 className="text-muted-foreground shrink-0 px-1 text-xs font-bold">{title}</h3>;
 }
 
-function QuickSettingSection({ children, title }: QuickSettingSectionProps) {
-  return (
-    <section className="flex shrink-0 flex-col gap-4">
-      <h3 className="text-muted-foreground px-1 text-xs font-bold">{title}</h3>
-      <div className="grid gap-4">{children}</div>
-    </section>
-  );
+function QuickSettingDivider() {
+  return <div className="border-border shrink-0 border-t" />;
 }
 
 function QuickSettingRow({ checked, icon: Icon, label, onChange }: QuickSettingRowProps) {
@@ -105,61 +99,58 @@ export default function ChannelLiveQuickSettingsPanel({
       <CardHeader className="gap-2 px-5 sm:px-6">
         <CardTitle>빠른 설정</CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-1 flex-col gap-4 px-5 sm:px-6">
-        <QuickSettingSection title="채팅">
-          <QuickSettingRow
-            checked={isSlowModeEnabled}
-            icon={Timer}
-            label="저속모드"
-            onChange={onSlowModeEnabledChange}
-          />
-          <QuickSettingRow
-            checked={isLinkBlocked}
-            icon={Link2}
-            label="링크 차단"
-            onChange={onLinkBlockedChange}
-          />
-        </QuickSettingSection>
+      <CardContent className="flex flex-1 flex-col justify-between gap-4 px-5 sm:px-6">
+        <QuickSettingSectionTitle title="채팅" />
+        <QuickSettingRow
+          checked={isSlowModeEnabled}
+          icon={Timer}
+          label="저속모드"
+          onChange={onSlowModeEnabledChange}
+        />
+        <QuickSettingRow
+          checked={isLinkBlocked}
+          icon={Link2}
+          label="링크 차단"
+          onChange={onLinkBlockedChange}
+        />
 
-        <div className="border-border border-t" />
+        <QuickSettingDivider />
 
-        <QuickSettingSection title="후원">
-          <QuickSettingRow
-            checked={isDonationEnabled}
-            icon={HandCoins}
-            label="후원 받기"
-            onChange={onDonationEnabledChange}
-          />
-          <QuickSettingRow
-            checked={isDonationAmountVisible}
-            icon={HandCoins}
-            label="후원 금액 공개"
-            onChange={onDonationAmountVisibleChange}
-          />
-          <QuickSettingRow
-            checked={isDonationAlertEnabled}
-            icon={Bell}
-            label="후원 알림"
-            onChange={onDonationAlertEnabledChange}
-          />
-        </QuickSettingSection>
+        <QuickSettingSectionTitle title="후원" />
+        <QuickSettingRow
+          checked={isDonationEnabled}
+          icon={HandCoins}
+          label="후원 받기"
+          onChange={onDonationEnabledChange}
+        />
+        <QuickSettingRow
+          checked={isDonationAmountVisible}
+          icon={HandCoins}
+          label="후원 금액 공개"
+          onChange={onDonationAmountVisibleChange}
+        />
+        <QuickSettingRow
+          checked={isDonationAlertEnabled}
+          icon={Bell}
+          label="후원 알림"
+          onChange={onDonationAlertEnabledChange}
+        />
 
-        <div className="border-border border-t" />
+        <QuickSettingDivider />
 
-        <QuickSettingSection title="알림">
-          <QuickSettingRow
-            checked={isAlertSoundEnabled}
-            icon={Volume2}
-            label="알림 사운드"
-            onChange={onAlertSoundEnabledChange}
-          />
-          <QuickSettingRow
-            checked={isTtsEnabled}
-            icon={Mic2}
-            label="TTS 사용"
-            onChange={onTtsEnabledChange}
-          />
-        </QuickSettingSection>
+        <QuickSettingSectionTitle title="알림" />
+        <QuickSettingRow
+          checked={isAlertSoundEnabled}
+          icon={Volume2}
+          label="알림 사운드"
+          onChange={onAlertSoundEnabledChange}
+        />
+        <QuickSettingRow
+          checked={isTtsEnabled}
+          icon={Mic2}
+          label="TTS 사용"
+          onChange={onTtsEnabledChange}
+        />
       </CardContent>
     </Card>
   );
