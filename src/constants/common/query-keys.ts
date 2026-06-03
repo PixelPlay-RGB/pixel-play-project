@@ -69,4 +69,11 @@ export const QUERY_KEYS = {
     search: (query?: string, section?: string) =>
       [...QUERY_KEYS.live.searchAll(), query, section].filter((v) => v !== undefined),
   },
+  channel: {
+    all: ["channel"] as const,
+    analyticsFollowGrowth: (creatorId?: string) =>
+      [...QUERY_KEYS.channel.all, "analytics", "follow-growth", creatorId].filter(
+        (v) => v !== undefined,
+      ),
+  },
 } as const;
