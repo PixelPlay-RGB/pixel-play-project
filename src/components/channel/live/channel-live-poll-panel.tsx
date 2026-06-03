@@ -188,6 +188,18 @@ function getRouletteItemLabelStyle(index: number, itemCount: number) {
   };
 }
 
+function getRouletteWinnerIndex(rotation: number, itemCount: number) {
+  if (itemCount === 0) {
+    return null;
+  }
+
+  const normalizedRotation = ((rotation % 360) + 360) % 360;
+  const pointedDegree = (360 - normalizedRotation) % 360;
+  const segmentDegree = 360 / itemCount;
+
+  return Math.floor(pointedDegree / segmentDegree);
+}
+
 export default function ChannelLivePollPanel({ broadcastId, messages }: Props) {
   const [selectedTool, setSelectedTool] = useState<InteractionTool | null>(null);
   const [activePoll, setActivePoll] = useState<PollState | null>(null);
@@ -431,12 +443,7 @@ export default function ChannelLivePollPanel({ broadcastId, messages }: Props) {
   const handleSpinRoulette = () => {
     if (rouletteItems.length === 0 || isRouletteSpinning) return;
 
-    const winnerIndex = Math.floor(Math.random() * rouletteItems.length);
-    const segmentDegree = 360 / rouletteItems.length;
-    const targetDegree = 360 - (winnerIndex * segmentDegree + segmentDegree / 2);
-    const currentDegree = ((rouletteRotation % 360) + 360) % 360;
-    const remainingDegree = (targetDegree - currentDegree + 360) % 360;
-    const nextRotation = rouletteRotation + 1440 + remainingDegree;
+    const nextRotation = rouletteRotation + 1440 + Math.random() * 360;
 
     setIsRouletteSpinning(true);
     setRouletteResult(null);
@@ -447,7 +454,12 @@ export default function ChannelLivePollPanel({ broadcastId, messages }: Props) {
     }
 
     rouletteTimeoutRef.current = setTimeout(() => {
-      setRouletteResult(rouletteItems[winnerIndex]);
+      const winnerIndex = getRouletteWinnerIndex(nextRotation, rouletteItems.length);
+
+      if (winnerIndex !== null) {
+        setRouletteResult(rouletteItems[winnerIndex]);
+      }
+
       setIsRouletteSpinning(false);
     }, 1700);
   };
