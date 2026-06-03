@@ -1,5 +1,5 @@
 "use client";
-// 방송 상태, 방송 시간, 해상도, 비트레이트, FPS 정보를 표시합니다.
+// 방송 상태, 방송 시간, 해상도와 비트레이트 정보를 표시합니다.
 
 import type { ChannelLiveState } from "@/components/channel/live/channel-live-operation-page";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -86,12 +86,11 @@ function StreamStatusContent({
     },
     { label: "해상도", value: formatResolution(streamStatus) },
     { label: "비트레이트", value: isOnline ? formatBitrate(bitrateKbps) : "-" },
-    { label: "FPS", value: streamStatus?.fps ? String(streamStatus.fps) : "-" },
   ];
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="border-border bg-muted/40 overflow-hidden rounded-xl border">
+    <div className="flex flex-1 flex-col gap-3">
+      <div className="border-border bg-muted/40 flex flex-1 flex-col overflow-hidden rounded-xl border">
         <div className="flex items-center justify-between gap-3 px-4 py-3">
           <span className="text-muted-foreground text-sm font-semibold">온라인 상태</span>
           <span className={getStatusClassName(streamStatus)}>
@@ -222,7 +221,7 @@ export default function ChannelLiveStreamStatusPanel({
 
   if (variant === "embedded") {
     return (
-      <section className="flex min-w-0 flex-col gap-3">
+      <section className="flex min-w-0 flex-col gap-3 lg:h-full">
         <h3 className="text-foreground text-sm font-bold">스트림 상태</h3>
         {content}
       </section>

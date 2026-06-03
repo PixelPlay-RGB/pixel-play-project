@@ -465,7 +465,7 @@ export default function ChannelLivePollPanel({ broadcastId, messages }: Props) {
   };
 
   return (
-    <section className="border-border bg-muted/40 flex min-h-96 min-w-0 flex-col gap-4 rounded-xl border p-4 shadow-sm">
+    <section className="border-border bg-card flex min-h-96 min-w-0 flex-col gap-4 rounded-xl border p-4 shadow-sm">
       {selectedTool === null ? (
         <div className="grid flex-1 gap-3 sm:grid-cols-3">
           {INTERACTION_TOOLS.map(({ icon: Icon, label, value }) => (
