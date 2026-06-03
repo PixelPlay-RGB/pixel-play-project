@@ -43,9 +43,8 @@ function QuickSettingRow({ checked, icon: Icon, label, onChange }: QuickSettingR
     <button
       type="button"
       className={cn(
-        "border-border bg-muted/40 text-muted-foreground flex min-h-12 items-center justify-between gap-3 rounded-xl border px-3 py-2 text-left text-sm font-bold shadow-sm transition-colors",
-        "hover:border-brand/40 hover:bg-brand/5",
-        checked && "border-brand/40 bg-brand/10 text-brand",
+        "text-muted-foreground flex min-h-12 items-center justify-start gap-3 rounded-xl px-1 py-2 text-left text-sm font-bold transition-colors",
+        "hover:text-foreground",
       )}
       aria-pressed={checked}
       onClick={() => onChange(!checked)}
@@ -53,26 +52,13 @@ function QuickSettingRow({ checked, icon: Icon, label, onChange }: QuickSettingR
       <span className="flex min-w-0 items-center gap-2.5">
         <span
           className={cn(
-            "bg-background flex size-8 shrink-0 items-center justify-center rounded-full",
-            checked ? "text-brand" : "text-muted-foreground",
+            "bg-muted/60 text-muted-foreground flex size-8 shrink-0 items-center justify-center rounded-full transition-colors",
+            checked && "text-brand",
           )}
         >
           <Icon className="size-4" />
         </span>
         <span>{label}</span>
-      </span>
-      <span
-        className={cn(
-          "flex h-5 w-9 shrink-0 items-center rounded-full p-0.5 transition-colors",
-          checked ? "bg-brand" : "bg-muted-foreground/30",
-        )}
-      >
-        <span
-          className={cn(
-            "size-4 rounded-full bg-white shadow-sm transition-transform",
-            checked && "translate-x-4",
-          )}
-        />
       </span>
     </button>
   );
