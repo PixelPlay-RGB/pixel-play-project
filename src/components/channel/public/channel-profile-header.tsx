@@ -41,13 +41,18 @@ export default function ChannelProfileHeader({ profile }: Props) {
         </h1>
         <p
           className={cn(
-            "text-muted-foreground mt-1 inline-flex items-center gap-1",
+            "text-muted-foreground mt-1 flex items-center gap-1",
             "text-xs font-semibold sm:text-sm",
           )}
         >
-          <UsersRound className="size-3.5" />
+          <UsersRound className="size-3.5 shrink-0" />
           팔로워 {numberFormatter.format(followerCount)}
         </p>
+        {profile.bio && (
+          <p className="text-muted-foreground/90 mt-1.5 line-clamp-2 text-xs leading-relaxed whitespace-pre-wrap sm:text-sm">
+            {profile.bio}
+          </p>
+        )}
       </div>
 
       {profile.isOwnChannel ? (
