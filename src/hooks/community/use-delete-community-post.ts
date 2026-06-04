@@ -23,10 +23,11 @@ export function useDeleteCommunityPost(postId: string) {
 
       toastAppSuccess(APP_MESSAGE_CODE.success.community.postDeleted);
       // 목록으로 이동했을 때 삭제된 글이 잠깐 보이지 않도록, 목록 캐시에서 먼저 즉시 제거 후 재검증.
+      // postsAll()은 모든 크리에이터/페이지 캐시를 매치하므로, 삭제 대상 글이 실제로 들어있는 캐시만 보정한다.
       queryClient.setQueriesData<CommunityPostsResult>(
         { queryKey: QUERY_KEYS.community.postsAll() },
         (data) =>
-          data
+          data && data.items.some((post) => post.id === postId)
             ? {
                 ...data,
                 items: data.items.filter((post) => post.id !== postId),

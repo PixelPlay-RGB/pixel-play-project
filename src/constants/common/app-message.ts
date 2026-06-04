@@ -449,7 +449,7 @@ export const APP_MESSAGE = {
   info: {
     common: {
       featureNotReady: {
-        title: "준비 중인 기능이에요",
+        title: "기능 준비 중",
         description: "조금만 기다려주세요. 곧 제공될 예정이에요.",
       },
     },
