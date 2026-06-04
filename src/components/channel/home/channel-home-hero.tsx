@@ -11,7 +11,7 @@ interface Props {
 
 export function ChannelHomeHero({ hero, creatorNickname }: Props) {
   if (hero) {
-    return <LiveHero hero={hero} />;
+    return <LiveHero hero={hero} eyebrow={`${creatorNickname} 님이 라이브 중이에요`} />;
   }
 
   return (

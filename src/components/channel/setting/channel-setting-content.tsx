@@ -3,6 +3,7 @@
 // 하나의 Card 안에서 섹션(공개 프로필 / 채널 소개 / 홈 배너)으로만 구분한다.
 
 import { Controller } from "react-hook-form";
+import { useRouter } from "next/navigation";
 import { UserStar } from "lucide-react";
 import type { ReactNode } from "react";
 
@@ -58,6 +59,7 @@ function SettingSection({
 }
 
 export function ChannelSettingContent({ profile, banners }: Props) {
+  const router = useRouter();
   const form = useChannelSettingForm(profile.bio ?? "");
   const bannerController = useChannelBanners(banners);
 
@@ -106,18 +108,29 @@ export function ChannelSettingContent({ profile, banners }: Props) {
       title="내 채널을 꾸며요"
       description="공개 프로필과 채널 소개, 홈 배너를 설정해 방문자에게 보여줄 채널을 완성해요."
       action={
-        <Button
-          type="button"
-          onClick={() => void handleSave()}
-          disabled={!canSubmit}
-          className={cn(
-            "h-11 shrink-0 rounded-xl px-7 font-bold",
-            "bg-brand hover:bg-brand/90 text-white",
-            "shadow-brand/20 shadow-sm transition-all active:scale-95",
-          )}
-        >
-          {isSaving ? <Spinner /> : "변경사항 저장"}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => router.back()}
+            disabled={isSaving}
+            className="h-11 shrink-0 rounded-xl px-5 font-bold"
+          >
+            돌아가기
+          </Button>
+          <Button
+            type="button"
+            onClick={() => void handleSave()}
+            disabled={!canSubmit}
+            className={cn(
+              "h-11 shrink-0 rounded-xl px-7 font-bold",
+              "bg-brand hover:bg-brand/90 text-white",
+              "shadow-brand/20 shadow-sm transition-all active:scale-95",
+            )}
+          >
+            {isSaving ? <Spinner /> : "변경사항 저장"}
+          </Button>
+        </div>
       }
     >
       <div ref={sentinelRef} aria-hidden />
