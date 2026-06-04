@@ -21,7 +21,10 @@ export default function CommunityPostPager({ creatorId, neighbors }: Props) {
       {neighbors.prev ? (
         <Link
           href={`${base}/${neighbors.prev.id}`}
-          className={cn(BUTTON_BASE, "border-border bg-background text-foreground hover:bg-muted")}
+          className={cn(
+            BUTTON_BASE,
+            "border-border bg-background text-foreground hover:border-brand/40 hover:text-brand",
+          )}
         >
           <ChevronLeft className="size-3.5" />
           이전글
@@ -39,7 +42,10 @@ export default function CommunityPostPager({ creatorId, neighbors }: Props) {
       {neighbors.next ? (
         <Link
           href={`${base}/${neighbors.next.id}`}
-          className={cn(BUTTON_BASE, "border-border bg-background text-foreground hover:bg-muted")}
+          className={cn(
+            BUTTON_BASE,
+            "border-border bg-background text-foreground hover:border-brand/40 hover:text-brand",
+          )}
         >
           다음글
           <ChevronRight className="size-3.5" />
