@@ -24,6 +24,7 @@ interface Props {
 }
 
 interface QuickSettingRowProps {
+  accent?: "brand" | "live";
   checked: boolean;
   icon: ComponentType<{ className?: string }>;
   label: string;
@@ -40,7 +41,16 @@ function QuickSettingSectionTitle({ title }: { title: string }) {
   );
 }
 
-function QuickSettingRow({ checked, icon: Icon, label, onChange }: QuickSettingRowProps) {
+function QuickSettingRow({
+  accent = "brand",
+  checked,
+  icon: Icon,
+  label,
+  onChange,
+}: QuickSettingRowProps) {
+  const activeIconClassName = accent === "live" ? "text-live" : "text-brand";
+  const activeToggleClassName = accent === "live" ? "bg-live" : "bg-brand";
+
   return (
     <button
       type="button"
@@ -55,7 +65,7 @@ function QuickSettingRow({ checked, icon: Icon, label, onChange }: QuickSettingR
         <span
           className={cn(
             "bg-muted/60 text-muted-foreground flex size-8 shrink-0 items-center justify-center rounded-full transition-colors",
-            checked && "text-brand",
+            checked && activeIconClassName,
           )}
         >
           <Icon className="size-4" />
@@ -65,7 +75,7 @@ function QuickSettingRow({ checked, icon: Icon, label, onChange }: QuickSettingR
       <span
         className={cn(
           "flex h-5 w-9 shrink-0 items-center rounded-full p-0.5 transition-colors",
-          checked ? "bg-brand" : "bg-muted-foreground/30",
+          checked ? activeToggleClassName : "bg-muted-foreground/30",
         )}
       >
         <span
@@ -117,18 +127,21 @@ export default function ChannelLiveQuickSettingsPanel({
 
         <QuickSettingSectionTitle title="후원" />
         <QuickSettingRow
+          accent="live"
           checked={isDonationEnabled}
           icon={HandCoins}
           label="후원 받기"
           onChange={onDonationEnabledChange}
         />
         <QuickSettingRow
+          accent="live"
           checked={isDonationAmountVisible}
           icon={HandCoins}
           label="후원 금액 공개"
           onChange={onDonationAmountVisibleChange}
         />
         <QuickSettingRow
+          accent="live"
           checked={isDonationAlertEnabled}
           icon={Bell}
           label="후원 알림"
