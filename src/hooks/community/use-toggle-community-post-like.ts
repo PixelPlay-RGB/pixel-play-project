@@ -3,7 +3,7 @@
 
 import { useMutation, useQueryClient, type QueryKey } from "@tanstack/react-query";
 
-import { toggleCommunityPostLikeAction } from "@/actions/community/community";
+import { setCommunityPostLikeAction } from "@/actions/community/community";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { QUERY_KEYS } from "@/constants/common/query-keys";
 import type { AppActionResult } from "@/types/common/action";
@@ -42,7 +42,7 @@ export function useToggleCommunityPostLike(postId: string) {
     ToggleLikeInput,
     ToggleLikeContext
   >({
-    mutationFn: () => toggleCommunityPostLikeAction(postId),
+    mutationFn: ({ currentLiked }) => setCommunityPostLikeAction(postId, !currentLiked),
     onMutate: async ({ currentLiked, currentLikeCount }) => {
       const next = {
         liked: !currentLiked,

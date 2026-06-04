@@ -8,7 +8,7 @@ import {
   type QueryKey,
 } from "@tanstack/react-query";
 
-import { toggleCommunityCommentLikeAction } from "@/actions/community/community";
+import { setCommunityCommentLikeAction } from "@/actions/community/community";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { QUERY_KEYS } from "@/constants/common/query-keys";
 import type { AppActionResult } from "@/types/common/action";
@@ -67,7 +67,8 @@ export function useToggleCommunityCommentLike() {
     ToggleCommentLikeInput,
     ToggleCommentLikeContext
   >({
-    mutationFn: ({ commentId }) => toggleCommunityCommentLikeAction(commentId),
+    mutationFn: ({ commentId, currentLiked }) =>
+      setCommunityCommentLikeAction(commentId, !currentLiked),
     onMutate: async ({ commentId, currentLiked, currentLikeCount }) => {
       const next = {
         liked: !currentLiked,

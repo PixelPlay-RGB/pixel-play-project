@@ -1155,6 +1155,18 @@ export type Database = {
         }
         Returns: Json
       }
+      set_community_comment_like: {
+        Args: {
+          p_actor_user_id: string
+          p_comment_id: string
+          p_liked: boolean
+        }
+        Returns: Json
+      }
+      set_community_post_like: {
+        Args: { p_actor_user_id: string; p_liked: boolean; p_post_id: string }
+        Returns: Json
+      }
       start_live_broadcast: {
         Args: {
           p_actor_user_id: string
@@ -1163,14 +1175,6 @@ export type Database = {
           p_title?: string
         }
         Returns: string
-      }
-      toggle_community_comment_like: {
-        Args: { p_actor_user_id: string; p_comment_id: string }
-        Returns: Json
-      }
-      toggle_community_post_like: {
-        Args: { p_actor_user_id: string; p_post_id: string }
-        Returns: Json
       }
       transfer_chat_room_owner: {
         Args: {

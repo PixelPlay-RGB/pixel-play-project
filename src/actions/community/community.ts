@@ -144,9 +144,10 @@ export async function deleteCommunityPostAction(postId: string): Promise<AppActi
   return { success: true };
 }
 
-// 좋아요 토글
-export async function toggleCommunityPostLikeAction(
+// 좋아요 설정(desired-state, 멱등). liked=true면 좋아요, false면 해제.
+export async function setCommunityPostLikeAction(
   postId: string,
+  liked: boolean,
 ): Promise<AppActionResult<CommunityPostLikeResult>> {
   const actor = await getAuthenticatedActorId({
     logLabel: "커뮤니티 좋아요 처리 중 인증 유저 조회 실패",
@@ -157,9 +158,10 @@ export async function toggleCommunityPostLikeAction(
   }
 
   const supabase = createAdminClient();
-  const { data, error } = await supabase.rpc("toggle_community_post_like", {
+  const { data, error } = await supabase.rpc("set_community_post_like", {
     p_actor_user_id: actor.userId,
     p_post_id: postId,
+    p_liked: liked,
   });
 
   if (error) {
@@ -170,9 +172,10 @@ export async function toggleCommunityPostLikeAction(
   return { success: true, data: parseCommunityPostLikeResult(data) };
 }
 
-// 댓글 좋아요 토글 (로그인 누구나)
-export async function toggleCommunityCommentLikeAction(
+// 댓글 좋아요 설정(desired-state, 멱등). 로그인 누구나.
+export async function setCommunityCommentLikeAction(
   commentId: string,
+  liked: boolean,
 ): Promise<AppActionResult<CommunityPostLikeResult>> {
   const actor = await getAuthenticatedActorId({
     logLabel: "커뮤니티 댓글 좋아요 처리 중 인증 유저 조회 실패",
@@ -183,9 +186,10 @@ export async function toggleCommunityCommentLikeAction(
   }
 
   const supabase = createAdminClient();
-  const { data, error } = await supabase.rpc("toggle_community_comment_like", {
+  const { data, error } = await supabase.rpc("set_community_comment_like", {
     p_actor_user_id: actor.userId,
     p_comment_id: commentId,
+    p_liked: liked,
   });
 
   if (error) {
