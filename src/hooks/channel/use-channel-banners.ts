@@ -63,15 +63,17 @@ export function useChannelBanners(initialBanners: ChannelBanner[]) {
     },
   });
 
-  const move = (index: number, direction: -1 | 1) => {
-    const target = index + direction;
-    if (target < 0 || target >= banners.length || reorderMutation.isPending) {
+  // 드래그 중 낙관적으로 순서만 반영(서버 요청 X).
+  const setOrder = (next: ChannelBanner[]) => {
+    setBanners(next);
+  };
+
+  // 드래그 종료 시 최종 순서를 서버에 커밋(순서가 실제로 바뀐 경우만 호출).
+  const commitOrder = (ids: string[]) => {
+    if (reorderMutation.isPending) {
       return;
     }
-    const next = [...banners];
-    [next[index], next[target]] = [next[target], next[index]];
-    setBanners(next); // 낙관적 반영
-    reorderMutation.mutate(next.map((banner) => banner.id));
+    reorderMutation.mutate(ids);
   };
 
   return {
@@ -80,7 +82,8 @@ export function useChannelBanners(initialBanners: ChannelBanner[]) {
     isAdding: addMutation.isPending,
     deleteBanner: deleteMutation.mutate,
     isDeleting: deleteMutation.isPending,
-    move,
+    setOrder,
+    commitOrder,
     isReordering: reorderMutation.isPending,
     canAddMore: banners.length < CHANNEL_BANNER_MAX,
   };

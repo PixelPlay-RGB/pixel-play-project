@@ -1,5 +1,5 @@
 "use client";
-// 채널 홈 배너 CRUD 필드. 이미지 업로드 + 제목 + 링크 등록, 위/아래 순서 변경, 삭제(즉시 반영).
+// 채널 홈 배너 CRUD 필드. 이미지 업로드 + 제목 + 링크 등록, 드래그&드롭 순서 변경, 삭제(즉시 반영).
 
 import { HintNote } from "@/components/common/hint-note";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,8 @@ import {
 } from "@/lib/zod/channel-profile";
 import { cn } from "@/lib/utils";
 import type { ChannelBanner } from "@/types/channel/channel";
-import { ChevronDown, ChevronUp, ImagePlus, Trash2 } from "lucide-react";
+import { GripVertical, ImagePlus, Trash2 } from "lucide-react";
+import { Reorder, useDragControls } from "motion/react";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 
@@ -25,14 +26,24 @@ interface Props {
 }
 
 export function ChannelBannerField({ initialBanners }: Props) {
-  const { banners, addBanner, isAdding, deleteBanner, isDeleting, move, isReordering, canAddMore } =
-    useChannelBanners(initialBanners);
+  const {
+    banners,
+    addBanner,
+    isAdding,
+    deleteBanner,
+    isDeleting,
+    setOrder,
+    commitOrder,
+    isReordering,
+    canAddMore,
+  } = useChannelBanners(initialBanners);
 
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [linkUrl, setLinkUrl] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const dragStartOrderRef = useRef<string[] | null>(null);
 
   useEffect(() => {
     return () => {
@@ -70,6 +81,20 @@ export function ChannelBannerField({ initialBanners }: Props) {
   };
 
   const busy = isAdding || isDeleting || isReordering;
+
+  const handleDragStart = () => {
+    dragStartOrderRef.current = banners.map((banner) => banner.id);
+  };
+
+  const handleDragEnd = () => {
+    const before = dragStartOrderRef.current;
+    const after = banners.map((banner) => banner.id);
+    dragStartOrderRef.current = null;
+    // 순서가 실제로 바뀐 경우에만 서버 커밋.
+    if (before && before.join("|") !== after.join("|")) {
+      commitOrder(after);
+    }
+  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -147,61 +172,99 @@ export function ChannelBannerField({ initialBanners }: Props) {
       )}
 
       {banners.length > 0 ? (
-        <ul className="flex flex-col gap-2">
-          {banners.map((banner, index) => (
-            <li
+        <Reorder.Group
+          as="ul"
+          axis="y"
+          values={banners}
+          onReorder={setOrder}
+          className="flex flex-col gap-2"
+        >
+          {banners.map((banner) => (
+            <BannerReorderItem
               key={banner.id}
-              className="border-border/60 bg-background flex items-center gap-3 rounded-xl border p-2.5"
-            >
-              <div className="relative size-14 shrink-0 overflow-hidden rounded-lg">
-                <Image src={banner.imageUrl} alt={banner.title} fill className="object-cover" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-foreground truncate text-sm font-bold">
-                  {banner.title || "제목 없음"}
-                </p>
-                <p className="text-muted-foreground truncate text-xs">{banner.linkUrl}</p>
-              </div>
-              <div className="flex shrink-0 items-center gap-0.5">
-                <button
-                  type="button"
-                  disabled={busy || index === 0}
-                  onClick={() => move(index, -1)}
-                  aria-label="위로 이동"
-                  className="text-muted-foreground hover:text-foreground rounded-md p-1.5 transition-colors disabled:opacity-30"
-                >
-                  <ChevronUp className="size-4" />
-                </button>
-                <button
-                  type="button"
-                  disabled={busy || index === banners.length - 1}
-                  onClick={() => move(index, 1)}
-                  aria-label="아래로 이동"
-                  className="text-muted-foreground hover:text-foreground rounded-md p-1.5 transition-colors disabled:opacity-30"
-                >
-                  <ChevronDown className="size-4" />
-                </button>
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => deleteBanner(banner.id)}
-                  aria-label={`${banner.title || "배너"} 삭제`}
-                  className="text-muted-foreground hover:text-destructive rounded-md p-1.5 transition-colors disabled:opacity-50"
-                >
-                  <Trash2 className="size-4" />
-                </button>
-              </div>
-            </li>
+              banner={banner}
+              disabled={busy}
+              onDelete={() => deleteBanner(banner.id)}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+            />
           ))}
-        </ul>
+        </Reorder.Group>
       ) : (
         <p className="text-muted-foreground py-2 text-center text-xs">아직 등록한 배너가 없어요.</p>
       )}
 
       <HintNote>
-        채널 홈 상단에 노출되는 외부 링크 배너예요. 최대 {CHANNEL_BANNER_MAX}개, 1MB 이하(jpg, png,
-        webp, gif, bmp).
+        드래그해서 순서를 바꿀 수 있어요. 채널 홈 상단에 노출되는 외부 링크 배너예요. 최대{" "}
+        {CHANNEL_BANNER_MAX}개, 1MB 이하(jpg, png, webp, gif, bmp).
       </HintNote>
     </div>
+  );
+}
+
+interface BannerReorderItemProps {
+  banner: ChannelBanner;
+  disabled: boolean;
+  onDelete: () => void;
+  onDragStart: () => void;
+  onDragEnd: () => void;
+}
+
+function BannerReorderItem({
+  banner,
+  disabled,
+  onDelete,
+  onDragStart,
+  onDragEnd,
+}: BannerReorderItemProps) {
+  const controls = useDragControls();
+
+  return (
+    <Reorder.Item
+      value={banner}
+      dragListener={false}
+      dragControls={controls}
+      onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
+      className="border-border/60 bg-background flex items-center gap-2.5 rounded-xl border p-2.5"
+    >
+      <button
+        type="button"
+        aria-label="드래그하여 순서 변경"
+        onPointerDown={(event) => {
+          if (disabled) return;
+          event.preventDefault();
+          controls.start(event);
+        }}
+        className={cn(
+          "text-muted-foreground hover:text-foreground shrink-0 cursor-grab touch-none rounded-md p-1 transition-colors active:cursor-grabbing",
+          disabled && "pointer-events-none opacity-40",
+        )}
+      >
+        <GripVertical className="size-4" />
+      </button>
+      <div className="relative size-14 shrink-0 overflow-hidden rounded-lg">
+        <Image
+          src={banner.imageUrl}
+          alt={banner.title || "배너"}
+          fill
+          sizes="56px"
+          className="object-cover"
+        />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-foreground truncate text-sm font-bold">{banner.title || "제목 없음"}</p>
+        <p className="text-muted-foreground truncate text-xs">{banner.linkUrl}</p>
+      </div>
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={onDelete}
+        aria-label={`${banner.title || "배너"} 삭제`}
+        className="text-muted-foreground hover:text-destructive shrink-0 rounded-md p-1.5 transition-colors disabled:opacity-50"
+      >
+        <Trash2 className="size-4" />
+      </button>
+    </Reorder.Item>
   );
 }
