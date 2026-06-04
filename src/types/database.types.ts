@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      channel_banner: {
+        Row: {
+          created_at: string
+          creator_id: string
+          id: string
+          image_path: string
+          link_url: string
+          sort_order: number
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          creator_id: string
+          id?: string
+          image_path: string
+          link_url: string
+          sort_order?: number
+          title?: string
+        }
+        Update: {
+          created_at?: string
+          creator_id?: string
+          id?: string
+          image_path?: string
+          link_url?: string
+          sort_order?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "channel_banner_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_room: {
         Row: {
           created_at: string
@@ -264,6 +302,7 @@ export type Database = {
           alert_sound_enabled: boolean
           alert_sound_key: string
           alert_volume: number
+          channel_bio: string
           chat_donation_message_enabled: boolean
           chat_overlay_version: number
           chat_rule_text: string
@@ -295,6 +334,7 @@ export type Database = {
           alert_sound_enabled?: boolean
           alert_sound_key?: string
           alert_volume?: number
+          channel_bio?: string
           chat_donation_message_enabled?: boolean
           chat_overlay_version?: number
           chat_rule_text?: string
@@ -326,6 +366,7 @@ export type Database = {
           alert_sound_enabled?: boolean
           alert_sound_key?: string
           alert_volume?: number
+          channel_bio?: string
           chat_donation_message_enabled?: boolean
           chat_overlay_version?: number
           chat_rule_text?: string
@@ -891,6 +932,10 @@ export type Database = {
         }
         Returns: string
       }
+      delete_channel_banner: {
+        Args: { p_actor_user_id: string; p_banner_id: string }
+        Returns: Json
+      }
       delete_community_comment: {
         Args: { p_actor_user_id: string; p_comment_id: string }
         Returns: boolean
@@ -911,6 +956,7 @@ export type Database = {
         Args: { p_actor_user_id: string; p_creator_id: string }
         Returns: undefined
       }
+      get_channel_banners: { Args: { p_creator_id: string }; Returns: Json }
       get_channel_community_posts: {
         Args: {
           p_creator_id: string
@@ -920,6 +966,7 @@ export type Database = {
         }
         Returns: Json
       }
+      get_channel_live_hero: { Args: { p_creator_id: string }; Returns: Json }
       get_channel_profile: {
         Args: { p_creator_id: string; p_viewer_id?: string }
         Returns: Json
@@ -1056,6 +1103,15 @@ export type Database = {
         Args: { p_actor_user_id: string }
         Returns: Json
       }
+      insert_channel_banner: {
+        Args: {
+          p_actor_user_id: string
+          p_image_path: string
+          p_link_url: string
+          p_title: string
+        }
+        Returns: Json
+      }
       join_chat_room: {
         Args: { p_actor_user_id: string; p_room_id: string }
         Returns: undefined
@@ -1075,6 +1131,10 @@ export type Database = {
       mark_room_read: {
         Args: { p_actor_user_id: string; p_room_id: string }
         Returns: undefined
+      }
+      reorder_channel_banners: {
+        Args: { p_actor_user_id: string; p_banner_ids: string[] }
+        Returns: Json
       }
       rotate_live_security_token_version: {
         Args: { p_actor_user_id: string; p_token_kind: string }
@@ -1187,6 +1247,10 @@ export type Database = {
       unfollow_creator: {
         Args: { p_actor_user_id: string; p_creator_id: string }
         Returns: undefined
+      }
+      update_channel_profile: {
+        Args: { p_actor_user_id: string; p_channel_bio: string }
+        Returns: Json
       }
       update_community_comment: {
         Args: {
