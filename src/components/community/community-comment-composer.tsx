@@ -97,7 +97,7 @@ export default function CommunityCommentComposer({
           placeholder={placeholder ?? (parentId ? "답글을 입력하세요." : "댓글을 입력하세요.")}
           aria-label={parentId ? "답글 입력" : "댓글 입력"}
           rows={1}
-          className="min-h-8 flex-1 resize-none border-0 bg-transparent p-0 text-base leading-relaxed shadow-none focus-visible:ring-0 md:text-sm"
+          className="min-h-8 flex-1 resize-none border-0 bg-transparent p-0 text-base leading-relaxed shadow-none focus-visible:ring-0 disabled:bg-transparent md:text-sm dark:bg-transparent dark:disabled:bg-transparent"
         />
       </div>
 
