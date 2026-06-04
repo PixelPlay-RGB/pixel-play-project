@@ -70,74 +70,78 @@ export default function CommunityPostDetailView({
         <CommunityPostPager creatorId={creatorId} neighbors={neighbors} />
       </div>
 
-      <div className="border-border/60 bg-card/40 rounded-2xl border p-4 sm:p-5">
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex min-w-0 items-center gap-3">
-            <Link
-              href={`/channel/${detail.creatorId}`}
-              aria-label={`${detail.creatorNickname} 채널로 이동`}
-              className="focus-visible:ring-ring shrink-0 rounded-full outline-none focus-visible:ring-2"
-            >
-              <Avatar className="hover:ring-brand/40 size-11 transition-[box-shadow] hover:ring-2">
-                <AvatarImage
-                  src={getAvatarImageSrc(detail.creatorPhotoUrl)}
-                  alt={`${detail.creatorNickname}의 프로필 사진`}
-                />
-                <AvatarFallback className="text-sm font-black">
-                  {getAvatarFallbackText(detail.creatorNickname, 1)}
-                </AvatarFallback>
-              </Avatar>
-            </Link>
-            <div className="min-w-0">
+      <div className="border-border/60 bg-card/40 overflow-hidden rounded-2xl border">
+        {/* 게시글 */}
+        <div className="p-4 sm:p-5">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex min-w-0 items-center gap-3">
               <Link
                 href={`/channel/${detail.creatorId}`}
-                className="text-foreground block truncate text-sm font-bold hover:underline"
+                aria-label={`${detail.creatorNickname} 채널로 이동`}
+                className="focus-visible:ring-ring shrink-0 rounded-full outline-none focus-visible:ring-2"
               >
-                {detail.creatorNickname}
+                <Avatar className="hover:ring-brand/40 size-11 transition-[box-shadow] hover:ring-2">
+                  <AvatarImage
+                    src={getAvatarImageSrc(detail.creatorPhotoUrl)}
+                    alt={`${detail.creatorNickname}의 프로필 사진`}
+                  />
+                  <AvatarFallback className="text-sm font-black">
+                    {getAvatarFallbackText(detail.creatorNickname, 1)}
+                  </AvatarFallback>
+                </Avatar>
               </Link>
-              <p className="text-muted-foreground text-xs">
-                {formatRelativeTime(detail.createdAt)}
-                {detail.modifiedAt && " · 수정됨"}
-              </p>
+              <div className="min-w-0">
+                <Link
+                  href={`/channel/${detail.creatorId}`}
+                  className="text-foreground block truncate text-sm font-bold hover:underline"
+                >
+                  {detail.creatorNickname}
+                </Link>
+                <p className="text-muted-foreground text-xs">
+                  {formatRelativeTime(detail.createdAt)}
+                  {detail.modifiedAt && " · 수정됨"}
+                </p>
+              </div>
             </div>
+
+            {isChannelOwner && (
+              <CommunityActionMenu
+                canEdit
+                canDelete
+                onEdit={() => router.push(`${communityHref}/write?postId=${detail.id}`)}
+                onDelete={() => setIsDeleteOpen(true)}
+                ariaLabel="게시글 더보기"
+              />
+            )}
           </div>
 
-          {isChannelOwner && (
-            <CommunityActionMenu
-              canEdit
-              canDelete
-              onEdit={() => router.push(`${communityHref}/write?postId=${detail.id}`)}
-              onDelete={() => setIsDeleteOpen(true)}
-              ariaLabel="게시글 더보기"
+          <p className="text-foreground mt-3 text-[0.95rem] leading-relaxed break-words whitespace-pre-wrap">
+            {detail.content}
+          </p>
+
+          <div className="mt-4 flex items-center justify-end">
+            <CommunityLikeButton
+              postId={detail.id}
+              authorId={detail.creatorId}
+              isLiked={detail.isLiked}
+              likeCount={detail.likeCount}
             />
-          )}
+          </div>
         </div>
 
-        <p className="text-foreground mt-3 text-[0.95rem] leading-relaxed break-words whitespace-pre-wrap">
-          {detail.content}
-        </p>
-
-        <div className="mt-4 flex items-center justify-end">
-          <CommunityLikeButton
+        {/* 댓글 영역 (같은 카드 안, 구분선으로 분리) */}
+        <section className="border-border/60 flex flex-col gap-4 border-t p-4 sm:p-5">
+          <h2 className="text-foreground text-sm font-black">
+            댓글 {numberFormatter.format(detail.commentCount)}
+          </h2>
+          <CommunityCommentComposer postId={detail.id} />
+          <CommunityCommentList
             postId={detail.id}
-            authorId={detail.creatorId}
-            isLiked={detail.isLiked}
-            likeCount={detail.likeCount}
+            isChannelOwner={isChannelOwner}
+            initialData={initialComments}
           />
-        </div>
+        </section>
       </div>
-
-      <section className="flex flex-col gap-4 pt-1">
-        <h2 className="text-foreground text-sm font-black">
-          댓글 {numberFormatter.format(detail.commentCount)}
-        </h2>
-        <CommunityCommentComposer postId={detail.id} />
-        <CommunityCommentList
-          postId={detail.id}
-          isChannelOwner={isChannelOwner}
-          initialData={initialComments}
-        />
-      </section>
 
       <CommunityDeleteDialog
         open={isDeleteOpen}
