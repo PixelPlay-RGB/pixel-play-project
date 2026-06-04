@@ -3,9 +3,10 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, MessageSquare, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, MessageSquare } from "lucide-react";
 import { useState } from "react";
 
+import CommunityActionMenu from "@/components/community/community-action-menu";
 import CommunityCommentComposer from "@/components/community/community-comment-composer";
 import CommunityCommentList from "@/components/community/community-comment-list";
 import CommunityLikeButton from "@/components/community/community-like-button";
@@ -20,11 +21,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button, buttonVariants } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { useCommunityPostDetail } from "@/hooks/community/use-community-post-detail";
 import { useDeleteCommunityPost } from "@/hooks/community/use-delete-community-post";
-import { cn } from "@/lib/utils";
 import type { CommunityCommentsResult, CommunityPostDetail } from "@/types/community/community";
 import { formatRelativeTime } from "@/utils/common/format";
 import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
@@ -70,77 +69,62 @@ export default function CommunityPostDetailView({
         커뮤니티
       </Link>
 
-      <div className="flex items-center gap-3">
-        <Link
-          href={`/channel/${detail.creatorId}`}
-          aria-label={`${detail.creatorNickname} 채널로 이동`}
-          className="focus-visible:ring-ring shrink-0 rounded-full outline-none focus-visible:ring-2"
-        >
-          <Avatar className="hover:ring-brand/40 size-11 transition-[box-shadow] hover:ring-2">
-            <AvatarImage
-              src={getAvatarImageSrc(detail.creatorPhotoUrl)}
-              alt={`${detail.creatorNickname}의 프로필 사진`}
-            />
-            <AvatarFallback className="text-sm font-black">
-              {getAvatarFallbackText(detail.creatorNickname, 1)}
-            </AvatarFallback>
-          </Avatar>
-        </Link>
-        <div className="min-w-0">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-3">
           <Link
             href={`/channel/${detail.creatorId}`}
-            className="text-foreground block truncate text-sm font-bold hover:underline"
+            aria-label={`${detail.creatorNickname} 채널로 이동`}
+            className="focus-visible:ring-ring shrink-0 rounded-full outline-none focus-visible:ring-2"
           >
-            {detail.creatorNickname}
+            <Avatar className="hover:ring-brand/40 size-11 transition-[box-shadow] hover:ring-2">
+              <AvatarImage
+                src={getAvatarImageSrc(detail.creatorPhotoUrl)}
+                alt={`${detail.creatorNickname}의 프로필 사진`}
+              />
+              <AvatarFallback className="text-sm font-black">
+                {getAvatarFallbackText(detail.creatorNickname, 1)}
+              </AvatarFallback>
+            </Avatar>
           </Link>
-          <p className="text-muted-foreground text-xs">
-            {formatRelativeTime(detail.createdAt)}
-            {detail.modifiedAt && " · 수정됨"}
-          </p>
+          <div className="min-w-0">
+            <Link
+              href={`/channel/${detail.creatorId}`}
+              className="text-foreground block truncate text-sm font-bold hover:underline"
+            >
+              {detail.creatorNickname}
+            </Link>
+            <p className="text-muted-foreground text-xs">
+              {formatRelativeTime(detail.createdAt)}
+              {detail.modifiedAt && " · 수정됨"}
+            </p>
+          </div>
         </div>
+
+        {isChannelOwner && (
+          <CommunityActionMenu
+            canEdit
+            canDelete
+            onEdit={() => router.push(`${communityHref}/write?postId=${detail.id}`)}
+            onDelete={() => setIsDeleteOpen(true)}
+            ariaLabel="게시글 더보기"
+          />
+        )}
       </div>
 
       <p className="text-foreground text-[0.95rem] leading-relaxed break-words whitespace-pre-wrap">
         {detail.content}
       </p>
 
-      <div className="border-border/60 flex items-center justify-between border-y py-3">
-        <div className="flex items-center gap-3">
-          <CommunityLikeButton
-            postId={detail.id}
-            isLiked={detail.isLiked}
-            likeCount={detail.likeCount}
-          />
-          <span className="text-muted-foreground inline-flex items-center gap-1 text-xs font-semibold">
-            <MessageSquare className="size-3.5" />
-            {numberFormatter.format(detail.commentCount)}
-          </span>
-        </div>
-
-        {isChannelOwner && (
-          <div className="flex items-center gap-1.5">
-            <Link
-              href={`${communityHref}/write?postId=${detail.id}`}
-              className={cn(
-                buttonVariants({ variant: "outline", size: "sm" }),
-                "h-8 rounded-lg px-2.5 text-xs font-semibold",
-              )}
-            >
-              <Pencil className="size-3.5" />
-              수정
-            </Link>
-            <Button
-              variant="outline"
-              size="sm"
-              type="button"
-              onClick={() => setIsDeleteOpen(true)}
-              className="text-muted-foreground hover:text-destructive h-8 rounded-lg px-2.5 text-xs font-semibold"
-            >
-              <Trash2 className="size-3.5" />
-              삭제
-            </Button>
-          </div>
-        )}
+      <div className="border-border/60 flex items-center justify-end gap-3 border-y py-3">
+        <span className="text-muted-foreground inline-flex items-center gap-1 text-xs font-semibold">
+          <MessageSquare className="size-3.5" />
+          {numberFormatter.format(detail.commentCount)}
+        </span>
+        <CommunityLikeButton
+          postId={detail.id}
+          isLiked={detail.isLiked}
+          likeCount={detail.likeCount}
+        />
       </div>
 
       <section className="flex flex-col gap-4">

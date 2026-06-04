@@ -41,7 +41,7 @@ export default function CommunityPostCard({ creatorId, creator, post }: Props) {
         {post.content}
       </p>
 
-      <div className="text-muted-foreground mt-3 flex items-center gap-4 text-xs font-semibold">
+      <div className="text-muted-foreground mt-3 flex items-center justify-end gap-4 text-xs font-semibold">
         <span className="inline-flex items-center gap-1">
           <Heart className="size-3.5" />
           {numberFormatter.format(post.likeCount)}
