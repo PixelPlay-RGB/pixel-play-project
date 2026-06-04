@@ -8,11 +8,9 @@ import { useState } from "react";
 import ChatRoomListPagination from "@/components/chat-room-list/chat-room-list-pagination";
 import CommunityEmptyState from "@/components/community/community-empty-state";
 import CommunityPostList from "@/components/community/community-post-list";
-import { buttonVariants } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { COMMUNITY_POST_PAGE_SIZE } from "@/constants/community/community";
 import { useCommunityPosts } from "@/hooks/community/use-community-posts";
-import { cn } from "@/lib/utils";
 import type { CommunityPostsResult } from "@/types/community/community";
 
 interface Props {
@@ -30,27 +28,17 @@ export default function CommunityBoard({ creatorId, isOwner, initialData }: Prop
 
   return (
     <section className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-foreground text-base font-black">
-          커뮤니티
-          <span className="text-muted-foreground ml-2 text-sm font-bold">
-            {result.totalCount.toLocaleString("ko-KR")}
-          </span>
-        </h2>
-
-        {isOwner && (
-          <Link
-            href={`/channel/${creatorId}/community/write`}
-            className={cn(
-              buttonVariants(),
-              "bg-brand hover:bg-brand/85 h-9 rounded-xl px-4 text-sm font-bold text-white",
-            )}
-          >
+      {isOwner && (
+        <Link
+          href={`/channel/${creatorId}/community/write`}
+          className="border-border/60 bg-card/60 hover:border-brand/30 hover:bg-card flex items-center gap-3 rounded-2xl border px-4 py-3.5 transition-colors"
+        >
+          <span className="bg-muted text-muted-foreground flex size-8 shrink-0 items-center justify-center rounded-full">
             <PenLine className="size-4" />
-            글쓰기
-          </Link>
-        )}
-      </div>
+          </span>
+          <span className="text-muted-foreground text-sm">어떤 이야기를 남겨볼까요?</span>
+        </Link>
+      )}
 
       {isPending ? (
         <div className="flex justify-center py-20">
@@ -62,7 +50,12 @@ export default function CommunityBoard({ creatorId, isOwner, initialData }: Prop
         />
       ) : (
         <>
-          <CommunityPostList creatorId={creatorId} creator={result.creator} posts={result.items} />
+          <CommunityPostList
+            creatorId={creatorId}
+            creator={result.creator}
+            posts={result.items}
+            isOwner={isOwner}
+          />
           <ChatRoomListPagination
             currentPage={page}
             totalPages={totalPages}
