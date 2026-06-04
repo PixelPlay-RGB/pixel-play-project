@@ -16,7 +16,7 @@ import {
   type UpdateChannelLiveSettingsInput,
 } from "@/lib/zod/channel-live";
 import type { AppActionResult } from "@/types/common/action";
-import type { Json } from "@/types/database.types";
+import type { Database, Json } from "@/types/database.types";
 import { isKnownMessageRpcError, resolveMessageRpcErrorCode } from "@/utils/common/app-message";
 import { buildLiveStreamKey } from "@/utils/live/live-security";
 import { revalidatePath } from "next/cache";
@@ -40,6 +40,9 @@ const LIVE_THUMBNAIL_EXTENSION_BY_TYPE: Record<string, string> = {
 };
 const CHANNEL_LIVE_CHAT_MESSAGE_LIMIT = 50;
 const CHANNEL_LIVE_DRAW_PARTICIPANT_PAGE_SIZE = 1000;
+
+type UpsertCreatorStudioSettingArgs =
+  Database["public"]["Functions"]["upsert_creator_studio_setting"]["Args"];
 
 export interface ChannelLiveActiveBroadcast {
   id: string;
@@ -77,12 +80,13 @@ export interface ChannelLiveDrawParticipant {
 
 export interface ChannelLiveStudioSettings {
   alertSoundEnabled: boolean;
+  alertSoundKey: string;
   alertVolume: number;
+  chatDonationMessageEnabled: boolean;
   chatRuleText: string;
   chatRuleVersion: number;
   chatScope: "authenticated" | "follower" | "manager";
   donationAlertDurationSeconds: number;
-  donationAlertEnabled: boolean;
   donationAlertVersion: number;
   donationAmountVisible: boolean;
   donationEnabled: boolean;
@@ -98,6 +102,8 @@ export interface ChannelLiveStudioSettings {
   chatOverlayVersion: number;
   ttsEnabled: boolean;
   ttsRate: number;
+  ttsVoiceUri: string;
+  ttsVolume: number;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -237,7 +243,9 @@ async function uploadLiveThumbnailFile(
 function createDefaultSettings(): ChannelLiveStudioSettings {
   return {
     alertSoundEnabled: true,
+    alertSoundKey: "classic",
     alertVolume: 32,
+    chatDonationMessageEnabled: false,
     chatOverlayVersion: 1,
     chatRuleText: "",
     chatRuleVersion: 1,
@@ -245,7 +253,6 @@ function createDefaultSettings(): ChannelLiveStudioSettings {
     defaultTags: [],
     defaultTitle: "",
     donationAlertDurationSeconds: 5,
-    donationAlertEnabled: true,
     donationAlertVersion: 1,
     donationAmountVisible: true,
     donationEnabled: true,
@@ -258,6 +265,8 @@ function createDefaultSettings(): ChannelLiveStudioSettings {
     streamKeyVersion: 1,
     ttsEnabled: true,
     ttsRate: 1,
+    ttsVoiceUri: "",
+    ttsVolume: 80,
   };
 }
 
@@ -266,7 +275,9 @@ function createSettingsFromRecord(settings: unknown): ChannelLiveStudioSettings 
 
   return {
     alertSoundEnabled: readBoolean(settings.alertSoundEnabled, true),
+    alertSoundKey: readString(settings.alertSoundKey) || "classic",
     alertVolume: readNumberWithFallback(settings.alertVolume, 32),
+    chatDonationMessageEnabled: readBoolean(settings.chatDonationMessageEnabled, false),
     chatOverlayVersion: readNumberWithFallback(settings.chatOverlayVersion, 1),
     chatRuleText: readString(settings.chatRuleText),
     chatRuleVersion: readNumberWithFallback(settings.chatRuleVersion, 1),
@@ -274,7 +285,6 @@ function createSettingsFromRecord(settings: unknown): ChannelLiveStudioSettings 
     defaultTags: readStringArray(settings.defaultTags),
     defaultTitle: readString(settings.defaultTitle),
     donationAlertDurationSeconds: readNumberWithFallback(settings.donationAlertDurationSeconds, 5),
-    donationAlertEnabled: readBoolean(settings.donationAlertEnabled, true),
     donationAlertVersion: readNumberWithFallback(settings.donationAlertVersion, 1),
     donationAmountVisible: readBoolean(settings.donationAmountVisible, true),
     donationEnabled: readBoolean(settings.donationEnabled, true),
@@ -287,6 +297,8 @@ function createSettingsFromRecord(settings: unknown): ChannelLiveStudioSettings 
     streamKeyVersion: readNumberWithFallback(settings.streamKeyVersion, 1),
     ttsEnabled: readBoolean(settings.ttsEnabled, true),
     ttsRate: readNumberWithFallback(settings.ttsRate, 1),
+    ttsVoiceUri: readString(settings.ttsVoiceUri),
+    ttsVolume: readNumberWithFallback(settings.ttsVolume, 80),
   };
 }
 
@@ -490,16 +502,16 @@ export async function updateChannelLiveSettingsAction(
   }
 
   const supabase = createAdminClient();
-  const { data, error } = await supabase.rpc("upsert_creator_studio_setting", {
+  const upsertParams = {
     p_actor_user_id: actor.userId,
     p_alert_sound_enabled: parsed.data.alertSoundEnabled,
     p_alert_volume: parsed.data.alertVolume,
+    p_chat_donation_message_enabled: parsed.data.chatDonationMessageEnabled,
     p_chat_rule_text: parsed.data.chatRuleText,
     p_chat_scope: parsed.data.chatScope,
     p_default_tags: parsed.data.defaultTags,
     p_default_title: parsed.data.defaultTitle,
     p_donation_alert_duration_seconds: parsed.data.donationAlertDurationSeconds,
-    p_donation_alert_enabled: parsed.data.donationAlertEnabled,
     p_donation_amount_visible: parsed.data.donationAmountVisible,
     p_donation_enabled: parsed.data.donationEnabled,
     p_donation_min_amount: parsed.data.donationMinAmount,
@@ -510,7 +522,9 @@ export async function updateChannelLiveSettingsAction(
     p_slow_mode_seconds: parsed.data.slowModeSeconds,
     p_tts_enabled: parsed.data.ttsEnabled,
     p_tts_rate: parsed.data.ttsRate,
-  });
+  } satisfies UpsertCreatorStudioSettingArgs;
+
+  const { data, error } = await supabase.rpc("upsert_creator_studio_setting", upsertParams);
 
   if (error || !data) {
     console.error("방송 설정 저장 RPC 실패", error);

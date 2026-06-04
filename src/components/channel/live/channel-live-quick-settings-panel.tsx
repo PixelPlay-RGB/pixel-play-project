@@ -3,19 +3,19 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { Bell, HandCoins, Link2, Mic2, Timer, Volume2 } from "lucide-react";
+import { HandCoins, Link2, MessageCircle, Mic2, Timer, Volume2 } from "lucide-react";
 import type { ComponentType } from "react";
 
 interface Props {
   isAlertSoundEnabled: boolean;
-  isDonationAlertEnabled: boolean;
+  isChatDonationMessageEnabled: boolean;
   isDonationAmountVisible: boolean;
   isDonationEnabled: boolean;
   isLinkBlocked: boolean;
   isSlowModeEnabled: boolean;
   isTtsEnabled: boolean;
   onAlertSoundEnabledChange: (isAlertSoundEnabled: boolean) => void;
-  onDonationAlertEnabledChange: (isDonationAlertEnabled: boolean) => void;
+  onChatDonationMessageEnabledChange: (isChatDonationMessageEnabled: boolean) => void;
   onDonationAmountVisibleChange: (isDonationAmountVisible: boolean) => void;
   onDonationEnabledChange: (isDonationEnabled: boolean) => void;
   onLinkBlockedChange: (isLinkBlocked: boolean) => void;
@@ -81,14 +81,14 @@ function QuickSettingRow({ checked, icon: Icon, label, onChange }: QuickSettingR
 
 export default function ChannelLiveQuickSettingsPanel({
   isAlertSoundEnabled,
-  isDonationAlertEnabled,
+  isChatDonationMessageEnabled,
   isDonationAmountVisible,
   isDonationEnabled,
   isLinkBlocked,
   isSlowModeEnabled,
   isTtsEnabled,
   onAlertSoundEnabledChange,
-  onDonationAlertEnabledChange,
+  onChatDonationMessageEnabledChange,
   onDonationAmountVisibleChange,
   onDonationEnabledChange,
   onLinkBlockedChange,
@@ -129,10 +129,10 @@ export default function ChannelLiveQuickSettingsPanel({
           onChange={onDonationAmountVisibleChange}
         />
         <QuickSettingRow
-          checked={isDonationAlertEnabled}
-          icon={Bell}
-          label="후원 알림"
-          onChange={onDonationAlertEnabledChange}
+          checked={isChatDonationMessageEnabled}
+          icon={MessageCircle}
+          label="후원 채팅 표시"
+          onChange={onChatDonationMessageEnabledChange}
         />
 
         <QuickSettingSectionTitle title="알림" />

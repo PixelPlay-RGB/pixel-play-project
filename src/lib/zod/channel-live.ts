@@ -28,10 +28,10 @@ export const startLiveBroadcastSchema = z.object({
 export const updateChannelLiveSettingsSchema = z.object({
   alertSoundEnabled: z.boolean(),
   alertVolume: z.number().int().min(0).max(100),
+  chatDonationMessageEnabled: z.boolean(),
   chatRuleText: z.string().max(300),
   chatScope: z.enum(["authenticated", "follower", "manager"]),
   donationAlertDurationSeconds: z.number().int().min(3).max(30),
-  donationAlertEnabled: z.boolean(),
   donationAmountVisible: z.boolean(),
   donationEnabled: z.boolean(),
   donationMinAmount: z.number().int().min(1000).max(1000000),

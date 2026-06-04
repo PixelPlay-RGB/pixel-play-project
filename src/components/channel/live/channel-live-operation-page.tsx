@@ -117,8 +117,8 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
   const [isDonationAmountVisible, setIsDonationAmountVisible] = useState(
     initialSettings?.donationAmountVisible ?? true,
   );
-  const [isDonationAlertEnabled, setIsDonationAlertEnabled] = useState(
-    initialSettings?.donationAlertEnabled ?? true,
+  const [isChatDonationMessageEnabled, setIsChatDonationMessageEnabled] = useState(
+    initialSettings?.chatDonationMessageEnabled ?? false,
   );
   const [donationAlertDurationSeconds, setDonationAlertDurationSeconds] = useState(
     initialSettings?.donationAlertDurationSeconds ?? 5,
@@ -252,12 +252,12 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
       const result = await updateChannelLiveSettingsAction({
         alertSoundEnabled: isAlertSoundEnabled,
         alertVolume,
+        chatDonationMessageEnabled: isChatDonationMessageEnabled,
         chatRuleText,
         chatScope,
         defaultTags: tags,
         defaultTitle: title,
         donationAlertDurationSeconds,
-        donationAlertEnabled: isDonationAlertEnabled,
         donationAmountVisible: isDonationAmountVisible,
         donationEnabled: isDonationEnabled,
         donationMinAmount,
@@ -303,7 +303,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
       setIsDonationEnabled(result.data.settings.donationEnabled);
       setDonationMinAmount(result.data.settings.donationMinAmount);
       setIsDonationAmountVisible(result.data.settings.donationAmountVisible);
-      setIsDonationAlertEnabled(result.data.settings.donationAlertEnabled);
+      setIsChatDonationMessageEnabled(result.data.settings.chatDonationMessageEnabled);
       setDonationAlertDurationSeconds(result.data.settings.donationAlertDurationSeconds);
       setIsAlertSoundEnabled(result.data.settings.alertSoundEnabled);
       setAlertVolume(result.data.settings.alertVolume);
@@ -407,14 +407,14 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
         <div className="min-w-0 xl:h-full xl:min-h-0 xl:overflow-y-auto xl:pr-2 xl:pb-2">
           <ChannelLiveQuickSettingsPanel
             isAlertSoundEnabled={isAlertSoundEnabled}
-            isDonationAlertEnabled={isDonationAlertEnabled}
+            isChatDonationMessageEnabled={isChatDonationMessageEnabled}
             isDonationAmountVisible={isDonationAmountVisible}
             isDonationEnabled={isDonationEnabled}
             isLinkBlocked={isLinkBlocked}
             isSlowModeEnabled={isSlowModeEnabled}
             isTtsEnabled={isTtsEnabled}
             onAlertSoundEnabledChange={setIsAlertSoundEnabled}
-            onDonationAlertEnabledChange={setIsDonationAlertEnabled}
+            onChatDonationMessageEnabledChange={setIsChatDonationMessageEnabled}
             onDonationAmountVisibleChange={setIsDonationAmountVisible}
             onDonationEnabledChange={setIsDonationEnabled}
             onLinkBlockedChange={setIsLinkBlocked}
