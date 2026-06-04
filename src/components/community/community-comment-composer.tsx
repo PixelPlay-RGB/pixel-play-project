@@ -1,5 +1,5 @@
 "use client";
-// 댓글 작성 입력창입니다. 로그인 유저만 작성할 수 있습니다.
+// 댓글/대댓글 작성 입력창입니다. 로그인 유저만 작성할 수 있습니다.
 
 import { SendHorizontal } from "lucide-react";
 import { useState } from "react";
@@ -10,13 +10,25 @@ import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { COMMUNITY_COMMENT_CONTENT_MAX } from "@/constants/community/community";
 import { useCreateCommunityComment } from "@/hooks/community/use-create-community-comment";
+import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth";
 
 interface Props {
   postId: string;
+  // 있으면 대댓글 작성.
+  parentId?: string;
+  compact?: boolean;
+  placeholder?: string;
+  onSubmitted?: () => void;
 }
 
-export default function CommunityCommentComposer({ postId }: Props) {
+export default function CommunityCommentComposer({
+  postId,
+  parentId,
+  compact = false,
+  placeholder,
+  onSubmitted,
+}: Props) {
   const currentUserId = useAuthStore((state) => state.user?.id);
   const [content, setContent] = useState("");
   const createComment = useCreateCommunityComment(postId);
@@ -46,8 +58,10 @@ export default function CommunityCommentComposer({ postId }: Props) {
     const value = content.trim();
     setContent("");
 
-    const result = await createComment.mutateAsync(value);
-    if (!result.success) {
+    const result = await createComment.mutateAsync({ content: value, parentId });
+    if (result.success) {
+      onSubmitted?.();
+    } else {
       setContent(value);
     }
   };
@@ -65,17 +79,20 @@ export default function CommunityCommentComposer({ postId }: Props) {
             event.currentTarget.form?.requestSubmit();
           }
         }}
-        placeholder="댓글을 입력하세요."
-        aria-label="댓글 입력"
+        placeholder={placeholder ?? (parentId ? "답글을 입력하세요." : "댓글을 입력하세요.")}
+        aria-label={parentId ? "답글 입력" : "댓글 입력"}
         rows={1}
-        className="max-h-32 min-h-10 flex-1 resize-none rounded-xl text-base leading-normal md:text-sm"
+        className={cn(
+          "flex-1 resize-none rounded-xl text-base leading-normal md:text-sm",
+          compact ? "max-h-28 min-h-9" : "max-h-32 min-h-10",
+        )}
       />
       <Button
         type="submit"
         size="icon-lg"
         variant="ghost"
         disabled={!isSubmittable || createComment.isPending}
-        aria-label="댓글 등록"
+        aria-label={parentId ? "답글 등록" : "댓글 등록"}
         className="text-brand hover:bg-brand/10 hover:text-brand shrink-0"
       >
         {createComment.isPending ? (

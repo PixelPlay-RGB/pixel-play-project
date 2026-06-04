@@ -6,7 +6,7 @@ import type { CommunityCommentsResult } from "@/types/community/community";
 import { getChannelProfile } from "@/utils/channel/channel-server";
 import { getCommunityComments, getCommunityPostDetail } from "@/utils/community/community-server";
 
-const EMPTY_COMMENTS: CommunityCommentsResult = { items: [], totalCount: 0 };
+const EMPTY_COMMENTS: CommunityCommentsResult = { bestComment: null, items: [], totalCount: 0 };
 
 export default async function CommunityPostDetailPage({
   params,
