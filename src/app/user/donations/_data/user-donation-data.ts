@@ -38,6 +38,8 @@ const WALLET_TRANSACTION_STATUSES = new Set<WalletTransactionStatus>([
 export async function getUserDonationSnapshot(
   _searchParams: UserDonationSearchParams = {},
 ): Promise<AppActionResult<UserDonationSnapshot>> {
+  void _searchParams;
+
   const serverClient = await createClient();
   const {
     data: { user },
@@ -71,7 +73,7 @@ export async function getUserDonationSnapshot(
   try {
     return {
       success: true,
-      data: buildUserDonationSnapshot(data),
+      data: buildUserDonationSnapshot(data, user.id),
     };
   } catch (error) {
     console.error("사용자 후원 지갑 snapshot 생성 실패", error);
@@ -82,7 +84,10 @@ export async function getUserDonationSnapshot(
   }
 }
 
-function buildUserDonationSnapshot(snapshot: Json): UserDonationSnapshot {
+function buildUserDonationSnapshot(
+  snapshot: Json,
+  paymentCustomerKey: string,
+): UserDonationSnapshot {
   const snapshotObject = readObject(snapshot);
   const wallet = readObject(snapshotObject?.wallet);
   const sentDonations = readArray(snapshotObject?.sentDonations)
@@ -93,6 +98,7 @@ function buildUserDonationSnapshot(snapshot: Json): UserDonationSnapshot {
     .filter((item): item is UserWalletTransactionItem => item !== null);
 
   return {
+    paymentCustomerKey,
     summary: {
       balanceAmount: readNumber(wallet?.balanceAmount, 0),
       sentDonationAmount: sumBy(sentDonations, (item) => item.amount),

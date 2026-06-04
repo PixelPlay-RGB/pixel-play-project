@@ -31,6 +31,7 @@ export interface UserWalletTransactionItem {
 }
 
 export interface UserDonationSnapshot {
+  paymentCustomerKey: string;
   summary: UserDonationSummary;
   sentDonations: UserSentDonationItem[];
   transactions: UserWalletTransactionItem[];

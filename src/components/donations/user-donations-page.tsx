@@ -55,7 +55,7 @@ export function UserDonationsPage({ snapshot, errorCode }: Props) {
           </div>
         </SettingsCard>
 
-        <WalletChargeCard />
+        <WalletChargeCard customerKey={snapshot.paymentCustomerKey} />
       </section>
 
       <section className="flex flex-col gap-4">
