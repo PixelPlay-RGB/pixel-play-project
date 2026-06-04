@@ -1,9 +1,8 @@
 "use client";
-// 게시글 상세 뷰: 헤더(목록으로 + ⋮) + 본문 + 좋아요 + 댓글 영역.
+// 게시글 상세 뷰: 상단 툴바(목록 + 이전/다음글) + 게시글 카드(작성자·본문·좋아요·⋮) + 댓글 영역.
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronLeft } from "lucide-react";
 import { useState } from "react";
 
 import CommunityActionMenu from "@/components/community/community-action-menu";
@@ -13,8 +12,10 @@ import CommunityDeleteDialog from "@/components/community/community-delete-dialo
 import CommunityLikeButton from "@/components/community/community-like-button";
 import CommunityPostPager from "@/components/community/community-post-pager";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { buttonVariants } from "@/components/ui/button";
 import { useCommunityPostDetail } from "@/hooks/community/use-community-post-detail";
 import { useDeleteCommunityPost } from "@/hooks/community/use-delete-community-post";
+import { cn } from "@/lib/utils";
 import type {
   CommunityAdjacentPosts,
   CommunityCommentsResult,
@@ -57,70 +58,78 @@ export default function CommunityPostDetailView({
   };
 
   return (
-    <article className="flex flex-col gap-5">
+    <article className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-2">
         <Link
           href={communityHref}
-          className="text-muted-foreground hover:text-foreground inline-flex w-fit items-center gap-0.5 text-sm font-semibold"
+          className={cn(
+            buttonVariants({ variant: "outline", size: "sm" }),
+            "h-8 rounded-lg px-3 text-xs font-semibold",
+          )}
         >
-          <ChevronLeft className="size-4" />
-          목록으로
+          목록
         </Link>
 
-        {isChannelOwner && (
-          <CommunityActionMenu
-            canEdit
-            canDelete
-            onEdit={() => router.push(`${communityHref}/write?postId=${detail.id}`)}
-            onDelete={() => setIsDeleteOpen(true)}
-            ariaLabel="게시글 더보기"
-          />
-        )}
+        <CommunityPostPager creatorId={creatorId} neighbors={neighbors} />
       </div>
 
-      <div className="flex min-w-0 items-center gap-3">
-        <Link
-          href={`/channel/${detail.creatorId}`}
-          aria-label={`${detail.creatorNickname} 채널로 이동`}
-          className="focus-visible:ring-ring shrink-0 rounded-full outline-none focus-visible:ring-2"
-        >
-          <Avatar className="hover:ring-brand/40 size-11 transition-[box-shadow] hover:ring-2">
-            <AvatarImage
-              src={getAvatarImageSrc(detail.creatorPhotoUrl)}
-              alt={`${detail.creatorNickname}의 프로필 사진`}
+      <div className="border-border/60 bg-card/40 rounded-2xl border p-4 sm:p-5">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-3">
+            <Link
+              href={`/channel/${detail.creatorId}`}
+              aria-label={`${detail.creatorNickname} 채널로 이동`}
+              className="focus-visible:ring-ring shrink-0 rounded-full outline-none focus-visible:ring-2"
+            >
+              <Avatar className="hover:ring-brand/40 size-11 transition-[box-shadow] hover:ring-2">
+                <AvatarImage
+                  src={getAvatarImageSrc(detail.creatorPhotoUrl)}
+                  alt={`${detail.creatorNickname}의 프로필 사진`}
+                />
+                <AvatarFallback className="text-sm font-black">
+                  {getAvatarFallbackText(detail.creatorNickname, 1)}
+                </AvatarFallback>
+              </Avatar>
+            </Link>
+            <div className="min-w-0">
+              <Link
+                href={`/channel/${detail.creatorId}`}
+                className="text-foreground block truncate text-sm font-bold hover:underline"
+              >
+                {detail.creatorNickname}
+              </Link>
+              <p className="text-muted-foreground text-xs">
+                {formatRelativeTime(detail.createdAt)}
+                {detail.modifiedAt && " · 수정됨"}
+              </p>
+            </div>
+          </div>
+
+          {isChannelOwner && (
+            <CommunityActionMenu
+              canEdit
+              canDelete
+              onEdit={() => router.push(`${communityHref}/write?postId=${detail.id}`)}
+              onDelete={() => setIsDeleteOpen(true)}
+              ariaLabel="게시글 더보기"
             />
-            <AvatarFallback className="text-sm font-black">
-              {getAvatarFallbackText(detail.creatorNickname, 1)}
-            </AvatarFallback>
-          </Avatar>
-        </Link>
-        <div className="min-w-0">
-          <Link
-            href={`/channel/${detail.creatorId}`}
-            className="text-foreground block truncate text-sm font-bold hover:underline"
-          >
-            {detail.creatorNickname}
-          </Link>
-          <p className="text-muted-foreground text-xs">
-            {formatRelativeTime(detail.createdAt)}
-            {detail.modifiedAt && " · 수정됨"}
-          </p>
+          )}
+        </div>
+
+        <p className="text-foreground mt-3 text-[0.95rem] leading-relaxed break-words whitespace-pre-wrap">
+          {detail.content}
+        </p>
+
+        <div className="mt-4 flex items-center justify-end">
+          <CommunityLikeButton
+            postId={detail.id}
+            isLiked={detail.isLiked}
+            likeCount={detail.likeCount}
+          />
         </div>
       </div>
 
-      <p className="text-foreground text-[0.95rem] leading-relaxed break-words whitespace-pre-wrap">
-        {detail.content}
-      </p>
-
-      <div className="flex items-center justify-end">
-        <CommunityLikeButton
-          postId={detail.id}
-          isLiked={detail.isLiked}
-          likeCount={detail.likeCount}
-        />
-      </div>
-
-      <section className="flex flex-col gap-4">
+      <section className="flex flex-col gap-4 pt-1">
         <h2 className="text-foreground text-sm font-black">
           댓글 {numberFormatter.format(detail.commentCount)}
         </h2>
@@ -131,8 +140,6 @@ export default function CommunityPostDetailView({
           initialData={initialComments}
         />
       </section>
-
-      <CommunityPostPager creatorId={creatorId} neighbors={neighbors} />
 
       <CommunityDeleteDialog
         open={isDeleteOpen}

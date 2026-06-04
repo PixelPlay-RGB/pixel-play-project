@@ -1,7 +1,8 @@
-// 게시글 상세의 이전 글 / 다음 글 네비게이션(치지직식).
+// 게시글 상세 상단의 이전글/다음글 네비게이션(치지직식 컴팩트 버튼).
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
+import { cn } from "@/lib/utils";
 import type { CommunityAdjacentPosts } from "@/types/community/community";
 
 interface Props {
@@ -9,46 +10,49 @@ interface Props {
   neighbors: CommunityAdjacentPosts;
 }
 
+const BUTTON_BASE =
+  "inline-flex h-8 items-center gap-1 rounded-lg border px-2.5 text-xs font-semibold transition-colors";
+
 export default function CommunityPostPager({ creatorId, neighbors }: Props) {
   const base = `/channel/${creatorId}/community`;
 
   return (
-    <nav className="border-border/60 divide-border/60 grid grid-cols-2 divide-x overflow-hidden rounded-2xl border">
+    <div className="flex items-center gap-1.5">
       {neighbors.prev ? (
         <Link
           href={`${base}/${neighbors.prev.id}`}
-          className="hover:bg-muted/40 flex items-center gap-2 px-4 py-3 transition-colors"
+          className={cn(BUTTON_BASE, "border-border bg-background text-foreground hover:bg-muted")}
         >
-          <ChevronLeft className="text-muted-foreground size-4 shrink-0" />
-          <div className="min-w-0">
-            <p className="text-muted-foreground text-xs font-bold">이전 글</p>
-            <p className="text-foreground/90 truncate text-sm">{neighbors.prev.content}</p>
-          </div>
+          <ChevronLeft className="size-3.5" />
+          이전글
         </Link>
       ) : (
-        <div className="text-muted-foreground/50 flex items-center gap-2 px-4 py-3 text-sm font-semibold">
-          <ChevronLeft className="size-4 shrink-0" />
-          이전 글 없음
-        </div>
+        <span
+          aria-disabled
+          className={cn(BUTTON_BASE, "border-border/50 text-muted-foreground/50 cursor-default")}
+        >
+          <ChevronLeft className="size-3.5" />
+          이전글
+        </span>
       )}
 
       {neighbors.next ? (
         <Link
           href={`${base}/${neighbors.next.id}`}
-          className="hover:bg-muted/40 flex items-center justify-end gap-2 px-4 py-3 text-right transition-colors"
+          className={cn(BUTTON_BASE, "border-border bg-background text-foreground hover:bg-muted")}
         >
-          <div className="min-w-0">
-            <p className="text-muted-foreground text-xs font-bold">다음 글</p>
-            <p className="text-foreground/90 truncate text-sm">{neighbors.next.content}</p>
-          </div>
-          <ChevronRight className="text-muted-foreground size-4 shrink-0" />
+          다음글
+          <ChevronRight className="size-3.5" />
         </Link>
       ) : (
-        <div className="text-muted-foreground/50 flex items-center justify-end gap-2 px-4 py-3 text-sm font-semibold">
-          다음 글 없음
-          <ChevronRight className="size-4 shrink-0" />
-        </div>
+        <span
+          aria-disabled
+          className={cn(BUTTON_BASE, "border-border/50 text-muted-foreground/50 cursor-default")}
+        >
+          다음글
+          <ChevronRight className="size-3.5" />
+        </span>
       )}
-    </nav>
+    </div>
   );
 }
