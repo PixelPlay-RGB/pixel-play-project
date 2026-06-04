@@ -12,7 +12,7 @@ interface Props {
 
 export default function ChannelPublicShell({ profile, children }: Props) {
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 pb-16 sm:px-6">
+    <div className="mx-auto w-full max-w-6xl px-4 pb-16 sm:px-6">
       <ChannelProfileHeader profile={profile} />
       <ChannelTabs creatorId={profile.id} />
       <div className="pt-6">{children}</div>
