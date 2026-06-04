@@ -11,6 +11,7 @@ import {
   CHANNEL_BANNER_LINK_MAX,
   CHANNEL_BANNER_MAX,
   CHANNEL_BANNER_TITLE_MAX,
+  HTTP_URL_PATTERN,
 } from "@/lib/zod/channel-profile";
 import { cn } from "@/lib/utils";
 import type { ChannelBanner } from "@/types/channel/channel";
@@ -20,7 +21,6 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 
 const ACCEPT = "image/jpeg,image/png,image/webp,image/gif,image/bmp";
-const HTTP_URL_PATTERN = /^https?:\/\/.+/;
 
 interface Props {
   controller: ChannelBannersController;

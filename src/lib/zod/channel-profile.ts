@@ -8,7 +8,8 @@ export const CHANNEL_BANNER_MAX = 5;
 export const CHANNEL_BANNER_TITLE_MAX = 20;
 export const CHANNEL_BANNER_LINK_MAX = 100;
 
-const HTTP_URL_PATTERN = /^https?:\/\/.+/;
+// http(s) URL 검증 정규식. 배너 링크 클라 검증에서도 동일 규칙을 재사용한다.
+export const HTTP_URL_PATTERN = /^https?:\/\/.+/;
 
 const httpUrlField = (max: number, invalidMessage: string, maxMessage: string) =>
   z

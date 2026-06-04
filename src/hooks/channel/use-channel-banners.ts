@@ -22,10 +22,34 @@ export function useChannelBanners(initialBanners: ChannelBanner[]) {
   // 서버에 저장된 순서 기준. 드래그로 banners 순서가 이 기준과 달라지면 isOrderDirty가 된다.
   const [baselineKey, setBaselineKey] = useState(() => orderKey(initialBanners));
 
-  // 서버 응답(추가/삭제/순서커밋)으로 목록·기준을 동기화.
+  // 순서커밋 응답: 목록·기준을 서버 순서로 완전 동기화(로컬 순서 == 저장 순서).
   const sync = (next: ChannelBanner[]) => {
     setBanners(next);
     setBaselineKey(orderKey(next));
+  };
+
+  // 추가/삭제 응답 머지: 미저장 드래그 순서를 보존한다.
+  // 살아남은 항목은 현재 로컬(드래그) 순서를 유지하고, 서버에만 새로 생긴 항목은 뒤에 붙인다.
+  // 기준(baseline)은 서버 저장 순서로 둬서, 미커밋 reorder가 있으면 isOrderDirty가 유지된다.
+  const applyServerList = (serverList: ChannelBanner[]) => {
+    setBanners((prev) => {
+      const byId = new Map(serverList.map((banner) => [banner.id, banner]));
+      const merged: ChannelBanner[] = [];
+      for (const banner of prev) {
+        const fresh = byId.get(banner.id);
+        if (fresh) {
+          merged.push(fresh);
+          byId.delete(banner.id);
+        }
+      }
+      for (const banner of serverList) {
+        if (byId.has(banner.id)) {
+          merged.push(banner);
+        }
+      }
+      return merged;
+    });
+    setBaselineKey(orderKey(serverList));
   };
 
   const addMutation = useMutation({
@@ -35,7 +59,7 @@ export function useChannelBanners(initialBanners: ChannelBanner[]) {
         toastAppError(result.code ?? APP_MESSAGE_CODE.error.channel.bannerSaveFailed);
         return;
       }
-      sync(result.data);
+      applyServerList(result.data);
       toastAppSuccess(result.code ?? APP_MESSAGE_CODE.success.channel.bannerSaved);
     },
     onError: (error) => {
@@ -51,7 +75,7 @@ export function useChannelBanners(initialBanners: ChannelBanner[]) {
         toastAppError(result.code ?? APP_MESSAGE_CODE.error.channel.bannerDeleteFailed);
         return;
       }
-      sync(result.data);
+      applyServerList(result.data);
       toastAppSuccess(result.code ?? APP_MESSAGE_CODE.success.channel.bannerDeleted);
     },
     onError: (error) => {

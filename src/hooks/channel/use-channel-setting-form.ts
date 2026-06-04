@@ -72,7 +72,6 @@ export function useChannelSettingForm(initialBio: string) {
   const canSave =
     Object.keys(errors).length === 0 &&
     (!nicknameChanged || nicknameAvailability.isNicknameAvailable);
-  const canSubmit = isDirty && canSave && !isBusy;
 
   const handleFileChange = (file: File | null) => {
     if (isSaving) return;
@@ -151,7 +150,6 @@ export function useChannelSettingForm(initialBio: string) {
     canSave,
     isSaving,
     isBusy,
-    canSubmit,
     nicknameValue,
     nicknameChanged,
     nicknameAvailability,
