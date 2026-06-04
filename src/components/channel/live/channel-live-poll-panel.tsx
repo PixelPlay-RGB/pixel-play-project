@@ -231,10 +231,12 @@ export default function ChannelLivePollPanel({ broadcastId, messages }: Props) {
     () => getDrawParticipants(messages, drawSession),
     [drawSession, messages],
   );
-  const confirmedDrawParticipants = drawSession?.participants.length
-    ? toDrawParticipantNames(drawSession.participants)
-    : [];
-  const drawParticipants = confirmedDrawParticipants.length
+  const isDrawParticipantConfirmed = Boolean(drawSession?.endedAt);
+  const confirmedDrawParticipants =
+    isDrawParticipantConfirmed && drawSession
+      ? toDrawParticipantNames(drawSession.participants)
+      : [];
+  const drawParticipants = isDrawParticipantConfirmed
     ? confirmedDrawParticipants
     : previewDrawParticipants;
   const drawableParticipants = drawParticipants.filter(
