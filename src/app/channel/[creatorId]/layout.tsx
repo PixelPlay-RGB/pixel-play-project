@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 
 import ChannelPublicShell from "@/components/channel/public/channel-public-shell";
+import LiveShell from "@/components/live/live-shell";
 import { getChannelProfile } from "@/utils/channel/channel-server";
 
 interface LayoutProps {
@@ -37,5 +38,9 @@ export default async function ChannelPublicLayout({ children, params }: LayoutPr
     notFound();
   }
 
-  return <ChannelPublicShell profile={result.data}>{children}</ChannelPublicShell>;
+  return (
+    <LiveShell mobileTitle="채널">
+      <ChannelPublicShell profile={result.data}>{children}</ChannelPublicShell>
+    </LiveShell>
+  );
 }

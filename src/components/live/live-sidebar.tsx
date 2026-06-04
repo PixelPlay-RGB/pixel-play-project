@@ -1,7 +1,7 @@
 "use client";
 // 라이브 탐색 Sidebar를 기존 Sidebar 컴포넌트 계층으로 렌더링합니다.
 
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useIsFetching } from "@tanstack/react-query";
 
 import LoadMoreButton from "@/components/common/load-more-button";
@@ -29,6 +29,7 @@ import {
 } from "@/constants/live/live-list";
 import { useLiveSidebar } from "@/hooks/live/use-live-sidebar";
 import { useLiveStore } from "@/stores/live";
+import type { LiveListFilter } from "@/types/live/live";
 
 const SIDEBAR_EMPTY_STATE_CLASS = "text-muted-foreground px-2 py-2 text-xs leading-relaxed";
 
@@ -52,6 +53,10 @@ export default function LiveSidebar({ isMobile }: LiveSidebarProps) {
     isKeywordLoading,
   } = useLiveSidebar();
   const router = useRouter();
+  const pathname = usePathname();
+  // 탐색 필터는 라이브 목록의 인페이지 필터다. /live가 아닌 곳에서 클릭하면
+  // /live로 이동하며 필터를 적용하고, /live가 아니면 어떤 필터도 활성(Focus)으로 표시하지 않는다.
+  const isLiveListRoute = pathname === "/live";
   const filter = useLiveStore((state) => state.filter);
   const sort = useLiveStore((state) => state.sort);
   const visibleCount = useLiveStore((state) => state.visibleCount);
@@ -66,6 +71,14 @@ export default function LiveSidebar({ isMobile }: LiveSidebarProps) {
   const isNavigationVisible = !isMobile;
   const isFollowingOverviewVisible =
     !canFetchMoreFollowing && followingItems.length < followingTotalCount;
+
+  // 필터 선택: 스토어에 적용하고, 라이브 목록이 아니면 /live로 이동해 해당 필터를 보여준다.
+  const handleSelectFilter = (value: LiveListFilter) => {
+    setFilter(value);
+    if (!isLiveListRoute) {
+      router.push("/live");
+    }
+  };
 
   return (
     <Sidebar
@@ -84,9 +97,11 @@ export default function LiveSidebar({ isMobile }: LiveSidebarProps) {
                     icon={LIVE_LIST_FILTER_ICON[item.value]}
                     label={item.label}
                     value={item.value}
-                    isActive={item.value === activeFilter}
-                    isLoading={item.value === activeFilter && activeFilterFetchCount > 0}
-                    onSelect={setFilter}
+                    isActive={isLiveListRoute && item.value === activeFilter}
+                    isLoading={
+                      isLiveListRoute && item.value === activeFilter && activeFilterFetchCount > 0
+                    }
+                    onSelect={handleSelectFilter}
                   />
                 ))}
               </SidebarMenu>
