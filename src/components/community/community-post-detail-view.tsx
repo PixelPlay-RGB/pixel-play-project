@@ -141,7 +141,7 @@ export default function CommunityPostDetailView({
         open={isDeleteOpen}
         onOpenChange={setIsDeleteOpen}
         title="게시글 삭제"
-        description={"이 게시글을 삭제할까요?\n댓글을 포함해 모두 삭제되며 복구할 수 없어요."}
+        description="댓글을 포함해 모두 삭제되며 복구할 수 없어요."
         isPending={deletePost.isPending}
         onConfirm={handleConfirmDelete}
       />

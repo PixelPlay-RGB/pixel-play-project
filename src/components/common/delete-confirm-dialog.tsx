@@ -46,7 +46,7 @@ export default function DeleteConfirmDialog({
       <AlertDialogContent
         showCloseButton={false}
         className={cn(
-          "overflow-hidden rounded-2xl p-0 shadow-xl sm:max-w-md",
+          "overflow-hidden rounded-2xl p-0 shadow-xl sm:max-w-lg",
           "border-destructive/20 shadow-destructive/10",
         )}
       >

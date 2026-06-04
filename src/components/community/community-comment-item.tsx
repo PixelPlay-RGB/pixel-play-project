@@ -226,8 +226,8 @@ export default function CommunityCommentItem({
         title={isReply ? "답글 삭제" : "댓글 삭제"}
         description={
           isReply
-            ? "이 답글을 삭제할까요?\n삭제한 답글은 복구할 수 없어요."
-            : "이 댓글을 삭제할까요?\n달린 답글도 함께 삭제되며 복구할 수 없어요."
+            ? "삭제한 답글은 복구할 수 없어요."
+            : "달린 답글도 함께 삭제되며 복구할 수 없어요."
         }
         isPending={deleteComment.isPending}
         onConfirm={handleConfirmDelete}
