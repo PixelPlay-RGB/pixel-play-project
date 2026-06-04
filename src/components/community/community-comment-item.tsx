@@ -8,16 +8,7 @@ import { useState } from "react";
 import CommunityActionMenu from "@/components/community/community-action-menu";
 import CommunityCommentLikeButton from "@/components/community/community-comment-like-button";
 import CommunityCommentReplies from "@/components/community/community-comment-replies";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import CommunityDeleteDialog from "@/components/community/community-delete-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
@@ -185,13 +176,13 @@ export default function CommunityCommentItem({
         )}
 
         {!isEditing && (
-          <div className="mt-1.5 flex items-center justify-between gap-2">
+          <div className="mt-1.5 flex h-7 items-center justify-between gap-2">
             <div className="flex items-center gap-3">
               {!isReply && (
                 <button
                   type="button"
                   onClick={() => setRepliesOpen((open) => !open)}
-                  className="text-muted-foreground hover:text-foreground text-xs font-semibold"
+                  className="text-muted-foreground hover:text-foreground inline-flex h-7 items-center text-xs font-semibold"
                 >
                   답글 쓰기
                 </button>
@@ -200,7 +191,7 @@ export default function CommunityCommentItem({
                 <button
                   type="button"
                   onClick={() => setRepliesOpen((open) => !open)}
-                  className="text-brand inline-flex items-center gap-0.5 text-xs font-bold"
+                  className="text-brand inline-flex h-7 items-center gap-0.5 text-xs font-bold"
                   aria-expanded={repliesOpen}
                 >
                   답글 {numberFormatter.format(comment.replyCount)}
@@ -228,32 +219,18 @@ export default function CommunityCommentItem({
         )}
       </div>
 
-      <AlertDialog
+      <CommunityDeleteDialog
         open={isDeleteOpen}
-        onOpenChange={(next) => {
-          if (!deleteComment.isPending) setIsDeleteOpen(next);
-        }}
-      >
-        <AlertDialogContent className="sm:max-w-sm">
-          <AlertDialogHeader>
-            <AlertDialogTitle>댓글 삭제</AlertDialogTitle>
-            <AlertDialogDescription>
-              이 댓글을 삭제할까요? 달린 답글도 함께 삭제되며 복구할 수 없어요.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleteComment.isPending}>취소</AlertDialogCancel>
-            <AlertDialogAction
-              variant="destructive"
-              type="button"
-              disabled={deleteComment.isPending}
-              onClick={handleConfirmDelete}
-            >
-              {deleteComment.isPending ? <Spinner className="size-4" /> : "삭제"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        onOpenChange={setIsDeleteOpen}
+        title={isReply ? "답글 삭제" : "댓글 삭제"}
+        description={
+          isReply
+            ? "이 답글을 삭제할까요?\n삭제한 답글은 복구할 수 없어요."
+            : "이 댓글을 삭제할까요?\n달린 답글도 함께 삭제되며 복구할 수 없어요."
+        }
+        isPending={deleteComment.isPending}
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 }

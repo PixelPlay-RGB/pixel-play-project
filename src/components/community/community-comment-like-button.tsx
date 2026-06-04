@@ -1,7 +1,7 @@
 "use client";
-// 댓글/대댓글 좋아요 토글 버튼(우측 정렬, 치지직 추천 스타일).
+// 댓글/대댓글 좋아요 토글 버튼. 게시글 좋아요(community-like-button)와 동일한 하트 스타일.
 
-import { ChevronUp } from "lucide-react";
+import { Heart } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { useToggleCommunityCommentLike } from "@/hooks/community/use-toggle-community-comment-like";
@@ -44,7 +44,7 @@ export default function CommunityCommentLikeButton({ commentId, isLiked, likeCou
           : "text-muted-foreground hover:text-brand",
       )}
     >
-      <ChevronUp className="size-3.5" />
+      <Heart className={cn("size-3.5", isLiked && "fill-current")} />
       {numberFormatter.format(likeCount)}
     </Button>
   );

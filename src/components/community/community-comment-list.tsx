@@ -1,6 +1,8 @@
 "use client";
 // 게시글 상세의 댓글 목록. 정렬(등록·인기·최신) + 베스트 고정 + 페이지네이션.
 
+import { useQueryClient } from "@tanstack/react-query";
+import { RotateCw } from "lucide-react";
 import { useState } from "react";
 
 import ChatRoomListPagination from "@/components/chat-room-list/chat-room-list-pagination";
@@ -11,6 +13,7 @@ import {
   COMMUNITY_COMMENT_PAGE_SIZE,
   COMMUNITY_COMMENT_SORTS,
 } from "@/constants/community/community";
+import { QUERY_KEYS } from "@/constants/common/query-keys";
 import { useCommunityComments } from "@/hooks/community/use-community-comments";
 import { cn } from "@/lib/utils";
 import type { CommunityCommentSort, CommunityCommentsResult } from "@/types/community/community";
@@ -22,6 +25,7 @@ interface Props {
 }
 
 export default function CommunityCommentList({ postId, isChannelOwner, initialData }: Props) {
+  const queryClient = useQueryClient();
   const [sort, setSort] = useState<CommunityCommentSort>(COMMUNITY_COMMENT_DEFAULT_SORT);
   const [page, setPage] = useState(1);
   const { data, isPending, isFetching } = useCommunityComments(postId, page, sort, initialData);
@@ -30,6 +34,13 @@ export default function CommunityCommentList({ postId, isChannelOwner, initialDa
     if (next === sort) return;
     setSort(next);
     setPage(1);
+  };
+
+  // 커뮤니티는 실시간 구독이 아니므로 수동 새로고침으로 최신 댓글을 반영합니다.
+  const handleRefresh = () => {
+    void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.community.commentsAll() });
+    void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.community.commentRepliesAll() });
+    void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.community.post(postId) });
   };
 
   const totalCount = data?.totalCount ?? 0;
@@ -41,21 +52,35 @@ export default function CommunityCommentList({ postId, isChannelOwner, initialDa
 
   return (
     <div>
-      <div className="flex items-center justify-end gap-0.5 pb-1">
-        {COMMUNITY_COMMENT_SORTS.map((option) => (
-          <button
-            key={option.value}
-            type="button"
-            onClick={() => handleSortChange(option.value)}
-            aria-pressed={sort === option.value}
-            className={cn(
-              "rounded-full px-2 py-1 text-xs font-bold transition-colors",
-              sort === option.value ? "text-brand" : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            {option.label}
-          </button>
-        ))}
+      <div className="flex items-center justify-between gap-2 pb-1">
+        <button
+          type="button"
+          onClick={handleRefresh}
+          aria-label="댓글 새로고침"
+          className="text-muted-foreground hover:text-foreground inline-flex h-7 items-center gap-1 text-xs font-semibold"
+        >
+          <RotateCw className={cn("size-3.5", isFetching && "animate-spin")} />
+          새로고침
+        </button>
+
+        <div className="flex items-center gap-0.5">
+          {COMMUNITY_COMMENT_SORTS.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => handleSortChange(option.value)}
+              aria-pressed={sort === option.value}
+              className={cn(
+                "rounded-full px-2 py-1 text-xs font-bold transition-colors",
+                sort === option.value
+                  ? "text-brand"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {isPending ? (

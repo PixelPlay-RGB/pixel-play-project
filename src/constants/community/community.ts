@@ -7,7 +7,7 @@ export const COMMUNITY_COMMENT_CONTENT_MAX = 1000;
 
 // 목록 페이지네이션 크기.
 export const COMMUNITY_POST_PAGE_SIZE = 10;
-export const COMMUNITY_COMMENT_PAGE_SIZE = 20;
+export const COMMUNITY_COMMENT_PAGE_SIZE = 10;
 
 // 댓글 정렬 옵션(치지직: 등록순·인기순·최신순).
 export const COMMUNITY_COMMENT_SORTS: ReadonlyArray<{
