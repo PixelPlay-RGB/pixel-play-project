@@ -1,14 +1,19 @@
 "use client";
 // 댓글/대댓글 좋아요를 낙관적으로 토글합니다. 목록·베스트·대댓글 캐시를 함께 갱신합니다.
 
-import { useMutation, useQueryClient, type QueryKey } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueryClient,
+  type InfiniteData,
+  type QueryKey,
+} from "@tanstack/react-query";
 
 import { toggleCommunityCommentLikeAction } from "@/actions/community/community";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { QUERY_KEYS } from "@/constants/common/query-keys";
 import type { AppActionResult } from "@/types/common/action";
 import type {
-  CommunityComment,
+  CommunityCommentRepliesResult,
   CommunityCommentsResult,
   CommunityPostLikeResult,
 } from "@/types/community/community";
@@ -23,7 +28,7 @@ interface ToggleCommentLikeInput {
 
 interface ToggleCommentLikeContext {
   commentsSnapshots: Array<[QueryKey, CommunityCommentsResult | undefined]>;
-  repliesSnapshots: Array<[QueryKey, CommunityComment[] | undefined]>;
+  repliesSnapshots: Array<[QueryKey, InfiniteData<CommunityCommentRepliesResult> | undefined]>;
 }
 
 export function useToggleCommunityCommentLike() {
@@ -41,8 +46,18 @@ export function useToggleCommunityCommentLike() {
     queryClient.setQueriesData<CommunityCommentsResult>({ queryKey: commentsKey }, (data) =>
       applyCommentLike(data, commentId, next),
     );
-    queryClient.setQueriesData<CommunityComment[]>({ queryKey: repliesKey }, (data) =>
-      data ? applyLikeToCommentList(data, commentId, next) : data,
+    queryClient.setQueriesData<InfiniteData<CommunityCommentRepliesResult>>(
+      { queryKey: repliesKey },
+      (data) =>
+        data
+          ? {
+              ...data,
+              pages: data.pages.map((page) => ({
+                ...page,
+                items: applyLikeToCommentList(page.items, commentId, next),
+              })),
+            }
+          : data,
     );
   };
 
@@ -65,7 +80,9 @@ export function useToggleCommunityCommentLike() {
       const commentsSnapshots = queryClient.getQueriesData<CommunityCommentsResult>({
         queryKey: commentsKey,
       });
-      const repliesSnapshots = queryClient.getQueriesData<CommunityComment[]>({
+      const repliesSnapshots = queryClient.getQueriesData<
+        InfiniteData<CommunityCommentRepliesResult>
+      >({
         queryKey: repliesKey,
       });
 

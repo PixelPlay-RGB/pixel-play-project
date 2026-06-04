@@ -7,7 +7,7 @@ import { createAdminClient } from "@/lib/supabase/admin-client";
 import { communityCommentContentSchema, communityPostContentSchema } from "@/lib/zod/community";
 import type { AppActionResult } from "@/types/common/action";
 import type {
-  CommunityComment,
+  CommunityCommentRepliesResult,
   CommunityCommentSort,
   CommunityCommentsResult,
   CommunityPostDetail,
@@ -46,11 +46,12 @@ export async function fetchCommunityCommentsAction(
   return getCommunityComments(postId, page, sort);
 }
 
-// 대댓글 목록 조회(토글 시 지연 로드)
+// 대댓글 목록 페이지네이션 조회(토글 시 지연 로드 + "답글 더보기")
 export async function fetchCommunityCommentRepliesAction(
   parentId: string,
-): Promise<AppActionResult<CommunityComment[]>> {
-  return getCommunityCommentReplies(parentId);
+  page = 1,
+): Promise<AppActionResult<CommunityCommentRepliesResult>> {
+  return getCommunityCommentReplies(parentId, page);
 }
 
 // 게시글 작성 (작성자 = 자기 채널 주인)

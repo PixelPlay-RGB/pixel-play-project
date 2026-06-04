@@ -3,6 +3,7 @@ import type {
   CommunityAdjacentPost,
   CommunityAdjacentPosts,
   CommunityComment,
+  CommunityCommentRepliesResult,
   CommunityCommentsResult,
   CommunityCreator,
   CommunityPost,
@@ -191,11 +192,19 @@ export function parseCommunityComments(value: Json): CommunityCommentsResult {
   };
 }
 
-// 대댓글 목록(jsonb 배열) → CommunityComment[].
-export function parseCommunityCommentReplies(value: Json): CommunityComment[] {
-  return readArray(value)
+// 대댓글 페이지네이션 결과({ items, hasMore }) 파싱.
+export function parseCommunityCommentReplies(value: Json): CommunityCommentRepliesResult {
+  const object = readObject(value);
+
+  if (!object) {
+    return { items: [], hasMore: false };
+  }
+
+  const items = readArray(object.items)
     .map(parseComment)
     .filter((item): item is CommunityComment => item !== null);
+
+  return { items, hasMore: readBoolean(object.hasMore) };
 }
 
 function parseAdjacentPost(value: Json | undefined): CommunityAdjacentPost | null {

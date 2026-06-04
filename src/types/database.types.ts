@@ -953,7 +953,12 @@ export type Database = {
         Returns: Json
       }
       get_community_comment_replies: {
-        Args: { p_parent_id: string; p_viewer_id?: string }
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_parent_id: string
+          p_viewer_id?: string
+        }
         Returns: Json
       }
       get_community_comments: {

@@ -65,6 +65,12 @@ export interface CommunityCommentsResult {
   totalCount: number;
 }
 
+// 대댓글 페이지네이션 조회 결과(토글 시 지연 로드 + "답글 더보기").
+export interface CommunityCommentRepliesResult {
+  items: CommunityComment[];
+  hasMore: boolean;
+}
+
 // 좋아요 토글 결과.
 export interface CommunityPostLikeResult {
   liked: boolean;

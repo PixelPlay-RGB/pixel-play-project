@@ -5,12 +5,13 @@ import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import {
   COMMUNITY_COMMENT_PAGE_SIZE,
   COMMUNITY_POST_PAGE_SIZE,
+  COMMUNITY_REPLY_PAGE_SIZE,
 } from "@/constants/community/community";
 import { createAdminClient } from "@/lib/supabase/admin-client";
 import type { AppActionResult } from "@/types/common/action";
 import type {
   CommunityAdjacentPosts,
-  CommunityComment,
+  CommunityCommentRepliesResult,
   CommunityCommentSort,
   CommunityCommentsResult,
   CommunityPostDetail,
@@ -107,13 +108,17 @@ export async function getCommunityComments(
 // 대댓글 목록(토글 시 지연 로드).
 export async function getCommunityCommentReplies(
   parentId: string,
-): Promise<AppActionResult<CommunityComment[]>> {
+  page = 1,
+): Promise<AppActionResult<CommunityCommentRepliesResult>> {
   const viewerId = await resolveViewerId();
   const supabase = createAdminClient();
+  const offset = (page - 1) * COMMUNITY_REPLY_PAGE_SIZE;
 
   const { data, error } = await supabase.rpc("get_community_comment_replies", {
     p_parent_id: parentId,
     p_viewer_id: viewerId ?? undefined,
+    p_limit: COMMUNITY_REPLY_PAGE_SIZE,
+    p_offset: offset,
   });
 
   if (error) {
