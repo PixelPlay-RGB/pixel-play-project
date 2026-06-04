@@ -352,6 +352,10 @@ export default function ChannelLivePollPanel({ broadcastId, messages }: Props) {
       }
 
       return result.data.participants;
+    } catch (error) {
+      console.error("방송 추첨 참여자 조회 액션 실패", error);
+      toastAppError(APP_MESSAGE_CODE.error.common.unknown);
+      return null;
     } finally {
       setIsDrawParticipantLoading(false);
     }
