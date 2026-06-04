@@ -49,4 +49,10 @@ export const FORM_MESSAGE = {
     commentRequired: "댓글 내용을 입력해주세요.",
     commentMax: (max: number) => `댓글은 ${max}자 이하여야 합니다.`,
   },
+  channelProfile: {
+    bioMax: (max: number) => `채널 소개는 ${max}자 이하여야 합니다.`,
+    bannerTitleMax: (max: number) => `배너 제목은 ${max}자 이하여야 합니다.`,
+    bannerLinkInvalid: "http(s)로 시작하는 올바른 링크를 입력해주세요.",
+    bannerLinkMax: (max: number) => `배너 링크는 ${max}자 이하여야 합니다.`,
+  },
 } as const;
