@@ -23,7 +23,7 @@ import {
 import { cn } from "@/lib/utils";
 import type { TossPaymentPrepareResponse } from "@/types/payments/toss-payment-api";
 import type { TossPaymentsPayment } from "@/types/payments/toss-payments";
-import { CreditCard, Loader2 } from "lucide-react";
+import { CreditCard, Eye, Loader2 } from "lucide-react";
 import Script from "next/script";
 import { FormEvent, useEffect, useId, useMemo, useRef, useState } from "react";
 
@@ -248,10 +248,18 @@ export function WalletChargeCard({ customerKey, variant = "card" }: Props) {
           </p>
         ) : null}
 
-        <Button type="submit" size="lg" disabled={!canRequestPayment || isBusy} className="w-full">
-          {isBusy ? <Loader2 className="animate-spin" /> : <CreditCard />}
-          {getPaymentButtonLabel(clientKey, paymentWindowState)}
-        </Button>
+        <div className="grid gap-2 sm:grid-cols-2">
+          <WalletChargePreviewDialog amount={numericAmount} disabled={!isValidAmount || isBusy} />
+          <Button
+            type="submit"
+            size="lg"
+            disabled={!canRequestPayment || isBusy}
+            className="w-full"
+          >
+            {isBusy ? <Loader2 className="animate-spin" /> : <CreditCard />}
+            {getPaymentButtonLabel(clientKey, paymentWindowState)}
+          </Button>
+        </div>
       </form>
     </>
   );
@@ -268,6 +276,84 @@ export function WalletChargeCard({ customerKey, variant = "card" }: Props) {
     >
       {content}
     </SettingsCard>
+  );
+}
+
+function WalletChargePreviewDialog({ amount, disabled }: { amount: number; disabled: boolean }) {
+  const trigger = (
+    <Button type="button" variant="outline" size="lg" disabled={disabled} className="w-full">
+      <Eye className="size-4" />
+      미리보기
+    </Button>
+  );
+
+  return (
+    <Dialog>
+      <DialogTrigger render={trigger} />
+      <DialogContent
+        className={cn(
+          "overflow-hidden rounded-2xl p-0 shadow-xl sm:max-w-md",
+          "border-live/20 shadow-live/10 dark:border-live/10",
+        )}
+      >
+        <DialogHeader className="bg-background border-b px-5 pt-5 pb-4">
+          <div className="flex items-start justify-between gap-4 pr-8">
+            <div className="min-w-0">
+              <DialogTitle className="text-lg font-black">Toss Payments</DialogTitle>
+              <DialogDescription className="mt-1">후원 지갑 충전</DialogDescription>
+            </div>
+            <span className="bg-muted text-muted-foreground rounded-full px-3 py-1 text-xs font-bold">
+              미리보기
+            </span>
+          </div>
+        </DialogHeader>
+
+        <div className="flex flex-col gap-4 px-5 py-5">
+          <section className="bg-muted/40 rounded-xl p-4">
+            <p className="text-muted-foreground text-xs font-bold">결제 금액</p>
+            <p className="text-foreground mt-2 text-3xl leading-none font-black">
+              {formatPoint(amount)}
+            </p>
+            <p className="text-muted-foreground mt-2 text-xs">
+              주문명: 후원 지갑 충전 {formatPoint(amount)}
+            </p>
+          </section>
+
+          <section className="grid gap-2">
+            <PreviewPaymentMethod label="카드" isSelected />
+            <PreviewPaymentMethod label="간편결제" />
+            <PreviewPaymentMethod label="계좌이체" />
+          </section>
+
+          <Button type="button" size="lg" className="w-full" disabled>
+            결제하기
+          </Button>
+          <p className="text-muted-foreground text-center text-xs">
+            실제 결제와 주문 생성은 진행되지 않습니다.
+          </p>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function PreviewPaymentMethod({
+  label,
+  isSelected = false,
+}: {
+  label: string;
+  isSelected?: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        "flex h-12 items-center justify-between rounded-lg border px-4 text-sm font-bold",
+        isSelected ? "border-brand bg-brand/10 text-brand" : "border-border text-muted-foreground",
+      )}
+    >
+      <span>{label}</span>
+      {isSelected ? <span className="text-xs">선택됨</span> : null}
+    </div>
   );
 }
 
