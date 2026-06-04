@@ -1,11 +1,12 @@
 "use client";
-// 게시글 상세의 댓글 목록. 정렬(등록·인기·최신) + 베스트 고정 + 페이지네이션.
+// 댓글 영역: 헤더(댓글 N + 새로고침 | 정렬) + 입력창 + 목록. 치지직 레이아웃.
 
 import { useQueryClient } from "@tanstack/react-query";
 import { RotateCw } from "lucide-react";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 
 import ChatRoomListPagination from "@/components/chat-room-list/chat-room-list-pagination";
+import CommunityCommentComposer from "@/components/community/community-comment-composer";
 import CommunityCommentItem from "@/components/community/community-comment-item";
 import { Spinner } from "@/components/ui/spinner";
 import {
@@ -20,11 +21,20 @@ import type { CommunityCommentSort, CommunityCommentsResult } from "@/types/comm
 
 interface Props {
   postId: string;
+  // 전체 댓글 수(대댓글 포함). 헤더에 표시.
+  commentCount: number;
   isChannelOwner: boolean;
   initialData?: CommunityCommentsResult;
 }
 
-export default function CommunityCommentList({ postId, isChannelOwner, initialData }: Props) {
+const numberFormatter = new Intl.NumberFormat("ko-KR");
+
+export default function CommunityCommentList({
+  postId,
+  commentCount,
+  isChannelOwner,
+  initialData,
+}: Props) {
   const queryClient = useQueryClient();
   const [sort, setSort] = useState<CommunityCommentSort>(COMMUNITY_COMMENT_DEFAULT_SORT);
   const [page, setPage] = useState(1);
@@ -51,37 +61,45 @@ export default function CommunityCommentList({ postId, isChannelOwner, initialDa
   const isEmpty = !bestComment && items.length === 0;
 
   return (
-    <div>
-      <div className="flex items-center justify-between gap-2 pb-1">
-        <button
-          type="button"
-          onClick={handleRefresh}
-          aria-label="댓글 새로고침"
-          className="text-muted-foreground hover:text-foreground inline-flex h-7 items-center gap-1 text-xs font-semibold"
-        >
-          <RotateCw className={cn("size-3.5", isFetching && "animate-spin")} />
-          새로고침
-        </button>
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5">
+          <h2 className="text-foreground text-sm font-black">
+            댓글 {numberFormatter.format(commentCount)}
+          </h2>
+          <button
+            type="button"
+            onClick={handleRefresh}
+            aria-label="댓글 새로고침"
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <RotateCw className={cn("size-4", isFetching && "animate-spin")} />
+          </button>
+        </div>
 
-        <div className="flex items-center gap-0.5">
-          {COMMUNITY_COMMENT_SORTS.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => handleSortChange(option.value)}
-              aria-pressed={sort === option.value}
-              className={cn(
-                "rounded-full px-2 py-1 text-xs font-bold transition-colors",
-                sort === option.value
-                  ? "text-brand"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {option.label}
-            </button>
+        <div className="flex items-center gap-1.5 text-xs font-bold">
+          {COMMUNITY_COMMENT_SORTS.map((option, index) => (
+            <Fragment key={option.value}>
+              {index > 0 && <span className="text-muted-foreground/40">·</span>}
+              <button
+                type="button"
+                onClick={() => handleSortChange(option.value)}
+                aria-pressed={sort === option.value}
+                className={cn(
+                  "transition-colors",
+                  sort === option.value
+                    ? "text-foreground"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {option.label}
+              </button>
+            </Fragment>
           ))}
         </div>
       </div>
+
+      <CommunityCommentComposer postId={postId} />
 
       {isPending ? (
         <div className="flex justify-center py-10">

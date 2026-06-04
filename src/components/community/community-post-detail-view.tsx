@@ -7,7 +7,6 @@ import { ChevronLeft } from "lucide-react";
 import { useState } from "react";
 
 import CommunityActionMenu from "@/components/community/community-action-menu";
-import CommunityCommentComposer from "@/components/community/community-comment-composer";
 import CommunityCommentList from "@/components/community/community-comment-list";
 import CommunityDeleteDialog from "@/components/community/community-delete-dialog";
 import CommunityLikeButton from "@/components/community/community-like-button";
@@ -30,8 +29,6 @@ interface Props {
   initialComments: CommunityCommentsResult;
   neighbors: CommunityAdjacentPosts;
 }
-
-const numberFormatter = new Intl.NumberFormat("ko-KR");
 
 export default function CommunityPostDetailView({
   creatorId,
@@ -130,13 +127,10 @@ export default function CommunityPostDetailView({
         </div>
 
         {/* 댓글 영역 (같은 카드 안, 구분선으로 분리) */}
-        <section className="border-border/60 flex flex-col gap-4 border-t p-4 sm:p-5">
-          <h2 className="text-foreground text-sm font-black">
-            댓글 {numberFormatter.format(detail.commentCount)}
-          </h2>
-          <CommunityCommentComposer postId={detail.id} />
+        <section className="border-border/60 border-t p-4 sm:p-5">
           <CommunityCommentList
             postId={detail.id}
+            commentCount={detail.commentCount}
             isChannelOwner={isChannelOwner}
             initialData={initialComments}
           />
