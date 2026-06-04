@@ -1,5 +1,5 @@
 "use client";
-// 게시글 좋아요(버프) 토글 버튼입니다.
+// 게시글 좋아요 토글 버튼. 본인 글은 좋아요할 수 없습니다.
 
 import { Heart } from "lucide-react";
 
@@ -10,6 +10,8 @@ import { useAuthStore } from "@/stores/auth";
 
 interface Props {
   postId: string;
+  // 글 작성자(=채널 주인) id. 본인이면 좋아요 비활성.
+  authorId: string;
   isLiked: boolean;
   likeCount: number;
   className?: string;
@@ -17,16 +19,21 @@ interface Props {
 
 const numberFormatter = new Intl.NumberFormat("ko-KR");
 
-export default function CommunityLikeButton({ postId, isLiked, likeCount, className }: Props) {
+export default function CommunityLikeButton({
+  postId,
+  authorId,
+  isLiked,
+  likeCount,
+  className,
+}: Props) {
   const currentUserId = useAuthStore((state) => state.user?.id);
   const toggleLike = useToggleCommunityPostLike(postId);
 
-  const handleClick = () => {
-    if (!currentUserId) {
-      return;
-    }
+  const isOwn = !!currentUserId && currentUserId === authorId;
+  const isDisabled = !currentUserId || isOwn;
 
-    if (toggleLike.isPending) {
+  const handleClick = () => {
+    if (isDisabled || toggleLike.isPending) {
       return;
     }
 
@@ -39,9 +46,10 @@ export default function CommunityLikeButton({ postId, isLiked, likeCount, classN
       size="sm"
       variant="outline"
       onClick={handleClick}
-      disabled={!currentUserId}
+      disabled={isDisabled}
       aria-pressed={isLiked}
       aria-label={isLiked ? "좋아요 취소" : "좋아요"}
+      title={isOwn ? "내 글은 좋아요할 수 없어요" : undefined}
       className={cn(
         "h-8 rounded-full px-3 text-xs font-bold transition-all active:scale-95",
         isLiked

@@ -204,6 +204,7 @@ export default function CommunityCommentItem({
 
             <CommunityCommentLikeButton
               commentId={comment.id}
+              authorId={comment.authorId}
               isLiked={comment.isLiked}
               likeCount={comment.likeCount}
             />

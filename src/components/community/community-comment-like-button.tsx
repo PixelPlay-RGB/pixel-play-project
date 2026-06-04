@@ -1,5 +1,5 @@
 "use client";
-// 댓글/대댓글 좋아요 토글 버튼. 게시글 좋아요(community-like-button)와 동일한 하트 스타일.
+// 댓글/대댓글 좋아요 토글 버튼. 게시글 좋아요와 동일한 하트 스타일. 본인 댓글은 비활성.
 
 import { Heart } from "lucide-react";
 
@@ -10,18 +10,28 @@ import { useAuthStore } from "@/stores/auth";
 
 interface Props {
   commentId: string;
+  // 댓글 작성자 id. 본인이면 좋아요 비활성.
+  authorId: string;
   isLiked: boolean;
   likeCount: number;
 }
 
 const numberFormatter = new Intl.NumberFormat("ko-KR");
 
-export default function CommunityCommentLikeButton({ commentId, isLiked, likeCount }: Props) {
+export default function CommunityCommentLikeButton({
+  commentId,
+  authorId,
+  isLiked,
+  likeCount,
+}: Props) {
   const currentUserId = useAuthStore((state) => state.user?.id);
   const toggleLike = useToggleCommunityCommentLike();
 
+  const isOwn = !!currentUserId && currentUserId === authorId;
+  const isDisabled = !currentUserId || isOwn;
+
   const handleClick = () => {
-    if (!currentUserId || toggleLike.isPending) {
+    if (isDisabled || toggleLike.isPending) {
       return;
     }
 
@@ -34,9 +44,10 @@ export default function CommunityCommentLikeButton({ commentId, isLiked, likeCou
       size="sm"
       variant="outline"
       onClick={handleClick}
-      disabled={!currentUserId}
+      disabled={isDisabled}
       aria-pressed={isLiked}
       aria-label={isLiked ? "좋아요 취소" : "좋아요"}
+      title={isOwn ? "내 댓글은 좋아요할 수 없어요" : undefined}
       className={cn(
         "h-7 gap-1 rounded-full px-2.5 text-xs font-bold transition-all active:scale-95",
         isLiked
