@@ -1,4 +1,4 @@
-// 공개 채널 홈 탭: Live Hero(오프라인 안내) + 배너 + 커뮤니티 최신 6개.
+// 공개 채널 홈 탭: Live Hero(오프라인 안내) + 배너 + 커뮤니티 최신 12개(캐러셀).
 import { notFound } from "next/navigation";
 
 import { ChannelHomeContent } from "@/components/channel/home/channel-home-content";
@@ -6,7 +6,7 @@ import { getChannelBanners, getChannelLiveHero } from "@/utils/channel/channel-e
 import { getChannelProfile } from "@/utils/channel/channel-server";
 import { getChannelCommunityPosts } from "@/utils/community/community-server";
 
-const HOME_COMMUNITY_PREVIEW_COUNT = 6;
+const HOME_COMMUNITY_PREVIEW_COUNT = 12;
 
 export default async function ChannelHomePage({
   params,
