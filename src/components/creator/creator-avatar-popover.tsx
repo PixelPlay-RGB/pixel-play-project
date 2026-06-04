@@ -49,6 +49,7 @@ export default function CreatorAvatarPopover({
   const currentUserId = useAuthStore((state) => state.user?.id);
   const toggleCreatorFollowing = useToggleCreatorFollowing();
   const [isUnfollowDialogOpen, setIsUnfollowDialogOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   const avatarSrc = getAvatarImageSrc(creatorPhotoUrl);
   const fallbackText = getAvatarFallbackText(creatorNickname);
@@ -80,7 +81,14 @@ export default function CreatorAvatarPopover({
 
   return (
     <>
-      <Popover>
+      <Popover
+        open={isOpen}
+        onOpenChange={(nextOpen, details) => {
+          // 팔로우/팔로잉 버튼이 처리 중 disabled되며 발생하는 포커스 아웃으로는 닫지 않습니다.
+          if (!nextOpen && details?.reason === "focus-out") return;
+          setIsOpen(nextOpen);
+        }}
+      >
         <PopoverTrigger
           type="button"
           aria-label={`${creatorNickname} 프로필 요약 열기`}
