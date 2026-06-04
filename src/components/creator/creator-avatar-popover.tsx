@@ -4,7 +4,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Radio } from "lucide-react";
+import { ChevronRight, Radio, Tv } from "lucide-react";
 
 import CreatorFollowingButton from "@/components/following/creator-following-button";
 import CreatorUnfollowDialog from "@/components/creator/creator-unfollow-dialog";
@@ -49,7 +49,6 @@ export default function CreatorAvatarPopover({
   const currentUserId = useAuthStore((state) => state.user?.id);
   const toggleCreatorFollowing = useToggleCreatorFollowing();
   const [isUnfollowDialogOpen, setIsUnfollowDialogOpen] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
 
   const avatarSrc = getAvatarImageSrc(creatorPhotoUrl);
   const fallbackText = getAvatarFallbackText(creatorNickname);
@@ -81,14 +80,7 @@ export default function CreatorAvatarPopover({
 
   return (
     <>
-      <Popover
-        open={isOpen}
-        onOpenChange={(nextOpen, details) => {
-          // 팔로우/팔로잉 버튼이 처리 중 disabled되며 발생하는 포커스 아웃으로는 닫지 않습니다.
-          if (!nextOpen && details?.reason === "focus-out") return;
-          setIsOpen(nextOpen);
-        }}
-      >
+      <Popover>
         <PopoverTrigger
           type="button"
           aria-label={`${creatorNickname} 프로필 요약 열기`}
@@ -138,26 +130,39 @@ export default function CreatorAvatarPopover({
                 </span>
               ) : (
                 <p className="text-muted-foreground mt-1 truncate text-xs font-medium">
-                  {isOwnChannel ? "내 라이브 채널" : "팔로우 중인 채널"}
+                  {isOwnChannel ? "내 채널" : "채널 보러 가기"}
                 </p>
               )}
             </div>
+            <ChevronRight className="text-muted-foreground/70 size-4 shrink-0" />
           </Link>
 
           <div className="border-border/60 bg-muted/30 flex flex-col gap-2 border-t px-3 py-3">
-            {/* 라이브 중이면 시청 페이지로, 아니면 공개 채널 페이지로 이동합니다. */}
+            {/* 라이브 중이면 시청 페이지 버튼을 함께 노출하고, 채널 보기는 항상 제공합니다. */}
+            {isLive && (
+              <Link
+                href={`/live/${creatorId}`}
+                className={cn(
+                  buttonVariants({ size: "sm" }),
+                  "h-8 w-full justify-center gap-1.5 rounded-full px-3 text-xs font-black",
+                  "bg-live hover:bg-live/85 shadow-live/25 text-white shadow-sm hover:shadow-md",
+                )}
+              >
+                <Radio className="size-3.5" />
+                라이브 보기
+              </Link>
+            )}
+
             <Link
-              href={isLive ? `/live/${creatorId}` : `/channel/${creatorId}`}
+              href={`/channel/${creatorId}`}
               className={cn(
                 buttonVariants({ size: "sm" }),
                 "h-8 w-full justify-center gap-1.5 rounded-full px-3 text-xs font-black",
-                isLive
-                  ? "bg-live hover:bg-live/85 shadow-live/25 text-white shadow-sm hover:shadow-md"
-                  : "border-border bg-background text-foreground hover:bg-muted border",
+                "border-border bg-background text-foreground hover:bg-muted border",
               )}
             >
-              <Radio className="size-3.5" />
-              {isLive ? "라이브 보기" : "채널 보기"}
+              <Tv className="size-3.5" />
+              채널 보기
             </Link>
 
             <CreatorFollowingButton
