@@ -5,8 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
-const DEFAULT_MEDIAMTX_API_BASE_URL = "http://3.34.211.173:9997";
-const MEDIAMTX_API_BASE_URL = process.env.MEDIAMTX_API_BASE_URL ?? DEFAULT_MEDIAMTX_API_BASE_URL;
+const LOCAL_MEDIAMTX_API_BASE_URL = "http://127.0.0.1:9997";
 const REQUEST_TIMEOUT_MS = 3000;
 const DEFAULT_CONFIGURED_FPS = 30;
 
@@ -24,6 +23,20 @@ function readString(value: unknown) {
 
 function trimTrailingSlashes(value: string) {
   return value.replace(/\/+$/g, "");
+}
+
+function getMediaMtxApiBaseUrl() {
+  const configuredBaseUrl = process.env.MEDIAMTX_API_BASE_URL?.trim();
+
+  if (configuredBaseUrl) {
+    return configuredBaseUrl;
+  }
+
+  if (process.env.NODE_ENV !== "production") {
+    return LOCAL_MEDIAMTX_API_BASE_URL;
+  }
+
+  throw new Error("MEDIAMTX_API_BASE_URL 환경 변수가 필요합니다.");
 }
 
 function getVideoDimensions(pathData: Record<string, unknown>) {
@@ -87,8 +100,9 @@ export async function GET(request: NextRequest) {
   const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
   try {
+    const mediaMtxApiBaseUrl = getMediaMtxApiBaseUrl();
     const response = await fetch(
-      `${trimTrailingSlashes(MEDIAMTX_API_BASE_URL)}/v3/paths/get/${encodeURIComponent(streamPath)}`,
+      `${trimTrailingSlashes(mediaMtxApiBaseUrl)}/v3/paths/get/${encodeURIComponent(streamPath)}`,
       {
         cache: "no-store",
         signal: controller.signal,

@@ -2,9 +2,9 @@
 
 import { LIVE_STREAM_SERVER_URL } from "@/constants/live/live-overlay";
 
-const DEFAULT_MEDIAMTX_RTMP_SERVER_URL = "rtmp://3.34.211.173:1935";
-const DEFAULT_MEDIAMTX_HLS_BASE_URL = "http://3.34.211.173:8888";
-const DEFAULT_MEDIAMTX_STREAM_PATH = "mystream";
+const LOCAL_MEDIAMTX_RTMP_SERVER_URL = "rtmp://127.0.0.1:1935";
+const LOCAL_MEDIAMTX_HLS_BASE_URL = "http://127.0.0.1:8888";
+const LOCAL_MEDIAMTX_STREAM_PATH = "mystream";
 
 function trimSlashes(value: string) {
   return value.replace(/^\/+|\/+$/g, "");
@@ -22,11 +22,42 @@ function getRtmpServerPath(value: string) {
   }
 }
 
+function getMediaConfigValue(value: string | undefined, key: string, localDefault: string) {
+  const configuredValue = value?.trim();
+
+  if (configuredValue) {
+    return configuredValue;
+  }
+
+  if (process.env.NODE_ENV !== "production") {
+    return localDefault;
+  }
+
+  throw new Error(`${key} 환경 변수가 필요합니다.`);
+}
+
 export const CHANNEL_LIVE_MEDIA_CONFIG = {
-  rtmpServerUrl:
-    process.env.NEXT_PUBLIC_MEDIAMTX_RTMP_SERVER_URL ?? DEFAULT_MEDIAMTX_RTMP_SERVER_URL,
-  hlsBaseUrl: process.env.NEXT_PUBLIC_MEDIAMTX_HLS_BASE_URL ?? DEFAULT_MEDIAMTX_HLS_BASE_URL,
-  streamPath: process.env.NEXT_PUBLIC_MEDIAMTX_STREAM_PATH ?? DEFAULT_MEDIAMTX_STREAM_PATH,
+  get rtmpServerUrl() {
+    return getMediaConfigValue(
+      process.env.NEXT_PUBLIC_MEDIAMTX_RTMP_SERVER_URL,
+      "NEXT_PUBLIC_MEDIAMTX_RTMP_SERVER_URL",
+      LOCAL_MEDIAMTX_RTMP_SERVER_URL,
+    );
+  },
+  get hlsBaseUrl() {
+    return getMediaConfigValue(
+      process.env.NEXT_PUBLIC_MEDIAMTX_HLS_BASE_URL,
+      "NEXT_PUBLIC_MEDIAMTX_HLS_BASE_URL",
+      LOCAL_MEDIAMTX_HLS_BASE_URL,
+    );
+  },
+  get streamPath() {
+    return getMediaConfigValue(
+      process.env.NEXT_PUBLIC_MEDIAMTX_STREAM_PATH,
+      "NEXT_PUBLIC_MEDIAMTX_STREAM_PATH",
+      LOCAL_MEDIAMTX_STREAM_PATH,
+    );
+  },
 } as const;
 
 export function getChannelLiveHlsUrl(streamPath = CHANNEL_LIVE_MEDIA_CONFIG.streamPath) {
