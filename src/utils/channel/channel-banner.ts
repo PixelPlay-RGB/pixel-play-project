@@ -12,5 +12,10 @@ export function getChannelBannerSrc(imagePath: string): string {
   if (/^https?:\/\//.test(imagePath)) {
     return imagePath;
   }
-  return `${SUPABASE_URL}/storage/v1/object/public/${BANNER_BUCKET}/${imagePath}`;
+  // 객체 이름이 제목 기반(한글·공백 가능)이므로 세그먼트별로 인코딩한다.
+  const encodedPath = imagePath
+    .split("/")
+    .map((segment) => encodeURIComponent(segment))
+    .join("/");
+  return `${SUPABASE_URL}/storage/v1/object/public/${BANNER_BUCKET}/${encodedPath}`;
 }

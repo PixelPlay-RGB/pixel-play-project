@@ -1,5 +1,5 @@
 "use client";
-// 채널 관리: 공개 프로필(사진·닉네임) + 채널 소개(bio) 배치 저장 + 홈 배너 즉시 CRUD.
+// 채널 관리: 공개 프로필(사진·닉네임) + 채널 소개(bio) + 홈 배너(추가/삭제는 즉시, 순서는 저장 시 커밋).
 // 하나의 Card 안에서 섹션(공개 프로필 / 채널 소개 / 홈 배너)으로만 구분한다.
 
 import { Controller } from "react-hook-form";
@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/input-group";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
+import { useChannelBanners } from "@/hooks/channel/use-channel-banners";
 import { useChannelSettingForm } from "@/hooks/channel/use-channel-setting-form";
 import { useStickyActionBar } from "@/hooks/common/use-sticky-action-bar";
 import { cn } from "@/lib/utils";
@@ -57,21 +58,47 @@ function SettingSection({
 }
 
 export function ChannelSettingContent({ profile, banners }: Props) {
+  const form = useChannelSettingForm(profile.bio ?? "");
+  const bannerController = useChannelBanners(banners);
+
   const {
     control,
     errors,
-    isSaving,
+    isDirty: isFormDirty,
+    canSave: canSaveForm,
+    isSaving: isFormSaving,
     isBusy,
-    canSubmit,
     nicknameValue,
     nicknameChanged,
     nicknameAvailability,
     handleFileChange,
     handleReset,
-    submit,
-  } = useChannelSettingForm(profile.bio ?? "");
+    runSave,
+  } = form;
+
+  const isDirty = isFormDirty || bannerController.isOrderDirty;
+  const isSaving = isFormSaving || bannerController.isCommittingOrder;
+  const canSubmit = isDirty && canSaveForm && !isBusy && !bannerController.isCommittingOrder;
 
   const { sentinelRef, show } = useStickyActionBar(canSubmit);
+
+  // 배너 순서 커밋 → 프로필/소개 저장(둘 다 dirty일 때만). 한 번의 "변경사항 저장"으로 처리.
+  const handleSave = async () => {
+    if (!canSubmit) return;
+
+    if (bannerController.isOrderDirty) {
+      const ok = await bannerController.commitOrder();
+      if (!ok) return;
+    }
+    if (isFormDirty) {
+      await runSave();
+    }
+  };
+
+  const handleResetAll = () => {
+    handleReset();
+    bannerController.resetOrder();
+  };
 
   return (
     <SettingsPage
@@ -81,7 +108,7 @@ export function ChannelSettingContent({ profile, banners }: Props) {
       action={
         <Button
           type="button"
-          onClick={submit}
+          onClick={() => void handleSave()}
           disabled={!canSubmit}
           className={cn(
             "h-11 shrink-0 rounded-xl px-7 font-bold",
@@ -96,7 +123,13 @@ export function ChannelSettingContent({ profile, banners }: Props) {
       <div ref={sentinelRef} aria-hidden />
 
       <Card className="gap-0 py-0 shadow-sm">
-        <form onSubmit={submit} className="flex flex-col">
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            void handleSave();
+          }}
+          className="flex flex-col"
+        >
           <SettingSection
             title="공개 프로필"
             description="채널에 보여지는 프로필 사진과 닉네임이에요."
@@ -109,7 +142,7 @@ export function ChannelSettingContent({ profile, banners }: Props) {
                   photoUrl={value || null}
                   nickname={nicknameValue}
                   onFileChange={handleFileChange}
-                  disabled={isSaving}
+                  disabled={isFormSaving}
                 />
               )}
             />
@@ -184,7 +217,7 @@ export function ChannelSettingContent({ profile, banners }: Props) {
               render={({ field }) => (
                 <ChannelBioField
                   value={field.value}
-                  disabled={isSaving}
+                  disabled={isFormSaving}
                   onChange={field.onChange}
                 />
               )}
@@ -194,10 +227,10 @@ export function ChannelSettingContent({ profile, banners }: Props) {
 
         <SettingSection
           title="홈 배너"
-          description="채널 홈 상단에 노출되는 외부 링크 배너를 관리해요."
+          description="채널 홈 상단에 노출되는 외부 링크 배너를 관리해요. 순서 변경은 저장해야 반영돼요."
           withDivider
         >
-          <ChannelBannerField initialBanners={banners} />
+          <ChannelBannerField controller={bannerController} />
         </SettingSection>
       </Card>
 
@@ -205,8 +238,8 @@ export function ChannelSettingContent({ profile, banners }: Props) {
         show={show}
         isSaving={isSaving}
         canSave={canSubmit}
-        onSave={submit}
-        onReset={handleReset}
+        onSave={() => void handleSave()}
+        onReset={handleResetAll}
       />
     </SettingsPage>
   );

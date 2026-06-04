@@ -1,12 +1,12 @@
 "use client";
-// 채널 홈 배너 CRUD 필드. 이미지 업로드 + 제목 + 링크 등록, 드래그&드롭 순서 변경, 삭제(즉시 반영).
+// 채널 홈 배너 CRUD 필드. 추가/삭제는 즉시 반영, 순서는 드래그로 로컬 변경 후 "변경사항 저장"에서 커밋.
 
 import DeleteConfirmDialog from "@/components/common/delete-confirm-dialog";
 import { HintNote } from "@/components/common/hint-note";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
-import { useChannelBanners } from "@/hooks/channel/use-channel-banners";
+import type { ChannelBannersController } from "@/hooks/channel/use-channel-banners";
 import {
   CHANNEL_BANNER_LINK_MAX,
   CHANNEL_BANNER_MAX,
@@ -23,21 +23,12 @@ const ACCEPT = "image/jpeg,image/png,image/webp,image/gif,image/bmp";
 const HTTP_URL_PATTERN = /^https?:\/\/.+/;
 
 interface Props {
-  initialBanners: ChannelBanner[];
+  controller: ChannelBannersController;
 }
 
-export function ChannelBannerField({ initialBanners }: Props) {
-  const {
-    banners,
-    addBanner,
-    isAdding,
-    deleteBanner,
-    isDeleting,
-    setOrder,
-    commitOrder,
-    isReordering,
-    canAddMore,
-  } = useChannelBanners(initialBanners);
+export function ChannelBannerField({ controller }: Props) {
+  const { banners, addBanner, isAdding, deleteBanner, isDeleting, setOrder, canAddMore } =
+    controller;
 
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -45,7 +36,6 @@ export function ChannelBannerField({ initialBanners }: Props) {
   const [linkUrl, setLinkUrl] = useState("");
   const [pendingDelete, setPendingDelete] = useState<ChannelBanner | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const dragStartOrderRef = useRef<string[] | null>(null);
 
   useEffect(() => {
     return () => {
@@ -82,21 +72,7 @@ export function ChannelBannerField({ initialBanners }: Props) {
     });
   };
 
-  const busy = isAdding || isDeleting || isReordering;
-
-  const handleDragStart = () => {
-    dragStartOrderRef.current = banners.map((banner) => banner.id);
-  };
-
-  const handleDragEnd = () => {
-    const before = dragStartOrderRef.current;
-    const after = banners.map((banner) => banner.id);
-    dragStartOrderRef.current = null;
-    // 순서가 실제로 바뀐 경우에만 서버 커밋.
-    if (before && before.join("|") !== after.join("|")) {
-      commitOrder(after);
-    }
-  };
+  const busy = isAdding || isDeleting;
 
   return (
     <div className="flex flex-col gap-4">
@@ -187,8 +163,6 @@ export function ChannelBannerField({ initialBanners }: Props) {
               banner={banner}
               disabled={busy}
               onRequestDelete={() => setPendingDelete(banner)}
-              onDragStart={handleDragStart}
-              onDragEnd={handleDragEnd}
             />
           ))}
         </Reorder.Group>
@@ -197,8 +171,8 @@ export function ChannelBannerField({ initialBanners }: Props) {
       )}
 
       <HintNote>
-        드래그해서 순서를 바꿀 수 있어요. 채널 홈 상단에 노출되는 외부 링크 배너예요. 최대{" "}
-        {CHANNEL_BANNER_MAX}개, 1MB 이하(jpg, png, webp, gif, bmp).
+        드래그해서 순서를 바꾼 뒤 변경사항 저장을 누르면 반영돼요. 채널 홈 상단에 노출되는 외부 링크
+        배너예요. 최대 {CHANNEL_BANNER_MAX}개, 1MB 이하(jpg, png, webp, gif, bmp).
       </HintNote>
 
       <DeleteConfirmDialog
@@ -206,8 +180,8 @@ export function ChannelBannerField({ initialBanners }: Props) {
         onOpenChange={(open) => {
           if (!open) setPendingDelete(null);
         }}
-        title="배너를 삭제할까요?"
-        description="삭제한 배너는 채널 홈에서 바로 사라지며 되돌릴 수 없어요."
+        title="배너 삭제"
+        description="삭제하면 채널 홈에서 사라지며 복구할 수 없어요."
         isPending={isDeleting}
         onConfirm={() => {
           if (!pendingDelete) return;
@@ -226,17 +200,9 @@ interface BannerReorderItemProps {
   banner: ChannelBanner;
   disabled: boolean;
   onRequestDelete: () => void;
-  onDragStart: () => void;
-  onDragEnd: () => void;
 }
 
-function BannerReorderItem({
-  banner,
-  disabled,
-  onRequestDelete,
-  onDragStart,
-  onDragEnd,
-}: BannerReorderItemProps) {
+function BannerReorderItem({ banner, disabled, onRequestDelete }: BannerReorderItemProps) {
   const controls = useDragControls();
 
   return (
@@ -244,8 +210,6 @@ function BannerReorderItem({
       value={banner}
       dragListener={false}
       dragControls={controls}
-      onDragStart={onDragStart}
-      onDragEnd={onDragEnd}
       className="border-border/60 bg-background flex items-center gap-2.5 rounded-xl border p-2.5"
     >
       <button

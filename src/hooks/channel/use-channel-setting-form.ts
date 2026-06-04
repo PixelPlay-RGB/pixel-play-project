@@ -148,6 +148,7 @@ export function useChannelSettingForm(initialBio: string) {
     control,
     errors,
     isDirty,
+    canSave,
     isSaving,
     isBusy,
     canSubmit,
@@ -156,6 +157,7 @@ export function useChannelSettingForm(initialBio: string) {
     nicknameAvailability,
     handleFileChange,
     handleReset,
-    submit,
+    // 프로필(사진·닉네임)+소개 저장 실행(검증 포함). 배너 순서 커밋과 함께 호출된다.
+    runSave: submit,
   };
 }

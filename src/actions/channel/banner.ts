@@ -16,6 +16,22 @@ const BANNER_BUCKET = "channel-media";
 const MAX_BANNER_SIZE = 1 * 1024 * 1024; // 1MB
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/bmp"];
 
+// storage 객체 이름을 배너 제목 기반으로 생성(UUID 대신). 충돌 방지를 위해 짧은 접미사만 덧붙인다.
+// 한글 제목은 그대로 유지하고, 경로/특수문자만 제거한다(공개 URL은 세그먼트 인코딩으로 처리).
+function buildBannerObjectName(title: string, fileName: string): string {
+  const ext = (fileName.split(".").pop() ?? "png").toLowerCase().replace(/[^a-z0-9]/g, "") || "png";
+  const base =
+    title
+      .trim()
+      .replace(/[\\/]+/g, " ")
+      .replace(/\s+/g, "-")
+      .replace(/[^\p{L}\p{N}_-]/gu, "")
+      .replace(/-+/g, "-")
+      .replace(/^[-_]+|[-_]+$/g, "")
+      .slice(0, 40) || "banner";
+  return `${base}-${crypto.randomUUID().slice(0, 8)}.${ext}`;
+}
+
 export async function addChannelBannerAction(
   formData: FormData,
 ): Promise<AppActionResult<ChannelBanner[]>> {
@@ -46,8 +62,7 @@ export async function addChannelBannerAction(
     return { success: false, code: APP_MESSAGE_CODE.error.auth.authInfoNotFound };
   }
 
-  const ext = (file.name.split(".").pop() ?? "png").toLowerCase();
-  const imagePath = `banners/${user.id}/${crypto.randomUUID()}.${ext}`;
+  const imagePath = `banners/${user.id}/${buildBannerObjectName(parsed.data.title, file.name)}`;
   const { error: uploadError } = await userClient.storage
     .from(BANNER_BUCKET)
     .upload(imagePath, file, { contentType: file.type, upsert: false });
