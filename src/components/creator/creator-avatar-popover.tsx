@@ -4,7 +4,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronRight, Radio } from "lucide-react";
+import { ChevronRight, Tv } from "lucide-react";
 
 import CreatorFollowingButton from "@/components/following/creator-following-button";
 import CreatorUnfollowDialog from "@/components/creator/creator-unfollow-dialog";
@@ -131,39 +131,36 @@ export default function CreatorAvatarPopover({
                   <span className="bg-live size-1.5 animate-pulse rounded-full" />
                   지금 라이브 중
                 </span>
-              ) : (
-                <p className="text-muted-foreground mt-1 truncate text-xs font-medium">
-                  {isOwnChannel ? "내 채널" : "채널 보기"}
-                </p>
-              )}
+              ) : isOwnChannel ? (
+                <p className="text-muted-foreground mt-1 truncate text-xs font-medium">내 채널</p>
+              ) : null}
             </div>
             <ChevronRight className="text-muted-foreground/70 group-hover/profile:text-brand size-4 shrink-0 transition-all group-hover/profile:translate-x-0.5" />
           </Link>
 
-          <div className="border-border/60 bg-muted/30 flex flex-col gap-2 border-t px-3 py-3">
-            {/* 라이브 중이면 시청 페이지 버튼만 노출. 채널 이동은 위 프로필 카드 클릭으로. */}
-            {isLive && (
-              <Link
-                href={`/live/${creatorId}`}
-                className={cn(
-                  buttonVariants({ size: "sm" }),
-                  "h-8 w-full justify-center gap-1.5 rounded-full px-3 text-xs font-black",
-                  "bg-live hover:bg-live/85 shadow-live/25 text-white shadow-sm hover:shadow-md",
-                )}
-              >
-                <Radio className="size-3.5" />
-                라이브 보기
-              </Link>
-            )}
+          {/* 채널 이동 + 팔로우를 한 줄에 반반으로. 채널 보기는 secondary, 팔로우는 primary 톤. */}
+          <div className="border-border/60 bg-muted/30 flex items-center gap-2 border-t px-3 py-3">
+            <Link
+              href={`/channel/${creatorId}`}
+              className={cn(
+                buttonVariants({ variant: "outline", size: "sm" }),
+                "h-8 flex-1 justify-center gap-1.5 rounded-full px-3 text-xs font-bold",
+              )}
+            >
+              <Tv className="size-3.5" />
+              채널 보기
+            </Link>
 
-            <CreatorFollowingButton
-              creatorNickname={creatorNickname}
-              isFollowing={isFollowing}
-              isOwnChannel={isOwnChannel}
-              isPending={isPending}
-              onClick={handleFollowingClick}
-              className="w-full"
-            />
+            <div className="flex-1">
+              <CreatorFollowingButton
+                creatorNickname={creatorNickname}
+                isFollowing={isFollowing}
+                isOwnChannel={isOwnChannel}
+                isPending={isPending}
+                onClick={handleFollowingClick}
+                className="w-full"
+              />
+            </div>
           </div>
         </PopoverContent>
       </Popover>
