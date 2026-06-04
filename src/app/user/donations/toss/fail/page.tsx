@@ -1,28 +1,36 @@
-// Toss Payments 결제 인증 실패 리다이렉트를 처리합니다.
+// Toss Payments 결제 실패 리다이렉트를 안전한 후원 지갑 상태 메시지로 변환합니다.
+import { markTossWalletChargeFailure } from "@/lib/payments/toss-wallet-charge";
 import { redirect } from "next/navigation";
 
 interface Props {
   searchParams: Promise<{
     code?: string | string[];
     message?: string | string[];
+    orderId?: string | string[];
   }>;
 }
 
+const TOSS_CANCEL_ERROR_CODES = new Set(["PAY_PROCESS_CANCELED", "PAY_PROCESS_ABORTED"]);
+
 export default async function TossPaymentFailRedirectPage({ searchParams }: Props) {
   const params = await searchParams;
-  const nextParams = new URLSearchParams({ paymentStatus: "fail" });
+  const code = readSingleValue(params.code);
+  const message = readSingleValue(params.message);
+  const paymentStatus = TOSS_CANCEL_ERROR_CODES.has(code) ? "charge_canceled" : "charge_failed";
 
-  appendSingleValue(nextParams, "code", params.code);
+  if (code || message) {
+    console.error("Toss 결제 실패 리다이렉트", { code, message });
+  }
 
-  redirect(`/user/donations?${nextParams.toString()}`);
+  await markTossWalletChargeFailure({
+    orderId: readSingleValue(params.orderId),
+    code,
+    status: paymentStatus === "charge_canceled" ? "canceled" : "failed",
+  });
+
+  redirect(`/user/donations?paymentStatus=${paymentStatus}`);
 }
 
-function appendSingleValue(
-  params: URLSearchParams,
-  key: string,
-  value: string | string[] | undefined,
-) {
-  if (typeof value === "string" && value) {
-    params.set(key, value);
-  }
+function readSingleValue(value: string | string[] | undefined) {
+  return typeof value === "string" ? value : "";
 }

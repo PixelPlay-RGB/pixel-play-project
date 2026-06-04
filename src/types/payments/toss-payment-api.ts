@@ -5,3 +5,11 @@ export interface TossPaymentPrepareResponse {
   orderName: string;
   amount: number;
 }
+
+export interface TossPaymentConfirmResponse {
+  orderId: string;
+  amount: number;
+  paymentKey: string;
+  balanceAfter: number | null;
+  replayed: boolean;
+}

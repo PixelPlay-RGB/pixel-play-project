@@ -37,6 +37,9 @@ export const APP_MESSAGE_CODE = {
       followed: "success.following.followed",
       unfollowed: "success.following.unfollowed",
     },
+    donation: {
+      chargeConfirmed: "success.donation.chargeConfirmed",
+    },
   },
   error: {
     common: {
@@ -92,6 +95,9 @@ export const APP_MESSAGE_CODE = {
       invalidChargeAmount: "error.donation.invalidChargeAmount",
       loadFailed: "error.donation.loadFailed",
       prepareChargeFailed: "error.donation.prepareChargeFailed",
+      confirmChargeFailed: "error.donation.confirmChargeFailed",
+      chargeFailed: "error.donation.chargeFailed",
+      chargeCanceled: "error.donation.chargeCanceled",
     },
     message: {
       invalidInput: "error.message.invalidInput",

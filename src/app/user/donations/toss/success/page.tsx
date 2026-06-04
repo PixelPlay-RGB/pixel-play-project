@@ -1,4 +1,5 @@
-// Toss Payments 결제 인증 성공 리다이렉트를 처리합니다.
+// Toss Payments 결제 성공 리다이렉트에서 서버 승인 처리를 수행합니다.
+import { confirmTossWalletCharge } from "@/lib/payments/toss-wallet-charge";
 import { redirect } from "next/navigation";
 
 interface Props {
@@ -6,27 +7,23 @@ interface Props {
     amount?: string | string[];
     orderId?: string | string[];
     paymentKey?: string | string[];
-    paymentType?: string | string[];
   }>;
 }
 
 export default async function TossPaymentSuccessRedirectPage({ searchParams }: Props) {
   const params = await searchParams;
-  const nextParams = new URLSearchParams({ paymentStatus: "success" });
-
-  appendSingleValue(nextParams, "amount", params.amount);
-  appendSingleValue(nextParams, "orderId", params.orderId);
-  appendSingleValue(nextParams, "paymentType", params.paymentType);
+  const result = await confirmTossWalletCharge({
+    amount: readSingleValue(params.amount),
+    orderId: readSingleValue(params.orderId),
+    paymentKey: readSingleValue(params.paymentKey),
+  });
+  const nextParams = new URLSearchParams({
+    paymentStatus: result.success ? "charge_success" : "charge_failed",
+  });
 
   redirect(`/user/donations?${nextParams.toString()}`);
 }
 
-function appendSingleValue(
-  params: URLSearchParams,
-  key: string,
-  value: string | string[] | undefined,
-) {
-  if (typeof value === "string" && value) {
-    params.set(key, value);
-  }
+function readSingleValue(value: string | string[] | undefined) {
+  return typeof value === "string" ? value : "";
 }

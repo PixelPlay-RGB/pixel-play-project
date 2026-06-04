@@ -4,6 +4,7 @@ import { SettingsPage } from "@/components/common/settings-page";
 import { UserDonationHistoryTable } from "@/components/donations/user-donation-history-table";
 import { WalletChargeDialog } from "@/components/donations/wallet-charge-card";
 import type { AppMessageCode } from "@/constants/common/app-message-code";
+import { cn } from "@/lib/utils";
 import type {
   UserDonationSnapshot,
   UserWalletChargeHistoryItem,
@@ -14,6 +15,7 @@ import { getAppMessage } from "@/utils/common/app-message";
 interface Props {
   snapshot: UserDonationSnapshot | null;
   errorCode?: AppMessageCode;
+  paymentResultCode?: AppMessageCode;
 }
 
 interface MonthlyDonationStats {
@@ -50,12 +52,13 @@ const PAYMENT_STATUS_SUMMARY: Record<
   },
 };
 
-export function UserDonationsPage({ snapshot, errorCode }: Props) {
+export function UserDonationsPage({ snapshot, errorCode, paymentResultCode }: Props) {
   if (!snapshot) {
     const message = getAppMessage(errorCode);
 
     return (
       <SettingsPage {...USER_DONATIONS_PAGE_HEADER}>
+        {paymentResultCode ? <PaymentResultNotice code={paymentResultCode} /> : null}
         <SettingsCard title={message.title}>
           <p className="text-muted-foreground text-sm">{message.description}</p>
         </SettingsCard>
@@ -69,6 +72,7 @@ export function UserDonationsPage({ snapshot, errorCode }: Props) {
   return (
     <SettingsPage {...USER_DONATIONS_PAGE_HEADER}>
       <DonationBalanceHero snapshot={snapshot} monthlyStats={monthlyStats} />
+      {paymentResultCode ? <PaymentResultNotice code={paymentResultCode} /> : null}
 
       <section className="grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(20rem,0.9fr)]">
         <UserDonationHistoryTable snapshot={snapshot} />
@@ -133,6 +137,29 @@ function DonationBalanceHero({
         </div>
       </div>
     </section>
+  );
+}
+
+function PaymentResultNotice({ code }: { code: AppMessageCode }) {
+  const message = getAppMessage(code);
+  const isSuccess = code.startsWith("success.");
+
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className={cn(
+        "rounded-lg border px-4 py-3 shadow-sm",
+        isSuccess
+          ? "border-brand/20 bg-brand/10 text-brand"
+          : "border-live/20 bg-live/10 text-live",
+      )}
+    >
+      <p className="text-sm font-black">{message.title}</p>
+      {message.description ? (
+        <p className="mt-1 text-sm text-current/80">{message.description}</p>
+      ) : null}
+    </div>
   );
 }
 
