@@ -89,7 +89,13 @@ export default function CommunityComposer({ creatorId, postId, initialContent = 
             type="button"
             variant="ghost"
             disabled={isPending}
-            onClick={() => router.back()}
+            onClick={() =>
+              router.push(
+                isEdit && postId
+                  ? `/channel/${creatorId}/community/${postId}`
+                  : `/channel/${creatorId}/community`,
+              )
+            }
             className="h-9 rounded-xl px-4 text-sm font-semibold"
           >
             취소
