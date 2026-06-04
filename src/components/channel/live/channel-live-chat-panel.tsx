@@ -9,11 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { MESSAGE_CONTENT_MAX_LENGTH } from "@/constants/message/message";
-import { createClient } from "@/lib/supabase/client";
+import { useChannelLiveChatSubscription } from "@/hooks/channel/use-channel-live-chat-subscription";
 import { cn } from "@/lib/utils";
 import { messageContentSchema } from "@/lib/zod/message";
-import type { Json } from "@/types/database.types";
-import type { LiveMessageRow } from "@/types/live/live";
 import { toastAppError } from "@/utils/common/toast-message";
 import { MessageCircle, Pause, Play, SendHorizontal } from "lucide-react";
 import { type FormEvent, useEffect, useState, useTransition } from "react";
@@ -26,34 +24,6 @@ interface Props {
   onToggleChatPaused: () => void;
 }
 
-function readJsonObject(value: Json): Record<string, Json | undefined> {
-  return value && typeof value === "object" && !Array.isArray(value)
-    ? (value as Record<string, Json | undefined>)
-    : {};
-}
-
-function readString(value: Json | undefined) {
-  const trimmed = typeof value === "string" ? value.trim() : "";
-
-  return trimmed.length > 0 ? trimmed : null;
-}
-
-function toChannelLiveChatMessage(message: LiveMessageRow): ChannelLiveChatMessage | null {
-  if (message.message_type !== "chat") {
-    return null;
-  }
-
-  const metadata = readJsonObject(message.metadata);
-
-  return {
-    authorName: readString(metadata.senderNickname) ?? "시청자",
-    content: message.content,
-    createdAt: message.created_at,
-    id: message.id,
-    isCreator: readString(metadata.senderRole) === "creator",
-  };
-}
-
 export default function ChannelLiveChatPanel({
   broadcastId,
   initialMessages,
@@ -61,7 +31,10 @@ export default function ChannelLiveChatPanel({
   onMessagesChange,
   onToggleChatPaused,
 }: Props) {
-  const [messages, setMessages] = useState(initialMessages);
+  const { appendMessage, messages } = useChannelLiveChatSubscription({
+    broadcastId,
+    initialMessages,
+  });
   const [draft, setDraft] = useState("");
   const [isSendPending, startSendTransition] = useTransition();
   const isInputDisabled = !broadcastId || liveState.isChatPaused || isSendPending;
@@ -69,43 +42,6 @@ export default function ChannelLiveChatPanel({
   useEffect(() => {
     onMessagesChange?.(messages);
   }, [messages, onMessagesChange]);
-
-  useEffect(() => {
-    if (!broadcastId) {
-      return;
-    }
-
-    const supabase = createClient();
-    const channel = supabase
-      .channel(`channel-live-chat:${broadcastId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          filter: `broadcast_id=eq.${broadcastId}`,
-          schema: "public",
-          table: "live_message",
-        },
-        (payload) => {
-          const nextMessage = toChannelLiveChatMessage(payload.new as LiveMessageRow);
-
-          if (!nextMessage) return;
-
-          setMessages((currentMessages) => {
-            if (currentMessages.some((message) => message.id === nextMessage.id)) {
-              return currentMessages;
-            }
-
-            return [...currentMessages, nextMessage].slice(-50);
-          });
-        },
-      )
-      .subscribe();
-
-    return () => {
-      void supabase.removeChannel(channel);
-    };
-  }, [broadcastId]);
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -137,14 +73,7 @@ export default function ChannelLiveChatPanel({
       }
 
       const sentMessage = result.data.message;
-
-      setMessages((currentMessages) => {
-        if (currentMessages.some((message) => message.id === sentMessage.id)) {
-          return currentMessages;
-        }
-
-        return [...currentMessages, sentMessage].slice(-50);
-      });
+      appendMessage(sentMessage);
     });
   };
 
