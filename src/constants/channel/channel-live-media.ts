@@ -5,6 +5,8 @@ import { LIVE_STREAM_SERVER_URL } from "@/constants/live/live-overlay";
 const LOCAL_MEDIAMTX_RTMP_SERVER_URL = "rtmp://127.0.0.1:1935";
 const LOCAL_MEDIAMTX_HLS_BASE_URL = "http://127.0.0.1:8888";
 const LOCAL_MEDIAMTX_STREAM_PATH = "mystream";
+const DEFAULT_RTMP_PORT = "1935";
+const DEFAULT_HLS_PORT = "8888";
 
 function trimSlashes(value: string) {
   return value.replace(/^\/+|\/+$/g, "");
@@ -14,11 +16,31 @@ function trimTrailingSlashes(value: string) {
   return value.replace(/\/+$/g, "");
 }
 
+function isLocalHostname(hostname: string) {
+  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
+}
+
 function getRtmpServerPath(value: string) {
   try {
     return trimSlashes(new URL(value).pathname);
   } catch {
     return "";
+  }
+}
+
+function getHlsBaseUrlFromRtmpServerUrl(value: string) {
+  try {
+    const url = new URL(value);
+
+    if (isLocalHostname(url.hostname)) {
+      return `http://${url.hostname}:${DEFAULT_HLS_PORT}`;
+    }
+
+    const port = url.port && url.port !== DEFAULT_RTMP_PORT ? `:${url.port}` : "";
+
+    return `https://${url.hostname}${port}`;
+  } catch {
+    return null;
   }
 }
 
@@ -36,6 +58,16 @@ function getMediaConfigValue(value: string | undefined, key: string, localDefaul
   throw new Error(`${key} 환경 변수가 필요합니다.`);
 }
 
+function getHlsBaseUrl() {
+  const configuredValue = process.env.NEXT_PUBLIC_MEDIAMTX_HLS_BASE_URL?.trim();
+
+  if (configuredValue) {
+    return configuredValue;
+  }
+
+  return getHlsBaseUrlFromRtmpServerUrl(LIVE_STREAM_SERVER_URL) ?? LOCAL_MEDIAMTX_HLS_BASE_URL;
+}
+
 export const CHANNEL_LIVE_MEDIA_CONFIG = {
   get rtmpServerUrl() {
     return getMediaConfigValue(
@@ -45,11 +77,7 @@ export const CHANNEL_LIVE_MEDIA_CONFIG = {
     );
   },
   get hlsBaseUrl() {
-    return getMediaConfigValue(
-      process.env.NEXT_PUBLIC_MEDIAMTX_HLS_BASE_URL,
-      "NEXT_PUBLIC_MEDIAMTX_HLS_BASE_URL",
-      LOCAL_MEDIAMTX_HLS_BASE_URL,
-    );
+    return getHlsBaseUrl();
   },
   get streamPath() {
     return getMediaConfigValue(
