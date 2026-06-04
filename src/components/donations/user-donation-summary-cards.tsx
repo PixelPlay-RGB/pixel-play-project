@@ -14,12 +14,12 @@ export function UserDonationSummaryCards({ summary }: Props) {
       icon: WalletCards,
     },
     {
-      label: "최근 후원",
+      label: "보낸 후원",
       value: formatWon(summary.sentDonationAmount),
       icon: CircleDollarSign,
     },
     {
-      label: "최근 충전",
+      label: "지갑 충전",
       value: formatWon(summary.chargeAmount),
       icon: CreditCard,
     },

@@ -7,7 +7,8 @@ import type {
   WalletTransactionStatus,
   WalletTransactionType,
 } from "@/types/donations/user-donations";
-import { ArrowDownLeft, CircleDollarSign, Gift, ReceiptText } from "lucide-react";
+import { CircleDollarSign, CreditCard, Gift, ReceiptText, RotateCcw } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
 interface Props {
@@ -15,8 +16,8 @@ interface Props {
 }
 
 const TRANSACTION_TYPE_LABEL: Record<WalletTransactionType, string> = {
-  charge: "충전",
-  donation_spend: "후원",
+  charge: "지갑 충전",
+  donation_spend: "보낸 후원",
   refund: "환불",
 };
 
@@ -27,12 +28,18 @@ const TRANSACTION_STATUS_LABEL: Record<WalletTransactionStatus, string> = {
   canceled: "취소",
 };
 
+const TRANSACTION_TYPE_ICON: Record<WalletTransactionType, LucideIcon> = {
+  charge: CreditCard,
+  donation_spend: Gift,
+  refund: RotateCcw,
+};
+
 export function UserDonationHistoryTable({ snapshot }: Props) {
   return (
     <section className="grid gap-4 xl:grid-cols-2">
       <SettingsCard
         title="최근 지갑 거래"
-        description="충전, 후원, 환불 내역을 최신순으로 표시합니다."
+        description="충전, 보낸 후원, 환불로 발생한 잔액 변동을 최신순으로 표시합니다."
       >
         <TransactionList transactions={snapshot.transactions} />
       </SettingsCard>
@@ -57,41 +64,45 @@ function TransactionList({ transactions }: { transactions: UserWalletTransaction
 
   return (
     <ul className="divide-border divide-y">
-      {transactions.map((transaction) => (
-        <li
-          key={transaction.id}
-          className="flex flex-col gap-3 py-4 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between"
-        >
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="bg-muted text-muted-foreground flex size-10 shrink-0 items-center justify-center rounded-lg">
-              <ArrowDownLeft className="size-5" />
-            </div>
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="text-foreground text-sm font-semibold">
-                  {TRANSACTION_TYPE_LABEL[transaction.type]}
-                </p>
-                <span className="text-muted-foreground rounded-md border px-2 py-0.5 text-xs">
-                  {TRANSACTION_STATUS_LABEL[transaction.status]}
-                </span>
+      {transactions.map((transaction) => {
+        const TransactionIcon = TRANSACTION_TYPE_ICON[transaction.type];
+
+        return (
+          <li
+            key={transaction.id}
+            className="flex flex-col gap-3 py-4 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between"
+          >
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="bg-muted text-muted-foreground flex size-10 shrink-0 items-center justify-center rounded-lg">
+                <TransactionIcon className="size-5" />
               </div>
-              <p className="text-muted-foreground mt-1 text-xs">
-                {formatKstDateTime(transaction.createdAt)}
-              </p>
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-foreground text-sm font-semibold">
+                    {TRANSACTION_TYPE_LABEL[transaction.type]}
+                  </p>
+                  <span className="text-muted-foreground rounded-md border px-2 py-0.5 text-xs">
+                    {TRANSACTION_STATUS_LABEL[transaction.status]}
+                  </span>
+                </div>
+                <p className="text-muted-foreground mt-1 text-xs">
+                  {formatKstDateTime(transaction.createdAt)}
+                </p>
+              </div>
             </div>
-          </div>
-          <div className="text-left sm:text-right">
-            <p className="text-foreground text-sm font-bold">
-              {formatSignedWon(transaction.amountDelta)}
-            </p>
-            {transaction.balanceAfter !== null && (
-              <p className="text-muted-foreground mt-1 text-xs">
-                잔액 {formatWon(transaction.balanceAfter)}
+            <div className="text-left sm:text-right">
+              <p className="text-foreground text-sm font-bold">
+                {formatSignedWon(transaction.amountDelta)}
               </p>
-            )}
-          </div>
-        </li>
-      ))}
+              {transaction.balanceAfter !== null && (
+                <p className="text-muted-foreground mt-1 text-xs">
+                  잔액 {formatWon(transaction.balanceAfter)}
+                </p>
+              )}
+            </div>
+          </li>
+        );
+      })}
     </ul>
   );
 }
