@@ -112,31 +112,42 @@ export default function CreatorAvatarPopover({
         </PopoverTrigger>
 
         <PopoverContent className="w-72 gap-0 overflow-hidden p-0" align="start" sideOffset={10}>
-          {/* 프로필 카드 전체가 채널로 이동하는 링크. hover 시 brand 강조 + chevron 이동으로 클릭 가능함을 안내. */}
-          <Link
-            href={`/channel/${creatorId}`}
-            aria-label={`${creatorNickname} 채널로 이동`}
-            className="group/profile hover:bg-muted/50 flex min-w-0 items-center gap-3 px-4 pt-4 pb-3.5 transition-colors"
-          >
-            <Avatar className={cn("size-12 shrink-0", isLive && "ring-live/80 ring-2")} size="lg">
-              <AvatarImage src={avatarSrc} alt={`${creatorNickname} 프로필 이미지`} />
-              <AvatarFallback>{fallbackText}</AvatarFallback>
-            </Avatar>
-            <div className="min-w-0 flex-1">
-              <p className="text-foreground group-hover/profile:text-brand truncate text-sm font-black transition-colors">
-                {creatorNickname}
-              </p>
-              {isLive ? (
+          {/* 라이브 중이면 프로필 카드 = 라이브 시청 링크(hover 강조 + chevron). 아니면 정적 정보 카드(채널 이동은 하단 버튼). */}
+          {isLive ? (
+            <Link
+              href={`/live/${creatorId}`}
+              aria-label={`${creatorNickname} 라이브 보기`}
+              className="group/profile hover:bg-muted/50 flex min-w-0 items-center gap-3 px-4 pt-4 pb-3.5 transition-colors"
+            >
+              <Avatar className="ring-live/80 size-12 shrink-0 ring-2" size="lg">
+                <AvatarImage src={avatarSrc} alt={`${creatorNickname} 프로필 이미지`} />
+                <AvatarFallback>{fallbackText}</AvatarFallback>
+              </Avatar>
+              <div className="min-w-0 flex-1">
+                <p className="text-foreground group-hover/profile:text-brand truncate text-sm font-black transition-colors">
+                  {creatorNickname}
+                </p>
                 <span className="text-live mt-1 inline-flex items-center gap-1.5 text-xs font-bold">
                   <span className="bg-live size-1.5 animate-pulse rounded-full" />
                   지금 라이브 중
                 </span>
-              ) : isOwnChannel ? (
-                <p className="text-muted-foreground mt-1 truncate text-xs font-medium">내 채널</p>
-              ) : null}
+              </div>
+              <ChevronRight className="text-muted-foreground/70 group-hover/profile:text-brand size-4 shrink-0 transition-all group-hover/profile:translate-x-0.5" />
+            </Link>
+          ) : (
+            <div className="flex min-w-0 items-center gap-3 px-4 pt-4 pb-3.5">
+              <Avatar className="size-12 shrink-0" size="lg">
+                <AvatarImage src={avatarSrc} alt={`${creatorNickname} 프로필 이미지`} />
+                <AvatarFallback>{fallbackText}</AvatarFallback>
+              </Avatar>
+              <div className="min-w-0 flex-1">
+                <p className="text-foreground truncate text-sm font-black">{creatorNickname}</p>
+                {isOwnChannel && (
+                  <p className="text-muted-foreground mt-1 truncate text-xs font-medium">내 채널</p>
+                )}
+              </div>
             </div>
-            <ChevronRight className="text-muted-foreground/70 group-hover/profile:text-brand size-4 shrink-0 transition-all group-hover/profile:translate-x-0.5" />
-          </Link>
+          )}
 
           {/* 채널 이동 + 팔로우를 한 줄에 반반으로. 채널 보기는 secondary, 팔로우는 primary 톤. */}
           <div className="border-border/60 bg-muted/30 flex items-center gap-2 border-t px-3 py-3">
