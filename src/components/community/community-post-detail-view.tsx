@@ -3,6 +3,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { ChevronLeft } from "lucide-react";
 import { useState } from "react";
 
 import CommunityActionMenu from "@/components/community/community-action-menu";
@@ -12,10 +13,8 @@ import CommunityDeleteDialog from "@/components/community/community-delete-dialo
 import CommunityLikeButton from "@/components/community/community-like-button";
 import CommunityPostPager from "@/components/community/community-post-pager";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { buttonVariants } from "@/components/ui/button";
 import { useCommunityPostDetail } from "@/hooks/community/use-community-post-detail";
 import { useDeleteCommunityPost } from "@/hooks/community/use-delete-community-post";
-import { cn } from "@/lib/utils";
 import type {
   CommunityAdjacentPosts,
   CommunityCommentsResult,
@@ -62,12 +61,10 @@ export default function CommunityPostDetailView({
       <div className="flex items-center justify-between gap-2">
         <Link
           href={communityHref}
-          className={cn(
-            buttonVariants({ variant: "outline", size: "sm" }),
-            "h-8 rounded-lg px-3 text-xs font-semibold",
-          )}
+          className="text-muted-foreground hover:text-foreground inline-flex w-fit items-center gap-0.5 text-sm font-semibold"
         >
-          목록
+          <ChevronLeft className="size-4" />
+          목록으로
         </Link>
 
         <CommunityPostPager creatorId={creatorId} neighbors={neighbors} />
@@ -123,6 +120,7 @@ export default function CommunityPostDetailView({
         <div className="mt-4 flex items-center justify-end">
           <CommunityLikeButton
             postId={detail.id}
+            authorId={detail.creatorId}
             isLiked={detail.isLiked}
             likeCount={detail.likeCount}
           />

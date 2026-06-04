@@ -1,6 +1,7 @@
 "use client";
 // 댓글/대댓글 작성 입력창. 텍스트영역 + 하단 한 줄(이모지·글자수·등록). 로그인 유저만 작성.
 
+import { SendHorizontal } from "lucide-react";
 import { useState } from "react";
 
 import ChatEmojiPicker from "@/components/chat-room/chat-emoji-picker";
@@ -116,11 +117,17 @@ export default function CommunityCommentComposer({
           </span>
           <Button
             type="submit"
+            size="icon-lg"
+            variant="ghost"
             disabled={!isSubmittable || createComment.isPending}
             aria-label={parentId ? "답글 등록" : "댓글 등록"}
-            className="bg-brand hover:bg-brand/85 h-8 rounded-xl px-4 text-sm font-bold text-white"
+            className="text-brand hover:bg-brand/10 hover:text-brand shrink-0"
           >
-            {createComment.isPending ? <Spinner className="size-4" /> : "등록"}
+            {createComment.isPending ? (
+              <Spinner className="size-5" />
+            ) : (
+              <SendHorizontal className="size-5" />
+            )}
           </Button>
         </div>
       </div>
