@@ -7,6 +7,8 @@ import { createAdminClient } from "@/lib/supabase/admin-client";
 import { communityCommentContentSchema, communityPostContentSchema } from "@/lib/zod/community";
 import type { AppActionResult } from "@/types/common/action";
 import type {
+  CommunityComment,
+  CommunityCommentSort,
   CommunityCommentsResult,
   CommunityPostDetail,
   CommunityPostLikeResult,
@@ -15,6 +17,7 @@ import type {
 import { parseCommunityPostLikeResult } from "@/utils/community/community-parser";
 import {
   getChannelCommunityPosts,
+  getCommunityCommentReplies,
   getCommunityComments,
   getCommunityPostDetail,
 } from "@/utils/community/community-server";
@@ -34,12 +37,20 @@ export async function fetchCommunityPostDetailAction(
   return getCommunityPostDetail(postId);
 }
 
-// 댓글 목록 페이지네이션
+// 댓글 목록 페이지네이션(+ 정렬)
 export async function fetchCommunityCommentsAction(
   postId: string,
   page: number,
+  sort: CommunityCommentSort = "oldest",
 ): Promise<AppActionResult<CommunityCommentsResult>> {
-  return getCommunityComments(postId, page);
+  return getCommunityComments(postId, page, sort);
+}
+
+// 대댓글 목록 조회(토글 시 지연 로드)
+export async function fetchCommunityCommentRepliesAction(
+  parentId: string,
+): Promise<AppActionResult<CommunityComment[]>> {
+  return getCommunityCommentReplies(parentId);
 }
 
 // 게시글 작성 (작성자 = 자기 채널 주인)
@@ -158,10 +169,37 @@ export async function toggleCommunityPostLikeAction(
   return { success: true, data: parseCommunityPostLikeResult(data) };
 }
 
-// 댓글 작성 (로그인 누구나)
+// 댓글 좋아요 토글 (로그인 누구나)
+export async function toggleCommunityCommentLikeAction(
+  commentId: string,
+): Promise<AppActionResult<CommunityPostLikeResult>> {
+  const actor = await getAuthenticatedActorId({
+    logLabel: "커뮤니티 댓글 좋아요 처리 중 인증 유저 조회 실패",
+  });
+
+  if (!actor.success) {
+    return { success: false, code: actor.result.code };
+  }
+
+  const supabase = createAdminClient();
+  const { data, error } = await supabase.rpc("toggle_community_comment_like", {
+    p_actor_user_id: actor.userId,
+    p_comment_id: commentId,
+  });
+
+  if (error) {
+    console.error("커뮤니티 댓글 좋아요 처리 실패", error);
+    return { success: false, code: APP_MESSAGE_CODE.error.community.likeFailed };
+  }
+
+  return { success: true, data: parseCommunityPostLikeResult(data) };
+}
+
+// 댓글/대댓글 작성 (로그인 누구나). parentId 있으면 대댓글.
 export async function createCommunityCommentAction(
   postId: string,
   content: string,
+  parentId?: string,
 ): Promise<AppActionResult<{ commentId: string }>> {
   const parsed = communityCommentContentSchema.safeParse(content);
 
@@ -182,6 +220,7 @@ export async function createCommunityCommentAction(
     p_actor_user_id: actor.userId,
     p_post_id: postId,
     p_content: parsed.data,
+    p_parent_id: parentId,
   });
 
   if (error || !data) {

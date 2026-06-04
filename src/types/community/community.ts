@@ -38,17 +38,29 @@ export interface CommunityPostDetail {
   isLiked: boolean;
 }
 
+// 댓글 정렬 기준 (등록순/인기순/최신순).
+export type CommunityCommentSort = "oldest" | "popular" | "latest";
+
 export interface CommunityComment {
   id: string;
+  // 상위 댓글이면 null, 대댓글이면 상위 댓글 id.
+  parentId: string | null;
   authorId: string;
   authorNickname: string;
   authorPhotoUrl: string | null;
   content: string;
   createdAt: string;
   modifiedAt: string | null;
+  likeCount: number;
+  isLiked: boolean;
+  // 상위 댓글에 달린 대댓글 수.
+  replyCount: number;
 }
 
 export interface CommunityCommentsResult {
+  // 좋아요 최다 상위 댓글(없으면 null). 목록 맨 위에 고정 표시.
+  bestComment: CommunityComment | null;
+  // 베스트를 제외한 상위 댓글 목록.
   items: CommunityComment[];
   totalCount: number;
 }

@@ -9,12 +9,15 @@ import {
 import { createAdminClient } from "@/lib/supabase/admin-client";
 import type { AppActionResult } from "@/types/common/action";
 import type {
+  CommunityComment,
+  CommunityCommentSort,
   CommunityCommentsResult,
   CommunityPostDetail,
   CommunityPostsResult,
 } from "@/types/community/community";
 import { resolveViewerId } from "@/utils/auth/viewer";
 import {
+  parseCommunityCommentReplies,
   parseCommunityComments,
   parseCommunityPostDetail,
   parseCommunityPostsResult,
@@ -77,12 +80,16 @@ export async function getCommunityPostDetail(
 export async function getCommunityComments(
   postId: string,
   page = 1,
+  sort: CommunityCommentSort = "oldest",
 ): Promise<AppActionResult<CommunityCommentsResult>> {
+  const viewerId = await resolveViewerId();
   const offset = Math.max(page - 1, 0) * COMMUNITY_COMMENT_PAGE_SIZE;
   const supabase = createAdminClient();
 
   const { data, error } = await supabase.rpc("get_community_comments", {
     p_post_id: postId,
+    p_viewer_id: viewerId ?? undefined,
+    p_sort: sort,
     p_limit: COMMUNITY_COMMENT_PAGE_SIZE,
     p_offset: offset,
   });
@@ -93,4 +100,24 @@ export async function getCommunityComments(
   }
 
   return { success: true, data: parseCommunityComments(data) };
+}
+
+// 대댓글 목록(토글 시 지연 로드).
+export async function getCommunityCommentReplies(
+  parentId: string,
+): Promise<AppActionResult<CommunityComment[]>> {
+  const viewerId = await resolveViewerId();
+  const supabase = createAdminClient();
+
+  const { data, error } = await supabase.rpc("get_community_comment_replies", {
+    p_parent_id: parentId,
+    p_viewer_id: viewerId ?? undefined,
+  });
+
+  if (error) {
+    console.error("커뮤니티 대댓글 조회 실패", error);
+    return { success: false, code: APP_MESSAGE_CODE.error.community.loadFailed };
+  }
+
+  return { success: true, data: parseCommunityCommentReplies(data) };
 }

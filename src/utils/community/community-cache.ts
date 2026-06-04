@@ -56,22 +56,61 @@ export function applyCommentCountDelta(
   return { ...data, commentCount: Math.max(0, data.commentCount + delta) };
 }
 
-// 댓글 목록 첫 페이지에 낙관적 댓글을 추가합니다(최신순이라 맨 앞).
-export function prependComment(
-  data: CommunityCommentsResult | undefined,
-  comment: CommunityComment,
-): CommunityCommentsResult | undefined {
-  if (!data) {
-    return data;
-  }
+// --- CommunityComment[] 단위 헬퍼 (목록 items + 대댓글 캐시 공용) ---
 
+function updateCommentInList(
+  list: CommunityComment[],
+  commentId: string,
+  patch: (comment: CommunityComment) => CommunityComment,
+): CommunityComment[] {
+  return list.map((item) => (item.id === commentId ? patch(item) : item));
+}
+
+export function applyContentToCommentList(
+  list: CommunityComment[],
+  commentId: string,
+  content: string,
+  modifiedAt: string,
+): CommunityComment[] {
+  return updateCommentInList(list, commentId, (item) => ({ ...item, content, modifiedAt }));
+}
+
+export function applyLikeToCommentList(
+  list: CommunityComment[],
+  commentId: string,
+  next: LikeState,
+): CommunityComment[] {
+  return updateCommentInList(list, commentId, (item) => ({
+    ...item,
+    isLiked: next.liked,
+    likeCount: next.likeCount,
+  }));
+}
+
+export function removeCommentFromList(
+  list: CommunityComment[],
+  commentId: string,
+): CommunityComment[] {
+  return list.filter((item) => item.id !== commentId);
+}
+
+// --- CommunityCommentsResult(베스트 + items) 단위 헬퍼 ---
+
+function patchBestAndItems(
+  data: CommunityCommentsResult,
+  commentId: string,
+  patch: (comment: CommunityComment) => CommunityComment,
+): CommunityCommentsResult {
   return {
-    items: [comment, ...data.items],
-    totalCount: data.totalCount + 1,
+    ...data,
+    bestComment:
+      data.bestComment && data.bestComment.id === commentId
+        ? patch(data.bestComment)
+        : data.bestComment,
+    items: updateCommentInList(data.items, commentId, patch),
   };
 }
 
-// 댓글 목록에서 특정 댓글 본문을 수정 표시와 함께 갱신합니다.
 export function applyCommentContent(
   data: CommunityCommentsResult | undefined,
   commentId: string,
@@ -82,15 +121,25 @@ export function applyCommentContent(
     return data;
   }
 
-  return {
-    ...data,
-    items: data.items.map((item) =>
-      item.id === commentId ? { ...item, content, modifiedAt } : item,
-    ),
-  };
+  return patchBestAndItems(data, commentId, (item) => ({ ...item, content, modifiedAt }));
 }
 
-// 댓글 목록에서 특정 댓글을 제거합니다.
+export function applyCommentLike(
+  data: CommunityCommentsResult | undefined,
+  commentId: string,
+  next: LikeState,
+): CommunityCommentsResult | undefined {
+  if (!data) {
+    return data;
+  }
+
+  return patchBestAndItems(data, commentId, (item) => ({
+    ...item,
+    isLiked: next.liked,
+    likeCount: next.likeCount,
+  }));
+}
+
 export function removeComment(
   data: CommunityCommentsResult | undefined,
   commentId: string,
@@ -99,31 +148,14 @@ export function removeComment(
     return data;
   }
 
-  const exists = data.items.some((item) => item.id === commentId);
+  const inItems = data.items.some((item) => item.id === commentId);
+  const isBest = data.bestComment?.id === commentId;
 
   return {
+    ...data,
+    bestComment: isBest ? null : data.bestComment,
     items: data.items.filter((item) => item.id !== commentId),
-    totalCount: exists ? Math.max(0, data.totalCount - 1) : data.totalCount,
-  };
-}
-
-// 낙관적 댓글 객체를 생성합니다.
-export function createOptimisticComment(params: {
-  id: string;
-  authorId: string;
-  authorNickname: string;
-  authorPhotoUrl: string | null;
-  content: string;
-  createdAt: string;
-}): CommunityComment {
-  return {
-    id: params.id,
-    authorId: params.authorId,
-    authorNickname: params.authorNickname,
-    authorPhotoUrl: params.authorPhotoUrl,
-    content: params.content,
-    createdAt: params.createdAt,
-    modifiedAt: null,
+    totalCount: inItems || isBest ? Math.max(0, data.totalCount - 1) : data.totalCount,
   };
 }
 

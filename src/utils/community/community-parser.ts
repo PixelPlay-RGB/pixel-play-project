@@ -104,12 +104,16 @@ function parseComment(value: Json | undefined): CommunityComment | null {
 
   return {
     id,
+    parentId: readString(object.parentId),
     authorId,
     authorNickname: readString(object.authorNickname) ?? "익명",
     authorPhotoUrl: readString(object.authorPhotoUrl),
     content,
     createdAt,
     modifiedAt: readString(object.modifiedAt),
+    likeCount: readNumber(object.likeCount),
+    isLiked: readBoolean(object.isLiked),
+    replyCount: readNumber(object.replyCount),
   };
 }
 
@@ -171,7 +175,7 @@ export function parseCommunityComments(value: Json): CommunityCommentsResult {
   const object = readObject(value);
 
   if (!object) {
-    return { items: [], totalCount: 0 };
+    return { bestComment: null, items: [], totalCount: 0 };
   }
 
   const items = readArray(object.items)
@@ -179,9 +183,17 @@ export function parseCommunityComments(value: Json): CommunityCommentsResult {
     .filter((item): item is CommunityComment => item !== null);
 
   return {
+    bestComment: parseComment(object.bestComment),
     items,
     totalCount: readNumber(object.totalCount),
   };
+}
+
+// 대댓글 목록(jsonb 배열) → CommunityComment[].
+export function parseCommunityCommentReplies(value: Json): CommunityComment[] {
+  return readArray(value)
+    .map(parseComment)
+    .filter((item): item is CommunityComment => item !== null);
 }
 
 export function parseCommunityPostLikeResult(value: Json): CommunityPostLikeResult {
