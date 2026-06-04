@@ -30,7 +30,7 @@ interface DrawState {
   endedAt: string | null;
   participants: ChannelLiveDrawParticipant[];
   startedAt: string;
-  winnerNames: string[];
+  winnerUserIds: string[];
 }
 
 interface PollResult {
@@ -239,9 +239,16 @@ export default function ChannelLivePollPanel({ broadcastId, messages }: Props) {
   const drawParticipants = isDrawParticipantConfirmed
     ? confirmedDrawParticipants
     : previewDrawParticipants;
-  const drawableParticipants = drawParticipants.filter(
-    (participant) => !drawSession?.winnerNames.includes(participant),
+  const drawParticipantNameById = new Map(
+    (drawSession?.participants ?? []).map((participant) => [
+      participant.userId,
+      participant.nickname,
+    ]),
   );
+  const drawWinnerNames =
+    drawSession?.winnerUserIds.map(
+      (winnerUserId) => drawParticipantNameById.get(winnerUserId) ?? "시청자",
+    ) ?? [];
   const selectedToolLabel = INTERACTION_TOOLS.find((tool) => tool.value === selectedTool)?.label;
   const rouletteSegmentStyle = useMemo(() => {
     if (rouletteItems.length === 0) {
@@ -324,7 +331,7 @@ export default function ChannelLivePollPanel({ broadcastId, messages }: Props) {
       endedAt: null,
       participants: [],
       startedAt: new Date().toISOString(),
-      winnerNames: [],
+      winnerUserIds: [],
     });
     setDrawRollingName(null);
     setDrawReelNames([]);
@@ -389,22 +396,24 @@ export default function ChannelLivePollPanel({ broadcastId, messages }: Props) {
       setDrawSession(nextSession);
     }
 
-    const dbParticipantNames = toDrawParticipantNames(nextSession.participants);
-    const availableParticipants = dbParticipantNames.filter(
-      (participant) => !nextSession.winnerNames.includes(participant),
+    const availableParticipants = nextSession.participants.filter(
+      (participant) => !nextSession.winnerUserIds.includes(participant.userId),
     );
     const nextParticipants =
-      availableParticipants.length > 0 ? availableParticipants : dbParticipantNames;
-    const winnerName = pickRandomItem(nextParticipants);
+      availableParticipants.length > 0 ? availableParticipants : nextSession.participants;
+    const winner = pickRandomItem(nextParticipants);
 
-    if (!winnerName || isDrawing) return;
+    if (!winner || isDrawing) return;
 
-    const winnerIndex = nextParticipants.findIndex((participant) => participant === winnerName);
+    const nextParticipantNames = toDrawParticipantNames(nextParticipants);
+    const winnerIndex = nextParticipants.findIndex(
+      (participant) => participant.userId === winner.userId,
+    );
     const repeatedReelNames = Array.from(
       { length: DRAW_REEL_REPEAT_COUNT },
-      () => nextParticipants,
+      () => nextParticipantNames,
     ).flat();
-    const finalReelNames = [...repeatedReelNames, ...nextParticipants];
+    const finalReelNames = [...repeatedReelNames, ...nextParticipantNames];
     const nextTargetIndex =
       repeatedReelNames.length + (winnerIndex >= 0 ? winnerIndex : nextParticipants.length - 1);
 
@@ -431,14 +440,14 @@ export default function ChannelLivePollPanel({ broadcastId, messages }: Props) {
         drawSpinStartTimeoutRef.current = null;
       }
 
-      setDrawRollingName(winnerName);
+      setDrawRollingName(winner.nickname);
       setDrawReelNames([]);
       setDrawReelTargetIndex(0);
       setDrawSession((currentSession) =>
         currentSession
           ? {
               ...currentSession,
-              winnerNames: [...currentSession.winnerNames, winnerName],
+              winnerUserIds: [...currentSession.winnerUserIds, winner.userId],
             }
           : currentSession,
       );
@@ -736,14 +745,14 @@ export default function ChannelLivePollPanel({ broadcastId, messages }: Props) {
                 )}
               </div>
 
-              {drawSession?.winnerNames.length ? (
+              {drawWinnerNames.length ? (
                 <div className="bg-brand/10 text-brand flex flex-col gap-2 rounded-xl px-3 py-3 text-sm font-bold">
                   <div className="flex items-center gap-2">
                     <Trophy className="size-4" />
                     당첨자
                   </div>
                   <div className="flex flex-wrap gap-1.5">
-                    {drawSession.winnerNames.map((winnerName, index) => (
+                    {drawWinnerNames.map((winnerName, index) => (
                       <span
                         key={`${winnerName}-${index}`}
                         className="bg-background text-brand rounded-full px-2.5 py-1 text-xs font-bold"
