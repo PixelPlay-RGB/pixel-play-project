@@ -3,7 +3,7 @@
 
 import CommunityCommentComposer from "@/components/community/community-comment-composer";
 import CommunityCommentItem from "@/components/community/community-comment-item";
-import { Spinner } from "@/components/ui/spinner";
+import { CommunityCommentItemSkeleton } from "@/components/community/community-comment-skeleton";
 import { useCommunityCommentReplies } from "@/hooks/community/use-community-comment-replies";
 
 interface Props {
@@ -19,9 +19,7 @@ export default function CommunityCommentReplies({ postId, parentId, isChannelOwn
   return (
     <div className="border-border/50 mt-2 ml-1 space-y-1 border-l-2 pl-3">
       {isPending ? (
-        <div className="flex justify-center py-3">
-          <Spinner className="text-muted-foreground size-4" />
-        </div>
+        <CommunityCommentItemSkeleton isReply />
       ) : (
         replies.map((reply) => (
           <CommunityCommentItem

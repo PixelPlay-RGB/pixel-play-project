@@ -8,7 +8,7 @@ import { Fragment, useState } from "react";
 import ChatRoomListPagination from "@/components/chat-room-list/chat-room-list-pagination";
 import CommunityCommentComposer from "@/components/community/community-comment-composer";
 import CommunityCommentItem from "@/components/community/community-comment-item";
-import { Spinner } from "@/components/ui/spinner";
+import { CommunityCommentListSkeleton } from "@/components/community/community-comment-skeleton";
 import {
   COMMUNITY_COMMENT_DEFAULT_SORT,
   COMMUNITY_COMMENT_PAGE_SIZE,
@@ -102,9 +102,7 @@ export default function CommunityCommentList({
       <CommunityCommentComposer postId={postId} />
 
       {isPending ? (
-        <div className="flex justify-center py-10">
-          <Spinner className="text-muted-foreground size-6" />
-        </div>
+        <CommunityCommentListSkeleton />
       ) : isEmpty ? (
         <p className="text-muted-foreground py-10 text-center text-sm font-semibold">
           가장 먼저 댓글을 남겨보세요.

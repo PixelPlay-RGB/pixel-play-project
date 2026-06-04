@@ -8,7 +8,7 @@ import { useState } from "react";
 import ChatRoomListPagination from "@/components/chat-room-list/chat-room-list-pagination";
 import CommunityEmptyState from "@/components/community/community-empty-state";
 import CommunityPostList from "@/components/community/community-post-list";
-import { Spinner } from "@/components/ui/spinner";
+import CommunityPostListSkeleton from "@/components/community/community-post-list-skeleton";
 import { COMMUNITY_POST_PAGE_SIZE } from "@/constants/community/community";
 import { useCommunityPosts } from "@/hooks/community/use-community-posts";
 import type { CommunityPostsResult } from "@/types/community/community";
@@ -41,9 +41,7 @@ export default function CommunityBoard({ creatorId, isOwner, initialData }: Prop
       )}
 
       {isPending ? (
-        <div className="flex justify-center py-20">
-          <Spinner className="text-muted-foreground size-6" />
-        </div>
+        <CommunityPostListSkeleton />
       ) : result.items.length === 0 ? (
         <CommunityEmptyState
           message={isOwner ? "첫 소식을 남겨 팔로워와 소통해보세요." : "아직 작성된 글이 없어요."}
