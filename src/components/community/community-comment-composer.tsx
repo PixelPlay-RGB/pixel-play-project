@@ -90,6 +90,8 @@ export default function CommunityCommentComposer({
           maxLength={COMMUNITY_COMMENT_CONTENT_MAX}
           onChange={(event) => setContent(event.target.value)}
           onKeyDown={(event) => {
+            // 한글 등 IME 조합 중 Enter는 조합 확정용이므로 제출로 처리하지 않습니다.
+            if (event.nativeEvent.isComposing) return;
             if (event.key === "Enter" && !event.shiftKey) {
               event.preventDefault();
               event.currentTarget.form?.requestSubmit();
