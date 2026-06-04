@@ -1,8 +1,16 @@
 "use client";
-// 후원 지갑 충전 결제창을 제공합니다.
+// 후원 지갑 충전 결제창을 열기 위한 금액 입력 UI를 제공합니다.
 
 import { SettingsCard } from "@/components/common/settings-card";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -21,13 +29,64 @@ import { FormEvent, useEffect, useId, useMemo, useRef, useState } from "react";
 
 interface Props {
   customerKey: string;
+  variant?: "card" | "plain";
+}
+
+interface WalletChargeDialogProps {
+  customerKey: string;
+  className?: string;
 }
 
 type PaymentWindowState = "idle" | "initializing" | "ready" | "opening" | "failed";
 
 const TOSS_PAYMENTS_SDK_URL = "https://js.tosspayments.com/v2/standard";
 
-export function WalletChargeCard({ customerKey }: Props) {
+export function WalletChargeDialog({ customerKey, className }: WalletChargeDialogProps) {
+  const trigger = (
+    <Button
+      type="button"
+      className={cn(
+        "bg-background text-live hover:bg-background/90 h-10 px-4 font-black shadow-sm",
+        "dark:text-live dark:bg-white dark:hover:bg-white/90",
+        className,
+      )}
+    >
+      <CreditCard className="size-4" />
+      충전하기
+    </Button>
+  );
+
+  return (
+    <Dialog>
+      <DialogTrigger render={trigger} />
+      <DialogContent
+        className={cn(
+          "overflow-hidden rounded-2xl p-0 shadow-xl sm:max-w-lg",
+          "border-live/20 shadow-live/10 dark:border-live/10",
+        )}
+      >
+        <DialogHeader className="border-live/10 bg-live/5 border-b px-5 pt-5 pb-4">
+          <div className="flex items-center gap-3">
+            <span className="bg-live/10 text-live ring-live/20 flex size-10 shrink-0 items-center justify-center rounded-xl ring-1">
+              <CreditCard className="size-5" />
+            </span>
+            <div className="min-w-0">
+              <DialogTitle className="text-lg font-bold">포인트 충전</DialogTitle>
+              <DialogDescription className="mt-1 leading-relaxed">
+                충전할 포인트를 선택하고 Toss Payments 결제창으로 결제를 진행합니다.
+              </DialogDescription>
+            </div>
+          </div>
+        </DialogHeader>
+        <div className="px-5 pt-1 pb-5">
+          <WalletChargeCard customerKey={customerKey} variant="plain" />
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export function WalletChargeCard({ customerKey, variant = "card" }: Props) {
   const amountInputId = useId();
   const clientKey = process.env.NEXT_PUBLIC_TOSS_PAYMENTS_CLIENT_KEY;
   const [amount, setAmount] = useState(String(WALLET_CHARGE_DEFAULT_AMOUNT));
@@ -84,6 +143,12 @@ export function WalletChargeCard({ customerKey }: Props) {
     };
   }, [clientKey, customerKey, isSdkLoaded]);
 
+  const handleSdkReady = () => {
+    setIsPaymentInitialized(false);
+    setPaymentWindowState("initializing");
+    setIsSdkLoaded(true);
+  };
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const payment = paymentRef.current;
@@ -112,21 +177,13 @@ export function WalletChargeCard({ customerKey }: Props) {
     }
   };
 
-  return (
-    <SettingsCard
-      title="지갑 충전"
-      description="충전 금액을 선택하거나 직접 입력할 수 있습니다."
-      contentClassName="gap-4"
-    >
+  const content = (
+    <>
       {clientKey ? (
         <Script
           src={TOSS_PAYMENTS_SDK_URL}
           strategy="afterInteractive"
-          onLoad={() => {
-            setIsPaymentInitialized(false);
-            setPaymentWindowState("initializing");
-            setIsSdkLoaded(true);
-          }}
+          onReady={handleSdkReady}
           onError={() => {
             setIsPaymentInitialized(false);
             setPaymentWindowState("failed");
@@ -148,7 +205,7 @@ export function WalletChargeCard({ customerKey }: Props) {
                 className={cn("h-10", isSelected && "bg-brand hover:bg-brand/90")}
                 onClick={() => setAmount(String(presetAmount))}
               >
-                {formatWon(presetAmount)}
+                {formatPoint(presetAmount)}
               </Button>
             );
           })}
@@ -170,18 +227,18 @@ export function WalletChargeCard({ customerKey }: Props) {
               onChange={(event) => setAmount(event.target.value)}
             />
             <span className="text-muted-foreground pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-sm">
-              원
+              P
             </span>
           </div>
           <p className="text-muted-foreground text-xs">
-            1,000원부터 1,000,000원까지 1,000원 단위로 충전할 수 있습니다.
+            1,000P부터 1,000,000P까지 1,000P 단위로 충전할 수 있습니다.
           </p>
         </div>
 
         <div className="bg-muted/40 flex items-center justify-between gap-3 rounded-lg px-4 py-3">
-          <span className="text-muted-foreground text-sm">충전 예정 금액</span>
+          <span className="text-muted-foreground text-sm">충전 예정 포인트</span>
           <strong className="text-foreground text-base">
-            {isValidAmount ? formatWon(numericAmount) : "0원"}
+            {isValidAmount ? formatPoint(numericAmount) : "0P"}
           </strong>
         </div>
 
@@ -196,6 +253,20 @@ export function WalletChargeCard({ customerKey }: Props) {
           {getPaymentButtonLabel(clientKey, paymentWindowState)}
         </Button>
       </form>
+    </>
+  );
+
+  if (variant === "plain") {
+    return <div className="flex flex-col gap-4">{content}</div>;
+  }
+
+  return (
+    <SettingsCard
+      title="지갑 충전"
+      description="충전 금액을 선택하거나 직접 입력할 수 있습니다."
+      contentClassName="gap-4"
+    >
+      {content}
     </SettingsCard>
   );
 }
@@ -298,6 +369,6 @@ function isValidChargeAmount(value: number | undefined) {
   );
 }
 
-function formatWon(amount: number) {
-  return `${amount.toLocaleString("ko-KR")}원`;
+function formatPoint(amount: number) {
+  return `${amount.toLocaleString("ko-KR")}P`;
 }
