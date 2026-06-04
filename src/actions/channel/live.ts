@@ -567,7 +567,7 @@ export async function uploadChannelLiveThumbnailAction(
   file: File,
 ): Promise<AppActionResult<{ thumbnailUrl: string }>> {
   const actor = await getAuthenticatedActorId({
-    logLabel: "諛⑹넚 誘몃━蹂닿린 ?대?吏 ?낅줈??以??몄쬆 ?좎? 議고쉶 ?ㅽ뙣",
+    logLabel: "방송 미리보기 이미지 업로드 중 인증 사용자 조회 실패",
   });
 
   if (!actor.success) {
