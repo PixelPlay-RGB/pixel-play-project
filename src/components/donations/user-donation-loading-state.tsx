@@ -10,15 +10,8 @@ export function UserDonationLoadingState() {
       title="후원 지갑"
       description="후원 지갑 정보를 불러오는 중입니다."
     >
-      <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-        <Skeleton className="h-30" />
-        <Skeleton className="h-30" />
-        <Skeleton className="h-30" />
-        <Skeleton className="h-30" />
-      </section>
-
       <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,24rem)]">
-        <SettingsCard title="현재 후원 지갑" description=" ">
+        <SettingsCard title="현재 충전 잔액" description=" ">
           <Skeleton className="h-20" />
         </SettingsCard>
         <SettingsCard title="지갑 충전" description=" ">
@@ -27,12 +20,12 @@ export function UserDonationLoadingState() {
       </section>
 
       <section className="grid gap-4 xl:grid-cols-2">
-        <SettingsCard title="최근 지갑 거래" description=" ">
+        <SettingsCard title="후원 내역" description=" ">
           <Skeleton className="h-16" />
           <Skeleton className="h-16" />
           <Skeleton className="h-16" />
         </SettingsCard>
-        <SettingsCard title="보낸 후원" description=" ">
+        <SettingsCard title="충전 내역" description=" ">
           <Skeleton className="h-16" />
           <Skeleton className="h-16" />
           <Skeleton className="h-16" />

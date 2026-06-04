@@ -9,9 +9,8 @@ import type { Json } from "@/types/database.types";
 import type {
   UserDonationSnapshot,
   UserSentDonationItem,
-  UserWalletTransactionItem,
+  UserWalletChargeHistoryItem,
   WalletTransactionStatus,
-  WalletTransactionType,
 } from "@/types/donations/user-donations";
 import { isAuthSessionMissingError } from "@/utils/auth/auth-error";
 
@@ -21,12 +20,6 @@ type UserDonationSearchParams = {
   month?: string | string[];
   kind?: string | string[];
 };
-
-const WALLET_TRANSACTION_TYPES = new Set<WalletTransactionType>([
-  "charge",
-  "donation_spend",
-  "refund",
-]);
 
 const WALLET_TRANSACTION_STATUSES = new Set<WalletTransactionStatus>([
   "pending",
@@ -93,25 +86,21 @@ function buildUserDonationSnapshot(
   const sentDonations = readArray(snapshotObject?.sentDonations)
     .map(readSentDonation)
     .filter((item): item is UserSentDonationItem => item !== null);
-  const transactions = readArray(snapshotObject?.transactions)
-    .map(readWalletTransaction)
-    .filter((item): item is UserWalletTransactionItem => item !== null);
+  const chargeHistorySource =
+    snapshotObject && "chargeHistories" in snapshotObject
+      ? snapshotObject.chargeHistories
+      : snapshotObject?.transactions;
+  const chargeHistories = readArray(chargeHistorySource)
+    .map(readChargeHistory)
+    .filter((item): item is UserWalletChargeHistoryItem => item !== null);
 
   return {
     paymentCustomerKey,
     summary: {
       balanceAmount: readNumber(wallet?.balanceAmount, 0),
-      sentDonationAmount: sumBy(sentDonations, (item) => item.amount),
-      chargeAmount: sumBy(
-        transactions.filter(
-          (transaction) => transaction.type === "charge" && transaction.status === "succeeded",
-        ),
-        (item) => item.amountDelta,
-      ),
-      transactionCount: transactions.length,
     },
     sentDonations,
-    transactions,
+    chargeHistories,
   };
 }
 
@@ -138,31 +127,28 @@ function readSentDonation(value: Json): UserSentDonationItem | null {
   };
 }
 
-function readWalletTransaction(value: Json): UserWalletTransactionItem | null {
+function readChargeHistory(value: Json): UserWalletChargeHistoryItem | null {
   const item = readObject(value);
   const id = readText(item?.id);
   const createdAt = readText(item?.createdAt);
+  const type = readText(item?.type);
+  const amount = readNumber(item?.amount, readNumber(item?.amountDelta, 0));
 
-  if (!item || !id || !createdAt) {
+  if (!item || !id || !createdAt || amount <= 0) {
+    return null;
+  }
+
+  if (type && type !== "charge") {
     return null;
   }
 
   return {
     id,
-    type: readTransactionType(item.type),
     status: readTransactionStatus(item.status),
-    amountDelta: readNumber(item.amountDelta, 0),
+    amount,
     balanceAfter: readNullableNumber(item.balanceAfter),
     createdAt,
   };
-}
-
-function readTransactionType(value: Json | undefined): WalletTransactionType {
-  if (typeof value === "string" && WALLET_TRANSACTION_TYPES.has(value as WalletTransactionType)) {
-    return value as WalletTransactionType;
-  }
-
-  return "charge";
 }
 
 function readTransactionStatus(value: Json | undefined): WalletTransactionStatus {
@@ -198,8 +184,4 @@ function readNumber(value: Json | undefined, fallback: number) {
 
 function readNullableNumber(value: Json | undefined) {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
-}
-
-function sumBy<T>(items: T[], getValue: (item: T) => number) {
-  return items.reduce((sum, item) => sum + getValue(item), 0);
 }
