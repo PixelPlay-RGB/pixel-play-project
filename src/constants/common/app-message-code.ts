@@ -123,7 +123,10 @@ export const APP_MESSAGE_CODE = {
     channel: {
       chatSettingsLoadFailed: "error.channel.chatSettingsLoadFailed",
       chatSettingsSaveFailed: "error.channel.chatSettingsSaveFailed",
+      liveEndSaveFailed: "error.channel.liveEndSaveFailed",
       liveSettingsSaveFailed: "error.channel.liveSettingsSaveFailed",
+      liveStartSaveFailed: "error.channel.liveStartSaveFailed",
+      liveThumbnailUploadFailed: "error.channel.liveThumbnailUploadFailed",
       securityLoadFailed: "error.channel.securityLoadFailed",
       securityCopyFailed: "error.channel.securityCopyFailed",
       securityTokenRotateFailed: "error.channel.securityTokenRotateFailed",

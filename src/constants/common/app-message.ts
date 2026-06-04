@@ -365,6 +365,18 @@ export const APP_MESSAGE = {
         title: "방송 설정 저장 실패",
         description: "입력값을 확인한 뒤 다시 시도해주세요.",
       },
+      liveThumbnailUploadFailed: {
+        title: "미리보기 이미지 업로드 실패",
+        description: "미리보기 이미지를 업로드하지 못했습니다.",
+      },
+      liveStartSaveFailed: {
+        title: "방송 시작 저장 실패",
+        description: "방송 시작 정보를 저장하지 못했습니다.",
+      },
+      liveEndSaveFailed: {
+        title: "방송 종료 저장 실패",
+        description: "방송 종료 정보를 저장하지 못했습니다.",
+      },
       securityLoadFailed: {
         title: "방송 연결 정보 조회 실패",
         description: "다시 로그인하거나 잠시 후 새로고침해주세요.",

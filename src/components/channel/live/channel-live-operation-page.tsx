@@ -18,6 +18,7 @@ import ChannelLiveStreamStatusPanel from "@/components/channel/live/channel-live
 import { CHANNEL_LIVE_MEDIA_CONFIG } from "@/constants/channel/channel-live-media";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { cn } from "@/lib/utils";
+import { getAppMessage } from "@/utils/common/app-message";
 import { toastAppError, toastAppSuccess } from "@/utils/common/toast-message";
 import { BadgeCheck } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
@@ -56,6 +57,12 @@ function getBroadcastStatusClassName(liveState: ChannelLiveState) {
   }
 
   return "bg-warning/10 text-warning";
+}
+
+function getBroadcastActionErrorMessage(code: Parameters<typeof getAppMessage>[0]) {
+  const message = getAppMessage(code);
+
+  return message.description ?? message.title;
 }
 
 export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
@@ -168,7 +175,11 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
         const uploadResult = await uploadChannelLiveThumbnailAction(thumbnailFile);
 
         if (!uploadResult.success || !uploadResult.data?.thumbnailUrl) {
-          setBroadcastActionError("미리보기 이미지를 업로드하지 못했습니다.");
+          setBroadcastActionError(
+            getBroadcastActionErrorMessage(
+              APP_MESSAGE_CODE.error.channel.liveThumbnailUploadFailed,
+            ),
+          );
           return;
         }
 
@@ -182,7 +193,9 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
       });
 
       if (!result.success || !result.data?.broadcastId) {
-        setBroadcastActionError("방송 시작 정보를 저장하지 못했습니다.");
+        setBroadcastActionError(
+          getBroadcastActionErrorMessage(APP_MESSAGE_CODE.error.channel.liveStartSaveFailed),
+        );
         return;
       }
 
@@ -207,7 +220,9 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
         const result = await endLiveBroadcastAction({ broadcastId });
 
         if (!result.success) {
-          setBroadcastActionError("방송 종료 정보를 저장하지 못했습니다.");
+          setBroadcastActionError(
+            getBroadcastActionErrorMessage(APP_MESSAGE_CODE.error.channel.liveEndSaveFailed),
+          );
           return;
         }
       }
