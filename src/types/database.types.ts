@@ -106,7 +106,9 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          like_count: number
           modified_at: string | null
+          parent_id: string | null
           post_id: string
         }
         Insert: {
@@ -114,7 +116,9 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          like_count?: number
           modified_at?: string | null
+          parent_id?: string | null
           post_id: string
         }
         Update: {
@@ -122,7 +126,9 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          like_count?: number
           modified_at?: string | null
+          parent_id?: string | null
           post_id?: string
         }
         Relationships: [
@@ -134,10 +140,50 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "community_comment_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "community_comment"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "community_comment_post_id_fkey"
             columns: ["post_id"]
             isOneToOne: false
             referencedRelation: "community_post"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_comment_like: {
+        Row: {
+          comment_id: string
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_comment_like_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "community_comment"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_comment_like_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user"
             referencedColumns: ["id"]
           },
         ]
@@ -798,6 +844,10 @@ export type Database = {
       }
       anonymous_donor_alias: { Args: { p_donor_id: string }; Returns: string }
       check_email_exists: { Args: { target_email: string }; Returns: boolean }
+      community_comment_to_json: {
+        Args: { p_comment_id: string; p_viewer_id: string }
+        Returns: Json
+      }
       confirm_wallet_charge: {
         Args: {
           p_actor_user_id: string
@@ -819,7 +869,12 @@ export type Database = {
         Returns: string
       }
       create_community_comment: {
-        Args: { p_actor_user_id: string; p_content: string; p_post_id: string }
+        Args: {
+          p_actor_user_id: string
+          p_content: string
+          p_parent_id?: string
+          p_post_id: string
+        }
         Returns: string
       }
       create_community_post: {
@@ -893,8 +948,18 @@ export type Database = {
           total_count: number
         }[]
       }
+      get_community_comment_replies: {
+        Args: { p_parent_id: string; p_viewer_id?: string }
+        Returns: Json
+      }
       get_community_comments: {
-        Args: { p_limit?: number; p_offset?: number; p_post_id: string }
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_post_id: string
+          p_sort?: string
+          p_viewer_id?: string
+        }
         Returns: Json
       }
       get_community_post: {
@@ -1089,6 +1154,10 @@ export type Database = {
           p_title?: string
         }
         Returns: string
+      }
+      toggle_community_comment_like: {
+        Args: { p_actor_user_id: string; p_comment_id: string }
+        Returns: Json
       }
       toggle_community_post_like: {
         Args: { p_actor_user_id: string; p_post_id: string }
