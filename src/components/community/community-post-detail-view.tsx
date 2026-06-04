@@ -8,7 +8,7 @@ import { useState } from "react";
 
 import CommunityActionMenu from "@/components/community/community-action-menu";
 import CommunityCommentList from "@/components/community/community-comment-list";
-import CommunityDeleteDialog from "@/components/community/community-delete-dialog";
+import DeleteConfirmDialog from "@/components/common/delete-confirm-dialog";
 import CommunityLikeButton from "@/components/community/community-like-button";
 import CommunityPostPager from "@/components/community/community-post-pager";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -137,7 +137,7 @@ export default function CommunityPostDetailView({
         </section>
       </div>
 
-      <CommunityDeleteDialog
+      <DeleteConfirmDialog
         open={isDeleteOpen}
         onOpenChange={setIsDeleteOpen}
         title="게시글 삭제"

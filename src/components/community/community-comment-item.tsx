@@ -8,7 +8,7 @@ import { useState } from "react";
 import CommunityActionMenu from "@/components/community/community-action-menu";
 import CommunityCommentLikeButton from "@/components/community/community-comment-like-button";
 import CommunityCommentReplies from "@/components/community/community-comment-replies";
-import CommunityDeleteDialog from "@/components/community/community-delete-dialog";
+import DeleteConfirmDialog from "@/components/common/delete-confirm-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
@@ -220,7 +220,7 @@ export default function CommunityCommentItem({
         )}
       </div>
 
-      <CommunityDeleteDialog
+      <DeleteConfirmDialog
         open={isDeleteOpen}
         onOpenChange={setIsDeleteOpen}
         title={isReply ? "답글 삭제" : "댓글 삭제"}

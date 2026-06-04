@@ -7,7 +7,7 @@ import { Heart, MessageSquare } from "lucide-react";
 import { useState } from "react";
 
 import CommunityActionMenu from "@/components/community/community-action-menu";
-import CommunityDeleteDialog from "@/components/community/community-delete-dialog";
+import DeleteConfirmDialog from "@/components/common/delete-confirm-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useDeleteCommunityPost } from "@/hooks/community/use-delete-community-post";
 import type { CommunityCreator, CommunityPost } from "@/types/community/community";
@@ -84,7 +84,7 @@ export default function CommunityPostCard({ creatorId, creator, post, isOwner }:
         </div>
       )}
 
-      <CommunityDeleteDialog
+      <DeleteConfirmDialog
         open={isDeleteOpen}
         onOpenChange={setIsDeleteOpen}
         title="게시글 삭제"
