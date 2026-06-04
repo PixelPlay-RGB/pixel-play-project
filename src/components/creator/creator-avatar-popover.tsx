@@ -4,7 +4,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronRight, Radio, Tv } from "lucide-react";
+import { ChevronRight, Radio } from "lucide-react";
 
 import CreatorFollowingButton from "@/components/following/creator-following-button";
 import CreatorUnfollowDialog from "@/components/creator/creator-unfollow-dialog";
@@ -112,17 +112,20 @@ export default function CreatorAvatarPopover({
         </PopoverTrigger>
 
         <PopoverContent className="w-72 gap-0 overflow-hidden p-0" align="start" sideOffset={10}>
+          {/* 프로필 카드 전체가 채널로 이동하는 링크. hover 시 brand 강조 + chevron 이동으로 클릭 가능함을 안내. */}
           <Link
             href={`/channel/${creatorId}`}
             aria-label={`${creatorNickname} 채널로 이동`}
-            className="hover:bg-muted/40 flex min-w-0 items-center gap-3 px-4 pt-4 pb-3.5 transition-colors"
+            className="group/profile hover:bg-muted/50 flex min-w-0 items-center gap-3 px-4 pt-4 pb-3.5 transition-colors"
           >
             <Avatar className={cn("size-12 shrink-0", isLive && "ring-live/80 ring-2")} size="lg">
               <AvatarImage src={avatarSrc} alt={`${creatorNickname} 프로필 이미지`} />
               <AvatarFallback>{fallbackText}</AvatarFallback>
             </Avatar>
             <div className="min-w-0 flex-1">
-              <p className="text-foreground truncate text-sm font-black">{creatorNickname}</p>
+              <p className="text-foreground group-hover/profile:text-brand truncate text-sm font-black transition-colors">
+                {creatorNickname}
+              </p>
               {isLive ? (
                 <span className="text-live mt-1 inline-flex items-center gap-1.5 text-xs font-bold">
                   <span className="bg-live size-1.5 animate-pulse rounded-full" />
@@ -130,15 +133,15 @@ export default function CreatorAvatarPopover({
                 </span>
               ) : (
                 <p className="text-muted-foreground mt-1 truncate text-xs font-medium">
-                  {isOwnChannel ? "내 채널" : "채널 보러 가기"}
+                  {isOwnChannel ? "내 채널" : "채널 보기"}
                 </p>
               )}
             </div>
-            <ChevronRight className="text-muted-foreground/70 size-4 shrink-0" />
+            <ChevronRight className="text-muted-foreground/70 group-hover/profile:text-brand size-4 shrink-0 transition-all group-hover/profile:translate-x-0.5" />
           </Link>
 
           <div className="border-border/60 bg-muted/30 flex flex-col gap-2 border-t px-3 py-3">
-            {/* 라이브 중이면 시청 페이지 버튼을 함께 노출하고, 채널 보기는 항상 제공합니다. */}
+            {/* 라이브 중이면 시청 페이지 버튼만 노출. 채널 이동은 위 프로필 카드 클릭으로. */}
             {isLive && (
               <Link
                 href={`/live/${creatorId}`}
@@ -152,18 +155,6 @@ export default function CreatorAvatarPopover({
                 라이브 보기
               </Link>
             )}
-
-            <Link
-              href={`/channel/${creatorId}`}
-              className={cn(
-                buttonVariants({ size: "sm" }),
-                "h-8 w-full justify-center gap-1.5 rounded-full px-3 text-xs font-black",
-                "border-border bg-background text-foreground hover:bg-muted border",
-              )}
-            >
-              <Tv className="size-3.5" />
-              채널 보기
-            </Link>
 
             <CreatorFollowingButton
               creatorNickname={creatorNickname}
