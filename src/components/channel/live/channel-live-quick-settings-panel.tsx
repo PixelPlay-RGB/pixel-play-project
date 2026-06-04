@@ -24,7 +24,6 @@ interface Props {
 }
 
 interface QuickSettingRowProps {
-  accent?: "brand" | "live";
   checked: boolean;
   icon: ComponentType<{ className?: string }>;
   label: string;
@@ -41,16 +40,7 @@ function QuickSettingSectionTitle({ title }: { title: string }) {
   );
 }
 
-function QuickSettingRow({
-  accent = "brand",
-  checked,
-  icon: Icon,
-  label,
-  onChange,
-}: QuickSettingRowProps) {
-  const activeIconClassName = accent === "live" ? "text-live" : "text-brand";
-  const activeToggleClassName = accent === "live" ? "bg-live" : "bg-brand";
-
+function QuickSettingRow({ checked, icon: Icon, label, onChange }: QuickSettingRowProps) {
   return (
     <button
       type="button"
@@ -65,7 +55,7 @@ function QuickSettingRow({
         <span
           className={cn(
             "bg-muted/60 text-muted-foreground flex size-8 shrink-0 items-center justify-center rounded-full transition-colors",
-            checked && activeIconClassName,
+            checked && "text-brand",
           )}
         >
           <Icon className="size-4" />
@@ -75,7 +65,7 @@ function QuickSettingRow({
       <span
         className={cn(
           "flex h-5 w-9 shrink-0 items-center rounded-full p-0.5 transition-colors",
-          checked ? activeToggleClassName : "bg-muted-foreground/30",
+          checked ? "bg-brand" : "bg-muted-foreground/30",
         )}
       >
         <span
@@ -127,21 +117,18 @@ export default function ChannelLiveQuickSettingsPanel({
 
         <QuickSettingSectionTitle title="후원" />
         <QuickSettingRow
-          accent="live"
           checked={isDonationEnabled}
           icon={HandCoins}
           label="후원 받기"
           onChange={onDonationEnabledChange}
         />
         <QuickSettingRow
-          accent="live"
           checked={isDonationAmountVisible}
           icon={HandCoins}
           label="후원 금액 공개"
           onChange={onDonationAmountVisibleChange}
         />
         <QuickSettingRow
-          accent="live"
           checked={isDonationAlertEnabled}
           icon={Bell}
           label="후원 알림"
