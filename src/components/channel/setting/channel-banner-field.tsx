@@ -1,6 +1,7 @@
 "use client";
 // 채널 홈 배너 CRUD 필드. 이미지 업로드 + 제목 + 링크 등록, 드래그&드롭 순서 변경, 삭제(즉시 반영).
 
+import DeleteConfirmDialog from "@/components/common/delete-confirm-dialog";
 import { HintNote } from "@/components/common/hint-note";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,6 +43,7 @@ export function ChannelBannerField({ initialBanners }: Props) {
   const [preview, setPreview] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [linkUrl, setLinkUrl] = useState("");
+  const [pendingDelete, setPendingDelete] = useState<ChannelBanner | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const dragStartOrderRef = useRef<string[] | null>(null);
 
@@ -184,7 +186,7 @@ export function ChannelBannerField({ initialBanners }: Props) {
               key={banner.id}
               banner={banner}
               disabled={busy}
-              onDelete={() => deleteBanner(banner.id)}
+              onRequestDelete={() => setPendingDelete(banner)}
               onDragStart={handleDragStart}
               onDragEnd={handleDragEnd}
             />
@@ -198,6 +200,24 @@ export function ChannelBannerField({ initialBanners }: Props) {
         드래그해서 순서를 바꿀 수 있어요. 채널 홈 상단에 노출되는 외부 링크 배너예요. 최대{" "}
         {CHANNEL_BANNER_MAX}개, 1MB 이하(jpg, png, webp, gif, bmp).
       </HintNote>
+
+      <DeleteConfirmDialog
+        open={pendingDelete !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingDelete(null);
+        }}
+        title="배너를 삭제할까요?"
+        description="삭제한 배너는 채널 홈에서 바로 사라지며 되돌릴 수 없어요."
+        isPending={isDeleting}
+        onConfirm={() => {
+          if (!pendingDelete) return;
+          deleteBanner(pendingDelete.id, {
+            onSuccess: (result) => {
+              if (result.success) setPendingDelete(null);
+            },
+          });
+        }}
+      />
     </div>
   );
 }
@@ -205,7 +225,7 @@ export function ChannelBannerField({ initialBanners }: Props) {
 interface BannerReorderItemProps {
   banner: ChannelBanner;
   disabled: boolean;
-  onDelete: () => void;
+  onRequestDelete: () => void;
   onDragStart: () => void;
   onDragEnd: () => void;
 }
@@ -213,7 +233,7 @@ interface BannerReorderItemProps {
 function BannerReorderItem({
   banner,
   disabled,
-  onDelete,
+  onRequestDelete,
   onDragStart,
   onDragEnd,
 }: BannerReorderItemProps) {
@@ -259,7 +279,7 @@ function BannerReorderItem({
       <button
         type="button"
         disabled={disabled}
-        onClick={onDelete}
+        onClick={onRequestDelete}
         aria-label={`${banner.title || "배너"} 삭제`}
         className="text-muted-foreground hover:text-destructive shrink-0 rounded-md p-1.5 transition-colors disabled:opacity-50"
       >
