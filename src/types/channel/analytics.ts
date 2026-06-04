@@ -34,18 +34,34 @@ export interface AnalyticsSample {
   at: number; // epoch ms
   viewers: number;
   chatCount: number;
+  donationAmountTotal: number; // 누적 후원(추세 파생용)
 }
+
+// Realtime 구독 연결 상태(연결 상태 표시·재연결 판단).
+export type AnalyticsConnectionState = "connecting" | "connected" | "reconnecting";
+
+// 시청자 추이 차트 시간 범위.
+export type AnalyticsRange = "5m" | "30m" | "all";
 
 // live_broadcast Realtime로 갱신되는 실시간 집계 + 파생 지표.
 export interface CreatorLiveStats {
-  currentViewers: number;
   peakViewers: number;
   chatMessageCount: number;
   donationCount: number;
   donationAmountTotal: number;
   messagesPerMinute: number | null; // 샘플 부족 시 null
   messagesPerMinuteTrend: number | null; // 10분 전 대비 % 변화, 부족 시 null
+  viewerTrend: number | null; // 10분 전 대비 시청자 % 변화
+  donationTrend: number | null; // 10분 전 대비 누적 후원 % 변화
   samples: AnalyticsSample[];
+  connection: AnalyticsConnectionState;
+}
+
+// presence 기반 동접 집계 결과.
+export interface CreatorLivePresence {
+  viewers: number;
+  isAggregating: boolean; // false면 presence 미연동(시청 화면 미머지)으로 폴백값 사용 중
+  connection: AnalyticsConnectionState;
 }
 
 // 팔로우 증가 폴링 결과.

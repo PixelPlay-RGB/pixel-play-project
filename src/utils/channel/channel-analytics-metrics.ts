@@ -1,6 +1,10 @@
-// 누적 시청자 샘플에서 분당 메시지와 추세(%)를 파생합니다.
+// 누적 시청자 샘플에서 분당 메시지·시청자/후원 추세(%)를 파생합니다.
 
-import { ANALYTICS_MPM_WINDOW_MS, ANALYTICS_TREND_WINDOW_MS } from "@/constants/channel/analytics";
+import {
+  ANALYTICS_MPM_WINDOW_MS,
+  ANALYTICS_TREND_CLAMP,
+  ANALYTICS_TREND_WINDOW_MS,
+} from "@/constants/channel/analytics";
 import type { AnalyticsSample } from "@/types/channel/analytics";
 
 export function deriveMessageMetrics(samples: AnalyticsSample[]): {
@@ -16,12 +20,51 @@ export function deriveMessageMetrics(samples: AnalyticsSample[]): {
   const past = messageRateAt(samples, now - ANALYTICS_TREND_WINDOW_MS);
 
   const messagesPerMinute = current === null ? null : Math.round(current);
-  const messagesPerMinuteTrend =
-    current === null || past === null || past === 0
-      ? null
-      : Math.round(((current - past) / past) * 100);
 
-  return { messagesPerMinute, messagesPerMinuteTrend };
+  return {
+    messagesPerMinute,
+    messagesPerMinuteTrend: percentTrend(current, past),
+  };
+}
+
+// 시청자 추이 추세(10분 전 동접 대비 % 변화).
+export function deriveViewerTrend(samples: AnalyticsSample[]): number | null {
+  return valueTrend(samples, (sample) => sample.viewers);
+}
+
+// 누적 후원 추세(10분 전 누적 대비 % 변화).
+export function deriveDonationTrend(samples: AnalyticsSample[]): number | null {
+  return valueTrend(samples, (sample) => sample.donationAmountTotal);
+}
+
+function valueTrend(
+  samples: AnalyticsSample[],
+  pick: (sample: AnalyticsSample) => number,
+): number | null {
+  if (samples.length < 2) {
+    return null;
+  }
+
+  const now = samples[samples.length - 1].at;
+  const head = lastSampleAtOrBefore(samples, now);
+  const base = lastSampleAtOrBefore(samples, now - ANALYTICS_TREND_WINDOW_MS);
+
+  if (!head || !base || head.at <= base.at) {
+    return null;
+  }
+
+  return percentTrend(pick(head), pick(base));
+}
+
+// 비정상 스파이크를 막기 위해 ±ANALYTICS_TREND_CLAMP로 클램프한다.
+function percentTrend(current: number | null, past: number | null): number | null {
+  if (current === null || past === null || past === 0) {
+    return null;
+  }
+
+  const trend = Math.round(((current - past) / past) * 100);
+
+  return Math.max(-ANALYTICS_TREND_CLAMP, Math.min(ANALYTICS_TREND_CLAMP, trend));
 }
 
 // anchorAt 직전 1분간 chat_message_count 증가량을 분당 값으로 환산한다.

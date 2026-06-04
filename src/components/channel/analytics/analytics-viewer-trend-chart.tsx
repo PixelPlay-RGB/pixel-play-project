@@ -1,26 +1,29 @@
 "use client";
 // 시청자 추이를 누적 샘플 기반 영역 차트로 렌더링합니다.
 
+import { memo, useMemo } from "react";
+
 import { Area, AreaChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts";
 
 import { ChartContainer, type ChartConfig } from "@/components/ui/chart";
-import { ANALYTICS_UNIT } from "@/constants/channel/analytics";
+import { ANALYTICS_LABEL, ANALYTICS_UNIT } from "@/constants/channel/analytics";
 import type { AnalyticsSample } from "@/types/channel/analytics";
+import { formatKstTime } from "@/utils/common/date";
 
 interface Props {
   samples: AnalyticsSample[];
 }
 
 const CHART_CONFIG: ChartConfig = {
-  viewers: { label: "시청자", color: "var(--color-brand)" },
+  viewers: { label: ANALYTICS_LABEL.viewerSeries, color: "var(--color-brand)" },
 };
 
-function formatTime(at: number) {
-  return new Date(at).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
-}
-
-export function AnalyticsViewerTrendChart({ samples }: Props) {
-  const data = samples.map((sample) => ({ at: sample.at, viewers: sample.viewers }));
+// 카운터·후원 등 차트와 무관한 갱신으로 recharts가 재조정되지 않도록 memo한다.
+export const AnalyticsViewerTrendChart = memo(function AnalyticsViewerTrendChart({ samples }: Props) {
+  const data = useMemo(
+    () => samples.map((sample) => ({ at: sample.at, viewers: sample.viewers })),
+    [samples],
+  );
 
   return (
     <ChartContainer config={CHART_CONFIG} className="h-64">
@@ -34,7 +37,7 @@ export function AnalyticsViewerTrendChart({ samples }: Props) {
         <CartesianGrid vertical={false} stroke="var(--color-border)" />
         <XAxis
           dataKey="at"
-          tickFormatter={formatTime}
+          tickFormatter={formatKstTime}
           tickLine={false}
           axisLine={false}
           minTickGap={48}
@@ -48,10 +51,10 @@ export function AnalyticsViewerTrendChart({ samples }: Props) {
           tick={{ fontSize: 12, fill: "var(--color-muted-foreground)" }}
         />
         <Tooltip
-          labelFormatter={(label) => formatTime(Number(label))}
+          labelFormatter={(label) => formatKstTime(Number(label))}
           formatter={(value) => [
             `${Number(value).toLocaleString("ko-KR")}${ANALYTICS_UNIT.viewers}`,
-            "시청자",
+            ANALYTICS_LABEL.viewerSeries,
           ]}
           contentStyle={{
             borderRadius: 12,
@@ -72,4 +75,4 @@ export function AnalyticsViewerTrendChart({ samples }: Props) {
       </AreaChart>
     </ChartContainer>
   );
-}
+});

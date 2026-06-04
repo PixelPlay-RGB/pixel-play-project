@@ -18,5 +18,11 @@ export default async function ChannelAnalyticsPage() {
     return <AnalyticsOfflineState />;
   }
 
-  return <ChannelAnalyticsView snapshot={{ ...snapshot, broadcast: snapshot.broadcast }} />;
+  // 활성 방송이 바뀌면 시계열·카운터 상태를 새로 시드하도록 키로 강제 리마운트한다.
+  return (
+    <ChannelAnalyticsView
+      key={snapshot.broadcast.id}
+      snapshot={{ ...snapshot, broadcast: snapshot.broadcast }}
+    />
+  );
 }

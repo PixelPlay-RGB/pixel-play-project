@@ -5,13 +5,10 @@ import { Gift, UserPlus } from "lucide-react";
 
 import { ANALYTICS_LABEL, ANALYTICS_UNIT } from "@/constants/channel/analytics";
 import type { AnalyticsLogEvent } from "@/types/channel/analytics";
+import { formatKstTime } from "@/utils/common/date";
 
 interface Props {
   events: AnalyticsLogEvent[];
-}
-
-function formatTime(at: string) {
-  return new Date(at).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
 }
 
 export function AnalyticsInteractionLog({ events }: Props) {
@@ -28,7 +25,7 @@ export function AnalyticsInteractionLog({ events }: Props) {
       {events.map((event) => (
         <li key={`${event.type}-${event.id}`} className="flex items-center gap-3 text-sm">
           <span className="text-muted-foreground w-10 shrink-0 font-mono text-xs">
-            {formatTime(event.at)}
+            {formatKstTime(event.at)}
           </span>
           {event.type === "donation" ? (
             <span className="text-live flex items-center gap-1.5 font-medium">

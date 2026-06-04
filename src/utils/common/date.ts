@@ -9,6 +9,19 @@ const DATE_INPUT_FORMATTER = new Intl.DateTimeFormat("en-CA", {
   day: "2-digit",
 });
 
+// 시·분 표기를 KST로 고정한다. 타임존을 박지 않으면 서버(UTC)·클라이언트 출력이 달라져
+// SSR 텍스트가 하이드레이션 때 어긋난다.
+const KST_TIME_FORMATTER = new Intl.DateTimeFormat("ko-KR", {
+  timeZone: "Asia/Seoul",
+  hourCycle: "h23", // 24시간 "14:30" 표기로 고정(좁은 mono 셀에 맞고 오전/오후 표기 폭 변동 제거)
+  hour: "2-digit",
+  minute: "2-digit",
+});
+
+export function formatKstTime(at: number | string | Date) {
+  return KST_TIME_FORMATTER.format(new Date(at));
+}
+
 export function getTodayDateInputValue() {
   const parts = DATE_INPUT_FORMATTER.formatToParts(new Date());
   const year = parts.find((part) => part.type === "year")?.value;

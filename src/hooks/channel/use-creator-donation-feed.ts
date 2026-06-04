@@ -3,46 +3,57 @@
 
 import { useEffect, useState } from "react";
 
+import { ANALYTICS_DONATION_LOG_LIMIT } from "@/constants/channel/analytics";
 import { createClient } from "@/lib/supabase/client";
-import type { AnalyticsLogEvent } from "@/types/channel/analytics";
-import type { Tables } from "@/types/database.types";
+import type {
+  AnalyticsConnectionState,
+  AnalyticsLogEvent,
+} from "@/types/channel/analytics";
+import { normalizeDonationRow } from "@/utils/channel/channel-analytics-normalize";
+import { startReconnectingChannel } from "@/utils/channel/realtime-reconnect";
 
-type DonationRow = Tables<"donation">;
+interface CreatorDonationFeed {
+  events: AnalyticsLogEvent[];
+  connection: AnalyticsConnectionState;
+}
 
 export function useCreatorDonationFeed(
   broadcastId: string,
   initialDonations: AnalyticsLogEvent[],
-): AnalyticsLogEvent[] {
+): CreatorDonationFeed {
   const [events, setEvents] = useState<AnalyticsLogEvent[]>(initialDonations);
+  const [connection, setConnection] = useState<AnalyticsConnectionState>("connecting");
 
   useEffect(() => {
     const supabase = createClient();
-    const channel = supabase
-      .channel(`channel-analytics-donation:${broadcastId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "donation",
-          filter: `broadcast_id=eq.${broadcastId}`,
-        },
-        (payload) => {
-          const row = payload.new as DonationRow;
 
-          setEvents((prev) =>
-            prev.some((event) => event.id === row.id)
-              ? prev
-              : [{ id: row.id, type: "donation", at: row.created_at, amount: row.amount }, ...prev],
-          );
-        },
-      )
-      .subscribe();
+    return startReconnectingChannel(supabase, {
+      buildChannel: () =>
+        supabase.channel(`channel-analytics-donation:${broadcastId}`).on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "donation",
+            filter: `broadcast_id=eq.${broadcastId}`,
+          },
+          (payload) => {
+            const event = normalizeDonationRow(payload.new, broadcastId);
 
-    return () => {
-      void supabase.removeChannel(channel);
-    };
+            if (!event) {
+              return;
+            }
+
+            setEvents((prev) =>
+              prev.some((existing) => existing.id === event.id)
+                ? prev
+                : [event, ...prev].slice(0, ANALYTICS_DONATION_LOG_LIMIT),
+            );
+          },
+        ),
+      onConnectionChange: setConnection,
+    });
   }, [broadcastId]);
 
-  return events;
+  return { events, connection };
 }

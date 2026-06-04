@@ -7,6 +7,7 @@ import type {
   ChannelAnalyticsSnapshot,
 } from "@/types/channel/analytics";
 import type { Json } from "@/types/database.types";
+import { readNumber, readObject, readText } from "@/utils/channel/channel-analytics-read";
 
 export function buildChannelAnalyticsSnapshot(
   creatorId: string,
@@ -22,7 +23,7 @@ export function buildChannelAnalyticsSnapshot(
   };
 }
 
-function readBroadcast(value: Json | undefined): AnalyticsBroadcast | null {
+function readBroadcast(value: unknown): AnalyticsBroadcast | null {
   const broadcast = readObject(value);
 
   if (!broadcast) {
@@ -48,7 +49,7 @@ function readBroadcast(value: Json | undefined): AnalyticsBroadcast | null {
   };
 }
 
-function readRecentDonations(value: Json | undefined, broadcastId: string): AnalyticsLogEvent[] {
+function readRecentDonations(value: unknown, broadcastId: string): AnalyticsLogEvent[] {
   if (!Array.isArray(value)) {
     return [];
   }
@@ -58,7 +59,7 @@ function readRecentDonations(value: Json | undefined, broadcastId: string): Anal
     .filter((event): event is AnalyticsLogEvent => event !== null);
 }
 
-function readDonationEvent(value: Json, broadcastId: string): AnalyticsLogEvent | null {
+function readDonationEvent(value: unknown, broadcastId: string): AnalyticsLogEvent | null {
   const donation = readObject(value);
 
   if (!donation || readText(donation.broadcastId) !== broadcastId) {
@@ -73,21 +74,4 @@ function readDonationEvent(value: Json, broadcastId: string): AnalyticsLogEvent 
   }
 
   return { id, type: "donation", at, amount: readNumber(donation.amount, 0) };
-}
-
-// 로컬 read 헬퍼(형제 channel-chat-snapshot.ts와 동일 패턴, readText는 필수값 판별 위해 null 반환)
-function readObject(value: Json | undefined): Record<string, Json | undefined> | null {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    return null;
-  }
-
-  return value as Record<string, Json | undefined>;
-}
-
-function readNumber(value: unknown, fallback: number) {
-  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
-}
-
-function readText(value: unknown): string | null {
-  return typeof value === "string" && value.trim() !== "" ? value : null;
 }

@@ -4,6 +4,7 @@ import "server-only";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { createAdminClient } from "@/lib/supabase/admin-client";
 import { createClient } from "@/lib/supabase/server";
+import { getMockAnalyticsCreatorId } from "@/mock/channel-analytics";
 import type { ChannelAnalyticsSnapshot } from "@/types/channel/analytics";
 import type { AppActionResult } from "@/types/common/action";
 import { isAuthSessionMissingError } from "@/utils/auth/auth-error";
@@ -22,7 +23,10 @@ export async function getChannelAnalyticsSnapshot(): Promise<
     console.error("채널 통계 조회 중 인증 유저 조회 실패", userError);
   }
 
-  if (!user) {
+  // mock 모드(.env.local에 creatorId 설정)면 그 creatorId를 actor로 써서 real 방송 테스트 데이터를 받는다.
+  const actorId = getMockAnalyticsCreatorId() ?? user?.id;
+
+  if (!actorId) {
     return {
       success: false,
       code: APP_MESSAGE_CODE.error.auth.authInfoNotFound,
@@ -31,7 +35,7 @@ export async function getChannelAnalyticsSnapshot(): Promise<
 
   const supabase = createAdminClient();
   const { data, error } = await supabase.rpc("get_creator_studio_snapshot", {
-    p_actor_user_id: user.id,
+    p_actor_user_id: actorId,
   });
 
   if (error) {
@@ -45,7 +49,7 @@ export async function getChannelAnalyticsSnapshot(): Promise<
   try {
     return {
       success: true,
-      data: buildChannelAnalyticsSnapshot(user.id, data),
+      data: buildChannelAnalyticsSnapshot(actorId, data),
     };
   } catch (error) {
     console.error("채널 통계 표시값 생성 실패", error);
