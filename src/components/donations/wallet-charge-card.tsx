@@ -5,7 +5,15 @@ import { SettingsCard } from "@/components/common/settings-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  WALLET_CHARGE_DEFAULT_AMOUNT,
+  WALLET_CHARGE_MAX_AMOUNT,
+  WALLET_CHARGE_MIN_AMOUNT,
+  WALLET_CHARGE_PRESET_AMOUNTS,
+  WALLET_CHARGE_STEP_AMOUNT,
+} from "@/constants/payments/wallet-charge";
 import { cn } from "@/lib/utils";
+import type { TossPaymentPrepareResponse } from "@/types/payments/toss-payment-api";
 import type {
   TossPaymentsPaymentWindow,
   TossPaymentsWidgets,
@@ -20,23 +28,20 @@ interface Props {
 
 type PaymentWidgetState = "idle" | "initializing" | "ready" | "opening" | "failed";
 
-const PRESET_AMOUNTS = [5000, 10000, 30000, 50000];
-const DEFAULT_AMOUNT = PRESET_AMOUNTS[1];
-const MINIMUM_CHARGE_AMOUNT = 1000;
 const TOSS_PAYMENTS_SDK_URL = "https://js.tosspayments.com/v2/standard";
 
 export function WalletChargeCard({ customerKey }: Props) {
   const amountInputId = useId();
   const clientKey = process.env.NEXT_PUBLIC_TOSS_PAYMENTS_CLIENT_KEY;
-  const [amount, setAmount] = useState(String(DEFAULT_AMOUNT));
+  const [amount, setAmount] = useState(String(WALLET_CHARGE_DEFAULT_AMOUNT));
   const [isSdkLoaded, setIsSdkLoaded] = useState(false);
   const [paymentWidgetState, setPaymentWidgetState] = useState<PaymentWidgetState>("idle");
   const widgetsRef = useRef<TossPaymentsWidgets | null>(null);
   const paymentWindowRef = useRef<TossPaymentsPaymentWindow | null>(null);
-  const amountRef = useRef(DEFAULT_AMOUNT);
+  const amountRef = useRef<number>(WALLET_CHARGE_DEFAULT_AMOUNT);
 
   const numericAmount = useMemo(() => Number(amount), [amount]);
-  const isValidAmount = Number.isFinite(numericAmount) && numericAmount >= MINIMUM_CHARGE_AMOUNT;
+  const isValidAmount = isValidChargeAmount(numericAmount);
   const isBusy = paymentWidgetState === "initializing" || paymentWidgetState === "opening";
   const canRequestPayment =
     Boolean(clientKey) && isSdkLoaded && paymentWidgetState === "ready" && isValidAmount;
@@ -57,7 +62,7 @@ export function WalletChargeCard({ customerKey }: Props) {
     widgetsRef.current = widgets;
 
     widgets
-      .setAmount({ currency: "KRW", value: DEFAULT_AMOUNT })
+      .setAmount({ currency: "KRW", value: WALLET_CHARGE_DEFAULT_AMOUNT })
       .then(() => {
         if (isActive) {
           setPaymentWidgetState("ready");
@@ -104,32 +109,27 @@ export function WalletChargeCard({ customerKey }: Props) {
     };
   }, [isValidAmount, numericAmount, paymentWidgetState]);
 
-  const requestPayment = useCallback(
-    (widgets: TossPaymentsWidgets) => {
-      const currentAmount = amountRef.current;
+  const requestPayment = useCallback(async (widgets: TossPaymentsWidgets) => {
+    const currentAmount = amountRef.current;
 
-      if (!Number.isFinite(currentAmount) || currentAmount < MINIMUM_CHARGE_AMOUNT) {
-        return;
-      }
+    if (!isValidChargeAmount(currentAmount)) {
+      return;
+    }
 
-      void widgets
-        .requestPayment({
-          orderId: createOrderId(),
-          orderName: `후원 지갑 충전 ${formatWon(currentAmount)}`,
-          successUrl: `${window.location.origin}/user/donations/toss/success`,
-          failUrl: `${window.location.origin}/user/donations/toss/fail`,
-          metadata: {
-            customerKey,
-            paymentType: "wallet_charge",
-          },
-        })
-        .catch((error) => {
-          console.error("Toss Payments 결제 요청 실패", error);
-          setPaymentWidgetState("failed");
-        });
-    },
-    [customerKey],
-  );
+    try {
+      const preparedPayment = await prepareTossWalletCharge(currentAmount);
+      await widgets.setAmount({ currency: "KRW", value: preparedPayment.amount });
+      await widgets.requestPayment({
+        orderId: preparedPayment.orderId,
+        orderName: preparedPayment.orderName,
+        successUrl: `${window.location.origin}/user/donations/toss/success`,
+        failUrl: `${window.location.origin}/user/donations/toss/fail`,
+      });
+    } catch (error) {
+      console.error("Toss Payments 결제 요청 실패", error);
+      setPaymentWidgetState("failed");
+    }
+  }, []);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -178,7 +178,7 @@ export function WalletChargeCard({ customerKey }: Props) {
 
       <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
         <div className="grid grid-cols-2 gap-2">
-          {PRESET_AMOUNTS.map((presetAmount) => {
+          {WALLET_CHARGE_PRESET_AMOUNTS.map((presetAmount) => {
             const isSelected = numericAmount === presetAmount;
 
             return (
@@ -203,8 +203,9 @@ export function WalletChargeCard({ customerKey }: Props) {
               id={amountInputId}
               type="number"
               inputMode="numeric"
-              min={MINIMUM_CHARGE_AMOUNT}
-              step={1000}
+              min={WALLET_CHARGE_MIN_AMOUNT}
+              max={WALLET_CHARGE_MAX_AMOUNT}
+              step={WALLET_CHARGE_STEP_AMOUNT}
               value={amount}
               aria-invalid={!isValidAmount}
               className="pr-10"
@@ -214,7 +215,9 @@ export function WalletChargeCard({ customerKey }: Props) {
               원
             </span>
           </div>
-          <p className="text-muted-foreground text-xs">최소 충전 금액은 1,000원입니다.</p>
+          <p className="text-muted-foreground text-xs">
+            1,000원부터 1,000,000원까지 1,000원 단위로 충전할 수 있습니다.
+          </p>
         </div>
 
         <div className="bg-muted/40 flex items-center justify-between gap-3 rounded-lg px-4 py-3">
@@ -267,11 +270,50 @@ function getPaymentStateMessage(clientKey: string | undefined, state: PaymentWid
   return "";
 }
 
-function createOrderId() {
-  const randomValue =
-    window.crypto?.randomUUID?.().replaceAll("-", "") ?? Math.random().toString(36).slice(2);
+async function prepareTossWalletCharge(amount: number) {
+  const response = await fetch("/api/payments/toss/prepare", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ amount }),
+  });
 
-  return `wallet_${Date.now()}_${randomValue.slice(0, 20)}`;
+  if (!response.ok) {
+    throw new Error("Toss 결제 준비 실패");
+  }
+
+  const data = (await response.json()) as unknown;
+
+  if (!isTossPaymentPrepareResponse(data)) {
+    throw new Error("Toss 결제 준비 응답 형식 오류");
+  }
+
+  return data;
+}
+
+function isTossPaymentPrepareResponse(value: unknown): value is TossPaymentPrepareResponse {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const response = value as Partial<TossPaymentPrepareResponse>;
+
+  return (
+    typeof response.orderId === "string" &&
+    typeof response.orderName === "string" &&
+    isValidChargeAmount(response.amount)
+  );
+}
+
+function isValidChargeAmount(value: number | undefined) {
+  return (
+    typeof value === "number" &&
+    Number.isInteger(value) &&
+    value >= WALLET_CHARGE_MIN_AMOUNT &&
+    value <= WALLET_CHARGE_MAX_AMOUNT &&
+    value % WALLET_CHARGE_STEP_AMOUNT === 0
+  );
 }
 
 function formatWon(amount: number) {

@@ -249,9 +249,17 @@ export const APP_MESSAGE = {
       },
     },
     donation: {
+      invalidChargeAmount: {
+        title: "충전 금액 확인 필요",
+        description: "충전 금액을 다시 확인해주세요.",
+      },
       loadFailed: {
         title: "후원 내역 조회 실패",
         description: "후원 지갑 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.",
+      },
+      prepareChargeFailed: {
+        title: "충전 준비 실패",
+        description: "충전 주문을 준비하지 못했습니다. 잠시 후 다시 시도해주세요.",
       },
     },
     chatRoomMember: {
