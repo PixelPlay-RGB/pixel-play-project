@@ -1,5 +1,6 @@
 // MediaMTX Control API를 서버에서 대신 조회해 방송 송출 상태를 반환합니다.
 import { CHANNEL_LIVE_MEDIA_CONFIG } from "@/constants/channel/channel-live-media";
+import { mediaMtxPathResponseSchema, type MediaMtxPathResponse } from "@/lib/zod/channel-live";
 import type { ChannelLiveStreamStatusResponse } from "@/types/channel/channel-live-stream";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -8,10 +9,6 @@ export const dynamic = "force-dynamic";
 const LOCAL_MEDIAMTX_API_BASE_URL = "http://127.0.0.1:9997";
 const REQUEST_TIMEOUT_MS = 3000;
 const DEFAULT_CONFIGURED_FPS = 30;
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
 
 function readNumber(value: unknown) {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
@@ -39,21 +36,18 @@ function getMediaMtxApiBaseUrl() {
   throw new Error("MEDIAMTX_API_BASE_URL 환경 변수가 필요합니다.");
 }
 
-function getVideoDimensions(pathData: Record<string, unknown>) {
+function getVideoDimensions(pathData: MediaMtxPathResponse) {
   const tracks = pathData.tracks2;
 
-  if (!Array.isArray(tracks)) {
+  if (!tracks?.length) {
     return { height: null, width: null };
   }
 
   const videoTrack = tracks.find((track) => {
-    if (!isRecord(track)) return false;
-
-    const codec = readString(track.codec);
-    return codec === "H264" || codec === "H265" || codec === "AV1";
+    return track.codec === "H264" || track.codec === "H265" || track.codec === "AV1";
   });
 
-  if (!isRecord(videoTrack) || !isRecord(videoTrack.codecProps)) {
+  if (!videoTrack?.codecProps) {
     return { height: null, width: null };
   }
 
@@ -120,23 +114,26 @@ export async function GET(request: NextRequest) {
     }
 
     const pathData: unknown = await response.json();
+    const parsedPathData = mediaMtxPathResponseSchema.safeParse(pathData);
 
-    if (!isRecord(pathData)) {
+    if (!parsedPathData.success) {
+      console.error("MediaMTX 응답 형식 오류", parsedPathData.error);
       return NextResponse.json(
         createUnavailableResponse(streamPath, "MediaMTX API 응답 형식이 올바르지 않습니다."),
       );
     }
 
-    const { height, width } = getVideoDimensions(pathData);
-    const isOnline = pathData.online === true;
+    const mediaMtxPathData = parsedPathData.data;
+    const { height, width } = getVideoDimensions(mediaMtxPathData);
+    const isOnline = mediaMtxPathData.online === true;
 
     return NextResponse.json({
       checkedAt: new Date().toISOString(),
       // MediaMTX Control API does not expose live FPS, so show the baseline OBS setting.
       fps: isOnline ? DEFAULT_CONFIGURED_FPS : null,
       height,
-      inboundBytes: readNumber(pathData.inboundBytes),
-      onlineTime: isOnline ? readString(pathData.onlineTime) : null,
+      inboundBytes: readNumber(mediaMtxPathData.inboundBytes),
+      onlineTime: isOnline ? readString(mediaMtxPathData.onlineTime) : null,
       state: isOnline ? "online" : "offline",
       streamPath,
       width,

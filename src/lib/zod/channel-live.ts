@@ -59,9 +59,33 @@ export const getChannelLiveDrawParticipantsSchema = z
   })
   .refine((value) => new Date(value.startedAt).getTime() <= new Date(value.endedAt).getTime());
 
+const mediaMtxTrackCodecPropsSchema = z
+  .object({
+    height: z.number().nullable().optional(),
+    width: z.number().nullable().optional(),
+  })
+  .passthrough();
+
+const mediaMtxTrackSchema = z
+  .object({
+    codec: z.string(),
+    codecProps: mediaMtxTrackCodecPropsSchema.nullable().optional(),
+  })
+  .passthrough();
+
+export const mediaMtxPathResponseSchema = z
+  .object({
+    inboundBytes: z.number().nullable().optional(),
+    online: z.boolean(),
+    onlineTime: z.string().nullable().optional(),
+    tracks2: z.array(mediaMtxTrackSchema).nullable().optional(),
+  })
+  .passthrough();
+
 export type GetChannelLiveDrawParticipantsInput = z.infer<
   typeof getChannelLiveDrawParticipantsSchema
 >;
+export type MediaMtxPathResponse = z.infer<typeof mediaMtxPathResponseSchema>;
 export type SendChannelLiveChatMessageInput = z.infer<typeof sendChannelLiveChatMessageSchema>;
 export type StartLiveBroadcastInput = z.infer<typeof startLiveBroadcastSchema>;
 export type UpdateChannelLiveSettingsInput = z.infer<typeof updateChannelLiveSettingsSchema>;
