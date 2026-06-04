@@ -76,7 +76,7 @@ export default function CommunityCommentComposer({
   return (
     <form
       onSubmit={handleSubmit}
-      className="border-border/60 focus-within:border-brand/40 bg-card/40 flex flex-col gap-2 rounded-2xl border p-3 transition-colors"
+      className="border-border/60 focus-within:border-brand/40 bg-muted/40 flex flex-col gap-2 rounded-2xl border p-3 transition-colors"
     >
       <div className="flex gap-2.5">
         <Avatar className={cn("mt-0.5 shrink-0", compact ? "size-7" : "size-8")}>
