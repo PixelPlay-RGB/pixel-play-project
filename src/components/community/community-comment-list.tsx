@@ -3,7 +3,7 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { RotateCw } from "lucide-react";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 
 import ChatRoomListPagination from "@/components/chat-room-list/chat-room-list-pagination";
 import CommunityCommentComposer from "@/components/community/community-comment-composer";
@@ -65,34 +65,36 @@ export default function CommunityCommentList({
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5">
           <h2 className="text-foreground text-sm font-black">
-            댓글 <span className="text-brand">{numberFormatter.format(commentCount)}</span>
+            댓글 {numberFormatter.format(commentCount)}
           </h2>
           <button
             type="button"
             onClick={handleRefresh}
             aria-label="댓글 새로고침"
-            className="text-muted-foreground hover:text-brand transition-colors"
+            className="text-muted-foreground hover:text-foreground transition-colors"
           >
             <RotateCw className={cn("size-4", isFetching && "animate-spin")} />
           </button>
         </div>
 
-        <div className="bg-brand/10 flex items-center gap-0.5 rounded-lg p-0.5 text-xs font-bold dark:bg-white/5">
-          {COMMUNITY_COMMENT_SORTS.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => handleSortChange(option.value)}
-              aria-pressed={sort === option.value}
-              className={cn(
-                "rounded-md px-2 py-1 transition-colors",
-                sort === option.value
-                  ? "bg-background text-brand dark:bg-card shadow-sm"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {option.label}
-            </button>
+        <div className="flex items-center gap-1.5 text-xs font-bold">
+          {COMMUNITY_COMMENT_SORTS.map((option, index) => (
+            <Fragment key={option.value}>
+              {index > 0 && <span className="text-muted-foreground/40">·</span>}
+              <button
+                type="button"
+                onClick={() => handleSortChange(option.value)}
+                aria-pressed={sort === option.value}
+                className={cn(
+                  "transition-colors",
+                  sort === option.value
+                    ? "text-brand"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {option.label}
+              </button>
+            </Fragment>
           ))}
         </div>
       </div>
