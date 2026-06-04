@@ -4,7 +4,11 @@ import { notFound } from "next/navigation";
 import CommunityPostDetailView from "@/components/community/community-post-detail-view";
 import type { CommunityCommentsResult } from "@/types/community/community";
 import { getChannelProfile } from "@/utils/channel/channel-server";
-import { getCommunityComments, getCommunityPostDetail } from "@/utils/community/community-server";
+import {
+  getCommunityComments,
+  getCommunityPostDetail,
+  getCommunityPostNeighbors,
+} from "@/utils/community/community-server";
 
 const EMPTY_COMMENTS: CommunityCommentsResult = { bestComment: null, items: [], totalCount: 0 };
 
@@ -15,10 +19,11 @@ export default async function CommunityPostDetailPage({
 }) {
   const { creatorId, postId } = await params;
 
-  const [profileResult, postResult, commentsResult] = await Promise.all([
+  const [profileResult, postResult, commentsResult, neighbors] = await Promise.all([
     getChannelProfile(creatorId),
     getCommunityPostDetail(postId),
     getCommunityComments(postId, 1),
+    getCommunityPostNeighbors(postId),
   ]);
 
   if (
@@ -40,6 +45,7 @@ export default async function CommunityPostDetailPage({
       initialComments={
         commentsResult.success && commentsResult.data ? commentsResult.data : EMPTY_COMMENTS
       }
+      neighbors={neighbors}
     />
   );
 }

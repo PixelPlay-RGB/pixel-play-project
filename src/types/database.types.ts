@@ -948,6 +948,10 @@ export type Database = {
           total_count: number
         }[]
       }
+      get_community_adjacent_posts: {
+        Args: { p_post_id: string }
+        Returns: Json
+      }
       get_community_comment_replies: {
         Args: { p_parent_id: string; p_viewer_id?: string }
         Returns: Json

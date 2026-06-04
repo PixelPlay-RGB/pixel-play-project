@@ -9,6 +9,7 @@ import {
 import { createAdminClient } from "@/lib/supabase/admin-client";
 import type { AppActionResult } from "@/types/common/action";
 import type {
+  CommunityAdjacentPosts,
   CommunityComment,
   CommunityCommentSort,
   CommunityCommentsResult,
@@ -17,6 +18,7 @@ import type {
 } from "@/types/community/community";
 import { resolveViewerId } from "@/utils/auth/viewer";
 import {
+  parseCommunityAdjacentPosts,
   parseCommunityCommentReplies,
   parseCommunityComments,
   parseCommunityPostDetail,
@@ -120,4 +122,20 @@ export async function getCommunityCommentReplies(
   }
 
   return { success: true, data: parseCommunityCommentReplies(data) };
+}
+
+// 게시글 상세의 이전/다음 글(없으면 null). 실패해도 네비게이션만 비표시.
+export async function getCommunityPostNeighbors(postId: string): Promise<CommunityAdjacentPosts> {
+  const supabase = createAdminClient();
+
+  const { data, error } = await supabase.rpc("get_community_adjacent_posts", {
+    p_post_id: postId,
+  });
+
+  if (error) {
+    console.error("커뮤니티 인접 글 조회 실패", error);
+    return { prev: null, next: null };
+  }
+
+  return parseCommunityAdjacentPosts(data);
 }

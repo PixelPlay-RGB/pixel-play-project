@@ -70,3 +70,15 @@ export interface CommunityPostLikeResult {
   liked: boolean;
   likeCount: number;
 }
+
+// 게시글 상세의 이전/다음 글 네비게이션 항목.
+export interface CommunityAdjacentPost {
+  id: string;
+  content: string;
+}
+
+export interface CommunityAdjacentPosts {
+  // 이전 글(더 오래된), 다음 글(더 최신). 없으면 null.
+  prev: CommunityAdjacentPost | null;
+  next: CommunityAdjacentPost | null;
+}

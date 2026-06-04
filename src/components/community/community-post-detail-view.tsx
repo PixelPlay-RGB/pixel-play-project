@@ -11,10 +11,15 @@ import CommunityCommentComposer from "@/components/community/community-comment-c
 import CommunityCommentList from "@/components/community/community-comment-list";
 import CommunityDeleteDialog from "@/components/community/community-delete-dialog";
 import CommunityLikeButton from "@/components/community/community-like-button";
+import CommunityPostPager from "@/components/community/community-post-pager";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useCommunityPostDetail } from "@/hooks/community/use-community-post-detail";
 import { useDeleteCommunityPost } from "@/hooks/community/use-delete-community-post";
-import type { CommunityCommentsResult, CommunityPostDetail } from "@/types/community/community";
+import type {
+  CommunityAdjacentPosts,
+  CommunityCommentsResult,
+  CommunityPostDetail,
+} from "@/types/community/community";
 import { formatRelativeTime } from "@/utils/common/format";
 import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
 
@@ -23,6 +28,7 @@ interface Props {
   post: CommunityPostDetail;
   isChannelOwner: boolean;
   initialComments: CommunityCommentsResult;
+  neighbors: CommunityAdjacentPosts;
 }
 
 const numberFormatter = new Intl.NumberFormat("ko-KR");
@@ -32,6 +38,7 @@ export default function CommunityPostDetailView({
   post,
   isChannelOwner,
   initialComments,
+  neighbors,
 }: Props) {
   const router = useRouter();
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -124,6 +131,8 @@ export default function CommunityPostDetailView({
           initialData={initialComments}
         />
       </section>
+
+      <CommunityPostPager creatorId={creatorId} neighbors={neighbors} />
 
       <CommunityDeleteDialog
         open={isDeleteOpen}

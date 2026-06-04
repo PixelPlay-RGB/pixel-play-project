@@ -1,5 +1,7 @@
 // 커뮤니티 게시판 RPC 응답(jsonb)을 화면 타입으로 변환합니다.
 import type {
+  CommunityAdjacentPost,
+  CommunityAdjacentPosts,
   CommunityComment,
   CommunityCommentsResult,
   CommunityCreator,
@@ -194,6 +196,35 @@ export function parseCommunityCommentReplies(value: Json): CommunityComment[] {
   return readArray(value)
     .map(parseComment)
     .filter((item): item is CommunityComment => item !== null);
+}
+
+function parseAdjacentPost(value: Json | undefined): CommunityAdjacentPost | null {
+  const object = readObject(value);
+
+  if (!object) {
+    return null;
+  }
+
+  const id = readString(object.id);
+
+  if (!id) {
+    return null;
+  }
+
+  return { id, content: readText(object.content) ?? "" };
+}
+
+export function parseCommunityAdjacentPosts(value: Json): CommunityAdjacentPosts {
+  const object = readObject(value);
+
+  if (!object) {
+    return { prev: null, next: null };
+  }
+
+  return {
+    prev: parseAdjacentPost(object.prev),
+    next: parseAdjacentPost(object.next),
+  };
 }
 
 export function parseCommunityPostLikeResult(value: Json): CommunityPostLikeResult {
