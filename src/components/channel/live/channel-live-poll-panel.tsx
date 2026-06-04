@@ -447,6 +447,8 @@ export default function ChannelLivePollPanel({ broadcastId, messages }: Props) {
   };
 
   const handleAddRouletteItem = () => {
+    if (isRouletteSpinning) return;
+
     const nextItem = rouletteInput.trim();
 
     if (!nextItem) return;
@@ -457,6 +459,8 @@ export default function ChannelLivePollPanel({ broadcastId, messages }: Props) {
   };
 
   const handleRemoveRouletteItem = (index: number) => {
+    if (isRouletteSpinning) return;
+
     setRouletteItems((currentItems) =>
       currentItems.filter((_, currentIndex) => currentIndex !== index),
     );
@@ -466,6 +470,7 @@ export default function ChannelLivePollPanel({ broadcastId, messages }: Props) {
   const handleSpinRoulette = () => {
     if (rouletteItems.length === 0 || isRouletteSpinning) return;
 
+    const spinningItems = [...rouletteItems];
     const nextRotation = rouletteRotation + 1440 + Math.random() * 360;
 
     setIsRouletteSpinning(true);
@@ -477,10 +482,10 @@ export default function ChannelLivePollPanel({ broadcastId, messages }: Props) {
     }
 
     rouletteTimeoutRef.current = setTimeout(() => {
-      const winnerIndex = getRouletteWinnerIndex(nextRotation, rouletteItems.length);
+      const winnerIndex = getRouletteWinnerIndex(nextRotation, spinningItems.length);
 
       if (winnerIndex !== null) {
-        setRouletteResult(rouletteItems[winnerIndex]);
+        setRouletteResult(spinningItems[winnerIndex]);
       }
 
       setIsRouletteSpinning(false);
@@ -841,6 +846,7 @@ export default function ChannelLivePollPanel({ broadcastId, messages }: Props) {
               <div className="flex gap-2">
                 <Input
                   value={rouletteInput}
+                  disabled={isRouletteSpinning}
                   maxLength={24}
                   placeholder="룰렛 항목"
                   className="border-border bg-background h-10 rounded-xl px-4 text-sm"
@@ -856,6 +862,7 @@ export default function ChannelLivePollPanel({ broadcastId, messages }: Props) {
                   type="button"
                   variant="outline"
                   className="h-10 rounded-xl font-bold"
+                  disabled={isRouletteSpinning}
                   onClick={handleAddRouletteItem}
                 >
                   추가
@@ -874,6 +881,7 @@ export default function ChannelLivePollPanel({ broadcastId, messages }: Props) {
                       size="icon"
                       variant="ghost"
                       className="size-8 rounded-xl"
+                      disabled={isRouletteSpinning}
                       onClick={() => handleRemoveRouletteItem(index)}
                     >
                       <X className="size-4" />
