@@ -55,11 +55,11 @@ export function ChannelCommunityPreview({ creatorId, isOwner, result }: Props) {
           </CarouselContent>
           <CarouselPrevious
             hideWhenDisabled
-            className="bg-background/95 border-border/70 left-2 z-10 size-9 shadow-lg backdrop-blur"
+            className="bg-background/95 border-border/70 left-0 z-10 size-9 -translate-x-1/2 shadow-lg backdrop-blur"
           />
           <CarouselNext
             hideWhenDisabled
-            className="bg-background/95 border-border/70 right-2 z-10 size-9 shadow-lg backdrop-blur"
+            className="bg-background/95 border-border/70 right-0 z-10 size-9 translate-x-1/2 shadow-lg backdrop-blur"
           />
         </div>
       ) : (
