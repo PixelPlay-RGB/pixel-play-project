@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import useEmblaCarousel, { type UseEmblaCarouselType } from "embla-carousel-react";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -163,9 +163,15 @@ function CarouselPrevious({
   className,
   variant = "outline",
   size = "icon",
+  hideWhenDisabled = false,
   ...props
-}: React.ComponentProps<typeof Button>) {
+}: React.ComponentProps<typeof Button> & { hideWhenDisabled?: boolean }) {
   const { orientation, scrollPrev, canScrollPrev } = useCarousel();
+
+  // 이전으로 더 갈 수 없으면 아예 렌더하지 않는다(비활성 버튼이 클릭을 가로채는 문제 방지).
+  if (hideWhenDisabled && !canScrollPrev) {
+    return null;
+  }
 
   return (
     <Button
@@ -183,7 +189,7 @@ function CarouselPrevious({
       onClick={scrollPrev}
       {...props}
     >
-      <ArrowLeft />
+      <ChevronLeft />
       <span className="sr-only">이전</span>
     </Button>
   );
@@ -193,9 +199,15 @@ function CarouselNext({
   className,
   variant = "outline",
   size = "icon",
+  hideWhenDisabled = false,
   ...props
-}: React.ComponentProps<typeof Button>) {
+}: React.ComponentProps<typeof Button> & { hideWhenDisabled?: boolean }) {
   const { orientation, scrollNext, canScrollNext } = useCarousel();
+
+  // 다음으로 더 갈 수 없으면 아예 렌더하지 않는다.
+  if (hideWhenDisabled && !canScrollNext) {
+    return null;
+  }
 
   return (
     <Button
@@ -213,7 +225,7 @@ function CarouselNext({
       onClick={scrollNext}
       {...props}
     >
-      <ArrowRight />
+      <ChevronRight />
       <span className="sr-only">다음</span>
     </Button>
   );
