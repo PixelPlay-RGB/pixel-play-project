@@ -1,10 +1,10 @@
 "use client";
 // 라이브 탐색 Sidebar를 기존 Sidebar 컴포넌트 계층으로 렌더링합니다.
 
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useIsFetching } from "@tanstack/react-query";
-import { ChevronDown, ExternalLink } from "lucide-react";
 
+import LoadMoreButton from "@/components/common/load-more-button";
 import LiveSidebarCategoryItem from "@/components/live/live-sidebar-category-item";
 import LiveSidebarChannelItem from "@/components/live/live-sidebar-channel-item";
 import LiveSidebarFollowingChannelItem from "@/components/live/live-sidebar-following-channel-item";
@@ -51,6 +51,7 @@ export default function LiveSidebar({ isMobile }: LiveSidebarProps) {
     isFollowingLoading,
     isKeywordLoading,
   } = useLiveSidebar();
+  const router = useRouter();
   const filter = useLiveStore((state) => state.filter);
   const sort = useLiveStore((state) => state.sort);
   const visibleCount = useLiveStore((state) => state.visibleCount);
@@ -114,25 +115,20 @@ export default function LiveSidebar({ isMobile }: LiveSidebarProps) {
                     ))}
                     {canFetchMoreFollowing ? (
                       <SidebarMenuItem>
-                        <button
-                          type="button"
+                        <LoadMoreButton
+                          isLoading={isFetchingMoreFollowing}
                           onClick={() => void fetchMoreFollowing()}
-                          disabled={isFetchingMoreFollowing}
-                          className="border-border text-muted-foreground hover:border-live/40 hover:text-live mx-auto mt-1 inline-flex h-8 items-center gap-1 rounded-full border px-3 text-xs font-bold transition-colors disabled:pointer-events-none disabled:opacity-60"
-                        >
-                          <ChevronDown className="size-3.5" />
-                          <span>{isFetchingMoreFollowing ? "불러오는 중" : "더보기"}</span>
-                        </button>
+                          accent="live"
+                        />
                       </SidebarMenuItem>
                     ) : isFollowingOverviewVisible ? (
                       <SidebarMenuItem>
-                        <Link
-                          href="/user/following"
-                          className="border-border text-muted-foreground hover:border-live/40 hover:text-live mx-auto mt-1 inline-flex h-8 items-center gap-1 rounded-full border px-3 text-xs font-bold transition-colors"
-                        >
-                          <ExternalLink className="size-3.5" />
-                          <span>전체보기</span>
-                        </Link>
+                        <LoadMoreButton
+                          isLoading={false}
+                          onClick={() => router.push("/user/following")}
+                          accent="live"
+                          label="전체보기"
+                        />
                       </SidebarMenuItem>
                     ) : null}
                   </>

@@ -91,8 +91,10 @@ export default function CreatorAvatarPopover({
         >
           <Avatar
             className={cn(
-              "transition-[box-shadow]",
+              "transition-[box-shadow,opacity]",
               "group-hover/avatar-trigger:ring-live/70 group-focus-visible/avatar-trigger:ring-live/70 group-hover/avatar-trigger:ring-2 group-focus-visible/avatar-trigger:ring-2",
+              // 라이브 링이 잘 안 보이는 사이드바에서도 hover 피드백을 주기 위해 투명도도 함께 변화.
+              "group-hover/avatar-trigger:opacity-60 group-focus-visible/avatar-trigger:opacity-60",
               showLiveRing && "ring-live/80 ring-2",
               avatarClassName,
             )}
@@ -110,7 +112,11 @@ export default function CreatorAvatarPopover({
         </PopoverTrigger>
 
         <PopoverContent className="w-72 gap-0 overflow-hidden p-0" align="start" sideOffset={10}>
-          <div className="flex min-w-0 items-center gap-3 px-4 pt-4 pb-3.5">
+          <Link
+            href={`/channel/${creatorId}`}
+            aria-label={`${creatorNickname} 채널로 이동`}
+            className="hover:bg-muted/40 flex min-w-0 items-center gap-3 px-4 pt-4 pb-3.5 transition-colors"
+          >
             <Avatar className={cn("size-12 shrink-0", isLive && "ring-live/80 ring-2")} size="lg">
               <AvatarImage src={avatarSrc} alt={`${creatorNickname} 프로필 이미지`} />
               <AvatarFallback>{fallbackText}</AvatarFallback>
@@ -128,7 +134,7 @@ export default function CreatorAvatarPopover({
                 </p>
               )}
             </div>
-          </div>
+          </Link>
 
           <div className="border-border/60 bg-muted/30 flex flex-col gap-2 border-t px-3 py-3">
             {/* 라이브 중이면 시청 페이지로, 아니면 공개 채널 페이지로 이동합니다. */}
