@@ -1,27 +1,17 @@
 "use client";
-// 게시글 상세 뷰: 본문 + 좋아요 + (채널 주인)수정/삭제 + 댓글 영역.
+// 게시글 상세 뷰: 헤더(목록으로 + ⋮) + 본문 + 좋아요 + 댓글 영역.
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, MessageSquare } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { useState } from "react";
 
 import CommunityActionMenu from "@/components/community/community-action-menu";
 import CommunityCommentComposer from "@/components/community/community-comment-composer";
 import CommunityCommentList from "@/components/community/community-comment-list";
+import CommunityDeleteDialog from "@/components/community/community-delete-dialog";
 import CommunityLikeButton from "@/components/community/community-like-button";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Spinner } from "@/components/ui/spinner";
 import { useCommunityPostDetail } from "@/hooks/community/use-community-post-detail";
 import { useDeleteCommunityPost } from "@/hooks/community/use-delete-community-post";
 import type { CommunityCommentsResult, CommunityPostDetail } from "@/types/community/community";
@@ -61,44 +51,14 @@ export default function CommunityPostDetailView({
 
   return (
     <article className="flex flex-col gap-5">
-      <Link
-        href={communityHref}
-        className="text-muted-foreground hover:text-foreground inline-flex w-fit items-center gap-1 text-sm font-semibold"
-      >
-        <ArrowLeft className="size-4" />
-        커뮤니티
-      </Link>
-
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex min-w-0 items-center gap-3">
-          <Link
-            href={`/channel/${detail.creatorId}`}
-            aria-label={`${detail.creatorNickname} 채널로 이동`}
-            className="focus-visible:ring-ring shrink-0 rounded-full outline-none focus-visible:ring-2"
-          >
-            <Avatar className="hover:ring-brand/40 size-11 transition-[box-shadow] hover:ring-2">
-              <AvatarImage
-                src={getAvatarImageSrc(detail.creatorPhotoUrl)}
-                alt={`${detail.creatorNickname}의 프로필 사진`}
-              />
-              <AvatarFallback className="text-sm font-black">
-                {getAvatarFallbackText(detail.creatorNickname, 1)}
-              </AvatarFallback>
-            </Avatar>
-          </Link>
-          <div className="min-w-0">
-            <Link
-              href={`/channel/${detail.creatorId}`}
-              className="text-foreground block truncate text-sm font-bold hover:underline"
-            >
-              {detail.creatorNickname}
-            </Link>
-            <p className="text-muted-foreground text-xs">
-              {formatRelativeTime(detail.createdAt)}
-              {detail.modifiedAt && " · 수정됨"}
-            </p>
-          </div>
-        </div>
+      <div className="flex items-center justify-between gap-2">
+        <Link
+          href={communityHref}
+          className="text-muted-foreground hover:text-foreground inline-flex w-fit items-center gap-0.5 text-sm font-semibold"
+        >
+          <ChevronLeft className="size-4" />
+          목록으로
+        </Link>
 
         {isChannelOwner && (
           <CommunityActionMenu
@@ -111,15 +71,41 @@ export default function CommunityPostDetailView({
         )}
       </div>
 
+      <div className="flex min-w-0 items-center gap-3">
+        <Link
+          href={`/channel/${detail.creatorId}`}
+          aria-label={`${detail.creatorNickname} 채널로 이동`}
+          className="focus-visible:ring-ring shrink-0 rounded-full outline-none focus-visible:ring-2"
+        >
+          <Avatar className="hover:ring-brand/40 size-11 transition-[box-shadow] hover:ring-2">
+            <AvatarImage
+              src={getAvatarImageSrc(detail.creatorPhotoUrl)}
+              alt={`${detail.creatorNickname}의 프로필 사진`}
+            />
+            <AvatarFallback className="text-sm font-black">
+              {getAvatarFallbackText(detail.creatorNickname, 1)}
+            </AvatarFallback>
+          </Avatar>
+        </Link>
+        <div className="min-w-0">
+          <Link
+            href={`/channel/${detail.creatorId}`}
+            className="text-foreground block truncate text-sm font-bold hover:underline"
+          >
+            {detail.creatorNickname}
+          </Link>
+          <p className="text-muted-foreground text-xs">
+            {formatRelativeTime(detail.createdAt)}
+            {detail.modifiedAt && " · 수정됨"}
+          </p>
+        </div>
+      </div>
+
       <p className="text-foreground text-[0.95rem] leading-relaxed break-words whitespace-pre-wrap">
         {detail.content}
       </p>
 
-      <div className="border-border/60 flex items-center justify-end gap-3 border-y py-3">
-        <span className="text-muted-foreground inline-flex items-center gap-1 text-xs font-semibold">
-          <MessageSquare className="size-3.5" />
-          {numberFormatter.format(detail.commentCount)}
-        </span>
+      <div className="flex items-center justify-end">
         <CommunityLikeButton
           postId={detail.id}
           isLiked={detail.isLiked}
@@ -139,32 +125,14 @@ export default function CommunityPostDetailView({
         />
       </section>
 
-      <AlertDialog
+      <CommunityDeleteDialog
         open={isDeleteOpen}
-        onOpenChange={(next) => {
-          if (!deletePost.isPending) setIsDeleteOpen(next);
-        }}
-      >
-        <AlertDialogContent className="sm:max-w-sm">
-          <AlertDialogHeader>
-            <AlertDialogTitle>게시글 삭제</AlertDialogTitle>
-            <AlertDialogDescription>
-              이 게시글을 삭제할까요? 댓글을 포함해 모두 삭제되며 복구할 수 없어요.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={deletePost.isPending}>취소</AlertDialogCancel>
-            <AlertDialogAction
-              variant="destructive"
-              type="button"
-              disabled={deletePost.isPending}
-              onClick={handleConfirmDelete}
-            >
-              {deletePost.isPending ? <Spinner className="size-4" /> : "삭제"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        onOpenChange={setIsDeleteOpen}
+        title="게시글 삭제"
+        description={"이 게시글을 삭제할까요?\n댓글을 포함해 모두 삭제되며 복구할 수 없어요."}
+        isPending={deletePost.isPending}
+        onConfirm={handleConfirmDelete}
+      />
     </article>
   );
 }
