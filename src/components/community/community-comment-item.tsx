@@ -170,7 +170,7 @@ export default function CommunityCommentItem({
             </div>
           </div>
         ) : (
-          <p className="text-foreground/90 mt-1 text-sm leading-relaxed break-words whitespace-pre-wrap">
+          <p className="text-foreground/90 mt-1 text-sm leading-relaxed wrap-break-word whitespace-pre-wrap">
             {comment.content}
           </p>
         )}

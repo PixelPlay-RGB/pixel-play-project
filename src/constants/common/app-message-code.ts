@@ -153,6 +153,11 @@ export const APP_MESSAGE_CODE = {
       dataNotFound: "error.supabase.dataNotFound",
     },
   },
+  info: {
+    common: {
+      featureNotReady: "info.common.featureNotReady",
+    },
+  },
 } as const satisfies AppMessageCodeSchema<typeof APP_MESSAGE>;
 
 type NestedValue<T> = T extends string

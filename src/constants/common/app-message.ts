@@ -446,7 +446,16 @@ export const APP_MESSAGE = {
       },
     },
   },
+  info: {
+    common: {
+      featureNotReady: {
+        title: "준비 중인 기능이에요",
+        description: "조금만 기다려주세요. 곧 제공될 예정이에요.",
+      },
+    },
+  },
 } as const satisfies {
   success: Record<string, Record<string, AppMessage>>;
   error: Record<string, Record<string, AppMessage>>;
+  info: Record<string, Record<string, AppMessage>>;
 };

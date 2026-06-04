@@ -56,7 +56,7 @@ export default function CommunityPostCard({ creatorId, creator, post, isOwner }:
           </div>
         </div>
 
-        <p className="text-foreground/90 mt-3 line-clamp-3 text-sm leading-relaxed break-words whitespace-pre-wrap">
+        <p className="text-foreground/90 mt-3 line-clamp-3 text-sm leading-relaxed wrap-break-word whitespace-pre-wrap">
           {post.content}
         </p>
 

@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { PenLine } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import ChatRoomListPagination from "@/components/chat-room-list/chat-room-list-pagination";
 import CommunityEmptyState from "@/components/community/community-empty-state";
@@ -25,6 +25,14 @@ export default function CommunityBoard({ creatorId, isOwner, initialData }: Prop
 
   const result = data ?? initialData;
   const totalPages = Math.max(1, Math.ceil(result.totalCount / COMMUNITY_POST_PAGE_SIZE));
+
+  // 마지막 페이지의 마지막 글을 지우면 totalCount가 줄어 현재 page가 범위를 벗어날 수 있어 보정.
+  useEffect(() => {
+    if (page > totalPages) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
 
   return (
     <section className="flex flex-col gap-4">

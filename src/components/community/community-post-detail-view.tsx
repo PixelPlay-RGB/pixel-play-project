@@ -112,7 +112,7 @@ export default function CommunityPostDetailView({
             )}
           </div>
 
-          <p className="text-foreground mt-3 text-[0.95rem] leading-relaxed break-words whitespace-pre-wrap">
+          <p className="text-foreground mt-3 text-sm leading-relaxed wrap-break-word whitespace-pre-wrap">
             {detail.content}
           </p>
 

@@ -3,9 +3,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { toast } from "sonner";
 
+import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { cn } from "@/lib/utils";
+import { toastAppInfo } from "@/utils/common/toast-message";
 
 interface Props {
   creatorId: string;
@@ -36,7 +37,7 @@ export default function ChannelTabs({ creatorId }: Props) {
     pathname === `/channel/${creatorId}` || pathname.startsWith(communityHref);
 
   const handleNotReady = (label: string) => {
-    toast(`${label} 기능은 준비 중이에요`);
+    toastAppInfo(APP_MESSAGE_CODE.info.common.featureNotReady, `${label} 탭은 곧 제공될 예정이에요.`);
   };
 
   return (

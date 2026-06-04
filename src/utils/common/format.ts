@@ -13,7 +13,8 @@ export function formatRelativeTime(iso: string): string {
     return "";
   }
 
-  const diffSeconds = Math.floor((Date.now() - target) / 1000);
+  // 시계 오차 등으로 미래 시각이 들어오면 음수가 되어 "방금 전"으로 어긋나므로 0으로 clamp.
+  const diffSeconds = Math.max(0, Math.floor((Date.now() - target) / 1000));
 
   if (diffSeconds < 60) {
     return "방금 전";

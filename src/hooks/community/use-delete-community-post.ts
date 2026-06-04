@@ -7,6 +7,7 @@ import { deleteCommunityPostAction } from "@/actions/community/community";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { QUERY_KEYS } from "@/constants/common/query-keys";
 import type { AppActionResult } from "@/types/common/action";
+import type { CommunityPostsResult } from "@/types/community/community";
 import { toastAppError, toastAppSuccess } from "@/utils/common/toast-message";
 
 export function useDeleteCommunityPost(postId: string) {
@@ -21,6 +22,18 @@ export function useDeleteCommunityPost(postId: string) {
       }
 
       toastAppSuccess(APP_MESSAGE_CODE.success.community.postDeleted);
+      // 목록으로 이동했을 때 삭제된 글이 잠깐 보이지 않도록, 목록 캐시에서 먼저 즉시 제거 후 재검증.
+      queryClient.setQueriesData<CommunityPostsResult>(
+        { queryKey: QUERY_KEYS.community.postsAll() },
+        (data) =>
+          data
+            ? {
+                ...data,
+                items: data.items.filter((post) => post.id !== postId),
+                totalCount: Math.max(0, data.totalCount - 1),
+              }
+            : data,
+      );
       queryClient.removeQueries({ queryKey: QUERY_KEYS.community.post(postId) });
       void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.community.postsAll() });
     },
