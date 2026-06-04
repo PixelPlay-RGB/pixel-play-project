@@ -1,10 +1,12 @@
 "use client";
-// 공개 채널 헤더: 아바타·닉네임·팔로워 수·팔로우 버튼을 렌더링합니다.
+// 공개 채널 헤더: 아바타·닉네임·팔로워 수·팔로우(또는 내 채널 설정) 버튼을 렌더링합니다.
 
-import { UsersRound } from "lucide-react";
+import Link from "next/link";
+import { Settings, UsersRound } from "lucide-react";
 
 import CreatorFollowingButton from "@/components/following/creator-following-button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { buttonVariants } from "@/components/ui/button";
 import { useToggleChannelFollowing } from "@/hooks/channel/use-toggle-channel-following";
 import { cn } from "@/lib/utils";
 import type { ChannelProfile } from "@/types/channel/channel";
@@ -48,14 +50,27 @@ export default function ChannelProfileHeader({ profile }: Props) {
         </p>
       </div>
 
-      <CreatorFollowingButton
-        creatorNickname={profile.nickname}
-        isFollowing={isFollowing}
-        isOwnChannel={profile.isOwnChannel}
-        isPending={isPending}
-        onClick={toggle}
-        className="h-9 px-4 text-sm"
-      />
+      {profile.isOwnChannel ? (
+        <Link
+          href={`/channel/${profile.id}/setting`}
+          className={cn(
+            buttonVariants({ variant: "outline", size: "sm" }),
+            "h-9 shrink-0 gap-1.5 rounded-full px-4 text-sm font-bold",
+          )}
+        >
+          <Settings className="size-4" />
+          채널 설정
+        </Link>
+      ) : (
+        <CreatorFollowingButton
+          creatorNickname={profile.nickname}
+          isFollowing={isFollowing}
+          isOwnChannel={profile.isOwnChannel}
+          isPending={isPending}
+          onClick={toggle}
+          className="h-9 px-4 text-sm"
+        />
+      )}
     </div>
   );
 }
