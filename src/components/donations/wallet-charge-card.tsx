@@ -1,5 +1,5 @@
 "use client";
-// 후원 지갑 충전 결제위젯을 제공합니다.
+// 후원 지갑 충전 결제창을 제공합니다.
 
 import { SettingsCard } from "@/components/common/settings-card";
 import { Button } from "@/components/ui/button";
@@ -14,19 +14,16 @@ import {
 } from "@/constants/payments/wallet-charge";
 import { cn } from "@/lib/utils";
 import type { TossPaymentPrepareResponse } from "@/types/payments/toss-payment-api";
-import type {
-  TossPaymentsPaymentWindow,
-  TossPaymentsWidgets,
-} from "@/types/payments/toss-payments";
+import type { TossPaymentsPayment } from "@/types/payments/toss-payments";
 import { CreditCard, Loader2 } from "lucide-react";
 import Script from "next/script";
-import { FormEvent, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { FormEvent, useEffect, useId, useMemo, useRef, useState } from "react";
 
 interface Props {
   customerKey: string;
 }
 
-type PaymentWidgetState = "idle" | "initializing" | "ready" | "opening" | "failed";
+type PaymentWindowState = "idle" | "initializing" | "ready" | "opening" | "failed";
 
 const TOSS_PAYMENTS_SDK_URL = "https://js.tosspayments.com/v2/standard";
 
@@ -35,20 +32,20 @@ export function WalletChargeCard({ customerKey }: Props) {
   const clientKey = process.env.NEXT_PUBLIC_TOSS_PAYMENTS_CLIENT_KEY;
   const [amount, setAmount] = useState(String(WALLET_CHARGE_DEFAULT_AMOUNT));
   const [isSdkLoaded, setIsSdkLoaded] = useState(false);
-  const [paymentWidgetState, setPaymentWidgetState] = useState<PaymentWidgetState>("idle");
-  const widgetsRef = useRef<TossPaymentsWidgets | null>(null);
-  const paymentWindowRef = useRef<TossPaymentsPaymentWindow | null>(null);
-  const amountRef = useRef<number>(WALLET_CHARGE_DEFAULT_AMOUNT);
+  const [isPaymentInitialized, setIsPaymentInitialized] = useState(false);
+  const [paymentWindowState, setPaymentWindowState] = useState<PaymentWindowState>("idle");
+  const paymentRef = useRef<TossPaymentsPayment | null>(null);
 
   const numericAmount = useMemo(() => Number(amount), [amount]);
   const isValidAmount = isValidChargeAmount(numericAmount);
-  const isBusy = paymentWidgetState === "initializing" || paymentWidgetState === "opening";
+  const isBusy = paymentWindowState === "initializing" || paymentWindowState === "opening";
   const canRequestPayment =
-    Boolean(clientKey) && isSdkLoaded && paymentWidgetState === "ready" && isValidAmount;
-
-  useEffect(() => {
-    amountRef.current = numericAmount;
-  }, [numericAmount]);
+    Boolean(clientKey) &&
+    isSdkLoaded &&
+    isPaymentInitialized &&
+    paymentWindowState !== "initializing" &&
+    paymentWindowState !== "opening" &&
+    isValidAmount;
 
   useEffect(() => {
     if (!clientKey || !customerKey || !isSdkLoaded || !window.TossPayments) {
@@ -56,105 +53,62 @@ export function WalletChargeCard({ customerKey }: Props) {
     }
 
     let isActive = true;
-    const tossPayments = window.TossPayments(clientKey);
-    const widgets = tossPayments.widgets({ customerKey });
 
-    widgetsRef.current = widgets;
+    try {
+      const tossPayments = window.TossPayments(clientKey);
+      const payment = tossPayments.payment({ customerKey });
 
-    widgets
-      .setAmount({ currency: "KRW", value: WALLET_CHARGE_DEFAULT_AMOUNT })
-      .then(() => {
-        if (isActive) {
-          setPaymentWidgetState("ready");
-        }
-      })
-      .catch((error) => {
-        console.error("Toss Payments 결제 금액 초기화 실패", error);
-        if (isActive) {
-          setPaymentWidgetState("failed");
-        }
-      });
+      paymentRef.current = payment;
+      queueActiveUpdate(
+        () => isActive,
+        () => {
+          setIsPaymentInitialized(true);
+          setPaymentWindowState("ready");
+        },
+      );
+    } catch (error) {
+      console.error("Toss Payments 결제창 초기화 실패", error);
+      queueActiveUpdate(
+        () => isActive,
+        () => {
+          setIsPaymentInitialized(false);
+          setPaymentWindowState("failed");
+        },
+      );
+    }
 
     return () => {
       isActive = false;
-      widgetsRef.current = null;
-      void paymentWindowRef.current?.destroy();
-      paymentWindowRef.current = null;
+      destroyTossPayment(paymentRef.current);
+      paymentRef.current = null;
     };
   }, [clientKey, customerKey, isSdkLoaded]);
 
-  useEffect(() => {
-    if (!widgetsRef.current || !isValidAmount) {
-      return;
-    }
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const payment = paymentRef.current;
 
-    let isActive = true;
-
-    widgetsRef.current
-      .setAmount({ currency: "KRW", value: numericAmount })
-      .then(() => {
-        if (isActive && paymentWidgetState === "failed") {
-          setPaymentWidgetState("ready");
-        }
-      })
-      .catch((error) => {
-        console.error("Toss Payments 결제 금액 동기화 실패", error);
-        if (isActive) {
-          setPaymentWidgetState("failed");
-        }
-      });
-
-    return () => {
-      isActive = false;
-    };
-  }, [isValidAmount, numericAmount, paymentWidgetState]);
-
-  const requestPayment = useCallback(async (widgets: TossPaymentsWidgets) => {
-    const currentAmount = amountRef.current;
-
-    if (!isValidChargeAmount(currentAmount)) {
+    if (!payment || !canRequestPayment) {
       return;
     }
 
     try {
-      const preparedPayment = await prepareTossWalletCharge(currentAmount);
-      await widgets.setAmount({ currency: "KRW", value: preparedPayment.amount });
-      await widgets.requestPayment({
+      setPaymentWindowState("opening");
+      const preparedPayment = await prepareTossWalletCharge(numericAmount);
+
+      await payment.requestPayment({
+        method: "CARD",
+        amount: { currency: "KRW", value: preparedPayment.amount },
         orderId: preparedPayment.orderId,
         orderName: preparedPayment.orderName,
         successUrl: `${window.location.origin}/user/donations/toss/success`,
         failUrl: `${window.location.origin}/user/donations/toss/fail`,
       });
+
+      setPaymentWindowState("ready");
     } catch (error) {
-      console.error("Toss Payments 결제 요청 실패", error);
-      setPaymentWidgetState("failed");
-    }
-  }, []);
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const widgets = widgetsRef.current;
-
-    if (!widgets || !canRequestPayment) {
-      return;
-    }
-
-    try {
-      setPaymentWidgetState("opening");
-      await widgets.setAmount({ currency: "KRW", value: numericAmount });
-
-      if (paymentWindowRef.current) {
-        await paymentWindowRef.current.destroy();
-        paymentWindowRef.current = null;
-      }
-
-      const paymentWindow = await widgets.renderPaymentWindow();
-      paymentWindowRef.current = paymentWindow;
-      paymentWindow.on("paymentRequest", () => requestPayment(widgets));
-      setPaymentWidgetState("ready");
-    } catch (error) {
-      console.error("Toss Payments 결제창 렌더링 실패", error);
-      setPaymentWidgetState("failed");
+      console.error("Toss Payments 결제창 요청 실패", error);
+      setPaymentWindowState("failed");
     }
   };
 
@@ -169,10 +123,14 @@ export function WalletChargeCard({ customerKey }: Props) {
           src={TOSS_PAYMENTS_SDK_URL}
           strategy="afterInteractive"
           onLoad={() => {
-            setPaymentWidgetState("initializing");
+            setIsPaymentInitialized(false);
+            setPaymentWindowState("initializing");
             setIsSdkLoaded(true);
           }}
-          onError={() => setPaymentWidgetState("failed")}
+          onError={() => {
+            setIsPaymentInitialized(false);
+            setPaymentWindowState("failed");
+          }}
         />
       ) : null}
 
@@ -227,22 +185,46 @@ export function WalletChargeCard({ customerKey }: Props) {
           </strong>
         </div>
 
-        {getPaymentStateMessage(clientKey, paymentWidgetState) ? (
+        {getPaymentStateMessage(clientKey, paymentWindowState) ? (
           <p className="text-muted-foreground text-xs">
-            {getPaymentStateMessage(clientKey, paymentWidgetState)}
+            {getPaymentStateMessage(clientKey, paymentWindowState)}
           </p>
         ) : null}
 
         <Button type="submit" size="lg" disabled={!canRequestPayment || isBusy} className="w-full">
           {isBusy ? <Loader2 className="animate-spin" /> : <CreditCard />}
-          {getPaymentButtonLabel(clientKey, paymentWidgetState)}
+          {getPaymentButtonLabel(clientKey, paymentWindowState)}
         </Button>
       </form>
     </SettingsCard>
   );
 }
 
-function getPaymentButtonLabel(clientKey: string | undefined, state: PaymentWidgetState) {
+function queueActiveUpdate(isActive: () => boolean, update: () => void) {
+  Promise.resolve().then(() => {
+    if (isActive()) {
+      update();
+    }
+  });
+}
+
+function destroyTossPayment(payment: TossPaymentsPayment | null) {
+  if (!payment) {
+    return;
+  }
+
+  try {
+    const result = payment.destroy();
+
+    if (result instanceof Promise) {
+      void result.catch(() => undefined);
+    }
+  } catch {
+    return;
+  }
+}
+
+function getPaymentButtonLabel(clientKey: string | undefined, state: PaymentWindowState) {
   if (!clientKey) {
     return "결제 키 필요";
   }
@@ -258,7 +240,7 @@ function getPaymentButtonLabel(clientKey: string | undefined, state: PaymentWidg
   return "토스로 충전하기";
 }
 
-function getPaymentStateMessage(clientKey: string | undefined, state: PaymentWidgetState) {
+function getPaymentStateMessage(clientKey: string | undefined, state: PaymentWindowState) {
   if (!clientKey) {
     return "NEXT_PUBLIC_TOSS_PAYMENTS_CLIENT_KEY를 설정하면 결제창을 사용할 수 있습니다.";
   }

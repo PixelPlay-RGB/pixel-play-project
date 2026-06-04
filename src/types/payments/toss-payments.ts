@@ -5,17 +5,16 @@ export interface TossPaymentsFactory {
 }
 
 export interface TossPaymentsClient {
-  widgets(params: TossPaymentsWidgetsParams): TossPaymentsWidgets;
+  payment(params: TossPaymentsPaymentParams): TossPaymentsPayment;
 }
 
-export interface TossPaymentsWidgetsParams {
+export interface TossPaymentsPaymentParams {
   customerKey: string;
 }
 
-export interface TossPaymentsWidgets {
-  setAmount(amount: TossPaymentsAmount): Promise<void>;
-  renderPaymentWindow(params?: TossPaymentsPaymentWindowParams): Promise<TossPaymentsPaymentWindow>;
-  requestPayment(paymentRequest: TossPaymentsPaymentRequest): Promise<void>;
+export interface TossPaymentsPayment {
+  requestPayment(paymentRequest: TossPaymentsDirectPaymentRequest): Promise<void>;
+  destroy(): Promise<void> | void;
 }
 
 export interface TossPaymentsAmount {
@@ -23,30 +22,15 @@ export interface TossPaymentsAmount {
   value: number;
 }
 
-export interface TossPaymentsPaymentWindowParams {
-  variantKey?: {
-    paymentMethod?: string;
-    agreement?: string;
-  };
-}
-
-export interface TossPaymentsPaymentWindow {
-  on(eventName: "paymentRequest", callback: TossPaymentsPaymentRequestCallback): void;
-  destroy(): Promise<void> | void;
-}
-
-export interface TossPaymentsPaymentMethod {
-  code: string;
-  methodId?: string;
-}
-
-export type TossPaymentsPaymentRequestCallback = (paymentMethod: TossPaymentsPaymentMethod) => void;
-
-export interface TossPaymentsPaymentRequest {
+export interface TossPaymentsDirectPaymentRequest {
+  method: "CARD";
+  amount: TossPaymentsAmount;
   orderId: string;
   orderName: string;
   successUrl: string;
   failUrl: string;
+  customerEmail?: string;
+  customerName?: string;
   metadata?: Record<string, string>;
 }
 
