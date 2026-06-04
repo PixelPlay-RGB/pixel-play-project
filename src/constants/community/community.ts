@@ -3,7 +3,7 @@ import type { CommunityCommentSort } from "@/types/community/community";
 
 // 게시글/댓글 본문 최대 길이 (DB CHECK 제약과 동일).
 export const COMMUNITY_POST_CONTENT_MAX = 5000;
-export const COMMUNITY_COMMENT_CONTENT_MAX = 1000;
+export const COMMUNITY_COMMENT_CONTENT_MAX = 5000;
 
 // 목록 페이지네이션 크기.
 export const COMMUNITY_POST_PAGE_SIZE = 10;
