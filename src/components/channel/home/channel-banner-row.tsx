@@ -30,7 +30,6 @@ export function ChannelBannerRow({ banners }: Props) {
               alt={banner.title || "채널 배너"}
               fill
               sizes="144px"
-              quality={90}
               className="object-cover transition duration-300 group-hover:scale-105"
             />
           </div>
