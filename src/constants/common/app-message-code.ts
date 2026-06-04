@@ -88,6 +88,9 @@ export const APP_MESSAGE_CODE = {
     search: {
       loadFailed: "error.search.loadFailed",
     },
+    donation: {
+      loadFailed: "error.donation.loadFailed",
+    },
     message: {
       invalidInput: "error.message.invalidInput",
       sendForbidden: "error.message.sendForbidden",

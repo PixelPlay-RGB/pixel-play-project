@@ -5,6 +5,7 @@ import { UserDonationHistoryTable } from "@/components/donations/user-donation-h
 import { UserDonationPeriodFilter } from "@/components/donations/user-donation-period-filter";
 import { UserDonationSummaryCards } from "@/components/donations/user-donation-summary-cards";
 import { UserDonationTabs } from "@/components/donations/user-donation-tabs";
+import { WalletChargeCard } from "@/components/donations/wallet-charge-card";
 import type { AppMessageCode } from "@/constants/common/app-message-code";
 import type { UserDonationSnapshot } from "@/types/donations/user-donations";
 import { getAppMessage } from "@/utils/common/app-message";
@@ -15,9 +16,9 @@ interface Props {
 }
 
 const USER_DONATIONS_PAGE_HEADER = {
-  kicker: "후원 지갑",
-  title: "포인트 내역을 확인해요",
-  description: "후원에 사용한 포인트와 충전 내역, 무료 지급 내역을 월별로 확인할 수 있습니다.",
+  kicker: "DONATIONS",
+  title: "후원 지갑",
+  description: "후원에 사용할 지갑 잔액과 최근 충전, 후원 내역을 확인할 수 있습니다.",
 } as const;
 
 export function UserDonationsPage({ snapshot, errorCode }: Props) {
@@ -37,12 +38,28 @@ export function UserDonationsPage({ snapshot, errorCode }: Props) {
     <SettingsPage {...USER_DONATIONS_PAGE_HEADER}>
       <UserDonationSummaryCards summary={snapshot.summary} />
 
-      <section className="flex flex-col gap-4">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <UserDonationTabs filter={snapshot.filter} />
-          <UserDonationPeriodFilter filter={snapshot.filter} />
-        </div>
+      <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,24rem)]">
+        <SettingsCard
+          title="현재 후원 지갑"
+          description="충전된 금액은 라이브 후원에 사용할 수 있습니다."
+          className="border-brand/30"
+        >
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-muted-foreground text-sm">현재 잔액</p>
+              <p className="text-foreground mt-2 text-4xl leading-tight font-black tracking-tight">
+                {snapshot.summary.balanceAmount.toLocaleString("ko-KR")}원
+              </p>
+            </div>
+            <UserDonationPeriodFilter />
+          </div>
+        </SettingsCard>
 
+        <WalletChargeCard />
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <UserDonationTabs />
         <UserDonationHistoryTable snapshot={snapshot} />
       </section>
     </SettingsPage>

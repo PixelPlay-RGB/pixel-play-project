@@ -1,7 +1,6 @@
-// 사용자 후원 지갑의 잔액과 월별 요약을 표시합니다.
-import { Button } from "@/components/ui/button";
+// 사용자 후원 지갑의 잔액과 최근 요약을 표시합니다.
 import type { UserDonationSummary } from "@/types/donations/user-donations";
-import { Coins, CreditCard, Gift, WalletCards } from "lucide-react";
+import { CircleDollarSign, CreditCard, ReceiptText, WalletCards } from "lucide-react";
 
 interface Props {
   summary: UserDonationSummary;
@@ -10,24 +9,24 @@ interface Props {
 export function UserDonationSummaryCards({ summary }: Props) {
   const items = [
     {
-      label: "보유 포인트",
-      value: summary.balanceAmount,
+      label: "보유 잔액",
+      value: formatWon(summary.balanceAmount),
       icon: WalletCards,
     },
     {
-      label: "이번 달 사용",
-      value: summary.monthlyUsageAmount,
-      icon: Coins,
+      label: "최근 후원",
+      value: formatWon(summary.sentDonationAmount),
+      icon: CircleDollarSign,
     },
     {
-      label: "이번 달 구매",
-      value: summary.monthlyPurchaseAmount,
+      label: "최근 충전",
+      value: formatWon(summary.chargeAmount),
       icon: CreditCard,
     },
     {
-      label: "이번 달 무료 지급",
-      value: summary.monthlyFreeAmount,
-      icon: Gift,
+      label: "최근 거래",
+      value: `${summary.transactionCount}건`,
+      icon: ReceiptText,
     },
   ];
 
@@ -45,29 +44,16 @@ export function UserDonationSummaryCards({ summary }: Props) {
               <span>{item.label}</span>
               <Icon className="text-brand size-5" />
             </div>
-            <strong className="text-foreground text-2xl font-black tabular-nums">
-              {formatPointAmount(item.value)}
+            <strong className="text-foreground text-2xl font-black break-words tabular-nums">
+              {item.value}
             </strong>
           </div>
         );
       })}
-
-      <div className="border-brand/25 bg-brand/5 flex min-h-30 flex-col justify-between rounded-lg border p-5 md:col-span-2 xl:col-span-4">
-        <div className="flex flex-col gap-1">
-          <span className="text-brand text-sm font-bold">포인트 충전</span>
-          <p className="text-muted-foreground text-sm">
-            결제 연동 API가 완료되면 이 화면에서 바로 포인트를 충전할 수 있습니다.
-          </p>
-        </div>
-        <Button type="button" disabled className="mt-4 w-full sm:w-fit">
-          <CreditCard className="size-4" />
-          충전 준비 중
-        </Button>
-      </div>
     </section>
   );
 }
 
-function formatPointAmount(value: number) {
-  return `${value.toLocaleString("ko-KR")} P`;
+function formatWon(value: number) {
+  return `${value.toLocaleString("ko-KR")}원`;
 }

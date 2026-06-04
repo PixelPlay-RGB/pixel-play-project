@@ -5,20 +5,15 @@ import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { createAdminClient } from "@/lib/supabase/admin-client";
 import { createClient } from "@/lib/supabase/server";
 import type { AppActionResult } from "@/types/common/action";
-import type { AppMessageCode } from "@/constants/common/app-message-code";
-import type { Database, Json } from "@/types/database.types";
+import type { Json } from "@/types/database.types";
 import type {
-  UserDonationFilter,
-  UserDonationFreeGrantHistoryItem,
-  UserDonationPurchaseHistoryItem,
   UserDonationSnapshot,
-  UserDonationTab,
-  UserDonationUsageHistoryItem,
-  UserDonationUsageKind,
+  UserSentDonationItem,
+  UserWalletTransactionItem,
+  WalletTransactionStatus,
+  WalletTransactionType,
 } from "@/types/donations/user-donations";
 import { isAuthSessionMissingError } from "@/utils/auth/auth-error";
-
-type WalletTransactionRow = Database["public"]["Tables"]["wallet_transaction"]["Row"];
 
 type UserDonationSearchParams = {
   tab?: string | string[];
@@ -27,21 +22,21 @@ type UserDonationSearchParams = {
   kind?: string | string[];
 };
 
-const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
-const USER_DONATION_HISTORY_LIMIT = 100;
-const MIN_FILTER_YEAR = 2020;
-const MAX_FILTER_YEAR = 2100;
-const FREE_GRANT_SOURCE_SET = new Set([
-  "admin_grant",
-  "event",
-  "free",
-  "free_grant",
-  "manual_grant",
-  "promotion",
+const WALLET_TRANSACTION_TYPES = new Set<WalletTransactionType>([
+  "charge",
+  "donation_spend",
+  "refund",
+]);
+
+const WALLET_TRANSACTION_STATUSES = new Set<WalletTransactionStatus>([
+  "pending",
+  "succeeded",
+  "failed",
+  "canceled",
 ]);
 
 export async function getUserDonationSnapshot(
-  searchParams: UserDonationSearchParams,
+  _searchParams: UserDonationSearchParams = {},
 ): Promise<AppActionResult<UserDonationSnapshot>> {
   const serverClient = await createClient();
   const {
@@ -60,245 +55,145 @@ export async function getUserDonationSnapshot(
     };
   }
 
-  const filter = normalizeUserDonationFilter(searchParams);
-  const periodRange = getKstMonthRange(filter.period);
   const supabase = createAdminClient();
+  const { data, error } = await supabase.rpc("get_user_donation_snapshot", {
+    p_actor_user_id: user.id,
+  });
 
-  const [walletResult, donationResult, transactionResult] = await Promise.all([
-    supabase.from("wallet_account").select("balance_amount").eq("user_id", user.id).maybeSingle(),
-    supabase
-      .from("donation")
-      .select("id,broadcast_id,creator_id,amount,message,created_at")
-      .eq("donor_id", user.id)
-      .gte("created_at", periodRange.startIso)
-      .lt("created_at", periodRange.endIso)
-      .order("created_at", { ascending: false })
-      .limit(USER_DONATION_HISTORY_LIMIT),
-    supabase
-      .from("wallet_transaction")
-      .select("*")
-      .eq("user_id", user.id)
-      .gte("created_at", periodRange.startIso)
-      .lt("created_at", periodRange.endIso)
-      .order("created_at", { ascending: false })
-      .limit(USER_DONATION_HISTORY_LIMIT),
-  ]);
-
-  if (walletResult.error || donationResult.error || transactionResult.error) {
-    console.error("사용자 후원 지갑 조회 실패", {
-      walletError: walletResult.error,
-      donationError: donationResult.error,
-      transactionError: transactionResult.error,
-    });
-
+  if (error) {
+    console.error("사용자 후원 지갑 조회 실패", error);
     return {
       success: false,
-      code: APP_MESSAGE_CODE.error.common.unknown,
+      code: APP_MESSAGE_CODE.error.donation.loadFailed,
     };
   }
 
-  const donations = donationResult.data ?? [];
-  const walletTransactions = transactionResult.data ?? [];
-  const creatorMap = await getCreatorNicknameMap(donations.map((donation) => donation.creator_id));
-  const broadcastMap = await getBroadcastTitleMap(
-    donations.map((donation) => donation.broadcast_id),
-  );
+  try {
+    return {
+      success: true,
+      data: buildUserDonationSnapshot(data),
+    };
+  } catch (error) {
+    console.error("사용자 후원 지갑 snapshot 생성 실패", error);
+    return {
+      success: false,
+      code: APP_MESSAGE_CODE.error.donation.loadFailed,
+    };
+  }
+}
 
-  const usageHistories =
-    filter.usageKind === "party"
-      ? []
-      : donations.map<UserDonationUsageHistoryItem>((donation) => ({
-          id: donation.id,
-          usedAt: donation.created_at,
-          amount: donation.amount,
-          content: broadcastMap.get(donation.broadcast_id) ?? "라이브 후원",
-          channelName: creatorMap.get(donation.creator_id) ?? "알 수 없는 채널",
-          message: donation.message,
-        }));
-
-  const freeGrantHistories = walletTransactions
-    .filter(isFreeGrantTransaction)
-    .map<UserDonationFreeGrantHistoryItem>((transaction) => {
-      const metadata = readJsonObject(transaction.metadata);
-
-      return {
-        id: transaction.id,
-        grantedAt: transaction.created_at,
-        amount: transaction.amount_delta,
-        content: readString(metadata?.title) ?? "무료 지급",
-        reason:
-          readString(metadata?.reason) ?? readString(metadata?.description) ?? "지급 사유 없음",
-      };
-    });
-
-  const freeGrantTransactionIdSet = new Set(freeGrantHistories.map((item) => item.id));
-  const purchaseHistories = walletTransactions
-    .filter(
-      (transaction) =>
-        transaction.transaction_type === "charge" &&
-        transaction.amount_delta > 0 &&
-        !freeGrantTransactionIdSet.has(transaction.id),
-    )
-    .map<UserDonationPurchaseHistoryItem>((transaction) => ({
-      id: transaction.id,
-      purchasedAt: transaction.created_at,
-      amount: transaction.amount_delta,
-      content: "포인트 충전",
-      status: transaction.transaction_status,
-      orderId: transaction.order_id,
-    }));
+function buildUserDonationSnapshot(snapshot: Json): UserDonationSnapshot {
+  const snapshotObject = readObject(snapshot);
+  const wallet = readObject(snapshotObject?.wallet);
+  const sentDonations = readArray(snapshotObject?.sentDonations)
+    .map(readSentDonation)
+    .filter((item): item is UserSentDonationItem => item !== null);
+  const transactions = readArray(snapshotObject?.transactions)
+    .map(readWalletTransaction)
+    .filter((item): item is UserWalletTransactionItem => item !== null);
 
   return {
-    success: true,
-    data: {
-      filter,
-      summary: {
-        balanceAmount: walletResult.data?.balance_amount ?? 0,
-        monthlyUsageAmount: sumBy(usageHistories, (item) => item.amount),
-        monthlyPurchaseAmount: sumBy(purchaseHistories, (item) => item.amount),
-        monthlyFreeAmount: sumBy(freeGrantHistories, (item) => item.amount),
-      },
-      usageHistories,
-      purchaseHistories,
-      freeGrantHistories,
+    summary: {
+      balanceAmount: readNumber(wallet?.balanceAmount, 0),
+      sentDonationAmount: sumBy(sentDonations, (item) => item.amount),
+      chargeAmount: sumBy(
+        transactions.filter(
+          (transaction) => transaction.type === "charge" && transaction.status === "succeeded",
+        ),
+        (item) => item.amountDelta,
+      ),
+      transactionCount: transactions.length,
     },
+    sentDonations,
+    transactions,
   };
 }
 
-export function normalizeUserDonationFilter(
-  searchParams: UserDonationSearchParams,
-): UserDonationFilter {
-  const currentPeriod = getCurrentKstPeriod();
+function readSentDonation(value: Json): UserSentDonationItem | null {
+  const item = readObject(value);
+  const id = readText(item?.id);
+  const broadcastId = readText(item?.broadcastId);
+  const creatorId = readText(item?.creatorId);
+  const amount = readNumber(item?.amount, 0);
+  const createdAt = readText(item?.createdAt);
+
+  if (!item || !id || !broadcastId || !creatorId || amount <= 0 || !createdAt) {
+    return null;
+  }
 
   return {
-    tab: normalizeTab(readFirstSearchParam(searchParams.tab)),
-    usageKind: normalizeUsageKind(readFirstSearchParam(searchParams.kind)),
-    period: {
-      year: normalizeYear(readFirstSearchParam(searchParams.year), currentPeriod.year),
-      month: normalizeMonth(readFirstSearchParam(searchParams.month), currentPeriod.month),
-    },
+    id,
+    broadcastId,
+    creatorId,
+    creatorNickname: readText(item.creatorNickname) || "알 수 없음",
+    amount,
+    message: readText(item.message),
+    createdAt,
   };
 }
 
-function getKstMonthRange(period: UserDonationFilter["period"]) {
-  const startTime = Date.UTC(period.year, period.month - 1, 1) - KST_OFFSET_MS;
-  const endTime = Date.UTC(period.year, period.month, 1) - KST_OFFSET_MS;
+function readWalletTransaction(value: Json): UserWalletTransactionItem | null {
+  const item = readObject(value);
+  const id = readText(item?.id);
+  const createdAt = readText(item?.createdAt);
+
+  if (!item || !id || !createdAt) {
+    return null;
+  }
 
   return {
-    startIso: new Date(startTime).toISOString(),
-    endIso: new Date(endTime).toISOString(),
+    id,
+    type: readTransactionType(item.type),
+    status: readTransactionStatus(item.status),
+    amountDelta: readNumber(item.amountDelta, 0),
+    balanceAfter: readNullableNumber(item.balanceAfter),
+    createdAt,
   };
 }
 
-async function getCreatorNicknameMap(creatorIds: string[]) {
-  const uniqueCreatorIds = [...new Set(creatorIds)];
-
-  if (uniqueCreatorIds.length === 0) {
-    return new Map<string, string>();
+function readTransactionType(value: Json | undefined): WalletTransactionType {
+  if (typeof value === "string" && WALLET_TRANSACTION_TYPES.has(value as WalletTransactionType)) {
+    return value as WalletTransactionType;
   }
 
-  const supabase = createAdminClient();
-  const { data, error } = await supabase
-    .from("user")
-    .select("id,nickname")
-    .in("id", uniqueCreatorIds);
+  return "charge";
+}
 
-  if (error) {
-    console.error("사용자 후원 내역 크리에이터 조회 실패", error);
-    return new Map<string, string>();
+function readTransactionStatus(value: Json | undefined): WalletTransactionStatus {
+  if (
+    typeof value === "string" &&
+    WALLET_TRANSACTION_STATUSES.has(value as WalletTransactionStatus)
+  ) {
+    return value as WalletTransactionStatus;
   }
 
-  return new Map((data ?? []).map((creator) => [creator.id, creator.nickname]));
+  return "pending";
 }
 
-async function getBroadcastTitleMap(broadcastIds: string[]) {
-  const uniqueBroadcastIds = [...new Set(broadcastIds)];
+function readArray(value: Json | undefined): Json[] {
+  return Array.isArray(value) ? value : [];
+}
 
-  if (uniqueBroadcastIds.length === 0) {
-    return new Map<string, string>();
+function readObject(value: Json | undefined): Record<string, Json | undefined> | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return null;
   }
 
-  const supabase = createAdminClient();
-  const { data, error } = await supabase
-    .from("live_broadcast")
-    .select("id,title")
-    .in("id", uniqueBroadcastIds);
-
-  if (error) {
-    console.error("사용자 후원 내역 방송 조회 실패", error);
-    return new Map<string, string>();
-  }
-
-  return new Map((data ?? []).map((broadcast) => [broadcast.id, broadcast.title]));
+  return value;
 }
 
-function normalizeTab(value?: string): UserDonationTab {
-  return value === "purchase" || value === "free" ? value : "usage";
+function readText(value: Json | undefined) {
+  return typeof value === "string" ? value : "";
 }
 
-function normalizeUsageKind(value?: string): UserDonationUsageKind {
-  return value === "party" ? "party" : "normal";
+function readNumber(value: Json | undefined, fallback: number) {
+  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
 }
 
-function normalizeYear(value: string | undefined, fallback: number) {
-  const parsedYear = Number(value);
-
-  return Number.isInteger(parsedYear) &&
-    parsedYear >= MIN_FILTER_YEAR &&
-    parsedYear <= MAX_FILTER_YEAR
-    ? parsedYear
-    : fallback;
-}
-
-function normalizeMonth(value: string | undefined, fallback: number) {
-  const parsedMonth = Number(value);
-
-  return Number.isInteger(parsedMonth) && parsedMonth >= 1 && parsedMonth <= 12
-    ? parsedMonth
-    : fallback;
-}
-
-function getCurrentKstPeriod(): UserDonationFilter["period"] {
-  const now = new Date(Date.now() + KST_OFFSET_MS);
-
-  return {
-    year: now.getUTCFullYear(),
-    month: now.getUTCMonth() + 1,
-  };
-}
-
-function readFirstSearchParam(value?: string | string[]) {
-  return Array.isArray(value) ? value[0] : value;
-}
-
-function isFreeGrantTransaction(transaction: WalletTransactionRow) {
-  if (transaction.transaction_type !== "charge" || transaction.amount_delta <= 0) {
-    return false;
-  }
-
-  const metadata = readJsonObject(transaction.metadata);
-  const source =
-    readString(metadata?.source) ??
-    readString(metadata?.grantSource) ??
-    readString(metadata?.type) ??
-    readString(metadata?.kind) ??
-    readString(metadata?.origin);
-
-  return source ? FREE_GRANT_SOURCE_SET.has(source) : false;
-}
-
-function readJsonObject(value: Json): Record<string, Json | undefined> | null {
-  return value && typeof value === "object" && !Array.isArray(value)
-    ? (value as Record<string, Json | undefined>)
-    : null;
-}
-
-function readString(value: Json | undefined) {
-  return typeof value === "string" && value.trim() ? value.trim() : null;
+function readNullableNumber(value: Json | undefined) {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
 function sumBy<T>(items: T[], getValue: (item: T) => number) {
   return items.reduce((sum, item) => sum + getValue(item), 0);
 }
-
-export const USER_DONATION_LOAD_FAILED_CODE: AppMessageCode = APP_MESSAGE_CODE.error.common.unknown;

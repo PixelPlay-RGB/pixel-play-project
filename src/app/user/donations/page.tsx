@@ -14,7 +14,7 @@ interface Props {
 
 export const metadata: Metadata = {
   title: "후원 지갑",
-  description: "PixelPlay 후원 포인트 사용 내역과 구매 내역을 확인합니다.",
+  description: "PixelPlay 후원 지갑 잔액과 후원 내역을 확인합니다.",
 };
 
 export default async function UserDonationsRoutePage({ searchParams }: Props) {
