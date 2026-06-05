@@ -123,38 +123,41 @@ export default function CommunityComposer({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-      <Textarea
-        value={content}
-        maxLength={COMMUNITY_POST_CONTENT_MAX}
-        onChange={(event) => setContent(event.target.value)}
-        placeholder="팔로워에게 전할 소식을 남겨보세요."
-        aria-label="게시글 내용"
-        className="min-h-48 resize-none rounded-2xl text-base leading-relaxed md:text-sm"
-      />
+      {/* Textarea + 첨부 이미지 미리보기를 한 박스로 묶어 입력 영역에 포함되게 한다. */}
+      <div className="border-border bg-muted/40 focus-within:border-brand/50 focus-within:ring-brand/20 flex flex-col gap-3 rounded-2xl border p-3 transition-colors focus-within:ring-3">
+        <Textarea
+          value={content}
+          maxLength={COMMUNITY_POST_CONTENT_MAX}
+          onChange={(event) => setContent(event.target.value)}
+          placeholder="팔로워에게 전할 소식을 남겨보세요."
+          aria-label="게시글 내용"
+          className="min-h-40 resize-none border-0 bg-transparent p-0 text-base leading-relaxed shadow-none focus-visible:ring-0 disabled:bg-transparent md:text-sm dark:bg-transparent dark:disabled:bg-transparent"
+        />
 
-      {displayImage && (
-        <div className="relative w-fit">
-          <div className="border-border relative size-40 overflow-hidden rounded-2xl border">
-            <Image
-              src={displayImage}
-              alt="첨부 이미지 미리보기"
-              fill
-              unoptimized
-              sizes="160px"
-              className="object-cover"
-            />
+        {displayImage && (
+          <div className="relative w-fit">
+            <div className="border-border relative size-40 overflow-hidden rounded-xl border">
+              <Image
+                src={displayImage}
+                alt="첨부 이미지 미리보기"
+                fill
+                unoptimized
+                sizes="160px"
+                className="object-cover"
+              />
+            </div>
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={handleRemoveImage}
+              aria-label="이미지 제거"
+              className="bg-foreground/80 text-background hover:bg-foreground absolute -top-2 -right-2 flex size-6 items-center justify-center rounded-full transition-colors disabled:opacity-50"
+            >
+              <X className="size-3.5" />
+            </button>
           </div>
-          <button
-            type="button"
-            disabled={isPending}
-            onClick={handleRemoveImage}
-            aria-label="이미지 제거"
-            className="bg-foreground/80 text-background hover:bg-foreground absolute -top-2 -right-2 flex size-6 items-center justify-center rounded-full transition-colors disabled:opacity-50"
-          >
-            <X className="size-3.5" />
-          </button>
-        </div>
-      )}
+        )}
+      </div>
 
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1">

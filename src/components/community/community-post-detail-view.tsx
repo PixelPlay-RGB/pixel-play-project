@@ -40,6 +40,7 @@ export default function CommunityPostDetailView({
 }: Props) {
   const router = useRouter();
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [imageDim, setImageDim] = useState<{ width: number; height: number } | null>(null);
   const { data } = useCommunityPostDetail(post.id, post);
   const deletePost = useDeleteCommunityPost(post.id);
 
@@ -118,15 +119,20 @@ export default function CommunityPostDetailView({
           </p>
 
           {detail.imageUrl && (
-            <div className="border-border/60 bg-muted/30 relative mt-4 aspect-square w-full max-w-sm overflow-hidden rounded-xl border">
-              <Image
-                src={detail.imageUrl}
-                alt="첨부 이미지"
-                fill
-                sizes="(min-width: 640px) 24rem, 100vw"
-                className="object-contain"
-              />
-            </div>
+            <Image
+              src={detail.imageUrl}
+              alt="첨부 이미지"
+              width={imageDim?.width ?? 1000}
+              height={imageDim?.height ?? 1000}
+              onLoad={(event) =>
+                setImageDim({
+                  width: event.currentTarget.naturalWidth,
+                  height: event.currentTarget.naturalHeight,
+                })
+              }
+              unoptimized
+              className="border-border/60 mt-4 h-auto max-h-[32rem] w-auto max-w-full rounded-xl border"
+            />
           )}
 
           <div className="mt-4 flex items-center justify-end">

@@ -39,7 +39,7 @@ export default function CommunityPostCard({ creatorId, creator, post, isOwner }:
   };
 
   return (
-    <div className="border-border/60 bg-card/60 hover:border-brand/30 hover:bg-card relative flex h-48 w-full flex-col rounded-2xl border transition-colors">
+    <div className="border-border/60 bg-card/60 hover:border-brand/30 hover:bg-card relative flex h-56 w-full flex-col rounded-2xl border transition-colors">
       <Link href={detailHref} className="flex min-h-0 flex-1 flex-col p-4 sm:p-5">
         <div className="flex items-center gap-2.5 pr-8">
           <Avatar className="size-9">
@@ -62,12 +62,12 @@ export default function CommunityPostCard({ creatorId, creator, post, isOwner }:
             {post.content}
           </p>
           {post.imageUrl && (
-            <div className="border-border/60 relative aspect-square shrink-0 overflow-hidden rounded-lg border">
+            <div className="border-border/60 relative aspect-square shrink-0 self-stretch overflow-hidden rounded-lg border">
               <Image
                 src={post.imageUrl}
                 alt="첨부 이미지"
                 fill
-                sizes="96px"
+                sizes="128px"
                 className="object-cover"
               />
             </div>
