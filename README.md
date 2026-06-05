@@ -17,7 +17,7 @@ Next.js 16 App Router, React 19, Supabase Auth/Postgres/Realtime, TanStack Query
 | Auth              | Supabase Auth, Email OTP, Google OAuth, GitHub OAuth    |
 | Database          | Supabase Postgres                                       |
 | Realtime          | Supabase Realtime Postgres Changes, Presence, Broadcast |
-| Payments          | Toss Payments (포인트 충전)                             |
+| Payments          | Toss Payments (포인트 충전, 연동 예정)                  |
 | Server State      | TanStack Query v5                                       |
 | Client State      | Zustand v5                                              |
 | Form / Validation | react-hook-form v7, Zod v4                              |
@@ -210,9 +210,9 @@ npm run dev
 
 ### 포인트 충전과 후원
 
-- 사용자는 포인트 지갑(`wallet_account`)을 통해 포인트를 충전하고 라이브에서 후원합니다.
-- 충전은 Toss Payments 연동(`/api/payments/toss/prepare`, `/confirm`, `/webhook`)으로 처리하고, 승인은 `confirm_wallet_charge` RPC가 멱등 처리합니다.
-- 후원 전송은 `send_live_donation` RPC가 지갑 차감과 후원 기록, 라이브 후원 메시지 생성을 단일 트랜잭션으로 처리합니다.
+- 사용자는 포인트 지갑(`wallet_account`)으로 라이브에서 후원하며, 포인트 충전(Toss Payments)은 후속 구현 예정입니다.
+- 충전용 Toss 연동 라우트(`/api/payments/toss/{prepare,confirm,webhook}`)는 현재 스캐폴드(501 Not Implemented) 상태이며, 승인 시 잔액 반영은 `confirm_wallet_charge` RPC(구현됨)로 처리할 예정입니다.
+- 후원 전송은 `send_live_donation` RPC가 지갑 차감과 후원 기록, 라이브 후원 메시지 생성을 단일 트랜잭션으로 멱등 처리합니다.
 - `/user/donations`에서 후원 내역과 충전 진입을 함께 보여주며, `get_user_donation_snapshot`으로 데이터를 조회합니다.
 
 ### 라우터와 공개 화면
