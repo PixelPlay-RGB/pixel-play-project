@@ -65,7 +65,7 @@ const DONATION_HISTORY_TABS: Array<{ value: DonationHistoryTab; label: string }>
   { value: "charge", label: "충전" },
   { value: "donation", label: "후원" },
 ];
-const HISTORY_ITEMS_PER_PAGE = 5;
+const HISTORY_ITEMS_PER_PAGE = 8;
 
 export function UserDonationHistoryTable({ snapshot, activeTab, onActiveTabChange }: Props) {
   const router = useRouter();
