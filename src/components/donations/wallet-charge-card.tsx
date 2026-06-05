@@ -22,7 +22,10 @@ import {
 } from "@/constants/payments/wallet-charge";
 import { cn } from "@/lib/utils";
 import type { TossPaymentPrepareResponse } from "@/types/payments/toss-payment-api";
-import type { TossPaymentsPayment } from "@/types/payments/toss-payments";
+import type {
+  TossPaymentsPaymentWindow,
+  TossPaymentsWidgets,
+} from "@/types/payments/toss-payments";
 import { CreditCard, Loader2 } from "lucide-react";
 import Script from "next/script";
 import { FormEvent, useEffect, useId, useMemo, useRef, useState } from "react";
@@ -93,7 +96,8 @@ export function WalletChargeCard({ customerKey, variant = "card" }: Props) {
   const [isSdkLoaded, setIsSdkLoaded] = useState(false);
   const [isPaymentInitialized, setIsPaymentInitialized] = useState(false);
   const [paymentWindowState, setPaymentWindowState] = useState<PaymentWindowState>("idle");
-  const paymentRef = useRef<TossPaymentsPayment | null>(null);
+  const widgetsRef = useRef<TossPaymentsWidgets | null>(null);
+  const paymentWindowRef = useRef<TossPaymentsPaymentWindow | null>(null);
 
   const numericAmount = useMemo(() => Number(amount), [amount]);
   const isValidAmount = isValidChargeAmount(numericAmount);
@@ -115,9 +119,9 @@ export function WalletChargeCard({ customerKey, variant = "card" }: Props) {
 
     try {
       const tossPayments = window.TossPayments(clientKey);
-      const payment = tossPayments.payment({ customerKey });
+      const widgets = tossPayments.widgets({ customerKey });
 
-      paymentRef.current = payment;
+      widgetsRef.current = widgets;
       queueActiveUpdate(
         () => isActive,
         () => {
@@ -138,10 +142,33 @@ export function WalletChargeCard({ customerKey, variant = "card" }: Props) {
 
     return () => {
       isActive = false;
-      destroyTossPayment(paymentRef.current);
-      paymentRef.current = null;
+      destroyTossPaymentWindow(paymentWindowRef.current);
+      paymentWindowRef.current = null;
+      widgetsRef.current = null;
     };
   }, [clientKey, customerKey, isSdkLoaded]);
+
+  useEffect(() => {
+    const widgets = widgetsRef.current;
+
+    if (!widgets || !isPaymentInitialized || !isValidAmount) {
+      return;
+    }
+
+    let isActive = true;
+
+    widgets.setAmount({ currency: "KRW", value: numericAmount }).catch((error: unknown) => {
+      console.error("Toss Payments 결제위젯 금액 동기화 실패", error);
+
+      if (isActive) {
+        setPaymentWindowState("failed");
+      }
+    });
+
+    return () => {
+      isActive = false;
+    };
+  }, [isPaymentInitialized, isValidAmount, numericAmount]);
 
   const handleSdkReady = () => {
     setIsPaymentInitialized(false);
@@ -151,9 +178,9 @@ export function WalletChargeCard({ customerKey, variant = "card" }: Props) {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const payment = paymentRef.current;
+    const widgets = widgetsRef.current;
 
-    if (!payment || !canRequestPayment) {
+    if (!widgets || !canRequestPayment) {
       return;
     }
 
@@ -161,13 +188,32 @@ export function WalletChargeCard({ customerKey, variant = "card" }: Props) {
       setPaymentWindowState("opening");
       const preparedPayment = await prepareTossWalletCharge(numericAmount);
 
-      await payment.requestPayment({
-        method: "CARD",
-        amount: { currency: "KRW", value: preparedPayment.amount },
-        orderId: preparedPayment.orderId,
-        orderName: preparedPayment.orderName,
-        successUrl: `${window.location.origin}/user/donations/toss/success`,
-        failUrl: `${window.location.origin}/user/donations/toss/fail`,
+      await widgets.setAmount({ currency: "KRW", value: preparedPayment.amount });
+      destroyTossPaymentWindow(paymentWindowRef.current);
+
+      const paymentWindow = await widgets.renderPaymentWindow();
+      let hasRequestedPayment = false;
+
+      paymentWindowRef.current = paymentWindow;
+      paymentWindow.on("paymentRequest", async () => {
+        if (hasRequestedPayment) {
+          return;
+        }
+
+        try {
+          hasRequestedPayment = true;
+          setPaymentWindowState("opening");
+          await widgets.requestPayment({
+            orderId: preparedPayment.orderId,
+            orderName: preparedPayment.orderName,
+            successUrl: `${window.location.origin}/user/donations/toss/success`,
+            failUrl: `${window.location.origin}/user/donations/toss/fail`,
+          });
+        } catch (error) {
+          console.error("Toss Payments 결제위젯 결제 요청 실패", error);
+          hasRequestedPayment = false;
+          setPaymentWindowState("failed");
+        }
       });
 
       setPaymentWindowState("ready");
@@ -279,13 +325,13 @@ function queueActiveUpdate(isActive: () => boolean, update: () => void) {
   });
 }
 
-function destroyTossPayment(payment: TossPaymentsPayment | null) {
-  if (!payment) {
+function destroyTossPaymentWindow(paymentWindow: TossPaymentsPaymentWindow | null) {
+  if (!paymentWindow) {
     return;
   }
 
   try {
-    const result = payment.destroy();
+    const result = paymentWindow.destroy();
 
     if (result instanceof Promise) {
       void result.catch(() => undefined);
