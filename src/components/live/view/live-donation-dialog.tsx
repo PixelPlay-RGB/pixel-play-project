@@ -50,20 +50,23 @@ export function LiveDonationDialog({
   onDonate,
 }: Props) {
   const minimumAmount = donationMinAmount > 0 ? donationMinAmount : LIVE_DONATION_MIN_AMOUNT;
-  const defaultAmount =
-    LIVE_DONATION_AMOUNTS.find((amount) => amount >= minimumAmount) ?? minimumAmount;
   const [open, setOpen] = useState(false);
-  const [selectedAmount, setSelectedAmount] = useState<number>(() => defaultAmount);
-  const [customInput, setCustomInput] = useState("");
+  // 후원 금액은 직접 입력값(숫자 문자열) 하나를 단일 소스로 둔다. 금액 버튼은 이 값에 더한다.
+  const [amountInput, setAmountInput] = useState("");
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const amount = Number(amountInput) || 0;
+
   function resetForm() {
-    setSelectedAmount(defaultAmount);
-    setCustomInput("");
+    setAmountInput("");
     setIsAnonymous(false);
     setMessage("");
+  }
+
+  function addAmount(delta: number) {
+    setAmountInput(String(amount + delta));
   }
 
   function handleOpenChange(next: boolean) {
@@ -72,23 +75,18 @@ export function LiveDonationDialog({
       resetForm();
       return;
     }
-    if (next && !donationEnabled) {
+    if (!donationEnabled) {
       return;
     }
-    if (next && !isLoggedIn) {
+    if (!isLoggedIn) {
       onLoginPrompt();
       return;
     }
-    if (next && (selectedAmount < minimumAmount || !Number.isInteger(selectedAmount))) {
-      setSelectedAmount(defaultAmount);
-      setCustomInput("");
-    }
-    setOpen(next);
+    setOpen(true);
   }
 
-  const remaining = walletBalance - selectedAmount;
-  const isBelowMin = selectedAmount < minimumAmount;
-  const isInvalidAmount = !Number.isInteger(selectedAmount);
+  const remaining = walletBalance - amount;
+  const isBelowMin = amount < minimumAmount;
   const minAmountLabel = `${formatDonationAmount(minimumAmount)}${LIVE_DONATION_LABEL.unit}`;
 
   return (
@@ -127,49 +125,33 @@ export function LiveDonationDialog({
           <div className="flex flex-col gap-2">
             <span className="text-sm font-medium">{LIVE_DONATION_LABEL.amountLabel}</span>
             <div className="grid grid-cols-3 gap-2">
-              {LIVE_DONATION_AMOUNTS.map((amount) => (
+              {LIVE_DONATION_AMOUNTS.map((preset) => (
                 <Button
-                  key={amount}
+                  key={preset}
                   type="button"
                   size="sm"
                   variant="outline"
-                  disabled={amount < minimumAmount}
-                  onClick={() => {
-                    setSelectedAmount(amount);
-                    setCustomInput("");
-                  }}
+                  onClick={() => addAmount(preset)}
                   className={cn(
                     "h-auto px-2 py-2 text-sm",
-                    selectedAmount === amount
-                      ? "border-brand bg-brand/10 text-brand"
-                      : "border-border text-foreground hover:border-brand/50",
+                    "border-border text-foreground hover:border-brand/50",
                   )}
                 >
-                  {formatDonationAmount(amount)}
+                  +{formatDonationAmount(preset)}
                   {LIVE_DONATION_LABEL.unit}
                 </Button>
               ))}
             </div>
             <div className="flex flex-col gap-1">
               <Input
-                type="number"
-                min={minimumAmount}
-                step={1}
+                type="text"
+                inputMode="numeric"
                 placeholder={LIVE_DONATION_LABEL.directInput.replace("{amount}", minAmountLabel)}
                 className="text-sm"
-                value={customInput}
-                onChange={(e) => {
-                  const raw = e.target.value;
-                  setCustomInput(raw);
-                  if (!raw) {
-                    setSelectedAmount(minimumAmount);
-                    return;
-                  }
-                  const val = Number(raw);
-                  if (Number.isFinite(val)) setSelectedAmount(val);
-                }}
+                value={amountInput}
+                onChange={(e) => setAmountInput(e.target.value.replace(/\D/g, ""))}
               />
-              {customInput !== "" && isBelowMin && (
+              {amountInput !== "" && isBelowMin && (
                 <p className="text-destructive text-xs">
                   {LIVE_DONATION_LABEL.minAmountError.replace("{amount}", minAmountLabel)}
                 </p>
@@ -220,7 +202,6 @@ export function LiveDonationDialog({
             type="button"
             disabled={
               !donationEnabled ||
-              isInvalidAmount ||
               isBelowMin ||
               remaining < 0 ||
               isSubmitting ||
@@ -233,7 +214,7 @@ export function LiveDonationDialog({
                 setIsSubmitting(true);
                 try {
                   const success = await onDonate({
-                    amount: selectedAmount,
+                    amount,
                     message,
                     isAnonymous,
                     idempotencyKey: crypto.randomUUID(),

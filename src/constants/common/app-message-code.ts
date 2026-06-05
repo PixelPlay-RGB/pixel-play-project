@@ -32,6 +32,7 @@ export const APP_MESSAGE_CODE = {
       securityCopied: "success.channel.securityCopied",
       securityTokenRotated: "success.channel.securityTokenRotated",
       chatSettingsSaved: "success.channel.chatSettingsSaved",
+      liveSettingsSaved: "success.channel.liveSettingsSaved",
     },
     following: {
       followed: "success.following.followed",
@@ -96,6 +97,8 @@ export const APP_MESSAGE_CODE = {
       invalidInput: "error.message.invalidInput",
       sendForbidden: "error.message.sendForbidden",
       sendFailed: "error.message.sendFailed",
+      slowMode: "error.message.slowMode",
+      linkBlocked: "error.message.linkBlocked",
     },
     chatRoomMember: {
       kickFailed: "error.chatRoomMember.kickFailed",
@@ -126,6 +129,10 @@ export const APP_MESSAGE_CODE = {
     channel: {
       chatSettingsLoadFailed: "error.channel.chatSettingsLoadFailed",
       chatSettingsSaveFailed: "error.channel.chatSettingsSaveFailed",
+      liveEndSaveFailed: "error.channel.liveEndSaveFailed",
+      liveSettingsSaveFailed: "error.channel.liveSettingsSaveFailed",
+      liveStartSaveFailed: "error.channel.liveStartSaveFailed",
+      liveThumbnailUploadFailed: "error.channel.liveThumbnailUploadFailed",
       securityLoadFailed: "error.channel.securityLoadFailed",
       securityCopyFailed: "error.channel.securityCopyFailed",
       securityTokenRotateFailed: "error.channel.securityTokenRotateFailed",
@@ -136,6 +143,11 @@ export const APP_MESSAGE_CODE = {
     },
     live: {
       donationFailed: "error.live.donationFailed",
+      donationInsufficientBalance: "error.live.donationInsufficientBalance",
+      donationDisabled: "error.live.donationDisabled",
+      donationSelf: "error.live.donationSelf",
+      donationInvalid: "error.live.donationInvalid",
+      donationDuplicate: "error.live.donationDuplicate",
       voteFailed: "error.live.voteFailed",
       voteNoActivePoll: "error.live.voteNoActivePoll",
       voteInvalidOption: "error.live.voteInvalidOption",

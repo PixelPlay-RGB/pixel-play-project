@@ -10,7 +10,12 @@ import {
 } from "@/constants/live/live";
 import type { AppActionResult } from "@/types/common/action";
 import type { SendLiveMessageResult } from "@/types/live/live";
-import { isKnownMessageRpcError, resolveMessageRpcErrorCode } from "@/utils/common/app-message";
+import {
+  isKnownDonationRpcError,
+  isKnownMessageRpcError,
+  resolveDonationRpcErrorCode,
+  resolveMessageRpcErrorCode,
+} from "@/utils/common/app-message";
 import { isRecord } from "@/utils/common/json";
 import { isUuid } from "@/utils/common/uuid";
 
@@ -123,7 +128,7 @@ export async function sendLiveDonationAction(params: {
   message: string;
   isAnonymous: boolean;
   idempotencyKey: string;
-}): Promise<boolean> {
+}): Promise<AppActionResult> {
   const { broadcastId, amount, message, isAnonymous, idempotencyKey } = params;
 
   if (
@@ -134,18 +139,26 @@ export async function sendLiveDonationAction(params: {
     !Number.isInteger(amount) ||
     amount <= 0 ||
     message.length > LIVE_DONATION_MESSAGE_MAX_LENGTH
-  )
-    return false;
+  ) {
+    return { success: false, code: APP_MESSAGE_CODE.error.live.donationInvalid };
+  }
 
   const actor = await getAuthenticatedActorId({
     logLabel: "라이브 후원 중 인증 사용자 조회 실패",
   });
 
-  if (!actor.success) return false;
+  if (!actor.success) {
+    return { success: false, code: actor.result.code };
+  }
 
-  const client = await createWriteClientForAction("라이브 후원 Admin Client 생성 실패");
+  const client = await createWriteClientForAction(
+    "라이브 후원 Admin Client 생성 실패",
+    APP_MESSAGE_CODE.error.live.donationFailed,
+  );
 
-  if (!client.success) return false;
+  if (!client.success) {
+    return client.result;
+  }
 
   const { error } = await client.supabase.rpc("send_live_donation", {
     p_actor_user_id: actor.userId,
@@ -157,11 +170,18 @@ export async function sendLiveDonationAction(params: {
   });
 
   if (error) {
-    console.error("라이브 후원 RPC 실패", error);
-    return false;
+    // 잔액부족·후원중지 등은 정상적인 거부이므로 에러 로그를 남기지 않는다.
+    if (!isKnownDonationRpcError(error)) {
+      console.error("라이브 후원 RPC 실패", error);
+    }
+
+    return {
+      success: false,
+      code: resolveDonationRpcErrorCode(error, APP_MESSAGE_CODE.error.live.donationFailed),
+    };
   }
 
-  return true;
+  return { success: true };
 }
 
 export async function acceptLiveChatRuleAction(

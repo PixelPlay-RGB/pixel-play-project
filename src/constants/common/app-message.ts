@@ -76,6 +76,10 @@ export const APP_MESSAGE = {
         title: "저장 완료",
         description: "새 채팅 설정을 다음 채팅부터 적용합니다.",
       },
+      liveSettingsSaved: {
+        title: "방송 설정 저장 완료",
+        description: "방송 운영 설정이 저장되었습니다.",
+      },
     },
     following: {
       followed: {
@@ -301,6 +305,14 @@ export const APP_MESSAGE = {
         title: "전송 실패",
         description: "잠시 후 다시 시도해주세요.",
       },
+      slowMode: {
+        title: "채팅 속도 제한",
+        description: "조금 천천히 보내면 다시 채팅할 수 있어요.",
+      },
+      linkBlocked: {
+        title: "링크 전송 불가",
+        description: "이 방송에서는 링크를 보낼 수 없어요.",
+      },
     },
     profile: {
       notFound: {
@@ -367,6 +379,22 @@ export const APP_MESSAGE = {
         title: "채팅 설정 저장 실패",
         description: "입력값을 확인한 뒤 다시 시도해주세요.",
       },
+      liveSettingsSaveFailed: {
+        title: "방송 설정 저장 실패",
+        description: "입력값을 확인한 뒤 다시 시도해주세요.",
+      },
+      liveThumbnailUploadFailed: {
+        title: "미리보기 이미지 업로드 실패",
+        description: "미리보기 이미지를 업로드하지 못했습니다.",
+      },
+      liveStartSaveFailed: {
+        title: "방송 시작 저장 실패",
+        description: "방송 시작 정보를 저장하지 못했습니다.",
+      },
+      liveEndSaveFailed: {
+        title: "방송 종료 저장 실패",
+        description: "방송 종료 정보를 저장하지 못했습니다.",
+      },
       securityLoadFailed: {
         title: "방송 연결 정보 조회 실패",
         description: "다시 로그인하거나 잠시 후 새로고침해주세요.",
@@ -394,6 +422,26 @@ export const APP_MESSAGE = {
       donationFailed: {
         title: "후원 실패",
         description: "후원 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+      },
+      donationInsufficientBalance: {
+        title: "후원금 부족",
+        description: "보유 후원금이 부족해요. 충전 후 다시 시도해주세요.",
+      },
+      donationDisabled: {
+        title: "후원 불가",
+        description: "이 방송은 후원을 받지 않고 있어요.",
+      },
+      donationSelf: {
+        title: "후원 불가",
+        description: "본인 방송에는 후원할 수 없어요.",
+      },
+      donationInvalid: {
+        title: "후원 정보 확인 필요",
+        description: "후원 금액과 내용을 다시 확인해주세요.",
+      },
+      donationDuplicate: {
+        title: "이미 처리된 후원",
+        description: "잠시 후 다시 시도해주세요.",
       },
       voteFailed: {
         title: "투표 실패",

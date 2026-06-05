@@ -80,16 +80,61 @@ const MESSAGE_RPC_ERROR_CODE_MAP: Array<{
     code: APP_MESSAGE_CODE.error.auth.authInfoNotFound,
   },
   {
+    errorCode: "PX403",
+    code: APP_MESSAGE_CODE.error.message.sendForbidden,
+  },
+  {
     errorCode: "PX404",
     code: APP_MESSAGE_CODE.error.chatRoom.notFound,
+  },
+  {
+    errorCode: "PX422",
+    code: APP_MESSAGE_CODE.error.message.linkBlocked,
   },
   {
     errorCode: "PX423",
     code: APP_MESSAGE_CODE.error.chatRoom.isKicked,
   },
   {
+    // 채팅 규칙 미동의 — 정상적으로는 클라가 먼저 규칙 팝오버로 막지만 경합 시 방어한다.
+    errorCode: "PX428",
+    code: APP_MESSAGE_CODE.error.message.sendForbidden,
+  },
+  {
+    // 슬로우모드 — 실시간 채팅에서 정상 거부이므로 실패가 아닌 안내로 다룬다.
+    errorCode: "PX429",
+    code: APP_MESSAGE_CODE.error.message.slowMode,
+  },
+  {
     errorCode: "PX461",
     code: APP_MESSAGE_CODE.error.message.sendForbidden,
+  },
+];
+
+// 후원 RPC(send_live_donation)의 sqlstate를 사용자 메시지 코드로 매핑한다.
+const DONATION_RPC_ERROR_CODE_MAP: Array<{
+  errorCode: string;
+  code: AppMessageCode;
+}> = [
+  {
+    errorCode: "PX400",
+    code: APP_MESSAGE_CODE.error.live.donationInvalid,
+  },
+  {
+    errorCode: "PX401",
+    code: APP_MESSAGE_CODE.error.auth.authInfoNotFound,
+  },
+  {
+    errorCode: "PX402",
+    code: APP_MESSAGE_CODE.error.live.donationInsufficientBalance,
+  },
+  {
+    errorCode: "PX403",
+    code: APP_MESSAGE_CODE.error.live.donationDisabled,
+  },
+  {
+    errorCode: "PX409",
+    code: APP_MESSAGE_CODE.error.live.donationDuplicate,
   },
 ];
 
@@ -175,4 +220,27 @@ export function isKnownMessageRpcError(error: unknown) {
   const code = (error as SupabaseLikeError).code;
 
   return MESSAGE_RPC_ERROR_CODE_MAP.some((item) => item.errorCode === code);
+}
+
+export function resolveDonationRpcErrorCode(
+  error: unknown,
+  fallbackCode: AppMessageCode = APP_MESSAGE_CODE.error.live.donationFailed,
+): AppMessageCode {
+  if (typeof error !== "object" || error === null) {
+    return fallbackCode;
+  }
+
+  const code = (error as SupabaseLikeError).code;
+
+  return DONATION_RPC_ERROR_CODE_MAP.find((item) => item.errorCode === code)?.code ?? fallbackCode;
+}
+
+export function isKnownDonationRpcError(error: unknown) {
+  if (typeof error !== "object" || error === null) {
+    return false;
+  }
+
+  const code = (error as SupabaseLikeError).code;
+
+  return DONATION_RPC_ERROR_CODE_MAP.some((item) => item.errorCode === code);
 }

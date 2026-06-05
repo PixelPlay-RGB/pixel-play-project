@@ -31,6 +31,8 @@ export const LIVE_LABEL = {
   playerUnmute: "음소거 해제",
   playerTheater: "극장 모드",
   playerTheaterExit: "기본 모드",
+  playerQualityAuto: "자동",
+  playerUnmuteHint: "소리 켜기",
   viewers: "명 시청 중",
   followers: "팔로워",
   broadcasts: "방송",

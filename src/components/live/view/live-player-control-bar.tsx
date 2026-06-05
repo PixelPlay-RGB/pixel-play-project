@@ -17,6 +17,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { LivePlayerQualityMenu } from "@/components/live/view/live-player-quality-menu";
 import { LivePlayerVolumeControl } from "@/components/live/view/live-player-volume-control";
 import { LIVE_LABEL, LIVE_PLAYER_ICON_BUTTON_CLASS } from "@/constants/live/live";
+import type { HlsQualityLevel } from "@/hooks/live/use-hls-player";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -34,6 +35,9 @@ interface Props {
   isChatCollapsed: boolean;
   openChatButtonRef?: Ref<HTMLButtonElement>;
   onOpenChat?: () => void;
+  qualityLevels: HlsQualityLevel[];
+  selectedQualityLevel: number;
+  onSelectQualityLevel: (index: number) => void;
 }
 
 export function LivePlayerControlBar({
@@ -51,6 +55,9 @@ export function LivePlayerControlBar({
   isChatCollapsed,
   openChatButtonRef,
   onOpenChat,
+  qualityLevels,
+  selectedQualityLevel,
+  onSelectQualityLevel,
 }: Props) {
   return (
     <div className="flex items-center gap-2">
@@ -78,7 +85,11 @@ export function LivePlayerControlBar({
       </span>
 
       <div className="ml-auto flex items-center gap-1">
-        <LivePlayerQualityMenu />
+        <LivePlayerQualityMenu
+          levels={qualityLevels}
+          selectedLevel={selectedQualityLevel}
+          onSelectLevel={onSelectQualityLevel}
+        />
 
         {onToggleTheater ? (
           <Button

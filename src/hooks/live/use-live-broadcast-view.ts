@@ -95,23 +95,28 @@ export function useLiveBroadcastView(creatorId: string) {
     idempotencyKey: string;
   }): Promise<boolean> {
     if (!broadcast?.id) return false;
+    // 크리에이터는 본인 방송에 후원할 수 없다(서버도 거부하지만 즉시 명확히 안내한다).
+    if (user?.id && user.id === creatorId) {
+      toastAppError(APP_MESSAGE_CODE.error.live.donationSelf);
+      return false;
+    }
     if (!donationEnabled) {
-      toastAppError(APP_MESSAGE_CODE.error.live.donationFailed);
+      toastAppError(APP_MESSAGE_CODE.error.live.donationDisabled);
       return false;
     }
     try {
-      const success = await sendLiveDonationAction({ broadcastId: broadcast.id, ...params });
-      if (success) {
-        void queryClient.invalidateQueries({
-          queryKey: QUERY_KEYS.donations.walletBalance(user?.id ?? undefined),
-        });
-        void queryClient.invalidateQueries({
-          queryKey: QUERY_KEYS.donations.liveRanking(creatorId),
-        });
-      } else {
-        toastAppError(APP_MESSAGE_CODE.error.live.donationFailed);
+      const result = await sendLiveDonationAction({ broadcastId: broadcast.id, ...params });
+      if (!result.success) {
+        toastAppError(result.code ?? APP_MESSAGE_CODE.error.live.donationFailed);
+        return false;
       }
-      return success;
+      void queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.donations.walletBalance(user?.id ?? undefined),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.donations.liveRanking(creatorId),
+      });
+      return true;
     } catch (error) {
       console.error("라이브 후원 처리 실패", error);
       toastAppError(APP_MESSAGE_CODE.error.live.donationFailed);

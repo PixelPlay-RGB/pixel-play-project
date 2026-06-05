@@ -1,19 +1,22 @@
 "use client";
-// 라이브 비디오 플레이어 — 컨테이너 전체화면/극장 모드와 하단 컨트롤 바를 조립합니다.
-// 실제 스트림(<video>)은 아직 미연결 placeholder입니다.
-// TODO(#73 머지 후): getChannelLiveHlsUrl + use-hls-player로 placeholder를 실제 <video>로 교체하고
-// useLivePlayerControls의 videoRef에 바인딩한다.
+// 라이브 비디오 플레이어 — MediaMTX HLS <video>에 컨테이너 전체화면/극장 모드와 하단 컨트롤 바를 조립합니다.
 
 import type { Ref } from "react";
-import { Play, Radio, Users } from "lucide-react";
+import { Play, Radio, Users, Volume2 } from "lucide-react";
 
 import { LivePlayerControlBar } from "@/components/live/view/live-player-control-bar";
+import { Button } from "@/components/ui/button";
+import { getChannelLiveHlsUrl } from "@/constants/channel/channel-live-media";
 import { LIVE_LABEL } from "@/constants/live/live";
 import { useFullscreen } from "@/hooks/live/use-fullscreen";
+import { useHlsPlayer } from "@/hooks/live/use-hls-player";
 import { useLivePlayerControls } from "@/hooks/live/use-live-player-controls";
 import { cn } from "@/lib/utils";
 import { formatCount } from "@/utils/live/live-chat";
 import type { LiveBroadcast } from "@/types/live/live";
+
+// MVP는 단일 공유 path(mystream)라 모든 시청 화면이 같은 재생 URL을 쓴다(크리에이터별 path는 후속).
+const LIVE_HLS_SRC = getChannelLiveHlsUrl();
 
 interface Props {
   broadcast: LiveBroadcast;
@@ -36,6 +39,7 @@ export function LiveVideoPlayer({
 }: Props) {
   const { containerRef, isFullscreen, toggleFullscreen } = useFullscreen<HTMLDivElement>();
   const {
+    videoRef,
     isPlaying,
     togglePlay,
     muted,
@@ -48,6 +52,10 @@ export function LiveVideoPlayer({
     handleFocus,
     handleBlur,
   } = useLivePlayerControls();
+  const { levels, selectedLevel, setLevel } = useHlsPlayer({
+    videoRef,
+    src: LIVE_HLS_SRC,
+  });
 
   return (
     <div
@@ -57,12 +65,20 @@ export function LiveVideoPlayer({
       onFocus={handleFocus}
       onBlur={handleBlur}
       className={cn(
-        "relative w-full overflow-hidden bg-linear-to-br from-neutral-900 via-neutral-800 to-neutral-900",
+        "relative w-full overflow-hidden bg-black",
         isTheater
           ? "aspect-video rounded-xl md:aspect-auto md:h-full md:rounded-none"
           : "aspect-video rounded-xl",
       )}
     >
+      <video
+        ref={videoRef}
+        autoPlay
+        muted
+        playsInline
+        className="absolute inset-0 size-full bg-black object-contain"
+      />
+
       <div className="absolute top-0 left-0 z-10 flex items-center gap-2 px-4 pt-4">
         <span className="bg-live flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold text-white">
           <Radio className="size-3" />
@@ -74,11 +90,36 @@ export function LiveVideoPlayer({
         </span>
       </div>
 
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="flex size-16 items-center justify-center rounded-full border border-white/20 bg-white/15 backdrop-blur-sm sm:size-20">
-          <Play className="size-7 fill-white text-white sm:size-9" />
+      {!isPlaying ? (
+        <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-black/20">
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            aria-label={LIVE_LABEL.playerPlay}
+            onClick={togglePlay}
+            className={cn(
+              "pointer-events-auto size-16 rounded-full border border-white/20 bg-white/15 text-white backdrop-blur-sm sm:size-20",
+              "hover:bg-white/25 hover:text-white",
+            )}
+          >
+            <Play className="size-7 fill-white sm:size-9" />
+          </Button>
         </div>
-      </div>
+      ) : muted ? (
+        <div className="pointer-events-none absolute inset-x-0 top-4 z-10 flex justify-center">
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            onClick={toggleMute}
+            className="pointer-events-auto gap-2 rounded-full bg-black/60 text-white hover:bg-black/70 hover:text-white"
+          >
+            <Volume2 className="size-4" />
+            {LIVE_LABEL.playerUnmuteHint}
+          </Button>
+        </div>
+      ) : null}
 
       <div
         className={cn(
@@ -101,6 +142,9 @@ export function LiveVideoPlayer({
           isChatCollapsed={isChatCollapsed}
           openChatButtonRef={openChatButtonRef}
           onOpenChat={onOpenChat}
+          qualityLevels={levels}
+          selectedQualityLevel={selectedLevel}
+          onSelectQualityLevel={setLevel}
         />
       </div>
     </div>
