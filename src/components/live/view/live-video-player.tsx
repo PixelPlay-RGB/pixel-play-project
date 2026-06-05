@@ -25,6 +25,15 @@ interface Props {
 }
 
 const HLS_RETRY_DELAY_MS = 2000;
+const EXPECTED_AUTO_PLAY_ERROR_NAMES = new Set([
+  "AbortError",
+  "NotAllowedError",
+  "NotSupportedError",
+]);
+
+function isExpectedAutoPlayError(error: unknown) {
+  return error instanceof DOMException && EXPECTED_AUTO_PLAY_ERROR_NAMES.has(error.name);
+}
 
 export function LiveVideoPlayer({
   broadcast,
@@ -61,9 +70,18 @@ export function LiveVideoPlayer({
 
     const playVideo = () => {
       void video.play().catch((error) => {
-        if (error instanceof DOMException && error.name === "AbortError") return;
-        console.error("라이브 영상 자동 재생 실패", error);
+        if (isExpectedAutoPlayError(error)) return;
+        console.warn("라이브 영상 자동 재생 실패", error);
       });
+    };
+
+    const playWhenReady = () => {
+      if (video.readyState >= HTMLMediaElement.HAVE_METADATA) {
+        playVideo();
+        return;
+      }
+
+      video.addEventListener("loadedmetadata", playVideo, { once: true });
     };
 
     if (video.canPlayType("application/vnd.apple.mpegurl")) {
@@ -73,18 +91,19 @@ export function LiveVideoPlayer({
         if (retryTimeout) clearTimeout(retryTimeout);
         retryTimeout = setTimeout(() => {
           video.load();
-          playVideo();
+          playWhenReady();
         }, HLS_RETRY_DELAY_MS);
       };
 
       video.src = hlsSrc;
       video.addEventListener("error", retryLoad);
       video.load();
-      playVideo();
+      playWhenReady();
 
       return () => {
         if (retryTimeout) clearTimeout(retryTimeout);
         video.removeEventListener("error", retryLoad);
+        video.removeEventListener("loadedmetadata", playVideo);
         video.removeAttribute("src");
         video.load();
       };
@@ -121,12 +140,13 @@ export function LiveVideoPlayer({
       }
     });
 
-    hls.on(Hls.Events.MANIFEST_PARSED, playVideo);
+    hls.on(Hls.Events.MANIFEST_PARSED, playWhenReady);
     hls.loadSource(hlsSrc);
     hls.attachMedia(video);
 
     return () => {
       if (retryTimeout) clearTimeout(retryTimeout);
+      video.removeEventListener("loadedmetadata", playVideo);
       hls.destroy();
     };
   }, [hlsSrc, videoRef]);
