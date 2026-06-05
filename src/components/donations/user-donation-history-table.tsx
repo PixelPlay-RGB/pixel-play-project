@@ -19,17 +19,18 @@ import type {
   UserDonationSnapshot,
   UserSentDonationItem,
   UserWalletChargeHistoryItem,
-  WalletTransactionStatus,
 } from "@/types/donations/user-donations";
 import { CreditCard, Gift, Inbox } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 
 interface Props {
   snapshot: UserDonationSnapshot;
+  activeTab: DonationHistoryTab;
+  onActiveTabChange: (tab: DonationHistoryTab) => void;
 }
 
-type DonationHistoryTab = "all" | "charge" | "donation";
+export type DonationHistoryTab = "all" | "charge" | "donation";
 
 type DonationHistoryItem =
   | {
@@ -55,20 +56,13 @@ const DONATION_HISTORY_TABS: Array<{ value: DonationHistoryTab; label: string }>
   { value: "donation", label: "후원" },
 ];
 
-const TRANSACTION_STATUS_LABEL: Record<WalletTransactionStatus, string> = {
-  pending: "승인 대기",
-  succeeded: "승인 완료",
-  failed: "승인 실패",
-  canceled: "승인 취소",
-};
-
-export function UserDonationHistoryTable({ snapshot }: Props) {
+export function UserDonationHistoryTable({ snapshot, activeTab, onActiveTabChange }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useState<DonationHistoryTab>("all");
   const historyTitle = `${snapshot.historyPeriod.year}년 ${snapshot.historyPeriod.month}월 내역`;
   const historyItems = useMemo(() => buildHistoryItems(snapshot), [snapshot]);
+  const succeededChargeHistories = useMemo(() => getSucceededChargeHistories(snapshot), [snapshot]);
   const yearOptions = useMemo(
     () => buildYearOptions(snapshot.historyPeriod.year),
     [snapshot.historyPeriod.year],
@@ -82,10 +76,10 @@ export function UserDonationHistoryTable({ snapshot }: Props) {
   const tabCounts = useMemo(
     () => ({
       all: historyItems.length,
-      charge: snapshot.chargeHistories.length,
+      charge: succeededChargeHistories.length,
       donation: snapshot.sentDonations.length,
     }),
-    [historyItems.length, snapshot.chargeHistories.length, snapshot.sentDonations.length],
+    [historyItems.length, succeededChargeHistories.length, snapshot.sentDonations.length],
   );
   const handlePeriodChange = (nextPeriod: { year?: number; month?: number }) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -101,7 +95,7 @@ export function UserDonationHistoryTable({ snapshot }: Props) {
     <section className="flex min-w-0 flex-col gap-4">
       <Tabs
         value={activeTab}
-        onValueChange={(nextValue) => setActiveTab(nextValue as DonationHistoryTab)}
+        onValueChange={(nextValue) => onActiveTabChange(nextValue as DonationHistoryTab)}
       >
         <TabsList
           className={cn(
@@ -282,12 +276,16 @@ function EmptyList({ activeTab }: { activeTab: DonationHistoryTab }) {
 }
 
 function buildHistoryItems(snapshot: UserDonationSnapshot): DonationHistoryItem[] {
-  const chargeItems = snapshot.chargeHistories.map(readChargeHistoryItem);
+  const chargeItems = getSucceededChargeHistories(snapshot).map(readChargeHistoryItem);
   const donationItems = snapshot.sentDonations.map(readSentDonationItem);
 
   return [...chargeItems, ...donationItems].sort(
     (left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
   );
+}
+
+function getSucceededChargeHistories(snapshot: UserDonationSnapshot) {
+  return snapshot.chargeHistories.filter((charge) => charge.status === "succeeded");
 }
 
 function buildYearOptions(selectedYear: number) {
@@ -315,7 +313,7 @@ function readChargeHistoryItem(charge: UserWalletChargeHistoryItem): DonationHis
     kind: "charge",
     id: charge.id,
     title: "후원금 충전",
-    description: `Toss Payments ${TRANSACTION_STATUS_LABEL[charge.status]}`,
+    description: "Toss Payments 승인 완료",
     amount: charge.amount,
     createdAt: charge.createdAt,
   };

@@ -1,34 +1,49 @@
 "use client";
-// 선택한 월의 보낸 후원 금액을 일자별 차트로 표시합니다.
+// 선택한 월의 충전과 방송후원 금액을 일자별 차트로 표시합니다.
 
+import type { DonationHistoryTab } from "@/components/donations/user-donation-history-table";
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
+import { cn } from "@/lib/utils";
 import type { UserDonationSnapshot } from "@/types/donations/user-donations";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import type { TooltipPayloadEntry, TooltipValueType } from "recharts";
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, type WheelEvent } from "react";
 
 interface Props {
   snapshot: UserDonationSnapshot;
+  activeTab: DonationHistoryTab;
 }
 
 interface DonationDailyChartItem {
   day: number;
   dayLabel: string;
-  amount: number;
-  count: number;
+  chargeAmount: number;
+  chargeCount: number;
+  donationAmount: number;
+  donationCount: number;
 }
 
 const DONATION_DAILY_CHART_CONFIG = {
-  amount: {
-    label: "보낸 후원",
+  chargeAmount: {
+    label: "후원금 충전",
     color: "var(--brand)",
   },
+  donationAmount: {
+    label: "방송후원",
+    color: "var(--live)",
+  },
 } satisfies ChartConfig;
+
+const CHART_HEADER_LABEL: Record<DonationHistoryTab, string> = {
+  all: "전체 내역",
+  charge: "후원금 충전",
+  donation: "방송후원",
+};
 
 const KST_DATE_FORMATTER = new Intl.DateTimeFormat("en-US", {
   timeZone: "Asia/Seoul",
@@ -37,15 +52,17 @@ const KST_DATE_FORMATTER = new Intl.DateTimeFormat("en-US", {
   day: "numeric",
 });
 
-export function UserDonationDailyChart({ snapshot }: Props) {
+export function UserDonationDailyChart({ snapshot, activeTab }: Props) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const chartData = useMemo(() => buildDonationDailyChartData(snapshot), [snapshot]);
-  const totalAmount = chartData.reduce((total, item) => total + item.amount, 0);
-  const totalCount = chartData.reduce((total, item) => total + item.count, 0);
-  const chartWidth = Math.max(chartData.length * 52, 360);
+  const chargeTotal = chartData.reduce((total, item) => total + item.chargeAmount, 0);
+  const donationTotal = chartData.reduce((total, item) => total + item.donationAmount, 0);
+  const chargeCount = chartData.reduce((total, item) => total + item.chargeCount, 0);
+  const donationCount = chartData.reduce((total, item) => total + item.donationCount, 0);
+  const chartWidth = Math.max(chartData.length * 56, 360);
   const periodLabel = `${snapshot.historyPeriod.year}년 ${snapshot.historyPeriod.month}월`;
 
-  const handleWheel = (event: React.WheelEvent<HTMLDivElement>) => {
+  const handleWheel = (event: WheelEvent<HTMLDivElement>) => {
     const scrollArea = scrollAreaRef.current;
 
     if (!scrollArea || scrollArea.scrollWidth <= scrollArea.clientWidth) {
@@ -65,7 +82,7 @@ export function UserDonationDailyChart({ snapshot }: Props) {
   if (chartData.length === 0) {
     return (
       <div className="border-border bg-muted/20 flex min-h-44 flex-col justify-center gap-2 rounded-lg border border-dashed p-4">
-        <p className="text-foreground text-sm font-black">표시할 후원 기간 없음</p>
+        <p className="text-foreground text-sm font-black">표시할 내역 기간 없음</p>
         <p className="text-muted-foreground text-xs">
           {periodLabel}은 아직 그래프로 표시할 수 있는 날짜가 없습니다.
         </p>
@@ -77,12 +94,18 @@ export function UserDonationDailyChart({ snapshot }: Props) {
     <div className="space-y-4">
       <div className="flex items-end justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-muted-foreground text-xs font-black">{periodLabel} 보낸 후원</p>
-          <p className="text-foreground mt-1 text-2xl leading-tight font-black">
-            {formatPoint(totalAmount)}
+          <p className="text-muted-foreground text-xs font-black">
+            {periodLabel} {CHART_HEADER_LABEL[activeTab]}
           </p>
+          <ChartTotalSummary
+            activeTab={activeTab}
+            chargeTotal={chargeTotal}
+            donationTotal={donationTotal}
+          />
         </div>
-        <p className="text-muted-foreground shrink-0 text-xs font-semibold">{totalCount}건</p>
+        <p className="text-muted-foreground shrink-0 text-xs font-semibold">
+          {formatChartCount(activeTab, chargeCount, donationCount)}
+        </p>
       </div>
 
       <div ref={scrollAreaRef} className="overflow-x-auto pb-2" onWheel={handleWheel} tabIndex={0}>
@@ -120,15 +143,32 @@ export function UserDonationDailyChart({ snapshot }: Props) {
                   />
                 }
               />
-              <Bar
-                dataKey="amount"
-                fill="var(--color-amount)"
-                radius={[6, 6, 0, 0]}
-                maxBarSize={30}
-              />
+              {activeTab !== "donation" ? (
+                <Bar
+                  dataKey="chargeAmount"
+                  fill="var(--color-chargeAmount)"
+                  radius={[6, 6, 0, 0]}
+                  maxBarSize={30}
+                />
+              ) : null}
+              {activeTab !== "charge" ? (
+                <Bar
+                  dataKey="donationAmount"
+                  fill="var(--color-donationAmount)"
+                  radius={[6, 6, 0, 0]}
+                  maxBarSize={30}
+                />
+              ) : null}
             </BarChart>
           </ChartContainer>
         </div>
+      </div>
+
+      <div className="flex flex-wrap gap-x-3 gap-y-2">
+        {activeTab !== "donation" ? (
+          <ChartLegendItem label="후원금 충전" className="bg-brand" />
+        ) : null}
+        {activeTab !== "charge" ? <ChartLegendItem label="방송후원" className="bg-live" /> : null}
       </div>
     </div>
   );
@@ -140,9 +180,34 @@ function buildDonationDailyChartData(snapshot: UserDonationSnapshot): DonationDa
   const chartData = Array.from({ length: visibleDayCount }, (_, index) => ({
     day: index + 1,
     dayLabel: `${index + 1}일`,
-    amount: 0,
-    count: 0,
+    chargeAmount: 0,
+    chargeCount: 0,
+    donationAmount: 0,
+    donationCount: 0,
   }));
+
+  snapshot.chargeHistories
+    .filter((charge) => charge.status === "succeeded")
+    .forEach((charge) => {
+      const chargeDate = getKstDateParts(charge.createdAt);
+
+      if (
+        chargeDate.year !== year ||
+        chargeDate.month !== month ||
+        chargeDate.day > visibleDayCount
+      ) {
+        return;
+      }
+
+      const dayItem = chartData[chargeDate.day - 1];
+
+      if (!dayItem) {
+        return;
+      }
+
+      dayItem.chargeAmount += charge.amount;
+      dayItem.chargeCount += 1;
+    });
 
   snapshot.sentDonations.forEach((donation) => {
     const donationDate = getKstDateParts(donation.createdAt);
@@ -161,8 +226,8 @@ function buildDonationDailyChartData(snapshot: UserDonationSnapshot): DonationDa
       return;
     }
 
-    dayItem.amount += donation.amount;
-    dayItem.count += 1;
+    dayItem.donationAmount += donation.amount;
+    dayItem.donationCount += 1;
   });
 
   return chartData;
@@ -199,8 +264,10 @@ function getKstDateParts(value: string | Date) {
 function formatTooltipValue(value: TooltipValueType | undefined, item: TooltipPayloadEntry) {
   const chartItem = item.payload as DonationDailyChartItem | undefined;
   const amount = readTooltipNumber(value);
+  const key = String(item.dataKey ?? "");
+  const count = key === "chargeAmount" ? chartItem?.chargeCount : chartItem?.donationCount;
 
-  return `${formatPoint(amount)} (${chartItem?.count ?? 0}건)`;
+  return `${formatPoint(amount)} (${count ?? 0}건)`;
 }
 
 function readTooltipNumber(value: TooltipValueType | undefined) {
@@ -229,4 +296,62 @@ function formatCompactPoint(value: number) {
 
 function formatPoint(value: number) {
   return `${value.toLocaleString("ko-KR")}P`;
+}
+
+function ChartTotalSummary({
+  activeTab,
+  chargeTotal,
+  donationTotal,
+}: {
+  activeTab: DonationHistoryTab;
+  chargeTotal: number;
+  donationTotal: number;
+}) {
+  if (activeTab === "charge") {
+    return (
+      <p className="text-brand mt-1 text-2xl leading-tight font-black">
+        {formatPoint(chargeTotal)}
+      </p>
+    );
+  }
+
+  if (activeTab === "donation") {
+    return (
+      <p className="text-live mt-1 text-2xl leading-tight font-black">
+        {formatPoint(donationTotal)}
+      </p>
+    );
+  }
+
+  return (
+    <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+      <p className="text-brand text-sm font-black">충전 {formatPoint(chargeTotal)}</p>
+      <p className="text-live text-sm font-black">후원 {formatPoint(donationTotal)}</p>
+    </div>
+  );
+}
+
+function ChartLegendItem({ label, className }: { label: string; className: string }) {
+  return (
+    <span className="text-muted-foreground flex items-center gap-1.5 text-xs font-semibold">
+      <span className={cn("size-2 rounded-full", className)} aria-hidden />
+      {label}
+    </span>
+  );
+}
+
+function formatChartCount(
+  activeTab: DonationHistoryTab,
+  chargeCount: number,
+  donationCount: number,
+) {
+  if (activeTab === "charge") {
+    return `${chargeCount}건`;
+  }
+
+  if (activeTab === "donation") {
+    return `${donationCount}건`;
+  }
+
+  return `${chargeCount + donationCount}건`;
 }

@@ -2,8 +2,7 @@
 import { SettingsCard } from "@/components/common/settings-card";
 import { SettingsPage } from "@/components/common/settings-page";
 import { PaymentResultToast } from "@/components/donations/payment-result-toast";
-import { UserDonationDailyChart } from "@/components/donations/user-donation-daily-chart";
-import { UserDonationHistoryTable } from "@/components/donations/user-donation-history-table";
+import { UserDonationDashboardSection } from "@/components/donations/user-donation-dashboard-section";
 import { WalletChargeDialog } from "@/components/donations/wallet-charge-card";
 import type { AppMessageCode } from "@/constants/common/app-message-code";
 import type { UserDonationSnapshot } from "@/types/donations/user-donations";
@@ -40,19 +39,7 @@ export function UserDonationsPage({ snapshot, errorCode, paymentResultCode }: Pr
       <DonationBalanceHero snapshot={snapshot} />
       {paymentResultCode ? <PaymentResultToast code={paymentResultCode} /> : null}
 
-      <section className="grid items-start gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(20rem,0.9fr)]">
-        <UserDonationHistoryTable snapshot={snapshot} />
-
-        <aside className="grid items-start gap-4 self-start sm:grid-cols-2 xl:grid-cols-1">
-          <SettingsCard title="후원 지갑 요약" className="self-start" contentClassName="gap-4">
-            <DonationSummaryGrid snapshot={snapshot} />
-          </SettingsCard>
-
-          <SettingsCard title="보낸 후원 그래프" className="self-start" contentClassName="gap-4">
-            <UserDonationDailyChart snapshot={snapshot} />
-          </SettingsCard>
-        </aside>
-      </section>
+      <UserDonationDashboardSection snapshot={snapshot} />
     </SettingsPage>
   );
 }
@@ -76,40 +63,6 @@ function DonationBalanceHero({ snapshot }: { snapshot: UserDonationSnapshot }) {
         </div>
       </div>
     </section>
-  );
-}
-
-function DonationSummaryGrid({ snapshot }: { snapshot: UserDonationSnapshot }) {
-  const summaryItems = [
-    {
-      label: "이번 달 후원",
-      value: snapshot.stats.currentMonthDonationAmount,
-    },
-    {
-      label: "이번 달 충전",
-      value: snapshot.stats.currentMonthChargeAmount,
-    },
-    {
-      label: "총 보낸 후원",
-      value: snapshot.stats.totalDonationAmount,
-    },
-    {
-      label: "총 충전 금액",
-      value: snapshot.stats.totalChargeAmount,
-    },
-  ];
-
-  return (
-    <dl className="grid gap-3 sm:grid-cols-2 xl:grid-cols-2">
-      {summaryItems.map((item) => (
-        <div key={item.label} className="rounded-lg border px-3 py-3">
-          <dt className="text-muted-foreground text-xs font-black">{item.label}</dt>
-          <dd className="text-foreground mt-2 text-xl leading-tight font-black">
-            {formatPoint(item.value)}
-          </dd>
-        </div>
-      ))}
-    </dl>
   );
 }
 
