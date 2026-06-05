@@ -120,4 +120,12 @@ export const QUERY_KEYS = {
     commentReplies: (commentId?: string) =>
       [...QUERY_KEYS.community.commentRepliesAll(), commentId].filter((v) => v !== undefined),
   },
+  settlement: {
+    all: ["settlement"] as const,
+    donationsAll: () => [...QUERY_KEYS.settlement.all, "donations"],
+    donations: (year?: number, status?: string, sort?: string, page?: number) =>
+      [...QUERY_KEYS.settlement.donationsAll(), year, status, sort, page].filter(
+        (v) => v !== undefined,
+      ),
+  },
 } as const;

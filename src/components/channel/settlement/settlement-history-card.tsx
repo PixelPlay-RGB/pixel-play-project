@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { getSettlementDonationsAction } from "@/actions/channel/settlement";
 import ChatRoomListPagination from "@/components/chat-room-list/chat-room-list-pagination";
+import { QUERY_KEYS } from "@/constants/common/query-keys";
 import { SettingsCard } from "@/components/common/settings-card";
 import {
   Select,
@@ -60,7 +61,7 @@ export function SettlementHistoryCard({ yearlySummary }: Props) {
   const [page, setPage] = useState(1);
 
   const { data, isFetching } = useQuery({
-    queryKey: ["settlement-donations", year, status, sort, page],
+    queryKey: QUERY_KEYS.settlement.donations(year, status, sort, page),
     queryFn: () => getSettlementDonationsAction({ year, status, sort, page }),
     placeholderData: (previous) => previous,
   });
