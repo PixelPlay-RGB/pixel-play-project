@@ -7,9 +7,12 @@ import { createAdminClient } from "@/lib/supabase/admin-client";
 import { channelChatSettingsSchema, type ChannelChatSettingsInput } from "@/lib/zod/channel-chat";
 import type { ChannelChatSnapshot } from "@/types/channel/chat";
 import type { AppActionResult } from "@/types/common/action";
+import type { Database } from "@/types/database.types";
 import { buildChannelChatSnapshot } from "@/utils/channel/channel-chat-snapshot";
 
 const CHANNEL_CHAT_SAVE_FAILED_CODE = APP_MESSAGE_CODE.error.channel.chatSettingsSaveFailed;
+type UpsertCreatorStudioSettingArgs =
+  Database["public"]["Functions"]["upsert_creator_studio_setting"]["Args"];
 
 export async function updateChannelChatSettingsAction(
   input: ChannelChatSettingsInput,
@@ -36,7 +39,7 @@ export async function updateChannelChatSettingsAction(
 
   const values = parsed.data;
   const supabase = createAdminClient();
-  const { data, error } = await supabase.rpc("upsert_creator_studio_setting", {
+  const upsertParams = {
     p_actor_user_id: actor.userId,
     p_chat_scope: values.chatScope,
     p_follower_wait_seconds: values.followerWaitSeconds,
@@ -46,7 +49,9 @@ export async function updateChannelChatSettingsAction(
     p_forbidden_words: values.forbiddenWords,
     p_chat_rule_text: values.chatRuleText,
     p_chat_donation_message_enabled: values.chatDonationMessageEnabled,
-  });
+  } satisfies UpsertCreatorStudioSettingArgs;
+
+  const { data, error } = await supabase.rpc("upsert_creator_studio_setting", upsertParams);
 
   if (error) {
     console.error("채널 채팅 설정 저장 실패", error);

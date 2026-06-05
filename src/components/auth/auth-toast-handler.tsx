@@ -43,15 +43,22 @@ function AuthToastInner({ nickname }: { nickname: string }) {
 }
 
 export default function AuthToastHandler() {
-  const { data: user, isLoading } = useNullableUser();
+  return (
+    <Suspense>
+      <AuthToastQueryGate />
+    </Suspense>
+  );
+}
 
-  if (isLoading || !user) {
+function AuthToastQueryGate() {
+  const searchParams = useSearchParams();
+  const shouldLoadUser =
+    searchParams.has("linked") || searchParams.has("login") || searchParams.has("welcome");
+  const { data: user, isLoading } = useNullableUser(shouldLoadUser);
+
+  if (!shouldLoadUser || isLoading || !user) {
     return null;
   }
 
-  return (
-    <Suspense>
-      <AuthToastInner nickname={user.nickname} />
-    </Suspense>
-  );
+  return <AuthToastInner nickname={user.nickname} />;
 }

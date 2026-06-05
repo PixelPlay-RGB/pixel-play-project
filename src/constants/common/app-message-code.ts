@@ -32,12 +32,17 @@ export const APP_MESSAGE_CODE = {
       securityCopied: "success.channel.securityCopied",
       securityTokenRotated: "success.channel.securityTokenRotated",
       chatSettingsSaved: "success.channel.chatSettingsSaved",
+      liveSettingsSaved: "success.channel.liveSettingsSaved",
       donationSettingsSaved: "success.channel.donationSettingsSaved",
       donationTestSent: "success.channel.donationTestSent",
     },
     following: {
       followed: "success.following.followed",
       unfollowed: "success.following.unfollowed",
+    },
+    live: {
+      urlCopied: "success.live.urlCopied",
+      voteUnchanged: "success.live.voteUnchanged",
     },
   },
   error: {
@@ -124,6 +129,10 @@ export const APP_MESSAGE_CODE = {
     channel: {
       chatSettingsLoadFailed: "error.channel.chatSettingsLoadFailed",
       chatSettingsSaveFailed: "error.channel.chatSettingsSaveFailed",
+      liveEndSaveFailed: "error.channel.liveEndSaveFailed",
+      liveSettingsSaveFailed: "error.channel.liveSettingsSaveFailed",
+      liveStartSaveFailed: "error.channel.liveStartSaveFailed",
+      liveThumbnailUploadFailed: "error.channel.liveThumbnailUploadFailed",
       donationSettingsLoadFailed: "error.channel.donationSettingsLoadFailed",
       donationSettingsSaveFailed: "error.channel.donationSettingsSaveFailed",
       donationTestFailed: "error.channel.donationTestFailed",
@@ -136,6 +145,12 @@ export const APP_MESSAGE_CODE = {
       failed: "error.following.failed",
       unfollowFailed: "error.following.unfollowFailed",
       loadFailed: "error.following.loadFailed",
+    },
+    live: {
+      donationFailed: "error.live.donationFailed",
+      voteFailed: "error.live.voteFailed",
+      voteNoActivePoll: "error.live.voteNoActivePoll",
+      voteInvalidOption: "error.live.voteInvalidOption",
     },
     supabase: {
       permissionDenied: "error.supabase.permissionDenied",

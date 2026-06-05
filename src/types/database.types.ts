@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      channel_banner: {
+        Row: {
+          created_at: string
+          creator_id: string
+          id: string
+          image_path: string
+          link_url: string
+          sort_order: number
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          creator_id: string
+          id?: string
+          image_path: string
+          link_url: string
+          sort_order?: number
+          title?: string
+        }
+        Update: {
+          created_at?: string
+          creator_id?: string
+          id?: string
+          image_path?: string
+          link_url?: string
+          sort_order?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "channel_banner_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_room: {
         Row: {
           created_at: string
@@ -100,11 +138,216 @@ export type Database = {
           },
         ]
       }
+      community_comment: {
+        Row: {
+          author_id: string
+          content: string
+          created_at: string
+          id: string
+          like_count: number
+          modified_at: string | null
+          parent_id: string | null
+          post_id: string
+        }
+        Insert: {
+          author_id: string
+          content: string
+          created_at?: string
+          id?: string
+          like_count?: number
+          modified_at?: string | null
+          parent_id?: string | null
+          post_id: string
+        }
+        Update: {
+          author_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          like_count?: number
+          modified_at?: string | null
+          parent_id?: string | null
+          post_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_comment_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_comment_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "community_comment"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_comment_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "community_post"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_comment_like: {
+        Row: {
+          comment_id: string
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_comment_like_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "community_comment"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_comment_like_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_post: {
+        Row: {
+          comment_count: number
+          content: string
+          created_at: string
+          creator_id: string
+          id: string
+          image_path: string | null
+          like_count: number
+          modified_at: string | null
+        }
+        Insert: {
+          comment_count?: number
+          content: string
+          created_at?: string
+          creator_id: string
+          id?: string
+          image_path?: string | null
+          like_count?: number
+          modified_at?: string | null
+        }
+        Update: {
+          comment_count?: number
+          content?: string
+          created_at?: string
+          creator_id?: string
+          id?: string
+          image_path?: string | null
+          like_count?: number
+          modified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_post_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_post_like: {
+        Row: {
+          created_at: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_post_like_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "community_post"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_post_like_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      creator_follow_event: {
+        Row: {
+          created_at: string
+          creator_id: string
+          event_type: string
+          id: string
+          viewer_id: string
+          viewer_nickname: string | null
+        }
+        Insert: {
+          created_at?: string
+          creator_id: string
+          event_type: string
+          id?: string
+          viewer_id: string
+          viewer_nickname?: string | null
+        }
+        Update: {
+          created_at?: string
+          creator_id?: string
+          event_type?: string
+          id?: string
+          viewer_id?: string
+          viewer_nickname?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_follow_event_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_follow_event_viewer_id_fkey"
+            columns: ["viewer_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       creator_studio_setting: {
         Row: {
           alert_sound_enabled: boolean
           alert_sound_key: string
           alert_volume: number
+          channel_bio: string
           chat_donation_message_enabled: boolean
           chat_overlay_version: number
           chat_rule_text: string
@@ -136,6 +379,7 @@ export type Database = {
           alert_sound_enabled?: boolean
           alert_sound_key?: string
           alert_volume?: number
+          channel_bio?: string
           chat_donation_message_enabled?: boolean
           chat_overlay_version?: number
           chat_rule_text?: string
@@ -167,6 +411,7 @@ export type Database = {
           alert_sound_enabled?: boolean
           alert_sound_key?: string
           alert_volume?: number
+          channel_bio?: string
           chat_donation_message_enabled?: boolean
           chat_overlay_version?: number
           chat_rule_text?: string
@@ -683,7 +928,12 @@ export type Database = {
         Args: { p_actor_user_id: string; p_creator_id: string }
         Returns: number
       }
+      anonymous_donor_alias: { Args: { p_donor_id: string }; Returns: string }
       check_email_exists: { Args: { target_email: string }; Returns: boolean }
+      community_comment_to_json: {
+        Args: { p_comment_id: string; p_viewer_id: string }
+        Returns: Json
+      }
       confirm_wallet_charge: {
         Args: {
           p_actor_user_id: string
@@ -704,6 +954,23 @@ export type Database = {
         }
         Returns: string
       }
+      create_community_comment: {
+        Args: {
+          p_actor_user_id: string
+          p_content: string
+          p_parent_id?: string
+          p_post_id: string
+        }
+        Returns: string
+      }
+      create_community_post: {
+        Args: {
+          p_actor_user_id: string
+          p_content: string
+          p_image_path?: string
+        }
+        Returns: string
+      }
       create_live_poll: {
         Args: {
           p_actor_user_id: string
@@ -712,6 +979,18 @@ export type Database = {
           p_options: Json
           p_title: string
         }
+        Returns: string
+      }
+      delete_channel_banner: {
+        Args: { p_actor_user_id: string; p_banner_id: string }
+        Returns: Json
+      }
+      delete_community_comment: {
+        Args: { p_actor_user_id: string; p_comment_id: string }
+        Returns: boolean
+      }
+      delete_community_post: {
+        Args: { p_actor_user_id: string; p_post_id: string }
         Returns: string
       }
       end_live_broadcast: {
@@ -725,6 +1004,21 @@ export type Database = {
       follow_creator: {
         Args: { p_actor_user_id: string; p_creator_id: string }
         Returns: undefined
+      }
+      get_channel_banners: { Args: { p_creator_id: string }; Returns: Json }
+      get_channel_community_posts: {
+        Args: {
+          p_creator_id: string
+          p_limit?: number
+          p_offset?: number
+          p_viewer_id?: string
+        }
+        Returns: Json
+      }
+      get_channel_live_hero: { Args: { p_creator_id: string }; Returns: Json }
+      get_channel_profile: {
+        Args: { p_creator_id: string; p_viewer_id?: string }
+        Returns: Json
       }
       get_chat_room_detail: {
         Args: { p_room_id: string }
@@ -749,6 +1043,33 @@ export type Database = {
           rooms: Json
           total_count: number
         }[]
+      }
+      get_community_adjacent_posts: {
+        Args: { p_post_id: string }
+        Returns: Json
+      }
+      get_community_comment_replies: {
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_parent_id: string
+          p_viewer_id?: string
+        }
+        Returns: Json
+      }
+      get_community_comments: {
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_post_id: string
+          p_sort?: string
+          p_viewer_id?: string
+        }
+        Returns: Json
+      }
+      get_community_post: {
+        Args: { p_post_id: string; p_viewer_id?: string }
+        Returns: Json
       }
       get_creator_donation_dashboard: {
         Args: {
@@ -796,6 +1117,10 @@ export type Database = {
         Args: { p_creator_id: string }
         Returns: Json
       }
+      get_live_donation_ranking: {
+        Args: { p_creator_id: string; p_limit?: number }
+        Returns: Json
+      }
       get_live_hero: { Args: never; Returns: Json }
       get_live_list: {
         Args: {
@@ -827,6 +1152,19 @@ export type Database = {
         Args: { p_actor_user_id: string }
         Returns: Json
       }
+      get_user_donation_snapshot_v2: {
+        Args: { p_actor_user_id: string; p_month?: number; p_year?: number }
+        Returns: Json
+      }
+      insert_channel_banner: {
+        Args: {
+          p_actor_user_id: string
+          p_image_path: string
+          p_link_url: string
+          p_title: string
+        }
+        Returns: Json
+      }
       join_chat_room: {
         Args: { p_actor_user_id: string; p_room_id: string }
         Returns: undefined
@@ -846,6 +1184,10 @@ export type Database = {
       mark_room_read: {
         Args: { p_actor_user_id: string; p_room_id: string }
         Returns: undefined
+      }
+      reorder_channel_banners: {
+        Args: { p_actor_user_id: string; p_banner_ids: string[] }
+        Returns: Json
       }
       rotate_live_security_token_version: {
         Args: { p_actor_user_id: string; p_token_kind: string }
@@ -918,6 +1260,26 @@ export type Database = {
         }
         Returns: string
       }
+      send_live_message_v2: {
+        Args: {
+          p_actor_user_id: string
+          p_broadcast_id: string
+          p_content: string
+        }
+        Returns: Json
+      }
+      set_community_comment_like: {
+        Args: {
+          p_actor_user_id: string
+          p_comment_id: string
+          p_liked: boolean
+        }
+        Returns: Json
+      }
+      set_community_post_like: {
+        Args: { p_actor_user_id: string; p_liked: boolean; p_post_id: string }
+        Returns: Json
+      }
       start_live_broadcast: {
         Args: {
           p_actor_user_id: string
@@ -938,6 +1300,27 @@ export type Database = {
       unfollow_creator: {
         Args: { p_actor_user_id: string; p_creator_id: string }
         Returns: undefined
+      }
+      update_channel_profile: {
+        Args: { p_actor_user_id: string; p_channel_bio: string }
+        Returns: Json
+      }
+      update_community_comment: {
+        Args: {
+          p_actor_user_id: string
+          p_comment_id: string
+          p_content: string
+        }
+        Returns: boolean
+      }
+      update_community_post: {
+        Args: {
+          p_actor_user_id: string
+          p_content: string
+          p_image_path?: string
+          p_post_id: string
+        }
+        Returns: boolean
       }
       upsert_creator_studio_setting: {
         Args: {
@@ -968,14 +1351,6 @@ export type Database = {
         Returns: Json
       }
       vote_live_poll: {
-        Args: {
-          p_actor_user_id: string
-          p_option_id: string
-          p_poll_id: string
-        }
-        Returns: undefined
-      }
-      vote_live_poll_2: {
         Args: {
           p_actor_user_id: string
           p_option_id: string

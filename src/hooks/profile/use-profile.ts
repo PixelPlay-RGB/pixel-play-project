@@ -9,7 +9,7 @@ import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { QUERY_KEYS } from "@/constants/common/query-keys";
 import type { AppMessageCode } from "@/constants/common/app-message-code";
 import { resolveSupabaseErrorCode } from "@/utils/common/app-message";
-import { isAuthSessionMissingError } from "@/utils/auth/auth-error";
+import { isRecoverableAuthSessionError } from "@/utils/auth/auth-error";
 
 type MissingProfileReason = "auth" | "profile";
 
@@ -42,7 +42,7 @@ async function resolveAuthUser(
     error,
   } = await supabase.auth.getUser();
 
-  if (error && !isAuthSessionMissingError(error)) {
+  if (error && !isRecoverableAuthSessionError(error)) {
     console.error("프로필 조회 중 인증 유저 조회 실패", error);
   }
 
@@ -131,7 +131,7 @@ export function useUser() {
 /**
  * 인증 또는 프로필 미생성 상태가 정상인 화면에서만 public.user 프로필을 nullable로 조회.
  */
-export function useNullableUser() {
+export function useNullableUser(enabled = true) {
   const user = useAuthStore((s) => s.user);
   const setUser = useAuthStore((s) => s.setUser);
 
@@ -139,6 +139,7 @@ export function useNullableUser() {
     queryKey: QUERY_KEYS.auth.profile(user?.id),
     queryFn: () => fetchProfileSnapshot(user, setUser),
     select: selectNullableProfile,
+    enabled,
     staleTime: user ? 1000 * 60 * 5 : 0,
     refetchOnMount: "always",
   });
