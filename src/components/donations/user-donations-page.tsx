@@ -46,8 +46,17 @@ export function UserDonationsPage({ snapshot, errorCode, paymentResultCode }: Pr
 
 function DonationBalanceHero({ snapshot }: { snapshot: UserDonationSnapshot }) {
   return (
-    <section className="from-live via-live/85 to-brand rounded-xl bg-gradient-to-br p-5 text-white shadow-sm sm:p-7">
-      <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+    <section className="from-live via-live/85 to-brand relative isolate overflow-hidden rounded-xl bg-gradient-to-br p-5 text-white shadow-sm sm:p-7">
+      <span
+        className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.12)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.12)_1px,transparent_1px)] [mask-image:linear-gradient(90deg,transparent_0%,rgba(0,0,0,0.08)_18%,rgba(0,0,0,0.72)_58%,black_100%)] bg-[length:32px_32px]"
+        aria-hidden
+      />
+      <span
+        className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(255,77,74,0.94)_0%,rgba(255,77,74,0.8)_20%,rgba(255,77,74,0.42)_42%,rgba(255,77,74,0)_70%)]"
+        aria-hidden
+      />
+
+      <div className="relative z-10 flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <div className="flex items-center gap-2 text-xs font-black tracking-wide uppercase">
             <span className="size-2 shrink-0 rotate-45 bg-white" aria-hidden />
