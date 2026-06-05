@@ -10,6 +10,7 @@ import { useState } from "react";
 import CommunityActionMenu from "@/components/community/community-action-menu";
 import CommunityCommentList from "@/components/community/community-comment-list";
 import DeleteConfirmDialog from "@/components/common/delete-confirm-dialog";
+import LinkifiedText from "@/components/common/linkified-text";
 import CommunityLikeButton from "@/components/community/community-like-button";
 import CommunityPostPager from "@/components/community/community-post-pager";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -114,9 +115,10 @@ export default function CommunityPostDetailView({
             )}
           </div>
 
-          <p className="text-foreground mt-3 text-sm leading-relaxed wrap-break-word whitespace-pre-wrap">
-            {detail.content}
-          </p>
+          <LinkifiedText
+            text={detail.content}
+            className="text-foreground mt-3 text-sm leading-relaxed wrap-break-word whitespace-pre-wrap"
+          />
 
           {detail.imageUrl && (
             <Image
