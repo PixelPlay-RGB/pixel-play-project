@@ -1,6 +1,6 @@
 // 사용자 계정 메뉴의 공통 항목 상수를 정의합니다.
 import type { LucideIcon } from "lucide-react";
-import { Heart, Key, LogOut, Radio, User, UserRoundCheck } from "lucide-react";
+import { Heart, Key, LogOut, Radio, Tv, User, UserRoundCheck } from "lucide-react";
 
 export type UserAccountLinkMenuItem = {
   type: "link";
@@ -46,6 +46,15 @@ export const USER_ACCOUNT_PRIMARY_MENU_ITEMS: UserAccountLinkMenuItem[] = [
     icon: Radio,
   },
 ];
+
+// 내 공개 채널 페이지(/channel/[myId])는 로그인 유저 id가 필요해 런타임에 생성합니다.
+export const createMyChannelMenuItem = (userId: string): UserAccountLinkMenuItem => ({
+  type: "link",
+  id: "myChannel",
+  label: "내 채널",
+  href: `/channel/${userId}`,
+  icon: Tv,
+});
 
 export const USER_ACCOUNT_DONATION_MENU_ITEM: UserAccountLinkMenuItem = {
   type: "link",

@@ -32,14 +32,10 @@ export function LiveChatParticipationNotice({
         <UserRoundPlus className="text-live mt-0.5 size-4 shrink-0" />
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
           <p className="text-foreground text-xs font-semibold">
-            {isWaiting
-              ? LIVE_LABEL.participationWaitTitle
-              : LIVE_LABEL.participationFollowerTitle}
+            {isWaiting ? LIVE_LABEL.participationWaitTitle : LIVE_LABEL.participationFollowerTitle}
           </p>
           <p className="text-muted-foreground text-xs leading-snug">
-            {isWaiting
-              ? LIVE_LABEL.participationWaitDesc
-              : LIVE_LABEL.participationFollowerDesc}
+            {isWaiting ? LIVE_LABEL.participationWaitDesc : LIVE_LABEL.participationFollowerDesc}
           </p>
         </div>
         {actionLabel && onAction ? (

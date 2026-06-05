@@ -25,7 +25,11 @@ function getScrollContainer(el: HTMLElement): HTMLElement | null {
   return null;
 }
 
-export function LiveChatMessageList({ messages, fillHeight = false, cleanbotEnabled = true }: Props) {
+export function LiveChatMessageList({
+  messages,
+  fillHeight = false,
+  cleanbotEnabled = true,
+}: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const isInitialMount = useRef(true);
   const wasNearBottomRef = useRef(true);
@@ -112,7 +116,9 @@ function MessageItem({ message, cleanbotEnabled }: MessageItemProps) {
             {message.author}
           </span>
         </div>
-        {message.content ? <p className="text-foreground wrap-break-word">{message.content}</p> : null}
+        {message.content ? (
+          <p className="text-foreground wrap-break-word">{message.content}</p>
+        ) : null}
       </div>
     );
   }

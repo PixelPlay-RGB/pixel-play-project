@@ -76,6 +76,8 @@ export function ChatForbiddenWordsField({ value, disabled, error, onChange }: Pr
               setInputError(null);
             }}
             onKeyDown={(event) => {
+              // IME 조합 중 Enter는 조합 확정이므로 추가로 처리하지 않습니다.
+              if (event.nativeEvent.isComposing) return;
               if (event.key === "Enter") {
                 event.preventDefault();
                 handleAdd();

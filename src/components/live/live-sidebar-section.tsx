@@ -17,21 +17,29 @@ interface LiveSidebarSectionProps {
   title: string;
   children: ReactNode;
   defaultOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export default function LiveSidebarSection({
   title,
   children,
   defaultOpen = true,
+  onOpenChange,
 }: LiveSidebarSectionProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
+
+  const handleToggle = () => {
+    const next = !isOpen;
+    setIsOpen(next);
+    onOpenChange?.(next);
+  };
 
   return (
     <SidebarGroup>
       <button
         type="button"
         aria-expanded={isOpen}
-        onClick={() => setIsOpen((current) => !current)}
+        onClick={handleToggle}
         className={cn(
           "text-sidebar-foreground/70 ring-sidebar-ring flex h-8 w-full items-center rounded-md px-2 text-xs font-medium outline-hidden transition-colors",
           "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2",

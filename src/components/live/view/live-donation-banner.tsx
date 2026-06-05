@@ -21,7 +21,7 @@ export function LiveDonationBanner({ donations }: Props) {
   const top3 = donations.slice(0, 3);
 
   return (
-    <div className="border-border bg-card/95 shadow-xs rounded-lg border px-2.5 py-1.5 backdrop-blur-sm">
+    <div className="border-border bg-card/95 rounded-lg border px-2.5 py-1.5 shadow-xs backdrop-blur-sm">
       <div className="mb-1 flex items-center gap-1">
         <Trophy className="text-muted-foreground size-2.5 shrink-0" />
         <span className="text-muted-foreground text-xs leading-none font-medium">

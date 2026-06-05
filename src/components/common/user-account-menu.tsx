@@ -6,10 +6,12 @@ import UserAccountMenuItemRenderer from "@/components/common/user-account-menu-i
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
 import {
+  createMyChannelMenuItem,
   USER_ACCOUNT_HEADER_ACCOUNT_MENU_ITEMS,
   USER_ACCOUNT_HEADER_PRIMARY_MENU_ITEMS,
   USER_ACCOUNT_PROFILE_MENU_ITEM,
 } from "@/constants/common/user-account-menu";
+import type { UserAccountMenuItem } from "@/constants/common/user-account-menu";
 import { useLogout } from "@/hooks/auth/use-logout";
 import { cn } from "@/lib/utils";
 import type { CurrentProfileSnapshot } from "@/types/profile/user";
@@ -36,6 +38,11 @@ export default function UserAccountMenu({ profile }: Props) {
   const isCanChangePassword = profile.linked_providers.includes("email");
   const avatarSrc = getAvatarImageSrc(profile.photo_url);
   const avatarAlt = `${profile.nickname}의 프로필 사진`;
+  // "내 채널"을 "채널 관리" 위에 노출합니다.
+  const primaryMenuItems: UserAccountMenuItem[] = [
+    createMyChannelMenuItem(profile.id),
+    ...USER_ACCOUNT_HEADER_PRIMARY_MENU_ITEMS,
+  ];
 
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
@@ -80,7 +87,7 @@ export default function UserAccountMenu({ profile }: Props) {
         <Separator className="my-2" />
 
         <div className="flex flex-col gap-1">
-          {USER_ACCOUNT_HEADER_PRIMARY_MENU_ITEMS.map((item) =>
+          {primaryMenuItems.map((item) =>
             UserAccountMenuItemRenderer(item, {
               context: "popover",
               onClose: () => setOpen(false),

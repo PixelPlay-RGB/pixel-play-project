@@ -31,7 +31,8 @@ interface SaveLiveThumbnailInput {
   shouldRemove: boolean;
 }
 
-const LIVE_THUMBNAIL_BUCKET = "live-thumbnails";
+const LIVE_THUMBNAIL_BUCKET = "user-media";
+const LIVE_THUMBNAIL_DIRECTORY = "live-thumbnail";
 const LIVE_THUMBNAIL_MAX_BYTES = 5 * 1024 * 1024;
 const LIVE_THUMBNAIL_EXTENSION_BY_TYPE: Record<string, string> = {
   "image/jpeg": "jpg",
@@ -163,8 +164,12 @@ function isValidLiveThumbnailFile(file: File | null | undefined) {
   );
 }
 
+function getLiveThumbnailDirectoryPath(userId: string) {
+  return `${userId}/${LIVE_THUMBNAIL_DIRECTORY}`;
+}
+
 function getLiveThumbnailFilePath(userId: string, extension: string) {
-  return `${userId}/thumbnail.${extension}`;
+  return `${getLiveThumbnailDirectoryPath(userId)}/thumbnail.${extension}`;
 }
 
 function appendCacheBuster(url: string) {
@@ -175,9 +180,10 @@ async function removeLiveThumbnailFiles(
   supabase: ReturnType<typeof createAdminClient>,
   userId: string,
 ) {
+  const directoryPath = getLiveThumbnailDirectoryPath(userId);
   const { data: files, error: listError } = await supabase.storage
     .from(LIVE_THUMBNAIL_BUCKET)
-    .list(userId);
+    .list(directoryPath);
 
   if (listError) {
     console.error("방송 미리보기 이미지 목록 조회 실패", listError);
@@ -186,7 +192,7 @@ async function removeLiveThumbnailFiles(
 
   const filePaths = (files ?? [])
     .filter((file) => file.name)
-    .map((file) => `${userId}/${file.name}`);
+    .map((file) => `${directoryPath}/${file.name}`);
 
   if (filePaths.length === 0) {
     return true;

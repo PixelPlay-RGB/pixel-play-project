@@ -52,7 +52,8 @@ export function mapLiveMessageRowToMessage(
   return {
     id: row.id,
     type: "text",
-    author: row.sender?.nickname ?? readString(metadata.senderNickname) ?? LIVE_LABEL.anonymousAuthor,
+    author:
+      row.sender?.nickname ?? readString(metadata.senderNickname) ?? LIVE_LABEL.anonymousAuthor,
     content: row.content,
     isHost,
     // 본인 메시지는 본인 화면에서 안 가린다. refetch 재매핑 시에도 일관 유지된다.
@@ -93,4 +94,3 @@ export function mapLiveMessageRealtimePayload(
     viewerId,
   );
 }
-

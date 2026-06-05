@@ -98,6 +98,8 @@ export function useToggleCreatorFollowing() {
     },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.live.all });
+      // 팔로잉 페이지 목록도 함께 갱신해 토글 결과가 즉시 반영되도록 합니다.
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.following.all });
     },
   });
 }

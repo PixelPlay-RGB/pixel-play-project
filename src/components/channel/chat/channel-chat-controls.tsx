@@ -8,6 +8,8 @@ import { ChatForbiddenWordsField } from "@/components/channel/chat/chat-forbidde
 import { ChatLinkBlockField } from "@/components/channel/chat/chat-link-block-field";
 import { ChatRuleTextField } from "@/components/channel/chat/chat-rule-text-field";
 import { ChatScopeField } from "@/components/channel/chat/chat-scope-field";
+import { SettingFieldRow } from "@/components/common/setting-field-row";
+import { SettingToggleControl } from "@/components/common/setting-toggle-control";
 import { SettingsCard } from "@/components/common/settings-card";
 import { ChatSlowModeField } from "@/components/channel/chat/chat-slow-mode-field";
 import { ChatWaitTimeField } from "@/components/channel/chat/chat-wait-time-field";
@@ -118,6 +120,25 @@ export function ChannelChatControls({ initialSnapshot }: Props) {
                     disabled={isSaving}
                     onChange={field.onChange}
                   />
+                )}
+              />
+              <Controller
+                name="chatDonationMessageEnabled"
+                control={control}
+                render={({ field }) => (
+                  <SettingFieldRow
+                    label="채팅창 후원 메시지"
+                    description="후원이 들어오면 채팅 오버레이(OBS 채팅창 주소)에도 후원 메시지를 함께 보여줘요."
+                  >
+                    <SettingToggleControl
+                      checked={field.value}
+                      checkedLabel="ON"
+                      uncheckedLabel="OFF"
+                      ariaLabel="채팅창 후원 메시지 표시"
+                      disabled={isSaving}
+                      onChange={field.onChange}
+                    />
+                  </SettingFieldRow>
                 )}
               />
             </SettingsCard>

@@ -13,7 +13,7 @@ interface LiveShellProps {
   children: ReactNode;
   // 콘텐츠 래퍼 클래스. 목록은 패딩+스크롤, 시청 화면은 풀블리드로 직접 지정한다.
   contentClassName?: string;
-  // 모바일 상단 헤더 라벨.
+  // 모바일 상단 헤더에 표시할 라벨(기본 "라이브"). 채널 등 다른 화면에서 재사용 시 지정.
   mobileTitle?: string;
 }
 

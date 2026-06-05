@@ -140,7 +140,7 @@ export async function sendLiveDonationAction(params: {
     amount <= 0 ||
     message.length > LIVE_DONATION_MESSAGE_MAX_LENGTH
   ) {
-    return { success: false, code: APP_MESSAGE_CODE.error.live.donationInvalid };
+    return { success: false, code: APP_MESSAGE_CODE.error.live.donationFailed };
   }
 
   const actor = await getAuthenticatedActorId({

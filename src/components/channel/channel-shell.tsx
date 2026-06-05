@@ -39,7 +39,7 @@ export default function ChannelShell({ children }: Props) {
         )}
         <div
           className={cn(
-            "h-full min-w-0 overflow-auto p-6 md:p-10",
+            "h-full min-w-0 [scrollbar-gutter:stable] overflow-auto p-6 md:p-10",
             isLiveOperationRoute && "xl:overflow-hidden",
           )}
         >

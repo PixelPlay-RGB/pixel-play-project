@@ -27,7 +27,7 @@ export function LivePlayerVolumeControl({ muted, volume, onToggleMute, onVolumeC
       >
         {muted ? <VolumeX className="size-5" /> : <Volume2 className="size-5" />}
       </Button>
-      <div className="w-0 overflow-hidden transition-all duration-200 group-hover/volume:w-20 group-focus-within/volume:w-20">
+      <div className="w-0 overflow-hidden transition-all duration-200 group-focus-within/volume:w-20 group-hover/volume:w-20">
         <Slider
           aria-label={LIVE_LABEL.playerVolume}
           min={0}

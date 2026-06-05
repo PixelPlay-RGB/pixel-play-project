@@ -48,6 +48,7 @@ export async function updateChannelChatSettingsAction(
     p_link_blocked: values.linkBlocked,
     p_forbidden_words: values.forbiddenWords,
     p_chat_rule_text: values.chatRuleText,
+    p_chat_donation_message_enabled: values.chatDonationMessageEnabled,
   } satisfies UpsertCreatorStudioSettingArgs;
 
   const { data, error } = await supabase.rpc("upsert_creator_studio_setting", upsertParams);

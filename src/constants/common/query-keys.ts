@@ -1,4 +1,5 @@
 // query-keys 상수를 정의합니다.
+import type { CommunityCommentSort } from "@/types/community/community";
 /**
  * Centralized Query Key Factory
  *
@@ -29,10 +30,21 @@ export const QUERY_KEYS = {
       [...QUERY_KEYS.live.polls(broadcastId), userId ?? "public"].filter((v) => v !== undefined),
     // 라이브 목록
     listAll: () => [...QUERY_KEYS.live.all, "list"],
-    list: (userId?: string, filter?: string, sort?: string, visibleCount?: number) =>
-      [...QUERY_KEYS.live.listAll(), userId ?? "public", filter, sort, visibleCount].filter(
-        (v) => v !== undefined,
-      ),
+    list: (
+      userId?: string,
+      filter?: string,
+      sort?: string,
+      visibleCount?: number,
+      excludedLiveId?: string | null,
+    ) =>
+      [
+        ...QUERY_KEYS.live.listAll(),
+        userId ?? "public",
+        filter,
+        sort,
+        visibleCount,
+        excludedLiveId ?? undefined,
+      ].filter((v) => v !== undefined),
     sidebar: {
       trending: (userId?: string) => [
         ...QUERY_KEYS.live.all,
@@ -85,5 +97,35 @@ export const QUERY_KEYS = {
       [...QUERY_KEYS.chat.all, "messages", roomId].filter((v) => v !== undefined),
     search: (query?: string, section?: string) =>
       [...QUERY_KEYS.chat.all, "search", query, section].filter((v) => v !== undefined),
+  },
+  following: {
+    all: ["following"] as const,
+    pageAll: () => [...QUERY_KEYS.following.all, "page"],
+    page: (userId?: string, filter?: string, page?: number) =>
+      [...QUERY_KEYS.following.pageAll(), userId ?? "public", filter, page].filter(
+        (v) => v !== undefined,
+      ),
+  },
+  community: {
+    all: ["community"] as const,
+    postsAll: () => [...QUERY_KEYS.community.all, "posts"],
+    posts: (creatorId?: string, page?: number) =>
+      [...QUERY_KEYS.community.postsAll(), creatorId, page].filter((v) => v !== undefined),
+    post: (postId?: string) =>
+      [...QUERY_KEYS.community.all, "post", postId].filter((v) => v !== undefined),
+    commentsAll: () => [...QUERY_KEYS.community.all, "comments"],
+    comments: (postId?: string, sort?: CommunityCommentSort, page?: number) =>
+      [...QUERY_KEYS.community.commentsAll(), postId, sort, page].filter((v) => v !== undefined),
+    commentRepliesAll: () => [...QUERY_KEYS.community.all, "commentReplies"],
+    commentReplies: (commentId?: string) =>
+      [...QUERY_KEYS.community.commentRepliesAll(), commentId].filter((v) => v !== undefined),
+  },
+  settlement: {
+    all: ["settlement"] as const,
+    donationsAll: () => [...QUERY_KEYS.settlement.all, "donations"],
+    donations: (year?: number, status?: string, sort?: string, page?: number) =>
+      [...QUERY_KEYS.settlement.donationsAll(), year, status, sort, page].filter(
+        (v) => v !== undefined,
+      ),
   },
 } as const;

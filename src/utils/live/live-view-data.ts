@@ -31,7 +31,8 @@ function isRawLiveWatchData(value: unknown): value is RawLiveWatchData {
   if (!isRecord(value.creator)) return false;
   if (!isRecord(value.viewerChatState)) return false;
   if (value.viewerRelation !== null && !isRecord(value.viewerRelation)) return false;
-  if (isRecord(value.viewerRelation) && typeof value.viewerRelation.isFollowing !== "boolean") return false;
+  if (isRecord(value.viewerRelation) && typeof value.viewerRelation.isFollowing !== "boolean")
+    return false;
 
   return typeof value.creator.id === "string" && typeof value.creator.nickname === "string";
 }

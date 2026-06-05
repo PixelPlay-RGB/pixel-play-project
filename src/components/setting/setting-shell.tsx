@@ -35,7 +35,9 @@ export function SettingShell({ children, profile }: Props) {
             <span className="text-foreground text-sm font-semibold">설정</span>
           </div>
         )}
-        <div className="h-full min-w-0 overflow-auto p-6 md:p-10">{children}</div>
+        <div className="h-full min-w-0 [scrollbar-gutter:stable] overflow-auto p-6 md:p-10">
+          {children}
+        </div>
       </SidebarInset>
     </SidebarProvider>
   );

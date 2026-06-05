@@ -1323,6 +1323,7 @@ export type Database = {
         }
         Returns: string
       }
+      sweep_live_viewer_counts: { Args: never; Returns: undefined }
       sync_live_viewer_presence: {
         Args: { p_broadcast_id: string; p_viewer_key: string }
         Returns: number

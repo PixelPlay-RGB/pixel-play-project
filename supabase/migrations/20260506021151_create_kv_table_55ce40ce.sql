@@ -1008,45 +1008,6 @@ on public.message for delete
 to authenticated
 using (user_id = (select auth.uid() as uid));
 
-insert into storage.buckets (id, name, public)
-values ('profiles', 'profiles', true)
-on conflict (id) do update
-set name = excluded.name,
-    public = excluded.public;
-
-create policy "프로필 사진 조회 정책"
-on storage.objects for select
-to public
-using (
-  bucket_id = 'profiles'
-  and (storage.foldername(name))[1] = 'avatars'
-);
-
-create policy "유저는 자신의 폴더에만 파일을 올릴 수 있다."
-on storage.objects for insert
-to authenticated
-with check (
-  bucket_id = 'profiles'
-  and (storage.foldername(name))[1] = 'avatars'
-  and (storage.foldername(name))[2] = auth.uid()::text
-);
-
-create policy "유저는 자신의 파일만 수정할 수 있다."
-on storage.objects for update
-to authenticated
-using (
-  bucket_id = 'profiles'
-  and (storage.foldername(name))[2] = auth.uid()::text
-);
-
-create policy "유저는 자신의 파일만 삭제할 수 있다."
-on storage.objects for delete
-to authenticated
-using (
-  bucket_id = 'profiles'
-  and (storage.foldername(name))[2] = auth.uid()::text
-);
-
 alter publication supabase_realtime add table public.chat_room;
 alter publication supabase_realtime add table public.chat_room_member;
 alter publication supabase_realtime add table public.message;

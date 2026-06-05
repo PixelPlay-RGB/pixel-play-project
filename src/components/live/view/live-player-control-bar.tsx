@@ -97,7 +97,11 @@ export function LivePlayerControlBar({
             size="icon"
             variant="ghost"
             aria-label={isTheater ? LIVE_LABEL.playerTheaterExit : LIVE_LABEL.playerTheater}
-            className={cn(LIVE_PLAYER_ICON_BUTTON_CLASS, "hidden md:inline-flex", isTheater && "text-live")}
+            className={cn(
+              LIVE_PLAYER_ICON_BUTTON_CLASS,
+              "hidden md:inline-flex",
+              isTheater && "text-live",
+            )}
             onClick={onToggleTheater}
           >
             <RectangleHorizontal className="size-5" />

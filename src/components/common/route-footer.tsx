@@ -16,7 +16,13 @@ export default function RouteFooter() {
   // 사이드바 대시보드(채널 관리·유저 설정)는 사이드바 하단 크레딧으로 대체합니다.
   const isSidebarDashboardRoute = pathname.startsWith("/channel") || pathname.startsWith("/user");
 
-  if (isChatRoomRoute || isLiveListRoute || isLiveWatchRoute || isLiveOverlayRoute || isSidebarDashboardRoute) {
+  if (
+    isChatRoomRoute ||
+    isLiveListRoute ||
+    isLiveWatchRoute ||
+    isLiveOverlayRoute ||
+    isSidebarDashboardRoute
+  ) {
     return null;
   }
 
