@@ -46,10 +46,21 @@ export const QUERY_KEYS = {
   live: {
     all: ["live"] as const,
     listAll: () => [...QUERY_KEYS.live.all, "list"],
-    list: (userId?: string, filter?: string, sort?: string, visibleCount?: number) =>
-      [...QUERY_KEYS.live.listAll(), userId ?? "public", filter, sort, visibleCount].filter(
-        (v) => v !== undefined,
-      ),
+    list: (
+      userId?: string,
+      filter?: string,
+      sort?: string,
+      visibleCount?: number,
+      excludedLiveId?: string | null,
+    ) =>
+      [
+        ...QUERY_KEYS.live.listAll(),
+        userId ?? "public",
+        filter,
+        sort,
+        visibleCount,
+        excludedLiveId ?? undefined,
+      ].filter((v) => v !== undefined),
     sidebar: {
       trending: (userId?: string) => [
         ...QUERY_KEYS.live.all,
@@ -68,5 +79,13 @@ export const QUERY_KEYS = {
     searchAll: () => [...QUERY_KEYS.live.all, "search"],
     search: (query?: string, section?: string) =>
       [...QUERY_KEYS.live.searchAll(), query, section].filter((v) => v !== undefined),
+  },
+  following: {
+    all: ["following"] as const,
+    pageAll: () => [...QUERY_KEYS.following.all, "page"],
+    page: (userId?: string, filter?: string, page?: number) =>
+      [...QUERY_KEYS.following.pageAll(), userId ?? "public", filter, page].filter(
+        (v) => v !== undefined,
+      ),
   },
 } as const;
