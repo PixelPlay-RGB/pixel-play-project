@@ -1,14 +1,19 @@
 "use client";
 // 댓글/대댓글 삭제 mutation(하드 딜리트). 낙관적 제거 후 재동기화합니다.
 
-import { useMutation, useQueryClient, type QueryKey } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueryClient,
+  type InfiniteData,
+  type QueryKey,
+} from "@tanstack/react-query";
 
 import { deleteCommunityCommentAction } from "@/actions/community/community";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { QUERY_KEYS } from "@/constants/common/query-keys";
 import type { AppActionResult } from "@/types/common/action";
 import type {
-  CommunityComment,
+  CommunityCommentRepliesResult,
   CommunityCommentsResult,
   CommunityPostDetail,
 } from "@/types/community/community";
@@ -21,7 +26,7 @@ import { toastAppError, toastAppSuccess } from "@/utils/common/toast-message";
 
 interface DeleteCommentContext {
   commentsSnapshots: Array<[QueryKey, CommunityCommentsResult | undefined]>;
-  repliesSnapshots: Array<[QueryKey, CommunityComment[] | undefined]>;
+  repliesSnapshots: Array<[QueryKey, InfiniteData<CommunityCommentRepliesResult> | undefined]>;
   detailSnapshot: CommunityPostDetail | undefined;
 }
 
@@ -48,7 +53,9 @@ export function useDeleteCommunityComment(postId: string) {
       const commentsSnapshots = queryClient.getQueriesData<CommunityCommentsResult>({
         queryKey: commentsKey,
       });
-      const repliesSnapshots = queryClient.getQueriesData<CommunityComment[]>({
+      const repliesSnapshots = queryClient.getQueriesData<
+        InfiniteData<CommunityCommentRepliesResult>
+      >({
         queryKey: repliesKey,
       });
       const detailSnapshot = queryClient.getQueryData<CommunityPostDetail>(detailKey);
@@ -56,8 +63,18 @@ export function useDeleteCommunityComment(postId: string) {
       queryClient.setQueriesData<CommunityCommentsResult>({ queryKey: commentsKey }, (data) =>
         removeComment(data, commentId),
       );
-      queryClient.setQueriesData<CommunityComment[]>({ queryKey: repliesKey }, (data) =>
-        data ? removeCommentFromList(data, commentId) : data,
+      queryClient.setQueriesData<InfiniteData<CommunityCommentRepliesResult>>(
+        { queryKey: repliesKey },
+        (data) =>
+          data
+            ? {
+                ...data,
+                pages: data.pages.map((page) => ({
+                  ...page,
+                  items: removeCommentFromList(page.items, commentId),
+                })),
+              }
+            : data,
       );
       queryClient.setQueryData<CommunityPostDetail>(detailKey, (data) =>
         applyCommentCountDelta(data, postId, -1),
