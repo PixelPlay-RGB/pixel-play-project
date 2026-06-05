@@ -2,7 +2,7 @@
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { Search } from "lucide-react";
-import type { KeyboardEventHandler, SubmitEvent } from "react";
+import type { KeyboardEventHandler, Ref, SubmitEvent } from "react";
 
 interface Props {
   value: string;
@@ -13,6 +13,7 @@ interface Props {
   disabled?: boolean;
   autoFocus?: boolean;
   onKeyDown?: KeyboardEventHandler<HTMLInputElement>;
+  inputRef?: Ref<HTMLInputElement>;
 }
 
 export default function SearchInput({
@@ -24,6 +25,7 @@ export default function SearchInput({
   disabled = false,
   autoFocus = false,
   onKeyDown,
+  inputRef,
 }: Props) {
   const handleSubmit = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -39,6 +41,7 @@ export default function SearchInput({
         )}
       />
       <Input
+        ref={inputRef}
         type="search"
         value={value}
         disabled={disabled}

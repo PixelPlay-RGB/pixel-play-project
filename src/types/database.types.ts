@@ -233,6 +233,7 @@ export type Database = {
           created_at: string
           creator_id: string
           id: string
+          image_path: string | null
           like_count: number
           modified_at: string | null
         }
@@ -242,6 +243,7 @@ export type Database = {
           created_at?: string
           creator_id: string
           id?: string
+          image_path?: string | null
           like_count?: number
           modified_at?: string | null
         }
@@ -251,6 +253,7 @@ export type Database = {
           created_at?: string
           creator_id?: string
           id?: string
+          image_path?: string | null
           like_count?: number
           modified_at?: string | null
         }
@@ -702,6 +705,32 @@ export type Database = {
           },
         ]
       }
+      live_viewer_heartbeat: {
+        Row: {
+          broadcast_id: string
+          last_seen_at: string
+          viewer_key: string
+        }
+        Insert: {
+          broadcast_id: string
+          last_seen_at?: string
+          viewer_key: string
+        }
+        Update: {
+          broadcast_id?: string
+          last_seen_at?: string
+          viewer_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_viewer_heartbeat_broadcast_id_fkey"
+            columns: ["broadcast_id"]
+            isOneToOne: false
+            referencedRelation: "live_broadcast"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       message: {
         Row: {
           chat_room_id: string
@@ -961,7 +990,11 @@ export type Database = {
         Returns: string
       }
       create_community_post: {
-        Args: { p_actor_user_id: string; p_content: string }
+        Args: {
+          p_actor_user_id: string
+          p_content: string
+          p_image_path?: string
+        }
         Returns: string
       }
       create_live_poll: {
@@ -984,7 +1017,7 @@ export type Database = {
       }
       delete_community_post: {
         Args: { p_actor_user_id: string; p_post_id: string }
-        Returns: boolean
+        Returns: string
       }
       end_live_broadcast: {
         Args: { p_actor_user_id: string; p_broadcast_id?: string }
@@ -1145,6 +1178,10 @@ export type Database = {
         Args: { p_actor_user_id: string }
         Returns: Json
       }
+      get_user_donation_snapshot_v2: {
+        Args: { p_actor_user_id: string; p_month?: number; p_year?: number }
+        Returns: Json
+      }
       insert_channel_banner: {
         Args: {
           p_actor_user_id: string
@@ -1170,9 +1207,17 @@ export type Database = {
         Args: { p_actor_user_id: string; p_room_id: string }
         Returns: undefined
       }
+      leave_live_viewer_presence: {
+        Args: { p_broadcast_id: string; p_viewer_key: string }
+        Returns: number
+      }
       mark_room_read: {
         Args: { p_actor_user_id: string; p_room_id: string }
         Returns: undefined
+      }
+      recompute_live_viewer_count: {
+        Args: { p_broadcast_id: string }
+        Returns: number
       }
       reorder_channel_banners: {
         Args: { p_actor_user_id: string; p_banner_ids: string[] }
@@ -1278,6 +1323,11 @@ export type Database = {
         }
         Returns: string
       }
+      sweep_live_viewer_counts: { Args: never; Returns: undefined }
+      sync_live_viewer_presence: {
+        Args: { p_broadcast_id: string; p_viewer_key: string }
+        Returns: number
+      }
       transfer_chat_room_owner: {
         Args: {
           p_actor_user_id: string
@@ -1303,7 +1353,12 @@ export type Database = {
         Returns: boolean
       }
       update_community_post: {
-        Args: { p_actor_user_id: string; p_content: string; p_post_id: string }
+        Args: {
+          p_actor_user_id: string
+          p_content: string
+          p_image_path?: string
+          p_post_id: string
+        }
         Returns: boolean
       }
       upsert_creator_studio_setting: {

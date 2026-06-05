@@ -1,7 +1,13 @@
 "use client";
 // 라이브 Sidebar에 표시할 독립 목록 데이터를 조회합니다.
 
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useQuery,
+  useQueryClient,
+  type InfiniteData,
+} from "@tanstack/react-query";
+import { useCallback } from "react";
 
 import { QUERY_KEYS } from "@/constants/common/query-keys";
 import {
@@ -16,7 +22,10 @@ import {
 } from "@/hooks/live/live-sidebar-query";
 import { useNullableUser } from "@/hooks/profile/use-profile";
 
+type FollowingChannelPage = Awaited<ReturnType<typeof fetchFollowingChannelSnapshot>>;
+
 export function useLiveSidebar() {
+  const queryClient = useQueryClient();
   const userQuery = useNullableUser();
   const viewerId = userQuery.data?.id;
 
@@ -61,6 +70,21 @@ export function useLiveSidebar() {
       .slice(0, LIVE_SIDEBAR_FOLLOWING_MAX_VISIBLE_COUNT) ?? [];
   const followingTotalCount = followingQuery.data?.pages[0]?.totalCount ?? 0;
 
+  // 팔로잉 섹션을 접으면 누적된 "더보기" 페이지를 첫 페이지(초기 노출 개수)로 되돌린다.
+  // refetch 없이 캐시를 잘라내며, 다시 펼쳤을 때 더보기 버튼이 초기 상태로 복원된다.
+  const resetFollowing = useCallback(() => {
+    queryClient.setQueryData<InfiniteData<FollowingChannelPage>>(
+      QUERY_KEYS.live.sidebar.following(viewerId),
+      (current) => {
+        if (!current || current.pages.length <= 1) return current;
+        return {
+          pages: current.pages.slice(0, 1),
+          pageParams: current.pageParams.slice(0, 1),
+        };
+      },
+    );
+  }, [queryClient, viewerId]);
+
   return {
     viewerId,
     isSignedIn: Boolean(viewerId),
@@ -69,6 +93,7 @@ export function useLiveSidebar() {
     keywordItems: keywordQuery.data?.items ?? [],
     followingTotalCount,
     fetchMoreFollowing: followingQuery.fetchNextPage,
+    resetFollowing,
     canFetchMoreFollowing: Boolean(followingQuery.hasNextPage),
     isFetchingMoreFollowing: followingQuery.isFetchingNextPage,
     isTrendingLoading: trendingQuery.isLoading,

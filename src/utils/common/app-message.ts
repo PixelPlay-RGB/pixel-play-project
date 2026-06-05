@@ -93,6 +93,24 @@ const MESSAGE_RPC_ERROR_CODE_MAP: Array<{
   },
 ];
 
+const DONATION_RPC_ERROR_CODE_MAP: Array<{
+  errorCode: string;
+  code: AppMessageCode;
+}> = [
+  {
+    errorCode: "PX401",
+    code: APP_MESSAGE_CODE.error.auth.authInfoNotFound,
+  },
+  {
+    errorCode: "PX402",
+    code: APP_MESSAGE_CODE.error.live.donationInsufficientBalance,
+  },
+  {
+    errorCode: "PX403",
+    code: APP_MESSAGE_CODE.error.live.donationDisabled,
+  },
+];
+
 export function getAppMessage(code?: AppMessageCode): AppMessage {
   if (!code) {
     return APP_MESSAGE.error.common.unknown;
@@ -175,4 +193,27 @@ export function isKnownMessageRpcError(error: unknown) {
   const code = (error as SupabaseLikeError).code;
 
   return MESSAGE_RPC_ERROR_CODE_MAP.some((item) => item.errorCode === code);
+}
+
+export function resolveDonationRpcErrorCode(
+  error: unknown,
+  fallbackCode: AppMessageCode = APP_MESSAGE_CODE.error.live.donationFailed,
+): AppMessageCode {
+  if (typeof error !== "object" || error === null) {
+    return fallbackCode;
+  }
+
+  const code = (error as SupabaseLikeError).code;
+
+  return DONATION_RPC_ERROR_CODE_MAP.find((item) => item.errorCode === code)?.code ?? fallbackCode;
+}
+
+export function isKnownDonationRpcError(error: unknown) {
+  if (typeof error !== "object" || error === null) {
+    return false;
+  }
+
+  const code = (error as SupabaseLikeError).code;
+
+  return DONATION_RPC_ERROR_CODE_MAP.some((item) => item.errorCode === code);
 }

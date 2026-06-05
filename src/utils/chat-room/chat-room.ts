@@ -1,3 +1,5 @@
+import { KST_TIME_ZONE } from "@/utils/common/kst";
+
 // 참가자-최대정원
 export const formatCapacity = (memberCnt: number, maxCapacity: number) =>
   `${memberCnt}/${maxCapacity}`;
@@ -23,12 +25,14 @@ export const getCapacityColorClass = (capacityPercent: number) => {
 };
 
 const TIME_FORMATTER = new Intl.DateTimeFormat("ko-KR", {
+  timeZone: KST_TIME_ZONE,
   hour: "2-digit",
   minute: "2-digit",
   hour12: false,
 });
 
 const DATE_FORMATTER = new Intl.DateTimeFormat("ko-KR", {
+  timeZone: KST_TIME_ZONE,
   year: "2-digit",
   month: "2-digit",
   day: "2-digit",

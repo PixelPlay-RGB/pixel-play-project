@@ -10,9 +10,11 @@ import { useIsMobile } from "@/hooks/common/use-mobile";
 
 interface LiveShellProps {
   children: ReactNode;
+  // 모바일 상단 헤더에 표시할 라벨(기본 "라이브"). 채널 등 다른 화면에서 재사용 시 지정.
+  mobileTitle?: string;
 }
 
-export default function LiveShell({ children }: LiveShellProps) {
+export default function LiveShell({ children, mobileTitle = "라이브" }: LiveShellProps) {
   const isMobile = useIsMobile();
   const [isMounted, setIsMounted] = useState(false);
 
@@ -30,7 +32,7 @@ export default function LiveShell({ children }: LiveShellProps) {
         {isMounted && isMobile && (
           <div className="border-border flex shrink-0 items-center gap-3 border-b p-4">
             <SidebarTrigger className="cursor-pointer" />
-            <span className="text-foreground text-sm font-semibold">라이브</span>
+            <span className="text-foreground text-sm font-semibold">{mobileTitle}</span>
           </div>
         )}
         <div className="h-full min-w-0 overflow-auto p-6 md:p-10">{children}</div>

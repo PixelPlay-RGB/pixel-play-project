@@ -1,10 +1,11 @@
 "use client";
 // 라이브 탐색 Sidebar를 기존 Sidebar 컴포넌트 계층으로 렌더링합니다.
 
-import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { useIsFetching } from "@tanstack/react-query";
-import { ChevronDown, ExternalLink } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
+import LoadMoreButton from "@/components/common/load-more-button";
 import LiveSidebarCategoryItem from "@/components/live/live-sidebar-category-item";
 import LiveSidebarChannelItem from "@/components/live/live-sidebar-channel-item";
 import LiveSidebarFollowingChannelItem from "@/components/live/live-sidebar-following-channel-item";
@@ -29,6 +30,7 @@ import {
 } from "@/constants/live/live-list";
 import { useLiveSidebar } from "@/hooks/live/use-live-sidebar";
 import { useLiveStore } from "@/stores/live";
+import type { LiveListFilter } from "@/types/live/live";
 
 const SIDEBAR_EMPTY_STATE_CLASS = "text-muted-foreground px-2 py-2 text-xs leading-relaxed";
 
@@ -45,12 +47,18 @@ export default function LiveSidebar({ isMobile }: LiveSidebarProps) {
     keywordItems,
     followingTotalCount,
     fetchMoreFollowing,
+    resetFollowing,
     canFetchMoreFollowing,
     isFetchingMoreFollowing,
     isTrendingLoading,
     isFollowingLoading,
     isKeywordLoading,
   } = useLiveSidebar();
+  const router = useRouter();
+  const pathname = usePathname();
+  // 탐색 필터는 라이브 목록의 인페이지 필터다. /live가 아닌 곳에서 클릭하면
+  // /live로 이동하며 필터를 적용하고, /live가 아니면 어떤 필터도 활성(Focus)으로 표시하지 않는다.
+  const isLiveListRoute = pathname === "/live";
   const filter = useLiveStore((state) => state.filter);
   const sort = useLiveStore((state) => state.sort);
   const visibleCount = useLiveStore((state) => state.visibleCount);
@@ -65,6 +73,14 @@ export default function LiveSidebar({ isMobile }: LiveSidebarProps) {
   const isNavigationVisible = !isMobile;
   const isFollowingOverviewVisible =
     !canFetchMoreFollowing && followingItems.length < followingTotalCount;
+
+  // 필터 선택: 스토어에 적용하고, 라이브 목록이 아니면 /live로 이동해 해당 필터를 보여준다.
+  const handleSelectFilter = (value: LiveListFilter) => {
+    setFilter(value);
+    if (!isLiveListRoute) {
+      router.push("/live");
+    }
+  };
 
   return (
     <Sidebar
@@ -83,9 +99,11 @@ export default function LiveSidebar({ isMobile }: LiveSidebarProps) {
                     icon={LIVE_LIST_FILTER_ICON[item.value]}
                     label={item.label}
                     value={item.value}
-                    isActive={item.value === activeFilter}
-                    isLoading={item.value === activeFilter && activeFilterFetchCount > 0}
-                    onSelect={setFilter}
+                    isActive={isLiveListRoute && item.value === activeFilter}
+                    isLoading={
+                      isLiveListRoute && item.value === activeFilter && activeFilterFetchCount > 0
+                    }
+                    onSelect={handleSelectFilter}
                   />
                 ))}
               </SidebarMenu>
@@ -96,7 +114,12 @@ export default function LiveSidebar({ isMobile }: LiveSidebarProps) {
         {isSignedIn ? (
           <>
             {isNavigationVisible ? <SidebarSeparator /> : null}
-            <LiveSidebarSection title="팔로잉 채널">
+            <LiveSidebarSection
+              title="팔로잉 채널"
+              onOpenChange={(open) => {
+                if (!open) resetFollowing();
+              }}
+            >
               <SidebarMenu className="gap-1.5">
                 {isFollowingLoading ? (
                   <>
@@ -114,25 +137,23 @@ export default function LiveSidebar({ isMobile }: LiveSidebarProps) {
                     ))}
                     {canFetchMoreFollowing ? (
                       <SidebarMenuItem>
-                        <button
-                          type="button"
+                        <LoadMoreButton
+                          isLoading={isFetchingMoreFollowing}
                           onClick={() => void fetchMoreFollowing()}
-                          disabled={isFetchingMoreFollowing}
-                          className="border-border text-muted-foreground hover:border-live/40 hover:text-live mx-auto mt-1 inline-flex h-8 items-center gap-1 rounded-full border px-3 text-xs font-bold transition-colors disabled:pointer-events-none disabled:opacity-60"
-                        >
-                          <ChevronDown className="size-3.5" />
-                          <span>{isFetchingMoreFollowing ? "불러오는 중" : "더보기"}</span>
-                        </button>
+                          accent="live"
+                          showSeparators={false}
+                        />
                       </SidebarMenuItem>
                     ) : isFollowingOverviewVisible ? (
                       <SidebarMenuItem>
-                        <Link
-                          href="/user/following"
-                          className="border-border text-muted-foreground hover:border-live/40 hover:text-live mx-auto mt-1 inline-flex h-8 items-center gap-1 rounded-full border px-3 text-xs font-bold transition-colors"
-                        >
-                          <ExternalLink className="size-3.5" />
-                          <span>전체보기</span>
-                        </Link>
+                        <LoadMoreButton
+                          isLoading={false}
+                          onClick={() => router.push("/user/following")}
+                          accent="live"
+                          label="전체보기"
+                          showSeparators={false}
+                          icon={ArrowRight}
+                        />
                       </SidebarMenuItem>
                     ) : null}
                   </>
