@@ -38,6 +38,10 @@ export const APP_MESSAGE_CODE = {
       followed: "success.following.followed",
       unfollowed: "success.following.unfollowed",
     },
+    live: {
+      urlCopied: "success.live.urlCopied",
+      voteUnchanged: "success.live.voteUnchanged",
+    },
   },
   error: {
     common: {
@@ -134,6 +138,12 @@ export const APP_MESSAGE_CODE = {
     following: {
       failed: "error.following.failed",
       unfollowFailed: "error.following.unfollowFailed",
+    },
+    live: {
+      donationFailed: "error.live.donationFailed",
+      voteFailed: "error.live.voteFailed",
+      voteNoActivePoll: "error.live.voteNoActivePoll",
+      voteInvalidOption: "error.live.voteInvalidOption",
     },
     supabase: {
       permissionDenied: "error.supabase.permissionDenied",

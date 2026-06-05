@@ -91,6 +91,16 @@ export const APP_MESSAGE = {
         description: "팔로잉 목록에서 제외했어요.",
       },
     },
+    live: {
+      urlCopied: {
+        title: "URL 복사 완료",
+        description: "URL 복사가 완료되었습니다.",
+      },
+      voteUnchanged: {
+        title: "이미 선택한 항목",
+        description: "다른 항목 번호를 입력하면 투표가 변경됩니다.",
+      },
+    },
   },
   error: {
     common: {
@@ -398,6 +408,24 @@ export const APP_MESSAGE = {
       unfollowFailed: {
         title: "팔로잉 해제 실패",
         description: "잠시 후 다시 시도해주세요.",
+      },
+    },
+    live: {
+      donationFailed: {
+        title: "후원 실패",
+        description: "후원 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+      },
+      voteFailed: {
+        title: "투표 실패",
+        description: "투표 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+      },
+      voteNoActivePoll: {
+        title: "진행 중인 투표 없음",
+        description: "현재 진행 중인 투표가 없습니다.",
+      },
+      voteInvalidOption: {
+        title: "잘못된 투표 번호",
+        description: "유효하지 않은 투표 번호입니다.",
       },
     },
     supabase: {

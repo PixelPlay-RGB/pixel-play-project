@@ -6,7 +6,7 @@ import { useAuthStore } from "@/stores/auth";
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/constants/common/query-keys";
-import { isAuthSessionMissingError } from "@/utils/auth/auth-error";
+import { isAuthSessionMissingError, isRecoverableAuthSessionError } from "@/utils/auth/auth-error";
 
 /**
  * 앱 루트에서 1회 마운트되어 Supabase Auth 상태를 Zustand store(AuthUser)에 동기화.
@@ -33,8 +33,10 @@ export default function AuthListener() {
     // 서버에서 세션 실제 유효성 검증 (스테일 JWT 방어)
     void supabase.auth.getUser().then(async ({ data, error }) => {
       if (error) {
-        if (!isAuthSessionMissingError(error)) {
+        if (!isRecoverableAuthSessionError(error)) {
           console.error("인증 리스너의 인증 유저 조회 실패", error);
+        }
+        if (!isAuthSessionMissingError(error)) {
           await supabase.auth.signOut({ scope: "local" });
         }
         setUser(null);

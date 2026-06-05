@@ -100,6 +100,113 @@ export type Database = {
           },
         ]
       }
+      community_comment: {
+        Row: {
+          author_id: string
+          content: string
+          created_at: string
+          id: string
+          post_id: string
+        }
+        Insert: {
+          author_id: string
+          content: string
+          created_at?: string
+          id?: string
+          post_id: string
+        }
+        Update: {
+          author_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          post_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_comment_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_comment_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "community_post"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_post: {
+        Row: {
+          comment_count: number
+          content: string
+          created_at: string
+          creator_id: string
+          id: string
+          like_count: number
+        }
+        Insert: {
+          comment_count?: number
+          content: string
+          created_at?: string
+          creator_id: string
+          id?: string
+          like_count?: number
+        }
+        Update: {
+          comment_count?: number
+          content?: string
+          created_at?: string
+          creator_id?: string
+          id?: string
+          like_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_post_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_post_like: {
+        Row: {
+          created_at: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_post_like_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "community_post"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_post_like_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       creator_studio_setting: {
         Row: {
           alert_sound_enabled: boolean
@@ -692,6 +799,7 @@ export type Database = {
         Args: { p_actor_user_id: string; p_creator_id: string }
         Returns: number
       }
+      anonymous_donor_alias: { Args: { p_donor_id: string }; Returns: string }
       check_email_exists: { Args: { target_email: string }; Returns: boolean }
       confirm_wallet_charge: {
         Args: {
@@ -769,12 +877,31 @@ export type Database = {
         }
         Returns: Json
       }
+      get_creator_settlement_donations: {
+        Args: {
+          p_actor_user_id: string
+          p_limit?: number
+          p_offset?: number
+          p_sort?: string
+          p_status?: string
+          p_year: number
+        }
+        Returns: Json
+      }
+      get_creator_settlement_yearly_summary: {
+        Args: { p_actor_user_id: string }
+        Returns: Json
+      }
       get_creator_studio_snapshot: {
         Args: { p_actor_user_id: string }
         Returns: Json
       }
       get_following_channel_list: {
         Args: { p_limit?: number; p_offset?: number }
+        Returns: Json
+      }
+      get_following_channel_page: {
+        Args: { p_filter?: string; p_limit?: number; p_offset?: number }
         Returns: Json
       }
       get_landing_snapshot: { Args: never; Returns: Json }
@@ -784,6 +911,10 @@ export type Database = {
       }
       get_live_donation_alert_overlay_snapshot: {
         Args: { p_creator_id: string }
+        Returns: Json
+      }
+      get_live_donation_ranking: {
+        Args: { p_creator_id: string; p_limit?: number }
         Returns: Json
       }
       get_live_hero: { Args: never; Returns: Json }
@@ -907,6 +1038,14 @@ export type Database = {
           p_content: string
         }
         Returns: string
+      }
+      send_live_message_v2: {
+        Args: {
+          p_actor_user_id: string
+          p_broadcast_id: string
+          p_content: string
+        }
+        Returns: Json
       }
       start_live_broadcast: {
         Args: {

@@ -2,11 +2,12 @@
 // 크리에이터 팔로잉 상태를 변경하는 서버 액션입니다.
 
 import { getAuthenticatedActorId } from "@/actions/common/authenticated-actor";
+import { createWriteClientForAction } from "@/actions/common/admin-client-action";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import type { AppMessageCode } from "@/constants/common/app-message-code";
-import { createAdminClient } from "@/lib/supabase/admin-client";
 import type { AppActionResult } from "@/types/common/action";
 import { resolveSupabaseErrorCode } from "@/utils/common/app-message";
+import { isUuid } from "@/utils/common/uuid";
 
 interface ToggleCreatorFollowingActionInput {
   creatorId: string;
@@ -28,7 +29,7 @@ function createFollowingFailureResult(
 export async function followCreatorAction({
   creatorId,
 }: ToggleCreatorFollowingActionInput): Promise<AppActionResult> {
-  if (!creatorId.trim()) {
+  if (!creatorId || !isUuid(creatorId)) {
     return {
       success: false,
       code: APP_MESSAGE_CODE.error.following.failed,
@@ -43,8 +44,16 @@ export async function followCreatorAction({
     return actor.result;
   }
 
-  const supabase = createAdminClient();
-  const { error } = await supabase.rpc("follow_creator", {
+  const client = await createWriteClientForAction(
+    "크리에이터 팔로우 Admin Client 생성 실패",
+    APP_MESSAGE_CODE.error.following.failed,
+  );
+
+  if (!client.success) {
+    return client.result;
+  }
+
+  const { error } = await client.supabase.rpc("follow_creator", {
     p_actor_user_id: actor.userId,
     p_creator_id: creatorId,
   });
@@ -66,7 +75,7 @@ export async function followCreatorAction({
 export async function unfollowCreatorAction({
   creatorId,
 }: ToggleCreatorFollowingActionInput): Promise<AppActionResult> {
-  if (!creatorId.trim()) {
+  if (!creatorId || !isUuid(creatorId)) {
     return {
       success: false,
       code: APP_MESSAGE_CODE.error.following.unfollowFailed,
@@ -81,8 +90,16 @@ export async function unfollowCreatorAction({
     return actor.result;
   }
 
-  const supabase = createAdminClient();
-  const { error } = await supabase.rpc("unfollow_creator", {
+  const client = await createWriteClientForAction(
+    "크리에이터 팔로우 취소 Admin Client 생성 실패",
+    APP_MESSAGE_CODE.error.following.unfollowFailed,
+  );
+
+  if (!client.success) {
+    return client.result;
+  }
+
+  const { error } = await client.supabase.rpc("unfollow_creator", {
     p_actor_user_id: actor.userId,
     p_creator_id: creatorId,
   });

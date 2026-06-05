@@ -211,6 +211,16 @@
     background: transparent !important;
   }
 
+  body:has(.live-popout-root) {
+    overflow: hidden;
+  }
+
+  body:has(.live-popout-root) .app-shell-background {
+    height: 100dvh;
+    min-height: 100dvh;
+    overflow: hidden;
+  }
+
   body.is-overlay-route .app-shell-background {
     background: transparent !important;
   }
@@ -226,7 +236,7 @@
 
   body:has(.live-overlay-root) header.sticky,
   body:has(.live-overlay-root) footer {
-    display: none;
+    display: none !important;
   }
 
   body.is-overlay-route main {
@@ -235,6 +245,12 @@
 
   body:has(.live-overlay-root) main {
     min-height: 100dvh;
+  }
+
+  body:has(.live-popout-root) main {
+    height: 100dvh;
+    min-height: 100dvh;
+    overflow: hidden;
   }
 
   .live-chat-overlay-stack {
