@@ -110,11 +110,17 @@ export async function deleteChannelBannerAction(
       ? (data as Record<string, Json | undefined>)
       : null;
 
-  // storage 객체 정리(best-effort).
+  // storage 객체 정리(best-effort). 실패해도 액션은 성공으로 두되 고아 파일 추적을 위해 로깅한다.
   const imagePath = typeof payload?.imagePath === "string" ? payload.imagePath : null;
   if (imagePath) {
     const userClient = await createClient();
-    await userClient.storage.from(USER_MEDIA_BUCKET).remove([imagePath]);
+    const { error: removeError } = await userClient.storage
+      .from(USER_MEDIA_BUCKET)
+      .remove([imagePath]);
+
+    if (removeError) {
+      console.error("배너 storage 정리 실패", removeError);
+    }
   }
 
   return {
