@@ -12,6 +12,7 @@ import { SEARCH_SCOPES, getSearchScopeConfig } from "@/constants/common/search-s
 import { cn } from "@/lib/utils";
 import type { SearchScope } from "@/stores/search-scope";
 import { ChevronDown } from "lucide-react";
+import { useState } from "react";
 
 interface Props {
   scope: SearchScope;
@@ -20,11 +21,12 @@ interface Props {
 }
 
 export default function SearchScopeSelect({ scope, onScopeChange, className }: Props) {
+  const [open, setOpen] = useState(false);
   const active = getSearchScopeConfig(scope);
   const ActiveIcon = active.icon;
 
   return (
-    <DropdownMenu>
+    <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger
         type="button"
         aria-label="검색 범위 선택"
@@ -43,7 +45,10 @@ export default function SearchScopeSelect({ scope, onScopeChange, className }: P
       <DropdownMenuContent align="start" sideOffset={10} className="min-w-36">
         <DropdownMenuRadioGroup
           value={scope}
-          onValueChange={(value) => onScopeChange(value as SearchScope)}
+          onValueChange={(value) => {
+            onScopeChange(value as SearchScope);
+            setOpen(false);
+          }}
         >
           {SEARCH_SCOPES.map((config) => {
             const Icon = config.icon;

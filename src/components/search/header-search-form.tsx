@@ -10,11 +10,11 @@ import {
   mobileHeaderSearchVariants,
 } from "@/lib/framer-motion/header-search";
 import { cn } from "@/lib/utils";
-import { useSearchScopeStore } from "@/stores/search-scope";
+import { useSearchScopeStore, type SearchScope } from "@/stores/search-scope";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowLeft, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState, type RefObject } from "react";
 
 export default function HeaderSearchForm() {
   const router = useRouter();
@@ -23,6 +23,14 @@ export default function HeaderSearchForm() {
   const [query, setQuery] = useState("");
   const [mobileOpen, setMobileOpen] = useState(false);
   const config = getSearchScopeConfig(scope);
+  const desktopInputRef = useRef<HTMLInputElement>(null);
+  const mobileInputRef = useRef<HTMLInputElement>(null);
+
+  // 스코프 선택 시 드롭다운이 닫히며 트리거로 돌아가는 포커스 이후에 검색 입력으로 옮긴다.
+  const handleScopeSelect = (next: SearchScope, target: RefObject<HTMLInputElement | null>) => {
+    setScope(next);
+    requestAnimationFrame(() => target.current?.focus());
+  };
 
   const handleSearch = () => {
     const trimmedQuery = query.trim();
@@ -74,8 +82,12 @@ export default function HeaderSearchForm() {
               >
                 <ArrowLeft className="size-5" />
               </Button>
-              <SearchScopeSelect scope={scope} onScopeChange={setScope} />
+              <SearchScopeSelect
+                scope={scope}
+                onScopeChange={(next) => handleScopeSelect(next, mobileInputRef)}
+              />
               <SearchInput
+                inputRef={mobileInputRef}
                 value={query}
                 onChange={setQuery}
                 onSubmit={handleSearch}
@@ -100,16 +112,20 @@ export default function HeaderSearchForm() {
           handleSearch();
         }}
         className={cn(
-          "hidden h-9 items-center rounded-full border py-0 pr-3 pl-1 transition-colors sm:flex sm:w-60 md:w-72",
+          "hidden h-9 items-center rounded-full border py-0 pr-3 pl-1 transition-colors sm:flex sm:w-72 md:w-80 lg:w-96",
           "bg-background/80 border-brand/20",
           "focus-within:border-brand/50 focus-within:ring-brand/30 focus-within:ring-2",
           "dark:border-border dark:bg-background/70",
         )}
       >
-        <SearchScopeSelect scope={scope} onScopeChange={setScope} />
+        <SearchScopeSelect
+          scope={scope}
+          onScopeChange={(next) => handleScopeSelect(next, desktopInputRef)}
+        />
         <span className="bg-border/70 mx-1.5 h-4 w-px shrink-0" aria-hidden />
         <Search className="text-muted-foreground pointer-events-none size-4 shrink-0" />
         <input
+          ref={desktopInputRef}
           type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}

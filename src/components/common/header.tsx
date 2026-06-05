@@ -24,8 +24,8 @@ export default async function Header() {
 
         <div className="flex items-center gap-2 sm:gap-3">
           <HeaderSearchForm />
-          <ThemeToggleButton />
           <BroadcastButton />
+          <ThemeToggleButton />
           {profile && <UserAccountMenu profile={profile} />}
           {!hasAuthUser && <LoginButton />}
         </div>
