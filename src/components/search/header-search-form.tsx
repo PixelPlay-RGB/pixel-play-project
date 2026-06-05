@@ -1,60 +1,34 @@
 "use client";
-// Header에서 검색어를 입력받아 검색 페이지로 이동합니다.
+// Header에서 검색 범위(라이브/채팅)를 직접 선택하고 검색어를 입력해 검색 페이지로 이동합니다.
+// 검색 범위는 라우터가 아니라 useSearchScopeStore가 보유하므로 어떤 화면에서도 항상 노출됩니다.
 import SearchInput from "@/components/search/search-input";
+import SearchScopeSelect from "@/components/search/search-scope-select";
 import { Button } from "@/components/ui/button";
+import { getSearchScopeConfig } from "@/constants/common/search-scope";
 import {
   mobileHeaderSearchTransition,
   mobileHeaderSearchVariants,
 } from "@/lib/framer-motion/header-search";
 import { cn } from "@/lib/utils";
+import { useSearchScopeStore } from "@/stores/search-scope";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowLeft, Search } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
-
-interface SearchRouteConfig {
-  path: "/chat/search" | "/live/search";
-  placeholder: string;
-  mobileAriaLabel: string;
-}
-
-function getSearchRouteConfig(pathname: string): SearchRouteConfig | null {
-  if (pathname === "/live" || pathname === "/live/search" || /^\/live\/[^/]+$/.test(pathname)) {
-    return {
-      path: "/live/search",
-      placeholder: "방송 제목·크리에이터 검색",
-      mobileAriaLabel: "방송 제목·크리에이터 검색 열기",
-    };
-  }
-
-  if (pathname === "/chat" || pathname.startsWith("/chat/")) {
-    return {
-      path: "/chat/search",
-      placeholder: "채팅방 전체 검색",
-      mobileAriaLabel: "채팅방 전체 검색 열기",
-    };
-  }
-
-  return null;
-}
-
-function resolveSearchPath(path: SearchRouteConfig["path"], query: string) {
-  const searchParams = new URLSearchParams({ query });
-  return `${path}?${searchParams.toString()}`;
-}
 
 export default function HeaderSearchForm() {
   const router = useRouter();
-  const pathname = usePathname();
+  const scope = useSearchScopeStore((state) => state.scope);
+  const setScope = useSearchScopeStore((state) => state.setScope);
   const [query, setQuery] = useState("");
   const [mobileOpen, setMobileOpen] = useState(false);
-  const searchConfig = getSearchRouteConfig(pathname);
-  const isMobileSearchOpen = mobileOpen && Boolean(searchConfig);
+  const config = getSearchScopeConfig(scope);
 
   const handleSearch = () => {
     const trimmedQuery = query.trim();
-    if (!trimmedQuery || !searchConfig) return;
-    router.push(resolveSearchPath(searchConfig.path, trimmedQuery));
+    if (!trimmedQuery) return;
+    const searchParams = new URLSearchParams({ query: trimmedQuery });
+    router.push(`${config.path}?${searchParams.toString()}`);
     setQuery("");
     setMobileOpen(false);
   };
@@ -64,22 +38,21 @@ export default function HeaderSearchForm() {
     setQuery("");
   };
 
-  if (!searchConfig) return null;
-
   return (
     <>
+      {/* 모바일: 검색 아이콘 → 전체폭 오버레이(스코프 칩 포함) */}
       <div className="sm:hidden">
         <Button
           variant="ghost"
           size="icon-sm"
           onClick={() => setMobileOpen(true)}
-          aria-label={searchConfig.mobileAriaLabel}
+          aria-label="검색 열기"
           className="text-muted-foreground hover:text-foreground"
         >
           <Search className="size-5" />
         </Button>
         <AnimatePresence>
-          {isMobileSearchOpen && (
+          {mobileOpen && (
             <motion.div
               key="mobile-header-search"
               initial="closed"
@@ -89,7 +62,7 @@ export default function HeaderSearchForm() {
               transition={mobileHeaderSearchTransition}
               className={cn(
                 "border-brand/15 bg-background dark:border-border",
-                "fixed inset-x-0 top-0 z-60 flex h-14 items-center gap-2 border-b px-3 shadow-sm",
+                "fixed inset-x-0 top-0 z-60 flex h-14 items-center gap-1.5 border-b px-3 shadow-sm",
               )}
             >
               <Button
@@ -101,11 +74,12 @@ export default function HeaderSearchForm() {
               >
                 <ArrowLeft className="size-5" />
               </Button>
+              <SearchScopeSelect scope={scope} onScopeChange={setScope} />
               <SearchInput
                 value={query}
                 onChange={setQuery}
                 onSubmit={handleSearch}
-                placeholder={searchConfig.placeholder}
+                placeholder={config.placeholder}
                 autoFocus
                 onKeyDown={(event) => {
                   if (event.key === "Escape") {
@@ -119,13 +93,31 @@ export default function HeaderSearchForm() {
         </AnimatePresence>
       </div>
 
-      <SearchInput
-        value={query}
-        onChange={setQuery}
-        onSubmit={handleSearch}
-        placeholder={searchConfig.placeholder}
-        className="hidden sm:block sm:w-48 md:w-64"
-      />
+      {/* 데스크톱: [스코프 칩 | 검색 입력] 한 알약 */}
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          handleSearch();
+        }}
+        className={cn(
+          "hidden h-9 items-center rounded-full border py-0 pr-3 pl-1 transition-colors sm:flex sm:w-60 md:w-72",
+          "bg-background/80 border-brand/20",
+          "focus-within:border-brand/50 focus-within:ring-brand/30 focus-within:ring-2",
+          "dark:border-border dark:bg-background/70",
+        )}
+      >
+        <SearchScopeSelect scope={scope} onScopeChange={setScope} />
+        <span className="bg-border/70 mx-1.5 h-4 w-px shrink-0" aria-hidden />
+        <Search className="text-muted-foreground pointer-events-none size-4 shrink-0" />
+        <input
+          type="search"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder={config.placeholder}
+          aria-label={config.placeholder}
+          className="placeholder:text-muted-foreground ml-2 h-full min-w-0 flex-1 bg-transparent text-sm outline-none"
+        />
+      </form>
     </>
   );
 }

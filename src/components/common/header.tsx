@@ -1,6 +1,7 @@
 // 애플리케이션 헤더 - 로고, 검색, 테마 전환, 프로필 배지 표시
 
 import LoginButton from "@/components/auth/login-button";
+import BroadcastButton from "@/components/common/broadcast-button";
 import HeaderMainNav from "@/components/common/header-main-nav";
 import ThemeToggleButton from "@/components/common/theme-toggle-button";
 import UserAccountMenu from "@/components/common/user-account-menu";
@@ -24,6 +25,7 @@ export default async function Header() {
         <div className="flex items-center gap-2 sm:gap-3">
           <HeaderSearchForm />
           <ThemeToggleButton />
+          <BroadcastButton />
           {profile && <UserAccountMenu profile={profile} />}
           {!hasAuthUser && <LoginButton />}
         </div>
