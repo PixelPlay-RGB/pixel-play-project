@@ -1,11 +1,17 @@
-// 라이브 채팅 팝아웃 화면을 렌더링합니다.
+// 라이브 채팅 팝아웃 페이지에서 채팅 전용 화면을 렌더링합니다.
+
+import { LiveChatPopout } from "@/components/live/chat/live-chat-popout";
 import { notFound } from "next/navigation";
 
-export const metadata = {
-  title: "라이브 채팅창",
-  description: "방송 채팅만 별도 창으로 확인하는 PixelPlay 라이브 채팅창입니다.",
-};
+interface Props {
+  params: Promise<{ creatorId: string }>;
+}
 
-export default function LiveChatPopoutPage() {
-  notFound();
+export default async function LiveChatPopoutPage({ params }: Props) {
+  const { creatorId } = await params;
+  if (!creatorId) {
+    notFound();
+  }
+
+  return <LiveChatPopout creatorId={creatorId} />;
 }

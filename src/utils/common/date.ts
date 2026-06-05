@@ -1,21 +1,11 @@
 // 날짜 입력과 검증에 사용하는 순수 유틸리티를 제공합니다.
+import { getKstDateKey } from "@/utils/common/kst";
 
 const DATE_INPUT_VALUE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
-const DATE_INPUT_FORMATTER = new Intl.DateTimeFormat("en-CA", {
-  timeZone: "Asia/Seoul",
-  year: "numeric",
-  month: "2-digit",
-  day: "2-digit",
-});
-
+// KST 기준 오늘 날짜('YYYY-MM-DD')를 반환합니다.
 export function getTodayDateInputValue() {
-  const parts = DATE_INPUT_FORMATTER.formatToParts(new Date());
-  const year = parts.find((part) => part.type === "year")?.value;
-  const month = parts.find((part) => part.type === "month")?.value;
-  const day = parts.find((part) => part.type === "day")?.value;
-
-  return `${year}-${month}-${day}`;
+  return getKstDateKey();
 }
 
 export function isValidDateInputValue(value: string) {

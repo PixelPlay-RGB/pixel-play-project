@@ -1,4 +1,4 @@
-// 채팅 설정 카드 안에서 반복되는 라벨과 입력 행을 렌더링합니다.
+// 설정 카드 안에서 반복되는 라벨과 입력 행을 렌더링합니다.
 
 import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
@@ -10,7 +10,7 @@ interface Props {
   isDimmed?: boolean;
 }
 
-export function ChatFieldRow({ label, description, children, isDimmed }: Props) {
+export function SettingFieldRow({ label, description, children, isDimmed }: Props) {
   return (
     <div
       className={cn(
@@ -18,9 +18,9 @@ export function ChatFieldRow({ label, description, children, isDimmed }: Props) 
         isDimmed && "opacity-60",
       )}
     >
-      <div className="flex min-w-0 flex-col gap-1 md:w-44 md:shrink-0">
+      <div className="flex min-w-0 flex-col gap-1 md:w-72 md:shrink-0 lg:w-80">
         <span className="text-foreground text-sm font-bold">{label}</span>
-        <span className="text-muted-foreground text-xs leading-5">{description}</span>
+        <span className="text-muted-foreground text-xs leading-5 text-pretty">{description}</span>
       </div>
       <div className="min-w-0 flex-1 md:flex md:justify-end">{children}</div>
     </div>

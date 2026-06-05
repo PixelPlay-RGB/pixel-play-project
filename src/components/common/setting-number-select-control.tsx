@@ -1,4 +1,4 @@
-// 채팅 설정에서 숫자 옵션을 선택하는 Select 컨트롤입니다.
+// 설정 화면에서 숫자 옵션을 선택하는 Select 컨트롤입니다.
 
 import {
   Select,
@@ -27,7 +27,7 @@ interface Props {
   onChange: (value: number) => void;
 }
 
-export function ChatNumberSelectControl({
+export function SettingNumberSelectControl({
   value,
   options,
   ariaLabel,

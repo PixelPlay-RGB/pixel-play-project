@@ -1,6 +1,6 @@
 // 채팅 참여 범위 선택 필드를 렌더링합니다.
 
-import { ChatFieldRow } from "@/components/channel/chat/chat-field-row";
+import { SettingFieldRow } from "@/components/common/setting-field-row";
 import { ChatSettingOptionButton } from "@/components/channel/chat/chat-setting-option-button";
 import { RadioGroup } from "@/components/ui/radio-group";
 import { CHANNEL_CHAT_SCOPE_OPTIONS } from "@/constants/channel/chat";
@@ -22,7 +22,7 @@ function isLiveChatScope(value: string): value is LiveChatScope {
 
 export function ChatScopeField({ value, disabled, onChange }: Props) {
   return (
-    <ChatFieldRow label="참여 범위" description="입력 권한">
+    <SettingFieldRow label="참여 범위" description="입력 권한">
       <RadioGroup
         value={value}
         className="flex w-auto flex-wrap gap-2"
@@ -41,6 +41,6 @@ export function ChatScopeField({ value, disabled, onChange }: Props) {
           />
         ))}
       </RadioGroup>
-    </ChatFieldRow>
+    </SettingFieldRow>
   );
 }

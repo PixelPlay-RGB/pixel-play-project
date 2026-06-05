@@ -33,16 +33,12 @@ export default function LiveList({ heroSlot, heroId }: LiveListProps) {
     [setPageSize],
   );
   const pageSize = useLiveListPageSize({ onPageSizeChange: handlePageSizeChange });
-  const query = useLiveList(pageSize !== null);
+  const query = useLiveList(pageSize !== null, heroId);
   const snapshot = query.data ?? EMPTY_LIVE_LIST_SNAPSHOT;
-  const visibleItems = heroId
-    ? snapshot.items.filter((item) => item.id !== heroId)
-    : snapshot.items;
+  const visibleItems = snapshot.items;
   const isInitialLoading =
     pageSize === null || (!query.isFetched && (!query.isUserFetched || query.isLoading));
-  const isHeroOnlyList = snapshot.items.length > 0 && visibleItems.length === 0;
-  const isEmpty =
-    !isInitialLoading && !query.isError && visibleItems.length === 0 && !isHeroOnlyList;
+  const isEmpty = !isInitialLoading && !query.isError && visibleItems.length === 0;
   const isFetchingMore = query.isFetching && query.isPlaceholderData;
   const listTitle = LIVE_LIST_SORT_TITLE[query.sort];
 

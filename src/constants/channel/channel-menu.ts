@@ -17,9 +17,12 @@ export const CHANNEL_MENU_ITEMS: ChannelMenuItem[] = [
   },
   {
     id: "donation",
-    label: "후원 설정",
-    href: "/channel/donation",
+    label: "후원",
     icon: HandCoins,
+    children: [
+      { id: "donation-settings", label: "설정", href: "/channel/donation" },
+      { id: "settlement", label: "정산", href: "/channel/settlement" },
+    ],
   },
   {
     id: "chat",

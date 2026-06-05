@@ -76,6 +76,18 @@ export const APP_MESSAGE = {
         title: "저장 완료",
         description: "새 채팅 설정을 다음 채팅부터 적용합니다.",
       },
+      liveSettingsSaved: {
+        title: "방송 설정 저장 완료",
+        description: "방송 운영 설정이 저장되었습니다.",
+      },
+      donationSettingsSaved: {
+        title: "저장 완료",
+        description: "새 후원 설정을 다음 방송부터 적용합니다.",
+      },
+      donationTestSent: {
+        title: "테스트 후원 전송 완료",
+        description: "OBS 후원 알림 화면에서 확인해주세요.",
+      },
     },
     following: {
       followed: {
@@ -106,6 +118,16 @@ export const APP_MESSAGE = {
       },
       commentUpdated: {
         title: "댓글 수정 완료",
+      },
+    },
+    live: {
+      urlCopied: {
+        title: "URL 복사 완료",
+        description: "URL 복사가 완료되었습니다.",
+      },
+      voteUnchanged: {
+        title: "이미 선택한 항목",
+        description: "다른 항목 번호를 입력하면 투표가 변경됩니다.",
       },
     },
   },
@@ -378,6 +400,38 @@ export const APP_MESSAGE = {
         title: "채팅 설정 저장 실패",
         description: "입력값을 확인한 뒤 다시 시도해주세요.",
       },
+      liveSettingsSaveFailed: {
+        title: "방송 설정 저장 실패",
+        description: "입력값을 확인한 뒤 다시 시도해주세요.",
+      },
+      liveThumbnailUploadFailed: {
+        title: "미리보기 이미지 업로드 실패",
+        description: "미리보기 이미지를 업로드하지 못했습니다.",
+      },
+      liveStartSaveFailed: {
+        title: "방송 시작 저장 실패",
+        description: "방송 시작 정보를 저장하지 못했습니다.",
+      },
+      liveEndSaveFailed: {
+        title: "방송 종료 저장 실패",
+        description: "방송 종료 정보를 저장하지 못했습니다.",
+      },
+      donationSettingsLoadFailed: {
+        title: "후원 설정 조회 실패",
+        description: "다시 로그인하거나 잠시 후 새로고침해주세요.",
+      },
+      donationSettingsSaveFailed: {
+        title: "후원 설정 저장 실패",
+        description: "입력값을 확인한 뒤 다시 시도해주세요.",
+      },
+      donationTestFailed: {
+        title: "테스트 후원 전송 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      settlementLoadFailed: {
+        title: "정산 내역 조회 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
       securityLoadFailed: {
         title: "방송 연결 정보 조회 실패",
         description: "다시 로그인하거나 잠시 후 새로고침해주세요.",
@@ -399,6 +453,28 @@ export const APP_MESSAGE = {
       unfollowFailed: {
         title: "팔로잉 해제 실패",
         description: "잠시 후 다시 시도해주세요.",
+      },
+      loadFailed: {
+        title: "팔로잉 목록 조회 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+    },
+    live: {
+      donationFailed: {
+        title: "후원 실패",
+        description: "후원 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+      },
+      voteFailed: {
+        title: "투표 실패",
+        description: "투표 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+      },
+      voteNoActivePoll: {
+        title: "진행 중인 투표 없음",
+        description: "현재 진행 중인 투표가 없습니다.",
+      },
+      voteInvalidOption: {
+        title: "잘못된 투표 번호",
+        description: "유효하지 않은 투표 번호입니다.",
       },
     },
     community: {
