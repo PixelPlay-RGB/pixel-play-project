@@ -27,8 +27,19 @@ interface Props {
 }
 
 export function ChannelBannerField({ controller }: Props) {
-  const { banners, addBanner, isAdding, deleteBanner, isDeleting, setOrder, canAddMore } =
-    controller;
+  const {
+    banners,
+    addBanner,
+    isAdding,
+    deleteBanner,
+    isDeleting,
+    isCommittingOrder,
+    setOrder,
+    canAddMore,
+  } = controller;
+
+  // 추가/삭제/순서커밋 중 하나라도 진행 중이면 모든 배너 조작을 잠가 상태 경합을 막는다.
+  const busy = isAdding || isDeleting || isCommittingOrder;
 
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -51,7 +62,7 @@ export function ChannelBannerField({ controller }: Props) {
     setFile(next);
   };
 
-  const canSubmit = !!file && HTTP_URL_PATTERN.test(linkUrl.trim()) && !isAdding;
+  const canSubmit = !!file && HTTP_URL_PATTERN.test(linkUrl.trim()) && !busy;
 
   const handleAdd = () => {
     if (!canSubmit || !file) return;
@@ -72,20 +83,18 @@ export function ChannelBannerField({ controller }: Props) {
     });
   };
 
-  const busy = isAdding || isDeleting;
-
   return (
     <div className="flex flex-col gap-4">
       {canAddMore && (
         <div className="border-border bg-muted/40 flex flex-col gap-3 rounded-xl border p-3 sm:flex-row">
           <button
             type="button"
-            disabled={isAdding}
+            disabled={busy}
             onClick={() => inputRef.current?.click()}
             className={cn(
               "relative flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-dashed",
               "border-border hover:border-brand/50 bg-background text-muted-foreground transition-colors",
-              isAdding && "pointer-events-none opacity-60",
+              busy && "pointer-events-none opacity-60",
             )}
             aria-label="배너 이미지 업로드"
           >
@@ -103,7 +112,7 @@ export function ChannelBannerField({ controller }: Props) {
           <div className="flex min-w-0 flex-1 flex-col gap-2">
             <Input
               value={title}
-              disabled={isAdding}
+              disabled={busy}
               maxLength={CHANNEL_BANNER_TITLE_MAX}
               onChange={(event) => setTitle(event.target.value)}
               placeholder="배너 제목을 입력해주세요."
@@ -111,7 +120,7 @@ export function ChannelBannerField({ controller }: Props) {
             <div className="flex gap-2">
               <Input
                 value={linkUrl}
-                disabled={isAdding}
+                disabled={busy}
                 maxLength={CHANNEL_BANNER_LINK_MAX}
                 onChange={(event) => setLinkUrl(event.target.value)}
                 onKeyDown={(event) => {

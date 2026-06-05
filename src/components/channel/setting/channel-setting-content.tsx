@@ -155,7 +155,7 @@ export function ChannelSettingContent({ profile, banners }: Props) {
                   photoUrl={value || null}
                   nickname={nicknameValue}
                   onFileChange={handleFileChange}
-                  disabled={isFormSaving}
+                  disabled={isSaving}
                 />
               )}
             />
@@ -185,7 +185,7 @@ export function ChannelSettingContent({ profile, banners }: Props) {
                         field.onChange(e.target.value);
                         nicknameAvailability.syncNicknameStatus(e.target.value);
                       }}
-                      disabled={isBusy}
+                      disabled={isBusy || bannerController.isCommittingOrder}
                     />
                   )}
                 />
@@ -194,7 +194,12 @@ export function ChannelSettingContent({ profile, banners }: Props) {
                     type="button"
                     variant="outline"
                     onClick={() => nicknameAvailability.checkNickname()}
-                    disabled={isBusy || !!errors.nickname || !nicknameChanged}
+                    disabled={
+                      isBusy ||
+                      bannerController.isCommittingOrder ||
+                      !!errors.nickname ||
+                      !nicknameChanged
+                    }
                     className="text-brand border-brand/40"
                   >
                     {nicknameAvailability.isCheckingNickname ? (
@@ -230,7 +235,7 @@ export function ChannelSettingContent({ profile, banners }: Props) {
               render={({ field }) => (
                 <ChannelBioField
                   value={field.value}
-                  disabled={isFormSaving}
+                  disabled={isSaving}
                   onChange={field.onChange}
                 />
               )}

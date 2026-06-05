@@ -104,17 +104,22 @@ export async function deleteChannelBannerAction(
     return { success: false, code: APP_MESSAGE_CODE.error.channel.bannerDeleteFailed };
   }
 
-  const payload = data as unknown as { imagePath?: string; banners?: Json };
+  // RPC는 jsonb { imagePath, banners }를 반환한다. 이중 단언 없이 런타임 형태를 검증한다.
+  const payload =
+    data && typeof data === "object" && !Array.isArray(data)
+      ? (data as Record<string, Json | undefined>)
+      : null;
 
   // storage 객체 정리(best-effort).
-  if (payload.imagePath) {
+  const imagePath = typeof payload?.imagePath === "string" ? payload.imagePath : null;
+  if (imagePath) {
     const userClient = await createClient();
-    await userClient.storage.from(USER_MEDIA_BUCKET).remove([payload.imagePath]);
+    await userClient.storage.from(USER_MEDIA_BUCKET).remove([imagePath]);
   }
 
   return {
     success: true,
-    data: parseChannelBanners(payload.banners ?? null),
+    data: parseChannelBanners(payload?.banners ?? null),
     code: APP_MESSAGE_CODE.success.channel.bannerDeleted,
   };
 }

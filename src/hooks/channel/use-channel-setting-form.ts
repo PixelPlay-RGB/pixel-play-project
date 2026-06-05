@@ -27,6 +27,8 @@ export function useChannelSettingForm(initialBio: string) {
   const { data: user, isLoading } = useUser();
 
   const [pendingFile, setPendingFile] = useState<File | null>(null);
+  // 마지막으로 저장된 bio. reset(취소)은 최초값이 아니라 이 값으로 되돌려야 DB와 어긋나지 않는다.
+  const [savedBio, setSavedBio] = useState(initialBio);
   const updateProfileMutation = useUpdateProfileMutation();
   const bioMutation = useMutation({
     mutationFn: (bio: string) => updateChannelProfileAction({ bio }),
@@ -93,7 +95,7 @@ export function useChannelSettingForm(initialBio: string) {
     reset({
       nickname: user.nickname,
       photoUrl: user.photo_url ?? null,
-      bio: initialBio,
+      bio: savedBio,
     });
     nicknameAvailability.resetNicknameAvailability();
     setPendingFile(null);
@@ -124,7 +126,7 @@ export function useChannelSettingForm(initialBio: string) {
       savedPhotoUrl = result.photoUrl ?? null;
     }
 
-    let savedBio = data.bio;
+    let nextSavedBio = data.bio;
 
     if (bioDirty) {
       const result = await bioMutation.mutateAsync(data.bio).catch(() => null);
@@ -132,11 +134,12 @@ export function useChannelSettingForm(initialBio: string) {
         toastAppError(result?.code ?? APP_MESSAGE_CODE.error.channel.channelProfileSaveFailed);
         return;
       }
-      savedBio = result.data.bio ?? "";
+      nextSavedBio = result.data.bio ?? "";
       toastAppSuccess(APP_MESSAGE_CODE.success.channel.channelProfileSaved);
     }
 
-    reset({ nickname: data.nickname, photoUrl: savedPhotoUrl, bio: savedBio });
+    setSavedBio(nextSavedBio);
+    reset({ nickname: data.nickname, photoUrl: savedPhotoUrl, bio: nextSavedBio });
     nicknameAvailability.markNicknameAvailable(data.nickname);
     setPendingFile(null);
   });

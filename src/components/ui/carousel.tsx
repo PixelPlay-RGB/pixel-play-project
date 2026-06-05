@@ -72,15 +72,19 @@ function Carousel({
 
   const handleKeyDown = React.useCallback(
     (event: React.KeyboardEvent<HTMLDivElement>) => {
-      if (event.key === "ArrowLeft") {
+      // 축에 맞춰 이전/다음 키를 분기한다(가로=←/→, 세로=↑/↓).
+      const prevKey = orientation === "horizontal" ? "ArrowLeft" : "ArrowUp";
+      const nextKey = orientation === "horizontal" ? "ArrowRight" : "ArrowDown";
+
+      if (event.key === prevKey) {
         event.preventDefault();
         scrollPrev();
-      } else if (event.key === "ArrowRight") {
+      } else if (event.key === nextKey) {
         event.preventDefault();
         scrollNext();
       }
     },
-    [scrollPrev, scrollNext],
+    [orientation, scrollPrev, scrollNext],
   );
 
   React.useEffect(() => {
@@ -165,6 +169,7 @@ function CarouselPrevious({
   variant = "outline",
   size = "icon",
   hideWhenDisabled = false,
+  onClick,
   ...props
 }: React.ComponentProps<typeof Button> & { hideWhenDisabled?: boolean }) {
   const { orientation, scrollPrev, canScrollPrev } = useCarousel();
@@ -187,8 +192,12 @@ function CarouselPrevious({
         className,
       )}
       disabled={!canScrollPrev}
-      onClick={scrollPrev}
       {...props}
+      // 외부 onClick을 먼저 호출하고, preventDefault가 없으면 내부 스크롤을 수행한다.
+      onClick={(event) => {
+        onClick?.(event);
+        if (!event.defaultPrevented) scrollPrev();
+      }}
     >
       <ChevronLeft />
       <span className="sr-only">이전</span>
@@ -201,6 +210,7 @@ function CarouselNext({
   variant = "outline",
   size = "icon",
   hideWhenDisabled = false,
+  onClick,
   ...props
 }: React.ComponentProps<typeof Button> & { hideWhenDisabled?: boolean }) {
   const { orientation, scrollNext, canScrollNext } = useCarousel();
@@ -223,8 +233,12 @@ function CarouselNext({
         className,
       )}
       disabled={!canScrollNext}
-      onClick={scrollNext}
       {...props}
+      // 외부 onClick을 먼저 호출하고, preventDefault가 없으면 내부 스크롤을 수행한다.
+      onClick={(event) => {
+        onClick?.(event);
+        if (!event.defaultPrevented) scrollNext();
+      }}
     >
       <ChevronRight />
       <span className="sr-only">다음</span>
