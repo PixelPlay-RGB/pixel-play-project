@@ -67,10 +67,10 @@ export function UserDonationsPage({ snapshot, errorCode, paymentResultCode }: Pr
       <DonationBalanceHero snapshot={snapshot} />
       {paymentResultCode ? <PaymentResultToast code={paymentResultCode} /> : null}
 
-      <section className="grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(20rem,0.9fr)]">
+      <section className="grid items-start gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(20rem,0.9fr)]">
         <UserDonationHistoryTable snapshot={snapshot} />
 
-        <aside className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
+        <aside className="grid gap-4 self-start sm:grid-cols-2 xl:grid-cols-1">
           <SettingsCard title="후원 지갑 요약" contentClassName="gap-4">
             <DonationSummaryGrid snapshot={snapshot} />
           </SettingsCard>
@@ -94,7 +94,7 @@ function DonationBalanceHero({ snapshot }: { snapshot: UserDonationSnapshot }) {
         <div className="min-w-0">
           <div className="flex items-center gap-2 text-xs font-black tracking-wide uppercase">
             <span className="size-2 shrink-0 rotate-45 bg-white" aria-hidden />
-            <span>DONATION BALANCE</span>
+            <span>DONATION POINT</span>
           </div>
           <p className="mt-4 text-5xl leading-none font-black tracking-tight sm:text-6xl">
             {formatPoint(snapshot.summary.balanceAmount)}

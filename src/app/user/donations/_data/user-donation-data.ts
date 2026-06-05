@@ -28,11 +28,12 @@ const WALLET_TRANSACTION_STATUSES = new Set<WalletTransactionStatus>([
   "canceled",
 ]);
 
-export async function getUserDonationSnapshot(
-  _searchParams: UserDonationSearchParams = {},
-): Promise<AppActionResult<UserDonationSnapshot>> {
-  void _searchParams;
+const MIN_HISTORY_YEAR = 2020;
+const MAX_HISTORY_MONTH = 12;
 
+export async function getUserDonationSnapshot(
+  searchParams: UserDonationSearchParams = {},
+): Promise<AppActionResult<UserDonationSnapshot>> {
   const serverClient = await createClient();
   const {
     data: { user },
@@ -51,8 +52,11 @@ export async function getUserDonationSnapshot(
   }
 
   const supabase = createAdminClient();
-  const { data, error } = await supabase.rpc("get_user_donation_snapshot", {
+  const historyPeriod = resolveHistoryPeriod(searchParams);
+  const { data, error } = await supabase.rpc("get_user_donation_snapshot_v2", {
     p_actor_user_id: user.id,
+    p_year: historyPeriod.year,
+    p_month: historyPeriod.month,
   });
 
   if (error) {
@@ -66,7 +70,7 @@ export async function getUserDonationSnapshot(
   try {
     return {
       success: true,
-      data: buildUserDonationSnapshot(data, user.id),
+      data: buildUserDonationSnapshot(data, user.id, historyPeriod),
     };
   } catch (error) {
     console.error("사용자 후원 지갑 snapshot 생성 실패", error);
@@ -80,10 +84,12 @@ export async function getUserDonationSnapshot(
 function buildUserDonationSnapshot(
   snapshot: Json,
   paymentCustomerKey: string,
+  fallbackHistoryPeriod: { year: number; month: number },
 ): UserDonationSnapshot {
   const snapshotObject = readObject(snapshot);
   const wallet = readObject(snapshotObject?.wallet);
   const stats = readObject(snapshotObject?.stats);
+  const historyPeriod = readObject(snapshotObject?.historyPeriod);
   const sentDonations = readArray(snapshotObject?.sentDonations)
     .map(readSentDonation)
     .filter((item): item is UserSentDonationItem => item !== null);
@@ -106,9 +112,50 @@ function buildUserDonationSnapshot(
       totalDonationAmount: readNumber(stats?.totalDonationAmount, 0),
       totalChargeAmount: readNumber(stats?.totalChargeAmount, 0),
     },
+    historyPeriod: {
+      year: readNumber(historyPeriod?.year, fallbackHistoryPeriod.year),
+      month: readNumber(historyPeriod?.month, fallbackHistoryPeriod.month),
+    },
     sentDonations,
     chargeHistories,
   };
+}
+
+function resolveHistoryPeriod(searchParams: UserDonationSearchParams) {
+  const now = new Date();
+  const currentYear = Number(
+    new Intl.DateTimeFormat("en", {
+      timeZone: "Asia/Seoul",
+      year: "numeric",
+    }).format(now),
+  );
+  const currentMonth = Number(
+    new Intl.DateTimeFormat("en", {
+      timeZone: "Asia/Seoul",
+      month: "numeric",
+    }).format(now),
+  );
+  const year = readPositiveIntegerParam(searchParams.year);
+  const month = readPositiveIntegerParam(searchParams.month);
+
+  return {
+    year: year && year >= MIN_HISTORY_YEAR ? year : currentYear,
+    month: month && month <= MAX_HISTORY_MONTH ? month : currentMonth,
+  };
+}
+
+function readPositiveIntegerParam(value: string | string[] | undefined) {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const numberValue = Number(value);
+
+  if (!Number.isInteger(numberValue) || numberValue <= 0) {
+    return null;
+  }
+
+  return numberValue;
 }
 
 function readSentDonation(value: Json): UserSentDonationItem | null {

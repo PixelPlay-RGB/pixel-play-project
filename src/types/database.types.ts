@@ -1,4 +1,4 @@
-export type Json =
+﻿export type Json =
   | string
   | number
   | boolean
@@ -797,6 +797,10 @@ export type Database = {
       }
       get_user_donation_snapshot: {
         Args: { p_actor_user_id: string }
+        Returns: Json
+      }
+      get_user_donation_snapshot_v2: {
+        Args: { p_actor_user_id: string; p_month?: number; p_year?: number }
         Returns: Json
       }
       join_chat_room: {

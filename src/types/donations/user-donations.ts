@@ -14,6 +14,11 @@ export interface UserDonationStats {
   totalChargeAmount: number;
 }
 
+export interface UserDonationHistoryPeriod {
+  year: number;
+  month: number;
+}
+
 export interface UserSentDonationItem {
   id: string;
   broadcastId: string;
@@ -36,6 +41,7 @@ export interface UserDonationSnapshot {
   paymentCustomerKey: string;
   summary: UserDonationSummary;
   stats: UserDonationStats;
+  historyPeriod: UserDonationHistoryPeriod;
   sentDonations: UserSentDonationItem[];
   chargeHistories: UserWalletChargeHistoryItem[];
 }
