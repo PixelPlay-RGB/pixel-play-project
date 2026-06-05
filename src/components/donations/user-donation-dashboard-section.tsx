@@ -24,22 +24,26 @@ export function UserDonationDashboardSection({ snapshot }: Props) {
   const [activeTab, setActiveTab] = useState<DonationHistoryTab>("all");
 
   return (
-    <section className="grid items-start gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(20rem,0.9fr)]">
+    <section className="grid items-start gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(20rem,0.9fr)] xl:items-stretch">
       <UserDonationHistoryTable
         snapshot={snapshot}
         activeTab={activeTab}
         onActiveTabChange={setActiveTab}
       />
 
-      <aside className="grid items-start gap-4 self-start sm:grid-cols-2 xl:grid-cols-1">
-        <SettingsCard title="후원 지갑 요약" className="self-start" contentClassName="gap-4">
+      <aside className="grid items-start gap-4 self-start sm:grid-cols-2 xl:flex xl:h-full xl:flex-col xl:self-stretch">
+        <SettingsCard
+          title="후원 지갑 요약"
+          className="self-start xl:self-stretch"
+          contentClassName="gap-4"
+        >
           <DonationSummaryGrid snapshot={snapshot} />
         </SettingsCard>
 
         <SettingsCard
           title={GRAPH_CARD_TITLE[activeTab]}
-          className="self-start"
-          contentClassName="gap-4"
+          className="self-start xl:flex-1 xl:self-stretch"
+          contentClassName="gap-4 xl:flex-1"
         >
           <UserDonationDailyChart snapshot={snapshot} activeTab={activeTab} />
         </SettingsCard>

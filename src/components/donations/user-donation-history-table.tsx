@@ -94,6 +94,11 @@ export function UserDonationHistoryTable({ snapshot, activeTab, onActiveTabChang
       ),
     [filteredItems, safeCurrentPage],
   );
+  const historyPageSlots = useMemo(
+    () =>
+      Array.from({ length: HISTORY_ITEMS_PER_PAGE }, (_, index) => paginatedItems[index] ?? null),
+    [paginatedItems],
+  );
   const tabCounts = useMemo(
     () => ({
       all: historyItems.length,
@@ -178,9 +183,13 @@ export function UserDonationHistoryTable({ snapshot, activeTab, onActiveTabChang
         {filteredItems.length > 0 ? (
           <>
             <ul className="divide-border divide-y">
-              {paginatedItems.map((item) => (
-                <HistoryListItem key={`${item.kind}-${item.id}`} item={item} />
-              ))}
+              {historyPageSlots.map((item, index) =>
+                item ? (
+                  <HistoryListItem key={`${item.kind}-${item.id}`} item={item} />
+                ) : (
+                  <HistoryListPlaceholder key={`empty-history-slot-${index}`} />
+                ),
+              )}
             </ul>
             <HistoryPagination
               currentPage={safeCurrentPage}
@@ -206,7 +215,7 @@ function HistoryPagination({
   onPageChange: (page: number) => void;
 }) {
   if (totalPages <= 1) {
-    return null;
+    return <div className="h-10" aria-hidden />;
   }
 
   const pageItems = getPageItems(currentPage, totalPages);
@@ -241,7 +250,7 @@ function HistoryPagination({
   };
 
   return (
-    <Pagination className="pt-1">
+    <Pagination className="h-10 pt-1">
       <PaginationContent className="gap-1">
         <PaginationItem>
           <PaginationPrevious
@@ -304,6 +313,10 @@ function HistoryPagination({
       </PaginationContent>
     </Pagination>
   );
+}
+
+function HistoryListPlaceholder() {
+  return <li className="h-16" aria-hidden />;
 }
 
 function HistoryPeriodSelect({
@@ -380,7 +393,7 @@ function HistoryListItem({ item }: { item: DonationHistoryItem }) {
   const isCharge = item.kind === "charge";
 
   return (
-    <li className="flex items-center gap-3 py-4 first:pt-0 last:pb-0">
+    <li className="flex h-16 items-center gap-3">
       <div
         className={cn(
           "flex size-10 shrink-0 items-center justify-center rounded-lg",

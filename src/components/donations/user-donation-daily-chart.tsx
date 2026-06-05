@@ -91,7 +91,7 @@ export function UserDonationDailyChart({ snapshot, activeTab }: Props) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="flex h-full flex-col gap-4">
       <div className="flex items-end justify-between gap-3">
         <div className="min-w-0">
           <p className="text-muted-foreground text-xs font-black">
@@ -108,8 +108,13 @@ export function UserDonationDailyChart({ snapshot, activeTab }: Props) {
         </p>
       </div>
 
-      <div ref={scrollAreaRef} className="overflow-x-auto pb-2" onWheel={handleWheel} tabIndex={0}>
-        <div style={{ width: chartWidth }} className="h-56">
+      <div
+        ref={scrollAreaRef}
+        className="min-h-0 flex-1 overflow-x-auto pb-2"
+        onWheel={handleWheel}
+        tabIndex={0}
+      >
+        <div style={{ width: chartWidth }} className="h-56 xl:h-full xl:min-h-56">
           <ChartContainer
             config={DONATION_DAILY_CHART_CONFIG}
             className="aspect-auto h-full w-full"
