@@ -1,4 +1,4 @@
-// 채팅 설정에서 이진 옵션을 바꾸는 스위치형 버튼입니다.
+// 설정 화면에서 이진 옵션을 바꾸는 스위치형 버튼입니다.
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -12,7 +12,7 @@ interface Props {
   onChange: (checked: boolean) => void;
 }
 
-export function ChatToggleControl({
+export function SettingToggleControl({
   checked,
   checkedLabel,
   uncheckedLabel,

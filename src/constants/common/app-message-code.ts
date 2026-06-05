@@ -33,6 +33,8 @@ export const APP_MESSAGE_CODE = {
       securityTokenRotated: "success.channel.securityTokenRotated",
       chatSettingsSaved: "success.channel.chatSettingsSaved",
       liveSettingsSaved: "success.channel.liveSettingsSaved",
+      donationSettingsSaved: "success.channel.donationSettingsSaved",
+      donationTestSent: "success.channel.donationTestSent",
     },
     following: {
       followed: "success.following.followed",
@@ -131,6 +133,10 @@ export const APP_MESSAGE_CODE = {
       liveSettingsSaveFailed: "error.channel.liveSettingsSaveFailed",
       liveStartSaveFailed: "error.channel.liveStartSaveFailed",
       liveThumbnailUploadFailed: "error.channel.liveThumbnailUploadFailed",
+      donationSettingsLoadFailed: "error.channel.donationSettingsLoadFailed",
+      donationSettingsSaveFailed: "error.channel.donationSettingsSaveFailed",
+      donationTestFailed: "error.channel.donationTestFailed",
+      settlementLoadFailed: "error.channel.settlementLoadFailed",
       securityLoadFailed: "error.channel.securityLoadFailed",
       securityCopyFailed: "error.channel.securityCopyFailed",
       securityTokenRotateFailed: "error.channel.securityTokenRotateFailed",
@@ -138,6 +144,7 @@ export const APP_MESSAGE_CODE = {
     following: {
       failed: "error.following.failed",
       unfollowFailed: "error.following.unfollowFailed",
+      loadFailed: "error.following.loadFailed",
     },
     live: {
       donationFailed: "error.live.donationFailed",

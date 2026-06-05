@@ -2,21 +2,11 @@
 // 헤더의 로고 링크와 주요 라우터 탭을 렌더링합니다.
 
 import Logo from "@/components/common/logo";
+import { HEADER_MAIN_TABS } from "@/constants/common/header-main-nav";
 import { useMainRoute } from "@/hooks/common/use-main-route";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-
-const HEADER_MAIN_TABS = [
-  {
-    href: "/live",
-    label: "라이브",
-  },
-  {
-    href: "/chat",
-    label: "채팅",
-  },
-] as const;
 
 function resolveLogoHref(pathname: string, fallbackMainRoute: string) {
   if (pathname === "/") return "/";
@@ -50,13 +40,13 @@ export default function HeaderMainNav() {
               key={tab.href}
               href={tab.href}
               className={cn(
-                "route-tab-link relative inline-flex h-9 items-center rounded-md border px-2 text-sm font-bold transition-colors sm:px-5",
+                "route-tab-link relative inline-flex h-9 items-center rounded-md border border-transparent bg-transparent px-2 text-sm font-bold transition-colors hover:bg-transparent focus-visible:bg-transparent active:bg-transparent sm:px-5 dark:hover:bg-transparent",
                 active
                   ? cn(
-                      "text-foreground border-transparent after:absolute after:right-2 after:bottom-1 after:left-2 after:h-0.5 after:rounded-full",
+                      "text-foreground after:absolute after:right-2 after:bottom-1 after:left-2 after:h-0.5 after:rounded-full",
                       "after:bg-foreground",
                     )
-                  : "text-muted-foreground hover:text-foreground border-transparent",
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               {tab.label}

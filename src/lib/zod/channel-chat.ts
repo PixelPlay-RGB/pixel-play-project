@@ -51,6 +51,7 @@ export const channelChatSettingsSchema = z.object({
   chatRuleText: z.string().max(CHANNEL_CHAT_RULE_MAX_LENGTH, {
     error: FORM_MESSAGE.channelChat.chatRuleTextMax(CHANNEL_CHAT_RULE_MAX_LENGTH),
   }),
+  chatDonationMessageEnabled: z.boolean(),
 });
 
 export type ChannelChatSettingsInput = z.infer<typeof channelChatSettingsSchema>;

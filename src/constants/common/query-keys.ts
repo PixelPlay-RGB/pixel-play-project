@@ -29,10 +29,21 @@ export const QUERY_KEYS = {
       [...QUERY_KEYS.live.polls(broadcastId), userId ?? "public"].filter((v) => v !== undefined),
     // 라이브 목록
     listAll: () => [...QUERY_KEYS.live.all, "list"],
-    list: (userId?: string, filter?: string, sort?: string, visibleCount?: number) =>
-      [...QUERY_KEYS.live.listAll(), userId ?? "public", filter, sort, visibleCount].filter(
-        (v) => v !== undefined,
-      ),
+    list: (
+      userId?: string,
+      filter?: string,
+      sort?: string,
+      visibleCount?: number,
+      excludedLiveId?: string | null,
+    ) =>
+      [
+        ...QUERY_KEYS.live.listAll(),
+        userId ?? "public",
+        filter,
+        sort,
+        visibleCount,
+        excludedLiveId ?? undefined,
+      ].filter((v) => v !== undefined),
     sidebar: {
       trending: (userId?: string) => [
         ...QUERY_KEYS.live.all,
@@ -85,5 +96,13 @@ export const QUERY_KEYS = {
       [...QUERY_KEYS.chat.all, "messages", roomId].filter((v) => v !== undefined),
     search: (query?: string, section?: string) =>
       [...QUERY_KEYS.chat.all, "search", query, section].filter((v) => v !== undefined),
+  },
+  following: {
+    all: ["following"] as const,
+    pageAll: () => [...QUERY_KEYS.following.all, "page"],
+    page: (userId?: string, filter?: string, page?: number) =>
+      [...QUERY_KEYS.following.pageAll(), userId ?? "public", filter, page].filter(
+        (v) => v !== undefined,
+      ),
   },
 } as const;

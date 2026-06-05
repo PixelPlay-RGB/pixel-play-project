@@ -80,6 +80,14 @@ export const APP_MESSAGE = {
         title: "방송 설정 저장 완료",
         description: "방송 운영 설정이 저장되었습니다.",
       },
+      donationSettingsSaved: {
+        title: "저장 완료",
+        description: "새 후원 설정을 다음 방송부터 적용합니다.",
+      },
+      donationTestSent: {
+        title: "테스트 후원 전송 완료",
+        description: "OBS 후원 알림 화면에서 확인해주세요.",
+      },
     },
     following: {
       followed: {
@@ -387,6 +395,22 @@ export const APP_MESSAGE = {
         title: "방송 종료 저장 실패",
         description: "방송 종료 정보를 저장하지 못했습니다.",
       },
+      donationSettingsLoadFailed: {
+        title: "후원 설정 조회 실패",
+        description: "다시 로그인하거나 잠시 후 새로고침해주세요.",
+      },
+      donationSettingsSaveFailed: {
+        title: "후원 설정 저장 실패",
+        description: "입력값을 확인한 뒤 다시 시도해주세요.",
+      },
+      donationTestFailed: {
+        title: "테스트 후원 전송 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      settlementLoadFailed: {
+        title: "정산 내역 조회 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
       securityLoadFailed: {
         title: "방송 연결 정보 조회 실패",
         description: "다시 로그인하거나 잠시 후 새로고침해주세요.",
@@ -407,6 +431,10 @@ export const APP_MESSAGE = {
       },
       unfollowFailed: {
         title: "팔로잉 해제 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      loadFailed: {
+        title: "팔로잉 목록 조회 실패",
         description: "잠시 후 다시 시도해주세요.",
       },
     },
