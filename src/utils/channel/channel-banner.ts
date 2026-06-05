@@ -1,8 +1,9 @@
 // 채널 배너 이미지 경로(storage path) → public URL 변환 유틸.
-// channel-media 버킷은 public이라 결정적 URL을 직접 구성합니다(클라이언트/서버 공용).
+// user-media 버킷은 public이라 결정적 URL을 직접 구성합니다(클라이언트/서버 공용).
+
+import { USER_MEDIA_BUCKET } from "@/constants/common/storage";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-export const BANNER_BUCKET = "channel-media";
 
 // 허용 이미지 MIME → storage 객체 확장자.
 const BANNER_MIME_EXTENSION: Record<string, string> = {
@@ -43,5 +44,5 @@ export function getChannelBannerSrc(imagePath: string): string {
     .split("/")
     .map((segment) => encodeURIComponent(segment))
     .join("/");
-  return `${SUPABASE_URL}/storage/v1/object/public/${BANNER_BUCKET}/${encodedPath}`;
+  return `${SUPABASE_URL}/storage/v1/object/public/${USER_MEDIA_BUCKET}/${encodedPath}`;
 }

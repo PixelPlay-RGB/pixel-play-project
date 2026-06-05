@@ -1,4 +1,5 @@
--- 채널 관리(#92): 배너 테이블 + channel-media 스토리지 버킷/정책 + 배너 CRUD RPC.
+-- 채널 관리(#92): 배너 테이블 + 배너 CRUD RPC.
+-- 배너 이미지 스토리지는 통합 user-media 버킷을 사용한다(20260605_create_user_media_bucket).
 
 create table if not exists public.channel_banner (
   id uuid primary key default gen_random_uuid(),
@@ -16,31 +17,6 @@ create index if not exists channel_banner_creator_sort_idx on public.channel_ban
 alter table public.channel_banner enable row level security;
 drop policy if exists "channel_banner_select_all" on public.channel_banner;
 create policy "channel_banner_select_all" on public.channel_banner for select using (true);
-
--- 스토리지 버킷 (public) — profiles 버킷 패턴 복제. 경로: banners/{creatorId}/{uuid}.{ext}
-insert into storage.buckets (id, name, public)
-values ('channel-media', 'channel-media', true)
-on conflict (id) do update set name = excluded.name, public = excluded.public;
-
-drop policy if exists "채널 미디어 조회 정책" on storage.objects;
-create policy "채널 미디어 조회 정책" on storage.objects for select to public
-  using (bucket_id = 'channel-media' and (storage.foldername(name))[1] = 'banners');
-
-drop policy if exists "채널 미디어 업로드 정책" on storage.objects;
-create policy "채널 미디어 업로드 정책" on storage.objects for insert to authenticated
-  with check (
-    bucket_id = 'channel-media'
-    and (storage.foldername(name))[1] = 'banners'
-    and (storage.foldername(name))[2] = auth.uid()::text
-  );
-
-drop policy if exists "채널 미디어 수정 정책" on storage.objects;
-create policy "채널 미디어 수정 정책" on storage.objects for update to authenticated
-  using (bucket_id = 'channel-media' and (storage.foldername(name))[2] = auth.uid()::text);
-
-drop policy if exists "채널 미디어 삭제 정책" on storage.objects;
-create policy "채널 미디어 삭제 정책" on storage.objects for delete to authenticated
-  using (bucket_id = 'channel-media' and (storage.foldername(name))[2] = auth.uid()::text);
 
 -- 배너 목록 jsonb (image_path 반환; public URL은 서버에서 변환). insert/delete/reorder 반환에도 재사용.
 create or replace function public.get_channel_banners(p_creator_id uuid)

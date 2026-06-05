@@ -3,6 +3,7 @@
 
 import { getAuthenticatedActorId } from "@/actions/common/authenticated-actor";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
+import { USER_MEDIA_BUCKET } from "@/constants/common/storage";
 import { createAdminClient } from "@/lib/supabase/admin-client";
 import { createClient } from "@/lib/supabase/server";
 import { channelBannerInputSchema } from "@/lib/zod/channel-profile";
@@ -10,7 +11,7 @@ import type { ChannelBanner } from "@/types/channel/channel";
 import type { AppActionResult } from "@/types/common/action";
 import type { Json } from "@/types/database.types";
 import { isAuthSessionMissingError } from "@/utils/auth/auth-error";
-import { BANNER_BUCKET, buildBannerObjectName } from "@/utils/channel/channel-banner";
+import { buildBannerObjectName } from "@/utils/channel/channel-banner";
 import { parseChannelBanners } from "@/utils/channel/channel-parser";
 
 const MAX_BANNER_SIZE = 1 * 1024 * 1024; // 1MB
@@ -32,7 +33,7 @@ export async function addChannelBannerAction(
     return { success: false, code: APP_MESSAGE_CODE.error.channel.bannerImageTooLarge };
   }
 
-  // 1) user-context client로 storage 업로드 (RLS: banners/{auth.uid}/...)
+  // 1) user-context client로 storage 업로드 (RLS: user-media/{auth.uid}/banner/...)
   const userClient = await createClient();
   const {
     data: { user },
@@ -46,9 +47,9 @@ export async function addChannelBannerAction(
     return { success: false, code: APP_MESSAGE_CODE.error.auth.authInfoNotFound };
   }
 
-  const imagePath = `banners/${user.id}/${buildBannerObjectName(parsed.data.title, file.type)}`;
+  const imagePath = `${user.id}/banner/${buildBannerObjectName(parsed.data.title, file.type)}`;
   const { error: uploadError } = await userClient.storage
-    .from(BANNER_BUCKET)
+    .from(USER_MEDIA_BUCKET)
     .upload(imagePath, file, { contentType: file.type, upsert: false });
 
   if (uploadError) {
@@ -66,7 +67,7 @@ export async function addChannelBannerAction(
   });
 
   if (error) {
-    await userClient.storage.from(BANNER_BUCKET).remove([imagePath]);
+    await userClient.storage.from(USER_MEDIA_BUCKET).remove([imagePath]);
     const code =
       (error as { code?: string }).code === "PX409"
         ? APP_MESSAGE_CODE.error.channel.bannerLimitReached
@@ -108,7 +109,7 @@ export async function deleteChannelBannerAction(
   // storage 객체 정리(best-effort).
   if (payload.imagePath) {
     const userClient = await createClient();
-    await userClient.storage.from(BANNER_BUCKET).remove([payload.imagePath]);
+    await userClient.storage.from(USER_MEDIA_BUCKET).remove([payload.imagePath]);
   }
 
   return {
