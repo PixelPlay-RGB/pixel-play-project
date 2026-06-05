@@ -30,7 +30,7 @@ export default function DonationAlertPreview({ amountVisible }: Props) {
             transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
             aria-hidden
           />
-          <PixelPlayPlayIcon className="text-live relative z-10 size-16 drop-shadow-[0_0_16px_rgba(255,96,87,0.6)] sm:size-24" />
+          <PixelPlayPlayIcon className="text-live relative z-10 size-16 drop-shadow-[0_0_16px_color-mix(in_oklab,var(--live)_60%,transparent)] sm:size-24" />
         </div>
 
         <div className="flex min-w-0 flex-col gap-2 text-left">
