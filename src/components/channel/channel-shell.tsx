@@ -33,7 +33,9 @@ export default function ChannelShell({ children }: Props) {
             <span className="text-foreground text-sm font-semibold">채널 관리</span>
           </div>
         )}
-        <div className="h-full min-w-0 overflow-auto p-6 md:p-10">{children}</div>
+        <div className="h-full min-w-0 [scrollbar-gutter:stable] overflow-auto p-6 md:p-10">
+          {children}
+        </div>
       </SidebarInset>
     </SidebarProvider>
   );

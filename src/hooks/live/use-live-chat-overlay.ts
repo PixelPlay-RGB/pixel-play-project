@@ -12,6 +12,8 @@ export function useLiveChatOverlay(initialSnapshot: LiveChatOverlaySnapshot) {
   const chatStackRef = useRef<HTMLDivElement>(null);
   const [visibleItems, setVisibleItems] = useState<LiveChatOverlayItem[]>(initialSnapshot.items);
   const broadcast = initialSnapshot.broadcast;
+  const donationMessageEnabled = initialSnapshot.donationMessageEnabled;
+  const donationAmountVisible = initialSnapshot.donationAmountVisible;
 
   const fitItemsToHeight = useCallback(() => {
     const chatStack = chatStackRef.current;
@@ -83,12 +85,10 @@ export function useLiveChatOverlay(initialSnapshot: LiveChatOverlaySnapshot) {
         (payload) => {
           const message = payload.new as LiveMessageRow;
 
-          if (message.message_type !== "chat") {
-            return;
-          }
-
           const item = mapLiveMessageToChatOverlayItem(message, {
             creatorId: broadcast.creatorId,
+            donationMessageEnabled,
+            amountVisible: donationAmountVisible,
           });
 
           if (!item) {
@@ -109,7 +109,7 @@ export function useLiveChatOverlay(initialSnapshot: LiveChatOverlaySnapshot) {
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [broadcast]);
+  }, [broadcast, donationMessageEnabled, donationAmountVisible]);
 
   return {
     chatStackRef,

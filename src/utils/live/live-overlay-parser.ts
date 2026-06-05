@@ -1,4 +1,5 @@
 // OBS 오버레이 RPC 응답을 화면 타입으로 변환합니다.
+import { DONATION_ALERT_SOUND_DEFAULT } from "@/constants/channel/donation";
 import {
   LIVE_DONATION_ALERT_DEFAULT_VISIBLE_MS,
   LIVE_OVERLAY_DEFAULT_CREATOR_NAME,
@@ -11,6 +12,7 @@ import type {
   LiveChatOverlaySnapshot,
 } from "@/types/live/live-chat-overlay";
 import type {
+  LiveDonationAlertAudioSettings,
   LiveDonationAlertOverlayData,
   LiveDonationAlertOverlaySnapshot,
 } from "@/types/live/live-donation-alert-overlay";
@@ -34,6 +36,8 @@ export function parseLiveChatOverlaySnapshot(value: Json): LiveChatOverlaySnapsh
 
   return {
     broadcast,
+    donationMessageEnabled: object.donationMessageEnabled === true,
+    donationAmountVisible: object.donationAmountVisible !== false,
     items,
   };
 }
@@ -68,11 +72,23 @@ export function parseLiveDonationAlertOverlaySnapshot(
     return null;
   }
 
+  const audio: LiveDonationAlertAudioSettings = {
+    alertSoundEnabled: object.alertSoundEnabled !== false,
+    alertSoundKey: readString(object.alertSoundKey) ?? DONATION_ALERT_SOUND_DEFAULT,
+    alertVolume: readNumber(object.alertVolume) ?? 32,
+    ttsEnabled: object.ttsEnabled !== false,
+    ttsRate: readNumber(object.ttsRate) ?? 1,
+    ttsVolume: readNumber(object.ttsVolume) ?? 80,
+    ttsVoiceUri: readString(object.ttsVoiceUri) ?? "",
+    amountVisible: object.amountVisible !== false,
+  };
+
   return {
     creatorId,
     broadcastId,
     creatorName,
     alertVisibleMs,
+    audio,
     donation,
   };
 }
@@ -129,20 +145,24 @@ function parseLiveChatOverlayMessage(value: Json | undefined): LiveChatOverlayMe
 
   const id = readString(object.id);
   const author = readString(object.author);
-  const content = readString(object.content);
+  const content = readText(object.content);
   const createdAt = readString(object.createdAt);
+  const kind = object.kind === "donation" ? "donation" : "chat";
+  const amount = readNumber(object.amount);
   const role = object.role === "creator" ? "creator" : undefined;
   const tone = readMessageTone(object.tone);
 
-  if (!id || !author || !content || !createdAt) {
+  if (!id || !author || content === null || !createdAt) {
     return null;
   }
 
   return {
     id,
+    kind,
     author,
     content,
     createdAt,
+    amount,
     role,
     tone,
   };
@@ -160,11 +180,12 @@ function parseLiveDonationAlertOverlayData(
   const id = readString(object.id);
   const creatorName = readString(object.creatorName);
   const donorName = readString(object.donorName);
+  // 금액 숨김(amountVisible=false) 시 amount는 null로 내려오므로 필수 검증에서 제외합니다.
   const amount = readNumber(object.amount);
   const message = readText(object.message);
   const createdAt = readString(object.createdAt);
 
-  if (!id || !creatorName || !donorName || amount === null || message === null || !createdAt) {
+  if (!id || !creatorName || !donorName || message === null || !createdAt) {
     return null;
   }
 

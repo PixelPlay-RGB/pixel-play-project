@@ -103,7 +103,9 @@ export type Database = {
       creator_studio_setting: {
         Row: {
           alert_sound_enabled: boolean
+          alert_sound_key: string
           alert_volume: number
+          chat_donation_message_enabled: boolean
           chat_overlay_version: number
           chat_rule_text: string
           chat_rule_version: number
@@ -113,7 +115,6 @@ export type Database = {
           default_tags: string[]
           default_title: string
           donation_alert_duration_seconds: number
-          donation_alert_enabled: boolean
           donation_alert_version: number
           donation_amount_visible: boolean
           donation_enabled: boolean
@@ -128,10 +129,14 @@ export type Database = {
           stream_key_version: number
           tts_enabled: boolean
           tts_rate: number
+          tts_voice_uri: string
+          tts_volume: number
         }
         Insert: {
           alert_sound_enabled?: boolean
+          alert_sound_key?: string
           alert_volume?: number
+          chat_donation_message_enabled?: boolean
           chat_overlay_version?: number
           chat_rule_text?: string
           chat_rule_version?: number
@@ -141,7 +146,6 @@ export type Database = {
           default_tags?: string[]
           default_title?: string
           donation_alert_duration_seconds?: number
-          donation_alert_enabled?: boolean
           donation_alert_version?: number
           donation_amount_visible?: boolean
           donation_enabled?: boolean
@@ -156,10 +160,14 @@ export type Database = {
           stream_key_version?: number
           tts_enabled?: boolean
           tts_rate?: number
+          tts_voice_uri?: string
+          tts_volume?: number
         }
         Update: {
           alert_sound_enabled?: boolean
+          alert_sound_key?: string
           alert_volume?: number
+          chat_donation_message_enabled?: boolean
           chat_overlay_version?: number
           chat_rule_text?: string
           chat_rule_version?: number
@@ -169,7 +177,6 @@ export type Database = {
           default_tags?: string[]
           default_title?: string
           donation_alert_duration_seconds?: number
-          donation_alert_enabled?: boolean
           donation_alert_version?: number
           donation_amount_visible?: boolean
           donation_enabled?: boolean
@@ -184,6 +191,8 @@ export type Database = {
           stream_key_version?: number
           tts_enabled?: boolean
           tts_rate?: number
+          tts_voice_uri?: string
+          tts_volume?: number
         }
         Relationships: [
           {
@@ -751,6 +760,21 @@ export type Database = {
         }
         Returns: Json
       }
+      get_creator_settlement_donations: {
+        Args: {
+          p_actor_user_id: string
+          p_limit?: number
+          p_offset?: number
+          p_sort?: string
+          p_status?: string
+          p_year: number
+        }
+        Returns: Json
+      }
+      get_creator_settlement_yearly_summary: {
+        Args: { p_actor_user_id: string }
+        Returns: Json
+      }
       get_creator_studio_snapshot: {
         Args: { p_actor_user_id: string }
         Returns: Json
@@ -919,13 +943,14 @@ export type Database = {
         Args: {
           p_actor_user_id: string
           p_alert_sound_enabled?: boolean
+          p_alert_sound_key?: string
           p_alert_volume?: number
+          p_chat_donation_message_enabled?: boolean
           p_chat_rule_text?: string
           p_chat_scope?: Database["public"]["Enums"]["live_chat_scope"]
           p_default_tags?: string[]
           p_default_title?: string
           p_donation_alert_duration_seconds?: number
-          p_donation_alert_enabled?: boolean
           p_donation_amount_visible?: boolean
           p_donation_enabled?: boolean
           p_donation_min_amount?: number
@@ -937,10 +962,20 @@ export type Database = {
           p_slow_mode_seconds?: number
           p_tts_enabled?: boolean
           p_tts_rate?: number
+          p_tts_voice_uri?: string
+          p_tts_volume?: number
         }
         Returns: Json
       }
       vote_live_poll: {
+        Args: {
+          p_actor_user_id: string
+          p_option_id: string
+          p_poll_id: string
+        }
+        Returns: undefined
+      }
+      vote_live_poll_2: {
         Args: {
           p_actor_user_id: string
           p_option_id: string

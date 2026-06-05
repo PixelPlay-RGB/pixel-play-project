@@ -11,15 +11,18 @@ export const metadata = {
 
 export default async function LiveDonationAlertOverlayPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ creatorId: string; overlayKey: string }>;
+  searchParams: Promise<{ preview?: string }>;
 }) {
   const { creatorId, overlayKey } = await params;
+  const { preview } = await searchParams;
   const snapshot = await getLiveDonationAlertOverlaySnapshot({ creatorId, overlayKey });
 
   if (!snapshot) {
     notFound();
   }
 
-  return <LiveDonationAlertOverlay initialSnapshot={snapshot} />;
+  return <LiveDonationAlertOverlay initialSnapshot={snapshot} isPreview={preview === "1"} />;
 }

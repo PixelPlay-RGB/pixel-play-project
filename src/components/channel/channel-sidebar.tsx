@@ -18,6 +18,7 @@ import { Spinner } from "@/components/ui/spinner";
 import UserAccountMenuItemRenderer from "@/components/common/user-account-menu-item";
 import { SidebarCredits } from "@/components/common/sidebar-credits";
 import { CHANNEL_MENU_ITEMS } from "@/constants/channel/channel-menu";
+import type { ChannelMenuItem } from "@/types/channel/channel-menu";
 import { USER_ACCOUNT_PROFILE_MENU_ITEM } from "@/constants/common/user-account-menu";
 import { useLogout } from "@/hooks/auth/use-logout";
 import { LogOut } from "lucide-react";
@@ -35,6 +36,13 @@ export default function ChannelSidebar({ isMobile }: Props) {
     return pathname === href || (href !== "/channel" && pathname.startsWith(`${href}/`));
   };
 
+  const isItemActive = (item: ChannelMenuItem) => {
+    if (item.children && item.children.length > 0) {
+      return item.children.some((child) => isActive(child.href));
+    }
+    return item.href ? isActive(item.href) : false;
+  };
+
   const handleLogout = async () => {
     await logoutMutation.mutateAsync().catch(() => undefined);
   };
@@ -50,7 +58,12 @@ export default function ChannelSidebar({ isMobile }: Props) {
           <SidebarGroupContent>
             <SidebarMenu className="gap-1.5">
               {CHANNEL_MENU_ITEMS.map((item) => (
-                <ChannelSidebarMenuItem key={item.id} item={item} isActive={isActive(item.href)} />
+                <ChannelSidebarMenuItem
+                  key={item.id}
+                  item={item}
+                  isActive={isItemActive(item)}
+                  isChildActive={isActive}
+                />
               ))}
             </SidebarMenu>
           </SidebarGroupContent>
