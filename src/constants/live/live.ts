@@ -32,7 +32,6 @@ export const LIVE_LABEL = {
   playerTheater: "극장 모드",
   playerTheaterExit: "기본 모드",
   playerQualityAuto: "자동",
-  playerUnmuteHint: "소리 켜기",
   viewers: "명 시청 중",
   followers: "팔로워",
   broadcasts: "방송",
@@ -95,6 +94,8 @@ export const LIVE_DONATION_LABEL = {
 export const LIVE_VOTE_LABEL = {
   title: "투표 참여",
   description: "진행 중인 투표 항목을 선택하고 참여할 수 있습니다.",
+  resultTitle: "투표 결과",
+  resultDescription: "종료된 투표의 최종 결과입니다.",
   loading: "투표를 불러오는 중입니다.",
   error: "투표를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.",
   empty: "현재 진행 중인 투표가 없습니다.",
@@ -103,6 +104,13 @@ export const LIVE_VOTE_LABEL = {
   changeVote: "투표 변경",
   changeHint: "다른 항목을 선택하면 투표가 변경됩니다.",
   submitting: "처리 중...",
+  ended: "종료",
+  winner: "1위",
+  yourChoice: "내 선택",
+  votesUnit: "표",
+  totalPrefix: "총",
+  participantsUnit: "명 참여",
+  liveParticipantsSuffix: "명 참여 중",
 } as const;
 
 export const LIVE_CHAT_MENU_LABEL = {

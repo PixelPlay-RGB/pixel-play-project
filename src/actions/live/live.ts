@@ -184,6 +184,76 @@ export async function sendLiveDonationAction(params: {
   return { success: true };
 }
 
+// 시청자 식별 키 — 로그인 시청자는 신뢰 가능한 user id('u:'), 익명 시청자는
+// 클라이언트가 생성한 세션 토큰('a:')을 쓴다. 로그인 여부는 서버에서 판단하므로
+// 클라이언트가 보낸 익명 키는 비로그인일 때만 채택한다(스푸핑 방어).
+const ANON_VIEWER_KEY_MAX_LENGTH = 64;
+
+async function resolveLiveViewerKey(anonViewerKey: string | undefined): Promise<string | null> {
+  const actor = await getAuthenticatedActorId({
+    logLabel: "라이브 시청자 집계 중 인증 사용자 조회 실패",
+  });
+
+  if (actor.success) return `u:${actor.userId}`;
+
+  const trimmed = anonViewerKey?.trim() ?? "";
+
+  if (!trimmed || trimmed.length > ANON_VIEWER_KEY_MAX_LENGTH) return null;
+
+  return `a:${trimmed}`;
+}
+
+// 시청 화면 하트비트 — current_viewer_count 집계용(로그인·익명 모두 집계).
+// 실패는 화면에 영향을 주지 않는 부수효과라 조용히 로깅만 한다.
+export async function syncLiveViewerPresenceAction(
+  broadcastId: string,
+  anonViewerKey?: string,
+): Promise<void> {
+  if (!broadcastId || !isUuid(broadcastId)) return;
+
+  const viewerKey = await resolveLiveViewerKey(anonViewerKey);
+
+  if (!viewerKey) return;
+
+  const client = await createWriteClientForAction("라이브 시청자 집계 Admin Client 생성 실패");
+
+  if (!client.success) return;
+
+  const { error } = await client.supabase.rpc("sync_live_viewer_presence", {
+    p_broadcast_id: broadcastId,
+    p_viewer_key: viewerKey,
+  });
+
+  if (error) {
+    console.error("라이브 시청자 집계 RPC 실패", error);
+  }
+}
+
+// 시청 화면 이탈 시 본인 하트비트를 제거해 시청자 수를 즉시 줄인다.
+export async function leaveLiveViewerPresenceAction(
+  broadcastId: string,
+  anonViewerKey?: string,
+): Promise<void> {
+  if (!broadcastId || !isUuid(broadcastId)) return;
+
+  const viewerKey = await resolveLiveViewerKey(anonViewerKey);
+
+  if (!viewerKey) return;
+
+  const client = await createWriteClientForAction("라이브 시청자 이탈 Admin Client 생성 실패");
+
+  if (!client.success) return;
+
+  const { error } = await client.supabase.rpc("leave_live_viewer_presence", {
+    p_broadcast_id: broadcastId,
+    p_viewer_key: viewerKey,
+  });
+
+  if (error) {
+    console.error("라이브 시청자 이탈 RPC 실패", error);
+  }
+}
+
 export async function acceptLiveChatRuleAction(
   creatorId: string,
 ): Promise<AppActionResult<{ acceptedVersion: number }>> {

@@ -28,10 +28,6 @@ export function LiveCreatorInfo({ broadcast }: Props) {
           <span>
             {formatCount(creator.followerCount)} {LIVE_LABEL.followers}
           </span>
-          <span>·</span>
-          <span>
-            {creator.broadcastCount.toLocaleString()} {LIVE_LABEL.broadcasts}
-          </span>
         </div>
       </div>
     </div>
