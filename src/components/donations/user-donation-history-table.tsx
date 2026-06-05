@@ -3,6 +3,15 @@
 
 import { SettingsCard } from "@/components/common/settings-card";
 import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import {
   Select,
   SelectContent,
   SelectGroup,
@@ -20,9 +29,10 @@ import type {
   UserSentDonationItem,
   UserWalletChargeHistoryItem,
 } from "@/types/donations/user-donations";
+import { getPageItems } from "@/utils/common/pagination";
 import { CreditCard, Gift, Inbox } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState, type MouseEvent } from "react";
 
 interface Props {
   snapshot: UserDonationSnapshot;
@@ -55,12 +65,13 @@ const DONATION_HISTORY_TABS: Array<{ value: DonationHistoryTab; label: string }>
   { value: "charge", label: "충전" },
   { value: "donation", label: "후원" },
 ];
+const HISTORY_ITEMS_PER_PAGE = 5;
 
 export function UserDonationHistoryTable({ snapshot, activeTab, onActiveTabChange }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const historyTitle = `${snapshot.historyPeriod.year}년 ${snapshot.historyPeriod.month}월 내역`;
+  const [currentPage, setCurrentPage] = useState(1);
   const historyItems = useMemo(() => buildHistoryItems(snapshot), [snapshot]);
   const succeededChargeHistories = useMemo(() => getSucceededChargeHistories(snapshot), [snapshot]);
   const yearOptions = useMemo(
@@ -73,6 +84,16 @@ export function UserDonationHistoryTable({ snapshot, activeTab, onActiveTabChang
       activeTab === "all" ? historyItems : historyItems.filter((item) => item.kind === activeTab),
     [activeTab, historyItems],
   );
+  const totalPages = Math.ceil(filteredItems.length / HISTORY_ITEMS_PER_PAGE);
+  const safeCurrentPage = Math.min(currentPage, Math.max(totalPages, 1));
+  const paginatedItems = useMemo(
+    () =>
+      filteredItems.slice(
+        (safeCurrentPage - 1) * HISTORY_ITEMS_PER_PAGE,
+        safeCurrentPage * HISTORY_ITEMS_PER_PAGE,
+      ),
+    [filteredItems, safeCurrentPage],
+  );
   const tabCounts = useMemo(
     () => ({
       all: historyItems.length,
@@ -81,6 +102,15 @@ export function UserDonationHistoryTable({ snapshot, activeTab, onActiveTabChang
     }),
     [historyItems.length, succeededChargeHistories.length, snapshot.sentDonations.length],
   );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, snapshot.historyPeriod.year, snapshot.historyPeriod.month]);
+
+  useEffect(() => {
+    setCurrentPage((page) => Math.min(page, Math.max(totalPages, 1)));
+  }, [totalPages]);
+
   const handlePeriodChange = (nextPeriod: { year?: number; month?: number }) => {
     const params = new URLSearchParams(searchParams.toString());
 
@@ -137,7 +167,7 @@ export function UserDonationHistoryTable({ snapshot, activeTab, onActiveTabChang
         </TabsList>
       </Tabs>
 
-      <SettingsCard title={historyTitle} contentClassName="gap-4">
+      <SettingsCard contentClassName="gap-4">
         <HistoryPeriodSelect
           year={snapshot.historyPeriod.year}
           month={snapshot.historyPeriod.month}
@@ -146,16 +176,133 @@ export function UserDonationHistoryTable({ snapshot, activeTab, onActiveTabChang
           onChange={handlePeriodChange}
         />
         {filteredItems.length > 0 ? (
-          <ul className="divide-border divide-y">
-            {filteredItems.map((item) => (
-              <HistoryListItem key={`${item.kind}-${item.id}`} item={item} />
-            ))}
-          </ul>
+          <>
+            <ul className="divide-border divide-y">
+              {paginatedItems.map((item) => (
+                <HistoryListItem key={`${item.kind}-${item.id}`} item={item} />
+              ))}
+            </ul>
+            <HistoryPagination
+              currentPage={safeCurrentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          </>
         ) : (
           <EmptyList activeTab={activeTab} />
         )}
       </SettingsCard>
     </section>
+  );
+}
+
+function HistoryPagination({
+  currentPage,
+  totalPages,
+  onPageChange,
+}: {
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}) {
+  if (totalPages <= 1) {
+    return null;
+  }
+
+  const pageItems = getPageItems(currentPage, totalPages);
+  const handlePageClick = (event: MouseEvent, nextPage: number) => {
+    event.preventDefault();
+
+    if (nextPage < 1 || nextPage > totalPages || nextPage === currentPage) {
+      return;
+    }
+
+    onPageChange(nextPage);
+  };
+
+  const handlePreviousClick = (event: MouseEvent) => {
+    event.preventDefault();
+
+    if (currentPage <= 1) {
+      return;
+    }
+
+    onPageChange(currentPage - 1);
+  };
+
+  const handleNextClick = (event: MouseEvent) => {
+    event.preventDefault();
+
+    if (currentPage >= totalPages) {
+      return;
+    }
+
+    onPageChange(currentPage + 1);
+  };
+
+  return (
+    <Pagination className="pt-1">
+      <PaginationContent className="gap-1">
+        <PaginationItem>
+          <PaginationPrevious
+            href="#"
+            onClick={handlePreviousClick}
+            aria-disabled={currentPage <= 1}
+            tabIndex={currentPage <= 1 ? -1 : undefined}
+            className={cn(
+              "border-border/60 bg-background text-muted-foreground rounded-lg border font-semibold",
+              "hover:border-brand/40 hover:bg-brand/10 hover:text-brand",
+              currentPage <= 1 && "pointer-events-none opacity-50",
+            )}
+          />
+        </PaginationItem>
+
+        {pageItems.map((item) =>
+          typeof item === "number" ? (
+            <PaginationItem key={item}>
+              <PaginationLink
+                href="#"
+                isActive={item === currentPage}
+                onClick={(event) => handlePageClick(event, item)}
+                className={cn(
+                  "rounded-lg font-semibold",
+                  item === currentPage && [
+                    "bg-brand text-white shadow-sm",
+                    "hover:bg-brand/90 hover:text-white",
+                    "dark:hover:bg-brand/90",
+                  ],
+                  item !== currentPage && [
+                    "text-muted-foreground",
+                    "hover:bg-brand/10 hover:text-brand",
+                    "dark:hover:bg-brand/15",
+                  ],
+                )}
+              >
+                {item}
+              </PaginationLink>
+            </PaginationItem>
+          ) : (
+            <PaginationItem key={item}>
+              <PaginationEllipsis className="text-muted-foreground/70" />
+            </PaginationItem>
+          ),
+        )}
+
+        <PaginationItem>
+          <PaginationNext
+            href="#"
+            onClick={handleNextClick}
+            aria-disabled={currentPage >= totalPages}
+            tabIndex={currentPage >= totalPages ? -1 : undefined}
+            className={cn(
+              "border-border/60 bg-background text-muted-foreground rounded-lg border font-semibold",
+              "hover:border-brand/40 hover:bg-brand/10 hover:text-brand",
+              currentPage >= totalPages && "pointer-events-none opacity-50",
+            )}
+          />
+        </PaginationItem>
+      </PaginationContent>
+    </Pagination>
   );
 }
 

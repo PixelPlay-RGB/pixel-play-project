@@ -59,7 +59,7 @@ export function UserDonationDailyChart({ snapshot, activeTab }: Props) {
   const donationTotal = chartData.reduce((total, item) => total + item.donationAmount, 0);
   const chargeCount = chartData.reduce((total, item) => total + item.chargeCount, 0);
   const donationCount = chartData.reduce((total, item) => total + item.donationCount, 0);
-  const chartWidth = Math.max(chartData.length * 56, 360);
+  const chartWidth = Math.max(chartData.length * getChartDayWidth(activeTab), 360);
   const periodLabel = `${snapshot.historyPeriod.year}년 ${snapshot.historyPeriod.month}월`;
 
   const handleWheel = (event: WheelEvent<HTMLDivElement>) => {
@@ -172,6 +172,10 @@ export function UserDonationDailyChart({ snapshot, activeTab }: Props) {
       </div>
     </div>
   );
+}
+
+function getChartDayWidth(activeTab: DonationHistoryTab) {
+  return activeTab === "all" ? 72 : 56;
 }
 
 function buildDonationDailyChartData(snapshot: UserDonationSnapshot): DonationDailyChartItem[] {
