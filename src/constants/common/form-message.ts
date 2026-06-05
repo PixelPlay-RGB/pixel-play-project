@@ -43,6 +43,12 @@ export const FORM_MESSAGE = {
     forbiddenWordRequired: "금칙어를 입력해주세요.",
     forbiddenWordMax: (max: number) => `금칙어는 ${max}자 이하여야 합니다.`,
   },
+  community: {
+    postRequired: "내용을 입력해주세요.",
+    postMax: (max: number) => `게시글은 ${max}자 이하여야 합니다.`,
+    commentRequired: "댓글 내용을 입력해주세요.",
+    commentMax: (max: number) => `댓글은 ${max}자 이하여야 합니다.`,
+  },
   channelDonation: {
     minAmountRange: (min: number, max: number) =>
       `최소 후원 금액은 ${min.toLocaleString()}P 이상 ${max.toLocaleString()}P 이하여야 합니다.`,

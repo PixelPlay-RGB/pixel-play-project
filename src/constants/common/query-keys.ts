@@ -1,4 +1,5 @@
 // query-keys 상수를 정의합니다.
+import type { CommunityCommentSort } from "@/types/community/community";
 /**
  * Centralized Query Key Factory
  *
@@ -104,5 +105,19 @@ export const QUERY_KEYS = {
       [...QUERY_KEYS.following.pageAll(), userId ?? "public", filter, page].filter(
         (v) => v !== undefined,
       ),
+  },
+  community: {
+    all: ["community"] as const,
+    postsAll: () => [...QUERY_KEYS.community.all, "posts"],
+    posts: (creatorId?: string, page?: number) =>
+      [...QUERY_KEYS.community.postsAll(), creatorId, page].filter((v) => v !== undefined),
+    post: (postId?: string) =>
+      [...QUERY_KEYS.community.all, "post", postId].filter((v) => v !== undefined),
+    commentsAll: () => [...QUERY_KEYS.community.all, "comments"],
+    comments: (postId?: string, sort?: CommunityCommentSort, page?: number) =>
+      [...QUERY_KEYS.community.commentsAll(), postId, sort, page].filter((v) => v !== undefined),
+    commentRepliesAll: () => [...QUERY_KEYS.community.all, "commentReplies"],
+    commentReplies: (commentId?: string) =>
+      [...QUERY_KEYS.community.commentRepliesAll(), commentId].filter((v) => v !== undefined),
   },
 } as const;

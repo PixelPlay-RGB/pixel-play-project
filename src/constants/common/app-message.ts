@@ -99,6 +99,27 @@ export const APP_MESSAGE = {
         description: "팔로잉 목록에서 제외했어요.",
       },
     },
+    community: {
+      postCreated: {
+        title: "게시글 등록 완료",
+        description: "새 글이 채널 커뮤니티에 게시되었어요.",
+      },
+      postDeleted: {
+        title: "게시글 삭제 완료",
+      },
+      commentCreated: {
+        title: "댓글 등록 완료",
+      },
+      commentDeleted: {
+        title: "댓글 삭제 완료",
+      },
+      postUpdated: {
+        title: "게시글 수정 완료",
+      },
+      commentUpdated: {
+        title: "댓글 수정 완료",
+      },
+    },
     live: {
       urlCopied: {
         title: "URL 복사 완료",
@@ -456,6 +477,40 @@ export const APP_MESSAGE = {
         description: "유효하지 않은 투표 번호입니다.",
       },
     },
+    community: {
+      postCreateFailed: {
+        title: "게시글 등록 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      postDeleteFailed: {
+        title: "게시글 삭제 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      commentCreateFailed: {
+        title: "댓글 등록 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      commentDeleteFailed: {
+        title: "댓글 삭제 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      likeFailed: {
+        title: "좋아요 처리 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      loadFailed: {
+        title: "커뮤니티 조회 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      postUpdateFailed: {
+        title: "게시글 수정 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      commentUpdateFailed: {
+        title: "댓글 수정 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+    },
     supabase: {
       permissionDenied: {
         title: "권한 없음",
@@ -467,7 +522,16 @@ export const APP_MESSAGE = {
       },
     },
   },
+  info: {
+    common: {
+      featureNotReady: {
+        title: "기능 준비 중",
+        description: "조금만 기다려주세요. 곧 제공될 예정이에요.",
+      },
+    },
+  },
 } as const satisfies {
   success: Record<string, Record<string, AppMessage>>;
   error: Record<string, Record<string, AppMessage>>;
+  info: Record<string, Record<string, AppMessage>>;
 };

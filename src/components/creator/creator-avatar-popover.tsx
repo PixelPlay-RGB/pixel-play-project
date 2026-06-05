@@ -4,7 +4,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Radio } from "lucide-react";
+import { ChevronRight, Tv } from "lucide-react";
 
 import CreatorFollowingButton from "@/components/following/creator-following-button";
 import CreatorUnfollowDialog from "@/components/creator/creator-unfollow-dialog";
@@ -91,8 +91,10 @@ export default function CreatorAvatarPopover({
         >
           <Avatar
             className={cn(
-              "transition-[box-shadow]",
+              "transition-[box-shadow,opacity]",
               "group-hover/avatar-trigger:ring-live/70 group-focus-visible/avatar-trigger:ring-live/70 group-hover/avatar-trigger:ring-2 group-focus-visible/avatar-trigger:ring-2",
+              // 라이브 링이 잘 안 보이는 사이드바에서도 hover 피드백을 주기 위해 투명도도 함께 변화.
+              "group-hover/avatar-trigger:opacity-60 group-focus-visible/avatar-trigger:opacity-60",
               showLiveRing && "ring-live/80 ring-2",
               avatarClassName,
             )}
@@ -110,50 +112,66 @@ export default function CreatorAvatarPopover({
         </PopoverTrigger>
 
         <PopoverContent className="w-72 gap-0 overflow-hidden p-0" align="start" sideOffset={10}>
-          <div className="flex min-w-0 items-center gap-3 px-4 pt-4 pb-3.5">
-            <Avatar className={cn("size-12 shrink-0", isLive && "ring-live/80 ring-2")} size="lg">
-              <AvatarImage src={avatarSrc} alt={`${creatorNickname} 프로필 이미지`} />
-              <AvatarFallback>{fallbackText}</AvatarFallback>
-            </Avatar>
-            <div className="min-w-0 flex-1">
-              <p className="text-foreground truncate text-sm font-black">{creatorNickname}</p>
-              {isLive ? (
+          {/* 라이브 중이면 프로필 카드 = 라이브 시청 링크(hover 강조 + chevron). 아니면 정적 정보 카드(채널 이동은 하단 버튼). */}
+          {isLive ? (
+            <Link
+              href={`/live/${creatorId}`}
+              aria-label={`${creatorNickname} 라이브 보기`}
+              className="group/profile hover:bg-muted/50 flex min-w-0 items-center gap-3 px-4 pt-4 pb-3.5 transition-colors"
+            >
+              <Avatar className="ring-live/80 size-12 shrink-0 ring-2" size="lg">
+                <AvatarImage src={avatarSrc} alt={`${creatorNickname} 프로필 이미지`} />
+                <AvatarFallback>{fallbackText}</AvatarFallback>
+              </Avatar>
+              <div className="min-w-0 flex-1">
+                <p className="text-foreground group-hover/profile:text-brand truncate text-sm font-black transition-colors">
+                  {creatorNickname}
+                </p>
                 <span className="text-live mt-1 inline-flex items-center gap-1.5 text-xs font-bold">
                   <span className="bg-live size-1.5 animate-pulse rounded-full" />
                   지금 라이브 중
                 </span>
-              ) : (
-                <p className="text-muted-foreground mt-1 truncate text-xs font-medium">
-                  {isOwnChannel ? "내 라이브 채널" : "팔로우 중인 채널"}
-                </p>
-              )}
+              </div>
+              <ChevronRight className="text-muted-foreground/70 group-hover/profile:text-brand size-4 shrink-0 transition-all group-hover/profile:translate-x-0.5" />
+            </Link>
+          ) : (
+            <div className="flex min-w-0 items-center gap-3 px-4 pt-4 pb-3.5">
+              <Avatar className="size-12 shrink-0" size="lg">
+                <AvatarImage src={avatarSrc} alt={`${creatorNickname} 프로필 이미지`} />
+                <AvatarFallback>{fallbackText}</AvatarFallback>
+              </Avatar>
+              <div className="min-w-0 flex-1">
+                <p className="text-foreground truncate text-sm font-black">{creatorNickname}</p>
+                {isOwnChannel && (
+                  <p className="text-muted-foreground mt-1 truncate text-xs font-medium">내 채널</p>
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
-          <div className="border-border/60 bg-muted/30 flex flex-col gap-2 border-t px-3 py-3">
-            {/* 채널 페이지 도입 전까지는 라이브 시청 페이지로 이동합니다. */}
+          {/* 채널 이동 + 팔로우를 한 줄에 반반으로. 채널 보기는 secondary, 팔로우는 primary 톤. */}
+          <div className="border-border/60 bg-muted/30 flex items-center gap-2 border-t px-3 py-3">
             <Link
-              href={`/live/${creatorId}`}
+              href={`/channel/${creatorId}`}
               className={cn(
-                buttonVariants({ size: "sm" }),
-                "h-8 w-full justify-center gap-1.5 rounded-full px-3 text-xs font-black",
-                isLive
-                  ? "bg-live hover:bg-live/85 shadow-live/25 text-white shadow-sm hover:shadow-md"
-                  : "border-border bg-background text-foreground hover:bg-muted border",
+                buttonVariants({ variant: "outline", size: "sm" }),
+                "h-8 flex-1 justify-center gap-1.5 rounded-full px-3 text-xs font-bold",
               )}
             >
-              <Radio className="size-3.5" />
-              {isLive ? "라이브 보기" : "채널 보기"}
+              <Tv className="size-3.5" />
+              채널 보기
             </Link>
 
-            <CreatorFollowingButton
-              creatorNickname={creatorNickname}
-              isFollowing={isFollowing}
-              isOwnChannel={isOwnChannel}
-              isPending={isPending}
-              onClick={handleFollowingClick}
-              className="w-full"
-            />
+            <div className="flex-1">
+              <CreatorFollowingButton
+                creatorNickname={creatorNickname}
+                isFollowing={isFollowing}
+                isOwnChannel={isOwnChannel}
+                isPending={isPending}
+                onClick={handleFollowingClick}
+                className="w-full"
+              />
+            </div>
           </div>
         </PopoverContent>
       </Popover>

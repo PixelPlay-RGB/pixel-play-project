@@ -40,6 +40,14 @@ export const APP_MESSAGE_CODE = {
       followed: "success.following.followed",
       unfollowed: "success.following.unfollowed",
     },
+    community: {
+      postCreated: "success.community.postCreated",
+      postDeleted: "success.community.postDeleted",
+      commentCreated: "success.community.commentCreated",
+      commentDeleted: "success.community.commentDeleted",
+      postUpdated: "success.community.postUpdated",
+      commentUpdated: "success.community.commentUpdated",
+    },
     live: {
       urlCopied: "success.live.urlCopied",
       voteUnchanged: "success.live.voteUnchanged",
@@ -152,9 +160,24 @@ export const APP_MESSAGE_CODE = {
       voteNoActivePoll: "error.live.voteNoActivePoll",
       voteInvalidOption: "error.live.voteInvalidOption",
     },
+    community: {
+      postCreateFailed: "error.community.postCreateFailed",
+      postDeleteFailed: "error.community.postDeleteFailed",
+      commentCreateFailed: "error.community.commentCreateFailed",
+      commentDeleteFailed: "error.community.commentDeleteFailed",
+      likeFailed: "error.community.likeFailed",
+      loadFailed: "error.community.loadFailed",
+      postUpdateFailed: "error.community.postUpdateFailed",
+      commentUpdateFailed: "error.community.commentUpdateFailed",
+    },
     supabase: {
       permissionDenied: "error.supabase.permissionDenied",
       dataNotFound: "error.supabase.dataNotFound",
+    },
+  },
+  info: {
+    common: {
+      featureNotReady: "info.common.featureNotReady",
     },
   },
 } as const satisfies AppMessageCodeSchema<typeof APP_MESSAGE>;
