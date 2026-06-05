@@ -10,6 +10,22 @@ const LOCAL_MEDIAMTX_API_BASE_URL = "http://127.0.0.1:9997";
 const REQUEST_TIMEOUT_MS = 3000;
 const DEFAULT_CONFIGURED_FPS = 30;
 
+// MediaMTX 미가동/타임아웃은 클라이언트가 3초마다 폴링하므로, 매 요청 스택 트레이스를 남기면 로그가 도배된다.
+// 연결 계열 오류는 스택 없이 최대 1분에 1회만 경고하고, 예상 밖 오류만 상세 로깅한다.
+const CONNECTIVITY_WARN_INTERVAL_MS = 60_000;
+let lastConnectivityWarnAt = 0;
+
+function isConnectivityError(error: unknown) {
+  if (!(error instanceof Error)) return false;
+  if (error.name === "AbortError") return true; // 타임아웃(REQUEST_TIMEOUT_MS)
+  if (error.message.includes("fetch failed")) return true;
+  const cause = (error as { cause?: { code?: unknown } }).cause;
+  const code = typeof cause?.code === "string" ? cause.code : null;
+  return (
+    code === "ECONNREFUSED" || code === "ENOTFOUND" || code === "ETIMEDOUT" || code === "ECONNRESET"
+  );
+}
+
 function readNumber(value: unknown) {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
@@ -139,7 +155,17 @@ export async function GET(request: NextRequest) {
       width,
     } satisfies ChannelLiveStreamStatusResponse);
   } catch (error) {
-    console.error("MediaMTX 스트림 상태 조회 실패", error);
+    if (isConnectivityError(error)) {
+      const now = Date.now();
+      if (now - lastConnectivityWarnAt > CONNECTIVITY_WARN_INTERVAL_MS) {
+        lastConnectivityWarnAt = now;
+        console.warn(
+          "MediaMTX 연결 불가 — 스트림 송출 상태를 확인할 수 없습니다. (MEDIAMTX_API_BASE_URL 또는 로컬 MediaMTX 실행 확인)",
+        );
+      }
+    } else {
+      console.error("MediaMTX 스트림 상태 조회 실패", error);
+    }
 
     return NextResponse.json(
       createUnavailableResponse(streamPath, "MediaMTX API에 연결할 수 없습니다."),
