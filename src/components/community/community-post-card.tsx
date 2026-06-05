@@ -1,6 +1,7 @@
 "use client";
 // 커뮤니티 목록의 게시글 카드. 본문 클릭 시 상세 이동, 채널 주인은 ⋮ 메뉴(수정/삭제).
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Heart, MessageSquare } from "lucide-react";
@@ -56,9 +57,22 @@ export default function CommunityPostCard({ creatorId, creator, post, isOwner }:
           </div>
         </div>
 
-        <p className="text-foreground/90 mt-3 line-clamp-3 min-h-0 flex-1 text-sm leading-relaxed wrap-break-word whitespace-pre-wrap">
-          {post.content}
-        </p>
+        <div className="mt-3 flex min-h-0 flex-1 gap-3">
+          <p className="text-foreground/90 line-clamp-3 min-w-0 flex-1 text-sm leading-relaxed wrap-break-word whitespace-pre-wrap">
+            {post.content}
+          </p>
+          {post.imageUrl && (
+            <div className="border-border/60 relative aspect-square shrink-0 overflow-hidden rounded-lg border">
+              <Image
+                src={post.imageUrl}
+                alt="첨부 이미지"
+                fill
+                sizes="96px"
+                className="object-cover"
+              />
+            </div>
+          )}
+        </div>
 
         <div className="text-muted-foreground mt-3 flex items-center justify-end gap-4 text-xs font-semibold">
           <span className="inline-flex items-center gap-1">

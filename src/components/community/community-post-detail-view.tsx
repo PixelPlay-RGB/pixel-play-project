@@ -1,6 +1,7 @@
 "use client";
 // 게시글 상세 뷰: 상단 툴바(목록 + 이전/다음글) + 게시글 카드(작성자·본문·좋아요·⋮) + 댓글 영역.
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
@@ -115,6 +116,18 @@ export default function CommunityPostDetailView({
           <p className="text-foreground mt-3 text-sm leading-relaxed wrap-break-word whitespace-pre-wrap">
             {detail.content}
           </p>
+
+          {detail.imageUrl && (
+            <div className="border-border/60 bg-muted/30 relative mt-4 aspect-square w-full max-w-sm overflow-hidden rounded-xl border">
+              <Image
+                src={detail.imageUrl}
+                alt="첨부 이미지"
+                fill
+                sizes="(min-width: 640px) 24rem, 100vw"
+                className="object-contain"
+              />
+            </div>
+          )}
 
           <div className="mt-4 flex items-center justify-end">
             <CommunityLikeButton
