@@ -67,6 +67,7 @@ export function UserDonationHistoryTable({ snapshot }: Props) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<DonationHistoryTab>("all");
+  const historyTitle = `${snapshot.historyPeriod.year}년 ${snapshot.historyPeriod.month}월 내역`;
   const historyItems = useMemo(() => buildHistoryItems(snapshot), [snapshot]);
   const yearOptions = useMemo(
     () => buildYearOptions(snapshot.historyPeriod.year),
@@ -142,7 +143,7 @@ export function UserDonationHistoryTable({ snapshot }: Props) {
         </TabsList>
       </Tabs>
 
-      <SettingsCard title="최근 내역" contentClassName="gap-4">
+      <SettingsCard title={historyTitle} contentClassName="gap-4">
         <HistoryPeriodSelect
           year={snapshot.historyPeriod.year}
           month={snapshot.historyPeriod.month}
