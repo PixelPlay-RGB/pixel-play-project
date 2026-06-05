@@ -96,12 +96,12 @@ export function useLiveBroadcastView(creatorId: string) {
   }): Promise<boolean> {
     if (!broadcast?.id) return false;
     if (!donationEnabled) {
-      toastAppError(APP_MESSAGE_CODE.error.live.donationFailed);
+      toastAppError(APP_MESSAGE_CODE.error.live.donationDisabled);
       return false;
     }
     try {
-      const success = await sendLiveDonationAction({ broadcastId: broadcast.id, ...params });
-      if (success) {
+      const result = await sendLiveDonationAction({ broadcastId: broadcast.id, ...params });
+      if (result.success) {
         void queryClient.invalidateQueries({
           queryKey: QUERY_KEYS.donations.walletBalance(user?.id ?? undefined),
         });
@@ -109,9 +109,9 @@ export function useLiveBroadcastView(creatorId: string) {
           queryKey: QUERY_KEYS.donations.liveRanking(creatorId),
         });
       } else {
-        toastAppError(APP_MESSAGE_CODE.error.live.donationFailed);
+        toastAppError(result.code ?? APP_MESSAGE_CODE.error.live.donationFailed);
       }
-      return success;
+      return result.success;
     } catch (error) {
       console.error("라이브 후원 처리 실패", error);
       toastAppError(APP_MESSAGE_CODE.error.live.donationFailed);

@@ -164,6 +164,8 @@ export const APP_MESSAGE_CODE = {
     },
     live: {
       donationFailed: "error.live.donationFailed",
+      donationInsufficientBalance: "error.live.donationInsufficientBalance",
+      donationDisabled: "error.live.donationDisabled",
       voteFailed: "error.live.voteFailed",
       voteNoActivePoll: "error.live.voteNoActivePoll",
       voteInvalidOption: "error.live.voteInvalidOption",

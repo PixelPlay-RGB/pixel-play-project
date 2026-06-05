@@ -494,6 +494,14 @@ export const APP_MESSAGE = {
         title: "후원 실패",
         description: "후원 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
       },
+      donationInsufficientBalance: {
+        title: "포인트 부족",
+        description: "보유 포인트가 부족해요. 잔액을 확인해주세요.",
+      },
+      donationDisabled: {
+        title: "후원 불가",
+        description: "이 방송은 현재 후원을 받지 않아요.",
+      },
       voteFailed: {
         title: "투표 실패",
         description: "투표 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
