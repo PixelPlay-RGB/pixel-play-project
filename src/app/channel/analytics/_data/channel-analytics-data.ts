@@ -3,28 +3,16 @@ import "server-only";
 
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { createAdminClient } from "@/lib/supabase/admin-client";
-import { createClient } from "@/lib/supabase/server";
-import { getMockAnalyticsCreatorId } from "@/mock/channel-analytics";
 import type { ChannelAnalyticsSnapshot } from "@/types/channel/analytics";
 import type { AppActionResult } from "@/types/common/action";
-import { isAuthSessionMissingError } from "@/utils/auth/auth-error";
 import { buildChannelAnalyticsSnapshot } from "@/utils/channel/channel-analytics-snapshot";
+
+import { resolveAnalyticsActorId } from "./analytics-actor";
 
 export async function getChannelAnalyticsSnapshot(): Promise<
   AppActionResult<ChannelAnalyticsSnapshot>
 > {
-  const serverClient = await createClient();
-  const {
-    data: { user },
-    error: userError,
-  } = await serverClient.auth.getUser();
-
-  if (userError && !isAuthSessionMissingError(userError)) {
-    console.error("채널 통계 조회 중 인증 유저 조회 실패", userError);
-  }
-
-  // mock 모드(.env.local에 creatorId 설정)면 그 creatorId를 actor로 써서 real 방송 테스트 데이터를 받는다.
-  const actorId = getMockAnalyticsCreatorId() ?? user?.id;
+  const actorId = await resolveAnalyticsActorId();
 
   if (!actorId) {
     return {

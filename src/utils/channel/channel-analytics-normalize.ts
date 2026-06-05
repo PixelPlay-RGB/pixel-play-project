@@ -4,6 +4,7 @@ import type { AnalyticsLogEvent } from "@/types/channel/analytics";
 import { readNumber, readObject, readText } from "@/utils/channel/channel-analytics-read";
 
 export interface NormalizedBroadcastCounters {
+  currentViewers: number;
   peakViewers: number;
   chatMessageCount: number;
   donationCount: number;
@@ -22,6 +23,7 @@ export function normalizeLiveBroadcastCounters(
   }
 
   return {
+    currentViewers: Math.max(0, readNumber(row.current_viewer_count, 0)),
     peakViewers: Math.max(0, readNumber(row.peak_viewer_count, 0)),
     chatMessageCount: Math.max(0, readNumber(row.chat_message_count, 0)),
     donationCount: Math.max(0, readNumber(row.donation_count, 0)),
@@ -48,5 +50,34 @@ export function normalizeDonationRow(
     return null;
   }
 
-  return { id, type: "donation", at, amount };
+  // 표시 닉네임은 전송 시 박힌 metadata.donorNickname(익명은 alias). donor_id는 노출하지 않는다.
+  const metadata = readObject(row.metadata);
+  const actorName = metadata ? (readText(metadata.donorNickname) ?? undefined) : undefined;
+
+  return { id, type: "donation", at, amount, actorName };
+}
+
+// creator_follow_event 행(초기 쿼리·Realtime payload 공통)을 상호작용 로그 이벤트로 변환한다.
+export function normalizeFollowEventRow(
+  value: unknown,
+  expectedCreatorId: string,
+): AnalyticsLogEvent | null {
+  const row = readObject(value);
+
+  if (!row || readText(row.creator_id) !== expectedCreatorId) {
+    return null;
+  }
+
+  const id = readText(row.id);
+  const at = readText(row.created_at);
+  const eventType = readText(row.event_type);
+
+  if (!id || !at || (eventType !== "follow" && eventType !== "unfollow")) {
+    return null;
+  }
+
+  // 닉네임은 트리거가 박은 viewer_nickname(없으면 이름 없이 표기). viewer_id는 노출하지 않는다.
+  const actorName = readText(row.viewer_nickname) ?? undefined;
+
+  return { id, type: eventType, at, actorName };
 }

@@ -12,14 +12,21 @@ export interface AnalyticsBroadcast {
   donationAmountTotal: number;
 }
 
-// 상호작용 로그 이벤트(후원·팔로우 공통).
-export type AnalyticsLogEventType = "donation" | "follow";
+// 상호작용 로그 이벤트(후원·팔로우·언팔로우 공통).
+export type AnalyticsLogEventType = "donation" | "follow" | "unfollow";
 
 export interface AnalyticsLogEvent {
   id: string;
   type: AnalyticsLogEventType;
   at: string; // ISO 타임스탬프
   amount?: number; // 후원 이벤트에만 존재
+  actorName?: string; // 행위자 표시 닉네임(후원자·팔로워). 익명 후원은 alias, 식별자(donor_id 등)는 노출 안 함.
+}
+
+// 이번 방송 최다 후원자(actorName 단위 금액 합산 결과).
+export interface TopSupporter {
+  name: string;
+  amount: number;
 }
 
 // SSR 초기 스냅샷.
@@ -45,27 +52,42 @@ export type AnalyticsRange = "5m" | "30m" | "all";
 
 // live_broadcast Realtime로 갱신되는 실시간 집계 + 파생 지표.
 export interface CreatorLiveStats {
+  currentViewers: number; // live_broadcast.current_viewer_count(시청 화면과 동일 소스)
   peakViewers: number;
+  averageViewers: number; // 방송 시작 이후 동접 평균(샘플 평균)
+  peakRatio: number | null; // 현재 동접의 최고 대비 % (0~−100, 데이터 부족 시 null)
   chatMessageCount: number;
   donationCount: number;
   donationAmountTotal: number;
   messagesPerMinute: number | null; // 샘플 부족 시 null
-  messagesPerMinuteTrend: number | null; // 10분 전 대비 % 변화, 부족 시 null
   viewerTrend: number | null; // 10분 전 대비 시청자 % 변화
   donationTrend: number | null; // 10분 전 대비 누적 후원 % 변화
+  donationPacePerMinute: number | null; // 최근 윈도우 후원 금액의 분당 환산(P/분), 부족 시 null
   samples: AnalyticsSample[];
   connection: AnalyticsConnectionState;
 }
 
-// presence 기반 동접 집계 결과.
-export interface CreatorLivePresence {
-  viewers: number;
-  isAggregating: boolean; // false면 presence 미연동(시청 화면 미머지)으로 폴백값 사용 중
+// 고유 채팅 참여자 집계 결과(live_message 구독 기반 롤링 윈도우 distinct).
+export interface CreatorChatParticipants {
+  uniqueCount: number; // 최근 윈도우 내 채팅한 고유 사용자 수(0도 유효 — 조용한 방송)
   connection: AnalyticsConnectionState;
 }
 
-// 팔로우 증가 폴링 결과.
-export interface FollowGrowth {
-  count: number;
+// 팔로우/언팔로우 피드 결과(creator_follow_event 초기 쿼리 + Realtime).
+export interface FollowFeed {
+  count: number; // 윈도우 내 순증(신규 팔로우 − 언팔로우), 취소가 많으면 음수
   events: AnalyticsLogEvent[];
+  isError: boolean;
+  connection: AnalyticsConnectionState;
+}
+
+// 지난 방송 분석: 종료된 방송 한 건의 최종 요약 지표(live_broadcast 종료 후에도 남는 집계).
+export interface BroadcastReport {
+  id: string;
+  title: string;
+  startedAt: string;
+  durationMs: number;
+  chatMessageCount: number;
+  donationCount: number;
+  donationAmountTotal: number;
 }

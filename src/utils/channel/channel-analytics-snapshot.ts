@@ -73,5 +73,8 @@ function readDonationEvent(value: unknown, broadcastId: string): AnalyticsLogEve
     return null;
   }
 
-  return { id, type: "donation", at, amount: readNumber(donation.amount, 0) };
+  // RPC가 닉네임을 내려주면 표시에 쓰고, 없으면 undefined(이름 없이 후원만 표기).
+  const actorName = readText(donation.donorNickname) ?? undefined;
+
+  return { id, type: "donation", at, amount: readNumber(donation.amount, 0), actorName };
 }

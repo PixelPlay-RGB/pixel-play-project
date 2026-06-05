@@ -4,10 +4,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import {
-  ANALYTICS_SAMPLE_CAP,
-  ANALYTICS_SAMPLE_INTERVAL_MS,
-} from "@/constants/channel/analytics";
+import { ANALYTICS_SAMPLE_CAP, ANALYTICS_SAMPLE_INTERVAL_MS } from "@/constants/channel/analytics";
 import { createClient } from "@/lib/supabase/client";
 import type {
   AnalyticsBroadcast,
@@ -16,26 +13,28 @@ import type {
   CreatorLiveStats,
 } from "@/types/channel/analytics";
 import {
+  deriveAverageViewers,
+  deriveDonationPace,
   deriveDonationTrend,
   deriveMessageMetrics,
+  derivePeakRatio,
   deriveViewerTrend,
 } from "@/utils/channel/channel-analytics-metrics";
 import { normalizeLiveBroadcastCounters } from "@/utils/channel/channel-analytics-normalize";
 import { startReconnectingChannel } from "@/utils/channel/realtime-reconnect";
 
 interface Counters {
+  currentViewers: number;
   peakViewers: number;
   chatMessageCount: number;
   donationCount: number;
   donationAmountTotal: number;
 }
 
-// presenceViewers는 presence 동접(미연동 시 폴백값)으로, 시계열의 viewers 축에 적재한다.
-export function useCreatorLiveStats(
-  broadcast: AnalyticsBroadcast,
-  presenceViewers: number,
-): CreatorLiveStats {
+// 현재 시청자는 live_broadcast.current_viewer_count(시청 화면과 동일 소스)를 구독해 시계열 viewers 축에 적재한다.
+export function useCreatorLiveStats(broadcast: AnalyticsBroadcast): CreatorLiveStats {
   const [counters, setCounters] = useState<Counters>(() => ({
+    currentViewers: broadcast.currentViewerCount,
     peakViewers: broadcast.peakViewerCount,
     chatMessageCount: broadcast.chatMessageCount,
     donationCount: broadcast.donationCount,
@@ -53,15 +52,10 @@ export function useCreatorLiveStats(
 
   // 고정 주기 타이머가 최신 값을 읽도록 ref로 보관(타이머 재생성 방지).
   const countersRef = useRef(counters);
-  const viewersRef = useRef(presenceViewers);
 
   useEffect(() => {
     countersRef.current = counters;
   }, [counters]);
-
-  useEffect(() => {
-    viewersRef.current = presenceViewers;
-  }, [presenceViewers]);
 
   // live_broadcast UPDATE 구독: KPI 카운터를 즉시 갱신하고 연결 상태를 추적한다.
   useEffect(() => {
@@ -101,7 +95,7 @@ export function useCreatorLiveStats(
           ...prev,
           {
             at: Date.now(),
-            viewers: viewersRef.current,
+            viewers: countersRef.current.currentViewers,
             chatCount: countersRef.current.chatMessageCount,
             donationAmountTotal: countersRef.current.donationAmountTotal,
           },
@@ -133,14 +127,16 @@ export function useCreatorLiveStats(
       ...deriveMessageMetrics(samples),
       viewerTrend: deriveViewerTrend(samples),
       donationTrend: deriveDonationTrend(samples),
+      donationPacePerMinute: deriveDonationPace(samples),
+      averageViewers: deriveAverageViewers(samples),
     }),
     [samples],
   );
 
-  // 표시 중인 현재 시청자는 presence라, 최고 시청자도 같은 소스(presence + 스냅샷 seed)로
-  // 파생해 "현재 > 최고" 모순을 막는다. live_broadcast peak 컬럼은 writer가 없어 seed로만 쓴다.
+  // 최고 시청자는 현재 시청자(current_viewer_count)와 같은 소스 + 스냅샷 seed로 파생해
+  // "현재 > 최고" 모순을 막는다. live_broadcast peak 컬럼은 seed로만 쓴다.
   const peakViewers = useMemo(() => {
-    let peak = Math.max(counters.peakViewers, presenceViewers);
+    let peak = Math.max(counters.peakViewers, counters.currentViewers);
 
     for (const sample of samples) {
       if (sample.viewers > peak) {
@@ -149,15 +145,20 @@ export function useCreatorLiveStats(
     }
 
     return peak;
-  }, [counters.peakViewers, presenceViewers, samples]);
+  }, [counters.peakViewers, counters.currentViewers, samples]);
+
+  // 현재 시청자의 최고 대비 위치. 같은 소스로 파생해 "현재 > 최고" 모순을 막는다.
+  const peakRatio = derivePeakRatio(counters.currentViewers, peakViewers);
 
   return {
     ...counters,
     peakViewers,
+    averageViewers: derived.averageViewers,
+    peakRatio,
     messagesPerMinute: derived.messagesPerMinute,
-    messagesPerMinuteTrend: derived.messagesPerMinuteTrend,
     viewerTrend: derived.viewerTrend,
     donationTrend: derived.donationTrend,
+    donationPacePerMinute: derived.donationPacePerMinute,
     samples,
     connection,
   };

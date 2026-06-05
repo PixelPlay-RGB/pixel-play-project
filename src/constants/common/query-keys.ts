@@ -71,8 +71,8 @@ export const QUERY_KEYS = {
   },
   channel: {
     all: ["channel"] as const,
-    analyticsFollowGrowth: (creatorId?: string) =>
-      [...QUERY_KEYS.channel.all, "analytics", "follow-growth", creatorId].filter(
+    analyticsFollowFeed: (creatorId?: string) =>
+      [...QUERY_KEYS.channel.all, "analytics", "follow-feed", creatorId].filter(
         (v) => v !== undefined,
       ),
   },
