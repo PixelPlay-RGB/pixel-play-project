@@ -149,6 +149,8 @@ export const APP_MESSAGE_CODE = {
     community: {
       postCreateFailed: "error.community.postCreateFailed",
       postDeleteFailed: "error.community.postDeleteFailed",
+      postImageTooLarge: "error.community.postImageTooLarge",
+      postImageUploadFailed: "error.community.postImageUploadFailed",
       commentCreateFailed: "error.community.commentCreateFailed",
       commentDeleteFailed: "error.community.commentDeleteFailed",
       likeFailed: "error.community.likeFailed",

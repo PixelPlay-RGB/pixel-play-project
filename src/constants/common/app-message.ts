@@ -440,6 +440,14 @@ export const APP_MESSAGE = {
         title: "게시글 삭제 실패",
         description: "잠시 후 다시 시도해주세요.",
       },
+      postImageTooLarge: {
+        title: "이미지 용량 초과",
+        description: "이미지는 5MB 이하만 첨부할 수 있어요.",
+      },
+      postImageUploadFailed: {
+        title: "이미지 업로드 실패",
+        description: "jpg, png, webp, gif 형식의 이미지를 다시 시도해주세요.",
+      },
       commentCreateFailed: {
         title: "댓글 등록 실패",
         description: "잠시 후 다시 시도해주세요.",

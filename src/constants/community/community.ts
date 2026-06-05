@@ -22,3 +22,7 @@ export const COMMUNITY_COMMENT_SORTS: ReadonlyArray<{
 ];
 
 export const COMMUNITY_COMMENT_DEFAULT_SORT: CommunityCommentSort = "oldest";
+
+// 게시글 첨부 이미지(단일). user-media/{userId}/community/{uuid}.{ext}에 저장.
+export const COMMUNITY_IMAGE_MAX_SIZE = 5 * 1024 * 1024; // 5MB
+export const COMMUNITY_IMAGE_ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
