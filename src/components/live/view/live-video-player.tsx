@@ -11,6 +11,7 @@ import { useFullscreen } from "@/hooks/live/use-fullscreen";
 import { useLivePlayerControls } from "@/hooks/live/use-live-player-controls";
 import { cn } from "@/lib/utils";
 import { formatCount } from "@/utils/live/live-chat";
+import { isExpectedLivePlaybackError } from "@/utils/live/live-playback-error";
 import type { LiveBroadcast } from "@/types/live/live";
 
 interface Props {
@@ -25,44 +26,6 @@ interface Props {
 }
 
 const HLS_RETRY_DELAY_MS = 2000;
-const EXPECTED_AUTO_PLAY_ERROR_NAMES = new Set([
-  "AbortError",
-  "NotAllowedError",
-  "NotSupportedError",
-]);
-const EXPECTED_AUTO_PLAY_ERROR_MESSAGE_PATTERNS = [
-  "no supported source",
-  "interrupted by a new load request",
-];
-
-function getErrorField(error: unknown, key: "message" | "name") {
-  if (error instanceof Error || error instanceof DOMException) {
-    return error[key];
-  }
-
-  if (typeof error !== "object" || error === null || !(key in error)) {
-    return null;
-  }
-
-  const value = (error as Partial<Record<"message" | "name", unknown>>)[key];
-
-  return typeof value === "string" ? value : null;
-}
-
-function isExpectedAutoPlayError(error: unknown) {
-  const errorName = getErrorField(error, "name");
-
-  if (errorName && EXPECTED_AUTO_PLAY_ERROR_NAMES.has(errorName)) {
-    return true;
-  }
-
-  const message = getErrorField(error, "message")?.toLowerCase();
-
-  return (
-    message?.includes("failed to load") ||
-    EXPECTED_AUTO_PLAY_ERROR_MESSAGE_PATTERNS.some((pattern) => message?.includes(pattern))
-  );
-}
 
 export function LiveVideoPlayer({
   broadcast,
@@ -99,7 +62,7 @@ export function LiveVideoPlayer({
 
     const playVideo = () => {
       void video.play().catch((error) => {
-        if (isExpectedAutoPlayError(error)) return;
+        if (isExpectedLivePlaybackError(error)) return;
         console.warn("라이브 영상 자동 재생 실패", error);
       });
     };

@@ -5,6 +5,8 @@
 
 import { useCallback, useEffect, useRef, useState, type FocusEvent } from "react";
 
+import { isExpectedLivePlaybackError } from "@/utils/live/live-playback-error";
+
 const DEFAULT_VOLUME = 1;
 const CONTROLS_HIDE_DELAY_MS = 2500;
 
@@ -30,7 +32,10 @@ export function useLivePlayerControls() {
         .play()
         .then(() => setIsPlaying(true))
         .catch((error) => {
-          console.error("라이브 영상 재생 실패", error);
+          if (!isExpectedLivePlaybackError(error)) {
+            console.warn("라이브 영상 재생 실패", error);
+          }
+
           setIsPlaying(false);
         });
       return;
