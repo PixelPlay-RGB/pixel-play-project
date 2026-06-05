@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { Heart, MessageSquare } from "lucide-react";
 import { useState } from "react";
 
+import ClampedText from "@/components/common/clamped-text";
 import CommunityActionMenu from "@/components/community/community-action-menu";
 import DeleteConfirmDialog from "@/components/common/delete-confirm-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -58,9 +59,11 @@ export default function CommunityPostCard({ creatorId, creator, post, isOwner }:
         </div>
 
         <div className="mt-3 flex min-h-0 flex-1 gap-3">
-          <p className="text-foreground/90 line-clamp-3 min-w-0 flex-1 text-sm leading-relaxed wrap-break-word whitespace-pre-wrap">
-            {post.content}
-          </p>
+          <ClampedText
+            text={post.content}
+            className="flex-1"
+            textClassName="text-foreground/90 line-clamp-3 text-sm leading-relaxed wrap-break-word whitespace-pre-wrap"
+          />
           {post.imageUrl && (
             <div className="border-border/60 relative aspect-square shrink-0 self-stretch overflow-hidden rounded-lg border">
               <Image

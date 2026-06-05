@@ -33,7 +33,7 @@ export function ChannelCommunityPreview({ creatorId, isOwner, result }: Props) {
         className="group/heading text-foreground inline-flex w-fit items-center gap-1 text-lg font-black"
       >
         커뮤니티
-        <ChevronRight className="text-muted-foreground group-hover/heading:text-brand size-5 transition-all group-hover/heading:translate-x-0.5" />
+        <ChevronRight className="text-muted-foreground group-hover/heading:text-brand relative top-[1.5px] size-5 transition-all group-hover/heading:translate-x-0.5" />
       </Link>
 
       {posts.length > 0 && result ? (
