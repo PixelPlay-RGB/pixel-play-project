@@ -46,6 +46,7 @@ export default function CommunityComposer({
   const [newFile, setNewFile] = useState<File | null>(null);
   const [newPreview, setNewPreview] = useState<string | null>(null);
   const [removedExisting, setRemovedExisting] = useState(false);
+  const [previewDim, setPreviewDim] = useState<{ width: number; height: number } | null>(null);
 
   const createPost = useCreateCommunityPost();
   const updatePost = useUpdateCommunityPost(postId ?? "");
@@ -66,6 +67,7 @@ export default function CommunityComposer({
       return file ? URL.createObjectURL(file) : null;
     });
     setNewFile(file);
+    setPreviewDim(null);
   };
 
   const handleSelectFile = (file: File | null) => {
@@ -136,16 +138,20 @@ export default function CommunityComposer({
 
         {displayImage && (
           <div className="relative w-fit">
-            <div className="border-border relative size-40 overflow-hidden rounded-xl border">
-              <Image
-                src={displayImage}
-                alt="첨부 이미지 미리보기"
-                fill
-                unoptimized
-                sizes="160px"
-                className="object-cover"
-              />
-            </div>
+            <Image
+              src={displayImage}
+              alt="첨부 이미지 미리보기"
+              width={previewDim?.width ?? 200}
+              height={previewDim?.height ?? 200}
+              onLoad={(event) =>
+                setPreviewDim({
+                  width: event.currentTarget.naturalWidth,
+                  height: event.currentTarget.naturalHeight,
+                })
+              }
+              unoptimized
+              className="border-border h-auto max-h-60 w-auto max-w-full rounded-xl border"
+            />
             <button
               type="button"
               disabled={isPending}
