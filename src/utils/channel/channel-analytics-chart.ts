@@ -30,8 +30,10 @@ export function resolveTickIntervalMs(range: AnalyticsRange, spanMs: number): nu
 
 // [minAt, maxAt] 안에서 간격 경계(정시 정렬)에 떨어지는 눈금들을 만든다.
 export function buildTimeTicks(minAt: number, maxAt: number, intervalMs: number): number[] {
+  // 샘플 1개(maxAt === minAt)면 그 시각 단일 눈금이 자연스럽다.
+  // 다만 maxAt가 비유한값이면 [NaN] 눈금이 새어나가지 않도록 빈 눈금으로 떨어뜨린다.
   if (!Number.isFinite(minAt) || !Number.isFinite(maxAt) || maxAt <= minAt) {
-    return [maxAt];
+    return Number.isFinite(maxAt) ? [maxAt] : [];
   }
 
   const ticks: number[] = [];

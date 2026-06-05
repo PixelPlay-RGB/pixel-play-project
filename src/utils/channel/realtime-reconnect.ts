@@ -26,9 +26,13 @@ export function startReconnectingChannel(
   let cancelled = false;
 
   const connect = () => {
-    channel = buildChannel();
-    channel.subscribe((status) => {
-      if (cancelled) {
+    const current = buildChannel();
+    channel = current;
+    current.subscribe((status) => {
+      // 정리(unmount)됐거나 재연결로 교체된 이전 채널의 늦은 상태 콜백은 무시한다.
+      // teardown 시 removeChannel이 CLOSED를 흘리는데, 이를 에러로 보면 멀쩡한 새 채널까지 끊고
+      // 다시 재연결하는 churn(무한 재연결)이 생긴다.
+      if (cancelled || channel !== current) {
         return;
       }
 
@@ -59,9 +63,14 @@ export function startReconnectingChannel(
       reconnectTimer = null;
 
       // 같은 topic의 이전 채널 제거가 끝난 뒤 재생성해야 구독이 좀비가 되지 않는다.
+      // 교체 대상을 먼저 비활성으로 표시(channel=null)해, 제거 중 흘러나오는 CLOSED가
+      // 재연결을 다시 잡지 않도록 한다.
       void (async () => {
-        if (channel) {
-          await supabase.removeChannel(channel);
+        const stale = channel;
+        channel = null;
+
+        if (stale) {
+          await supabase.removeChannel(stale);
         }
 
         if (cancelled) {
