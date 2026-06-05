@@ -46,6 +46,7 @@ export default function LiveSidebar({ isMobile }: LiveSidebarProps) {
     keywordItems,
     followingTotalCount,
     fetchMoreFollowing,
+    resetFollowing,
     canFetchMoreFollowing,
     isFetchingMoreFollowing,
     isTrendingLoading,
@@ -112,7 +113,12 @@ export default function LiveSidebar({ isMobile }: LiveSidebarProps) {
         {isSignedIn ? (
           <>
             {isNavigationVisible ? <SidebarSeparator /> : null}
-            <LiveSidebarSection title="팔로잉 채널">
+            <LiveSidebarSection
+              title="팔로잉 채널"
+              onOpenChange={(open) => {
+                if (!open) resetFollowing();
+              }}
+            >
               <SidebarMenu className="gap-1.5">
                 {isFollowingLoading ? (
                   <>
@@ -134,6 +140,7 @@ export default function LiveSidebar({ isMobile }: LiveSidebarProps) {
                           isLoading={isFetchingMoreFollowing}
                           onClick={() => void fetchMoreFollowing()}
                           accent="live"
+                          showSeparators={false}
                         />
                       </SidebarMenuItem>
                     ) : isFollowingOverviewVisible ? (
@@ -143,6 +150,7 @@ export default function LiveSidebar({ isMobile }: LiveSidebarProps) {
                           onClick={() => router.push("/user/following")}
                           accent="live"
                           label="전체보기"
+                          showSeparators={false}
                         />
                       </SidebarMenuItem>
                     ) : null}

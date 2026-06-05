@@ -16,6 +16,7 @@ interface LoadMoreButtonProps {
   disabled?: boolean;
   label?: string;
   accent?: keyof typeof LOAD_MORE_ACCENT_CLASS;
+  showSeparators?: boolean;
 }
 
 export default function LoadMoreButton({
@@ -24,10 +25,11 @@ export default function LoadMoreButton({
   disabled,
   label = "더보기",
   accent = "brand",
+  showSeparators = true,
 }: LoadMoreButtonProps) {
   return (
-    <div className="flex items-center gap-4 pt-1">
-      <Separator className="flex-1" />
+    <div className={cn("flex items-center pt-1", showSeparators ? "gap-4" : "justify-center")}>
+      {showSeparators ? <Separator className="flex-1" /> : null}
       <Button
         type="button"
         variant="secondary"
@@ -46,7 +48,7 @@ export default function LoadMoreButton({
         )}
         {label}
       </Button>
-      <Separator className="flex-1" />
+      {showSeparators ? <Separator className="flex-1" /> : null}
     </div>
   );
 }
