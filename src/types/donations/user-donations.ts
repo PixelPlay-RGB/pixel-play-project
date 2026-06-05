@@ -7,6 +7,13 @@ export interface UserDonationSummary {
   balanceAmount: number;
 }
 
+export interface UserDonationStats {
+  currentMonthDonationAmount: number;
+  currentMonthChargeAmount: number;
+  totalDonationAmount: number;
+  totalChargeAmount: number;
+}
+
 export interface UserSentDonationItem {
   id: string;
   broadcastId: string;
@@ -28,6 +35,7 @@ export interface UserWalletChargeHistoryItem {
 export interface UserDonationSnapshot {
   paymentCustomerKey: string;
   summary: UserDonationSummary;
+  stats: UserDonationStats;
   sentDonations: UserSentDonationItem[];
   chargeHistories: UserWalletChargeHistoryItem[];
 }

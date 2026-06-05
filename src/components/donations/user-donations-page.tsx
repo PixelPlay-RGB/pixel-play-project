@@ -18,12 +18,6 @@ interface Props {
   paymentResultCode?: AppMessageCode;
 }
 
-interface MonthlyDonationStats {
-  chargeAmount: number;
-  donationAmount: number;
-  donationCount: number;
-}
-
 const USER_DONATIONS_PAGE_HEADER = {
   kicker: "DONATIONS",
   title: "후원 지갑",
@@ -66,25 +60,19 @@ export function UserDonationsPage({ snapshot, errorCode, paymentResultCode }: Pr
     );
   }
 
-  const monthlyStats = getMonthlyDonationStats(snapshot);
   const paymentStatus = getPaymentStatus(snapshot.chargeHistories[0]);
 
   return (
     <SettingsPage {...USER_DONATIONS_PAGE_HEADER}>
-      <DonationBalanceHero snapshot={snapshot} monthlyStats={monthlyStats} />
+      <DonationBalanceHero snapshot={snapshot} />
       {paymentResultCode ? <PaymentResultToast code={paymentResultCode} /> : null}
 
       <section className="grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(20rem,0.9fr)]">
         <UserDonationHistoryTable snapshot={snapshot} />
 
         <aside className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
-          <SettingsCard title="이번 달 후원" contentClassName="gap-2">
-            <p className="text-foreground text-3xl leading-tight font-black">
-              {formatPoint(monthlyStats.donationAmount)}
-            </p>
-            <p className="text-muted-foreground text-sm">
-              총 {monthlyStats.donationCount.toLocaleString("ko-KR")}회 보냈습니다.
-            </p>
+          <SettingsCard title="후원 지갑 요약" contentClassName="gap-4">
+            <DonationSummaryGrid snapshot={snapshot} />
           </SettingsCard>
 
           <SettingsCard title="결제 상태" contentClassName="gap-2">
@@ -99,13 +87,7 @@ export function UserDonationsPage({ snapshot, errorCode, paymentResultCode }: Pr
   );
 }
 
-function DonationBalanceHero({
-  snapshot,
-  monthlyStats,
-}: {
-  snapshot: UserDonationSnapshot;
-  monthlyStats: MonthlyDonationStats;
-}) {
+function DonationBalanceHero({ snapshot }: { snapshot: UserDonationSnapshot }) {
   return (
     <section className="from-live via-live/85 to-brand rounded-xl bg-gradient-to-br p-5 text-white shadow-sm sm:p-7">
       <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
@@ -117,44 +99,48 @@ function DonationBalanceHero({
           <p className="mt-4 text-5xl leading-none font-black tracking-tight sm:text-6xl">
             {formatPoint(snapshot.summary.balanceAmount)}
           </p>
-          <dl className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-sm font-black text-white/90">
-            <div className="flex items-center gap-1.5">
-              <dt>이번 달 충전</dt>
-              <dd>{formatPoint(monthlyStats.chargeAmount)}</dd>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <dt>보낸 후원</dt>
-              <dd>{formatPoint(monthlyStats.donationAmount)}</dd>
-            </div>
-          </dl>
         </div>
 
         <div className="flex shrink-0 flex-wrap items-center gap-2">
           <WalletChargeDialog customerKey={snapshot.paymentCustomerKey} />
-          <span className="bg-brand/25 text-brand-foreground flex h-10 items-center rounded-full px-4 text-xs font-black ring-1 ring-white/10">
-            포인트 사용 가능
-          </span>
         </div>
       </div>
     </section>
   );
 }
 
-function getMonthlyDonationStats(snapshot: UserDonationSnapshot): MonthlyDonationStats {
-  const donationAmount = snapshot.sentDonations
-    .filter((donation) => isCurrentKstMonth(donation.createdAt))
-    .reduce((total, donation) => total + donation.amount, 0);
-  const chargeAmount = snapshot.chargeHistories
-    .filter((charge) => charge.status === "succeeded" && isCurrentKstMonth(charge.createdAt))
-    .reduce((total, charge) => total + charge.amount, 0);
+function DonationSummaryGrid({ snapshot }: { snapshot: UserDonationSnapshot }) {
+  const summaryItems = [
+    {
+      label: "이번 달 후원",
+      value: snapshot.stats.currentMonthDonationAmount,
+    },
+    {
+      label: "이번 달 충전",
+      value: snapshot.stats.currentMonthChargeAmount,
+    },
+    {
+      label: "총 보낸 후원",
+      value: snapshot.stats.totalDonationAmount,
+    },
+    {
+      label: "총 충전 금액",
+      value: snapshot.stats.totalChargeAmount,
+    },
+  ];
 
-  return {
-    chargeAmount,
-    donationAmount,
-    donationCount: snapshot.sentDonations.filter((donation) =>
-      isCurrentKstMonth(donation.createdAt),
-    ).length,
-  };
+  return (
+    <dl className="grid gap-3 sm:grid-cols-2 xl:grid-cols-2">
+      {summaryItems.map((item) => (
+        <div key={item.label} className="rounded-lg border px-3 py-3">
+          <dt className="text-muted-foreground text-xs font-black">{item.label}</dt>
+          <dd className="text-foreground mt-2 text-xl leading-tight font-black">
+            {formatPoint(item.value)}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  );
 }
 
 function getPaymentStatus(latestCharge: UserWalletChargeHistoryItem | undefined) {
@@ -166,18 +152,6 @@ function getPaymentStatus(latestCharge: UserWalletChargeHistoryItem | undefined)
   }
 
   return PAYMENT_STATUS_SUMMARY[latestCharge.status];
-}
-
-function isCurrentKstMonth(value: string) {
-  return getKstMonthKey(value) === getKstMonthKey(new Date().toISOString());
-}
-
-function getKstMonthKey(value: string) {
-  return new Intl.DateTimeFormat("ko-KR", {
-    timeZone: "Asia/Seoul",
-    year: "numeric",
-    month: "2-digit",
-  }).format(new Date(value));
 }
 
 function formatPoint(value: number) {

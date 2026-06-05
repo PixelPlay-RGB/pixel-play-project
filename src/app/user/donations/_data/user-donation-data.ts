@@ -83,6 +83,7 @@ function buildUserDonationSnapshot(
 ): UserDonationSnapshot {
   const snapshotObject = readObject(snapshot);
   const wallet = readObject(snapshotObject?.wallet);
+  const stats = readObject(snapshotObject?.stats);
   const sentDonations = readArray(snapshotObject?.sentDonations)
     .map(readSentDonation)
     .filter((item): item is UserSentDonationItem => item !== null);
@@ -98,6 +99,12 @@ function buildUserDonationSnapshot(
     paymentCustomerKey,
     summary: {
       balanceAmount: readNumber(wallet?.balanceAmount, 0),
+    },
+    stats: {
+      currentMonthDonationAmount: readNumber(stats?.currentMonthDonationAmount, 0),
+      currentMonthChargeAmount: readNumber(stats?.currentMonthChargeAmount, 0),
+      totalDonationAmount: readNumber(stats?.totalDonationAmount, 0),
+      totalChargeAmount: readNumber(stats?.totalChargeAmount, 0),
     },
     sentDonations,
     chargeHistories,
