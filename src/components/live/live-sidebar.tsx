@@ -3,6 +3,7 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { useIsFetching } from "@tanstack/react-query";
+import { ArrowRight } from "lucide-react";
 
 import LoadMoreButton from "@/components/common/load-more-button";
 import LiveSidebarCategoryItem from "@/components/live/live-sidebar-category-item";
@@ -151,6 +152,7 @@ export default function LiveSidebar({ isMobile }: LiveSidebarProps) {
                           accent="live"
                           label="전체보기"
                           showSeparators={false}
+                          icon={ArrowRight}
                         />
                       </SidebarMenuItem>
                     ) : null}
