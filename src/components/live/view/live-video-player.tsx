@@ -30,9 +30,38 @@ const EXPECTED_AUTO_PLAY_ERROR_NAMES = new Set([
   "NotAllowedError",
   "NotSupportedError",
 ]);
+const EXPECTED_AUTO_PLAY_ERROR_MESSAGE_PATTERNS = [
+  "no supported source",
+  "interrupted by a new load request",
+];
+
+function getErrorField(error: unknown, key: "message" | "name") {
+  if (error instanceof Error || error instanceof DOMException) {
+    return error[key];
+  }
+
+  if (typeof error !== "object" || error === null || !(key in error)) {
+    return null;
+  }
+
+  const value = (error as Partial<Record<"message" | "name", unknown>>)[key];
+
+  return typeof value === "string" ? value : null;
+}
 
 function isExpectedAutoPlayError(error: unknown) {
-  return error instanceof DOMException && EXPECTED_AUTO_PLAY_ERROR_NAMES.has(error.name);
+  const errorName = getErrorField(error, "name");
+
+  if (errorName && EXPECTED_AUTO_PLAY_ERROR_NAMES.has(errorName)) {
+    return true;
+  }
+
+  const message = getErrorField(error, "message")?.toLowerCase();
+
+  return (
+    message?.includes("failed to load") ||
+    EXPECTED_AUTO_PLAY_ERROR_MESSAGE_PATTERNS.some((pattern) => message?.includes(pattern))
+  );
 }
 
 export function LiveVideoPlayer({
