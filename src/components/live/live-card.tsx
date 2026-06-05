@@ -3,8 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import CreatorAvatarPopover from "@/components/creator/creator-avatar-popover";
 import LiveBadge from "@/components/live/live-badge";
-import LiveCreatorPopover from "@/components/live/live-creator-popover";
 import LiveTagLink from "@/components/live/live-tag-link";
 import { cn } from "@/lib/utils";
 import type { LiveListItem } from "@/types/live/live";
@@ -50,11 +50,14 @@ export default function LiveCard({ item }: LiveCardProps) {
       </Link>
 
       <div className="relative z-10 mt-3 flex gap-2.5">
-        <LiveCreatorPopover
+        <CreatorAvatarPopover
           creatorId={item.creatorId}
           creatorNickname={item.creatorNickname}
           creatorPhotoUrl={item.creatorPhotoUrl}
           isFollowing={item.isFollowing}
+          isLive
+          avatarClassName="size-9"
+          triggerClassName="mt-0.5"
         />
 
         <div className="min-w-0 flex-1 space-y-2">

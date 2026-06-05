@@ -129,6 +129,7 @@ export const APP_MESSAGE_CODE = {
     following: {
       failed: "error.following.failed",
       unfollowFailed: "error.following.unfollowFailed",
+      loadFailed: "error.following.loadFailed",
     },
     supabase: {
       permissionDenied: "error.supabase.permissionDenied",
