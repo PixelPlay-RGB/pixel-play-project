@@ -312,11 +312,11 @@ src/
 
 ### Supabase Storage
 
-| 버킷         | 경로                            | 용도                     |
-| ------------ | ------------------------------- | ------------------------ |
-| `user-media` | `{user.id}/avatar/avatar.{ext}` | 유저 프로필 사진         |
-| `user-media` | `{user.id}/banner/{name}.{ext}` | 채널 홈 배너             |
-| `user-media` | `{user.id}/live-thumbnail/...`  | 라이브 썸네일(이전 예정) |
+| 버킷         | 경로                            | 용도             |
+| ------------ | ------------------------------- | ---------------- |
+| `user-media` | `{user.id}/avatar/avatar.{ext}` | 유저 프로필 사진 |
+| `user-media` | `{user.id}/banner/{name}.{ext}` | 채널 홈 배너     |
+| `user-media` | `{user.id}/live-thumbnail/...`  | 라이브 썸네일    |
 
 모든 유저 미디어를 단일 공개 버킷 `user-media`에 `{user.id}/{카테고리}/` 구조로 저장합니다. storage RLS는 본인 폴더(`foldername[1] = auth.uid()`)로만 제한하며(이미지 표시는 공개 CDN URL로 처리되어 SELECT 정책 불필요), 유저 삭제 시 `delete-user-storage` Edge Function이 `{user.id}/` 하위를 재귀적으로 정리합니다. 프로필 이미지는 `upsert`로 처리하고 확장자가 달라져 남은 파일을 정리하며, 공개 URL에는 캐시 갱신을 위해 `?t={Date.now()}` 쿼리를 붙입니다.
 
