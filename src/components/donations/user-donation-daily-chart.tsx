@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import type { UserDonationSnapshot } from "@/types/donations/user-donations";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import type { TooltipPayloadEntry, TooltipValueType } from "recharts";
-import { useMemo, useRef, type WheelEvent } from "react";
+import { useEffect, useMemo, useRef } from "react";
 
 interface Props {
   snapshot: UserDonationSnapshot;
@@ -62,22 +62,36 @@ export function UserDonationDailyChart({ snapshot, activeTab }: Props) {
   const chartWidth = Math.max(chartData.length * getChartDayWidth(activeTab), 360);
   const periodLabel = `${snapshot.historyPeriod.year}년 ${snapshot.historyPeriod.month}월`;
 
-  const handleWheel = (event: WheelEvent<HTMLDivElement>) => {
+  useEffect(() => {
     const scrollArea = scrollAreaRef.current;
 
-    if (!scrollArea || scrollArea.scrollWidth <= scrollArea.clientWidth) {
+    if (!scrollArea) {
       return;
     }
 
-    const delta = Math.abs(event.deltaY) > Math.abs(event.deltaX) ? event.deltaY : event.deltaX;
+    const handleWheel = (event: WheelEvent) => {
+      const delta = Math.abs(event.deltaY) > Math.abs(event.deltaX) ? event.deltaY : event.deltaX;
 
-    if (delta === 0) {
-      return;
-    }
+      if (delta === 0) {
+        return;
+      }
 
-    event.preventDefault();
-    scrollArea.scrollLeft += delta;
-  };
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (scrollArea.scrollWidth <= scrollArea.clientWidth) {
+        return;
+      }
+
+      scrollArea.scrollLeft += delta;
+    };
+
+    scrollArea.addEventListener("wheel", handleWheel, { passive: false });
+
+    return () => {
+      scrollArea.removeEventListener("wheel", handleWheel);
+    };
+  }, []);
 
   if (chartData.length === 0) {
     return (
@@ -110,8 +124,7 @@ export function UserDonationDailyChart({ snapshot, activeTab }: Props) {
 
       <div
         ref={scrollAreaRef}
-        className="min-h-0 flex-1 overflow-x-auto pb-2"
-        onWheel={handleWheel}
+        className="min-h-0 flex-1 overflow-x-auto overscroll-contain pb-2"
         tabIndex={0}
       >
         <div style={{ width: chartWidth }} className="h-56 xl:h-full xl:min-h-56">
