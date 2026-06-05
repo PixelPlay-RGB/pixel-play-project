@@ -14,6 +14,12 @@ import { isKnownMessageRpcError, resolveMessageRpcErrorCode } from "@/utils/comm
 import { isRecord } from "@/utils/common/json";
 import { isUuid } from "@/utils/common/uuid";
 
+function extractWalletBalance(data: unknown): number {
+  if (!isRecord(data) || !isRecord(data.wallet)) return 0;
+
+  return typeof data.wallet.balanceAmount === "number" ? data.wallet.balanceAmount : 0;
+}
+
 // send_live_message_v2의 jsonb 응답({ messageId, moderated })을 앱 타입으로 정규화한다.
 // 금칙어로 가려진 경우 messageId는 null, moderated는 true다.
 function normalizeSendLiveMessageResult(data: unknown): SendLiveMessageResult | null {
@@ -86,6 +92,43 @@ export async function sendLiveMessageAction(
   }
 
   return { success: true, data: result };
+}
+
+export async function getUserWalletBalanceAction(): Promise<
+  AppActionResult<{ walletBalance: number }>
+> {
+  const actor = await getAuthenticatedActorId({
+    logLabel: "라이브 지갑 잔액 조회 중 인증 사용자 조회 실패",
+  });
+
+  if (!actor.success) {
+    return { success: false, code: actor.result.code };
+  }
+
+  const client = await createWriteClientForAction<{ walletBalance: number }>(
+    "라이브 지갑 잔액 Admin Client 생성 실패",
+    APP_MESSAGE_CODE.error.common.unknown,
+  );
+
+  if (!client.success) {
+    return client.result;
+  }
+
+  const { data, error } = await client.supabase.rpc("get_user_donation_snapshot", {
+    p_actor_user_id: actor.userId,
+  });
+
+  if (error) {
+    console.error("라이브 지갑 잔액 RPC 실패", error);
+    return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
+  }
+
+  return {
+    success: true,
+    data: {
+      walletBalance: extractWalletBalance(data),
+    },
+  };
 }
 
 export async function voteLivePollAction(pollId: string, optionId: string): Promise<boolean> {

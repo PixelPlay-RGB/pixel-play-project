@@ -12,17 +12,32 @@ export function useLivePlayerControls() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const focusWithinRef = useRef(false);
-  // 음소거 해제 시 되돌릴 직전 볼륨. 음소거는 volume===0으로 표현하고 muted는 파생값으로 둔다.
-  const previousVolumeRef = useRef(DEFAULT_VOLUME);
-
-  const [isPlaying, setIsPlaying] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [muted, setMuted] = useState(true);
   const [volume, setVolumeState] = useState(DEFAULT_VOLUME);
   const [controlsVisible, setControlsVisible] = useState(true);
 
-  const muted = volume === 0;
-
   const togglePlay = useCallback(() => {
-    setIsPlaying((prev) => !prev);
+    const video = videoRef.current;
+
+    if (!video) {
+      setIsPlaying((prev) => !prev);
+      return;
+    }
+
+    if (video.paused) {
+      void video
+        .play()
+        .then(() => setIsPlaying(true))
+        .catch((error) => {
+          console.error("라이브 영상 재생 실패", error);
+          setIsPlaying(false);
+        });
+      return;
+    }
+
+    video.pause();
+    setIsPlaying(false);
   }, []);
 
   const applyVolume = useCallback((next: number) => {
@@ -31,26 +46,38 @@ export function useLivePlayerControls() {
     const video = videoRef.current;
     if (video) {
       video.volume = next;
-      video.muted = next === 0;
+      if (next > 0) video.muted = false;
     }
   }, []);
 
   const setVolume = useCallback(
     (next: number) => {
-      if (next > 0) previousVolumeRef.current = next;
+      setMuted(next === 0);
       applyVolume(next);
     },
     [applyVolume],
   );
 
   const toggleMute = useCallback(() => {
-    if (volume > 0) {
-      previousVolumeRef.current = volume;
-      applyVolume(0);
-      return;
-    }
-    applyVolume(previousVolumeRef.current || DEFAULT_VOLUME);
-  }, [volume, applyVolume]);
+    setMuted((prev) => {
+      const next = !prev;
+      const video = videoRef.current;
+      if (video) video.muted = next;
+      return next;
+    });
+  }, []);
+
+  const handleVideoPlay = useCallback(() => setIsPlaying(true), []);
+
+  const handleVideoPause = useCallback(() => setIsPlaying(false), []);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    video.volume = volume;
+    video.muted = muted;
+  }, [muted, volume]);
 
   const clearHideTimer = useCallback(() => {
     if (hideTimerRef.current) {
@@ -110,5 +137,7 @@ export function useLivePlayerControls() {
     handlePointerLeave,
     handleFocus,
     handleBlur,
+    handleVideoPlay,
+    handleVideoPause,
   };
 }

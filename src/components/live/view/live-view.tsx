@@ -20,9 +20,10 @@ import { LIVE_LABEL } from "@/constants/live/live";
 
 interface Props {
   creatorId: string;
+  playbackUrl: string | null;
 }
 
-export function LiveView({ creatorId }: Props) {
+export function LiveView({ creatorId, playbackUrl }: Props) {
   const moveToLogin = useMoveToLogin();
   const isMobile = useIsMobile();
   const openChatButtonRef = useRef<HTMLButtonElement>(null);
@@ -140,6 +141,7 @@ export function LiveView({ creatorId }: Props) {
             <div className={cn(isTheater && "md:min-h-0 md:flex-1")}>
               <LiveVideoPlayer
                 broadcast={broadcast}
+                hlsSrc={playbackUrl}
                 elapsedText={elapsedText}
                 isChatCollapsed={isChatCollapsed}
                 isTheater={isTheater}

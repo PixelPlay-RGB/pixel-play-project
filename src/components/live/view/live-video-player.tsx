@@ -1,10 +1,8 @@
 "use client";
 // 라이브 비디오 플레이어 — 컨테이너 전체화면/극장 모드와 하단 컨트롤 바를 조립합니다.
-// 실제 스트림(<video>)은 아직 미연결 placeholder입니다.
-// TODO(#73 머지 후): getChannelLiveHlsUrl + use-hls-player로 placeholder를 실제 <video>로 교체하고
-// useLivePlayerControls의 videoRef에 바인딩한다.
 
-import type { Ref } from "react";
+import Hls from "hls.js";
+import { useEffect, type Ref } from "react";
 import { Play, Radio, Users } from "lucide-react";
 
 import { LivePlayerControlBar } from "@/components/live/view/live-player-control-bar";
@@ -17,6 +15,7 @@ import type { LiveBroadcast } from "@/types/live/live";
 
 interface Props {
   broadcast: LiveBroadcast;
+  hlsSrc: string | null;
   elapsedText: string;
   isChatCollapsed?: boolean;
   isTheater?: boolean;
@@ -25,8 +24,11 @@ interface Props {
   onOpenChat?: () => void;
 }
 
+const HLS_RETRY_DELAY_MS = 2000;
+
 export function LiveVideoPlayer({
   broadcast,
+  hlsSrc,
   elapsedText,
   isChatCollapsed = false,
   isTheater = false,
@@ -36,6 +38,7 @@ export function LiveVideoPlayer({
 }: Props) {
   const { containerRef, isFullscreen, toggleFullscreen } = useFullscreen<HTMLDivElement>();
   const {
+    videoRef,
     isPlaying,
     togglePlay,
     muted,
@@ -47,7 +50,86 @@ export function LiveVideoPlayer({
     handlePointerLeave,
     handleFocus,
     handleBlur,
+    handleVideoPlay,
+    handleVideoPause,
   } = useLivePlayerControls();
+
+  useEffect(() => {
+    const video = videoRef.current;
+
+    if (!video || !hlsSrc) return;
+
+    const playVideo = () => {
+      void video.play().catch((error) => {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        console.error("라이브 영상 자동 재생 실패", error);
+      });
+    };
+
+    if (video.canPlayType("application/vnd.apple.mpegurl")) {
+      let retryTimeout: ReturnType<typeof setTimeout> | null = null;
+
+      const retryLoad = () => {
+        if (retryTimeout) clearTimeout(retryTimeout);
+        retryTimeout = setTimeout(() => {
+          video.load();
+          playVideo();
+        }, HLS_RETRY_DELAY_MS);
+      };
+
+      video.src = hlsSrc;
+      video.addEventListener("error", retryLoad);
+      video.load();
+      playVideo();
+
+      return () => {
+        if (retryTimeout) clearTimeout(retryTimeout);
+        video.removeEventListener("error", retryLoad);
+        video.removeAttribute("src");
+        video.load();
+      };
+    }
+
+    if (!Hls.isSupported()) return;
+
+    let retryTimeout: ReturnType<typeof setTimeout> | null = null;
+    const hls = new Hls({
+      backBufferLength: 5,
+      liveMaxLatencyDuration: 3,
+      liveSyncDuration: 1,
+      liveSyncMode: "edge",
+      lowLatencyMode: true,
+      maxBufferLength: 5,
+      maxLiveSyncPlaybackRate: 1.2,
+    });
+
+    const retryLoad = () => {
+      if (retryTimeout) clearTimeout(retryTimeout);
+      retryTimeout = setTimeout(() => {
+        hls.startLoad(-1);
+      }, HLS_RETRY_DELAY_MS);
+    };
+
+    hls.on(Hls.Events.ERROR, (_event, data) => {
+      if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+        retryLoad();
+        return;
+      }
+
+      if (data.fatal && data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+        hls.recoverMediaError();
+      }
+    });
+
+    hls.on(Hls.Events.MANIFEST_PARSED, playVideo);
+    hls.loadSource(hlsSrc);
+    hls.attachMedia(video);
+
+    return () => {
+      if (retryTimeout) clearTimeout(retryTimeout);
+      hls.destroy();
+    };
+  }, [hlsSrc, videoRef]);
 
   return (
     <div
@@ -63,6 +145,19 @@ export function LiveVideoPlayer({
           : "aspect-video rounded-xl",
       )}
     >
+      {hlsSrc ? (
+        <video
+          ref={videoRef}
+          className="absolute inset-0 size-full bg-black object-contain"
+          autoPlay
+          muted={muted}
+          playsInline
+          title={broadcast.title}
+          onPlay={handleVideoPlay}
+          onPause={handleVideoPause}
+        />
+      ) : null}
+
       <div className="absolute top-0 left-0 z-10 flex items-center gap-2 px-4 pt-4">
         <span className="bg-live flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold text-white">
           <Radio className="size-3" />
@@ -74,7 +169,12 @@ export function LiveVideoPlayer({
         </span>
       </div>
 
-      <div className="absolute inset-0 flex items-center justify-center">
+      <div
+        className={cn(
+          "absolute inset-0 flex items-center justify-center transition-opacity duration-200",
+          hlsSrc && isPlaying && "pointer-events-none opacity-0",
+        )}
+      >
         <div className="flex size-16 items-center justify-center rounded-full border border-white/20 bg-white/15 backdrop-blur-sm sm:size-20">
           <Play className="size-7 fill-white text-white sm:size-9" />
         </div>
