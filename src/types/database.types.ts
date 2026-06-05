@@ -233,6 +233,7 @@ export type Database = {
           created_at: string
           creator_id: string
           id: string
+          image_path: string | null
           like_count: number
           modified_at: string | null
         }
@@ -242,6 +243,7 @@ export type Database = {
           created_at?: string
           creator_id: string
           id?: string
+          image_path?: string | null
           like_count?: number
           modified_at?: string | null
         }
@@ -251,6 +253,7 @@ export type Database = {
           created_at?: string
           creator_id?: string
           id?: string
+          image_path?: string | null
           like_count?: number
           modified_at?: string | null
         }
@@ -291,6 +294,48 @@ export type Database = {
           {
             foreignKeyName: "community_post_like_user_id_fkey"
             columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      creator_follow_event: {
+        Row: {
+          created_at: string
+          creator_id: string
+          event_type: string
+          id: string
+          viewer_id: string
+          viewer_nickname: string | null
+        }
+        Insert: {
+          created_at?: string
+          creator_id: string
+          event_type: string
+          id?: string
+          viewer_id: string
+          viewer_nickname?: string | null
+        }
+        Update: {
+          created_at?: string
+          creator_id?: string
+          event_type?: string
+          id?: string
+          viewer_id?: string
+          viewer_nickname?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_follow_event_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_follow_event_viewer_id_fkey"
+            columns: ["viewer_id"]
             isOneToOne: false
             referencedRelation: "user"
             referencedColumns: ["id"]
@@ -919,7 +964,11 @@ export type Database = {
         Returns: string
       }
       create_community_post: {
-        Args: { p_actor_user_id: string; p_content: string }
+        Args: {
+          p_actor_user_id: string
+          p_content: string
+          p_image_path?: string
+        }
         Returns: string
       }
       create_live_poll: {
@@ -942,7 +991,7 @@ export type Database = {
       }
       delete_community_post: {
         Args: { p_actor_user_id: string; p_post_id: string }
-        Returns: boolean
+        Returns: string
       }
       end_live_broadcast: {
         Args: { p_actor_user_id: string; p_broadcast_id?: string }
@@ -1261,7 +1310,12 @@ export type Database = {
         Returns: boolean
       }
       update_community_post: {
-        Args: { p_actor_user_id: string; p_content: string; p_post_id: string }
+        Args: {
+          p_actor_user_id: string
+          p_content: string
+          p_image_path?: string
+          p_post_id: string
+        }
         Returns: boolean
       }
       upsert_creator_studio_setting: {
