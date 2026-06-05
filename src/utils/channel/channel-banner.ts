@@ -15,18 +15,16 @@ const BANNER_MIME_EXTENSION: Record<string, string> = {
 };
 
 // storage 객체 이름을 배너 제목 기반으로 생성(UUID 대신). 충돌 방지를 위해 짧은 접미사만 덧붙인다.
-// 한글 제목은 그대로 유지하고 경로/특수문자만 제거한다(공개 URL은 getChannelBannerSrc에서 세그먼트 인코딩).
+// Supabase storage 객체 키는 비ASCII(한글 등)를 허용하지 않으므로 ASCII 슬러그로 정규화한다.
+// ASCII가 남지 않으면(예: 순수 한글 제목) "banner"로 폴백한다.
 // 확장자는 파일명이 아니라 검증된 MIME 타입에서 결정해 오확장자를 막는다.
 export function buildBannerObjectName(title: string, mimeType: string): string {
   const ext = BANNER_MIME_EXTENSION[mimeType] ?? "png";
   const base =
     title
       .trim()
-      .replace(/[\\/]+/g, " ")
-      .replace(/\s+/g, "-")
-      .replace(/[^\p{L}\p{N}_-]/gu, "")
-      .replace(/-+/g, "-")
-      .replace(/^[-_]+|[-_]+$/g, "")
+      .replace(/[^a-zA-Z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
       .slice(0, 40) || "banner";
   return `${base}-${crypto.randomUUID().slice(0, 8)}.${ext}`;
 }
