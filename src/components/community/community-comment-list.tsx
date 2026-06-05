@@ -21,6 +21,8 @@ import type { CommunityCommentSort, CommunityCommentsResult } from "@/types/comm
 
 interface Props {
   postId: string;
+  // 서버에서 확인한 시청자 id(비로그인 null). 인증 게이팅의 1차 기준.
+  viewerId: string | null;
   // 전체 댓글 수(대댓글 포함). 헤더에 표시.
   commentCount: number;
   isChannelOwner: boolean;
@@ -31,6 +33,7 @@ const numberFormatter = new Intl.NumberFormat("ko-KR");
 
 export default function CommunityCommentList({
   postId,
+  viewerId,
   commentCount,
   isChannelOwner,
   initialData,
@@ -99,7 +102,7 @@ export default function CommunityCommentList({
         </div>
       </div>
 
-      <CommunityCommentComposer postId={postId} />
+      <CommunityCommentComposer postId={postId} viewerId={viewerId} />
 
       {isPending ? (
         <CommunityCommentListSkeleton />
@@ -114,6 +117,7 @@ export default function CommunityCommentList({
               <li>
                 <CommunityCommentItem
                   postId={postId}
+                  viewerId={viewerId}
                   comment={bestComment}
                   isChannelOwner={isChannelOwner}
                   isBest
@@ -124,6 +128,7 @@ export default function CommunityCommentList({
               <li key={comment.id}>
                 <CommunityCommentItem
                   postId={postId}
+                  viewerId={viewerId}
                   comment={comment}
                   isChannelOwner={isChannelOwner}
                 />

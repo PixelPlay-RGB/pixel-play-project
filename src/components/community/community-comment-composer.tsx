@@ -18,6 +18,8 @@ import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar
 
 interface Props {
   postId: string;
+  // 서버에서 확인한 시청자 id(비로그인 null). 인증 게이팅의 1차 기준.
+  viewerId: string | null;
   // 있으면 대댓글 작성.
   parentId?: string;
   compact?: boolean;
@@ -29,12 +31,16 @@ const numberFormatter = new Intl.NumberFormat("ko-KR");
 
 export default function CommunityCommentComposer({
   postId,
+  viewerId,
   parentId,
   compact = false,
   placeholder,
   onSubmitted,
 }: Props) {
-  const currentUserId = useAuthStore((state) => state.user?.id);
+  // 서버 viewerId 우선, 클라 Zustand는 보조(SPA 내 로그인 등 prop이 stale일 때 대비).
+  // SSR/하이드레이션 동안 Zustand는 항상 null이라 단독으로 쓰면 로그인 폴백이 잘못 노출됐었음.
+  const storeUserId = useAuthStore((state) => state.user?.id);
+  const currentUserId = viewerId ?? storeUserId;
   const { data: profile } = useNullableUser();
   const [content, setContent] = useState("");
   const createComment = useCreateCommunityComment(postId);

@@ -8,7 +8,7 @@ import { useState } from "react";
 import CommunityActionMenu from "@/components/community/community-action-menu";
 import CommunityCommentLikeButton from "@/components/community/community-comment-like-button";
 import CommunityCommentReplies from "@/components/community/community-comment-replies";
-import CommunityDeleteDialog from "@/components/community/community-delete-dialog";
+import DeleteConfirmDialog from "@/components/common/delete-confirm-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
@@ -24,6 +24,8 @@ import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar
 
 interface Props {
   postId: string;
+  // 서버에서 확인한 시청자 id(비로그인 null). 인증 게이팅의 1차 기준.
+  viewerId: string | null;
   comment: CommunityComment;
   isChannelOwner: boolean;
   isBest?: boolean;
@@ -34,12 +36,15 @@ const numberFormatter = new Intl.NumberFormat("ko-KR");
 
 export default function CommunityCommentItem({
   postId,
+  viewerId,
   comment,
   isChannelOwner,
   isBest = false,
   isReply = false,
 }: Props) {
-  const currentUserId = useAuthStore((state) => state.user?.id);
+  // 서버 viewerId 우선, 클라 Zustand는 보조(SPA 내 로그인 등 prop이 stale일 때 대비).
+  const storeUserId = useAuthStore((state) => state.user?.id);
+  const currentUserId = viewerId ?? storeUserId;
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState(comment.content);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -204,6 +209,7 @@ export default function CommunityCommentItem({
 
             <CommunityCommentLikeButton
               commentId={comment.id}
+              viewerId={viewerId}
               authorId={comment.authorId}
               isLiked={comment.isLiked}
               likeCount={comment.likeCount}
@@ -214,20 +220,21 @@ export default function CommunityCommentItem({
         {!isReply && repliesOpen && (
           <CommunityCommentReplies
             postId={postId}
+            viewerId={viewerId}
             parentId={comment.id}
             isChannelOwner={isChannelOwner}
           />
         )}
       </div>
 
-      <CommunityDeleteDialog
+      <DeleteConfirmDialog
         open={isDeleteOpen}
         onOpenChange={setIsDeleteOpen}
         title={isReply ? "답글 삭제" : "댓글 삭제"}
         description={
           isReply
-            ? "이 답글을 삭제할까요?\n삭제한 답글은 복구할 수 없어요."
-            : "이 댓글을 삭제할까요?\n달린 답글도 함께 삭제되며 복구할 수 없어요."
+            ? "삭제한 답글은 복구할 수 없어요."
+            : "달린 답글도 함께 삭제되며 복구할 수 없어요."
         }
         isPending={deleteComment.isPending}
         onConfirm={handleConfirmDelete}

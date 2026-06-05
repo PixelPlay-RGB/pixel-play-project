@@ -1,6 +1,7 @@
 "use client";
 // 게시글 상세 뷰: 상단 툴바(목록 + 이전/다음글) + 게시글 카드(작성자·본문·좋아요·⋮) + 댓글 영역.
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
@@ -8,7 +9,8 @@ import { useState } from "react";
 
 import CommunityActionMenu from "@/components/community/community-action-menu";
 import CommunityCommentList from "@/components/community/community-comment-list";
-import CommunityDeleteDialog from "@/components/community/community-delete-dialog";
+import DeleteConfirmDialog from "@/components/common/delete-confirm-dialog";
+import LinkifiedText from "@/components/common/linkified-text";
 import CommunityLikeButton from "@/components/community/community-like-button";
 import CommunityPostPager from "@/components/community/community-post-pager";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -24,6 +26,8 @@ import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar
 
 interface Props {
   creatorId: string;
+  // 서버에서 확인한 시청자 id(비로그인 null). 클라 Zustand 대신 인증 게이팅의 1차 기준.
+  viewerId: string | null;
   post: CommunityPostDetail;
   isChannelOwner: boolean;
   initialComments: CommunityCommentsResult;
@@ -32,6 +36,7 @@ interface Props {
 
 export default function CommunityPostDetailView({
   creatorId,
+  viewerId,
   post,
   isChannelOwner,
   initialComments,
@@ -39,6 +44,7 @@ export default function CommunityPostDetailView({
 }: Props) {
   const router = useRouter();
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [imageDim, setImageDim] = useState<{ width: number; height: number } | null>(null);
   const { data } = useCommunityPostDetail(post.id, post);
   const deletePost = useDeleteCommunityPost(post.id);
 
@@ -112,13 +118,32 @@ export default function CommunityPostDetailView({
             )}
           </div>
 
-          <p className="text-foreground mt-3 text-sm leading-relaxed wrap-break-word whitespace-pre-wrap">
-            {detail.content}
-          </p>
+          <LinkifiedText
+            text={detail.content}
+            className="text-foreground mt-3 text-sm leading-relaxed wrap-break-word whitespace-pre-wrap"
+          />
+
+          {detail.imageUrl && (
+            <Image
+              src={detail.imageUrl}
+              alt="첨부 이미지"
+              width={imageDim?.width ?? 1000}
+              height={imageDim?.height ?? 1000}
+              onLoad={(event) =>
+                setImageDim({
+                  width: event.currentTarget.naturalWidth,
+                  height: event.currentTarget.naturalHeight,
+                })
+              }
+              unoptimized
+              className="border-border/60 mt-4 h-auto max-h-[32rem] w-auto max-w-full rounded-xl border"
+            />
+          )}
 
           <div className="mt-4 flex items-center justify-end">
             <CommunityLikeButton
               postId={detail.id}
+              viewerId={viewerId}
               authorId={detail.creatorId}
               isLiked={detail.isLiked}
               likeCount={detail.likeCount}
@@ -130,6 +155,7 @@ export default function CommunityPostDetailView({
         <section className="border-border/60 border-t p-4 sm:p-5">
           <CommunityCommentList
             postId={detail.id}
+            viewerId={viewerId}
             commentCount={detail.commentCount}
             isChannelOwner={isChannelOwner}
             initialData={initialComments}
@@ -137,11 +163,11 @@ export default function CommunityPostDetailView({
         </section>
       </div>
 
-      <CommunityDeleteDialog
+      <DeleteConfirmDialog
         open={isDeleteOpen}
         onOpenChange={setIsDeleteOpen}
         title="게시글 삭제"
-        description={"이 게시글을 삭제할까요?\n댓글을 포함해 모두 삭제되며 복구할 수 없어요."}
+        description="댓글을 포함해 모두 삭제되며 복구할 수 없어요."
         isPending={deletePost.isPending}
         onConfirm={handleConfirmDelete}
       />

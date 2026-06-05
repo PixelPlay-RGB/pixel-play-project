@@ -88,6 +88,16 @@ export const APP_MESSAGE = {
         title: "테스트 후원 전송 완료",
         description: "OBS 후원 알림 화면에서 확인해주세요.",
       },
+      channelProfileSaved: {
+        title: "채널 정보 저장 완료",
+        description: "변경한 채널 소개와 링크가 적용되었어요.",
+      },
+      bannerSaved: {
+        title: "배너 저장 완료",
+      },
+      bannerDeleted: {
+        title: "배너 삭제 완료",
+      },
     },
     following: {
       followed: {
@@ -444,6 +454,26 @@ export const APP_MESSAGE = {
         title: "새 정보 생성 실패",
         description: "잠시 후 다시 시도해주세요.",
       },
+      channelProfileSaveFailed: {
+        title: "채널 정보 저장 실패",
+        description: "입력값을 확인한 뒤 다시 시도해주세요.",
+      },
+      bannerSaveFailed: {
+        title: "배너 저장 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      bannerDeleteFailed: {
+        title: "배너 삭제 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      bannerImageTooLarge: {
+        title: "이미지 용량 초과",
+        description: "1MB 이하의 이미지를 선택해주세요.",
+      },
+      bannerLimitReached: {
+        title: "배너 개수 초과",
+        description: "배너는 최대 5개까지 등록할 수 있어요.",
+      },
     },
     following: {
       failed: {
@@ -485,6 +515,14 @@ export const APP_MESSAGE = {
       postDeleteFailed: {
         title: "게시글 삭제 실패",
         description: "잠시 후 다시 시도해주세요.",
+      },
+      postImageTooLarge: {
+        title: "이미지 용량 초과",
+        description: "이미지는 5MB 이하만 첨부할 수 있어요.",
+      },
+      postImageUploadFailed: {
+        title: "이미지 업로드 실패",
+        description: "jpg, png, webp, gif 형식의 이미지를 다시 시도해주세요.",
       },
       commentCreateFailed: {
         title: "댓글 등록 실패",

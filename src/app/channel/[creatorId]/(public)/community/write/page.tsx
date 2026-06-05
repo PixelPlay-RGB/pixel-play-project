@@ -27,6 +27,7 @@ export default async function CommunityWritePage({
   }
 
   let initialContent = "";
+  let initialImageUrl: string | null = null;
 
   if (postId) {
     const postResult = await getCommunityPostDetail(postId);
@@ -36,12 +37,18 @@ export default async function CommunityWritePage({
     }
 
     initialContent = postResult.data.content;
+    initialImageUrl = postResult.data.imageUrl;
   }
 
   return (
     <div className="flex flex-col gap-4">
       <h1 className="text-foreground text-lg font-black">{postId ? "글 수정" : "글쓰기"}</h1>
-      <CommunityComposer creatorId={creatorId} postId={postId} initialContent={initialContent} />
+      <CommunityComposer
+        creatorId={creatorId}
+        postId={postId}
+        initialContent={initialContent}
+        initialImageUrl={initialImageUrl}
+      />
     </div>
   );
 }

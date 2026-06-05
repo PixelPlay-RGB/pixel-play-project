@@ -11,8 +11,10 @@ interface Props {
 }
 
 export default function ChannelPublicShell({ profile, children }: Props) {
+  // 라이브 목록과 동일한 사이드바/콘텐츠 컨테이너(LiveShell) 안에서 렌더되므로
+  // 자체 max-width·여백 없이 라이브 목록과 같은 콘텐츠 영역을 가득 채운다.
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 pb-16 sm:px-6">
+    <div className="w-full">
       <ChannelProfileHeader profile={profile} />
       <ChannelTabs creatorId={profile.id} />
       <div className="pt-6">{children}</div>

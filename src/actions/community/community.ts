@@ -3,9 +3,17 @@
 
 import { getAuthenticatedActorId } from "@/actions/common/authenticated-actor";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
+import { USER_MEDIA_BUCKET } from "@/constants/common/storage";
+import {
+  COMMUNITY_IMAGE_ALLOWED_TYPES,
+  COMMUNITY_IMAGE_MAX_SIZE,
+} from "@/constants/community/community";
 import { createAdminClient } from "@/lib/supabase/admin-client";
+import { createClient } from "@/lib/supabase/server";
 import { communityCommentContentSchema, communityPostContentSchema } from "@/lib/zod/community";
 import type { AppActionResult } from "@/types/common/action";
+import { isAuthSessionMissingError } from "@/utils/auth/auth-error";
+import { buildCommunityImagePath } from "@/utils/community/community-image";
 import type {
   CommunityCommentRepliesResult,
   CommunityCommentSort,
@@ -54,31 +62,69 @@ export async function fetchCommunityCommentRepliesAction(
   return getCommunityCommentReplies(parentId, page);
 }
 
-// 게시글 작성 (작성자 = 자기 채널 주인)
-export async function createCommunityPostAction(
-  content: string,
-): Promise<AppActionResult<{ postId: string }>> {
-  const parsed = communityPostContentSchema.safeParse(content);
+// 첨부 이미지 검증(타입·크기). 통과하면 null, 실패면 에러 코드.
+function validateCommunityImage(image: File) {
+  if (!COMMUNITY_IMAGE_ALLOWED_TYPES.includes(image.type)) {
+    return APP_MESSAGE_CODE.error.community.postImageUploadFailed;
+  }
+  if (image.size > COMMUNITY_IMAGE_MAX_SIZE) {
+    return APP_MESSAGE_CODE.error.community.postImageTooLarge;
+  }
+  return null;
+}
 
+// 게시글 작성 (작성자 = 자기 채널 주인). 이미지는 user-context로 업로드 후 admin RPC에 경로 저장.
+export async function createCommunityPostAction(
+  formData: FormData,
+): Promise<AppActionResult<{ postId: string }>> {
+  const content = (formData.get("content") as string | null) ?? "";
+  const image = formData.get("image") as File | null;
+  const hasImage = !!image && image.size > 0;
+
+  const parsed = communityPostContentSchema.safeParse(content);
   if (!parsed.success) {
     return { success: false, code: APP_MESSAGE_CODE.error.community.postCreateFailed };
   }
-
-  const actor = await getAuthenticatedActorId({
-    logLabel: "커뮤니티 게시글 작성 중 인증 유저 조회 실패",
-  });
-
-  if (!actor.success) {
-    return { success: false, code: actor.result.code };
+  if (hasImage) {
+    const imageError = validateCommunityImage(image);
+    if (imageError) {
+      return { success: false, code: imageError };
+    }
   }
 
-  const supabase = createAdminClient();
-  const { data, error } = await supabase.rpc("create_community_post", {
-    p_actor_user_id: actor.userId,
+  const userClient = await createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await userClient.auth.getUser();
+  if (!user || userError) {
+    if (userError && !isAuthSessionMissingError(userError)) {
+      console.error("커뮤니티 게시글 작성 중 인증 유저 조회 실패", userError);
+    }
+    return { success: false, code: APP_MESSAGE_CODE.error.auth.authInfoNotFound };
+  }
+
+  let imagePath: string | null = null;
+  if (hasImage) {
+    imagePath = buildCommunityImagePath(user.id, image.type);
+    const { error: uploadError } = await userClient.storage
+      .from(USER_MEDIA_BUCKET)
+      .upload(imagePath, image, { contentType: image.type, upsert: false });
+    if (uploadError) {
+      console.error("커뮤니티 이미지 업로드 실패", uploadError);
+      return { success: false, code: APP_MESSAGE_CODE.error.community.postImageUploadFailed };
+    }
+  }
+
+  const admin = createAdminClient();
+  const { data, error } = await admin.rpc("create_community_post", {
+    p_actor_user_id: user.id,
     p_content: parsed.data,
+    p_image_path: imagePath ?? undefined,
   });
 
   if (error || !data) {
+    if (imagePath) await userClient.storage.from(USER_MEDIA_BUCKET).remove([imagePath]);
     console.error("커뮤니티 게시글 작성 실패", error);
     return { success: false, code: APP_MESSAGE_CODE.error.community.postCreateFailed };
   }
@@ -86,59 +132,113 @@ export async function createCommunityPostAction(
   return { success: true, data: { postId: data } };
 }
 
-// 게시글 수정 (본인 글만)
+// 게시글 수정 (본인 글만). imageMode: keep(유지)·replace(교체)·remove(제거).
 export async function updateCommunityPostAction(
   postId: string,
-  content: string,
+  formData: FormData,
 ): Promise<AppActionResult> {
-  const parsed = communityPostContentSchema.safeParse(content);
+  const content = (formData.get("content") as string | null) ?? "";
+  const imageMode = (formData.get("imageMode") as string | null) ?? "keep";
+  const image = formData.get("image") as File | null;
+  const willReplace = imageMode === "replace" && !!image && image.size > 0;
 
+  const parsed = communityPostContentSchema.safeParse(content);
   if (!parsed.success) {
     return { success: false, code: APP_MESSAGE_CODE.error.community.postUpdateFailed };
   }
-
-  const actor = await getAuthenticatedActorId({
-    logLabel: "커뮤니티 게시글 수정 중 인증 유저 조회 실패",
-  });
-
-  if (!actor.success) {
-    return { success: false, code: actor.result.code };
+  if (willReplace) {
+    const imageError = validateCommunityImage(image);
+    if (imageError) {
+      return { success: false, code: imageError };
+    }
   }
 
-  const supabase = createAdminClient();
-  const { error } = await supabase.rpc("update_community_post", {
-    p_actor_user_id: actor.userId,
+  const userClient = await createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await userClient.auth.getUser();
+  if (!user || userError) {
+    if (userError && !isAuthSessionMissingError(userError)) {
+      console.error("커뮤니티 게시글 수정 중 인증 유저 조회 실패", userError);
+    }
+    return { success: false, code: APP_MESSAGE_CODE.error.auth.authInfoNotFound };
+  }
+
+  const admin = createAdminClient();
+  // 현재 저장된 image_path(교체/제거 시 옛 파일 정리용)를 서버에서 조회한다.
+  const { data: currentRow } = await admin
+    .from("community_post")
+    .select("image_path")
+    .eq("id", postId)
+    .maybeSingle();
+  const currentImagePath = currentRow?.image_path ?? null;
+
+  // 최종 image_path 계산: 유지=기존, 교체=새 업로드, 제거=null.
+  let finalImagePath: string | null = currentImagePath;
+  let uploadedNew: string | null = null;
+  if (imageMode === "remove") {
+    finalImagePath = null;
+  } else if (willReplace) {
+    uploadedNew = buildCommunityImagePath(user.id, image.type);
+    const { error: uploadError } = await userClient.storage
+      .from(USER_MEDIA_BUCKET)
+      .upload(uploadedNew, image, { contentType: image.type, upsert: false });
+    if (uploadError) {
+      console.error("커뮤니티 이미지 업로드 실패", uploadError);
+      return { success: false, code: APP_MESSAGE_CODE.error.community.postImageUploadFailed };
+    }
+    finalImagePath = uploadedNew;
+  }
+
+  const { error } = await admin.rpc("update_community_post", {
+    p_actor_user_id: user.id,
     p_post_id: postId,
     p_content: parsed.data,
+    p_image_path: finalImagePath ?? undefined,
   });
 
   if (error) {
+    if (uploadedNew) await userClient.storage.from(USER_MEDIA_BUCKET).remove([uploadedNew]);
     console.error("커뮤니티 게시글 수정 실패", error);
     return { success: false, code: APP_MESSAGE_CODE.error.community.postUpdateFailed };
+  }
+
+  // 교체/제거로 더 이상 안 쓰는 옛 이미지 정리(best-effort).
+  if (currentImagePath && currentImagePath !== finalImagePath) {
+    await userClient.storage.from(USER_MEDIA_BUCKET).remove([currentImagePath]);
   }
 
   return { success: true };
 }
 
-// 게시글 삭제 (본인 글만)
+// 게시글 삭제 (본인 글만). 삭제된 글의 image_path를 받아 storage 정리.
 export async function deleteCommunityPostAction(postId: string): Promise<AppActionResult> {
-  const actor = await getAuthenticatedActorId({
-    logLabel: "커뮤니티 게시글 삭제 중 인증 유저 조회 실패",
-  });
-
-  if (!actor.success) {
-    return { success: false, code: actor.result.code };
+  const userClient = await createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await userClient.auth.getUser();
+  if (!user || userError) {
+    if (userError && !isAuthSessionMissingError(userError)) {
+      console.error("커뮤니티 게시글 삭제 중 인증 유저 조회 실패", userError);
+    }
+    return { success: false, code: APP_MESSAGE_CODE.error.auth.authInfoNotFound };
   }
 
-  const supabase = createAdminClient();
-  const { error } = await supabase.rpc("delete_community_post", {
-    p_actor_user_id: actor.userId,
+  const admin = createAdminClient();
+  const { data: imagePath, error } = await admin.rpc("delete_community_post", {
+    p_actor_user_id: user.id,
     p_post_id: postId,
   });
 
   if (error) {
     console.error("커뮤니티 게시글 삭제 실패", error);
     return { success: false, code: APP_MESSAGE_CODE.error.community.postDeleteFailed };
+  }
+
+  if (imagePath) {
+    await userClient.storage.from(USER_MEDIA_BUCKET).remove([imagePath]);
   }
 
   return { success: true };

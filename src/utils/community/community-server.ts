@@ -29,15 +29,16 @@ import {
 export async function getChannelCommunityPosts(
   creatorId: string,
   page = 1,
+  limit = COMMUNITY_POST_PAGE_SIZE,
 ): Promise<AppActionResult<CommunityPostsResult>> {
   const viewerId = await resolveViewerId();
-  const offset = Math.max(page - 1, 0) * COMMUNITY_POST_PAGE_SIZE;
+  const offset = Math.max(page - 1, 0) * limit;
   const supabase = createAdminClient();
 
   const { data, error } = await supabase.rpc("get_channel_community_posts", {
     p_creator_id: creatorId,
     p_viewer_id: viewerId ?? undefined,
-    p_limit: COMMUNITY_POST_PAGE_SIZE,
+    p_limit: limit,
     p_offset: offset,
   });
 

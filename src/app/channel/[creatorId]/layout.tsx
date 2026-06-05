@@ -1,9 +1,10 @@
-// 공개 채널 페이지 셸 레이아웃. 크리에이터 프로필을 조회해 헤더/탭과 함께 렌더링합니다.
+// 채널 공통 레이아웃: 라이브 목록과 동일한 사이드바/콘텐츠 컨테이너(LiveShell)만 제공한다.
+// 공개 프로필 헤더+탭은 (public) 그룹에서만 적용해 관리(setting) 페이지엔 노출하지 않는다.
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 
-import ChannelPublicShell from "@/components/channel/public/channel-public-shell";
+import LiveShell from "@/components/live/live-shell";
 import { getChannelProfile } from "@/utils/channel/channel-server";
 
 interface LayoutProps {
@@ -29,7 +30,7 @@ export async function generateMetadata({
   };
 }
 
-export default async function ChannelPublicLayout({ children, params }: LayoutProps) {
+export default async function ChannelLayout({ children, params }: LayoutProps) {
   const { creatorId } = await params;
   const result = await getChannelProfile(creatorId);
 
@@ -37,5 +38,5 @@ export default async function ChannelPublicLayout({ children, params }: LayoutPr
     notFound();
   }
 
-  return <ChannelPublicShell profile={result.data}>{children}</ChannelPublicShell>;
+  return <LiveShell mobileTitle="채널">{children}</LiveShell>;
 }

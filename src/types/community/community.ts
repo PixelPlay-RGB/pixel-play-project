@@ -10,6 +10,8 @@ export interface CommunityCreator {
 export interface CommunityPost {
   id: string;
   content: string;
+  // 첨부 이미지 공개 URL(없으면 null).
+  imageUrl: string | null;
   likeCount: number;
   commentCount: number;
   createdAt: string;
@@ -31,6 +33,8 @@ export interface CommunityPostDetail {
   creatorNickname: string;
   creatorPhotoUrl: string | null;
   content: string;
+  // 첨부 이미지 공개 URL(없으면 null).
+  imageUrl: string | null;
   likeCount: number;
   commentCount: number;
   createdAt: string;

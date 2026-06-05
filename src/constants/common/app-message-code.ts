@@ -35,6 +35,9 @@ export const APP_MESSAGE_CODE = {
       liveSettingsSaved: "success.channel.liveSettingsSaved",
       donationSettingsSaved: "success.channel.donationSettingsSaved",
       donationTestSent: "success.channel.donationTestSent",
+      channelProfileSaved: "success.channel.channelProfileSaved",
+      bannerSaved: "success.channel.bannerSaved",
+      bannerDeleted: "success.channel.bannerDeleted",
     },
     following: {
       followed: "success.following.followed",
@@ -148,6 +151,11 @@ export const APP_MESSAGE_CODE = {
       securityLoadFailed: "error.channel.securityLoadFailed",
       securityCopyFailed: "error.channel.securityCopyFailed",
       securityTokenRotateFailed: "error.channel.securityTokenRotateFailed",
+      channelProfileSaveFailed: "error.channel.channelProfileSaveFailed",
+      bannerSaveFailed: "error.channel.bannerSaveFailed",
+      bannerDeleteFailed: "error.channel.bannerDeleteFailed",
+      bannerImageTooLarge: "error.channel.bannerImageTooLarge",
+      bannerLimitReached: "error.channel.bannerLimitReached",
     },
     following: {
       failed: "error.following.failed",
@@ -163,6 +171,8 @@ export const APP_MESSAGE_CODE = {
     community: {
       postCreateFailed: "error.community.postCreateFailed",
       postDeleteFailed: "error.community.postDeleteFailed",
+      postImageTooLarge: "error.community.postImageTooLarge",
+      postImageUploadFailed: "error.community.postImageUploadFailed",
       commentCreateFailed: "error.community.commentCreateFailed",
       commentDeleteFailed: "error.community.commentDeleteFailed",
       likeFailed: "error.community.likeFailed",

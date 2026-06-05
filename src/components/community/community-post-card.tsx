@@ -1,13 +1,15 @@
 "use client";
 // 커뮤니티 목록의 게시글 카드. 본문 클릭 시 상세 이동, 채널 주인은 ⋮ 메뉴(수정/삭제).
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Heart, MessageSquare } from "lucide-react";
 import { useState } from "react";
 
+import ClampedText from "@/components/common/clamped-text";
 import CommunityActionMenu from "@/components/community/community-action-menu";
-import CommunityDeleteDialog from "@/components/community/community-delete-dialog";
+import DeleteConfirmDialog from "@/components/common/delete-confirm-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useDeleteCommunityPost } from "@/hooks/community/use-delete-community-post";
 import type { CommunityCreator, CommunityPost } from "@/types/community/community";
@@ -38,8 +40,8 @@ export default function CommunityPostCard({ creatorId, creator, post, isOwner }:
   };
 
   return (
-    <div className="border-border/60 bg-card/60 hover:border-brand/30 hover:bg-card relative rounded-2xl border transition-colors">
-      <Link href={detailHref} className="block p-4 sm:p-5">
+    <div className="border-border/60 bg-card/60 hover:border-brand/30 hover:bg-card relative flex h-56 w-full flex-col rounded-2xl border transition-colors">
+      <Link href={detailHref} className="flex min-h-0 flex-1 flex-col p-4 sm:p-5">
         <div className="flex items-center gap-2.5 pr-8">
           <Avatar className="size-9">
             <AvatarImage src={getAvatarImageSrc(creator.photoUrl)} alt={`${creator.nickname}`} />
@@ -56,9 +58,24 @@ export default function CommunityPostCard({ creatorId, creator, post, isOwner }:
           </div>
         </div>
 
-        <p className="text-foreground/90 mt-3 line-clamp-3 text-sm leading-relaxed wrap-break-word whitespace-pre-wrap">
-          {post.content}
-        </p>
+        <div className="mt-3 flex min-h-0 flex-1 gap-3">
+          <ClampedText
+            text={post.content}
+            className="flex-1"
+            textClassName="text-foreground/90 line-clamp-3 text-sm leading-relaxed wrap-break-word whitespace-pre-wrap"
+          />
+          {post.imageUrl && (
+            <div className="border-border/60 relative aspect-square shrink-0 self-stretch overflow-hidden rounded-lg border">
+              <Image
+                src={post.imageUrl}
+                alt="첨부 이미지"
+                fill
+                sizes="128px"
+                className="object-cover"
+              />
+            </div>
+          )}
+        </div>
 
         <div className="text-muted-foreground mt-3 flex items-center justify-end gap-4 text-xs font-semibold">
           <span className="inline-flex items-center gap-1">
@@ -84,11 +101,11 @@ export default function CommunityPostCard({ creatorId, creator, post, isOwner }:
         </div>
       )}
 
-      <CommunityDeleteDialog
+      <DeleteConfirmDialog
         open={isDeleteOpen}
         onOpenChange={setIsDeleteOpen}
         title="게시글 삭제"
-        description={"이 게시글을 삭제할까요?\n댓글을 포함해 모두 삭제되며 복구할 수 없어요."}
+        description="댓글을 포함해 모두 삭제되며 복구할 수 없어요."
         isPending={deletePost.isPending}
         onConfirm={handleConfirmDelete}
       />

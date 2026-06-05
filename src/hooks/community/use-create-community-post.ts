@@ -9,11 +9,21 @@ import { QUERY_KEYS } from "@/constants/common/query-keys";
 import type { AppActionResult } from "@/types/common/action";
 import { toastAppError, toastAppSuccess } from "@/utils/common/toast-message";
 
+export interface CreateCommunityPostPayload {
+  content: string;
+  image: File | null;
+}
+
 export function useCreateCommunityPost() {
   const queryClient = useQueryClient();
 
-  return useMutation<AppActionResult<{ postId: string }>, Error, string>({
-    mutationFn: (content) => createCommunityPostAction(content),
+  return useMutation<AppActionResult<{ postId: string }>, Error, CreateCommunityPostPayload>({
+    mutationFn: ({ content, image }) => {
+      const formData = new FormData();
+      formData.append("content", content);
+      if (image) formData.append("image", image);
+      return createCommunityPostAction(formData);
+    },
     onSuccess: (result) => {
       if (!result.success) {
         toastAppError(result.code ?? APP_MESSAGE_CODE.error.community.postCreateFailed);

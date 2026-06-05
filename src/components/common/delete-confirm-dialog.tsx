@@ -1,5 +1,5 @@
 "use client";
-// 커뮤니티 게시글/댓글 삭제 확인 다이얼로그(프로젝트 배너 헤더 컨벤션).
+// 공용 삭제 확인 다이얼로그(프로젝트 배너 헤더 컨벤션). 게시글·댓글·배너 등 삭제 확인에 재사용.
 
 import { Trash2 } from "lucide-react";
 
@@ -27,7 +27,7 @@ interface Props {
   confirmLabel?: string;
 }
 
-export default function CommunityDeleteDialog({
+export default function DeleteConfirmDialog({
   open,
   onOpenChange,
   title,
@@ -46,7 +46,7 @@ export default function CommunityDeleteDialog({
       <AlertDialogContent
         showCloseButton={false}
         className={cn(
-          "overflow-hidden rounded-2xl p-0 shadow-xl sm:max-w-md",
+          "overflow-hidden rounded-2xl p-0 shadow-xl sm:max-w-lg",
           "border-destructive/20 shadow-destructive/10",
         )}
       >

@@ -12,6 +12,12 @@ import type {
   CommunityPostsResult,
 } from "@/types/community/community";
 import type { Json } from "@/types/database.types";
+import { getUserMediaPublicUrl } from "@/utils/storage/user-media";
+
+function readImageUrl(value: Json | undefined): string | null {
+  const path = typeof value === "string" && value.trim().length > 0 ? value.trim() : null;
+  return path ? getUserMediaPublicUrl(path) : null;
+}
 
 function readObject(value: Json | undefined): Record<string, Json | undefined> | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
@@ -81,6 +87,7 @@ function parsePostItem(value: Json | undefined): CommunityPost | null {
   return {
     id,
     content,
+    imageUrl: readImageUrl(object.imagePath),
     likeCount: readNumber(object.likeCount),
     commentCount: readNumber(object.commentCount),
     createdAt,
@@ -166,6 +173,7 @@ export function parseCommunityPostDetail(value: Json): CommunityPostDetail | nul
     creatorNickname: readString(object.creatorNickname) ?? "크리에이터",
     creatorPhotoUrl: readString(object.creatorPhotoUrl),
     content,
+    imageUrl: readImageUrl(object.imagePath),
     likeCount: readNumber(object.likeCount),
     commentCount: readNumber(object.commentCount),
     createdAt,

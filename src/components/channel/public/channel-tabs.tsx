@@ -1,5 +1,5 @@
 "use client";
-// 공개 채널 탭 내비게이션. 커뮤니티만 활성, 나머지는 준비중 안내합니다.
+// 공개 채널 탭 내비게이션(홈/커뮤니티/동영상/클립). 동영상·클립은 준비중 안내.
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -16,13 +16,17 @@ interface ChannelTab {
   key: string;
   label: string;
   ready: boolean;
+  // 채널 베이스 경로 뒤에 붙는 경로(홈은 ""). ready 탭만 사용.
+  path?: string;
+  // exact=true면 정확히 일치할 때만 활성(홈).
+  exact?: boolean;
 }
 
 const TABS: ChannelTab[] = [
-  { key: "community", label: "커뮤니티", ready: true },
+  { key: "home", label: "홈", ready: true, path: "", exact: true },
+  { key: "community", label: "커뮤니티", ready: true, path: "/community" },
   { key: "videos", label: "동영상", ready: false },
   { key: "clips", label: "클립", ready: false },
-  { key: "about", label: "정보", ready: false },
 ];
 
 const tabClassName = cn(
@@ -32,18 +36,30 @@ const tabClassName = cn(
 
 export default function ChannelTabs({ creatorId }: Props) {
   const pathname = usePathname();
-  const communityHref = `/channel/${creatorId}/community`;
-  const isCommunityActive =
-    pathname === `/channel/${creatorId}` || pathname.startsWith(communityHref);
+  const basePath = `/channel/${creatorId}`;
 
   const handleNotReady = (label: string) => {
-    toastAppInfo(APP_MESSAGE_CODE.info.common.featureNotReady, `${label} 탭은 곧 제공될 예정이에요.`);
+    toastAppInfo(
+      APP_MESSAGE_CODE.info.common.featureNotReady,
+      `${label} 탭은 곧 제공될 예정이에요.`,
+    );
+  };
+
+  const isTabActive = (tab: ChannelTab) => {
+    if (!tab.ready || tab.path === undefined) {
+      return false;
+    }
+    const href = `${basePath}${tab.path}`;
+    if (tab.exact) {
+      return pathname === href;
+    }
+    return pathname === href || pathname.startsWith(`${href}/`);
   };
 
   return (
     <nav className="border-border/60 flex items-center gap-6 border-b">
       {TABS.map((tab) => {
-        if (!tab.ready) {
+        if (!tab.ready || tab.path === undefined) {
           return (
             <button
               key={tab.key}
@@ -59,14 +75,16 @@ export default function ChannelTabs({ creatorId }: Props) {
           );
         }
 
+        const isActive = isTabActive(tab);
+
         return (
           <Link
             key={tab.key}
-            href={communityHref}
-            aria-current={isCommunityActive ? "page" : undefined}
+            href={`${basePath}${tab.path}`}
+            aria-current={isActive ? "page" : undefined}
             className={cn(
               tabClassName,
-              isCommunityActive
+              isActive
                 ? "text-brand after:bg-brand"
                 : "text-muted-foreground hover:text-foreground after:bg-transparent",
             )}
