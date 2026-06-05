@@ -11,11 +11,18 @@ import { useCommunityCommentReplies } from "@/hooks/community/use-community-comm
 
 interface Props {
   postId: string;
+  // 서버에서 확인한 시청자 id(비로그인 null). 인증 게이팅의 1차 기준.
+  viewerId: string | null;
   parentId: string;
   isChannelOwner: boolean;
 }
 
-export default function CommunityCommentReplies({ postId, parentId, isChannelOwner }: Props) {
+export default function CommunityCommentReplies({
+  postId,
+  viewerId,
+  parentId,
+  isChannelOwner,
+}: Props) {
   const { data, isPending, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useCommunityCommentReplies(parentId, true);
   const replies = data?.pages.flatMap((page) => page.items) ?? [];
@@ -29,6 +36,7 @@ export default function CommunityCommentReplies({ postId, parentId, isChannelOwn
           <CommunityCommentItem
             key={reply.id}
             postId={postId}
+            viewerId={viewerId}
             comment={reply}
             isChannelOwner={isChannelOwner}
             isReply
@@ -53,7 +61,7 @@ export default function CommunityCommentReplies({ postId, parentId, isChannelOwn
       )}
 
       <div className="pt-1">
-        <CommunityCommentComposer postId={postId} parentId={parentId} compact />
+        <CommunityCommentComposer postId={postId} viewerId={viewerId} parentId={parentId} compact />
       </div>
     </div>
   );

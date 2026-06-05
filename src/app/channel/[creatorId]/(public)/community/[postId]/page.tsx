@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import CommunityPostDetailView from "@/components/community/community-post-detail-view";
 import type { CommunityCommentsResult } from "@/types/community/community";
+import { resolveViewerId } from "@/utils/auth/viewer";
 import { getChannelProfile } from "@/utils/channel/channel-server";
 import {
   getCommunityComments,
@@ -19,7 +20,8 @@ export default async function CommunityPostDetailPage({
 }) {
   const { creatorId, postId } = await params;
 
-  const [profileResult, postResult, commentsResult, neighbors] = await Promise.all([
+  const [viewerId, profileResult, postResult, commentsResult, neighbors] = await Promise.all([
+    resolveViewerId(),
     getChannelProfile(creatorId),
     getCommunityPostDetail(postId),
     getCommunityComments(postId, 1),
@@ -40,6 +42,7 @@ export default async function CommunityPostDetailPage({
   return (
     <CommunityPostDetailView
       creatorId={creatorId}
+      viewerId={viewerId}
       post={postResult.data}
       isChannelOwner={profileResult.data.isOwnChannel}
       initialComments={

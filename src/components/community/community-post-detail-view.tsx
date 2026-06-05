@@ -26,6 +26,8 @@ import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar
 
 interface Props {
   creatorId: string;
+  // 서버에서 확인한 시청자 id(비로그인 null). 클라 Zustand 대신 인증 게이팅의 1차 기준.
+  viewerId: string | null;
   post: CommunityPostDetail;
   isChannelOwner: boolean;
   initialComments: CommunityCommentsResult;
@@ -34,6 +36,7 @@ interface Props {
 
 export default function CommunityPostDetailView({
   creatorId,
+  viewerId,
   post,
   isChannelOwner,
   initialComments,
@@ -140,6 +143,7 @@ export default function CommunityPostDetailView({
           <div className="mt-4 flex items-center justify-end">
             <CommunityLikeButton
               postId={detail.id}
+              viewerId={viewerId}
               authorId={detail.creatorId}
               isLiked={detail.isLiked}
               likeCount={detail.likeCount}
@@ -151,6 +155,7 @@ export default function CommunityPostDetailView({
         <section className="border-border/60 border-t p-4 sm:p-5">
           <CommunityCommentList
             postId={detail.id}
+            viewerId={viewerId}
             commentCount={detail.commentCount}
             isChannelOwner={isChannelOwner}
             initialData={initialComments}

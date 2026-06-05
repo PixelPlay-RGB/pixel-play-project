@@ -10,6 +10,8 @@ import { useAuthStore } from "@/stores/auth";
 
 interface Props {
   postId: string;
+  // 서버에서 확인한 시청자 id(비로그인 null). 인증 게이팅의 1차 기준.
+  viewerId: string | null;
   // 글 작성자(=채널 주인) id. 본인이면 좋아요 비활성.
   authorId: string;
   isLiked: boolean;
@@ -21,12 +23,15 @@ const numberFormatter = new Intl.NumberFormat("ko-KR");
 
 export default function CommunityLikeButton({
   postId,
+  viewerId,
   authorId,
   isLiked,
   likeCount,
   className,
 }: Props) {
-  const currentUserId = useAuthStore((state) => state.user?.id);
+  // 서버 viewerId 우선, 클라 Zustand는 보조.
+  const storeUserId = useAuthStore((state) => state.user?.id);
+  const currentUserId = viewerId ?? storeUserId;
   const toggleLike = useToggleCommunityPostLike(postId);
 
   const isOwn = !!currentUserId && currentUserId === authorId;
