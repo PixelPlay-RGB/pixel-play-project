@@ -2,11 +2,12 @@
 
 import { CalendarCheck } from "lucide-react";
 
-import { DonationSettingsLoadFailedState } from "@/components/channel/donation/donation-settings-load-failed-state";
+import { LoadFailedState } from "@/components/common/load-failed-state";
 import { SettlementHistoryCard } from "@/components/channel/settlement/settlement-history-card";
 import { SettlementSummaryCard } from "@/components/channel/settlement/settlement-summary-card";
 import { HintNote } from "@/components/common/hint-note";
 import { SettingsPage } from "@/components/common/settings-page";
+import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { SETTLEMENT_PAYOUT_DAY } from "@/constants/channel/donation";
 import type { ChannelDonationSnapshot, SettlementYearSummary } from "@/types/channel/donation";
 
@@ -17,7 +18,7 @@ interface Props {
 
 export function ChannelSettlementPageContent({ initialSnapshot, yearlySummary }: Props) {
   if (!initialSnapshot) {
-    return <DonationSettingsLoadFailedState />;
+    return <LoadFailedState code={APP_MESSAGE_CODE.error.channel.donationSettingsLoadFailed} />;
   }
 
   return (
