@@ -41,7 +41,7 @@ const STATUS_BADGE: Record<SettlementStatus, { label: string; className: string 
   completed: { label: "정산 완료", className: "bg-brand/15 text-brand" },
   scheduled: {
     label: "정산 예정",
-    className: "bg-amber-400/15 text-amber-600 dark:text-amber-400",
+    className: "bg-warning/15 text-warning",
   },
 };
 
