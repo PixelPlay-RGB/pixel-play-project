@@ -16,6 +16,8 @@ import { parseChannelBanners } from "@/utils/channel/channel-parser";
 
 const MAX_BANNER_SIZE = 1 * 1024 * 1024; // 1MB
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/bmp"];
+// insert_channel_banner RPC가 배너 개수 한도(5개) 초과 시 던지는 SQLSTATE
+const BANNER_LIMIT_REACHED_PG_CODE = "PX409";
 
 export async function addChannelBannerAction(
   formData: FormData,
@@ -69,7 +71,7 @@ export async function addChannelBannerAction(
   if (error) {
     await userClient.storage.from(USER_MEDIA_BUCKET).remove([imagePath]);
     const code =
-      (error as { code?: string }).code === "PX409"
+      (error as { code?: string }).code === BANNER_LIMIT_REACHED_PG_CODE
         ? APP_MESSAGE_CODE.error.channel.bannerLimitReached
         : APP_MESSAGE_CODE.error.channel.bannerSaveFailed;
     return { success: false, code };
