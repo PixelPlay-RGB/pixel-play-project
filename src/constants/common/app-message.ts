@@ -519,7 +519,7 @@ export const APP_MESSAGE = {
         description: "후원 금액과 내용을 다시 확인해주세요.",
       },
       donationDuplicate: {
-        title: "이미 처리된 후원",
+        title: "중복 후원 불가",
         description: "잠시 후 다시 시도해주세요.",
       },
       voteFailed: {

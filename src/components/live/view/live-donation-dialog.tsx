@@ -94,7 +94,7 @@ export function LiveDonationDialog({
       <DialogTrigger
         render={
           <Button
-            className="bg-brand hover:bg-brand/90 text-brand-foreground flex-1 text-xs"
+            className="bg-live hover:bg-live/90 text-live-foreground flex-1 text-xs"
             size="sm"
             disabled={!donationEnabled}
             title={!donationEnabled ? LIVE_DONATION_LABEL.disabled : undefined}
@@ -117,7 +117,7 @@ export function LiveDonationDialog({
               type="checkbox"
               checked={isAnonymous}
               onChange={(e) => setIsAnonymous(e.target.checked)}
-              className="accent-brand size-4"
+              className="accent-live size-4"
             />
             {LIVE_DONATION_LABEL.anonymous}
           </label>
@@ -134,7 +134,7 @@ export function LiveDonationDialog({
                   onClick={() => addAmount(preset)}
                   className={cn(
                     "h-auto px-2 py-2 text-sm",
-                    "border-border text-foreground hover:border-brand/50",
+                    "border-border text-foreground hover:border-live/50",
                   )}
                 >
                   +{formatDonationAmount(preset)}
@@ -208,7 +208,7 @@ export function LiveDonationDialog({
               !!isWalletLoading ||
               !!isWalletError
             }
-            className="bg-brand hover:bg-brand/90 text-brand-foreground"
+            className="bg-live hover:bg-live/90 text-live-foreground"
             onClick={() => {
               void (async () => {
                 setIsSubmitting(true);

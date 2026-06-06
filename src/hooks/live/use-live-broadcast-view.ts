@@ -62,6 +62,12 @@ export function useLiveBroadcastView(creatorId: string) {
 
   async function votePoll(pollId: string, optionId: string): Promise<boolean> {
     const broadcastId = broadcast?.id;
+    // 이미 투표한 항목을 그대로 보내면 표 취소(unvote)다 — RPC가 기존 표 행을 삭제하므로
+    // 낙관적 갱신도 선택 해제(null)로 둔다.
+    const cachedPolls = broadcastId
+      ? queryClient.getQueryData<LivePoll[]>(QUERY_KEYS.live.pollsForViewer(broadcastId, user?.id))
+      : undefined;
+    const isUnvote = cachedPolls?.find((poll) => poll.id === pollId)?.userVotedOptionId === optionId;
     try {
       const success = await voteLivePollAction(pollId, optionId);
       if (!success) {
@@ -73,7 +79,9 @@ export function useLiveBroadcastView(creatorId: string) {
           QUERY_KEYS.live.pollsForViewer(broadcastId, user?.id),
           (prev) =>
             prev?.map((poll) =>
-              poll.id === pollId ? { ...poll, userVotedOptionId: optionId } : poll,
+              poll.id === pollId
+                ? { ...poll, userVotedOptionId: isUnvote ? null : optionId }
+                : poll,
             ),
         );
         void queryClient.invalidateQueries({

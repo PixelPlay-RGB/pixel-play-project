@@ -57,14 +57,14 @@ function getMaxCount(options: LivePollOption[]): number {
   return options.reduce((max, option) => Math.max(max, option.count), 0);
 }
 
-// 항목 뒤를 채우는 득표율 막대(진행 중·종료 결과 공용). emphasized면 브랜드 톤.
+// 항목 뒤를 채우는 득표율 막대(진행 중·종료 결과 공용). emphasized면 라이브 톤.
 function VoteOptionBar({ percent, emphasized }: { percent: number; emphasized: boolean }) {
   return (
     <span
       aria-hidden
       className={cn(
         "absolute inset-y-0 left-0 transition-all duration-300",
-        emphasized ? "bg-brand/20" : "bg-muted",
+        emphasized ? "bg-live/20" : "bg-muted",
       )}
       style={{ width: `${percent}%` }}
     />
@@ -89,12 +89,18 @@ function VoteContent({ activePoll, onVote, onClose }: VoteContentProps) {
 
   // 이미 투표한 항목과 다른 항목을 골라야 제출할 수 있습니다(투표 변경).
   const hasChanged = selectedOption !== (activePoll.userVotedOptionId ?? null);
+  // 투표한 사용자가 선택을 해제하면(이미 누른 항목을 다시 클릭) 표 취소(unvote) 의도입니다.
+  const isUnvote = hasVoted && selectedOption === null;
+  const canSubmit = !isVoting && (isUnvote || (!!selectedOption && hasChanged));
   const total = activePoll.totalCount;
 
   async function handleVote() {
-    if (!selectedOption || isVoting || !hasChanged) return;
+    if (!canSubmit) return;
+    // 표 취소는 RPC에 기존 선택 항목을 그대로 보내면 됩니다(같은 항목 재선택 = 취소).
+    const targetOptionId = isUnvote ? activePoll.userVotedOptionId : selectedOption;
+    if (!targetOptionId) return;
     setIsVoting(true);
-    const success = await onVote(activePoll.id, selectedOption);
+    const success = await onVote(activePoll.id, targetOptionId);
     setIsVoting(false);
     if (success) onClose();
   }
@@ -127,10 +133,12 @@ function VoteContent({ activePoll, onVote, onClose }: VoteContentProps) {
                 variant="outline"
                 aria-checked={isSelected}
                 disabled={isVoting}
-                onClick={() => setSelectedOption(option.id)}
+                onClick={() =>
+                  setSelectedOption((prev) => (prev === option.id ? null : option.id))
+                }
                 className={cn(
                   "relative h-auto w-full justify-start overflow-hidden px-3 py-2.5",
-                  isSelected ? "border-brand text-brand" : "hover:border-brand/40",
+                  isSelected ? "border-live text-live" : "hover:border-live/40",
                 )}
               >
                 <VoteOptionBar percent={percent} emphasized={isSelected} />
@@ -158,17 +166,19 @@ function VoteContent({ activePoll, onVote, onClose }: VoteContentProps) {
         </Button>
         <Button
           type="button"
-          disabled={!selectedOption || isVoting || !hasChanged}
+          disabled={!canSubmit}
           onClick={() => void handleVote()}
-          className="bg-brand hover:bg-brand/90 text-brand-foreground"
+          className="bg-live hover:bg-live/90 text-live-foreground"
         >
           {isVoting
             ? LIVE_VOTE_LABEL.submitting
-            : hasVoted
-              ? hasChanged
-                ? LIVE_VOTE_LABEL.changeVote
-                : LIVE_VOTE_LABEL.participated
-              : LIVE_VOTE_LABEL.submit}
+            : isUnvote
+              ? LIVE_VOTE_LABEL.cancelVote
+              : hasVoted
+                ? hasChanged
+                  ? LIVE_VOTE_LABEL.changeVote
+                  : LIVE_VOTE_LABEL.participated
+                : LIVE_VOTE_LABEL.submit}
         </Button>
       </div>
     </>
@@ -199,22 +209,22 @@ function VoteResults({ poll, onClose }: { poll: LivePoll; onClose: () => void })
                 key={option.id}
                 className={cn(
                   "relative overflow-hidden rounded-md border px-3 py-2.5",
-                  isWinner ? "border-brand/60" : "border-border",
+                  isWinner ? "border-live/60" : "border-border",
                 )}
               >
                 <VoteOptionBar percent={percent} emphasized={isWinner} />
                 <div className="relative flex w-full items-center gap-2 text-sm">
-                  {isWinner ? <Crown className="text-brand size-4 shrink-0" /> : null}
+                  {isWinner ? <Crown className="text-live size-4 shrink-0" /> : null}
                   <span
                     className={cn(
                       "min-w-0 flex-1 truncate text-left",
-                      isWinner && "text-brand font-medium",
+                      isWinner && "text-live font-medium",
                     )}
                   >
                     {index + 1}. {option.label}
                   </span>
                   {isWinner ? (
-                    <span className="bg-brand/15 text-brand shrink-0 rounded-full px-1.5 py-0.5 text-xs font-medium">
+                    <span className="bg-live/15 text-live shrink-0 rounded-full px-1.5 py-0.5 text-xs font-medium">
                       {LIVE_VOTE_LABEL.winner}
                     </span>
                   ) : null}
