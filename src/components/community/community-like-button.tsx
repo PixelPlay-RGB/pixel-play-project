@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useToggleCommunityPostLike } from "@/hooks/community/use-toggle-community-post-like";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth";
+import { formatNumber } from "@/utils/common/format";
 
 interface Props {
   postId: string;
@@ -18,8 +19,6 @@ interface Props {
   likeCount: number;
   className?: string;
 }
-
-const numberFormatter = new Intl.NumberFormat("ko-KR");
 
 export default function CommunityLikeButton({
   postId,
@@ -64,7 +63,7 @@ export default function CommunityLikeButton({
       )}
     >
       <Heart className={cn("size-3.5", isLiked && "fill-current")} />
-      {numberFormatter.format(likeCount)}
+      {formatNumber(likeCount)}
     </Button>
   );
 }

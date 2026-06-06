@@ -6,6 +6,7 @@ import { useToggleLiveSearchFollowing } from "@/hooks/following/use-toggle-live-
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth";
 import type { LiveSearchResult } from "@/types/search/search";
+import { formatNumber } from "@/utils/common/format";
 import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
 import { Radio, UsersRound } from "lucide-react";
 import Link from "next/link";
@@ -13,8 +14,6 @@ import Link from "next/link";
 interface Props {
   result: LiveSearchResult;
 }
-
-const numberFormatter = new Intl.NumberFormat("ko-KR");
 
 export default function LiveCreatorResultCard({ result }: Props) {
   const currentUserId = useAuthStore((state) => state.user?.id);
@@ -88,12 +87,12 @@ export default function LiveCreatorResultCard({ result }: Props) {
             {result.is_live && (
               <span className={cn("text-live inline-flex", "items-center gap-1")}>
                 <Radio className="size-3" />
-                {numberFormatter.format(result.current_viewer_count)}명 시청 중
+                {formatNumber(result.current_viewer_count)}명 시청 중
               </span>
             )}
             <span className={cn("text-muted-foreground inline-flex", "items-center gap-1")}>
               <UsersRound className="size-3" />
-              팔로워 {numberFormatter.format(result.follower_count)}
+              팔로워 {formatNumber(result.follower_count)}
             </span>
           </div>
         </div>

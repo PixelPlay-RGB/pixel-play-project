@@ -10,13 +10,12 @@ import { buttonVariants } from "@/components/ui/button";
 import { useToggleChannelFollowing } from "@/hooks/channel/use-toggle-channel-following";
 import { cn } from "@/lib/utils";
 import type { ChannelProfile } from "@/types/channel/channel";
+import { formatNumber } from "@/utils/common/format";
 import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
 
 interface Props {
   profile: ChannelProfile;
 }
-
-const numberFormatter = new Intl.NumberFormat("ko-KR");
 
 export default function ChannelProfileHeader({ profile }: Props) {
   const { isFollowing, followerCount, isPending, toggle } = useToggleChannelFollowing({
@@ -53,7 +52,7 @@ export default function ChannelProfileHeader({ profile }: Props) {
           )}
         >
           <UsersRound className="size-3.5 shrink-0" />
-          팔로워 {numberFormatter.format(followerCount)}
+          팔로워 {formatNumber(followerCount)}
         </p>
         {profile.bio && (
           <p className="text-muted-foreground/90 mt-1.5 line-clamp-2 text-xs leading-relaxed whitespace-pre-wrap sm:text-sm">

@@ -19,7 +19,7 @@ import { useUpdateCommunityComment } from "@/hooks/community/use-update-communit
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth";
 import type { CommunityComment } from "@/types/community/community";
-import { formatRelativeTime } from "@/utils/common/format";
+import { formatNumber, formatRelativeTime } from "@/utils/common/format";
 import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
 
 interface Props {
@@ -31,8 +31,6 @@ interface Props {
   isBest?: boolean;
   isReply?: boolean;
 }
-
-const numberFormatter = new Intl.NumberFormat("ko-KR");
 
 export default function CommunityCommentItem({
   postId,
@@ -199,7 +197,7 @@ export default function CommunityCommentItem({
                   className="text-brand inline-flex h-7 items-center gap-0.5 text-xs font-bold"
                   aria-expanded={repliesOpen}
                 >
-                  답글 {numberFormatter.format(comment.replyCount)}
+                  답글 {formatNumber(comment.replyCount)}
                   <ChevronDown
                     className={cn("size-3.5 transition-transform", repliesOpen && "rotate-180")}
                   />

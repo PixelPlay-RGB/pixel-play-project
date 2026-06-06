@@ -14,6 +14,7 @@ import { useCreateCommunityComment } from "@/hooks/community/use-create-communit
 import { useNullableUser } from "@/hooks/profile/use-profile";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth";
+import { formatNumber } from "@/utils/common/format";
 import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
 
 interface Props {
@@ -26,8 +27,6 @@ interface Props {
   placeholder?: string;
   onSubmitted?: () => void;
 }
-
-const numberFormatter = new Intl.NumberFormat("ko-KR");
 
 export default function CommunityCommentComposer({
   postId,
@@ -120,8 +119,8 @@ export default function CommunityCommentComposer({
               overLimit && "text-destructive",
             )}
           >
-            {numberFormatter.format(content.length)} /{" "}
-            {numberFormatter.format(COMMUNITY_COMMENT_CONTENT_MAX)}
+            {formatNumber(content.length)} /{" "}
+            {formatNumber(COMMUNITY_COMMENT_CONTENT_MAX)}
           </span>
           <Button
             type="submit"

@@ -1,4 +1,12 @@
 // format 유틸리티 함수를 제공합니다.
+
+// 천 단위 구분 숫자 포맷(ko-KR). SSR/CSR 동일 출력을 위해 로케일을 고정하고 포맷터를 1회만 생성한다.
+const NUMBER_FORMATTER = new Intl.NumberFormat("ko-KR");
+
+export function formatNumber(value: number): string {
+  return NUMBER_FORMATTER.format(value);
+}
+
 export function formatDate(iso: string): string {
   const d = new Date(iso);
   const pad = (n: number) => String(n).padStart(2, "0");

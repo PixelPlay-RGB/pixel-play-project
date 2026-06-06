@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useToggleCommunityCommentLike } from "@/hooks/community/use-toggle-community-comment-like";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth";
+import { formatNumber } from "@/utils/common/format";
 
 interface Props {
   commentId: string;
@@ -17,8 +18,6 @@ interface Props {
   isLiked: boolean;
   likeCount: number;
 }
-
-const numberFormatter = new Intl.NumberFormat("ko-KR");
 
 export default function CommunityCommentLikeButton({
   commentId,
@@ -61,7 +60,7 @@ export default function CommunityCommentLikeButton({
       )}
     >
       <Heart className={cn("size-3.5", isLiked && "fill-current")} />
-      {numberFormatter.format(likeCount)}
+      {formatNumber(likeCount)}
     </Button>
   );
 }
