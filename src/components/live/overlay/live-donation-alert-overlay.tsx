@@ -10,6 +10,7 @@ import {
   liveDonationAlertTextVariants,
 } from "@/lib/framer-motion/live-overlay";
 import type { LiveDonationAlertOverlaySnapshot } from "@/types/live/live-donation-alert-overlay";
+import { formatNumber } from "@/utils/common/format";
 import { formatDonationDonorLabel } from "@/utils/live/live-donation-alert-format";
 
 import { PixelPlayPlayIcon } from "./pixel-play-play-icon";
@@ -23,7 +24,7 @@ export function LiveDonationAlertOverlay({
 }) {
   const { donation, isVisible } = useLiveDonationAlertOverlay(initialSnapshot, { isPreview });
   const donorLabel = formatDonationDonorLabel(donation?.donorName);
-  const formattedAmount = donation?.amount != null ? donation.amount.toLocaleString("ko-KR") : null;
+  const formattedAmount = donation?.amount != null ? formatNumber(donation.amount) : null;
 
   return (
     <main

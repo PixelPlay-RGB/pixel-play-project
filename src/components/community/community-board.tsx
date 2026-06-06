@@ -5,7 +5,7 @@ import Link from "next/link";
 import { PenLine } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import ChatRoomListPagination from "@/components/chat-room-list/chat-room-list-pagination";
+import ListPagination from "@/components/common/list-pagination";
 import CommunityEmptyState from "@/components/community/community-empty-state";
 import CommunityPostList from "@/components/community/community-post-list";
 import CommunityPostListSkeleton from "@/components/community/community-post-list-skeleton";
@@ -62,7 +62,7 @@ export default function CommunityBoard({ creatorId, isOwner, initialData }: Prop
             posts={result.items}
             isOwner={isOwner}
           />
-          <ChatRoomListPagination
+          <ListPagination
             currentPage={page}
             totalPages={totalPages}
             isFetching={isFetching}

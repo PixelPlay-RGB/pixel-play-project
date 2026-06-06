@@ -2,7 +2,8 @@
 import { SettingsPage } from "@/components/common/settings-page";
 import { SideTipCard, SideTipStep } from "@/components/common/side-tip-card";
 import { ChannelSecurityControls } from "@/components/channel/security/channel-security-controls";
-import { SecurityLoadFailedState } from "@/components/channel/security/security-load-failed-state";
+import { LoadFailedState } from "@/components/common/load-failed-state";
+import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import type { ChannelSecuritySnapshot } from "@/types/channel/security";
 import { ShieldCheck } from "lucide-react";
 
@@ -12,7 +13,7 @@ interface Props {
 
 export function ChannelSecurityPageContent({ initialSnapshot }: Props) {
   if (!initialSnapshot) {
-    return <SecurityLoadFailedState />;
+    return <LoadFailedState code={APP_MESSAGE_CODE.error.channel.securityLoadFailed} />;
   }
 
   return (

@@ -5,6 +5,7 @@ import { motion } from "motion/react";
 
 import { PixelPlayPlayIcon } from "@/components/live/overlay/pixel-play-play-icon";
 import { DONATION_TEST_ALERT_SAMPLE } from "@/constants/channel/donation";
+import { formatNumber } from "@/utils/common/format";
 
 interface Props {
   amountVisible: boolean;
@@ -12,7 +13,7 @@ interface Props {
 
 export default function DonationAlertPreview({ amountVisible }: Props) {
   const { donorNickname, amount, message } = DONATION_TEST_ALERT_SAMPLE;
-  const formattedAmount = amount.toLocaleString("ko-KR");
+  const formattedAmount = formatNumber(amount);
 
   return (
     <div className="border-live/20 relative flex aspect-video w-full items-center overflow-hidden rounded-2xl border bg-zinc-950 shadow-xl">

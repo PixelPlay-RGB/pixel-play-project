@@ -53,14 +53,18 @@ npm install
 cp .env.example .env.local
 ```
 
-| 변수                                      | 설명                                                      |
-| ----------------------------------------- | --------------------------------------------------------- |
-| `NEXT_PUBLIC_SUPABASE_URL`                | Supabase 프로젝트 URL                                     |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`    | Supabase publishable key                                  |
-| `NEXT_PUBLIC_SITE_URL`                    | OBS 오버레이 주소 생성에 사용할 공개 서비스 URL           |
-| `NEXT_PUBLIC_ENABLE_REACT_QUERY_DEVTOOLS` | 개발 중 React Query Devtools 표시 여부 (`true`일 때 표시) |
-| `SUPABASE_SERVICE_ROLE_KEY`               | 회원 탈퇴 등 관리자 작업에 사용하는 service role key      |
-| `LIVE_OVERLAY_TOKEN_SECRET`               | 스트림 키와 OBS 오버레이 key 생성에 사용하는 서버 secret  |
+| 변수                                      | 설명                                                                                                                       |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`                | Supabase 프로젝트 URL                                                                                                      |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`    | Supabase publishable key                                                                                                   |
+| `NEXT_PUBLIC_SITE_URL`                    | OBS 오버레이 주소 생성에 사용할 공개 서비스 URL                                                                            |
+| `NEXT_PUBLIC_ENABLE_REACT_QUERY_DEVTOOLS` | 개발 중 React Query Devtools 표시 여부 (`true`일 때 표시)                                                                  |
+| `SUPABASE_SERVICE_ROLE_KEY`               | 회원 탈퇴 등 관리자 작업에 사용하는 service role key                                                                       |
+| `LIVE_OVERLAY_TOKEN_SECRET`               | 스트림 키와 OBS 오버레이 key 생성에 사용하는 서버 secret                                                                   |
+| `NEXT_PUBLIC_MEDIAMTX_RTMP_SERVER_URL`    | OBS 송출용 RTMP 서버 주소 (미설정 시 개발 기본 `rtmp://127.0.0.1:1935`)                                                    |
+| `NEXT_PUBLIC_MEDIAMTX_HLS_BASE_URL`       | 라이브 미리보기 재생용 HLS 베이스 URL (미설정 시 RTMP URL에서 유도)                                                        |
+| `NEXT_PUBLIC_MEDIAMTX_STREAM_PATH`        | 미리보기·송출 상태 조회 기본 스트림 path (미설정 시 개발 기본 `mystream`)                                                  |
+| `MEDIAMTX_API_BASE_URL`                   | 송출 상태 조회용 MediaMTX Control API 베이스 URL (서버 전용, 미설정 시 개발 기본 `http://127.0.0.1:9997`, production 필수) |
 
 환경 변수 키를 추가하거나 변경하면 루트의 `env.d.ts` 타입 선언도 함께 갱신합니다.
 
@@ -266,7 +270,7 @@ npm run dev
 src/
 ├── actions/               # Server Actions (auth, channel, chat-room, common, community, donations, following, live, message, profile)
 ├── app/                   # Next.js App Router
-│   ├── api/               # Route Handler (auth/withdraw, payments/toss)
+│   ├── api/               # Route Handler (auth/withdraw, payments/toss, channel/live/stream-status)
 │   ├── auth/              # 로그인, 회원가입, OAuth callback, 프로필 완성
 │   ├── channel/           # (studio) 스튜디오(live, chat, security, donation, settlement, analytics)
 │   │                      #   + [creatorId] 공개 채널(홈, community, setting)
@@ -315,6 +319,7 @@ src/
 | `community_post_like`         | 게시글 좋아요                                                  |
 | `community_comment_like`      | 댓글 좋아요                                                    |
 | `channel_banner`              | 채널 홈 배너(이미지·제목·링크·정렬 순서)                       |
+| `creator_follow_event`        | 크리에이터 통계용 팔로우/언팔로우 상호작용 이벤트 로그         |
 
 ### Enum
 
@@ -359,21 +364,22 @@ src/
 
 ### DB Triggers
 
-| 트리거                                                    | 설명                                                         |
-| --------------------------------------------------------- | ------------------------------------------------------------ |
-| `trigger_insert_date_divider_message`                     | 매일 첫 메시지 INSERT 시 날짜 구분 system 메시지를 자동 삽입 |
-| `trigger_insert_chat_room_member_system_message`          | 채팅방 참여/나가기 시 system 메시지를 자동 삽입              |
-| `trigger_update_member_count`                             | 멤버 변경 시 채팅방 현재 인원 수를 갱신                      |
-| `trigger_check_capacity_on_rejoin`                        | 재입장 시 정원 초과를 검증                                   |
-| `trigger_delete_empty_chat_room`                          | 멤버가 모두 나간 채팅방을 정리                               |
-| `increment_live_broadcast_message_count_on_live_message`  | 라이브 메시지 INSERT 시 방송 채팅 수를 증가                  |
-| `increment_live_broadcast_donation_stats_on_donation`     | 후원 발생 시 방송 후원 합계·횟수를 증가                      |
-| `sync_live_broadcast_peak_viewer_count_on_live_broadcast` | 현재 시청자 수 변경 시 최고 시청자 수를 동기화               |
-| `community_comment_count_trigger`                         | 댓글·대댓글 INSERT·DELETE 시 게시글 댓글 수를 갱신           |
-| `community_post_like_count_trigger`                       | 게시글 좋아요 INSERT·DELETE 시 좋아요 수를 갱신              |
-| `community_comment_like_count_trigger`                    | 댓글 좋아요 INSERT·DELETE 시 댓글 좋아요 수를 갱신           |
-| `community_comment_validate_parent_trigger`               | 대댓글 부모를 검증해 1단계 대댓글로 평탄화                   |
-| `set_*_modified_at`                                       | 각 테이블의 `modified_at` 타임스탬프 자동 갱신               |
+| 트리거                                                    | 설명                                                                                                |
+| --------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `trigger_insert_date_divider_message`                     | 매일 첫 메시지 INSERT 시 날짜 구분 system 메시지를 자동 삽입                                        |
+| `trigger_insert_chat_room_member_system_message`          | 채팅방 참여/나가기 시 system 메시지를 자동 삽입                                                     |
+| `trigger_update_member_count`                             | 멤버 변경 시 채팅방 현재 인원 수를 갱신                                                             |
+| `trigger_check_capacity_on_rejoin`                        | 재입장 시 정원 초과를 검증                                                                          |
+| `trigger_delete_empty_chat_room`                          | 멤버가 모두 나간 채팅방을 정리                                                                      |
+| `increment_live_broadcast_message_count_on_live_message`  | 라이브 메시지 INSERT 시 방송 채팅 수를 증가                                                         |
+| `increment_live_broadcast_donation_stats_on_donation`     | 후원 발생 시 방송 후원 합계·횟수를 증가                                                             |
+| `sync_live_broadcast_peak_viewer_count_on_live_broadcast` | 현재 시청자 수 변경 시 최고 시청자 수를 동기화                                                      |
+| `community_comment_count_trigger`                         | 댓글·대댓글 INSERT·DELETE 시 게시글 댓글 수를 갱신                                                  |
+| `community_post_like_count_trigger`                       | 게시글 좋아요 INSERT·DELETE 시 좋아요 수를 갱신                                                     |
+| `community_comment_like_count_trigger`                    | 댓글 좋아요 INSERT·DELETE 시 댓글 좋아요 수를 갱신                                                  |
+| `community_comment_validate_parent_trigger`               | 대댓글 부모를 검증해 1단계 대댓글로 평탄화                                                          |
+| `trg_log_creator_follow_event`                            | `viewer_creator_relation.followed_at` 전이를 follow/unfollow 이벤트로 `creator_follow_event`에 적재 |
+| `set_*_modified_at`                                       | 각 테이블의 `modified_at` 타임스탬프 자동 갱신                                                      |
 
 ### 스키마 변경 절차
 
@@ -384,7 +390,7 @@ npm run db:types
 ```
 
 - migration 파일명은 `YYYYMMDDHHMMSS_작업_내용.sql` 형식이며, 파일의 version 접두사는 원격 `schema_migrations` 이력과 일치해야 합니다.
-- 마이그레이션은 도메인별로 채팅(`~20260519`), 라이브·채널·후원(`20260527~`)으로 누적되어 있습니다. 전체 목록은 `supabase/migrations/`를 기준으로 확인합니다.
+- 마이그레이션은 도메인별로 채팅(`~20260519`), 라이브·후원·정산(`20260527~`), 커뮤니티 게시판·채널 프로필/배너·통계 이벤트 로그(`20260602~20260605`)로 누적되어 있습니다. 전체 목록과 최신 version은 `supabase/migrations/`를 기준으로 확인합니다.
 - 적용·기록 규칙의 상세는 `.agents/supabase-convention/SKILLS.md`를 참고합니다.
 
 ---
@@ -416,5 +422,6 @@ npm run db:types
 - 채팅방의 `message` INSERT 이벤트로 새 메시지를, `chat_room_member` 변경 이벤트로 참여자 목록·방 정보·목록 count를 갱신합니다.
 - 강퇴 상태는 현재 유저의 `chat_room_member.is_banned` 변경을 감지해 UI에 반영합니다.
 - 라이브 OBS 오버레이는 `live_message` INSERT 이벤트로 채팅·후원 알림을 실시간 반영합니다.
+- 크리에이터 통계 화면은 `creator_follow_event` INSERT 이벤트로 팔로우/언팔로우 상호작용 로그를 폴링 없이 즉시 반영합니다.
 - Presence는 채팅방 접속 상태 표시 전용으로 사용하며, 권한 판단이나 DB 저장에는 사용하지 않습니다.
 - Broadcast는 채팅방 typing indicator 표시 전용으로 사용하고 DB에는 저장하지 않습니다.

@@ -2,9 +2,11 @@
 
 import { LIVE_THUMBNAIL_FALLBACK_URLS } from "@/constants/live/live-list";
 import type { LiveHeroItem, LiveListItem, LiveListSnapshot } from "@/types/live/live";
+import { formatNumber } from "@/utils/common/format";
 
-const VIEWER_COUNT_FORMATTER = new Intl.NumberFormat("ko-KR");
-const SAFE_THUMBNAIL_HOSTS = new Set(["ftvoynnfpfzmblgrntqj.supabase.co", "images.unsplash.com"]);
+// Supabase 스토리지 호스트는 프로젝트 URL에서 도출해 환경이 바뀌어도 썸네일이 깨지지 않게 한다.
+const SUPABASE_HOSTNAME = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname;
+const SAFE_THUMBNAIL_HOSTS = new Set([SUPABASE_HOSTNAME, "images.unsplash.com"]);
 
 export const EMPTY_LIVE_LIST_SNAPSHOT: LiveListSnapshot = {
   items: [],
@@ -177,15 +179,15 @@ export function createLiveSearchHref(query: string) {
 }
 
 export function formatViewerCount(count: number) {
-  return `${VIEWER_COUNT_FORMATTER.format(count)}명 시청`;
+  return `${formatNumber(count)}명 시청`;
 }
 
 export function formatViewerCountNumber(count: number) {
-  return VIEWER_COUNT_FORMATTER.format(count);
+  return formatNumber(count);
 }
 
 export function formatViewerCountLabel(count: number) {
-  return `${VIEWER_COUNT_FORMATTER.format(count)}명`;
+  return `${formatNumber(count)}명`;
 }
 
 export function formatLiveDuration(startedAt: string) {

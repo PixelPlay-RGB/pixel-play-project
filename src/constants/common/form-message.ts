@@ -1,5 +1,7 @@
 // 폼 검증과 필드 오류에 사용하는 문장형 메시지를 관리하는 상수
 
+import { formatNumber } from "@/utils/common/format";
+
 export const FORM_MESSAGE = {
   auth: {
     emailInvalid: "올바른 이메일 형식을 입력해주세요.",
@@ -51,7 +53,7 @@ export const FORM_MESSAGE = {
   },
   channelDonation: {
     minAmountRange: (min: number, max: number) =>
-      `최소 후원 금액은 ${min.toLocaleString()}P 이상 ${max.toLocaleString()}P 이하여야 합니다.`,
+      `최소 후원 금액은 ${formatNumber(min)}P 이상 ${formatNumber(max)}P 이하여야 합니다.`,
     alertDurationInvalid: "선택할 수 있는 알림 표시 시간을 골라주세요.",
     alertSoundInvalid: "선택할 수 있는 알림음을 골라주세요.",
     alertVolumeRange: "알림 볼륨은 0부터 100 사이여야 합니다.",

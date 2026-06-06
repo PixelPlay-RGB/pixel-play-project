@@ -13,7 +13,7 @@ import DeleteConfirmDialog from "@/components/common/delete-confirm-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useDeleteCommunityPost } from "@/hooks/community/use-delete-community-post";
 import type { CommunityCreator, CommunityPost } from "@/types/community/community";
-import { formatRelativeTime } from "@/utils/common/format";
+import { formatNumber, formatRelativeTime } from "@/utils/common/format";
 import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
 
 interface Props {
@@ -22,8 +22,6 @@ interface Props {
   post: CommunityPost;
   isOwner: boolean;
 }
-
-const numberFormatter = new Intl.NumberFormat("ko-KR");
 
 export default function CommunityPostCard({ creatorId, creator, post, isOwner }: Props) {
   const router = useRouter();
@@ -80,11 +78,11 @@ export default function CommunityPostCard({ creatorId, creator, post, isOwner }:
         <div className="text-muted-foreground mt-3 flex items-center justify-end gap-4 text-xs font-semibold">
           <span className="inline-flex items-center gap-1">
             <Heart className="size-3.5" />
-            {numberFormatter.format(post.likeCount)}
+            {formatNumber(post.likeCount)}
           </span>
           <span className="inline-flex items-center gap-1">
             <MessageSquare className="size-3.5" />
-            {numberFormatter.format(post.commentCount)}
+            {formatNumber(post.commentCount)}
           </span>
         </div>
       </Link>

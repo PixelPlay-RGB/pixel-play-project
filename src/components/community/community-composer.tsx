@@ -17,6 +17,7 @@ import {
   COMMUNITY_IMAGE_MAX_SIZE,
   COMMUNITY_POST_CONTENT_MAX,
 } from "@/constants/community/community";
+import { formatNumber } from "@/utils/common/format";
 import { useCreateCommunityPost } from "@/hooks/community/use-create-community-post";
 import { useUpdateCommunityPost } from "@/hooks/community/use-update-community-post";
 import { cn } from "@/lib/utils";
@@ -200,8 +201,8 @@ export default function CommunityComposer({
               content.length > COMMUNITY_POST_CONTENT_MAX && "text-destructive",
             )}
           >
-            {content.length.toLocaleString("ko-KR")} /{" "}
-            {COMMUNITY_POST_CONTENT_MAX.toLocaleString("ko-KR")}
+            {formatNumber(content.length)} /{" "}
+            {formatNumber(COMMUNITY_POST_CONTENT_MAX)}
           </span>
 
           <Button

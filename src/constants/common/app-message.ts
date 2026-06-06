@@ -462,6 +462,10 @@ export const APP_MESSAGE = {
         title: "새 정보 생성 실패",
         description: "잠시 후 다시 시도해주세요.",
       },
+      analyticsLoadFailed: {
+        title: "통계 조회 실패",
+        description: "다시 로그인하거나 잠시 후 새로고침해주세요.",
+      },
       channelProfileSaveFailed: {
         title: "채널 정보 저장 실패",
         description: "입력값을 확인한 뒤 다시 시도해주세요.",

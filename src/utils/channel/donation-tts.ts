@@ -1,5 +1,7 @@
 // 후원 알림 TTS로 읽을 문구를 만듭니다.
 
+import { formatNumber } from "@/utils/common/format";
+
 interface DonationTtsParams {
   donorNickname: string;
   amount: number | null;
@@ -16,7 +18,7 @@ export function buildDonationTtsText({
 }: DonationTtsParams): string {
   const head =
     amountVisible && amount !== null
-      ? `${donorNickname}님이 ${amount.toLocaleString("ko-KR")}포인트를 후원했습니다.`
+      ? `${donorNickname}님이 ${formatNumber(amount)}포인트를 후원했습니다.`
       : `${donorNickname}님이 후원했습니다.`;
 
   const trimmedMessage = message.trim();

@@ -1,4 +1,4 @@
-// 크리에이터 아바타, 이름, 팔로워 수, 방송 횟수를 표시합니다.
+// 크리에이터 아바타, 이름, 팔로워 수를 표시합니다.
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatCount } from "@/utils/live/live-chat";

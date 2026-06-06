@@ -5,7 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { RotateCw } from "lucide-react";
 import { Fragment, useState } from "react";
 
-import ChatRoomListPagination from "@/components/chat-room-list/chat-room-list-pagination";
+import ListPagination from "@/components/common/list-pagination";
 import CommunityCommentComposer from "@/components/community/community-comment-composer";
 import CommunityCommentItem from "@/components/community/community-comment-item";
 import { CommunityCommentListSkeleton } from "@/components/community/community-comment-skeleton";
@@ -18,6 +18,7 @@ import { QUERY_KEYS } from "@/constants/common/query-keys";
 import { useCommunityComments } from "@/hooks/community/use-community-comments";
 import { cn } from "@/lib/utils";
 import type { CommunityCommentSort, CommunityCommentsResult } from "@/types/community/community";
+import { formatNumber } from "@/utils/common/format";
 
 interface Props {
   postId: string;
@@ -28,8 +29,6 @@ interface Props {
   isChannelOwner: boolean;
   initialData?: CommunityCommentsResult;
 }
-
-const numberFormatter = new Intl.NumberFormat("ko-KR");
 
 export default function CommunityCommentList({
   postId,
@@ -68,7 +67,7 @@ export default function CommunityCommentList({
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5">
           <h2 className="text-foreground text-sm font-black">
-            댓글 {numberFormatter.format(commentCount)}
+            댓글 {formatNumber(commentCount)}
           </h2>
           <button
             type="button"
@@ -136,7 +135,7 @@ export default function CommunityCommentList({
             ))}
           </ul>
 
-          <ChatRoomListPagination
+          <ListPagination
             currentPage={page}
             totalPages={totalPages}
             isFetching={isFetching}

@@ -7,14 +7,6 @@ import type {
 
 type JsonObject = Record<string, unknown>;
 
-export const EMPTY_FOLLOWING_CHANNEL_PAGE_SNAPSHOT: FollowingChannelPageSnapshot = {
-  items: [],
-  totalCount: 0,
-  liveCount: 0,
-  recentBroadcastCount: 0,
-  filteredCount: 0,
-};
-
 function isJsonObject(value: unknown): value is JsonObject {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }

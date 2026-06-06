@@ -24,7 +24,6 @@ export async function fetchLiveListSnapshot({
   const { data, error } = await supabase.rpc("get_live_list", {
     p_filter: filter,
     p_sort: sort,
-    p_query: undefined,
     p_limit: limit,
     p_offset: 0,
     p_excluded_live_id: excludedLiveId ?? undefined,

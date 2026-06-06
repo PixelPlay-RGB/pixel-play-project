@@ -4,9 +4,10 @@
 import { Heart } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { useViewerId } from "@/hooks/common/use-viewer-id";
 import { useToggleCommunityPostLike } from "@/hooks/community/use-toggle-community-post-like";
 import { cn } from "@/lib/utils";
-import { useAuthStore } from "@/stores/auth";
+import { formatNumber } from "@/utils/common/format";
 
 interface Props {
   postId: string;
@@ -19,8 +20,6 @@ interface Props {
   className?: string;
 }
 
-const numberFormatter = new Intl.NumberFormat("ko-KR");
-
 export default function CommunityLikeButton({
   postId,
   viewerId,
@@ -29,9 +28,7 @@ export default function CommunityLikeButton({
   likeCount,
   className,
 }: Props) {
-  // 서버 viewerId 우선, 클라 Zustand는 보조.
-  const storeUserId = useAuthStore((state) => state.user?.id);
-  const currentUserId = viewerId ?? storeUserId;
+  const currentUserId = useViewerId(viewerId);
   const toggleLike = useToggleCommunityPostLike(postId);
 
   const isOwn = !!currentUserId && currentUserId === authorId;
@@ -64,7 +61,7 @@ export default function CommunityLikeButton({
       )}
     >
       <Heart className={cn("size-3.5", isLiked && "fill-current")} />
-      {numberFormatter.format(likeCount)}
+      {formatNumber(likeCount)}
     </Button>
   );
 }

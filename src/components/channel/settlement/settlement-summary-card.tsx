@@ -21,7 +21,7 @@ export function SettlementSummaryCard({ monthlyDonation, settlement }: Props) {
 
   // 이번 달분은 아직 마감 전이므로 후원이 있으면 '정산 예정', 없으면 '정산 대상 없음'으로 표시합니다.
   const statusBadge = hasDonation
-    ? { label: "정산 예정", className: "bg-amber-400/15 text-amber-600 dark:text-amber-400" }
+    ? { label: "정산 예정", className: "bg-warning/15 text-warning" }
     : { label: "정산 대상 없음", className: "bg-muted text-muted-foreground" };
 
   const hasAccount = settlement.bankName.length > 0 && settlement.accountHolder.length > 0;

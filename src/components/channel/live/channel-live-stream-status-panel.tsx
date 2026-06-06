@@ -68,13 +68,11 @@ function getStatusClassName(status: ChannelLiveStreamStatusResponse | null) {
 
 function StreamStatusContent({
   durationLabel,
-  isBroadcasting,
   isOnline,
   bitrateKbps,
   streamStatus,
 }: {
   durationLabel: string;
-  isBroadcasting: boolean;
   isOnline: boolean;
   bitrateKbps: number | null;
   streamStatus: ChannelLiveStreamStatusResponse | null;
@@ -95,7 +93,7 @@ function StreamStatusContent({
           <span className="text-muted-foreground text-sm font-semibold">온라인 상태</span>
           <span className={getStatusClassName(streamStatus)}>
             <Radio className="size-3.5" />
-            {isBroadcasting ? getStatusLabel(streamStatus) : "송출 대기"}
+            {getStatusLabel(streamStatus)}
           </span>
         </div>
         {streamStats.map((stat) => (
@@ -114,24 +112,15 @@ function StreamStatusContent({
 
 export default function ChannelLiveStreamStatusPanel({
   activeBroadcastStartedAt,
-  liveState,
   streamPath,
   variant = "card",
 }: Props) {
-  const isBroadcasting = liveState.isBroadcasting;
   const [streamStatus, setStreamStatus] = useState<ChannelLiveStreamStatusResponse | null>(null);
   const [bitrateKbps, setBitrateKbps] = useState<number | null>(null);
   const [durationLabel, setDurationLabel] = useState(DEFAULT_STREAM_DURATION);
   const previousSampleRef = useRef<BitrateSample | null>(null);
 
-  // 송출 상태는 방송 중일 때만 폴링한다. 실제 영상은 OBS가 MediaMTX로 직접 송출하므로,
-  // 방송 시작 전(송출 대기)에는 확인할 스트림이 없어 폴링이 불필요하다.
   useEffect(() => {
-    if (!isBroadcasting) {
-      previousSampleRef.current = null;
-      return;
-    }
-
     let isMounted = true;
     const abortController = new AbortController();
 
@@ -187,12 +176,10 @@ export default function ChannelLiveStreamStatusPanel({
       abortController.abort();
       clearInterval(interval);
     };
-  }, [streamPath, isBroadcasting]);
+  }, [streamPath]);
 
   useEffect(() => {
-    const startedAt = isBroadcasting
-      ? (streamStatus?.onlineTime ?? activeBroadcastStartedAt)
-      : null;
+    const startedAt = streamStatus?.onlineTime ?? activeBroadcastStartedAt;
 
     const updateDuration = () => {
       setDurationLabel(formatDuration(startedAt));
@@ -204,19 +191,15 @@ export default function ChannelLiveStreamStatusPanel({
     return () => {
       clearInterval(interval);
     };
-  }, [isBroadcasting, activeBroadcastStartedAt, streamStatus?.onlineTime]);
+  }, [activeBroadcastStartedAt, streamStatus?.onlineTime]);
 
-  // 방송 중이 아니면 폴링이 멈춘 상태이므로 직전 송출 정보를 표시하지 않는다.
-  const displayStatus = isBroadcasting ? streamStatus : null;
-  const displayBitrate = isBroadcasting ? bitrateKbps : null;
-  const isOnline = displayStatus?.state === "online";
+  const isOnline = streamStatus?.state === "online";
   const content = (
     <StreamStatusContent
       durationLabel={durationLabel}
-      isBroadcasting={isBroadcasting}
       isOnline={isOnline}
-      bitrateKbps={displayBitrate}
-      streamStatus={displayStatus}
+      bitrateKbps={bitrateKbps}
+      streamStatus={streamStatus}
     />
   );
 

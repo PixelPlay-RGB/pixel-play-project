@@ -1,13 +1,21 @@
 "use client";
 // 댓글/대댓글 수정 mutation. 낙관적으로 본문·수정표시를 갱신 후 재동기화합니다.
 
-import { useMutation, useQueryClient, type QueryKey } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueryClient,
+  type InfiniteData,
+  type QueryKey,
+} from "@tanstack/react-query";
 
 import { updateCommunityCommentAction } from "@/actions/community/community";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { QUERY_KEYS } from "@/constants/common/query-keys";
 import type { AppActionResult } from "@/types/common/action";
-import type { CommunityComment, CommunityCommentsResult } from "@/types/community/community";
+import type {
+  CommunityCommentRepliesResult,
+  CommunityCommentsResult,
+} from "@/types/community/community";
 import { applyCommentContent, applyContentToCommentList } from "@/utils/community/community-cache";
 import { toastAppError, toastAppSuccess } from "@/utils/common/toast-message";
 
@@ -18,7 +26,7 @@ interface UpdateCommentInput {
 
 interface UpdateCommentContext {
   commentsSnapshots: Array<[QueryKey, CommunityCommentsResult | undefined]>;
-  repliesSnapshots: Array<[QueryKey, CommunityComment[] | undefined]>;
+  repliesSnapshots: Array<[QueryKey, InfiniteData<CommunityCommentRepliesResult> | undefined]>;
 }
 
 export function useUpdateCommunityComment(postId: string) {
@@ -41,7 +49,9 @@ export function useUpdateCommunityComment(postId: string) {
       const commentsSnapshots = queryClient.getQueriesData<CommunityCommentsResult>({
         queryKey: commentsKey,
       });
-      const repliesSnapshots = queryClient.getQueriesData<CommunityComment[]>({
+      const repliesSnapshots = queryClient.getQueriesData<
+        InfiniteData<CommunityCommentRepliesResult>
+      >({
         queryKey: repliesKey,
       });
       const modifiedAt = new Date().toISOString();
@@ -49,8 +59,18 @@ export function useUpdateCommunityComment(postId: string) {
       queryClient.setQueriesData<CommunityCommentsResult>({ queryKey: commentsKey }, (data) =>
         applyCommentContent(data, commentId, content, modifiedAt),
       );
-      queryClient.setQueriesData<CommunityComment[]>({ queryKey: repliesKey }, (data) =>
-        data ? applyContentToCommentList(data, commentId, content, modifiedAt) : data,
+      queryClient.setQueriesData<InfiniteData<CommunityCommentRepliesResult>>(
+        { queryKey: repliesKey },
+        (data) =>
+          data
+            ? {
+                ...data,
+                pages: data.pages.map((page) => ({
+                  ...page,
+                  items: applyContentToCommentList(page.items, commentId, content, modifiedAt),
+                })),
+              }
+            : data,
       );
 
       return { commentsSnapshots, repliesSnapshots };

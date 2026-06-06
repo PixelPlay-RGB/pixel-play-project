@@ -3,6 +3,7 @@ import LiveSearchTagLink from "@/components/search/live-search-tag-link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import type { LiveSearchResult } from "@/types/search/search";
+import { formatNumber } from "@/utils/common/format";
 import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
 import { getLiveSearchTagLabels } from "@/utils/search/live-search";
 import { Radio, Users } from "lucide-react";
@@ -12,8 +13,6 @@ import Link from "next/link";
 interface Props {
   result: LiveSearchResult;
 }
-
-const numberFormatter = new Intl.NumberFormat("ko-KR");
 
 function getFallbackTone(creatorId: string) {
   const lastCharCode = creatorId.charCodeAt(creatorId.length - 1);
@@ -127,7 +126,7 @@ export default function LiveBroadcastResultCard({ result }: Props) {
           )}
         >
           <Users className="text-live size-3" />
-          {numberFormatter.format(result.current_viewer_count)}
+          {formatNumber(result.current_viewer_count)}
         </span>
       </Link>
 

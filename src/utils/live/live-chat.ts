@@ -3,6 +3,7 @@
 import { CLEANBOT_PROFANITY_WORDS } from "@/constants/live/cleanbot";
 import { LIVE_MESSAGE_LIMIT } from "@/constants/live/live";
 import type { LiveChatMessage } from "@/types/live/live";
+import { formatNumber } from "@/utils/common/format";
 
 // 메시지 본문이 클린봇 시드 사전의 비속어를 포함하는지(대소문자 무시 부분일치) 판정한다.
 // 방장 금칙어(서버 차단)와 별개의 best-effort 필터다.
@@ -27,7 +28,7 @@ export function formatCount(count: number): string {
   if (count >= 1000) {
     return `${(count / 1000).toFixed(1)}천`;
   }
-  return count.toLocaleString();
+  return formatNumber(count);
 }
 
 export function formatElapsedTime(seconds: number): string {
@@ -45,5 +46,5 @@ export function formatElapsedTime(seconds: number): string {
 }
 
 export function formatDonationAmount(amount: number): string {
-  return amount.toLocaleString();
+  return formatNumber(amount);
 }
