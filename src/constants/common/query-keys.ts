@@ -14,7 +14,7 @@ export const QUERY_KEYS = {
   auth: {
     all: ["auth"] as const,
     session: () => [...QUERY_KEYS.auth.all, "session"],
-    profiles: () => [...QUERY_KEYS.auth.all, "profile"],
+    profileAll: () => [...QUERY_KEYS.auth.all, "profile"],
     profile: (userId?: string) => [...QUERY_KEYS.auth.all, "profile", userId ?? "session"],
   },
   live: {
@@ -45,20 +45,19 @@ export const QUERY_KEYS = {
         visibleCount,
         excludedLiveId ?? undefined,
       ].filter((v) => v !== undefined),
+    sidebarAll: () => [...QUERY_KEYS.live.all, "sidebar"],
     sidebar: {
       trending: (userId?: string) => [
-        ...QUERY_KEYS.live.all,
-        "sidebar",
+        ...QUERY_KEYS.live.sidebarAll(),
         "trending",
         userId ?? "public",
       ],
       following: (userId?: string) => [
-        ...QUERY_KEYS.live.all,
-        "sidebar",
+        ...QUERY_KEYS.live.sidebarAll(),
         "following",
         userId ?? "public",
       ],
-      keywords: () => [...QUERY_KEYS.live.all, "sidebar", "keywords"],
+      keywords: () => [...QUERY_KEYS.live.sidebarAll(), "keywords"],
     },
     searchAll: () => [...QUERY_KEYS.live.all, "search"],
     search: (query?: string, section?: string) =>
