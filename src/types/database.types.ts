@@ -705,6 +705,32 @@ export type Database = {
           },
         ]
       }
+      live_viewer_heartbeat: {
+        Row: {
+          broadcast_id: string
+          last_seen_at: string
+          viewer_key: string
+        }
+        Insert: {
+          broadcast_id: string
+          last_seen_at?: string
+          viewer_key: string
+        }
+        Update: {
+          broadcast_id?: string
+          last_seen_at?: string
+          viewer_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_viewer_heartbeat_broadcast_id_fkey"
+            columns: ["broadcast_id"]
+            isOneToOne: false
+            referencedRelation: "live_broadcast"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       message: {
         Row: {
           chat_room_id: string
@@ -1181,9 +1207,17 @@ export type Database = {
         Args: { p_actor_user_id: string; p_room_id: string }
         Returns: undefined
       }
+      leave_live_viewer_presence: {
+        Args: { p_broadcast_id: string; p_viewer_key: string }
+        Returns: number
+      }
       mark_room_read: {
         Args: { p_actor_user_id: string; p_room_id: string }
         Returns: undefined
+      }
+      recompute_live_viewer_count: {
+        Args: { p_broadcast_id: string }
+        Returns: number
       }
       reorder_channel_banners: {
         Args: { p_actor_user_id: string; p_banner_ids: string[] }
@@ -1288,6 +1322,11 @@ export type Database = {
           p_title?: string
         }
         Returns: string
+      }
+      sweep_live_viewer_counts: { Args: never; Returns: undefined }
+      sync_live_viewer_presence: {
+        Args: { p_broadcast_id: string; p_viewer_key: string }
+        Returns: number
       }
       transfer_chat_room_owner: {
         Args: {

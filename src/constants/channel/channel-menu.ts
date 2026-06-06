@@ -38,8 +38,11 @@ export const CHANNEL_MENU_ITEMS: ChannelMenuItem[] = [
   },
   {
     id: "analytics",
-    label: "실시간 통계",
-    href: "/channel/analytics",
+    label: "통계 분석",
     icon: BarChart3,
+    children: [
+      { id: "analytics-live", label: "실시간 통계", href: "/channel/analytics/live" },
+      { id: "analytics-report", label: "지난 방송 분석", href: "/channel/analytics/report" },
+    ],
   },
 ];

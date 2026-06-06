@@ -128,4 +128,11 @@ export const QUERY_KEYS = {
         (v) => v !== undefined,
       ),
   },
+  channel: {
+    all: ["channel"] as const,
+    analyticsFollowFeed: (creatorId?: string) =>
+      [...QUERY_KEYS.channel.all, "analytics", "follow-feed", creatorId].filter(
+        (v) => v !== undefined,
+      ),
+  },
 } as const;
