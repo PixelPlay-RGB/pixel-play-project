@@ -13,7 +13,7 @@ import { COMMUNITY_COMMENT_CONTENT_MAX } from "@/constants/community/community";
 import { useCreateCommunityComment } from "@/hooks/community/use-create-community-comment";
 import { useNullableUser } from "@/hooks/profile/use-profile";
 import { cn } from "@/lib/utils";
-import { useAuthStore } from "@/stores/auth";
+import { useViewerId } from "@/hooks/common/use-viewer-id";
 import { formatNumber } from "@/utils/common/format";
 import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
 
@@ -36,10 +36,7 @@ export default function CommunityCommentComposer({
   placeholder,
   onSubmitted,
 }: Props) {
-  // 서버 viewerId 우선, 클라 Zustand는 보조(SPA 내 로그인 등 prop이 stale일 때 대비).
-  // SSR/하이드레이션 동안 Zustand는 항상 null이라 단독으로 쓰면 로그인 폴백이 잘못 노출됐었음.
-  const storeUserId = useAuthStore((state) => state.user?.id);
-  const currentUserId = viewerId ?? storeUserId;
+  const currentUserId = useViewerId(viewerId);
   const { data: profile } = useNullableUser();
   const [content, setContent] = useState("");
   const createComment = useCreateCommunityComment(postId);

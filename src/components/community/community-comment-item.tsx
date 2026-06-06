@@ -16,8 +16,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { COMMUNITY_COMMENT_CONTENT_MAX } from "@/constants/community/community";
 import { useDeleteCommunityComment } from "@/hooks/community/use-delete-community-comment";
 import { useUpdateCommunityComment } from "@/hooks/community/use-update-community-comment";
+import { useViewerId } from "@/hooks/common/use-viewer-id";
 import { cn } from "@/lib/utils";
-import { useAuthStore } from "@/stores/auth";
 import type { CommunityComment } from "@/types/community/community";
 import { formatNumber, formatRelativeTime } from "@/utils/common/format";
 import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
@@ -40,9 +40,7 @@ export default function CommunityCommentItem({
   isBest = false,
   isReply = false,
 }: Props) {
-  // 서버 viewerId 우선, 클라 Zustand는 보조(SPA 내 로그인 등 prop이 stale일 때 대비).
-  const storeUserId = useAuthStore((state) => state.user?.id);
-  const currentUserId = viewerId ?? storeUserId;
+  const currentUserId = useViewerId(viewerId);
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState(comment.content);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
