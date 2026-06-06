@@ -18,6 +18,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { CHAT_ROOM_TABS, ROOM_TAB_LABELS } from "@/constants/chat-room/chat-room";
 import { useChatRoomStore } from "@/stores/chat-room";
+import { formatNumber } from "@/utils/common/format";
 import type { ChatRoomCounts, ChatRoomTab } from "@/types/chat-room/chat-room";
 import { cn } from "@/lib/utils";
 
@@ -186,7 +187,7 @@ export default function ChatRoomListTabs({ counts, isFetching = false }: Props) 
                       "*:bg-brand! *:fill-brand!",
                     )}
                   >
-                    {ROOM_TAB_LABELS[tab]} {count.toLocaleString()}개
+                    {ROOM_TAB_LABELS[tab]} {formatNumber(count)}개
                   </TooltipContent>
                 </Tooltip>
               );

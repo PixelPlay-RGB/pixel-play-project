@@ -8,6 +8,7 @@ import type {
   LiveChatOverlayMessage,
   LiveChatOverlaySnapshot,
 } from "@/types/live/live-chat-overlay";
+import { formatNumber } from "@/utils/common/format";
 import { getLiveChatOverlayNicknameColor } from "@/utils/live/live-chat-overlay-style";
 
 export function LiveChatOverlay({ initialSnapshot }: { initialSnapshot: LiveChatOverlaySnapshot }) {
@@ -76,7 +77,7 @@ function DonationMessageItem({ message }: { message: LiveChatOverlayMessage }) {
       <span className="text-live mr-1.5 font-medium">{message.author}</span>
       {typeof message.amount === "number" && (
         <span className="text-live mr-1.5 font-medium">
-          {message.amount.toLocaleString("ko-KR")}P
+          {formatNumber(message.amount)}P
         </span>
       )}
       <span className="mr-1.5 text-white/70">후원</span>

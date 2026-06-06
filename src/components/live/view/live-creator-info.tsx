@@ -2,6 +2,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatCount } from "@/utils/live/live-chat";
+import { formatNumber } from "@/utils/common/format";
 import { LIVE_LABEL } from "@/constants/live/live";
 import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
 import type { LiveBroadcast } from "@/types/live/live";
@@ -30,7 +31,7 @@ export function LiveCreatorInfo({ broadcast }: Props) {
           </span>
           <span>·</span>
           <span>
-            {creator.broadcastCount.toLocaleString()} {LIVE_LABEL.broadcasts}
+            {formatNumber(creator.broadcastCount)} {LIVE_LABEL.broadcasts}
           </span>
         </div>
       </div>
