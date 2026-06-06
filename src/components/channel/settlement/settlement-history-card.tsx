@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { getSettlementDonationsAction } from "@/actions/channel/settlement";
-import ChatRoomListPagination from "@/components/chat-room-list/chat-room-list-pagination";
+import ListPagination from "@/components/common/list-pagination";
 import { QUERY_KEYS } from "@/constants/common/query-keys";
 import { SettingsCard } from "@/components/common/settings-card";
 import {
@@ -256,7 +256,7 @@ export function SettlementHistoryCard({ yearlySummary }: Props) {
         </div>
       )}
 
-      <ChatRoomListPagination
+      <ListPagination
         currentPage={page}
         totalPages={totalPages}
         isFetching={isFetching}

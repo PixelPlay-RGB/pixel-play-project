@@ -5,7 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { RotateCw } from "lucide-react";
 import { Fragment, useState } from "react";
 
-import ChatRoomListPagination from "@/components/chat-room-list/chat-room-list-pagination";
+import ListPagination from "@/components/common/list-pagination";
 import CommunityCommentComposer from "@/components/community/community-comment-composer";
 import CommunityCommentItem from "@/components/community/community-comment-item";
 import { CommunityCommentListSkeleton } from "@/components/community/community-comment-skeleton";
@@ -136,7 +136,7 @@ export default function CommunityCommentList({
             ))}
           </ul>
 
-          <ChatRoomListPagination
+          <ListPagination
             currentPage={page}
             totalPages={totalPages}
             isFetching={isFetching}
