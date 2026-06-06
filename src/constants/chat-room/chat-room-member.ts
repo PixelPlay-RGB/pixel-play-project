@@ -4,13 +4,11 @@ export const MEMBER_ACTION_COPY = {
     title: "강퇴하기",
     description: "님을 채팅방에서 강퇴하시겠습니까?",
     confirm: "강퇴하기",
-    success: "참여자를 강퇴했습니다.",
   },
   transfer: {
     title: "방장 위임",
     description: "님에게 방장 권한을 위임하시겠습니까?",
     confirm: "위임하기",
-    success: "방장 권한을 위임했습니다.",
   },
 } as const;
 

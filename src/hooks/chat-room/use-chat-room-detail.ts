@@ -72,7 +72,6 @@ export function useChatRoomDetail(roomId: string) {
     roomFetched: detailQuery.isFetched,
     roomMissing,
     membership,
-    membershipFetched: detailQuery.isFetched,
     members,
     isJoined,
     isKicked,
