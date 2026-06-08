@@ -30,6 +30,7 @@ import type {
   UserWalletChargeHistoryItem,
 } from "@/types/donations/user-donations";
 import { getPageItems } from "@/utils/common/pagination";
+import { formatPoint } from "@/utils/donations/format";
 import { CreditCard, Gift, Inbox } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState, type MouseEvent } from "react";
@@ -490,10 +491,6 @@ function readSentDonationItem(donation: UserSentDonationItem): DonationHistoryIt
     amount: donation.amount,
     createdAt: donation.createdAt,
   };
-}
-
-function formatPoint(value: number) {
-  return `${value.toLocaleString("ko-KR")}P`;
 }
 
 function formatKstTime(value: string) {

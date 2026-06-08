@@ -8,6 +8,7 @@ import {
   type DonationHistoryTab,
 } from "@/components/donations/user-donation-history-table";
 import type { UserDonationSnapshot } from "@/types/donations/user-donations";
+import { formatPoint } from "@/utils/donations/format";
 import { useState } from "react";
 
 interface Props {
@@ -84,8 +85,4 @@ function DonationSummaryGrid({ snapshot }: { snapshot: UserDonationSnapshot }) {
       ))}
     </dl>
   );
-}
-
-function formatPoint(value: number) {
-  return `${value.toLocaleString("ko-KR")}P`;
 }

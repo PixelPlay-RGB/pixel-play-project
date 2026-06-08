@@ -11,6 +11,7 @@ namespace NodeJS {
 
     SUPABASE_SERVICE_ROLE_KEY: string;
     LIVE_OVERLAY_TOKEN_SECRET: string;
+    TOSS_PAYMENTS_SECRET_KEY?: string;
     MEDIAMTX_API_BASE_URL?: string;
     VERCEL_URL?: string;
   }

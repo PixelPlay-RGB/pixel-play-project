@@ -7,6 +7,7 @@ import { WalletChargeDialog } from "@/components/donations/wallet-charge-card";
 import type { AppMessageCode } from "@/constants/common/app-message-code";
 import type { UserDonationSnapshot } from "@/types/donations/user-donations";
 import { getAppMessage } from "@/utils/common/app-message";
+import { formatPoint } from "@/utils/donations/format";
 
 interface Props {
   snapshot: UserDonationSnapshot | null;
@@ -73,8 +74,4 @@ function DonationBalanceHero({ snapshot }: { snapshot: UserDonationSnapshot }) {
       </div>
     </section>
   );
-}
-
-function formatPoint(value: number) {
-  return `${value.toLocaleString("ko-KR")}P`;
 }

@@ -28,6 +28,7 @@ import type {
   TossPaymentsWidgets,
 } from "@/types/payments/toss-payments";
 import { getAppMessage } from "@/utils/common/app-message";
+import { formatPoint } from "@/utils/donations/format";
 import { CreditCard, Loader2 } from "lucide-react";
 import Script from "next/script";
 import { FormEvent, useEffect, useId, useMemo, useRef, useState } from "react";
@@ -417,8 +418,4 @@ function isValidChargeAmount(value: number | undefined) {
     value <= WALLET_CHARGE_MAX_AMOUNT &&
     value % WALLET_CHARGE_STEP_AMOUNT === 0
   );
-}
-
-function formatPoint(amount: number) {
-  return `${amount.toLocaleString("ko-KR")}P`;
 }

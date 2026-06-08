@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/chart";
 import { cn } from "@/lib/utils";
 import type { UserDonationSnapshot } from "@/types/donations/user-donations";
+import { formatPoint } from "@/utils/donations/format";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import type { TooltipPayloadEntry, TooltipValueType } from "recharts";
 import { useEffect, useMemo, useRef } from "react";
@@ -314,10 +315,6 @@ function formatCompactPoint(value: number) {
   }
 
   return String(value);
-}
-
-function formatPoint(value: number) {
-  return `${value.toLocaleString("ko-KR")}P`;
 }
 
 function ChartTotalSummary({
