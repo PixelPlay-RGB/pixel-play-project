@@ -4,7 +4,19 @@
 import type { Database } from "@/types/database.types";
 import type { AppNotification, NotificationType } from "@/types/notification/notification";
 
-type NotificationRow = Database["public"]["Tables"]["notification"]["Row"];
+// 목록 조회에서 선택하는 컬럼만 받는다(use-notifications의 select와 일치).
+type NotificationRow = Pick<
+  Database["public"]["Tables"]["notification"]["Row"],
+  | "id"
+  | "type"
+  | "actor_id"
+  | "actor_nickname"
+  | "actor_photo_url"
+  | "title"
+  | "body"
+  | "link_path"
+  | "created_at"
+>;
 
 export function parseNotification(row: NotificationRow): AppNotification {
   return {

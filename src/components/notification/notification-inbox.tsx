@@ -14,7 +14,8 @@ import type { AppNotification } from "@/types/notification/notification";
 import { formatNotificationGroupLabel } from "@/utils/common/format";
 
 export default function NotificationInbox({ onNavigate }: { onNavigate: () => void }) {
-  const { data, isPending, fetchNextPage, hasNextPage, isFetchingNextPage } = useNotifications(true);
+  const { data, isPending, isError, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useNotifications(true);
   const deleteAll = useDeleteAllNotifications();
   const deleteOne = useDeleteNotification();
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -35,6 +36,14 @@ export default function NotificationInbox({ onNavigate }: { onNavigate: () => vo
         <div className="flex justify-center py-10">
           <Spinner />
         </div>
+      );
+    }
+
+    if (isError) {
+      return (
+        <p className="text-muted-foreground py-10 text-center text-sm font-semibold">
+          알림을 불러오지 못했어요.
+        </p>
       );
     }
 

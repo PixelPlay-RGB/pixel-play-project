@@ -24,7 +24,8 @@ export function useNotifications(enabled: boolean) {
       const to = from + NOTIFICATION_PAGE_SIZE - 1;
       const { data, error } = await supabase
         .from("notification")
-        .select("*")
+        // 파서가 쓰는 컬럼만 명시적으로 선택(과조회 방지 + DB 계약 고정).
+        .select("id, type, actor_id, actor_nickname, actor_photo_url, title, body, link_path, created_at")
         // RLS로도 본인 수신분만 보이지만, 명시적 recipient 필터로 인덱스 활용 + 정책 변경 방어.
         .eq("recipient_id", userId!)
         // 같은 created_at(동시 이벤트) 페이지 경계에서 중복/누락이 없도록 id로 안정 정렬한다.
