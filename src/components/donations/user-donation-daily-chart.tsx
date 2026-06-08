@@ -125,10 +125,10 @@ export function UserDonationDailyChart({ snapshot, activeTab }: Props) {
 
       <div
         ref={scrollAreaRef}
-        className="h-56 min-h-56 overflow-x-auto overscroll-contain pb-2"
+        className="h-64 min-h-64 overflow-x-auto overflow-y-hidden overscroll-contain pb-2"
         tabIndex={0}
       >
-        <div style={{ width: chartWidth }} className="h-full min-h-56">
+        <div style={{ width: chartWidth }} className="h-full min-h-64">
           <ChartContainer
             config={DONATION_DAILY_CHART_CONFIG}
             className="aspect-auto h-full w-full"
