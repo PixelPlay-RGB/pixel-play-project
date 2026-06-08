@@ -7,6 +7,7 @@ import NotificationInbox from "@/components/notification/notification-inbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useMarkNotificationsSeen } from "@/hooks/notification/use-mark-notifications-seen";
 import { useNotificationBadge } from "@/hooks/notification/use-notification-badge";
+import { cn } from "@/lib/utils";
 
 export default function NotificationBell() {
   const [open, setOpen] = useState(false);
@@ -26,11 +27,16 @@ export default function NotificationBell() {
       <PopoverTrigger
         type="button"
         aria-label="알림"
-        className="text-muted-foreground hover:text-foreground relative inline-flex size-9 items-center justify-center rounded-full"
+        className={cn(
+          "relative grid size-10 place-items-center rounded-md border border-transparent bg-transparent",
+          "cursor-pointer",
+          "text-foreground hover:bg-muted hover:text-foreground dark:hover:bg-muted/50",
+          "transition-all duration-200",
+        )}
       >
-        <Bell className="size-5" />
+        <Bell size={24} />
         {unreadCount > 0 && (
-          <span className="bg-live ring-background absolute top-1.5 right-1.5 size-2 rounded-full ring-2" />
+          <span className="bg-live ring-background absolute top-2 right-2 size-2 rounded-full ring-2" />
         )}
       </PopoverTrigger>
       <PopoverContent align="end" className="w-88 gap-0 p-0">

@@ -31,7 +31,7 @@ export default async function Header() {
             <BroadcastButton />
           </div>
 
-          <Separator orientation="vertical" className="h-6" />
+          <Separator orientation="vertical" className="h-6 data-vertical:self-center" />
 
           {/* 섹션 2: 알림 + 테마 토글 */}
           <div className="flex items-center gap-2 sm:gap-3">
@@ -39,7 +39,7 @@ export default async function Header() {
             <ThemeToggleButton />
           </div>
 
-          <Separator orientation="vertical" className="h-6" />
+          <Separator orientation="vertical" className="h-6 data-vertical:self-center" />
 
           {/* 섹션 3: 계정 */}
           <div className="flex items-center">
