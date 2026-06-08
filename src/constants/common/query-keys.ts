@@ -143,7 +143,9 @@ export const QUERY_KEYS = {
       [...QUERY_KEYS.notification.all, "last-seen", userId ?? "public"].filter(
         (v) => v !== undefined,
       ),
-    unreadCount: (userId?: string) =>
+    unreadCountAll: (userId?: string) =>
       [...QUERY_KEYS.notification.all, "unread", userId ?? "public"].filter((v) => v !== undefined),
+    unreadCount: (userId?: string, lastSeen?: string | null) =>
+      [...QUERY_KEYS.notification.unreadCountAll(userId), lastSeen].filter((v) => v !== undefined),
   },
 } as const;

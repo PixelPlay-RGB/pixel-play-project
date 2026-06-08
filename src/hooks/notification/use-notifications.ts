@@ -17,6 +17,7 @@ export function useNotifications(enabled: boolean) {
   return useInfiniteQuery({
     queryKey: QUERY_KEYS.notification.list(userId),
     enabled: enabled && !!userId,
+    staleTime: 1000 * 30,
     initialPageParam: 0,
     queryFn: async ({ pageParam }) => {
       const from = pageParam * NOTIFICATION_PAGE_SIZE;
@@ -24,7 +25,11 @@ export function useNotifications(enabled: boolean) {
       const { data, error } = await supabase
         .from("notification")
         .select("*")
+        // RLS로도 본인 수신분만 보이지만, 명시적 recipient 필터로 인덱스 활용 + 정책 변경 방어.
+        .eq("recipient_id", userId!)
+        // 같은 created_at(동시 이벤트) 페이지 경계에서 중복/누락이 없도록 id로 안정 정렬한다.
         .order("created_at", { ascending: false })
+        .order("id", { ascending: false })
         .range(from, to);
       if (error) throw error;
       return (data ?? []).map(parseNotification);

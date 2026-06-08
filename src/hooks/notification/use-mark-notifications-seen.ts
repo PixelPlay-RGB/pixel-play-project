@@ -15,7 +15,9 @@ export function useMarkNotificationsSeen() {
     onSuccess: (result) => {
       if (!result.success) return;
       void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.notification.lastSeen(userId) });
-      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.notification.unreadCount(userId) });
+      void queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.notification.unreadCountAll(userId),
+      });
     },
   });
 }

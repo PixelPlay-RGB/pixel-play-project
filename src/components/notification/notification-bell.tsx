@@ -33,7 +33,7 @@ export default function NotificationBell() {
           <span className="bg-live ring-background absolute top-1.5 right-1.5 size-2 rounded-full ring-2" />
         )}
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-[22rem] gap-0 p-0">
+      <PopoverContent align="end" className="w-88 gap-0 p-0">
         <div className="border-border flex items-center justify-between border-b px-4 py-3">
           <span className="text-foreground text-sm font-bold">알림</span>
         </div>

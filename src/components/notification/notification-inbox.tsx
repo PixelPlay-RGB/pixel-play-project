@@ -6,15 +6,7 @@ import NotificationItem from "@/components/notification/notification-item";
 import { Spinner } from "@/components/ui/spinner";
 import { useNotifications } from "@/hooks/notification/use-notifications";
 import type { AppNotification } from "@/types/notification/notification";
-
-const DAY_MS = 24 * 60 * 60 * 1000;
-
-function groupLabel(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
-  if (diff < DAY_MS) return "오늘";
-  if (diff < 7 * DAY_MS) return "최근 일주일";
-  return "이전";
-}
+import { formatNotificationGroupLabel } from "@/utils/common/format";
 
 export default function NotificationInbox({ onNavigate }: { onNavigate: () => void }) {
   const { data, isPending, fetchNextPage, hasNextPage, isFetchingNextPage } = useNotifications(true);
@@ -37,11 +29,12 @@ export default function NotificationInbox({ onNavigate }: { onNavigate: () => vo
   }
 
   return (
-    <div className="flex max-h-[28rem] flex-col overflow-y-auto p-1">
+    <div className="flex max-h-112 flex-col overflow-y-auto p-1">
       {items.map((item, index) => {
-        const label = groupLabel(item.createdAt);
+        const label = formatNotificationGroupLabel(item.createdAt);
         // 직전 아이템과 그룹 라벨이 다를 때(또는 첫 아이템)만 그룹 헤더를 노출합니다.
-        const prevLabel = index > 0 ? groupLabel(items[index - 1].createdAt) : null;
+        const prevLabel =
+          index > 0 ? formatNotificationGroupLabel(items[index - 1].createdAt) : null;
         const showLabel = label !== prevLabel;
         return (
           <Fragment key={item.id}>
