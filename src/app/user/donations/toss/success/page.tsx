@@ -2,6 +2,8 @@
 import { confirmTossWalletCharge } from "@/lib/payments/toss-wallet-charge";
 import { redirect } from "next/navigation";
 
+import { getTossSuccessRedirectPaymentStatus } from "./toss-success-redirect-status";
+
 interface Props {
   searchParams: Promise<{
     amount?: string | string[];
@@ -12,13 +14,15 @@ interface Props {
 
 export default async function TossPaymentSuccessRedirectPage({ searchParams }: Props) {
   const params = await searchParams;
-  const result = await confirmTossWalletCharge({
-    amount: readSingleValue(params.amount),
-    orderId: readSingleValue(params.orderId),
-    paymentKey: readSingleValue(params.paymentKey),
-  });
+  const paymentStatus = await getTossSuccessRedirectPaymentStatus(() =>
+    confirmTossWalletCharge({
+      amount: readSingleValue(params.amount),
+      orderId: readSingleValue(params.orderId),
+      paymentKey: readSingleValue(params.paymentKey),
+    }),
+  );
   const nextParams = new URLSearchParams({
-    paymentStatus: result.success ? "charge_success" : "charge_failed",
+    paymentStatus,
   });
 
   redirect(`/user/donations?${nextParams.toString()}`);
