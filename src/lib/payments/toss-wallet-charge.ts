@@ -8,6 +8,10 @@ import {
   WALLET_CHARGE_MIN_AMOUNT,
   WALLET_CHARGE_STEP_AMOUNT,
 } from "@/constants/payments/wallet-charge";
+import {
+  shouldMarkTossConfirmFailed,
+  TOSS_CONFIRM_TIMEOUT_MS,
+} from "@/lib/payments/toss-confirm-failure-policy";
 import { createAdminClient } from "@/lib/supabase/admin-client";
 import { createClient } from "@/lib/supabase/server";
 import type { AppActionResult } from "@/types/common/action";
@@ -246,42 +250,57 @@ async function requestTossPaymentConfirm(
     };
   }
 
-  const response = await fetch(TOSS_PAYMENTS_CONFIRM_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Basic ${Buffer.from(`${secretKey}:`).toString("base64")}`,
-      "Content-Type": "application/json",
-      "Idempotency-Key": idempotencyKey,
-    },
-    body: JSON.stringify({
-      paymentKey: input.paymentKey,
-      orderId: input.orderId,
-      amount: input.amount,
-    }),
-    cache: "no-store",
-  }).catch((error: unknown) => {
-    console.error("Toss 결제 승인 API 네트워크 호출 실패", error);
-    return null;
-  });
+  const abortController = new AbortController();
+  const timeoutId = setTimeout(() => abortController.abort(), TOSS_CONFIRM_TIMEOUT_MS);
 
-  if (!response) {
+  let response: Response;
+
+  try {
+    response = await fetch(TOSS_PAYMENTS_CONFIRM_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${Buffer.from(`${secretKey}:`).toString("base64")}`,
+        "Content-Type": "application/json",
+        "Idempotency-Key": idempotencyKey,
+      },
+      body: JSON.stringify({
+        paymentKey: input.paymentKey,
+        orderId: input.orderId,
+        amount: input.amount,
+      }),
+      cache: "no-store",
+      signal: abortController.signal,
+    });
+  } catch (error: unknown) {
+    console.error("Toss 결제 승인 API 네트워크 호출 실패", error);
     return {
       success: false as const,
-      status: 502,
+      status: isAbortError(error) ? 504 : 502,
       shouldMarkFailed: false,
     };
+  } finally {
+    clearTimeout(timeoutId);
   }
+
   const data = await readJsonResponse(response);
 
   if (!response.ok) {
+    const tossErrorCode = readObjectText(data, "code");
+    const shouldMarkFailed = shouldMarkTossConfirmFailed({
+      status: response.status,
+      errorCode: tossErrorCode,
+    });
+
     console.error("Toss 결제 승인 API 호출 실패", {
       status: response.status,
+      tossErrorCode,
+      shouldMarkFailed,
       data,
     });
     return {
       success: false as const,
       status: response.status,
-      shouldMarkFailed: true,
+      shouldMarkFailed,
     };
   }
 
@@ -429,6 +448,12 @@ async function readJsonResponse(response: Response) {
   } catch {
     return null;
   }
+}
+
+function isAbortError(error: unknown) {
+  return (
+    error instanceof DOMException && (error.name === "AbortError" || error.name === "TimeoutError")
+  );
 }
 
 function isValidChargeAmount(amount: number) {
