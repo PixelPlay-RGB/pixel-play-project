@@ -1,5 +1,5 @@
 "use client";
-// 수신함 패널: 헤더(알림 + 모두 삭제) + 날짜 그룹(오늘/어제/최근 일주일/이전) 목록 + 더보기 + 개별 삭제.
+// 수신함 패널: 헤더(알림 + 모두 삭제) + 날짜 그룹(오늘/최근 일주일/이전) 목록 + 더보기 + 개별 삭제.
 import { Fragment, useState } from "react";
 
 import DeleteConfirmDialog from "@/components/common/delete-confirm-dialog";

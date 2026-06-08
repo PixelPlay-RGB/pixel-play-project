@@ -46,7 +46,7 @@ export function formatRelativeTime(iso: string): string {
   return formatDate(iso);
 }
 
-// 알림 수신함 그룹 라벨(오늘/어제/최근 일주일/이전).
+// 알림 수신함 그룹 라벨(오늘/최근 일주일/이전).
 // rolling(시간 누적)이 아니라 자정(00시) 기준 달력 일수 차이로 판정한다.
 const GROUP_DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -67,9 +67,6 @@ export function formatNotificationGroupLabel(iso: string): string {
 
   if (daysAgo <= 0) {
     return "오늘";
-  }
-  if (daysAgo === 1) {
-    return "어제";
   }
   if (daysAgo < 7) {
     return "최근 일주일";
