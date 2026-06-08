@@ -4,6 +4,7 @@ import LoginButton from "@/components/auth/login-button";
 import BroadcastButton from "@/components/common/broadcast-button";
 import HeaderMainNav from "@/components/common/header-main-nav";
 import ThemeToggleButton from "@/components/common/theme-toggle-button";
+import NotificationBell from "@/components/notification/notification-bell";
 import UserAccountMenu from "@/components/common/user-account-menu";
 import HeaderSearchForm from "@/components/search/header-search-form";
 import { cn } from "@/lib/utils";
@@ -26,6 +27,7 @@ export default async function Header() {
           <HeaderSearchForm />
           <BroadcastButton />
           <ThemeToggleButton />
+          {hasAuthUser && <NotificationBell />}
           {profile && <UserAccountMenu profile={profile} />}
           {!hasAuthUser && <LoginButton />}
         </div>
