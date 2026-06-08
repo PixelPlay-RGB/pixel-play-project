@@ -116,6 +116,8 @@ export const APP_MESSAGE_CODE = {
       confirmChargeFailed: "error.donation.confirmChargeFailed",
       chargeFailed: "error.donation.chargeFailed",
       chargeCanceled: "error.donation.chargeCanceled",
+      paymentWindowConfigMissing: "error.donation.paymentWindowConfigMissing",
+      paymentWindowLoadFailed: "error.donation.paymentWindowLoadFailed",
     },
     message: {
       invalidInput: "error.message.invalidInput",

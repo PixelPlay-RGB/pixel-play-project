@@ -169,27 +169,27 @@ begin
     on wallet.user_id = target_user.id
   left join lateral (
     select
-      coalesce(sum(donation.amount), 0)::integer as total_amount,
+      coalesce(sum(donation.amount), 0::bigint) as total_amount,
       coalesce(
         sum(donation.amount) filter (
           where donation.created_at >= v_current_month_start
             and donation.created_at < v_next_current_month_start
         ),
         0
-      )::integer as current_month_amount
+      ) as current_month_amount
     from public.donation as donation
     where donation.donor_id = target_user.id
   ) as donation_stat on true
   left join lateral (
     select
-      coalesce(sum(wallet_charge.amount_delta), 0)::integer as total_amount,
+      coalesce(sum(wallet_charge.amount_delta), 0::bigint) as total_amount,
       coalesce(
         sum(wallet_charge.amount_delta) filter (
           where wallet_charge.created_at >= v_current_month_start
             and wallet_charge.created_at < v_next_current_month_start
         ),
         0
-      )::integer as current_month_amount
+      ) as current_month_amount
     from public.wallet_transaction as wallet_charge
     where wallet_charge.user_id = target_user.id
       and wallet_charge.transaction_type = 'charge'::public.wallet_transaction_type

@@ -332,6 +332,14 @@ export const APP_MESSAGE = {
         title: "충전 취소",
         description: "결제가 취소되어 후원 지갑에 반영되지 않았습니다.",
       },
+      paymentWindowConfigMissing: {
+        title: "결제 키 필요",
+        description: "NEXT_PUBLIC_TOSS_PAYMENTS_CLIENT_KEY를 설정하면 결제창을 사용할 수 있습니다.",
+      },
+      paymentWindowLoadFailed: {
+        title: "결제창 로드 실패",
+        description: "결제창을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.",
+      },
     },
     chatRoomMember: {
       kickFailed: {

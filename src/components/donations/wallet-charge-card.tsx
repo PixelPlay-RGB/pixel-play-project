@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import {
   WALLET_CHARGE_DEFAULT_AMOUNT,
   WALLET_CHARGE_MAX_AMOUNT,
@@ -26,6 +27,7 @@ import type {
   TossPaymentsPaymentWindow,
   TossPaymentsWidgets,
 } from "@/types/payments/toss-payments";
+import { getAppMessage } from "@/utils/common/app-message";
 import { CreditCard, Loader2 } from "lucide-react";
 import Script from "next/script";
 import { FormEvent, useEffect, useId, useMemo, useRef, useState } from "react";
@@ -359,11 +361,13 @@ function getPaymentButtonLabel(clientKey: string | undefined, state: PaymentWind
 
 function getPaymentStateMessage(clientKey: string | undefined, state: PaymentWindowState) {
   if (!clientKey) {
-    return "NEXT_PUBLIC_TOSS_PAYMENTS_CLIENT_KEY를 설정하면 결제창을 사용할 수 있습니다.";
+    return (
+      getAppMessage(APP_MESSAGE_CODE.error.donation.paymentWindowConfigMissing).description ?? ""
+    );
   }
 
   if (state === "failed") {
-    return "결제창을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.";
+    return getAppMessage(APP_MESSAGE_CODE.error.donation.paymentWindowLoadFailed).description ?? "";
   }
 
   return "";

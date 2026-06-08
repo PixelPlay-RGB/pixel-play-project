@@ -2,6 +2,8 @@
 import { markTossWalletChargeFailure } from "@/lib/payments/toss-wallet-charge";
 import { redirect } from "next/navigation";
 
+import { markTossFailureForRedirect } from "./toss-fail-redirect-marking";
+
 interface Props {
   searchParams: Promise<{
     code?: string | string[];
@@ -16,16 +18,21 @@ export default async function TossPaymentFailRedirectPage({ searchParams }: Prop
   const params = await searchParams;
   const code = readSingleValue(params.code);
   const message = readSingleValue(params.message);
+  const orderId = readSingleValue(params.orderId);
   const paymentStatus = TOSS_CANCEL_ERROR_CODES.has(code) ? "charge_canceled" : "charge_failed";
 
   if (code || message) {
     console.error("Toss 결제 실패 리다이렉트", { code, message });
   }
 
-  await markTossWalletChargeFailure({
-    orderId: readSingleValue(params.orderId),
-    code,
-    status: paymentStatus === "charge_canceled" ? "canceled" : "failed",
+  await markTossFailureForRedirect({
+    orderId,
+    markFailure: () =>
+      markTossWalletChargeFailure({
+        orderId,
+        code,
+        status: paymentStatus === "charge_canceled" ? "canceled" : "failed",
+      }),
   });
 
   redirect(`/user/donations?paymentStatus=${paymentStatus}`);
