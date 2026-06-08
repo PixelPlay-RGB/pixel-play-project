@@ -4,6 +4,8 @@
 import { useInView } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 
+import { formatNumber } from "@/utils/common/format";
+
 export function AnimatedHeroStat({ value, label }: { value: string; label: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, amount: 0.6 });
@@ -17,14 +19,13 @@ export function AnimatedHeroStat({ value, label }: { value: string; label: strin
     let animationFrame = 0;
     const duration = 1200;
     const start = performance.now();
-    const formatter = new Intl.NumberFormat("ko-KR");
 
     const tick = (now: number) => {
       const progress = Math.min(1, (now - start) / duration);
       const easedProgress = 1 - Math.pow(1 - progress, 3);
       const nextValue = Math.round(targetValue * easedProgress);
 
-      setDisplayValue(formatter.format(nextValue));
+      setDisplayValue(formatNumber(nextValue));
 
       if (progress < 1) {
         animationFrame = requestAnimationFrame(tick);

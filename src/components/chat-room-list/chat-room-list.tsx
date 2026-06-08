@@ -3,10 +3,10 @@
 
 import ChatRoomListEmptyState from "@/components/chat-room-list/chat-room-list-empty-state";
 import ChatRoomListHeader from "@/components/chat-room-list/chat-room-list-header";
-import ChatRoomListPagination from "@/components/chat-room-list/chat-room-list-pagination";
 import ChatRoomListUnreadRealtimeListener from "@/components/chat-room-list/chat-room-list-unread-realtime-listener";
 import ChatRoomCard from "@/components/chat-room/shared/chat-room-card";
 import ChatRoomCardGridSkeleton from "@/components/chat-room/shared/chat-room-card-grid-skeleton";
+import ListPagination from "@/components/common/list-pagination";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { useChatRoomList } from "@/hooks/chat-room/use-chat-room-list";
 import { useChatRoomPageSize } from "@/hooks/chat-room/use-chat-room-page-size";
@@ -74,7 +74,7 @@ export default function ChatRoomList() {
         )}
       </div>
 
-      <ChatRoomListPagination
+      <ListPagination
         currentPage={currentPage}
         totalPages={chatRoomList.totalPages}
         isFetching={isPageFetching}

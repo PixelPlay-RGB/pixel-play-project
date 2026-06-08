@@ -1,4 +1,6 @@
-// 팔로잉한 채널 placeholder 페이지를 렌더링합니다.
+// 팔로잉한 채널 목록 페이지를 렌더링합니다.
+import FollowingChannelSection from "@/components/following/following-channel-section";
+
 export default function UserFollowingPage() {
-  return <div>팔로잉 페이지</div>;
+  return <FollowingChannelSection />;
 }

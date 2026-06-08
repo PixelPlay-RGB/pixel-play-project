@@ -12,35 +12,62 @@ interface OverlayMessageOptions {
   creatorId: string;
   authorFallback?: string;
   creatorName?: string;
+  donationMessageEnabled?: boolean;
+  amountVisible?: boolean;
 }
 
 export function mapLiveMessageToChatOverlayItem(
   message: LiveMessageRow,
   options: OverlayMessageOptions,
 ): LiveChatOverlayItem | null {
-  if (message.message_type !== "chat") {
-    return null;
+  if (message.message_type === "chat") {
+    const metadata = readJsonObject(message.metadata);
+    const author =
+      readString(metadata.senderNickname) ??
+      options.authorFallback ??
+      LIVE_OVERLAY_DEFAULT_VIEWER_NAME;
+
+    const overlayMessage: LiveChatOverlayMessage = {
+      id: message.id,
+      kind: "chat",
+      author,
+      content: message.content,
+      createdAt: message.created_at,
+      role: message.sender_id === options.creatorId ? "creator" : undefined,
+      tone: message.sender_id === options.creatorId ? "brand" : undefined,
+    };
+
+    return {
+      type: "message",
+      message: overlayMessage,
+    };
   }
 
-  const metadata = readJsonObject(message.metadata);
-  const author =
-    readString(metadata.senderNickname) ??
-    options.authorFallback ??
-    LIVE_OVERLAY_DEFAULT_VIEWER_NAME;
+  // 채팅창 후원 메시지 출력이 켜져 있을 때만 후원 메시지를 채팅 오버레이에 노출합니다.
+  if (message.message_type === "donation" && options.donationMessageEnabled) {
+    const metadata = readJsonObject(message.metadata);
+    const author =
+      readString(metadata.donorNickname) ??
+      options.authorFallback ??
+      LIVE_OVERLAY_DEFAULT_VIEWER_NAME;
+    const amount = options.amountVisible === false ? null : readNumber(metadata.amount);
 
-  const overlayMessage: LiveChatOverlayMessage = {
-    id: message.id,
-    author,
-    content: message.content,
-    createdAt: message.created_at,
-    role: message.sender_id === options.creatorId ? "creator" : undefined,
-    tone: message.sender_id === options.creatorId ? "brand" : undefined,
-  };
+    const overlayMessage: LiveChatOverlayMessage = {
+      id: message.id,
+      kind: "donation",
+      author,
+      content: message.content,
+      createdAt: message.created_at,
+      amount,
+    };
 
-  return {
-    type: "message",
-    message: overlayMessage,
-  };
+    return {
+      type: "message",
+      message: overlayMessage,
+    };
+  }
+
+  return null;
 }
 
 export function mapLiveMessageToDonationAlert(

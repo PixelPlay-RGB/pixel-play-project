@@ -56,5 +56,11 @@ next-env.d.ts
 checklist.md
 context-notes.md
 
+# Local docs
+/docs/**/*.md
+
 # Supabase CLI local state
 supabase/.temp/
+
+# Playwright MCP 디버그 산출물
+.playwright-mcp/

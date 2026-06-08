@@ -2,12 +2,10 @@
 
 import Link from "next/link";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import CreatorAvatarPopover from "@/components/creator/creator-avatar-popover";
 import LiveSidebarLiveStatus from "@/components/live/live-sidebar-live-status";
 import { SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
-import { cn } from "@/lib/utils";
 import type { FollowingChannelItem } from "@/types/live/live";
-import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
 
 interface LiveSidebarFollowingChannelItemProps {
   item: FollowingChannelItem;
@@ -17,18 +15,22 @@ export default function LiveSidebarFollowingChannelItem({
   item,
 }: LiveSidebarFollowingChannelItemProps) {
   return (
-    <SidebarMenuItem>
+    <SidebarMenuItem className="flex items-center gap-1">
+      <CreatorAvatarPopover
+        creatorId={item.creatorId}
+        creatorNickname={item.creatorNickname}
+        creatorPhotoUrl={item.creatorPhotoUrl}
+        isFollowing
+        isLive={item.isLive}
+        showLiveRing={item.isLive}
+        avatarSize="sm"
+        avatarClassName="size-7"
+        triggerClassName="ml-1"
+      />
       <SidebarMenuButton
         render={<Link href={`/live/${item.creatorId}`} />}
-        className="h-auto gap-4 py-2"
+        className="h-auto w-auto min-w-0 flex-1 gap-2 py-2"
       >
-        <Avatar className={cn("size-7", item.isLive && "ring-live/80 ring-2")} size="sm">
-          <AvatarImage
-            src={getAvatarImageSrc(item.creatorPhotoUrl)}
-            alt={`${item.creatorNickname} 프로필 이미지`}
-          />
-          <AvatarFallback>{getAvatarFallbackText(item.creatorNickname, 1)}</AvatarFallback>
-        </Avatar>
         <span className="text-sidebar-foreground min-w-0 flex-1 truncate text-xs font-bold">
           {item.creatorNickname}
         </span>

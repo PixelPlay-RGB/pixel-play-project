@@ -19,9 +19,11 @@ import {
 
 interface LiveHeroProps {
   hero: LiveHeroItem | null;
+  // Hero 상단 라벨. 라이브 목록에선 "지금 가장 많이 보는 방송", 채널 홈에선 "지금 라이브 중" 등으로 재사용.
+  eyebrow?: string;
 }
 
-export default function LiveHero({ hero }: LiveHeroProps) {
+export default function LiveHero({ hero, eyebrow = "지금 가장 많이 보는 방송" }: LiveHeroProps) {
   if (!hero) {
     return (
       <section className="border-border bg-card flex min-h-52 flex-col justify-between rounded-lg border-2 p-5 md:min-h-64 md:p-6">
@@ -78,7 +80,7 @@ export default function LiveHero({ hero }: LiveHeroProps) {
 
       <div className="pointer-events-none absolute right-4 bottom-4 left-4 z-10 flex flex-col gap-4 text-white md:right-6 md:bottom-6 md:left-6">
         <div className="max-w-170 space-y-2">
-          <p className="text-live text-sm font-bold">지금 가장 많이 보는 방송</p>
+          <p className="text-live text-sm font-bold">{eyebrow}</p>
           <h1 className="line-clamp-2 text-2xl leading-tight font-extrabold wrap-break-word md:text-4xl">
             <Link
               href={liveHref}

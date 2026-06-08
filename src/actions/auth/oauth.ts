@@ -139,8 +139,8 @@ export async function unLinkOAuthAction(provider: OAuthProvider): Promise<Action
     };
   }
 
-  const currentProviders = dbUser.linked_providers || [];
-  const updatedProviders = currentProviders.filter((p: string) => p !== provider);
+  const currentProviders = dbUser.linked_providers ?? [];
+  const updatedProviders = currentProviders.filter((p) => p !== provider);
 
   const { error: updateError } = await supabase
     .from("user")

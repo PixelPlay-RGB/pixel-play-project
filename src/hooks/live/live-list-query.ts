@@ -9,6 +9,7 @@ interface FetchLiveListSnapshotParams {
   filter: LiveListFilter;
   sort: LiveListSort;
   limit: number;
+  excludedLiveId?: string | null;
 }
 
 // 개인화(isFollowing/FOLLOWING)는 RPC 내부에서 auth.uid()로 계산하므로 viewerId를 전달하지 않습니다.
@@ -16,15 +17,16 @@ export async function fetchLiveListSnapshot({
   filter,
   sort,
   limit,
+  excludedLiveId,
 }: FetchLiveListSnapshotParams): Promise<LiveListSnapshot> {
   const supabase = createClient();
 
   const { data, error } = await supabase.rpc("get_live_list", {
     p_filter: filter,
     p_sort: sort,
-    p_query: undefined,
     p_limit: limit,
     p_offset: 0,
+    p_excluded_live_id: excludedLiveId ?? undefined,
   });
 
   if (error) {

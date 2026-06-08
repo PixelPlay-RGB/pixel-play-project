@@ -61,5 +61,6 @@ function toFormValues(snapshot: ChannelChatSnapshot): ChannelChatSettingsInput {
     linkBlocked: snapshot.linkBlocked,
     forbiddenWords: snapshot.forbiddenWords,
     chatRuleText: snapshot.chatRuleText,
+    chatDonationMessageEnabled: snapshot.chatDonationMessageEnabled,
   };
 }

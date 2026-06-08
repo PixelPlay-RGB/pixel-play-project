@@ -90,7 +90,7 @@ export default function ChatRoomCard({ chatRoom, unreadMessageCount = 0 }: Props
             <span
               className={cn(
                 "bg-brand inline-flex h-5 items-center gap-1 rounded-full px-2 shadow-sm",
-                "text-xs leading-none font-black text-white",
+                "text-brand-foreground text-xs leading-none font-black",
                 "shadow-brand/30",
               )}
             >

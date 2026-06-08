@@ -76,6 +76,28 @@ export const APP_MESSAGE = {
         title: "저장 완료",
         description: "새 채팅 설정을 다음 채팅부터 적용합니다.",
       },
+      liveSettingsSaved: {
+        title: "방송 설정 저장 완료",
+        description: "방송 운영 설정이 저장되었습니다.",
+      },
+      donationSettingsSaved: {
+        title: "저장 완료",
+        description: "새 후원 설정을 다음 방송부터 적용합니다.",
+      },
+      donationTestSent: {
+        title: "테스트 후원 전송 완료",
+        description: "OBS 후원 알림 화면에서 확인해주세요.",
+      },
+      channelProfileSaved: {
+        title: "채널 정보 저장 완료",
+        description: "변경한 채널 소개와 링크가 적용되었어요.",
+      },
+      bannerSaved: {
+        title: "배너 저장 완료",
+      },
+      bannerDeleted: {
+        title: "배너 삭제 완료",
+      },
     },
     following: {
       followed: {
@@ -91,6 +113,37 @@ export const APP_MESSAGE = {
       chargeConfirmed: {
         title: "충전 완료",
         description: "후원 지갑 잔액에 충전 금액을 반영했습니다.",
+      },
+    },
+    community: {
+      postCreated: {
+        title: "게시글 등록 완료",
+        description: "새 글이 채널 커뮤니티에 게시되었어요.",
+      },
+      postDeleted: {
+        title: "게시글 삭제 완료",
+      },
+      commentCreated: {
+        title: "댓글 등록 완료",
+      },
+      commentDeleted: {
+        title: "댓글 삭제 완료",
+      },
+      postUpdated: {
+        title: "게시글 수정 완료",
+      },
+      commentUpdated: {
+        title: "댓글 수정 완료",
+      },
+    },
+    live: {
+      urlCopied: {
+        title: "URL 복사 완료",
+        description: "URL 복사가 완료되었습니다.",
+      },
+      voteUnchanged: {
+        title: "이미 선택한 항목",
+        description: "다른 항목 번호를 입력하면 투표가 변경됩니다.",
       },
     },
   },
@@ -389,6 +442,38 @@ export const APP_MESSAGE = {
         title: "채팅 설정 저장 실패",
         description: "입력값을 확인한 뒤 다시 시도해주세요.",
       },
+      liveSettingsSaveFailed: {
+        title: "방송 설정 저장 실패",
+        description: "입력값을 확인한 뒤 다시 시도해주세요.",
+      },
+      liveThumbnailUploadFailed: {
+        title: "미리보기 이미지 업로드 실패",
+        description: "미리보기 이미지를 업로드하지 못했습니다.",
+      },
+      liveStartSaveFailed: {
+        title: "방송 시작 저장 실패",
+        description: "방송 시작 정보를 저장하지 못했습니다.",
+      },
+      liveEndSaveFailed: {
+        title: "방송 종료 저장 실패",
+        description: "방송 종료 정보를 저장하지 못했습니다.",
+      },
+      donationSettingsLoadFailed: {
+        title: "후원 설정 조회 실패",
+        description: "다시 로그인하거나 잠시 후 새로고침해주세요.",
+      },
+      donationSettingsSaveFailed: {
+        title: "후원 설정 저장 실패",
+        description: "입력값을 확인한 뒤 다시 시도해주세요.",
+      },
+      donationTestFailed: {
+        title: "테스트 후원 전송 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      settlementLoadFailed: {
+        title: "정산 내역 조회 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
       securityLoadFailed: {
         title: "방송 연결 정보 조회 실패",
         description: "다시 로그인하거나 잠시 후 새로고침해주세요.",
@@ -401,6 +486,30 @@ export const APP_MESSAGE = {
         title: "새 정보 생성 실패",
         description: "잠시 후 다시 시도해주세요.",
       },
+      analyticsLoadFailed: {
+        title: "통계 조회 실패",
+        description: "다시 로그인하거나 잠시 후 새로고침해주세요.",
+      },
+      channelProfileSaveFailed: {
+        title: "채널 정보 저장 실패",
+        description: "입력값을 확인한 뒤 다시 시도해주세요.",
+      },
+      bannerSaveFailed: {
+        title: "배너 저장 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      bannerDeleteFailed: {
+        title: "배너 삭제 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      bannerImageTooLarge: {
+        title: "이미지 용량 초과",
+        description: "1MB 이하의 이미지를 선택해주세요.",
+      },
+      bannerLimitReached: {
+        title: "배너 개수 초과",
+        description: "배너는 최대 5개까지 등록할 수 있어요.",
+      },
     },
     following: {
       failed: {
@@ -409,6 +518,78 @@ export const APP_MESSAGE = {
       },
       unfollowFailed: {
         title: "팔로잉 해제 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      loadFailed: {
+        title: "팔로잉 목록 조회 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+    },
+    live: {
+      donationFailed: {
+        title: "후원 실패",
+        description: "후원 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+      },
+      donationInsufficientBalance: {
+        title: "포인트 부족",
+        description: "보유 포인트가 부족해요. 잔액을 확인해주세요.",
+      },
+      donationDisabled: {
+        title: "후원 불가",
+        description: "이 방송은 현재 후원을 받지 않아요.",
+      },
+      voteFailed: {
+        title: "투표 실패",
+        description: "투표 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+      },
+      voteNoActivePoll: {
+        title: "진행 중인 투표 없음",
+        description: "현재 진행 중인 투표가 없습니다.",
+      },
+      voteInvalidOption: {
+        title: "잘못된 투표 번호",
+        description: "유효하지 않은 투표 번호입니다.",
+      },
+    },
+    community: {
+      postCreateFailed: {
+        title: "게시글 등록 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      postDeleteFailed: {
+        title: "게시글 삭제 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      postImageTooLarge: {
+        title: "이미지 용량 초과",
+        description: "이미지는 5MB 이하만 첨부할 수 있어요.",
+      },
+      postImageUploadFailed: {
+        title: "이미지 업로드 실패",
+        description: "jpg, png, webp, gif 형식의 이미지를 다시 시도해주세요.",
+      },
+      commentCreateFailed: {
+        title: "댓글 등록 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      commentDeleteFailed: {
+        title: "댓글 삭제 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      likeFailed: {
+        title: "좋아요 처리 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      loadFailed: {
+        title: "커뮤니티 조회 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      postUpdateFailed: {
+        title: "게시글 수정 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      commentUpdateFailed: {
+        title: "댓글 수정 실패",
         description: "잠시 후 다시 시도해주세요.",
       },
     },
@@ -423,7 +604,16 @@ export const APP_MESSAGE = {
       },
     },
   },
+  info: {
+    common: {
+      featureNotReady: {
+        title: "기능 준비 중",
+        description: "조금만 기다려주세요. 곧 제공될 예정이에요.",
+      },
+    },
+  },
 } as const satisfies {
   success: Record<string, Record<string, AppMessage>>;
   error: Record<string, Record<string, AppMessage>>;
+  info: Record<string, Record<string, AppMessage>>;
 };

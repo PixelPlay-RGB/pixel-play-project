@@ -93,6 +93,24 @@ const MESSAGE_RPC_ERROR_CODE_MAP: Array<{
   },
 ];
 
+const DONATION_RPC_ERROR_CODE_MAP: Array<{
+  errorCode: string;
+  code: AppMessageCode;
+}> = [
+  {
+    errorCode: "PX401",
+    code: APP_MESSAGE_CODE.error.auth.authInfoNotFound,
+  },
+  {
+    errorCode: "PX402",
+    code: APP_MESSAGE_CODE.error.live.donationInsufficientBalance,
+  },
+  {
+    errorCode: "PX403",
+    code: APP_MESSAGE_CODE.error.live.donationDisabled,
+  },
+];
+
 export function getAppMessage(code?: AppMessageCode): AppMessage {
   if (!code) {
     return APP_MESSAGE.error.common.unknown;
@@ -114,11 +132,7 @@ export function resolveSupabaseErrorCode(
   error: unknown,
   fallbackCode: AppMessageCode = APP_MESSAGE_CODE.error.common.unknown,
 ): AppMessageCode {
-  if (typeof error !== "object" || error === null) {
-    return fallbackCode;
-  }
-
-  const code = (error as SupabaseLikeError).code;
+  const code = readSupabaseErrorCode(error);
 
   if (code === "42501") {
     return APP_MESSAGE_CODE.error.supabase.permissionDenied;
@@ -131,48 +145,62 @@ export function resolveSupabaseErrorCode(
   return fallbackCode;
 }
 
+type RpcErrorCodeMap = Array<{ errorCode: string; code: AppMessageCode }>;
+
+function readSupabaseErrorCode(error: unknown): string | undefined {
+  if (typeof error !== "object" || error === null) {
+    return undefined;
+  }
+
+  return (error as SupabaseLikeError).code;
+}
+
+// RPC 에러코드 → 앱 메시지 코드 변환의 공통 구현(도메인은 map/fallback만 주입).
+function resolveRpcErrorCode(
+  error: unknown,
+  map: RpcErrorCodeMap,
+  fallbackCode: AppMessageCode,
+): AppMessageCode {
+  const code = readSupabaseErrorCode(error);
+
+  return map.find((item) => item.errorCode === code)?.code ?? fallbackCode;
+}
+
+function isKnownRpcError(error: unknown, map: RpcErrorCodeMap): boolean {
+  const code = readSupabaseErrorCode(error);
+
+  return map.some((item) => item.errorCode === code);
+}
+
 export function resolveChatRoomRpcErrorCode(
   error: unknown,
   fallbackCode: AppMessageCode = APP_MESSAGE_CODE.error.common.unknown,
 ): AppMessageCode {
-  if (typeof error !== "object" || error === null) {
-    return fallbackCode;
-  }
-
-  const code = (error as SupabaseLikeError).code;
-
-  return CHAT_ROOM_RPC_ERROR_CODE_MAP.find((item) => item.errorCode === code)?.code ?? fallbackCode;
+  return resolveRpcErrorCode(error, CHAT_ROOM_RPC_ERROR_CODE_MAP, fallbackCode);
 }
 
 export function isKnownChatRoomRpcError(error: unknown) {
-  if (typeof error !== "object" || error === null) {
-    return false;
-  }
-
-  const code = (error as SupabaseLikeError).code;
-
-  return CHAT_ROOM_RPC_ERROR_CODE_MAP.some((item) => item.errorCode === code);
+  return isKnownRpcError(error, CHAT_ROOM_RPC_ERROR_CODE_MAP);
 }
 
 export function resolveMessageRpcErrorCode(
   error: unknown,
   fallbackCode: AppMessageCode = APP_MESSAGE_CODE.error.common.unknown,
 ): AppMessageCode {
-  if (typeof error !== "object" || error === null) {
-    return fallbackCode;
-  }
-
-  const code = (error as SupabaseLikeError).code;
-
-  return MESSAGE_RPC_ERROR_CODE_MAP.find((item) => item.errorCode === code)?.code ?? fallbackCode;
+  return resolveRpcErrorCode(error, MESSAGE_RPC_ERROR_CODE_MAP, fallbackCode);
 }
 
 export function isKnownMessageRpcError(error: unknown) {
-  if (typeof error !== "object" || error === null) {
-    return false;
-  }
+  return isKnownRpcError(error, MESSAGE_RPC_ERROR_CODE_MAP);
+}
 
-  const code = (error as SupabaseLikeError).code;
+export function resolveDonationRpcErrorCode(
+  error: unknown,
+  fallbackCode: AppMessageCode = APP_MESSAGE_CODE.error.live.donationFailed,
+): AppMessageCode {
+  return resolveRpcErrorCode(error, DONATION_RPC_ERROR_CODE_MAP, fallbackCode);
+}
 
-  return MESSAGE_RPC_ERROR_CODE_MAP.some((item) => item.errorCode === code);
+export function isKnownDonationRpcError(error: unknown) {
+  return isKnownRpcError(error, DONATION_RPC_ERROR_CODE_MAP);
 }

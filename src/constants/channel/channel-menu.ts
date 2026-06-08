@@ -17,9 +17,12 @@ export const CHANNEL_MENU_ITEMS: ChannelMenuItem[] = [
   },
   {
     id: "donation",
-    label: "후원 설정",
-    href: "/channel/donation",
+    label: "후원",
     icon: HandCoins,
+    children: [
+      { id: "donation-settings", label: "설정", href: "/channel/donation" },
+      { id: "settlement", label: "정산", href: "/channel/settlement" },
+    ],
   },
   {
     id: "chat",
@@ -35,8 +38,11 @@ export const CHANNEL_MENU_ITEMS: ChannelMenuItem[] = [
   },
   {
     id: "analytics",
-    label: "실시간 통계",
-    href: "/channel/analytics",
+    label: "통계 분석",
     icon: BarChart3,
+    children: [
+      { id: "analytics-live", label: "실시간 통계", href: "/channel/analytics/live" },
+      { id: "analytics-report", label: "지난 방송 분석", href: "/channel/analytics/report" },
+    ],
   },
 ];

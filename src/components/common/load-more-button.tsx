@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { ChevronDown, Loader2 } from "lucide-react";
+import { ChevronDown, Loader2, type LucideIcon } from "lucide-react";
 
 const LOAD_MORE_ACCENT_CLASS = {
   brand: "hover:border-brand/40 hover:text-brand",
@@ -16,6 +16,8 @@ interface LoadMoreButtonProps {
   disabled?: boolean;
   label?: string;
   accent?: keyof typeof LOAD_MORE_ACCENT_CLASS;
+  showSeparators?: boolean;
+  icon?: LucideIcon;
 }
 
 export default function LoadMoreButton({
@@ -24,10 +26,12 @@ export default function LoadMoreButton({
   disabled,
   label = "더보기",
   accent = "brand",
+  showSeparators = true,
+  icon: Icon = ChevronDown,
 }: LoadMoreButtonProps) {
   return (
-    <div className="flex items-center gap-4 pt-1">
-      <Separator className="flex-1" />
+    <div className={cn("flex items-center pt-1", showSeparators ? "gap-4" : "justify-center")}>
+      {showSeparators ? <Separator className="flex-1" /> : null}
       <Button
         type="button"
         variant="secondary"
@@ -42,11 +46,11 @@ export default function LoadMoreButton({
         {isLoading ? (
           <Loader2 className="h-3.5 w-3.5 animate-spin" />
         ) : (
-          <ChevronDown className="h-3.5 w-3.5" />
+          <Icon className="h-3.5 w-3.5" />
         )}
         {label}
       </Button>
-      <Separator className="flex-1" />
+      {showSeparators ? <Separator className="flex-1" /> : null}
     </div>
   );
 }

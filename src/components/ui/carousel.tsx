@@ -1,0 +1,256 @@
+"use client";
+
+import * as React from "react";
+import useEmblaCarousel, { type UseEmblaCarouselType } from "embla-carousel-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
+type CarouselApi = UseEmblaCarouselType[1];
+type UseCarouselParameters = Parameters<typeof useEmblaCarousel>;
+type CarouselOptions = UseCarouselParameters[0];
+type CarouselPlugin = UseCarouselParameters[1];
+
+type CarouselProps = {
+  opts?: CarouselOptions;
+  plugins?: CarouselPlugin;
+  orientation?: "horizontal" | "vertical";
+  setApi?: (api: CarouselApi) => void;
+};
+
+type CarouselContextProps = {
+  carouselRef: ReturnType<typeof useEmblaCarousel>[0];
+  api: ReturnType<typeof useEmblaCarousel>[1];
+  scrollPrev: () => void;
+  scrollNext: () => void;
+  canScrollPrev: boolean;
+  canScrollNext: boolean;
+} & CarouselProps;
+
+const CarouselContext = React.createContext<CarouselContextProps | null>(null);
+
+function useCarousel() {
+  const context = React.useContext(CarouselContext);
+
+  if (!context) {
+    throw new Error("useCarousel must be used within a <Carousel />");
+  }
+
+  return context;
+}
+
+function Carousel({
+  orientation = "horizontal",
+  opts,
+  setApi,
+  plugins,
+  className,
+  children,
+  ...props
+}: React.ComponentProps<"div"> & CarouselProps) {
+  const [carouselRef, api] = useEmblaCarousel(
+    { ...opts, axis: orientation === "horizontal" ? "x" : "y" },
+    plugins,
+  );
+  const [canScrollPrev, setCanScrollPrev] = React.useState(false);
+  const [canScrollNext, setCanScrollNext] = React.useState(false);
+
+  const onSelect = React.useCallback((api: CarouselApi) => {
+    if (!api) return;
+    setCanScrollPrev(api.canScrollPrev());
+    setCanScrollNext(api.canScrollNext());
+  }, []);
+
+  const scrollPrev = React.useCallback(() => {
+    api?.scrollPrev();
+  }, [api]);
+
+  const scrollNext = React.useCallback(() => {
+    api?.scrollNext();
+  }, [api]);
+
+  const handleKeyDown = React.useCallback(
+    (event: React.KeyboardEvent<HTMLDivElement>) => {
+      // 축에 맞춰 이전/다음 키를 분기한다(가로=←/→, 세로=↑/↓).
+      const prevKey = orientation === "horizontal" ? "ArrowLeft" : "ArrowUp";
+      const nextKey = orientation === "horizontal" ? "ArrowRight" : "ArrowDown";
+
+      if (event.key === prevKey) {
+        event.preventDefault();
+        scrollPrev();
+      } else if (event.key === nextKey) {
+        event.preventDefault();
+        scrollNext();
+      }
+    },
+    [orientation, scrollPrev, scrollNext],
+  );
+
+  React.useEffect(() => {
+    if (!api || !setApi) return;
+    setApi(api);
+  }, [api, setApi]);
+
+  React.useEffect(() => {
+    if (!api) return;
+    // 마운트 시 현재 스크롤 가능 여부를 1회 동기화(embla 초기 상태 반영).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    onSelect(api);
+    api.on("reInit", onSelect);
+    api.on("select", onSelect);
+
+    return () => {
+      api?.off("reInit", onSelect);
+      api?.off("select", onSelect);
+    };
+  }, [api, onSelect]);
+
+  return (
+    <CarouselContext.Provider
+      value={{
+        carouselRef,
+        api,
+        opts,
+        orientation: orientation || (opts?.axis === "y" ? "vertical" : "horizontal"),
+        scrollPrev,
+        scrollNext,
+        canScrollPrev,
+        canScrollNext,
+      }}
+    >
+      <div
+        onKeyDownCapture={handleKeyDown}
+        className={cn("relative", className)}
+        role="region"
+        aria-roledescription="carousel"
+        data-slot="carousel"
+        {...props}
+      >
+        {children}
+      </div>
+    </CarouselContext.Provider>
+  );
+}
+
+function CarouselContent({ className, ...props }: React.ComponentProps<"div">) {
+  const { carouselRef, orientation } = useCarousel();
+
+  return (
+    <div ref={carouselRef} className="overflow-hidden" data-slot="carousel-content">
+      <div
+        className={cn("flex", orientation === "horizontal" ? "-ml-4" : "-mt-4 flex-col", className)}
+        {...props}
+      />
+    </div>
+  );
+}
+
+function CarouselItem({ className, ...props }: React.ComponentProps<"div">) {
+  const { orientation } = useCarousel();
+
+  return (
+    <div
+      role="group"
+      aria-roledescription="slide"
+      data-slot="carousel-item"
+      className={cn(
+        "min-w-0 shrink-0 grow-0 basis-full",
+        orientation === "horizontal" ? "pl-4" : "pt-4",
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+function CarouselPrevious({
+  className,
+  variant = "outline",
+  size = "icon",
+  hideWhenDisabled = false,
+  onClick,
+  ...props
+}: React.ComponentProps<typeof Button> & { hideWhenDisabled?: boolean }) {
+  const { orientation, scrollPrev, canScrollPrev } = useCarousel();
+
+  // 이전으로 더 갈 수 없으면 아예 렌더하지 않는다(비활성 버튼이 클릭을 가로채는 문제 방지).
+  if (hideWhenDisabled && !canScrollPrev) {
+    return null;
+  }
+
+  return (
+    <Button
+      data-slot="carousel-previous"
+      variant={variant}
+      size={size}
+      className={cn(
+        "absolute size-8 rounded-full",
+        orientation === "horizontal"
+          ? "top-1/2 -left-12 -translate-y-1/2"
+          : "-top-12 left-1/2 -translate-x-1/2 rotate-90",
+        className,
+      )}
+      disabled={!canScrollPrev}
+      {...props}
+      // 외부 onClick을 먼저 호출하고, preventDefault가 없으면 내부 스크롤을 수행한다.
+      onClick={(event) => {
+        onClick?.(event);
+        if (!event.defaultPrevented) scrollPrev();
+      }}
+    >
+      <ChevronLeft />
+      <span className="sr-only">이전</span>
+    </Button>
+  );
+}
+
+function CarouselNext({
+  className,
+  variant = "outline",
+  size = "icon",
+  hideWhenDisabled = false,
+  onClick,
+  ...props
+}: React.ComponentProps<typeof Button> & { hideWhenDisabled?: boolean }) {
+  const { orientation, scrollNext, canScrollNext } = useCarousel();
+
+  // 다음으로 더 갈 수 없으면 아예 렌더하지 않는다.
+  if (hideWhenDisabled && !canScrollNext) {
+    return null;
+  }
+
+  return (
+    <Button
+      data-slot="carousel-next"
+      variant={variant}
+      size={size}
+      className={cn(
+        "absolute size-8 rounded-full",
+        orientation === "horizontal"
+          ? "top-1/2 -right-12 -translate-y-1/2"
+          : "-bottom-12 left-1/2 -translate-x-1/2 rotate-90",
+        className,
+      )}
+      disabled={!canScrollNext}
+      {...props}
+      // 외부 onClick을 먼저 호출하고, preventDefault가 없으면 내부 스크롤을 수행한다.
+      onClick={(event) => {
+        onClick?.(event);
+        if (!event.defaultPrevented) scrollNext();
+      }}
+    >
+      <ChevronRight />
+      <span className="sr-only">다음</span>
+    </Button>
+  );
+}
+
+export {
+  type CarouselApi,
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselPrevious,
+  CarouselNext,
+};

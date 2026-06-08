@@ -129,6 +129,8 @@ export function MessageInput({
         onChange={(e) => handleDraftChange(e.target.value)}
         onCompositionEnd={(e) => handleDraftChange(e.currentTarget.value)}
         onKeyDown={(e) => {
+          // IME 조합 중 Enter(조합 확정)는 전송으로 처리하지 않습니다.
+          if (e.nativeEvent.isComposing) return;
           if (submitDisabled) return;
           if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
