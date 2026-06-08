@@ -95,10 +95,12 @@ async function collectChatParticipants(
   // 상한을 넘으면 일부 방송 메시지가 아예 안 실려, 대형 방송 언더카운트뿐 아니라 후순위
   // 방송 참여자가 0으로 누락될 수 있고 기간 합집합도 그만큼 빠진다.
   // → 정확 집계는 count(distinct) RPC 후속으로 승격(현재는 graceful 근사).
+  // message_type은 chat으로 좁힌다 — 후원/운영(클린봇) 알림 작성자는 채팅 참여자가 아니다.
   const { data, error } = await supabase
     .from("live_message")
     .select("broadcast_id, sender_id")
     .in("broadcast_id", broadcastIds)
+    .eq("message_type", "chat")
     .limit(REPORT_MESSAGE_FETCH_CAP);
 
   if (error) {
