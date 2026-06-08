@@ -334,7 +334,7 @@ export const APP_MESSAGE = {
       },
       paymentWindowConfigMissing: {
         title: "결제 키 필요",
-        description: "NEXT_PUBLIC_TOSS_PAYMENTS_CLIENT_KEY를 설정하면 결제창을 사용할 수 있습니다.",
+        description: "결제 설정이 필요합니다. 관리자에게 문의하거나 잠시 후 다시 시도해주세요.",
       },
       paymentWindowLoadFailed: {
         title: "결제창 로드 실패",
