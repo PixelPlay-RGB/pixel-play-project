@@ -1067,6 +1067,10 @@ export type Database = {
         }
         Returns: string
       }
+      delete_all_notifications: {
+        Args: { p_actor_user_id: string }
+        Returns: undefined
+      }
       delete_channel_banner: {
         Args: { p_actor_user_id: string; p_banner_id: string }
         Returns: Json
@@ -1078,6 +1082,10 @@ export type Database = {
       delete_community_post: {
         Args: { p_actor_user_id: string; p_post_id: string }
         Returns: string
+      }
+      delete_notification: {
+        Args: { p_actor_user_id: string; p_notification_id: string }
+        Returns: undefined
       }
       emit_follower_notification: {
         Args: {

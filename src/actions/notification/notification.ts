@@ -25,3 +25,46 @@ export async function markNotificationsSeenAction(): Promise<AppActionResult> {
 
   return { success: true };
 }
+
+export async function deleteAllNotificationsAction(): Promise<AppActionResult> {
+  const actor = await getAuthenticatedActorId({
+    logLabel: "알림 전체 삭제 중 인증 유저 조회 실패",
+  });
+  if (!actor.success) {
+    return { success: false, code: actor.result.code };
+  }
+
+  const admin = createAdminClient();
+  const { error } = await admin.rpc("delete_all_notifications", {
+    p_actor_user_id: actor.userId,
+  });
+
+  if (error) {
+    console.error("알림 전체 삭제 실패", error);
+    return { success: false, code: APP_MESSAGE_CODE.error.notification.deleteFailed };
+  }
+
+  return { success: true };
+}
+
+export async function deleteNotificationAction(notificationId: string): Promise<AppActionResult> {
+  const actor = await getAuthenticatedActorId({
+    logLabel: "알림 삭제 중 인증 유저 조회 실패",
+  });
+  if (!actor.success) {
+    return { success: false, code: actor.result.code };
+  }
+
+  const admin = createAdminClient();
+  const { error } = await admin.rpc("delete_notification", {
+    p_actor_user_id: actor.userId,
+    p_notification_id: notificationId,
+  });
+
+  if (error) {
+    console.error("알림 삭제 실패", error);
+    return { success: false, code: APP_MESSAGE_CODE.error.notification.deleteFailed };
+  }
+
+  return { success: true };
+}
