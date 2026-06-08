@@ -109,6 +109,12 @@ export const APP_MESSAGE = {
         description: "팔로잉 목록에서 제외했어요.",
       },
     },
+    donation: {
+      chargeConfirmed: {
+        title: "충전 완료",
+        description: "후원 지갑 잔액에 충전 금액을 반영했습니다.",
+      },
+    },
     community: {
       postCreated: {
         title: "게시글 등록 완료",
@@ -299,6 +305,40 @@ export const APP_MESSAGE = {
       loadFailed: {
         title: "검색 결과 조회 실패",
         description: "잠시 후 다시 검색해 주세요.",
+      },
+    },
+    donation: {
+      invalidChargeAmount: {
+        title: "충전 금액 확인 필요",
+        description: "충전 금액을 다시 확인해주세요.",
+      },
+      loadFailed: {
+        title: "후원 내역 조회 실패",
+        description: "후원 지갑 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.",
+      },
+      prepareChargeFailed: {
+        title: "충전 준비 실패",
+        description: "충전 주문을 준비하지 못했습니다. 잠시 후 다시 시도해주세요.",
+      },
+      confirmChargeFailed: {
+        title: "충전 승인 실패",
+        description: "결제 승인 확인에 실패했습니다. 잠시 후 다시 시도해 주세요.",
+      },
+      chargeFailed: {
+        title: "충전 실패",
+        description: "결제가 완료되지 않았습니다. 다시 충전해 주세요.",
+      },
+      chargeCanceled: {
+        title: "충전 취소",
+        description: "결제가 취소되어 후원 지갑에 반영되지 않았습니다.",
+      },
+      paymentWindowConfigMissing: {
+        title: "결제 키 필요",
+        description: "결제 설정이 필요합니다. 관리자에게 문의하거나 잠시 후 다시 시도해주세요.",
+      },
+      paymentWindowLoadFailed: {
+        title: "결제창 로드 실패",
+        description: "결제창을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.",
       },
     },
     chatRoomMember: {

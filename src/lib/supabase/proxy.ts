@@ -31,6 +31,10 @@ function isPublicAuthRoute(pathname: string) {
   return pathname === "/auth/login" || pathname === "/auth/signup" || pathname === "/auth/callback";
 }
 
+function isApiRoute(pathname: string) {
+  return pathname.startsWith("/api/");
+}
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
@@ -69,7 +73,7 @@ export async function updateSession(request: NextRequest) {
   const currentPath = getCurrentPathWithSearch(request);
 
   // 비로그인 처리
-  if (!user && !isPublicRoute(pathname) && !isPublicAuthRoute(pathname)) {
+  if (!user && !isApiRoute(pathname) && !isPublicRoute(pathname) && !isPublicAuthRoute(pathname)) {
     const url = request.nextUrl.clone();
     const loginPath = createPathWithNext("/auth/login", currentPath);
     url.pathname = "/auth/login";

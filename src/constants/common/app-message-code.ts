@@ -43,6 +43,9 @@ export const APP_MESSAGE_CODE = {
       followed: "success.following.followed",
       unfollowed: "success.following.unfollowed",
     },
+    donation: {
+      chargeConfirmed: "success.donation.chargeConfirmed",
+    },
     community: {
       postCreated: "success.community.postCreated",
       postDeleted: "success.community.postDeleted",
@@ -105,6 +108,16 @@ export const APP_MESSAGE_CODE = {
     },
     search: {
       loadFailed: "error.search.loadFailed",
+    },
+    donation: {
+      invalidChargeAmount: "error.donation.invalidChargeAmount",
+      loadFailed: "error.donation.loadFailed",
+      prepareChargeFailed: "error.donation.prepareChargeFailed",
+      confirmChargeFailed: "error.donation.confirmChargeFailed",
+      chargeFailed: "error.donation.chargeFailed",
+      chargeCanceled: "error.donation.chargeCanceled",
+      paymentWindowConfigMissing: "error.donation.paymentWindowConfigMissing",
+      paymentWindowLoadFailed: "error.donation.paymentWindowLoadFailed",
     },
     message: {
       invalidInput: "error.message.invalidInput",

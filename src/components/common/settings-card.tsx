@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
 
 interface Props {
-  title: string;
+  title?: string;
   description?: ReactNode;
   children: ReactNode;
   className?: string;
@@ -15,14 +15,16 @@ interface Props {
 export function SettingsCard({ title, description, children, className, contentClassName }: Props) {
   return (
     <Card className={cn("gap-5 py-6 shadow-sm", className)}>
-      <CardHeader className="gap-2 px-5 sm:px-6">
-        <CardTitle>{title}</CardTitle>
-        {description && (
-          <CardDescription className="max-w-3xl leading-6 text-pretty whitespace-pre-line">
-            {description}
-          </CardDescription>
-        )}
-      </CardHeader>
+      {title || description ? (
+        <CardHeader className="gap-2 px-5 sm:px-6">
+          {title ? <CardTitle>{title}</CardTitle> : null}
+          {description && (
+            <CardDescription className="max-w-3xl leading-6 text-pretty whitespace-pre-line">
+              {description}
+            </CardDescription>
+          )}
+        </CardHeader>
+      ) : null}
       <CardContent className={cn("flex flex-col gap-5 px-5 sm:px-6", contentClassName)}>
         {children}
       </CardContent>
