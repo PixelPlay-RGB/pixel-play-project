@@ -776,6 +776,63 @@ export type Database = {
           },
         ]
       }
+      notification: {
+        Row: {
+          actor_id: string
+          actor_nickname: string | null
+          actor_photo_url: string | null
+          body: string | null
+          created_at: string
+          id: string
+          link_path: string
+          recipient_id: string
+          resource_id: string | null
+          title: string
+          type: string
+        }
+        Insert: {
+          actor_id: string
+          actor_nickname?: string | null
+          actor_photo_url?: string | null
+          body?: string | null
+          created_at?: string
+          id?: string
+          link_path: string
+          recipient_id: string
+          resource_id?: string | null
+          title: string
+          type: string
+        }
+        Update: {
+          actor_id?: string
+          actor_nickname?: string | null
+          actor_photo_url?: string | null
+          body?: string | null
+          created_at?: string
+          id?: string
+          link_path?: string
+          recipient_id?: string
+          resource_id?: string | null
+          title?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notification_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user: {
         Row: {
           birth: string
@@ -787,6 +844,7 @@ export type Database = {
           modified_at: string
           name: string
           nickname: string
+          notifications_last_seen_at: string | null
           phone: string
           photo_url: string | null
         }
@@ -800,6 +858,7 @@ export type Database = {
           modified_at?: string
           name: string
           nickname: string
+          notifications_last_seen_at?: string | null
           phone: string
           photo_url?: string | null
         }
@@ -813,6 +872,7 @@ export type Database = {
           modified_at?: string
           name?: string
           nickname?: string
+          notifications_last_seen_at?: string | null
           phone?: string
           photo_url?: string | null
         }
@@ -1019,6 +1079,17 @@ export type Database = {
         Args: { p_actor_user_id: string; p_post_id: string }
         Returns: string
       }
+      emit_follower_notification: {
+        Args: {
+          p_actor_id: string
+          p_body: string
+          p_link_path: string
+          p_resource_id: string
+          p_title: string
+          p_type: string
+        }
+        Returns: undefined
+      }
       end_live_broadcast: {
         Args: { p_actor_user_id: string; p_broadcast_id?: string }
         Returns: string
@@ -1210,6 +1281,10 @@ export type Database = {
       leave_live_viewer_presence: {
         Args: { p_broadcast_id: string; p_viewer_key: string }
         Returns: number
+      }
+      mark_notifications_seen: {
+        Args: { p_actor_user_id: string }
+        Returns: undefined
       }
       mark_room_read: {
         Args: { p_actor_user_id: string; p_room_id: string }
