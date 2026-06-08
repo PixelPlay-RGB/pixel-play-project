@@ -66,7 +66,7 @@ const DONATION_HISTORY_TABS: Array<{ value: DonationHistoryTab; label: string }>
   { value: "charge", label: "충전" },
   { value: "donation", label: "후원" },
 ];
-const HISTORY_ITEMS_PER_PAGE = 8;
+const HISTORY_ITEMS_PER_PAGE = 9;
 
 type HistoryPageState = {
   scopeKey: string;
@@ -130,7 +130,7 @@ export function UserDonationHistoryTable({ snapshot, activeTab, onActiveTabChang
   };
 
   return (
-    <section className="flex min-w-0 flex-col gap-4">
+    <section className="flex min-w-0 flex-col gap-4 xl:h-full">
       <Tabs
         value={activeTab}
         onValueChange={(nextValue) => onActiveTabChange(nextValue as DonationHistoryTab)}
@@ -175,7 +175,7 @@ export function UserDonationHistoryTable({ snapshot, activeTab, onActiveTabChang
         </TabsList>
       </Tabs>
 
-      <SettingsCard contentClassName="gap-4">
+      <SettingsCard className="xl:flex-1" contentClassName="gap-4">
         <HistoryPeriodSelect
           year={snapshot.historyPeriod.year}
           month={snapshot.historyPeriod.month}
