@@ -1,13 +1,11 @@
 // 라이브 시청 화면에서 사용하는 상수를 정의합니다.
 
 export const LIVE_LABEL = {
-  chatRulePlaceholder: "채팅 규칙을 확인해주세요.",
   chatRuleTitle: "채팅 규칙 안내",
   chatRuleDescription: "첫 채팅 전에 한 번만 확인합니다.",
   chatRuleDefaultText:
     "서로를 존중하며 대화해주세요. 반복 도배, 비방, 홍보성 메시지는 제한될 수 있습니다.",
   chatRuleAccept: "규칙 확인하고 채팅하기",
-  chatVoteCommandPlaceholder: "채팅은 제한 중입니다. !1처럼 입력해 투표할 수 있습니다.",
   live: "LIVE",
   chat: "라이브 채팅",
   follow: "팔로우",
@@ -31,6 +29,7 @@ export const LIVE_LABEL = {
   playerUnmute: "음소거 해제",
   playerTheater: "극장 모드",
   playerTheaterExit: "기본 모드",
+  playerQualityAuto: "자동",
   viewers: "명 시청 중",
   followers: "팔로워",
   broadcasts: "방송",
@@ -93,14 +92,24 @@ export const LIVE_DONATION_LABEL = {
 export const LIVE_VOTE_LABEL = {
   title: "투표 참여",
   description: "진행 중인 투표 항목을 선택하고 참여할 수 있습니다.",
+  resultTitle: "투표 결과",
+  resultDescription: "종료된 투표의 최종 결과입니다.",
   loading: "투표를 불러오는 중입니다.",
   error: "투표를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.",
   empty: "현재 진행 중인 투표가 없습니다.",
   submit: "참여하기",
   participated: "참여 완료",
   changeVote: "투표 변경",
-  changeHint: "다른 항목을 선택하면 투표가 변경됩니다.",
+  cancelVote: "투표 취소",
+  changeHint: "다른 항목을 선택하면 투표가 변경되고, 선택한 항목을 다시 누르면 취소됩니다.",
   submitting: "처리 중...",
+  ended: "종료",
+  winner: "1위",
+  yourChoice: "내 선택",
+  votesUnit: "표",
+  totalPrefix: "총",
+  participantsUnit: "명 참여",
+  liveParticipantsSuffix: "명 참여 중",
 } as const;
 
 export const LIVE_CHAT_MENU_LABEL = {

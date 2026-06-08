@@ -384,6 +384,14 @@ export const APP_MESSAGE = {
         title: "전송 실패",
         description: "잠시 후 다시 시도해주세요.",
       },
+      slowMode: {
+        title: "채팅 속도 제한",
+        description: "조금 천천히 보내면 다시 채팅할 수 있어요.",
+      },
+      linkBlocked: {
+        title: "링크 전송 불가",
+        description: "이 방송에서는 링크를 보낼 수 없어요.",
+      },
     },
     profile: {
       notFound: {
@@ -545,6 +553,18 @@ export const APP_MESSAGE = {
       donationDisabled: {
         title: "후원 불가",
         description: "이 방송은 현재 후원을 받지 않아요.",
+      },
+      donationSelf: {
+        title: "후원 불가",
+        description: "본인 방송에는 후원할 수 없어요.",
+      },
+      donationInvalid: {
+        title: "후원 정보 확인 필요",
+        description: "후원 금액과 내용을 다시 확인해주세요.",
+      },
+      donationDuplicate: {
+        title: "중복 후원 불가",
+        description: "잠시 후 다시 시도해주세요.",
       },
       voteFailed: {
         title: "투표 실패",

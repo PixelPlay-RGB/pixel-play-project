@@ -48,7 +48,7 @@ export function useLiveBroadcastView(creatorId: string) {
   const messages = messagesQuery.messages;
 
   const pollsQuery = useLivePolls(broadcast?.id, user?.id);
-  const donationRankingQuery = useLiveDonationRanking(creatorId, broadcast?.id);
+  const donationRankingQuery = useLiveDonationRanking(creatorId);
   const donationEnabled = watchData?.settings.donationEnabled ?? false;
   const donationMinAmount = watchData?.settings.donationMinAmount ?? LIVE_DONATION_MIN_AMOUNT;
 
@@ -62,6 +62,12 @@ export function useLiveBroadcastView(creatorId: string) {
 
   async function votePoll(pollId: string, optionId: string): Promise<boolean> {
     const broadcastId = broadcast?.id;
+    // 이미 투표한 항목을 그대로 보내면 표 취소(unvote)다 — RPC가 기존 표 행을 삭제하므로
+    // 낙관적 갱신도 선택 해제(null)로 둔다.
+    const cachedPolls = broadcastId
+      ? queryClient.getQueryData<LivePoll[]>(QUERY_KEYS.live.pollsForViewer(broadcastId, user?.id))
+      : undefined;
+    const isUnvote = cachedPolls?.find((poll) => poll.id === pollId)?.userVotedOptionId === optionId;
     try {
       const success = await voteLivePollAction(pollId, optionId);
       if (!success) {
@@ -73,7 +79,9 @@ export function useLiveBroadcastView(creatorId: string) {
           QUERY_KEYS.live.pollsForViewer(broadcastId, user?.id),
           (prev) =>
             prev?.map((poll) =>
-              poll.id === pollId ? { ...poll, userVotedOptionId: optionId } : poll,
+              poll.id === pollId
+                ? { ...poll, userVotedOptionId: isUnvote ? null : optionId }
+                : poll,
             ),
         );
         void queryClient.invalidateQueries({
@@ -95,6 +103,11 @@ export function useLiveBroadcastView(creatorId: string) {
     idempotencyKey: string;
   }): Promise<boolean> {
     if (!broadcast?.id) return false;
+    // 크리에이터는 본인 방송에 후원할 수 없다(서버도 거부하지만 즉시 명확히 안내한다).
+    if (user?.id && user.id === creatorId) {
+      toastAppError(APP_MESSAGE_CODE.error.live.donationSelf);
+      return false;
+    }
     if (!donationEnabled) {
       toastAppError(APP_MESSAGE_CODE.error.live.donationDisabled);
       return false;
@@ -145,6 +158,8 @@ export function useLiveBroadcastView(creatorId: string) {
         toastAppError(APP_MESSAGE_CODE.error.live.voteInvalidOption);
         return false;
       }
+      // 팝오버는 같은 항목 재클릭 = 표 취소(unvote)지만, 채팅 !N(예: !1)은
+      // 같은 번호 재전송이 실수로 표를 취소하는 사고를 막으려 일부러 no-op로 둔다.
       if (option.id === activePoll.userVotedOptionId) {
         toastAppInfo(APP_MESSAGE_CODE.success.live.voteUnchanged);
         return false;

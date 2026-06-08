@@ -123,6 +123,8 @@ export const APP_MESSAGE_CODE = {
       invalidInput: "error.message.invalidInput",
       sendForbidden: "error.message.sendForbidden",
       sendFailed: "error.message.sendFailed",
+      slowMode: "error.message.slowMode",
+      linkBlocked: "error.message.linkBlocked",
     },
     chatRoomMember: {
       kickFailed: "error.chatRoomMember.kickFailed",
@@ -180,6 +182,9 @@ export const APP_MESSAGE_CODE = {
       donationFailed: "error.live.donationFailed",
       donationInsufficientBalance: "error.live.donationInsufficientBalance",
       donationDisabled: "error.live.donationDisabled",
+      donationSelf: "error.live.donationSelf",
+      donationInvalid: "error.live.donationInvalid",
+      donationDuplicate: "error.live.donationDuplicate",
       voteFailed: "error.live.voteFailed",
       voteNoActivePoll: "error.live.voteNoActivePoll",
       voteInvalidOption: "error.live.voteInvalidOption",

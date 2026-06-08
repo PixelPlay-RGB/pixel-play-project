@@ -44,6 +44,9 @@ interface Props {
   }) => Promise<boolean>;
   chatRuleText?: string;
   onAcceptChatRule?: () => Promise<boolean>;
+  onFollow?: () => void;
+  isFollowing?: boolean;
+  isFollowPending?: boolean;
   onCollapse?: () => void;
   collapseButtonRef?: Ref<HTMLButtonElement>;
 }
@@ -68,6 +71,9 @@ export function LiveChatPanel({
   onDonate,
   chatRuleText,
   onAcceptChatRule,
+  onFollow,
+  isFollowing,
+  isFollowPending,
   onCollapse,
   collapseButtonRef,
 }: Props) {
@@ -167,6 +173,9 @@ export function LiveChatPanel({
             onDonate={onDonate}
             chatRuleText={chatRuleText}
             onAcceptChatRule={onAcceptChatRule}
+            onFollow={onFollow}
+            isFollowing={isFollowing}
+            isFollowPending={isFollowPending}
           />
         </>
       )}

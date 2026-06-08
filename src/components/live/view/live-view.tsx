@@ -11,8 +11,9 @@ import { LiveChatPanel } from "@/components/live/view/live-chat-panel";
 import { LiveLoginPromptDialog } from "@/components/live/view/live-login-prompt-dialog";
 import { useIsMobile } from "@/hooks/common/use-mobile";
 import { useLiveBroadcastView } from "@/hooks/live/use-live-broadcast-view";
-import { useFollowCreator } from "@/hooks/live/use-follow-creator";
+import { useLiveFollowAction } from "@/hooks/live/use-live-follow-action";
 import { useLiveElapsed } from "@/hooks/live/use-live-elapsed";
+import { useLiveViewerPresence } from "@/hooks/live/use-live-viewer-presence";
 import { useMoveToLogin } from "@/hooks/live/use-move-to-login";
 import { cn } from "@/lib/utils";
 import { formatCount } from "@/utils/live/live-chat";
@@ -20,9 +21,10 @@ import { LIVE_LABEL } from "@/constants/live/live";
 
 interface Props {
   creatorId: string;
+  hlsSrc: string | null;
 }
 
-export function LiveView({ creatorId }: Props) {
+export function LiveView({ creatorId, hlsSrc }: Props) {
   const moveToLogin = useMoveToLogin();
   const isMobile = useIsMobile();
   const openChatButtonRef = useRef<HTMLButtonElement>(null);
@@ -52,11 +54,13 @@ export function LiveView({ creatorId }: Props) {
     sendMessage,
     acceptChatRule,
   } = useLiveBroadcastView(creatorId);
-  const { toggleFollow, isPending: isFollowPending } = useFollowCreator(
+  const { handleFollow, isFollowPending } = useLiveFollowAction({
     creatorId,
     isFollowing,
+    isLoggedIn,
     onFollowToggled,
-  );
+    onUnauthenticated: openLoginPrompt,
+  });
 
   const [isLoginPromptOpen, setIsLoginPromptOpen] = useState(false);
   const [isDesktopChatCollapsed, setIsDesktopChatCollapsed] = useState(false);
@@ -64,17 +68,12 @@ export function LiveView({ creatorId }: Props) {
   const isChatCollapsed = isDesktopChatCollapsed && !isMobile;
   const elapsedText = useLiveElapsed(broadcast?.elapsedSeconds ?? 0);
 
+  // 방송을 보는 동안 하트비트를 보내 현재 시청자 수를 집계한다(로그인·익명 모두).
+  useLiveViewerPresence(broadcast?.id);
+
   function openLoginPrompt() {
     if (isAuthLoading) return;
     setIsLoginPromptOpen(true);
-  }
-
-  function handleFollow() {
-    if (!isLoggedIn) {
-      openLoginPrompt();
-      return;
-    }
-    void toggleFollow();
   }
 
   function collapseDesktopChat() {
@@ -114,11 +113,7 @@ export function LiveView({ creatorId }: Props) {
   return (
     <>
       <div
-        className={cn(
-          "bg-background overflow-hidden",
-          "min-h-app-content",
-          "md:fixed md:inset-x-0 md:top-(--app-header-height) md:bottom-0 md:min-h-0",
-        )}
+        className={cn("bg-background overflow-hidden", "min-h-app-content", "md:h-full md:min-h-0")}
       >
         <div
           className={cn(
@@ -133,13 +128,16 @@ export function LiveView({ creatorId }: Props) {
             className={cn(
               "flex min-w-0 flex-1 flex-col gap-4 py-4",
               "md:pl-4 2xl:pl-6",
-              "md:overflow-y-auto",
-              isTheater && "md:gap-0 md:overflow-hidden md:py-0",
+              "md:overflow-hidden",
+              isTheater && "md:gap-0 md:py-0",
             )}
           >
-            <div className={cn(isTheater && "md:min-h-0 md:flex-1")}>
+            <div
+              className={cn("md:flex md:min-h-0 md:flex-1 md:items-center md:justify-center")}
+            >
               <LiveVideoPlayer
                 broadcast={broadcast}
+                hlsSrc={hlsSrc}
                 elapsedText={elapsedText}
                 isChatCollapsed={isChatCollapsed}
                 isTheater={isTheater}
@@ -205,6 +203,9 @@ export function LiveView({ creatorId }: Props) {
               onDonate={sendDonation}
               chatRuleText={chatRuleText}
               onAcceptChatRule={acceptChatRule}
+              onFollow={handleFollow}
+              isFollowing={isFollowing}
+              isFollowPending={isFollowPending}
               onCollapse={collapseDesktopChat}
               collapseButtonRef={collapseChatButtonRef}
             />

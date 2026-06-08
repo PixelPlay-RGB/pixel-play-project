@@ -7,14 +7,21 @@ import { useEffect, useState } from "react";
 import LiveSidebar from "@/components/live/live-sidebar";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/common/use-mobile";
+import { cn } from "@/lib/utils";
 
 interface LiveShellProps {
   children: ReactNode;
+  // 콘텐츠 래퍼 클래스. 목록은 패딩+스크롤, 시청 화면은 풀블리드로 직접 지정한다.
+  contentClassName?: string;
   // 모바일 상단 헤더에 표시할 라벨(기본 "라이브"). 채널 등 다른 화면에서 재사용 시 지정.
   mobileTitle?: string;
 }
 
-export default function LiveShell({ children, mobileTitle = "라이브" }: LiveShellProps) {
+export default function LiveShell({
+  children,
+  contentClassName = "overflow-auto p-6 md:p-10",
+  mobileTitle = "라이브",
+}: LiveShellProps) {
   const isMobile = useIsMobile();
   const [isMounted, setIsMounted] = useState(false);
 
@@ -35,7 +42,7 @@ export default function LiveShell({ children, mobileTitle = "라이브" }: LiveS
             <span className="text-foreground text-sm font-semibold">{mobileTitle}</span>
           </div>
         )}
-        <div className="h-full min-w-0 overflow-auto p-6 md:p-10">{children}</div>
+        <div className={cn("h-full min-w-0", contentClassName)}>{children}</div>
       </SidebarInset>
     </SidebarProvider>
   );
