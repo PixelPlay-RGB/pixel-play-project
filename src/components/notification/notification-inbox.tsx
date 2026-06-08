@@ -46,18 +46,19 @@ export default function NotificationInbox({ onNavigate }: { onNavigate: () => vo
       );
     }
 
+    // 그룹 라벨을 아이템당 한 번만 계산하고, 직전 라벨과 다를 때만 헤더를 노출한다.
+    const groupLabels = items.map((item) => formatNotificationGroupLabel(item.createdAt));
+
     return (
       <div className="flex max-h-112 flex-col overflow-y-auto p-1">
         {items.map((item, index) => {
-          const label = formatNotificationGroupLabel(item.createdAt);
-          // 직전 아이템과 그룹 라벨이 다를 때(또는 첫 아이템)만 그룹 헤더를 노출합니다.
-          const prevLabel =
-            index > 0 ? formatNotificationGroupLabel(items[index - 1].createdAt) : null;
-          const showLabel = label !== prevLabel;
+          const showLabel = groupLabels[index] !== groupLabels[index - 1];
           return (
             <Fragment key={item.id}>
               {showLabel && (
-                <p className="text-muted-foreground px-3 pt-3 pb-1 text-xs font-bold">{label}</p>
+                <p className="text-muted-foreground px-3 pt-3 pb-1 text-xs font-bold">
+                  {groupLabels[index]}
+                </p>
               )}
               <NotificationItem
                 notification={item}

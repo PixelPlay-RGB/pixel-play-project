@@ -4,6 +4,7 @@ import Link from "next/link";
 import { X } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { cn } from "@/lib/utils";
 import type { AppNotification } from "@/types/notification/notification";
 import { formatRelativeTime } from "@/utils/common/format";
 import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
@@ -22,7 +23,10 @@ export default function NotificationItem({ notification, onNavigate, onDelete }:
       <Link
         href={notification.linkPath}
         onClick={onNavigate}
-        className="hover:bg-muted/60 flex gap-3 rounded-xl px-3 py-2.5 pr-10 transition-colors"
+        className={cn(
+          "flex gap-3 rounded-xl px-3 py-2.5 pr-10",
+          "hover:bg-muted/60 transition-colors",
+        )}
       >
         <Avatar className="size-9 shrink-0">
           <AvatarImage src={getAvatarImageSrc(notification.actorPhotoUrl)} alt={nickname} />
@@ -44,7 +48,11 @@ export default function NotificationItem({ notification, onNavigate, onDelete }:
         type="button"
         aria-label="알림 삭제"
         onClick={() => onDelete(notification.id)}
-        className="text-muted-foreground hover:bg-muted hover:text-foreground absolute top-2 right-2 z-10 grid size-7 place-items-center rounded-md opacity-0 transition group-hover:opacity-100"
+        className={cn(
+          "absolute top-2 right-2 z-10 grid size-7 place-items-center rounded-md",
+          "text-muted-foreground hover:bg-muted hover:text-foreground",
+          "opacity-70 transition group-hover:opacity-100",
+        )}
       >
         <X className="size-4" />
       </button>
