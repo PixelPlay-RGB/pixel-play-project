@@ -93,11 +93,7 @@ function buildUserDonationSnapshot(
   const sentDonations = readArray(snapshotObject?.sentDonations)
     .map(readSentDonation)
     .filter((item): item is UserSentDonationItem => item !== null);
-  const chargeHistorySource =
-    snapshotObject && "chargeHistories" in snapshotObject
-      ? snapshotObject.chargeHistories
-      : snapshotObject?.transactions;
-  const chargeHistories = readArray(chargeHistorySource)
+  const chargeHistories = readArray(snapshotObject?.chargeHistories)
     .map(readChargeHistory)
     .filter((item): item is UserWalletChargeHistoryItem => item !== null);
 

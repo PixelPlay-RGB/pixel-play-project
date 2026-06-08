@@ -32,7 +32,7 @@ import type {
 import { getPageItems } from "@/utils/common/pagination";
 import { CreditCard, Gift, Inbox } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState, type MouseEvent } from "react";
+import { useMemo, useState, type MouseEvent } from "react";
 
 interface Props {
   snapshot: UserDonationSnapshot;
@@ -67,11 +67,20 @@ const DONATION_HISTORY_TABS: Array<{ value: DonationHistoryTab; label: string }>
 ];
 const HISTORY_ITEMS_PER_PAGE = 8;
 
+type HistoryPageState = {
+  scopeKey: string;
+  page: number;
+};
+
 export function UserDonationHistoryTable({ snapshot, activeTab, onActiveTabChange }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [currentPage, setCurrentPage] = useState(1);
+  const historyScopeKey = `${activeTab}:${snapshot.historyPeriod.year}:${snapshot.historyPeriod.month}`;
+  const [pageState, setPageState] = useState<HistoryPageState>({
+    scopeKey: historyScopeKey,
+    page: 1,
+  });
   const historyItems = useMemo(() => buildHistoryItems(snapshot), [snapshot]);
   const succeededChargeHistories = useMemo(() => getSucceededChargeHistories(snapshot), [snapshot]);
   const yearOptions = useMemo(
@@ -85,6 +94,7 @@ export function UserDonationHistoryTable({ snapshot, activeTab, onActiveTabChang
     [activeTab, historyItems],
   );
   const totalPages = Math.ceil(filteredItems.length / HISTORY_ITEMS_PER_PAGE);
+  const currentPage = pageState.scopeKey === historyScopeKey ? pageState.page : 1;
   const safeCurrentPage = Math.min(currentPage, Math.max(totalPages, 1));
   const paginatedItems = useMemo(
     () =>
@@ -107,14 +117,6 @@ export function UserDonationHistoryTable({ snapshot, activeTab, onActiveTabChang
     }),
     [historyItems.length, succeededChargeHistories.length, snapshot.sentDonations.length],
   );
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [activeTab, snapshot.historyPeriod.year, snapshot.historyPeriod.month]);
-
-  useEffect(() => {
-    setCurrentPage((page) => Math.min(page, Math.max(totalPages, 1)));
-  }, [totalPages]);
 
   const handlePeriodChange = (nextPeriod: { year?: number; month?: number }) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -194,7 +196,7 @@ export function UserDonationHistoryTable({ snapshot, activeTab, onActiveTabChang
             <HistoryPagination
               currentPage={safeCurrentPage}
               totalPages={totalPages}
-              onPageChange={setCurrentPage}
+              onPageChange={(page) => setPageState({ scopeKey: historyScopeKey, page })}
             />
           </>
         ) : (

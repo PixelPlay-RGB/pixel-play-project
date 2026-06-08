@@ -81,6 +81,7 @@ begin
       from public.wallet_transaction as wallet_charge
       where wallet_charge.user_id = target_user.id
         and wallet_charge.transaction_type = 'charge'::public.wallet_transaction_type
+        and wallet_charge.transaction_status = 'succeeded'::public.wallet_transaction_status
       order by wallet_charge.created_at desc
       limit 20
     ) as ranked
