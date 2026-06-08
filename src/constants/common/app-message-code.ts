@@ -187,6 +187,7 @@ export const APP_MESSAGE_CODE = {
       commentUpdateFailed: "error.community.commentUpdateFailed",
     },
     notification: {
+      loadFailed: "error.notification.loadFailed",
       deleteFailed: "error.notification.deleteFailed",
     },
     supabase: {

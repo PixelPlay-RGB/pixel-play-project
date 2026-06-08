@@ -5,12 +5,14 @@ import { Fragment, useState } from "react";
 import DeleteConfirmDialog from "@/components/common/delete-confirm-dialog";
 import NotificationItem from "@/components/notification/notification-item";
 import { Spinner } from "@/components/ui/spinner";
+import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import {
   useDeleteAllNotifications,
   useDeleteNotification,
 } from "@/hooks/notification/use-delete-notifications";
 import { useNotifications } from "@/hooks/notification/use-notifications";
 import type { AppNotification } from "@/types/notification/notification";
+import { getAppMessage } from "@/utils/common/app-message";
 import { formatNotificationGroupLabel } from "@/utils/common/format";
 
 export default function NotificationInbox({ onNavigate }: { onNavigate: () => void }) {
@@ -40,10 +42,12 @@ export default function NotificationInbox({ onNavigate }: { onNavigate: () => vo
     }
 
     if (isError) {
+      const message = getAppMessage(APP_MESSAGE_CODE.error.notification.loadFailed);
       return (
-        <p className="text-muted-foreground py-10 text-center text-sm font-semibold">
-          알림을 불러오지 못했어요.
-        </p>
+        <div className="text-muted-foreground flex flex-col items-center gap-1 py-10 text-center">
+          <p className="text-foreground text-sm font-semibold">{message.title}</p>
+          <p className="text-xs">{message.description}</p>
+        </div>
       );
     }
 
