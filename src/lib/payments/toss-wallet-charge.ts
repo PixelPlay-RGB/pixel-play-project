@@ -272,10 +272,16 @@ async function requestTossPaymentConfirm(
       signal: abortController.signal,
     });
   } catch (error: unknown) {
-    console.error("Toss 결제 승인 API 네트워크 호출 실패", error);
+    const isTimeout = isAbortError(error);
+    const status = isTimeout ? 504 : 502;
+    console.error("Toss 결제 승인 API 네트워크 호출 실패", {
+      error,
+      isTimeout,
+      status,
+    });
     return {
       success: false as const,
-      status: isAbortError(error) ? 504 : 502,
+      status,
       shouldMarkFailed: false,
     };
   } finally {
