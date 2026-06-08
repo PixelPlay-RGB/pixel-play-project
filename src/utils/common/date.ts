@@ -16,18 +16,18 @@ export function formatKstTime(at: number | string | Date) {
   return KST_TIME_FORMATTER.format(new Date(at));
 }
 
-// 월·일·시·분 표기를 KST로 고정한다(지난 방송 분석 등 날짜+시각 표기, SSR 결정성 보장).
-const KST_DATE_TIME_FORMATTER = new Intl.DateTimeFormat("ko-KR", {
+// YYYY-MM-DD를 KST로 고정한다(en-CA가 ISO식 "2026-06-08" 표기를 준다). SSR 결정성 보장.
+const KST_NUMERIC_DATE_FORMATTER = new Intl.DateTimeFormat("en-CA", {
   timeZone: "Asia/Seoul",
-  hourCycle: "h23",
-  month: "long",
-  day: "numeric",
-  hour: "2-digit",
-  minute: "2-digit",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
 });
 
-export function formatKstDateTime(at: number | string | Date) {
-  return KST_DATE_TIME_FORMATTER.format(new Date(at));
+// "2026-06-08 10:20" (날짜 + 시각, KST 고정)
+export function formatKstDateTimeNumeric(at: number | string | Date) {
+  const date = new Date(at);
+  return `${KST_NUMERIC_DATE_FORMATTER.format(date)} ${formatKstTime(date)}`;
 }
 
 // 경과 시간을 "N시간 M분"(1시간 미만이면 "M분")으로 표기한다.

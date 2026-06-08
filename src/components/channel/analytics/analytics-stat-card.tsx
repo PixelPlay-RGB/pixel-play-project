@@ -26,7 +26,8 @@ export function AnalyticsStatCard({ icon: Icon, label, value, hint, trend }: Pro
         <span className="text-foreground text-3xl font-bold tracking-tight">{value}</span>
         {typeof trend === "number" && <TrendBadge trend={trend} />}
       </div>
-      {hint && <p className="text-muted-foreground text-xs">{hint}</p>}
+      {/* hint가 없어도 한 줄 높이를 예약해 카드 높이를 통일한다. */}
+      <p className="text-muted-foreground min-h-4 text-xs">{hint}</p>
     </Card>
   );
 }

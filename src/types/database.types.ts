@@ -1176,6 +1176,13 @@ export type Database = {
         Args: { p_post_id: string; p_viewer_id?: string }
         Returns: Json
       }
+      get_creator_broadcast_chat_participants: {
+        Args: { p_broadcast_ids: string[] }
+        Returns: {
+          broadcast_id: string
+          participant_count: number
+        }[]
+      }
       get_creator_donation_dashboard: {
         Args: {
           p_actor_user_id: string

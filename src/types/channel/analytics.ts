@@ -85,9 +85,33 @@ export interface FollowFeed {
 export interface BroadcastReport {
   id: string;
   title: string;
+  thumbnailUrl: string | null;
   startedAt: string;
   durationMs: number;
-  chatMessageCount: number;
+  // 최고 동접 writer(#72 시청 화면 하트비트)가 dev에 합류하기 전에는 0으로 남는다.
+  // 0이면 화면에서 "—"로 도배되지 않게 graceful 처리한다.
+  peakViewerCount: number;
+  // 채팅 고유 참여자 수(live_message의 distinct sender_id). 총 메시지 수가 아니라 "몇 명이 참여했나".
+  chatParticipantCount: number;
   donationCount: number;
   donationAmountTotal: number;
 }
+
+// 지난 방송 분석 상단 헤더: 선택 기간 내 종료 방송들의 누적 합계.
+export interface BroadcastReportSummary {
+  broadcastCount: number;
+  totalDurationMs: number;
+  peakViewerCount: number; // 기간 내 최고 동접(각 방송 peak의 최댓값). 0이면 미집계로 본다.
+  chatParticipantCount: number; // 기간 내 채팅 고유 참여자(방송 간 합집합, 연인원 아님).
+  totalDonationCount: number;
+  totalDonationAmount: number;
+}
+
+// 페이지 → 뷰로 넘기는 페이로드. 참여자 합집합은 방송별 카운트로 못 구해서 별도로 싣는다.
+export interface BroadcastReportPayload {
+  reports: BroadcastReport[];
+  totalChatParticipants: number;
+}
+
+// 지난 방송 분석 기간 프리셋(서버 조회 범위).
+export type BroadcastReportPeriod = "7d" | "30d" | "all";
