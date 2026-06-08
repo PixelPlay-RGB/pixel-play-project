@@ -146,6 +146,11 @@ export const APP_MESSAGE = {
         description: "다른 항목 번호를 입력하면 투표가 변경됩니다.",
       },
     },
+    notification: {
+      allDeleted: {
+        title: "알림 전체 삭제 완료",
+      },
+    },
   },
   error: {
     common: {
@@ -618,6 +623,16 @@ export const APP_MESSAGE = {
       },
       commentUpdateFailed: {
         title: "댓글 수정 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+    },
+    notification: {
+      loadFailed: {
+        title: "알림 조회 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      deleteFailed: {
+        title: "알림 삭제 실패",
         description: "잠시 후 다시 시도해주세요.",
       },
     },

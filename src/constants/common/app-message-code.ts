@@ -58,6 +58,9 @@ export const APP_MESSAGE_CODE = {
       urlCopied: "success.live.urlCopied",
       voteUnchanged: "success.live.voteUnchanged",
     },
+    notification: {
+      allDeleted: "success.notification.allDeleted",
+    },
   },
   error: {
     common: {
@@ -200,6 +203,10 @@ export const APP_MESSAGE_CODE = {
       loadFailed: "error.community.loadFailed",
       postUpdateFailed: "error.community.postUpdateFailed",
       commentUpdateFailed: "error.community.commentUpdateFailed",
+    },
+    notification: {
+      loadFailed: "error.notification.loadFailed",
+      deleteFailed: "error.notification.deleteFailed",
     },
     supabase: {
       permissionDenied: "error.supabase.permissionDenied",
