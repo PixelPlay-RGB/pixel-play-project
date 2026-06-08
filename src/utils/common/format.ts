@@ -46,22 +46,32 @@ export function formatRelativeTime(iso: string): string {
   return formatDate(iso);
 }
 
-// 알림 수신함 그룹 라벨(오늘/최근 일주일/이전). '오늘'은 rolling 24h가 아니라 달력 날짜 기준으로 판정한다.
-const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+// 알림 수신함 그룹 라벨(오늘/어제/최근 일주일/이전).
+// rolling(시간 누적)이 아니라 자정(00시) 기준 달력 일수 차이로 판정한다.
+const GROUP_DAY_MS = 24 * 60 * 60 * 1000;
 
 export function formatNotificationGroupLabel(iso: string): string {
-  const target = new Date(iso).getTime();
-  if (Number.isNaN(target)) {
+  const target = new Date(iso);
+  if (Number.isNaN(target.getTime())) {
     return "이전";
   }
 
   const now = new Date();
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const startOfTargetDay = new Date(
+    target.getFullYear(),
+    target.getMonth(),
+    target.getDate(),
+  ).getTime();
+  const daysAgo = Math.round((startOfToday - startOfTargetDay) / GROUP_DAY_MS);
 
-  if (target >= startOfToday) {
+  if (daysAgo <= 0) {
     return "오늘";
   }
-  if (Date.now() - target < WEEK_MS) {
+  if (daysAgo === 1) {
+    return "어제";
+  }
+  if (daysAgo < 7) {
     return "최근 일주일";
   }
   return "이전";
