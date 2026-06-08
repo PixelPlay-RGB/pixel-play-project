@@ -3,6 +3,7 @@
 // 선택을 어떻게 반영할지(콜백/URL 등)는 호출부가 onSelect로 주입한다.
 
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface SegmentedOption<T extends string> {
   value: T;
@@ -13,23 +14,40 @@ interface Props<T extends string> {
   options: readonly SegmentedOption<T>[];
   value: T;
   onSelect: (value: T) => void;
+  ariaLabel: string;
 }
 
-export function SegmentedButtonGroup<T extends string>({ options, value, onSelect }: Props<T>) {
+export function SegmentedButtonGroup<T extends string>({
+  options,
+  value,
+  onSelect,
+  ariaLabel,
+}: Props<T>) {
   return (
-    <div className="flex gap-1">
-      {options.map((option) => (
-        <Button
-          key={option.value}
-          type="button"
-          size="sm"
-          variant={value === option.value ? "default" : "ghost"}
-          onClick={() => onSelect(option.value)}
-          aria-pressed={value === option.value}
-        >
-          {option.label}
-        </Button>
-      ))}
+    <div role="radiogroup" aria-label={ariaLabel} className="flex flex-wrap gap-2">
+      {options.map((option) => {
+        const isActive = value === option.value;
+
+        return (
+          <Button
+            key={option.value}
+            type="button"
+            size="sm"
+            variant="outline"
+            role="radio"
+            aria-checked={isActive}
+            onClick={() => onSelect(option.value)}
+            className={cn(
+              "text-xs font-bold transition-colors",
+              isActive
+                ? "border-brand bg-brand shadow-brand/25 hover:bg-brand/90 dark:border-brand! dark:bg-brand! dark:hover:bg-brand/90! text-white shadow-sm hover:text-white dark:text-white!"
+                : "hover:border-brand/40 hover:bg-brand/5",
+            )}
+          >
+            {option.label}
+          </Button>
+        );
+      })}
     </div>
   );
 }

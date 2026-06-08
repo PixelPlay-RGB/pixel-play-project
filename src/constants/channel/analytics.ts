@@ -70,6 +70,8 @@ export const ANALYTICS_LABEL = {
   reportPeriod7d: "최근 7일",
   reportPeriod30d: "최근 30일",
   reportPeriodAll: "전체",
+  reportPeriodAriaLabel: "지난 방송 조회 기간",
+  rangeAriaLabel: "시청자 추이 시간 범위",
   // TODO(#88): 채팅 제한 이벤트는 제한 기록을 저장하는 테이블이 생기면 로그에 추가한다.
 } as const;
 

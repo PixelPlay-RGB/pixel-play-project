@@ -15,7 +15,7 @@ export function AnalyticsElapsed({ startedAt }: Props) {
 
   return (
     <span className="text-muted-foreground flex items-center gap-1.5 text-sm font-medium">
-      <Clock className="size-4" aria-hidden />
+      <Clock className="text-live size-4" aria-hidden />
       {elapsed ? `${ANALYTICS_LABEL.elapsedPrefix} ${elapsed}` : ANALYTICS_LABEL.elapsedPending}
     </span>
   );
