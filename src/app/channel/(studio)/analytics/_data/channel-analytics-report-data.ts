@@ -1,11 +1,7 @@
 // 채널 지난 방송 분석 페이지의 서버 데이터(종료된 방송 요약)를 조회합니다.
 import "server-only";
 
-import {
-  ANALYTICS_REPORT_LIMIT,
-  REPORT_MESSAGE_FETCH_CAP,
-  REPORT_PERIOD_DEFAULT,
-} from "@/constants/channel/analytics";
+import { ANALYTICS_REPORT_LIMIT, REPORT_PERIOD_DEFAULT } from "@/constants/channel/analytics";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { createAdminClient } from "@/lib/supabase/admin-client";
 import type {
@@ -70,58 +66,47 @@ export async function getCreatorBroadcastReports(
   );
 
   const reports = rows
-    .map((row) => mapBroadcastReportRow(row, byBroadcast.get(row.id)?.size ?? 0))
+    .map((row) => mapBroadcastReportRow(row, byBroadcast.get(row.id) ?? 0))
     .filter((report): report is BroadcastReport => report !== null);
 
   return { success: true, data: { reports, totalChatParticipants: total } };
 }
 
-// 종료된 방송들의 채팅 고유 참여자를 live_message에서 집계한다.
-// 방송별 distinct sender + 기간 전체 distinct sender(합집합)를 함께 만든다.
-// 참여자 집계 실패는 화면 전체를 막지 않고 0으로 graceful 처리한다.
+// 종료된 방송들의 채팅 고유 참여자 수를 집계 RPC로 조회한다.
+// RPC가 message_type='chat'으로 좁혀 count(distinct sender_id)를 DB에서 수행하므로
+// JS distinct + 행 상한(언더카운트)이 사라진다. GROUPING SETS로 방송별 카운트와
+// 기간 전체 합집합(broadcast_id=null 행)을 한 번에 받는다.
+// 집계 실패는 화면 전체를 막지 않고 0으로 graceful 처리한다.
 async function collectChatParticipants(
   supabase: ReturnType<typeof createAdminClient>,
   broadcastIds: string[],
-): Promise<{ byBroadcast: Map<string, Set<string>>; total: number }> {
-  const byBroadcast = new Map<string, Set<string>>();
-  const everyone = new Set<string>();
+): Promise<{ byBroadcast: Map<string, number>; total: number }> {
+  const byBroadcast = new Map<string, number>();
 
   if (broadcastIds.length === 0) {
     return { byBroadcast, total: 0 };
   }
 
-  // ⚠️ PostgREST 기본 행 상한(db-max-rows, 보통 1000)이 먼저 걸리므로 실제 수신은
-  // min(1000, REPORT_MESSAGE_FETCH_CAP) 행이다. 단일 .in() + 정렬 없음이라 메시지 총합이
-  // 상한을 넘으면 일부 방송 메시지가 아예 안 실려, 대형 방송 언더카운트뿐 아니라 후순위
-  // 방송 참여자가 0으로 누락될 수 있고 기간 합집합도 그만큼 빠진다.
-  // → 정확 집계는 count(distinct) RPC 후속으로 승격(현재는 graceful 근사).
-  // message_type은 chat으로 좁힌다 — 후원/운영(클린봇) 알림 작성자는 채팅 참여자가 아니다.
-  const { data, error } = await supabase
-    .from("live_message")
-    .select("broadcast_id, sender_id")
-    .in("broadcast_id", broadcastIds)
-    .eq("message_type", "chat")
-    .limit(REPORT_MESSAGE_FETCH_CAP);
+  const { data, error } = await supabase.rpc("get_creator_broadcast_chat_participants", {
+    p_broadcast_ids: broadcastIds,
+  });
 
   if (error) {
     console.error("지난 방송 채팅 참여자 집계 실패", error);
     return { byBroadcast, total: 0 };
   }
 
-  for (const message of data ?? []) {
-    if (!message.sender_id) {
+  let total = 0;
+  for (const row of data ?? []) {
+    // broadcast_id가 null인 행은 GROUPING SETS의 합계 행 = 기간 전체 합집합 참여자.
+    // (타입 생성기는 non-null로 추론하나 합계 행은 null이라 좁혀서 처리한다.)
+    const broadcastId = row.broadcast_id as string | null;
+    if (broadcastId === null) {
+      total = row.participant_count;
       continue;
     }
-
-    everyone.add(message.sender_id);
-
-    let participants = byBroadcast.get(message.broadcast_id);
-    if (!participants) {
-      participants = new Set<string>();
-      byBroadcast.set(message.broadcast_id, participants);
-    }
-    participants.add(message.sender_id);
+    byBroadcast.set(broadcastId, row.participant_count);
   }
 
-  return { byBroadcast, total: everyone.size };
+  return { byBroadcast, total };
 }

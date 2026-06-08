@@ -111,11 +111,6 @@ export const ANALYTICS_REPORT_LIMIT = 30;
 // 지난 방송 분석 목록 페이지당 방송 개수(전체 fetch 후 메모리 페이징)
 export const REPORT_PAGE_SIZE = 10;
 
-// 채팅 고유 참여자 집계를 위해 한 번에 읽는 live_message 행 상한.
-// ⚠️ 서버측 DISTINCT 집계를 쿼리 빌더로 못 해 행을 받아 JS에서 distinct하므로,
-// 이 상한을 넘는 대형 방송은 참여자 수가 언더카운트된다(정확 집계는 RPC 후속).
-export const REPORT_MESSAGE_FETCH_CAP = 5_000;
-
 // 지난 방송 분석 기간 프리셋(상단 합계·하단 목록 공통 조회 범위)
 export const REPORT_PERIOD_DEFAULT = "all" as const;
 export const REPORT_PERIOD_OPTIONS = [
