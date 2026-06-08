@@ -48,7 +48,7 @@ export function useLiveBroadcastView(creatorId: string) {
   const messages = messagesQuery.messages;
 
   const pollsQuery = useLivePolls(broadcast?.id, user?.id);
-  const donationRankingQuery = useLiveDonationRanking(creatorId, broadcast?.id);
+  const donationRankingQuery = useLiveDonationRanking(creatorId);
   const donationEnabled = watchData?.settings.donationEnabled ?? false;
   const donationMinAmount = watchData?.settings.donationMinAmount ?? LIVE_DONATION_MIN_AMOUNT;
 
@@ -158,6 +158,8 @@ export function useLiveBroadcastView(creatorId: string) {
         toastAppError(APP_MESSAGE_CODE.error.live.voteInvalidOption);
         return false;
       }
+      // 팝오버는 같은 항목 재클릭 = 표 취소(unvote)지만, 채팅 !N(예: !1)은
+      // 같은 번호 재전송이 실수로 표를 취소하는 사고를 막으려 일부러 no-op로 둔다.
       if (option.id === activePoll.userVotedOptionId) {
         toastAppInfo(APP_MESSAGE_CODE.success.live.voteUnchanged);
         return false;

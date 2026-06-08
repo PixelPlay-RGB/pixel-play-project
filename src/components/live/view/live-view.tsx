@@ -11,7 +11,7 @@ import { LiveChatPanel } from "@/components/live/view/live-chat-panel";
 import { LiveLoginPromptDialog } from "@/components/live/view/live-login-prompt-dialog";
 import { useIsMobile } from "@/hooks/common/use-mobile";
 import { useLiveBroadcastView } from "@/hooks/live/use-live-broadcast-view";
-import { useFollowCreator } from "@/hooks/live/use-follow-creator";
+import { useLiveFollowAction } from "@/hooks/live/use-live-follow-action";
 import { useLiveElapsed } from "@/hooks/live/use-live-elapsed";
 import { useLiveViewerPresence } from "@/hooks/live/use-live-viewer-presence";
 import { useMoveToLogin } from "@/hooks/live/use-move-to-login";
@@ -54,11 +54,13 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     sendMessage,
     acceptChatRule,
   } = useLiveBroadcastView(creatorId);
-  const { toggleFollow, isPending: isFollowPending } = useFollowCreator(
+  const { handleFollow, isFollowPending } = useLiveFollowAction({
     creatorId,
     isFollowing,
+    isLoggedIn,
     onFollowToggled,
-  );
+    onUnauthenticated: openLoginPrompt,
+  });
 
   const [isLoginPromptOpen, setIsLoginPromptOpen] = useState(false);
   const [isDesktopChatCollapsed, setIsDesktopChatCollapsed] = useState(false);
@@ -72,14 +74,6 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
   function openLoginPrompt() {
     if (isAuthLoading) return;
     setIsLoginPromptOpen(true);
-  }
-
-  function handleFollow() {
-    if (!isLoggedIn) {
-      openLoginPrompt();
-      return;
-    }
-    void toggleFollow();
   }
 
   function collapseDesktopChat() {
@@ -209,6 +203,9 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
               onDonate={sendDonation}
               chatRuleText={chatRuleText}
               onAcceptChatRule={acceptChatRule}
+              onFollow={handleFollow}
+              isFollowing={isFollowing}
+              isFollowPending={isFollowPending}
               onCollapse={collapseDesktopChat}
               collapseButtonRef={collapseChatButtonRef}
             />

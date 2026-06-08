@@ -214,7 +214,7 @@ function VoteResults({ poll, onClose }: { poll: LivePoll; onClose: () => void })
               >
                 <VoteOptionBar percent={percent} emphasized={isWinner} />
                 <div className="relative flex w-full items-center gap-2 text-sm">
-                  {isWinner ? <Crown className="text-live size-4 shrink-0" /> : null}
+                  {isWinner ? <Crown aria-hidden className="text-live size-4 shrink-0" /> : null}
                   <span
                     className={cn(
                       "min-w-0 flex-1 truncate text-left",

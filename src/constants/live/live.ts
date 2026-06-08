@@ -1,13 +1,11 @@
 // 라이브 시청 화면에서 사용하는 상수를 정의합니다.
 
 export const LIVE_LABEL = {
-  chatRulePlaceholder: "채팅 규칙을 확인해주세요.",
   chatRuleTitle: "채팅 규칙 안내",
   chatRuleDescription: "첫 채팅 전에 한 번만 확인합니다.",
   chatRuleDefaultText:
     "서로를 존중하며 대화해주세요. 반복 도배, 비방, 홍보성 메시지는 제한될 수 있습니다.",
   chatRuleAccept: "규칙 확인하고 채팅하기",
-  chatVoteCommandPlaceholder: "채팅은 제한 중입니다. !1처럼 입력해 투표할 수 있습니다.",
   live: "LIVE",
   chat: "라이브 채팅",
   follow: "팔로우",

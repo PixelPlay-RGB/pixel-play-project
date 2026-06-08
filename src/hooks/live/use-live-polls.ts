@@ -24,11 +24,6 @@ function parsePollOptions(raw: unknown): LivePollOption[] {
   });
 }
 
-function readVotePollId(row: unknown): string | null {
-  if (!row || typeof row !== "object" || !("poll_id" in row)) return null;
-  return typeof row.poll_id === "string" ? row.poll_id : null;
-}
-
 export function useLivePolls(broadcastId: string | null | undefined, userId?: string | null) {
   const supabase = useMemo(() => createClient(), []);
   const queryClient = useQueryClient();
@@ -92,18 +87,12 @@ export function useLivePolls(broadcastId: string | null | undefined, userId?: st
   useEffect(() => {
     if (!broadcastId) return;
 
+    // 득표수 변화는 트리거가 live_poll.options를 UPDATE하므로 live_poll 구독만으로 충분하다.
+    // (과거 live_poll_vote 전역 구독은 중복 + 필터 불가한 전역 fan-out이라 제거했다.)
     const invalidatePolls = () => {
       void queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.live.polls(broadcastId),
       });
-    };
-
-    const shouldInvalidateVote = (pollId: unknown) => {
-      if (typeof pollId !== "string") return false;
-      const polls = queryClient.getQueryData<LivePoll[]>(
-        QUERY_KEYS.live.pollsForViewer(broadcastId, userId),
-      );
-      return !polls || polls.some((poll) => poll.id === pollId);
     };
 
     const channel = supabase
@@ -118,25 +107,12 @@ export function useLivePolls(broadcastId: string | null | undefined, userId?: st
         },
         invalidatePolls,
       )
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "live_poll_vote",
-        },
-        (payload) => {
-          const row = payload.new && typeof payload.new === "object" ? payload.new : payload.old;
-          const pollId = readVotePollId(row);
-          if (shouldInvalidateVote(pollId)) invalidatePolls();
-        },
-      )
       .subscribe();
 
     return () => {
       void channel.unsubscribe();
     };
-  }, [broadcastId, userId, supabase, queryClient]);
+  }, [broadcastId, supabase, queryClient]);
 
   useEffect(() => {
     if (!broadcastId || !query.data) return;

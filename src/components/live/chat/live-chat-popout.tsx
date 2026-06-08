@@ -10,6 +10,7 @@ import { LiveChatParticipationNotice } from "@/components/live/chat/live-chat-pa
 import { LiveDonationBanner } from "@/components/live/view/live-donation-banner";
 import { LIVE_LABEL } from "@/constants/live/live";
 import { useLiveBroadcastView } from "@/hooks/live/use-live-broadcast-view";
+import { useLiveFollowAction } from "@/hooks/live/use-live-follow-action";
 import { useMoveToLogin } from "@/hooks/live/use-move-to-login";
 
 interface Props {
@@ -41,7 +42,17 @@ export function LiveChatPopout({ creatorId }: Props) {
     acceptChatRule,
     votePoll,
     sendDonation,
+    isFollowing,
+    onFollowToggled,
   } = useLiveBroadcastView(creatorId);
+
+  const { handleFollow, isFollowPending } = useLiveFollowAction({
+    creatorId,
+    isFollowing,
+    isLoggedIn,
+    onFollowToggled,
+    onUnauthenticated: moveToLogin,
+  });
 
   function moveToLiveWatch() {
     router.push(`/live/${creatorId}`);
@@ -108,6 +119,9 @@ export function LiveChatPopout({ creatorId }: Props) {
         votePresentation="dialog"
         chatRuleText={chatRuleText}
         onAcceptChatRule={acceptChatRule}
+        onFollow={handleFollow}
+        isFollowing={isFollowing}
+        isFollowPending={isFollowPending}
       />
     </div>
   );

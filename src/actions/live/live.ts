@@ -203,11 +203,12 @@ async function resolveLiveViewerKey(anonViewerKey: string | undefined): Promise<
   return `a:${trimmed}`;
 }
 
-// 시청 화면 하트비트 — current_viewer_count 집계용(로그인·익명 모두 집계).
+// 시청자 하트비트 sync/leave 공통 골격 — RPC 이름에서 로그 라벨까지 도출한다.
 // 실패는 화면에 영향을 주지 않는 부수효과라 조용히 로깅만 한다.
-export async function syncLiveViewerPresenceAction(
+async function runLiveViewerPresenceRpc(
+  rpc: "sync_live_viewer_presence" | "leave_live_viewer_presence",
   broadcastId: string,
-  anonViewerKey?: string,
+  anonViewerKey: string | undefined,
 ): Promise<void> {
   if (!broadcastId || !isUuid(broadcastId)) return;
 
@@ -215,18 +216,28 @@ export async function syncLiveViewerPresenceAction(
 
   if (!viewerKey) return;
 
-  const client = await createWriteClientForAction("라이브 시청자 집계 Admin Client 생성 실패");
+  const action = rpc === "sync_live_viewer_presence" ? "집계" : "이탈";
+
+  const client = await createWriteClientForAction(`라이브 시청자 ${action} Admin Client 생성 실패`);
 
   if (!client.success) return;
 
-  const { error } = await client.supabase.rpc("sync_live_viewer_presence", {
+  const { error } = await client.supabase.rpc(rpc, {
     p_broadcast_id: broadcastId,
     p_viewer_key: viewerKey,
   });
 
   if (error) {
-    console.error("라이브 시청자 집계 RPC 실패", error);
+    console.error(`라이브 시청자 ${action} RPC 실패`, error);
   }
+}
+
+// 시청 화면 하트비트 — current_viewer_count 집계용(로그인·익명 모두 집계).
+export async function syncLiveViewerPresenceAction(
+  broadcastId: string,
+  anonViewerKey?: string,
+): Promise<void> {
+  await runLiveViewerPresenceRpc("sync_live_viewer_presence", broadcastId, anonViewerKey);
 }
 
 // 시청 화면 이탈 시 본인 하트비트를 제거해 시청자 수를 즉시 줄인다.
@@ -234,24 +245,7 @@ export async function leaveLiveViewerPresenceAction(
   broadcastId: string,
   anonViewerKey?: string,
 ): Promise<void> {
-  if (!broadcastId || !isUuid(broadcastId)) return;
-
-  const viewerKey = await resolveLiveViewerKey(anonViewerKey);
-
-  if (!viewerKey) return;
-
-  const client = await createWriteClientForAction("라이브 시청자 이탈 Admin Client 생성 실패");
-
-  if (!client.success) return;
-
-  const { error } = await client.supabase.rpc("leave_live_viewer_presence", {
-    p_broadcast_id: broadcastId,
-    p_viewer_key: viewerKey,
-  });
-
-  if (error) {
-    console.error("라이브 시청자 이탈 RPC 실패", error);
-  }
+  await runLiveViewerPresenceRpc("leave_live_viewer_presence", broadcastId, anonViewerKey);
 }
 
 export async function acceptLiveChatRuleAction(

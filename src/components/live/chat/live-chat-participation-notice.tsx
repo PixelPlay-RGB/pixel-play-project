@@ -1,5 +1,5 @@
 "use client";
-// 팔로우 전용 채팅 참여 안내 — 채팅 패널과 팝아웃에서 공유합니다.
+// 팔로우 직후 대기 안내 — 채팅 패널과 팝아웃에서 공유합니다.
 
 import { UserRoundPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,25 +17,23 @@ export function LiveChatParticipationNotice({
   actionLabel,
   onAction,
 }: Props) {
-  if (
-    chatUnavailableReason !== "follower_required" &&
-    chatUnavailableReason !== "follower_wait_required"
-  ) {
+  // follower_required는 입력바의 팔로우 popover가 안내하므로, 이 카드는 팔로우 직후
+  // 대기 상태(follower_wait_required)만 책임진다. 나머지 사유는 렌더하지 않는다.
+  // (어떤 사유에 카드를 띄울지 결정은 여기 한 곳에 두고, 호출부는 사유만 넘긴다.)
+  if (chatUnavailableReason !== "follower_wait_required") {
     return null;
   }
-
-  const isWaiting = chatUnavailableReason === "follower_wait_required";
 
   return (
     <div className="border-border bg-card border-t px-3 py-3">
       <div className="border-live/20 bg-live/5 flex items-start gap-2 rounded-lg border px-3 py-2.5">
-        <UserRoundPlus className="text-live mt-0.5 size-4 shrink-0" />
+        <UserRoundPlus aria-hidden className="text-live mt-0.5 size-4 shrink-0" />
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
           <p className="text-foreground text-xs font-semibold">
-            {isWaiting ? LIVE_LABEL.participationWaitTitle : LIVE_LABEL.participationFollowerTitle}
+            {LIVE_LABEL.participationWaitTitle}
           </p>
           <p className="text-muted-foreground text-xs leading-snug">
-            {isWaiting ? LIVE_LABEL.participationWaitDesc : LIVE_LABEL.participationFollowerDesc}
+            {LIVE_LABEL.participationWaitDesc}
           </p>
         </div>
         {actionLabel && onAction ? (
