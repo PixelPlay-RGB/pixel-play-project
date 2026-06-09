@@ -385,25 +385,27 @@ function InteractionNoticeCard({
   return (
     <div
       className={cn(
-        "flex flex-col gap-3 rounded-lg border p-3",
+        "flex flex-col overflow-hidden rounded-lg border",
         isActive ? "border-brand/40" : "border-border",
       )}
     >
-      <StatusPill tone={isActive ? "brand" : "muted"}>
-        {isActive ? LIVE_VOTE_LABEL.active : LIVE_VOTE_LABEL.ended}
-      </StatusPill>
-      <div className="flex items-center gap-2">
-        <span className="bg-brand/10 text-brand flex size-9 shrink-0 items-center justify-center rounded-full">
-          <Icon className="size-5" />
-        </span>
-        <div className="min-w-0">
-          <p className="text-foreground text-sm font-bold">{title}</p>
-          {isActive ? (
-            <p className="text-muted-foreground text-xs leading-relaxed">{description}</p>
-          ) : null}
+      <div className="flex flex-col gap-3 p-3">
+        <StatusPill tone={isActive ? "brand" : "muted"}>
+          {isActive ? LIVE_VOTE_LABEL.active : LIVE_VOTE_LABEL.ended}
+        </StatusPill>
+        <div className="flex items-center gap-2">
+          <span className="bg-brand/10 text-brand flex size-9 shrink-0 items-center justify-center rounded-full">
+            <Icon className="size-5" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-foreground text-sm font-bold">{title}</p>
+            {isActive ? (
+              <p className="text-muted-foreground text-xs leading-relaxed">{description}</p>
+            ) : null}
+          </div>
         </div>
       </div>
-      <div className="border-border bg-background rounded-lg border px-3 py-2">
+      <div className="border-border border-t border-dashed px-3 py-3">
         <p className="text-foreground text-sm font-bold wrap-break-word">{detail}</p>
         {notice.participantCount !== undefined ? (
           <p className="text-muted-foreground mt-1 text-xs">
@@ -412,18 +414,20 @@ function InteractionNoticeCard({
           </p>
         ) : null}
       </div>
-      <Button
-        type="button"
-        variant={isActive ? "default" : "outline"}
-        disabled={isActive}
-        className={cn(
-          isActive && "bg-live/80 text-live-foreground",
-          "h-9 w-full text-xs font-bold",
-        )}
-        onClick={onClose}
-      >
-        {isActive ? LIVE_VOTE_LABEL.active : LIVE_LABEL.close}
-      </Button>
+      <div className="border-border border-t border-dashed p-3">
+        <Button
+          type="button"
+          variant={isActive ? "default" : "outline"}
+          disabled={isActive}
+          className={cn(
+            isActive && "bg-live/80 text-live-foreground",
+            "h-9 w-full text-xs font-bold",
+          )}
+          onClick={onClose}
+        >
+          {isActive ? LIVE_VOTE_LABEL.active : LIVE_LABEL.close}
+        </Button>
+      </div>
     </div>
   );
 }
