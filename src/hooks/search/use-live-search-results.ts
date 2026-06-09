@@ -93,12 +93,14 @@ export function useLiveSearchResults(query: string) {
     isEmptyResult: broadcastResults.length === 0 && creatorResults.length === 0,
     broadcast: {
       results: broadcastResults,
+      totalCount: broadcastResults[0]?.total_count ?? broadcastResults.length,
       hasMore: broadcastSearch.hasNextPage,
       isFetchingMore: broadcastSearch.isFetchingNextPage,
       fetchMore: broadcastSearch.fetchNextPage,
     },
     creator: {
       results: creatorResults,
+      totalCount: creatorResults[0]?.total_count ?? creatorResults.length,
       hasMore: creatorSearch.hasNextPage,
       isFetchingMore: creatorSearch.isFetchingNextPage,
       fetchMore: creatorSearch.fetchNextPage,

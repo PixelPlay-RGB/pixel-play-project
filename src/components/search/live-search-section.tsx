@@ -17,6 +17,7 @@ interface Props {
   results: LiveSearchResult[];
   section: LiveSearchSectionType;
   title: string;
+  totalCount: number;
 }
 
 export default function LiveSearchSection({
@@ -27,17 +28,13 @@ export default function LiveSearchSection({
   results,
   section,
   title,
+  totalCount,
 }: Props) {
   const sectionLabel = section === "broadcast" ? "방송" : "크리에이터";
 
   return (
     <section className="flex flex-col gap-4">
-      <div
-        className={cn(
-          "flex flex-col gap-3",
-          "sm:flex-row sm:items-end sm:justify-between sm:gap-4",
-        )}
-      >
+      <div className="flex flex-col gap-3">
         <div className="flex min-w-0 gap-3">
           <span
             className={cn(
@@ -57,15 +54,12 @@ export default function LiveSearchSection({
                     : "bg-brand/10 text-brand dark:bg-brand/15",
                 )}
               >
-                {sectionLabel} {results.length}개
+                {sectionLabel} {totalCount}개
               </span>
             </div>
             <p className="text-muted-foreground mt-1 text-sm">{description}</p>
           </div>
         </div>
-        <span className={cn("text-muted-foreground shrink-0 px-1", "text-xs font-black")}>
-          {results.length}개 표시 중
-        </span>
       </div>
 
       <div
