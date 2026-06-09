@@ -17,18 +17,22 @@ import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import UserAccountMenuItemRenderer from "@/components/common/user-account-menu-item";
 import { SidebarCredits } from "@/components/common/sidebar-credits";
+import IdentityCard from "@/components/common/identity-card";
 import { CHANNEL_MENU_ITEMS } from "@/constants/channel/channel-menu";
 import type { ChannelMenuItem } from "@/types/channel/channel-menu";
 import { USER_ACCOUNT_PROFILE_MENU_ITEM } from "@/constants/common/user-account-menu";
 import { useLogout } from "@/hooks/auth/use-logout";
+import type { CurrentProfileSnapshot } from "@/types/profile/user";
+import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
 import { LogOut } from "lucide-react";
 import { usePathname } from "next/navigation";
 
 interface Props {
   isMobile?: boolean;
+  profile: CurrentProfileSnapshot | null;
 }
 
-export default function ChannelSidebar({ isMobile }: Props) {
+export default function ChannelSidebar({ isMobile, profile }: Props) {
   const pathname = usePathname();
   const logoutMutation = useLogout();
 
@@ -53,6 +57,18 @@ export default function ChannelSidebar({ isMobile }: Props) {
       className="bg-background h-full shrink-0 border-r"
     >
       <SidebarContent>
+        {profile && (
+          <div className="px-2 pt-2">
+            <IdentityCard
+              href={`/channel/${profile.id}`}
+              avatarSrc={getAvatarImageSrc(profile.photo_url)}
+              avatarAlt={`${profile.nickname}의 채널`}
+              fallbackText={getAvatarFallbackText(profile.nickname)}
+              badgeLabel="내 채널"
+              title={profile.nickname}
+            />
+          </div>
+        )}
         <SidebarGroup>
           <SidebarGroupLabel>채널 관리</SidebarGroupLabel>
           <SidebarGroupContent>

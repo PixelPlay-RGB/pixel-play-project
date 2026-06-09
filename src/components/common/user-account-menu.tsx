@@ -2,6 +2,7 @@
 // 헤더 사용자 계정 메뉴를 렌더링합니다.
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import IdentityCard from "@/components/common/identity-card";
 import UserAccountMenuItemRenderer from "@/components/common/user-account-menu-item";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
@@ -16,7 +17,6 @@ import { useLogout } from "@/hooks/auth/use-logout";
 import { cn } from "@/lib/utils";
 import type { CurrentProfileSnapshot } from "@/types/profile/user";
 import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
-import Link from "next/link";
 import { useState } from "react";
 
 interface Props {
@@ -64,25 +64,15 @@ export default function UserAccountMenu({ profile }: Props) {
       </PopoverTrigger>
 
       <PopoverContent className="w-72 overflow-hidden p-2" align="end" sideOffset={8}>
-        <Link
+        <IdentityCard
           href={USER_ACCOUNT_PROFILE_MENU_ITEM.href}
           onClick={() => setOpen(false)}
-          className={cn("route-accent-surface flex items-center gap-3 rounded-lg border p-3")}
-        >
-          <Avatar className="route-accent-border h-11 w-11 border">
-            <AvatarImage src={avatarSrc} alt={avatarAlt} />
-            <AvatarFallback>{getAvatarFallbackText(profile.nickname)}</AvatarFallback>
-          </Avatar>
-
-          <div className="flex min-w-0 flex-col gap-1">
-            <span className="route-accent-badge w-fit rounded-md px-1.5 py-0.5 text-xs font-black">
-              {USER_ACCOUNT_PROFILE_MENU_ITEM.label}
-            </span>
-            <span className="text-foreground truncate text-base leading-tight font-black">
-              {profile.nickname}
-            </span>
-          </div>
-        </Link>
+          avatarSrc={avatarSrc}
+          avatarAlt={avatarAlt}
+          fallbackText={getAvatarFallbackText(profile.nickname)}
+          badgeLabel={USER_ACCOUNT_PROFILE_MENU_ITEM.label}
+          title={profile.nickname}
+        />
 
         <Separator className="my-2" />
 

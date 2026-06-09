@@ -513,7 +513,9 @@ export function ChannelDonationControls({ initialSnapshot }: Props) {
                 OBS에 테스트 후원 보내기
               </Button>
               <HintNote>
-                OBS에 후원 알림 주소를 연결해 두면, 보낸 테스트 후원이 실제 알림으로 화면에 떠요.
+                OBS에 후원 알림 주소를 연결해 두면,
+                <br />
+                보낸 테스트 후원이 실제 알림으로 화면에 떠요.
                 <br />
                 방송 시청자에게는 보이지 않고, 후원 통계에도 잡히지 않아요.
               </HintNote>
