@@ -56,9 +56,9 @@ export default function LiveSidebar({ isMobile }: LiveSidebarProps) {
   } = useLiveSidebar();
   const router = useRouter();
   const pathname = usePathname();
-  // 탐색 필터는 라이브 목록의 인페이지 필터다. /live가 아닌 곳에서 클릭하면
-  // /live로 이동하며 필터를 적용하고, /live가 아니면 어떤 필터도 활성(Focus)으로 표시하지 않는다.
-  const isLiveListRoute = pathname === "/live";
+  // 탐색 필터는 라이브 목록(인덱스 "/")의 인페이지 필터다. "/"가 아닌 곳에서 클릭하면
+  // "/"로 이동하며 필터를 적용하고, "/"가 아니면 어떤 필터도 활성(Focus)으로 표시하지 않는다.
+  const isLiveListRoute = pathname === "/";
   const filter = useLiveStore((state) => state.filter);
   const sort = useLiveStore((state) => state.sort);
   const visibleCount = useLiveStore((state) => state.visibleCount);
@@ -74,11 +74,11 @@ export default function LiveSidebar({ isMobile }: LiveSidebarProps) {
   const isFollowingOverviewVisible =
     !canFetchMoreFollowing && followingItems.length < followingTotalCount;
 
-  // 필터 선택: 스토어에 적용하고, 라이브 목록이 아니면 /live로 이동해 해당 필터를 보여준다.
+  // 필터 선택: 스토어에 적용하고, 라이브 목록(인덱스 "/")이 아니면 "/"로 이동해 해당 필터를 보여준다.
   const handleSelectFilter = (value: LiveListFilter) => {
     setFilter(value);
     if (!isLiveListRoute) {
-      router.push("/live");
+      router.push("/");
     }
   };
 
