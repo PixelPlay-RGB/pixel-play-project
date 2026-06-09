@@ -46,21 +46,18 @@ function ChatMessageItem({ message }: { message: LiveChatOverlayMessage }) {
   const nicknameColor = getLiveChatOverlayNicknameColor(message.author, message.role);
 
   return (
-    <p
-      className={cn(
-        "inline-block max-w-130 rounded-xl bg-black/50 px-3.5 py-2",
-        "text-3xl leading-9 font-normal wrap-break-word",
-      )}
-    >
+    <div className="inline-flex max-w-130 items-start gap-1.5 rounded-xl bg-black/50 px-3.5 py-2">
       <MessagePrefix role={message.role} />
-      <span
-        className={cn("mr-1.5 shrink-0 font-medium", message.tone === "muted" && "text-white/55")}
-        style={message.tone === "muted" ? undefined : { color: nicknameColor }}
-      >
-        {message.author}
-      </span>
-      {message.content}
-    </p>
+      <p className="min-w-0 text-3xl leading-9 font-normal wrap-break-word">
+        <span
+          className={cn("mr-1.5 font-medium", message.tone === "muted" && "text-white/55")}
+          style={message.tone === "muted" ? undefined : { color: nicknameColor }}
+        >
+          {message.author}
+        </span>
+        {message.content}
+      </p>
+    </div>
   );
 }
 
@@ -91,7 +88,7 @@ function MessagePrefix({ role }: { role?: LiveChatOverlayMessage["role"] }) {
     return (
       <span
         className={cn(
-          "mr-1.5 inline-flex size-8 shrink-0 items-center justify-center rounded-md align-middle",
+          "mt-0.5 inline-flex size-8 shrink-0 items-center justify-center rounded-md",
           "text-brand ring-brand/30 bg-black/50 shadow-md ring-1",
         )}
         aria-label="방장"
@@ -105,7 +102,7 @@ function MessagePrefix({ role }: { role?: LiveChatOverlayMessage["role"] }) {
     return (
       <span
         className={cn(
-          "mr-1.5 inline-flex size-8 shrink-0 items-center justify-center rounded-md align-middle",
+          "mt-0.5 inline-flex size-8 shrink-0 items-center justify-center rounded-md",
           "bg-live/80 ring-live/40 text-white shadow-md ring-1",
         )}
         aria-label="후원자"

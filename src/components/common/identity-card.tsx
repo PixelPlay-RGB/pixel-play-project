@@ -33,18 +33,26 @@ export default function IdentityCard({
       href={href}
       onClick={onClick}
       className={cn(
-        "route-accent-surface group/identity flex items-center gap-3 rounded-xl border p-3",
-        "shadow-sm transition-all hover:-translate-y-px hover:shadow-md",
+        "group/identity relative flex items-center gap-3 overflow-hidden rounded-2xl border p-3.5",
+        "border-brand/20 from-brand/12 via-card to-card bg-gradient-to-br",
+        "shadow-sm transition-all hover:border-brand/45 hover:shadow-md hover:shadow-brand/10",
+        "dark:border-brand/25 dark:from-brand/18 dark:via-card dark:to-card",
         className,
       )}
     >
-      <Avatar className="route-accent-border size-12 border-2 shadow-sm">
+      {/* 우상단 코너 글로우 */}
+      <span
+        className="bg-brand/20 pointer-events-none absolute -top-10 -right-10 size-24 rounded-full blur-2xl transition-opacity group-hover/identity:opacity-70"
+        aria-hidden
+      />
+
+      <Avatar className="ring-brand/35 size-12 shrink-0 shadow-sm ring-2">
         <AvatarImage src={avatarSrc} alt={avatarAlt} />
-        <AvatarFallback className="font-black">{fallbackText}</AvatarFallback>
+        <AvatarFallback className="bg-brand/10 text-brand font-black">{fallbackText}</AvatarFallback>
       </Avatar>
 
-      <div className="flex min-w-0 flex-col gap-1">
-        <span className="route-accent-badge w-fit rounded-md px-1.5 py-0.5 text-[11px] font-black tracking-wide">
+      <div className="relative flex min-w-0 flex-col gap-1">
+        <span className="bg-brand/15 text-brand w-fit rounded-full px-2 py-0.5 text-[11px] font-black tracking-wide">
           {badgeLabel}
         </span>
         <span className="text-foreground truncate text-[15px] leading-tight font-black">
@@ -53,7 +61,7 @@ export default function IdentityCard({
       </div>
 
       <ChevronRight
-        className="text-muted-foreground/40 group-hover/identity:text-muted-foreground ml-auto size-4 shrink-0 transition-transform group-hover/identity:translate-x-0.5"
+        className="text-brand/50 group-hover/identity:text-brand relative ml-auto size-4 shrink-0 transition-transform group-hover/identity:translate-x-0.5"
         aria-hidden
       />
     </Link>
