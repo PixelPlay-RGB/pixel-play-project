@@ -1,10 +1,15 @@
 // MediaMTX Control API를 서버에서 대신 조회해 방송 송출 상태를 반환합니다.
-import { CHANNEL_LIVE_MEDIA_CONFIG } from "@/constants/channel/channel-live-media";
+import {
+  CHANNEL_LIVE_MEDIA_CONFIG,
+  getChannelLiveHlsUrl,
+} from "@/constants/channel/channel-live-media";
+import { createClient } from "@/lib/supabase/server";
 import { mediaMtxPathResponseSchema, type MediaMtxPathResponse } from "@/lib/zod/channel-live";
 import type { ChannelLiveStreamStatusResponse } from "@/types/channel/channel-live-stream";
 import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 const DEFAULT_MEDIAMTX_API_BASE_URL = "http://live.pixel-play.studio:9997";
 const REQUEST_TIMEOUT_MS = 3000;
@@ -83,9 +88,24 @@ function createOfflineResponse(streamPath: string): ChannelLiveStreamStatusRespo
   };
 }
 
+async function getAuthenticatedUserId() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
+  if (error) {
+    console.error("자동 방송 썸네일 인증 사용자 조회 실패", error);
+  }
+
+  return user?.id ?? null;
+}
+
 export async function GET(request: NextRequest) {
   const streamPath =
     request.nextUrl.searchParams.get("path") ?? CHANNEL_LIVE_MEDIA_CONFIG.streamPath;
+  const shouldCaptureAutoThumbnail = request.nextUrl.searchParams.get("autoThumbnail") === "1";
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
@@ -122,8 +142,25 @@ export async function GET(request: NextRequest) {
     const mediaMtxPathData = parsedPathData.data;
     const { height, width } = getVideoDimensions(mediaMtxPathData);
     const isOnline = mediaMtxPathData.online === true;
+    let autoThumbnailUrl: string | null = null;
+
+    if (isOnline && shouldCaptureAutoThumbnail) {
+      const userId = await getAuthenticatedUserId();
+
+      if (userId) {
+        const { ensureChannelLiveAutoThumbnail } =
+          await import("@/utils/channel/channel-live-auto-thumbnail");
+
+        autoThumbnailUrl = await ensureChannelLiveAutoThumbnail({
+          hlsUrl: getChannelLiveHlsUrl(streamPath),
+          streamPath,
+          userId,
+        });
+      }
+    }
 
     return NextResponse.json({
+      autoThumbnailUrl,
       checkedAt: new Date().toISOString(),
       // MediaMTX Control API does not expose live FPS, so show the baseline OBS setting.
       fps: isOnline ? DEFAULT_CONFIGURED_FPS : null,

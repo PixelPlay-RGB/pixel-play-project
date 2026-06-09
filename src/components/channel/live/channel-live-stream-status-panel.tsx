@@ -10,6 +10,8 @@ import { useEffect, useRef, useState } from "react";
 interface Props {
   activeBroadcastStartedAt?: string | null;
   liveState: ChannelLiveState;
+  onStatusChange?: (status: ChannelLiveStreamStatusResponse) => void;
+  shouldCaptureAutoThumbnail?: boolean;
   streamPath: string;
   variant?: "card" | "embedded";
 }
@@ -112,6 +114,8 @@ function StreamStatusContent({
 
 export default function ChannelLiveStreamStatusPanel({
   activeBroadcastStartedAt,
+  onStatusChange,
+  shouldCaptureAutoThumbnail = false,
   streamPath,
   variant = "card",
 }: Props) {
@@ -126,13 +130,16 @@ export default function ChannelLiveStreamStatusPanel({
 
     const loadStreamStatus = async () => {
       try {
-        const response = await fetch(
-          `/api/channel/live/stream-status?path=${encodeURIComponent(streamPath)}`,
-          {
-            cache: "no-store",
-            signal: abortController.signal,
-          },
-        );
+        const params = new URLSearchParams({ path: streamPath });
+
+        if (shouldCaptureAutoThumbnail) {
+          params.set("autoThumbnail", "1");
+        }
+
+        const response = await fetch(`/api/channel/live/stream-status?${params.toString()}`, {
+          cache: "no-store",
+          signal: abortController.signal,
+        });
 
         if (!response.ok) return;
 
@@ -161,6 +168,7 @@ export default function ChannelLiveStreamStatusPanel({
         }
 
         setStreamStatus(nextStatus);
+        onStatusChange?.(nextStatus);
       } catch (error) {
         if (!abortController.signal.aborted) {
           console.error("방송 송출 상태 조회 실패", error);
@@ -176,7 +184,7 @@ export default function ChannelLiveStreamStatusPanel({
       abortController.abort();
       clearInterval(interval);
     };
-  }, [streamPath]);
+  }, [onStatusChange, shouldCaptureAutoThumbnail, streamPath]);
 
   useEffect(() => {
     const startedAt = streamStatus?.onlineTime ?? activeBroadcastStartedAt;

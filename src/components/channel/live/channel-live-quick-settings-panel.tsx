@@ -1,9 +1,10 @@
 "use client";
 // 방송 운영 화면의 채팅, 후원, 알림 빠른 설정을 오른쪽 패널로 렌더링합니다.
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { HandCoins, Link2, MessageCircle, Mic2, Timer, Volume2 } from "lucide-react";
+import { HandCoins, Link2, MessageCircle, Mic2, Save, Timer, Volume2 } from "lucide-react";
 import type { ComponentType } from "react";
 
 interface Props {
@@ -12,6 +13,7 @@ interface Props {
   isDonationAmountVisible: boolean;
   isDonationEnabled: boolean;
   isLinkBlocked: boolean;
+  isSettingsActionPending: boolean;
   isSlowModeEnabled: boolean;
   isTtsEnabled: boolean;
   onAlertSoundEnabledChange: (isAlertSoundEnabled: boolean) => void;
@@ -19,6 +21,7 @@ interface Props {
   onDonationAmountVisibleChange: (isDonationAmountVisible: boolean) => void;
   onDonationEnabledChange: (isDonationEnabled: boolean) => void;
   onLinkBlockedChange: (isLinkBlocked: boolean) => void;
+  onSaveSettings: () => void;
   onSlowModeEnabledChange: (isSlowModeEnabled: boolean) => void;
   onTtsEnabledChange: (isTtsEnabled: boolean) => void;
 }
@@ -85,6 +88,7 @@ export default function ChannelLiveQuickSettingsPanel({
   isDonationAmountVisible,
   isDonationEnabled,
   isLinkBlocked,
+  isSettingsActionPending,
   isSlowModeEnabled,
   isTtsEnabled,
   onAlertSoundEnabledChange,
@@ -92,6 +96,7 @@ export default function ChannelLiveQuickSettingsPanel({
   onDonationAmountVisibleChange,
   onDonationEnabledChange,
   onLinkBlockedChange,
+  onSaveSettings,
   onSlowModeEnabledChange,
   onTtsEnabledChange,
 }: Props) {
@@ -99,6 +104,18 @@ export default function ChannelLiveQuickSettingsPanel({
     <Card className="flex min-h-144 flex-col gap-5 py-6 shadow-sm xl:min-h-full">
       <CardHeader className="gap-2 px-5 sm:px-6">
         <CardTitle>빠른 설정</CardTitle>
+        <CardAction>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={isSettingsActionPending}
+            onClick={onSaveSettings}
+          >
+            <Save className="size-4" />
+            저장
+          </Button>
+        </CardAction>
       </CardHeader>
       <CardContent className="flex flex-1 flex-col justify-between gap-4 px-5 sm:px-6">
         <QuickSettingSectionTitle title="채팅" />

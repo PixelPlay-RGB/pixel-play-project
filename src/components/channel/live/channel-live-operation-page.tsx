@@ -19,10 +19,10 @@ import ChannelLiveStreamStatusPanel from "@/components/channel/live/channel-live
 import { CHANNEL_LIVE_MEDIA_CONFIG } from "@/constants/channel/channel-live-media";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { cn } from "@/lib/utils";
+import type { ChannelLiveStreamStatusResponse } from "@/types/channel/channel-live-stream";
 import { getAppMessage } from "@/utils/common/app-message";
 import { toastAppError, toastAppSuccess } from "@/utils/common/toast-message";
-import { BadgeCheck } from "lucide-react";
-import { useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
 
 export type ChannelLiveVisibility = "public" | "private" | "unlisted";
 export type ChannelLiveChatScope = "authenticated" | "follower" | "manager";
@@ -41,23 +41,36 @@ interface Props {
 const DEFAULT_TITLE = "";
 const DEFAULT_TAGS: string[] = [];
 
-function getBroadcastStatusLabel(liveState: ChannelLiveState) {
+function getBroadcastStatusLabel(liveState: ChannelLiveState, isStreamOnline: boolean) {
   if (liveState.isBroadcasting) return "방송 중";
+  if (isStreamOnline) return "방송 준비중";
   if (liveState.hasEnded) return "방송 종료";
 
-  return "방송 준비";
+  return "송출 대기";
 }
 
-function getBroadcastStatusClassName(liveState: ChannelLiveState) {
+function getBroadcastStatusClassName(liveState: ChannelLiveState, isStreamOnline: boolean) {
   if (liveState.isBroadcasting) {
     return "bg-destructive/10 text-destructive";
+  }
+
+  if (isStreamOnline) {
+    return "bg-warning/10 text-warning";
   }
 
   if (liveState.hasEnded) {
     return "bg-muted text-muted-foreground";
   }
 
-  return "bg-warning/10 text-warning";
+  return "bg-muted text-muted-foreground";
+}
+
+function getBroadcastSubStatusLabel(liveState: ChannelLiveState, isStreamOnline: boolean) {
+  if (liveState.isBroadcasting) return "시청자에게 공개 중";
+  if (isStreamOnline) return "방송 시작 전 미리보기 중";
+  if (liveState.hasEnded) return "방송 종료됨";
+
+  return "OBS 송출 대기";
 }
 
 function getBroadcastActionErrorMessage(code: Parameters<typeof getAppMessage>[0]) {
@@ -132,6 +145,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
   const [isTtsEnabled, setIsTtsEnabled] = useState(initialSettings?.ttsEnabled ?? true);
   const [ttsRate, setTtsRate] = useState(initialSettings?.ttsRate ?? 1);
   const [liveChatMessages, setLiveChatMessages] = useState<ChannelLiveChatMessage[]>([]);
+  const [streamStatus, setStreamStatus] = useState<ChannelLiveStreamStatusResponse | null>(null);
   const [isBroadcastActionPending, startBroadcastTransition] = useTransition();
   const [isSettingsActionPending, startSettingsTransition] = useTransition();
 
@@ -141,6 +155,23 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
     isChatPaused,
     visibility,
   };
+  const isStreamOnline = streamStatus?.state === "online";
+  const shouldCaptureAutoThumbnail = !thumbnailFile && !thumbnailPreviewUrl.trim();
+
+  const handleStreamStatusChange = useCallback(
+    (nextStatus: ChannelLiveStreamStatusResponse) => {
+      setStreamStatus(nextStatus);
+
+      if (thumbnailFile || thumbnailPreviewUrl.trim() || !nextStatus.autoThumbnailUrl) {
+        return;
+      }
+
+      setThumbnailPreviewUrl(nextStatus.autoThumbnailUrl);
+      setThumbnailPreviewName("자동 캡쳐 이미지");
+      setIsThumbnailRemoved(false);
+    },
+    [thumbnailFile, thumbnailPreviewUrl],
+  );
 
   useEffect(() => {
     if (!thumbnailPreviewUrl.startsWith("blob:")) return;
@@ -324,7 +355,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
               <span
                 className={cn(
                   "inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-xs font-semibold",
-                  getBroadcastStatusClassName(liveState),
+                  getBroadcastStatusClassName(liveState, isStreamOnline),
                 )}
               >
                 <span className="relative flex size-2.5">
@@ -336,29 +367,26 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
                       "relative inline-flex size-2.5 rounded-full",
                       liveState.isBroadcasting
                         ? "bg-destructive"
-                        : liveState.hasEnded
-                          ? "bg-muted-foreground"
-                          : "bg-warning",
+                        : isStreamOnline
+                          ? "bg-warning"
+                          : "bg-muted-foreground",
                     )}
                   />
                 </span>
-                {getBroadcastStatusLabel(liveState)}
+                {getBroadcastStatusLabel(liveState, isStreamOnline)}
               </span>
               <span className="text-foreground text-sm font-semibold">
-                {isBroadcasting ? "송출 중" : "송출 대기"}
+                {getBroadcastSubStatusLabel(liveState, isStreamOnline)}
               </span>
             </div>
-            <span className="bg-brand/10 text-brand inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold">
-              <BadgeCheck className="size-3.5" />
-              {visibility === "public"
-                ? "공개 예정"
-                : visibility === "private"
-                  ? "비공개"
-                  : "일부 공개"}
-            </span>
           </div>
           <div className="shrink-0">
-            <ChannelLivePreviewPanel liveState={liveState} streamPath={streamPath} title={title} />
+            <ChannelLivePreviewPanel
+              isStreamOnline={isStreamOnline}
+              liveState={liveState}
+              streamPath={streamPath}
+              title={title}
+            />
           </div>
           <div className="shrink-0">
             <ChannelLiveSettingsPanel
@@ -369,6 +397,8 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
                 <ChannelLiveStreamStatusPanel
                   activeBroadcastStartedAt={broadcastStartedAt}
                   liveState={liveState}
+                  onStatusChange={handleStreamStatusChange}
+                  shouldCaptureAutoThumbnail={shouldCaptureAutoThumbnail}
                   streamPath={streamPath}
                   variant="embedded"
                 />
@@ -414,6 +444,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
             isDonationAmountVisible={isDonationAmountVisible}
             isDonationEnabled={isDonationEnabled}
             isLinkBlocked={isLinkBlocked}
+            isSettingsActionPending={isSettingsActionPending}
             isSlowModeEnabled={isSlowModeEnabled}
             isTtsEnabled={isTtsEnabled}
             onAlertSoundEnabledChange={setIsAlertSoundEnabled}
@@ -421,6 +452,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
             onDonationAmountVisibleChange={setIsDonationAmountVisible}
             onDonationEnabledChange={setIsDonationEnabled}
             onLinkBlockedChange={setIsLinkBlocked}
+            onSaveSettings={handleSaveSettings}
             onSlowModeEnabledChange={setIsSlowModeEnabled}
             onTtsEnabledChange={setIsTtsEnabled}
           />
