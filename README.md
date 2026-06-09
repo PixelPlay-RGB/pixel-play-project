@@ -1,8 +1,10 @@
 # PixelPlay
 
-실시간 채팅과 라이브 스트리밍을 함께 제공하는 웹 애플리케이션입니다.
+실시간 라이브 스트리밍 웹 애플리케이션입니다.
 
-Next.js 16 App Router, React 19, Supabase Auth/Postgres/Realtime, TanStack Query, Zustand를 중심으로 공개 랜딩, 라이브 목록·시청·검색, 라이브 투표·후원 랭킹, OBS 오버레이, 채팅방 목록·상세·검색, 메시지, 참여자 관리, 크리에이터 채널 관리(채팅·보안·후원·정산·라이브), 공개 채널 홈·커뮤니티(게시판)·배너, 팔로잉, 포인트 충전과 후원, 프로필 설정 기능을 제공합니다.
+Next.js 16 App Router, React 19, Supabase Auth/Postgres/Realtime, TanStack Query, Zustand를 중심으로 라이브 목록(인덱스)·시청·검색, 라이브 투표·후원 랭킹·라이브 채팅, OBS 오버레이, 크리에이터 채널 관리(채팅·보안·후원·정산·라이브), 공개 채널 홈·커뮤니티(게시판)·배너, 팔로잉, 인앱 알림(수신함), 포인트 충전과 후원, 프로필 설정 기능을 제공합니다.
+
+> 인덱스(`/`)가 라이브 목록인 **라이브 스트리밍 전용** 서비스입니다. 독립 채팅방(`/chat`) 기능은 제거되었고, 방송 중 라이브 채팅과 채널 채팅 설정은 유지됩니다. (#105)
 
 쓰기 작업은 Server Action에서 인증 사용자를 확인한 뒤 Supabase `service_role` 경계로 RPC를 호출하는 방식으로 통일되어 있습니다. 읽기는 RPC의 실행 권한에 따라, `authenticated`에 열린 RPC는 브라우저 client + TanStack Query로, `service_role` 전용 RPC(크리에이터 스튜디오·OBS 오버레이 등)는 Server Component(SSR)에서 조회합니다. 클라이언트 컴포넌트는 TanStack Query mutation hook으로 pending 상태와 후처리를 관리합니다.
 
@@ -91,7 +93,7 @@ https://<supabase-project-id>.supabase.co/auth/v1/callback
 npm run dev
 ```
 
-브라우저에서 <http://localhost:3000>에 접속합니다. 비로그인 상태의 `/`, `/live`, `/live/*`, `/chat/room/[roomId]`는 공개 화면을 표시하고, 보호 라우트는 `/auth/login?next=<현재경로>`로 이동합니다.
+브라우저에서 <http://localhost:3000>에 접속합니다. 비로그인 상태의 `/`(라이브 목록), `/live/[creatorId]`(시청), `/live/search`, `/channel/[creatorId]`(공개 채널)는 공개 화면을 표시하고, 보호 라우트는 `/auth/login?next=<현재경로>`로 이동합니다.
 
 ---
 
@@ -114,15 +116,12 @@ npm run dev
 
 | 라우트                                                        | 접근       | 설명                                                       |
 | ------------------------------------------------------------- | ---------- | ---------------------------------------------------------- |
-| `/`                                                           | 공개       | 랜딩 페이지. 라이브 둘러보기, 채팅 시작하기, 로그인 CTA    |
-| `/live`                                                       | 공개       | 라이브 목록. 필터·정렬·사이드바(팔로잉·트렌딩·인기 키워드) |
+| `/`                                                           | 공개       | 라이브 목록(인덱스). 필터·정렬·사이드바(팔로잉·트렌딩·인기 키워드) |
+| `/live`                                                       | 리다이렉트 | 구 목록 경로 → `/`로 리다이렉트(`next.config` redirects)   |
 | `/live/search?query=`                                         | 공개       | 라이브 검색 결과                                           |
 | `/live/[creatorId]`                                           | 공개       | 라이브 시청 화면                                           |
 | `/live/[creatorId]/chat[/overlayKey]`                         | 공개(읽기) | OBS 채팅 오버레이                                          |
 | `/live/[creatorId]/alerts/donation[/overlayKey]`              | 공개(읽기) | OBS 후원 알림 오버레이                                     |
-| `/chat`                                                       | 보호       | 채팅방 목록                                                |
-| `/chat/room/[roomId]`                                         | 혼합       | 채팅방 상세(비로그인은 공유 preview, 로그인은 상세)        |
-| `/chat/search?query=`                                         | 보호       | 채팅방 검색 결과                                           |
 | `/channel/{live,chat,security,donation,settlement,analytics}` | 보호       | 크리에이터 채널 관리(스튜디오)                             |
 | `/channel/[creatorId]`                                        | 공개       | 공개 채널 홈. 라이브 Hero, 배너, 커뮤니티 미리보기         |
 | `/channel/[creatorId]/community[/[postId]\|/write]`           | 혼합       | 채널 커뮤니티(게시판) 목록·상세·작성                       |
@@ -132,9 +131,9 @@ npm run dev
 | `/user/donations`                                             | 보호       | 후원 내역과 포인트 충전                                    |
 
 - 보호 라우트는 비로그인 접근 시 `/auth/login?next=<현재경로>`로 이동하고, 로그인 성공 후 원래 경로로 돌아갑니다.
-- `/live`, `/channel/*`, `/user/*`는 사이드바 셸 레이아웃을 사용하며 공용 Footer 대신 사이드바 하단 크레딧을 표시합니다.
+- `/`, `/channel/*`, `/user/*`는 사이드바 셸 레이아웃을 사용하며 공용 Footer 대신 사이드바 하단 크레딧을 표시합니다.
 - OBS 오버레이 라우트(`/live/[creatorId]/chat`, `/alerts/donation`)는 Footer와 헤더를 숨긴 투명 배경 화면으로 렌더링합니다.
-- 헤더 내비게이션은 라이브, 채팅 탭 순서로 제공하고, 검색 입력은 라이브 라우터에서는 라이브 검색으로, 채팅 관련 라우터에서는 채팅방 검색으로 이동합니다.
+- 헤더는 별도 내비게이션 탭 없이 3섹션(검색·방송하기 / 알림·테마 / 계정)으로 구성하며, 검색 입력은 라이브 검색(`/live/search`)으로 이동합니다.
 
 ---
 
@@ -152,7 +151,7 @@ npm run dev
 - 로그인과 현재 비밀번호 확인은 기존 계정 호환을 위해 비밀번호 입력 여부만 검증하고, 실제 인증은 Supabase Auth에 위임합니다.
 - Google, GitHub OAuth 로그인과 추가 프로필 입력 흐름을 제공하고, 연동 계정 목록을 `linked_providers`로 관리합니다.
 - 로그인 상태는 Supabase 세션을 기준으로 검증하고 `AuthListener`가 Zustand store에 동기화합니다.
-- 로그인 완료 사용자가 `/auth/login`, `/auth/signup`에 직접 접근하면 `next` 경로로 이동하고, 유효한 `next`가 없으면 `/live`로 이동합니다.
+- 로그인 완료 사용자가 `/auth/login`, `/auth/signup`에 직접 접근하면 `next` 경로로 이동하고, 유효한 `next`가 없으면 `/`(라이브 목록)로 이동합니다.
 - 프로필이 없는 OAuth 로그인 유저는 `/auth/complete-profile`로 이동합니다.
 - 비밀번호 변경, 프로필 수정, 프로필 이미지 업로드와 삭제, 회원 탈퇴 API를 제공합니다.
 - 프로필 이미지가 없는 유저는 `public/default-avatar.webp` 기본 이미지를 표시합니다.
@@ -219,48 +218,16 @@ npm run dev
 - 후원 전송은 `send_live_donation` RPC가 지갑 차감과 후원 기록, 라이브 후원 메시지 생성을 단일 트랜잭션으로 멱등 처리합니다.
 - `/user/donations`에서 후원 내역과 충전 진입을 함께 보여주며, `get_user_donation_snapshot`으로 데이터를 조회합니다.
 
-### 라우터와 공개 화면
+### 알림 (수신함)
 
-- `/`는 공개 랜딩 페이지이며 `get_landing_snapshot`으로 하이라이트 데이터를 조회합니다.
-- `/`와 `/chat/room/[roomId]`, `/live`, `/live/*`는 비로그인 상태에서도 공개 화면을 렌더링합니다.
+- 헤더 종 아이콘에서 인앱 알림 수신함을 제공합니다. 팔로우한 크리에이터의 ① 라이브 시작 ② 커뮤니티 글 작성 시 팔로워에게 알림이 DB 트리거로 fan-out됩니다.
+- `notification` 테이블 INSERT를 Supabase Realtime으로 받아 종 아이콘의 안읽음 빨간 배지를 갱신하고, 드롭다운을 열면 방문 기준으로 읽음 처리합니다(`user.notifications_last_seen_at`, `mark_notifications_seen`).
+- 알림 목록은 오늘/최근 일주일/이전(자정 기준)으로 그룹화하며, 전체 삭제와 개별 삭제를 제공합니다.
 
 ### SEO와 공유 미리보기
 
 - production domain은 `https://pixel-play.studio`를 metadata base URL로 사용합니다.
-- 메인 페이지와 채팅방 상세 페이지는 Open Graph와 Twitter large image metadata를 제공합니다.
-- 공유 썸네일은 `public/og-home.webp`, `public/og-chat-room.webp` 정적 에셋을 사용합니다.
-- 비로그인 채팅방 preview는 `get_public_chat_room_metadata` RPC로 title과 description만 조회합니다. 메시지, 멤버, unread, presence는 공개하지 않습니다.
-
-### 채팅방 목록
-
-- `JOINED`, `NOT_JOINED`, `OWNED` 탭으로 채팅방 목록을 분리하고, `get_chat_room_list` RPC로 탭별 개수, 정렬, 번호형 페이지네이션, 탭 내 검색, unread_count, total_count를 한 응답으로 처리합니다.
-- `JOINED`, `OWNED` 탭의 기본 정렬은 최신 메시지순이며 정렬 옵션은 최신 메시지순, 생성일 최신순, 참여자 많은순으로 제공합니다. `NOT_JOINED` 탭의 기본 정렬은 생성일 최신순이며 정원 마감 방을 제외합니다.
-- 탭 변경 시 정렬값은 탭별 기본값으로, 검색어는 빈 값으로 초기화하며, 검색 중에는 탭 badge가 `total_count`로 오버라이드됩니다.
-- 채팅방 목록은 `useQuery`와 `keepPreviousData` 기반 번호형 페이지네이션으로 조회하고, page size는 grid 열 수에 맞춰 모바일 8개, 2열 12개, 3열 12개, 4열 16개로 조정합니다.
-- 채팅방 생성 Dialog에서 제목, 설명, 정원을 입력해 방을 만들 수 있으며 `createChatRoomAction`이 `create_chat_room` RPC를 호출합니다.
-
-### 채팅방 상세
-
-- 비로그인 사용자가 공유 링크로 접근하면 title, description, 로그인 CTA만 있는 public preview를 표시하고, 로그인 후 같은 URL에서 상세 화면으로 전환됩니다.
-- 방 정보, 현재 유저 멤버십, 활성 참여자 목록은 `get_chat_room_detail` RPC로 함께 조회합니다.
-- 미참여 유저가 진입하면 `JoinChatRoomDialog`가 표시되고, 정원 마감 상태에서는 참여 불가 안내만 표시합니다. 참여 완료 후 Realtime으로 자동 상태 전환됩니다.
-- 방장은 참여자 Popover에서 강퇴와 방장 권한 위임을 실행할 수 있으며, 현재 정책상 방장은 채팅방 나가기가 제한됩니다.
-- 강퇴된 유저는 Realtime 이벤트로 감지되어 입력이 잠기고 안내 Dialog가 표시됩니다.
-- 참여, 나가기, 읽음 처리, 강퇴, 방장 위임은 Server Action과 RPC를 통해 처리합니다.
-
-### 메시지
-
-- 메시지 목록은 `useInfiniteQuery`로 최신 메시지부터 조회하고 상단 근접 시 이전 메시지를 추가로 가져옵니다.
-- 같은 작성자의 연속 text 메시지는 bubble grouping으로 avatar와 nickname 반복을 줄입니다.
-- 새 메시지는 Supabase Realtime `postgres_changes` INSERT 이벤트를 받아 React Query cache에 `created_at desc` 순서로 병합합니다.
-- 텍스트 메시지는 `sendMessageAction`이 `send_chat_message` RPC를 호출하는 방식으로 전송하고, optimistic 메시지를 먼저 삽입한 뒤 RPC가 반환한 message id로 교체합니다. 실패 시 재전송과 취소 액션을 표시합니다.
-- 메시지 입력 중인 멤버는 Motion 기반 3점 typing indicator로 표시하고, 일정 시간 입력이 없으면 접속 dot으로 돌아갑니다.
-- 날짜 구분 system 메시지는 PostgreSQL AFTER INSERT Trigger(`trigger_insert_date_divider_message`)가 매일 첫 메시지 INSERT 시 `📅 YYYY년 MM월 DD일 요일` 형식으로 자동 삽입하며, partial unique index와 `ON CONFLICT DO NOTHING`으로 중복을 방지합니다.
-
-### 채팅방 검색
-
-- `/chat/search?query=검색어`에서 제목 검색과 방장 닉네임 검색을 섹션으로 나누어 표시합니다.
-- 검색 결과는 `search_chat_rooms` RPC와 `useInfiniteQuery`로 페이지 단위 조회하고, 각 섹션은 더보기 버튼으로 다음 페이지를 불러옵니다.
+- 인덱스(라이브 목록)는 Open Graph와 Twitter large image metadata를 제공하며, 공유 썸네일은 `public/og-home.webp` 정적 에셋을 사용합니다.
 
 ---
 

@@ -33,35 +33,26 @@ export default function IdentityCard({
       href={href}
       onClick={onClick}
       className={cn(
-        "group/identity relative flex items-center gap-3 overflow-hidden rounded-2xl border p-3.5",
-        "border-brand/20 from-brand/12 via-card to-card bg-gradient-to-br",
-        "shadow-sm transition-all hover:border-brand/45 hover:shadow-md hover:shadow-brand/10",
-        "dark:border-brand/25 dark:from-brand/18 dark:via-card dark:to-card",
+        "group/identity flex items-center gap-3 rounded-xl border p-3 transition-colors",
+        "border-brand/20 bg-brand/5 hover:border-brand/40 hover:bg-brand/10",
+        "dark:bg-brand/10 dark:hover:bg-brand/15",
         className,
       )}
     >
-      {/* 우상단 코너 글로우 */}
-      <span
-        className="bg-brand/20 pointer-events-none absolute -top-10 -right-10 size-24 rounded-full blur-2xl transition-opacity group-hover/identity:opacity-70"
-        aria-hidden
-      />
-
-      <Avatar className="ring-brand/35 size-12 shrink-0 shadow-sm ring-2">
+      <Avatar className="ring-brand/30 size-11 shrink-0 ring-2">
         <AvatarImage src={avatarSrc} alt={avatarAlt} />
         <AvatarFallback className="bg-brand/10 text-brand font-black">{fallbackText}</AvatarFallback>
       </Avatar>
 
-      <div className="relative flex min-w-0 flex-col gap-1">
-        <span className="bg-brand/15 text-brand w-fit rounded-full px-2 py-0.5 text-[11px] font-black tracking-wide">
+      <div className="flex min-w-0 flex-col gap-1">
+        <span className="bg-brand/10 text-brand w-fit rounded-md px-1.5 py-0.5 text-[11px] font-black tracking-wide">
           {badgeLabel}
         </span>
-        <span className="text-foreground truncate text-[15px] leading-tight font-black">
-          {title}
-        </span>
+        <span className="text-foreground truncate text-sm font-bold">{title}</span>
       </div>
 
       <ChevronRight
-        className="text-brand/50 group-hover/identity:text-brand relative ml-auto size-4 shrink-0 transition-transform group-hover/identity:translate-x-0.5"
+        className="text-brand/40 group-hover/identity:text-brand ml-auto size-4 shrink-0 transition-colors"
         aria-hidden
       />
     </Link>
