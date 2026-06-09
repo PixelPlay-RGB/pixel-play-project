@@ -1,8 +1,8 @@
 "use client";
-// 투표 참여(진행 중 실시간 중간집계)와 종료 후 결과를 채팅 패널 액션으로 제공합니다.
+// 투표 참여와 라이브 상호작용 결과를 채팅 패널 액션 팝오버로 제공합니다.
 
 import { useId, useState } from "react";
-import { Crown } from "lucide-react";
+import { Check, Crown, Gift, Trophy } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -23,20 +23,21 @@ import {
 import { LIVE_LABEL, LIVE_VOTE_LABEL } from "@/constants/live/live";
 import { cn } from "@/lib/utils";
 import { formatCount } from "@/utils/live/live-chat";
-import type { LivePoll, LivePollOption } from "@/types/live/live";
+import type { LiveInteractionNotice, LivePoll, LivePollOption } from "@/types/live/live";
 
 interface Props {
-  polls: LivePoll[];
-  isLoading?: boolean;
+  interactionNotices?: LiveInteractionNotice[];
   isError?: boolean;
-  onLoginPrompt: () => void;
+  isInteractionNoticesError?: boolean;
+  isInteractionNoticesLoading?: boolean;
+  isLoading?: boolean;
   isLoggedIn: boolean;
+  onLoginPrompt: () => void;
   onVote: (pollId: string, optionId: string) => Promise<boolean>;
+  polls: LivePoll[];
   presentation?: "popover" | "dialog";
 }
 
-// 진행 중 투표를 우선 노출하고, 없으면 가장 최근 종료된 투표 결과를 노출한다.
-// (목록은 created_at 오름차순이라 뒤에서부터 첫 종료 항목이 최신이다.)
 function selectRelevantPoll(polls: LivePoll[]): LivePoll | null {
   const activePoll = polls.find((poll) => poll.status === "active");
   if (activePoll) return activePoll;
@@ -57,221 +58,291 @@ function getMaxCount(options: LivePollOption[]): number {
   return options.reduce((max, option) => Math.max(max, option.count), 0);
 }
 
-// 항목 뒤를 채우는 득표율 막대(진행 중·종료 결과 공용). emphasized면 라이브 톤.
-function VoteOptionBar({ percent, emphasized }: { percent: number; emphasized: boolean }) {
+function getSelectedOption(poll: LivePoll): LivePollOption | null {
+  return poll.options.find((option) => option.id === poll.userVotedOptionId) ?? null;
+}
+
+function StatusPill({ children, tone }: { children: string; tone: "brand" | "live" | "muted" }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex rounded-full px-2 py-0.5 text-[11px] font-bold",
+        tone === "brand" && "bg-brand/10 text-brand",
+        tone === "live" && "bg-live/10 text-live",
+        tone === "muted" && "bg-muted text-muted-foreground",
+      )}
+    >
+      {children}
+    </span>
+  );
+}
+
+function VoteOptionBar({ percent, emphasized }: { emphasized: boolean; percent: number }) {
   return (
     <span
       aria-hidden
       className={cn(
         "absolute inset-y-0 left-0 transition-all duration-300",
-        emphasized ? "bg-live/20" : "bg-muted",
+        emphasized ? "bg-brand/20" : "bg-muted",
       )}
       style={{ width: `${percent}%` }}
     />
   );
 }
 
-interface VoteContentProps {
-  activePoll: LivePoll;
-  onVote: (pollId: string, optionId: string) => Promise<boolean>;
-  onClose: () => void;
+function StandbyCard() {
+  return (
+    <div className="border-border flex flex-col gap-3 rounded-lg border p-3">
+      <StatusPill tone="brand">상시 버튼</StatusPill>
+      <div className="flex flex-col gap-1">
+        <p className="text-foreground text-sm font-bold">{LIVE_VOTE_LABEL.emptyTitle}</p>
+        <p className="text-muted-foreground text-xs leading-relaxed">{LIVE_VOTE_LABEL.emptyDesc}</p>
+      </div>
+      <Button type="button" variant="outline" disabled className="h-9 w-full">
+        {LIVE_VOTE_LABEL.waiting}
+      </Button>
+    </div>
+  );
 }
 
-// 진행 중: 선택 가능한 항목 + 실시간 중간집계(득표율 막대)를 함께 보여준다.
-function VoteContent({ activePoll, onVote, onClose }: VoteContentProps) {
+function ActiveVoteCard({
+  activePoll,
+  onVote,
+  onClose,
+}: {
+  activePoll: LivePoll;
+  onClose: () => void;
+  onVote: (pollId: string, optionId: string) => Promise<boolean>;
+}) {
   const titleId = useId();
-  const hintId = useId();
-  const hasVoted = !!activePoll.userVotedOptionId;
-  const [selectedOption, setSelectedOption] = useState<string | null>(
-    activePoll.userVotedOptionId ?? null,
-  );
+  const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [isVoting, setIsVoting] = useState(false);
-
-  // 이미 투표한 항목과 다른 항목을 골라야 제출할 수 있습니다(투표 변경).
-  const hasChanged = selectedOption !== (activePoll.userVotedOptionId ?? null);
-  // 투표한 사용자가 선택을 해제하면(이미 누른 항목을 다시 클릭) 표 취소(unvote) 의도입니다.
-  const isUnvote = hasVoted && selectedOption === null;
-  const canSubmit = !isVoting && (isUnvote || (!!selectedOption && hasChanged));
   const total = activePoll.totalCount;
+  const canSubmit = !!selectedOption && !isVoting;
 
   async function handleVote() {
-    if (!canSubmit) return;
-    // 표 취소는 RPC에 기존 선택 항목을 그대로 보내면 됩니다(같은 항목 재선택 = 취소).
-    const targetOptionId = isUnvote ? activePoll.userVotedOptionId : selectedOption;
-    if (!targetOptionId) return;
+    if (!selectedOption || isVoting) return;
+
     setIsVoting(true);
-    const success = await onVote(activePoll.id, targetOptionId);
+    const success = await onVote(activePoll.id, selectedOption);
     setIsVoting(false);
+
     if (success) onClose();
   }
 
   return (
-    <>
-      <div className="flex flex-col gap-3">
-        <p id={titleId} className="text-foreground text-sm font-medium">
-          {activePoll.title}
-        </p>
-        {hasVoted ? (
-          <p id={hintId} className="text-muted-foreground text-xs">
-            {LIVE_VOTE_LABEL.changeHint}
-          </p>
-        ) : null}
-        <div
-          role="radiogroup"
-          aria-labelledby={titleId}
-          aria-describedby={hasVoted ? hintId : undefined}
-          className="flex flex-col gap-2"
-        >
-          {activePoll.options.map((option, index) => {
-            const isSelected = selectedOption === option.id;
-            const percent = getVotePercent(option.count, total);
-            return (
-              <Button
-                key={option.id}
-                type="button"
-                role="radio"
-                variant="outline"
-                aria-checked={isSelected}
-                disabled={isVoting}
-                onClick={() =>
-                  setSelectedOption((prev) => (prev === option.id ? null : option.id))
-                }
-                className={cn(
-                  "relative h-auto w-full justify-start overflow-hidden px-3 py-2.5",
-                  isSelected ? "border-live text-live" : "hover:border-live/40",
-                )}
-              >
-                <VoteOptionBar percent={percent} emphasized={isSelected} />
-                <span className="relative flex w-full items-center gap-2 text-sm">
-                  <span className="min-w-0 flex-1 truncate text-left">
-                    {index + 1}. {option.label}
-                  </span>
-                  <span className="text-muted-foreground shrink-0 text-xs tabular-nums">
-                    {percent}% · {formatCount(option.count)}
-                    {LIVE_VOTE_LABEL.votesUnit}
-                  </span>
+    <div className="border-brand/40 flex flex-col gap-3 rounded-lg border p-3">
+      <StatusPill tone="brand">{LIVE_VOTE_LABEL.active}</StatusPill>
+      <p id={titleId} className="text-foreground text-sm font-bold">
+        {activePoll.title}
+      </p>
+      <div role="radiogroup" aria-labelledby={titleId} className="flex flex-col gap-2">
+        {activePoll.options.map((option, index) => {
+          const isSelected = selectedOption === option.id;
+          const percent = getVotePercent(option.count, total);
+
+          return (
+            <Button
+              key={option.id}
+              type="button"
+              role="radio"
+              variant="outline"
+              aria-checked={isSelected}
+              disabled={isVoting}
+              onClick={() => setSelectedOption(option.id)}
+              className={cn(
+                "relative h-9 w-full justify-start overflow-hidden px-3 text-sm font-bold",
+                isSelected ? "border-brand bg-brand/5 text-brand" : "hover:border-brand/40",
+              )}
+            >
+              <VoteOptionBar percent={percent} emphasized={isSelected} />
+              <span className="relative flex min-w-0 items-center gap-2">
+                <span className="bg-brand/10 text-brand flex size-5 shrink-0 items-center justify-center rounded-full text-xs">
+                  {index + 1}
                 </span>
-              </Button>
-            );
-          })}
-        </div>
-        <p className="text-muted-foreground text-xs tabular-nums">
+                <span className="truncate">{option.label}</span>
+              </span>
+            </Button>
+          );
+        })}
+      </div>
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-muted-foreground text-xs font-semibold tabular-nums">
           {formatCount(total)}
           {LIVE_VOTE_LABEL.liveParticipantsSuffix}
-        </p>
-      </div>
-      <div className="flex justify-end gap-2">
-        <Button type="button" variant="outline" onClick={onClose}>
-          {LIVE_LABEL.cancel}
-        </Button>
+        </span>
         <Button
           type="button"
           disabled={!canSubmit}
           onClick={() => void handleVote()}
-          className="bg-live hover:bg-live/90 text-live-foreground"
+          className="bg-live hover:bg-live/90 text-live-foreground h-9 px-4 text-xs font-bold"
         >
-          {isVoting
-            ? LIVE_VOTE_LABEL.submitting
-            : isUnvote
-              ? LIVE_VOTE_LABEL.cancelVote
-              : hasVoted
-                ? hasChanged
-                  ? LIVE_VOTE_LABEL.changeVote
-                  : LIVE_VOTE_LABEL.participated
-                : LIVE_VOTE_LABEL.submit}
+          {isVoting ? LIVE_VOTE_LABEL.submitting : LIVE_VOTE_LABEL.confirmVote}
         </Button>
       </div>
-    </>
+    </div>
   );
 }
 
-// 종료: 읽기 전용 결과. 1위 강조, 내 선택 표시, 항목별 득표수·비율.
-function VoteResults({ poll, onClose }: { poll: LivePoll; onClose: () => void }) {
+function ParticipatedCard({ poll }: { poll: LivePoll }) {
+  const selectedOption = getSelectedOption(poll);
+
+  return (
+    <div className="border-brand/40 flex flex-col gap-3 rounded-lg border p-3">
+      <StatusPill tone="brand">{LIVE_VOTE_LABEL.participatedStatus}</StatusPill>
+      <p className="text-foreground text-sm font-bold">{poll.title}</p>
+      <div className="flex flex-col gap-2">
+        {poll.options.map((option, index) => {
+          const isSelected = option.id === poll.userVotedOptionId;
+
+          return (
+            <div
+              key={option.id}
+              className={cn(
+                "border-border flex h-9 items-center gap-2 rounded-lg border px-3 text-sm font-bold",
+                isSelected && "border-brand bg-brand/5 text-brand",
+              )}
+            >
+              <span className="bg-brand/10 text-brand flex size-5 shrink-0 items-center justify-center rounded-full text-xs">
+                {index + 1}
+              </span>
+              <span className="min-w-0 flex-1 truncate">
+                {isSelected ? `${option.label}${LIVE_VOTE_LABEL.selectedSuffix}` : option.label}
+              </span>
+              {isSelected ? <Check className="size-4 shrink-0" /> : null}
+            </div>
+          );
+        })}
+      </div>
+      <p className="text-muted-foreground text-xs font-semibold">
+        {selectedOption ? LIVE_VOTE_LABEL.waitForResult : LIVE_VOTE_LABEL.waitForResultFallback}
+      </p>
+      <Button type="button" disabled className="bg-live/80 h-9 w-full text-xs font-bold">
+        {LIVE_VOTE_LABEL.participated}
+      </Button>
+    </div>
+  );
+}
+
+function VoteResults({ poll, onClose }: { onClose: () => void; poll: LivePoll }) {
   const total = poll.totalCount;
   const maxCount = getMaxCount(poll.options);
 
   return (
-    <>
-      <div className="flex flex-col gap-3">
-        <div className="flex items-start justify-between gap-2">
-          <p className="text-foreground text-sm font-medium">{poll.title}</p>
-          <span className="bg-muted text-muted-foreground shrink-0 rounded-full px-2 py-0.5 text-xs font-medium">
-            {LIVE_VOTE_LABEL.ended}
-          </span>
-        </div>
-        <div className="flex flex-col gap-2">
-          {poll.options.map((option, index) => {
-            const percent = getVotePercent(option.count, total);
-            const isWinner = option.count > 0 && option.count === maxCount;
-            const isUserChoice = poll.userVotedOptionId === option.id;
-            return (
-              <div
-                key={option.id}
-                className={cn(
-                  "relative overflow-hidden rounded-md border px-3 py-2.5",
-                  isWinner ? "border-live/60" : "border-border",
-                )}
-              >
-                <VoteOptionBar percent={percent} emphasized={isWinner} />
-                <div className="relative flex w-full items-center gap-2 text-sm">
-                  {isWinner ? <Crown aria-hidden className="text-live size-4 shrink-0" /> : null}
-                  <span
-                    className={cn(
-                      "min-w-0 flex-1 truncate text-left",
-                      isWinner && "text-live font-medium",
-                    )}
-                  >
-                    {index + 1}. {option.label}
-                  </span>
-                  {isWinner ? (
-                    <span className="bg-live/15 text-live shrink-0 rounded-full px-1.5 py-0.5 text-xs font-medium">
-                      {LIVE_VOTE_LABEL.winner}
-                    </span>
-                  ) : null}
-                  {isUserChoice ? (
-                    <span className="bg-muted text-muted-foreground shrink-0 rounded-full px-1.5 py-0.5 text-xs">
-                      {LIVE_VOTE_LABEL.yourChoice}
-                    </span>
-                  ) : null}
-                  <span className="shrink-0 text-xs font-medium tabular-nums">
-                    {percent}% · {formatCount(option.count)}
-                    {LIVE_VOTE_LABEL.votesUnit}
-                  </span>
-                </div>
+    <div className="border-border flex flex-col gap-3 rounded-lg border p-3">
+      <StatusPill tone="muted">{LIVE_VOTE_LABEL.ended}</StatusPill>
+      <p className="text-foreground text-sm font-bold">{poll.title}</p>
+      <div className="flex flex-col gap-2">
+        {poll.options.map((option) => {
+          const percent = getVotePercent(option.count, total);
+          const isWinner = option.count > 0 && option.count === maxCount;
+
+          return (
+            <div key={option.id} className="border-border rounded-lg border px-3 py-2">
+              <div className="mb-2 flex items-center gap-2 text-sm font-bold">
+                {isWinner ? <Crown aria-hidden className="text-live size-4 shrink-0" /> : null}
+                <span className="min-w-0 flex-1 truncate">{option.label}</span>
+                <span className="shrink-0 text-xs tabular-nums">
+                  {formatCount(option.count)}
+                  {LIVE_VOTE_LABEL.votesUnit} · {percent}%
+                </span>
               </div>
-            );
-          })}
-        </div>
-        <p className="text-muted-foreground text-xs tabular-nums">
-          {LIVE_VOTE_LABEL.totalPrefix} {formatCount(total)}
+              <div className="bg-muted h-2 overflow-hidden rounded-full">
+                <div
+                  className={cn("h-full rounded-full", isWinner ? "bg-live" : "bg-brand")}
+                  style={{ width: `${percent}%` }}
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div className="border-border flex items-center justify-between rounded-lg border px-3 py-2 text-xs font-bold">
+        <span>{LIVE_VOTE_LABEL.totalPrefix}</span>
+        <span>
+          {formatCount(total)}
           {LIVE_VOTE_LABEL.participantsUnit}
-        </p>
+        </span>
       </div>
-      <div className="flex justify-end">
-        <Button type="button" variant="outline" onClick={onClose}>
-          {LIVE_LABEL.confirm}
-        </Button>
-      </div>
-    </>
+      <Button type="button" variant="outline" className="h-9 w-full" onClick={onClose}>
+        {LIVE_LABEL.close}
+      </Button>
+    </div>
+  );
+}
+
+function InteractionNoticeList({
+  isError,
+  isLoading,
+  notices,
+}: {
+  isError?: boolean;
+  isLoading?: boolean;
+  notices: LiveInteractionNotice[];
+}) {
+  if (isLoading) {
+    return <p className="text-muted-foreground text-xs">{LIVE_VOTE_LABEL.resultLoading}</p>;
+  }
+
+  if (isError) {
+    return <p className="text-muted-foreground text-xs">{LIVE_VOTE_LABEL.resultError}</p>;
+  }
+
+  if (notices.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      <p className="text-foreground text-xs font-bold">{LIVE_VOTE_LABEL.recentResults}</p>
+      {notices.slice(0, 3).map((notice) => {
+        const Icon = notice.type === "draw" ? Trophy : Gift;
+        const title =
+          notice.type === "draw" ? LIVE_VOTE_LABEL.drawResult : LIVE_VOTE_LABEL.rouletteResult;
+        const detail = notice.winnerNames?.join(", ") ?? notice.resultLabel ?? notice.content;
+
+        return (
+          <div key={notice.id} className="border-border rounded-lg border px-3 py-2">
+            <div className="mb-1 flex items-center gap-2">
+              <Icon className="text-brand size-4 shrink-0" />
+              <span className="text-foreground text-xs font-bold">{title}</span>
+            </div>
+            <p className="text-foreground text-sm font-bold wrap-break-word">{detail}</p>
+            {notice.participantCount !== undefined ? (
+              <p className="text-muted-foreground mt-1 text-xs">
+                {formatCount(notice.participantCount)}
+                {LIVE_VOTE_LABEL.participantsUnit}
+              </p>
+            ) : null}
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
 function VoteBody({
-  isLoading,
+  interactionNotices,
   isError,
-  relevantPoll,
+  isInteractionNoticesError,
+  isInteractionNoticesLoading,
+  isLoading,
   isLoggedIn,
+  onClose,
   onLoginPrompt,
   onVote,
-  onClose,
+  relevantPoll,
 }: {
-  isLoading?: boolean;
+  interactionNotices: LiveInteractionNotice[];
   isError?: boolean;
-  relevantPoll: LivePoll | null;
+  isInteractionNoticesError?: boolean;
+  isInteractionNoticesLoading?: boolean;
+  isLoading?: boolean;
   isLoggedIn: boolean;
+  onClose: () => void;
   onLoginPrompt: () => void;
   onVote: (pollId: string, optionId: string) => Promise<boolean>;
-  onClose: () => void;
+  relevantPoll: LivePoll | null;
 }) {
   if (isLoading) {
     return <p className="text-muted-foreground text-sm">{LIVE_VOTE_LABEL.loading}</p>;
@@ -281,53 +352,77 @@ function VoteBody({
     return <p className="text-muted-foreground text-sm">{LIVE_VOTE_LABEL.error}</p>;
   }
 
+  const noticeList = (
+    <InteractionNoticeList
+      notices={interactionNotices}
+      isLoading={isInteractionNoticesLoading}
+      isError={isInteractionNoticesError}
+    />
+  );
+
   if (!relevantPoll) {
-    return <p className="text-muted-foreground text-sm">{LIVE_VOTE_LABEL.empty}</p>;
+    return (
+      <div className="flex flex-col gap-4">
+        <StandbyCard />
+        {noticeList}
+      </div>
+    );
   }
 
   if (relevantPoll.status === "ended") {
-    return <VoteResults poll={relevantPoll} onClose={onClose} />;
+    return (
+      <div className="flex flex-col gap-4">
+        <VoteResults poll={relevantPoll} onClose={onClose} />
+        {noticeList}
+      </div>
+    );
   }
 
-  // 진행 중 투표는 참여에 로그인이 필요하다. (결과 열람 중 realtime으로 새 투표가 시작된 경우 등)
   if (!isLoggedIn) {
     return (
-      <div className="flex flex-col gap-3">
-        <p className="text-foreground text-sm font-medium">{relevantPoll.title}</p>
-        <p className="text-muted-foreground text-sm">{LIVE_LABEL.loginDescription}</p>
-        <div className="flex justify-end">
+      <div className="flex flex-col gap-4">
+        <div className="border-border flex flex-col gap-3 rounded-lg border p-3">
+          <StatusPill tone="brand">{LIVE_VOTE_LABEL.active}</StatusPill>
+          <p className="text-foreground text-sm font-bold">{relevantPoll.title}</p>
+          <p className="text-muted-foreground text-sm">{LIVE_LABEL.loginDescription}</p>
           <Button
             type="button"
             onClick={() => {
               onClose();
               onLoginPrompt();
             }}
-            className="bg-brand hover:bg-brand/90 text-brand-foreground"
+            className="bg-brand hover:bg-brand/90 text-brand-foreground h-9 w-full"
           >
             {LIVE_LABEL.loginButton}
           </Button>
         </div>
+        {noticeList}
       </div>
     );
   }
 
   return (
-    <VoteContent
-      key={`${relevantPoll.id}:${relevantPoll.userVotedOptionId ?? "none"}`}
-      activePoll={relevantPoll}
-      onVote={onVote}
-      onClose={onClose}
-    />
+    <div className="flex flex-col gap-4">
+      {relevantPoll.userVotedOptionId ? (
+        <ParticipatedCard poll={relevantPoll} />
+      ) : (
+        <ActiveVoteCard activePoll={relevantPoll} onVote={onVote} onClose={onClose} />
+      )}
+      {noticeList}
+    </div>
   );
 }
 
 export function LiveVotePopover({
-  polls,
-  isLoading,
+  interactionNotices = [],
   isError,
-  onLoginPrompt,
+  isInteractionNoticesError,
+  isInteractionNoticesLoading,
+  isLoading,
   isLoggedIn,
+  onLoginPrompt,
   onVote,
+  polls,
   presentation = "popover",
 }: Props) {
   const [open, setOpen] = useState(false);
@@ -341,17 +436,32 @@ export function LiveVotePopover({
     : LIVE_VOTE_LABEL.description;
 
   function handleOpenChange(next: boolean) {
-    // 결과 열람은 로그인 불필요. 진행 중 투표 참여만 로그인을 요구한다.
     if (next && !isLoggedIn && relevantPoll?.status === "active") {
       onLoginPrompt();
       return;
     }
+
     setOpen(next);
   }
 
   function handleOpen() {
     handleOpenChange(true);
   }
+
+  const body = (
+    <VoteBody
+      interactionNotices={interactionNotices}
+      isLoading={isLoading}
+      isError={isError}
+      isInteractionNoticesLoading={isInteractionNoticesLoading}
+      isInteractionNoticesError={isInteractionNoticesError}
+      relevantPoll={relevantPoll}
+      isLoggedIn={isLoggedIn}
+      onLoginPrompt={onLoginPrompt}
+      onVote={onVote}
+      onClose={() => setOpen(false)}
+    />
+  );
 
   if (presentation === "dialog") {
     return (
@@ -365,15 +475,7 @@ export function LiveVotePopover({
               <DialogTitle>{headerTitle}</DialogTitle>
               <DialogDescription>{headerDescription}</DialogDescription>
             </DialogHeader>
-            <VoteBody
-              isLoading={isLoading}
-              isError={isError}
-              relevantPoll={relevantPoll}
-              isLoggedIn={isLoggedIn}
-              onLoginPrompt={onLoginPrompt}
-              onVote={onVote}
-              onClose={() => setOpen(false)}
-            />
+            {body}
           </DialogContent>
         </Dialog>
       </>
@@ -394,15 +496,7 @@ export function LiveVotePopover({
           <PopoverTitle>{headerTitle}</PopoverTitle>
           <PopoverDescription>{headerDescription}</PopoverDescription>
         </PopoverHeader>
-        <VoteBody
-          isLoading={isLoading}
-          isError={isError}
-          relevantPoll={relevantPoll}
-          isLoggedIn={isLoggedIn}
-          onLoginPrompt={onLoginPrompt}
-          onVote={onVote}
-          onClose={() => setOpen(false)}
-        />
+        {body}
       </PopoverContent>
     </Popover>
   );

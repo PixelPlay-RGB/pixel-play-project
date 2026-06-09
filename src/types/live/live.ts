@@ -124,6 +124,18 @@ export interface LivePoll {
   userVotedOptionId: string | null;
 }
 
+export type LiveInteractionNoticeType = "draw" | "roulette";
+
+export interface LiveInteractionNotice {
+  content: string;
+  createdAt: string;
+  id: string;
+  participantCount?: number;
+  resultLabel?: string;
+  type: LiveInteractionNoticeType;
+  winnerNames?: string[];
+}
+
 export interface LiveCreator {
   id: string;
   name: string;
@@ -167,6 +179,7 @@ export interface LiveWatchBroadcast {
 export interface LiveWatchSettings {
   chatScope: "authenticated" | "follower" | "manager";
   followerWaitSeconds: number;
+  chatPaused: boolean;
   slowModeEnabled: boolean;
   slowModeSeconds: number;
   linkBlocked: boolean;
@@ -186,6 +199,7 @@ export interface LiveWatchViewerRelation {
 
 // RPC가 계산해 주는 채팅 불가 사유 — 차단/블랙리스트가 아닌 채팅 가능 여부 판단용
 export type LiveChatUnavailableReason =
+  | "chat_paused"
   | "login_required"
   | "live_offline"
   | "manager_only"

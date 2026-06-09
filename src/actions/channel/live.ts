@@ -1,15 +1,24 @@
 "use server";
 // 방송 운영 페이지에서 사용하는 라이브 방송 RPC Server Action입니다.
 
+import { randomUUID } from "crypto";
 import { getAuthenticatedActorId } from "@/actions/common/authenticated-actor";
 import { getChannelLiveStreamPath } from "@/constants/channel/channel-live-media";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { createAdminClient } from "@/lib/supabase/admin-client";
 import {
+  createChannelLivePollSchema,
+  endChannelLivePollSchema,
   getChannelLiveDrawParticipantsSchema,
+  sendChannelLiveInteractionNoticeSchema,
+  updateChannelLiveChatPausedSchema,
+  type CreateChannelLivePollInput,
+  type EndChannelLivePollInput,
   type GetChannelLiveDrawParticipantsInput,
+  type SendChannelLiveInteractionNoticeInput,
   startLiveBroadcastSchema,
   type StartLiveBroadcastInput,
+  type UpdateChannelLiveChatPausedInput,
   updateChannelLiveSettingsSchema,
   type UpdateChannelLiveSettingsInput,
 } from "@/lib/zod/channel-live";
@@ -82,6 +91,7 @@ export interface ChannelLiveStudioSettings {
   alertSoundKey: string;
   alertVolume: number;
   chatDonationMessageEnabled: boolean;
+  chatPaused: boolean;
   chatRuleText: string;
   chatRuleVersion: number;
   chatScope: "authenticated" | "follower" | "manager";
@@ -156,6 +166,10 @@ function readMetadataString(value: Json | undefined) {
   const trimmed = typeof value === "string" ? value.trim() : "";
 
   return trimmed.length > 0 ? trimmed : null;
+}
+
+function toJsonMetadata(value: Record<string, unknown> | undefined): Json {
+  return value ? (JSON.parse(JSON.stringify(value)) as Json) : {};
 }
 
 function getLiveThumbnailExtension(file: File) {
@@ -259,6 +273,7 @@ function createDefaultSettings(): ChannelLiveStudioSettings {
     alertSoundKey: "classic",
     alertVolume: 32,
     chatDonationMessageEnabled: false,
+    chatPaused: false,
     chatOverlayVersion: 1,
     chatRuleText: "",
     chatRuleVersion: 1,
@@ -291,6 +306,7 @@ function createSettingsFromRecord(settings: unknown): ChannelLiveStudioSettings 
     alertSoundKey: readString(settings.alertSoundKey) || "classic",
     alertVolume: readNumberWithFallback(settings.alertVolume, 32),
     chatDonationMessageEnabled: readBoolean(settings.chatDonationMessageEnabled, false),
+    chatPaused: readBoolean(settings.chatPaused, false),
     chatOverlayVersion: readNumberWithFallback(settings.chatOverlayVersion, 1),
     chatRuleText: readString(settings.chatRuleText),
     chatRuleVersion: readNumberWithFallback(settings.chatRuleVersion, 1),
@@ -500,6 +516,42 @@ export async function updateChannelLiveSettingsAction(
   };
 }
 
+export async function updateChannelLiveChatPausedAction(
+  input: UpdateChannelLiveChatPausedInput,
+): Promise<AppActionResult<ChannelLiveStudioSnapshot>> {
+  const parsed = updateChannelLiveChatPausedSchema.safeParse(input);
+
+  if (!parsed.success) {
+    return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
+  }
+
+  const actor = await getAuthenticatedActorId({
+    logLabel: "라이브 채팅 일시정지 저장 중 인증 사용자 조회 실패",
+  });
+
+  if (!actor.success) {
+    return { success: false, code: actor.result.code };
+  }
+
+  const supabase = createAdminClient();
+  const { data, error } = await supabase.rpc("set_live_chat_paused", {
+    p_actor_user_id: actor.userId,
+    p_chat_paused: parsed.data.chatPaused,
+  });
+
+  if (error || !data) {
+    console.error("라이브 채팅 일시정지 RPC 실패", error);
+    return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
+  }
+
+  revalidatePath("/channel/live");
+
+  return {
+    success: true,
+    data: toChannelLiveStudioSnapshot(data, actor.userId),
+  };
+}
+
 export async function startLiveBroadcastAction(
   input: StartLiveBroadcastInput,
 ): Promise<AppActionResult<{ broadcastId: string }>> {
@@ -633,6 +685,116 @@ export async function saveChannelLiveThumbnailAction({
   return {
     success: true,
     data: { thumbnailUrl: data.thumbnail_url },
+  };
+}
+
+export async function createChannelLivePollAction(
+  input: CreateChannelLivePollInput,
+): Promise<AppActionResult<{ pollId: string }>> {
+  const parsed = createChannelLivePollSchema.safeParse(input);
+
+  if (!parsed.success) {
+    return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
+  }
+
+  const actor = await getAuthenticatedActorId({
+    logLabel: "방송 투표 생성 중 인증 사용자 조회 실패",
+  });
+
+  if (!actor.success) {
+    return { success: false, code: actor.result.code };
+  }
+
+  const pollOptions: Json = parsed.data.options.map((option) => ({
+    count: 0,
+    id: randomUUID(),
+    label: option.trim(),
+  }));
+  const supabase = createAdminClient();
+  const { data: pollId, error } = await supabase.rpc("create_live_poll", {
+    p_actor_user_id: actor.userId,
+    p_broadcast_id: parsed.data.broadcastId,
+    p_ends_at: parsed.data.endsAt ?? undefined,
+    p_options: pollOptions,
+    p_title: parsed.data.title.trim(),
+  });
+
+  if (error || !pollId) {
+    console.error("방송 투표 생성 RPC 실패", error);
+    return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
+  }
+
+  return {
+    success: true,
+    data: { pollId },
+  };
+}
+
+export async function endChannelLivePollAction(
+  input: EndChannelLivePollInput,
+): Promise<AppActionResult> {
+  const parsed = endChannelLivePollSchema.safeParse(input);
+
+  if (!parsed.success) {
+    return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
+  }
+
+  const actor = await getAuthenticatedActorId({
+    logLabel: "방송 투표 종료 중 인증 사용자 조회 실패",
+  });
+
+  if (!actor.success) {
+    return { success: false, code: actor.result.code };
+  }
+
+  const supabase = createAdminClient();
+  const { error } = await supabase.rpc("end_live_poll", {
+    p_actor_user_id: actor.userId,
+    p_poll_id: parsed.data.pollId,
+  });
+
+  if (error) {
+    console.error("방송 투표 종료 RPC 실패", error);
+    return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
+  }
+
+  return { success: true };
+}
+
+export async function sendChannelLiveInteractionNoticeAction(
+  input: SendChannelLiveInteractionNoticeInput,
+): Promise<AppActionResult<{ messageId: string }>> {
+  const parsed = sendChannelLiveInteractionNoticeSchema.safeParse(input);
+
+  if (!parsed.success) {
+    return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
+  }
+
+  const actor = await getAuthenticatedActorId({
+    logLabel: "라이브 상호작용 결과 공지 중 인증 사용자 조회 실패",
+  });
+
+  if (!actor.success) {
+    return { success: false, code: actor.result.code };
+  }
+
+  const supabase = createAdminClient();
+  const { data: messageId, error } = await supabase.rpc("send_live_interaction_notice", {
+    p_actor_user_id: actor.userId,
+    p_broadcast_id: parsed.data.broadcastId,
+    p_content: parsed.data.content.trim(),
+    p_interaction_type: parsed.data.interactionType,
+    p_metadata: toJsonMetadata(parsed.data.metadata),
+  });
+
+  if (error || !messageId) {
+    console.error("라이브 상호작용 결과 공지 RPC 실패", error);
+    return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
+  }
+
+  return {
+    success: true,
+    data: { messageId },
   };
 }
 

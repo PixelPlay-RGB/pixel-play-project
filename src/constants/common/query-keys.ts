@@ -28,6 +28,8 @@ export const QUERY_KEYS = {
       [...QUERY_KEYS.live.all, "polls", broadcastId].filter((v) => v !== undefined),
     pollsForViewer: (broadcastId?: string, userId?: string | null) =>
       [...QUERY_KEYS.live.polls(broadcastId), userId ?? "public"].filter((v) => v !== undefined),
+    interactionNotices: (broadcastId?: string) =>
+      [...QUERY_KEYS.live.all, "interaction-notices", broadcastId].filter((v) => v !== undefined),
     // 라이브 목록
     listAll: () => [...QUERY_KEYS.live.all, "list"],
     list: (

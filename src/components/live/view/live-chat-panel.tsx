@@ -15,6 +15,7 @@ import { LIVE_LABEL } from "@/constants/live/live";
 import type {
   LiveChatMessage,
   LiveDonation,
+  LiveInteractionNotice,
   LivePoll,
   LiveViewerChatState,
 } from "@/types/live/live";
@@ -24,8 +25,11 @@ interface Props {
   messages: LiveChatMessage[];
   donations: LiveDonation[];
   polls: LivePoll[];
+  interactionNotices: LiveInteractionNotice[];
   isPollsLoading?: boolean;
   isPollsError?: boolean;
+  isInteractionNoticesLoading?: boolean;
+  isInteractionNoticesError?: boolean;
   chatState: LiveViewerChatState;
   isLoggedIn: boolean;
   walletBalance: number;
@@ -56,8 +60,11 @@ export function LiveChatPanel({
   messages,
   donations,
   polls,
+  interactionNotices,
   isPollsLoading,
   isPollsError,
+  isInteractionNoticesLoading,
+  isInteractionNoticesError,
   chatState,
   isLoggedIn,
   walletBalance,
@@ -158,8 +165,11 @@ export function LiveChatPanel({
           <LiveChatParticipationNotice chatUnavailableReason={chatState.chatUnavailableReason} />
           <LiveChatInputBar
             polls={polls}
+            interactionNotices={interactionNotices}
             isPollsLoading={isPollsLoading}
             isPollsError={isPollsError}
+            isInteractionNoticesLoading={isInteractionNoticesLoading}
+            isInteractionNoticesError={isInteractionNoticesError}
             chatState={chatState}
             isLoggedIn={isLoggedIn}
             walletBalance={walletBalance}

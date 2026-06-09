@@ -5,6 +5,7 @@ import {
   endLiveBroadcastAction,
   saveChannelLiveThumbnailAction,
   startLiveBroadcastAction,
+  updateChannelLiveChatPausedAction,
   type ChannelLiveChatMessage,
   type ChannelLiveStudioSnapshot,
   updateChannelLiveSettingsAction,
@@ -98,7 +99,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
   const visibility: ChannelLiveVisibility = "public";
   const [isBroadcasting, setIsBroadcasting] = useState(Boolean(activeBroadcast));
   const [hasEnded, setHasEnded] = useState(false);
-  const [isChatPaused, setIsChatPaused] = useState(false);
+  const [isChatPaused, setIsChatPaused] = useState(initialSettings?.chatPaused ?? false);
   const [broadcastId, setBroadcastId] = useState<string | null>(activeBroadcast?.id ?? null);
   const [broadcastStartedAt, setBroadcastStartedAt] = useState<string | null>(
     activeBroadcast?.startedAt ?? null,
@@ -148,6 +149,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
   const [streamStatus, setStreamStatus] = useState<ChannelLiveStreamStatusResponse | null>(null);
   const [isBroadcastActionPending, startBroadcastTransition] = useTransition();
   const [isSettingsActionPending, startSettingsTransition] = useTransition();
+  const [isChatPausePending, startChatPauseTransition] = useTransition();
 
   const liveState: ChannelLiveState = {
     isBroadcasting,
@@ -337,12 +339,30 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
       setDonationMinAmount(result.data.settings.donationMinAmount);
       setIsDonationAmountVisible(result.data.settings.donationAmountVisible);
       setIsChatDonationMessageEnabled(result.data.settings.chatDonationMessageEnabled);
+      setIsChatPaused(result.data.settings.chatPaused);
       setDonationAlertDurationSeconds(result.data.settings.donationAlertDurationSeconds);
       setIsAlertSoundEnabled(result.data.settings.alertSoundEnabled);
       setAlertVolume(result.data.settings.alertVolume);
       setIsTtsEnabled(result.data.settings.ttsEnabled);
       setTtsRate(result.data.settings.ttsRate);
       toastAppSuccess(APP_MESSAGE_CODE.success.channel.liveSettingsSaved);
+    });
+  };
+
+  const handleToggleChatPaused = () => {
+    const nextChatPaused = !isChatPaused;
+
+    setIsChatPaused(nextChatPaused);
+    startChatPauseTransition(async () => {
+      const result = await updateChannelLiveChatPausedAction({ chatPaused: nextChatPaused });
+
+      if (!result.success || !result.data) {
+        setIsChatPaused(!nextChatPaused);
+        toastAppError(APP_MESSAGE_CODE.error.common.unknown);
+        return;
+      }
+
+      setIsChatPaused(result.data.settings.chatPaused);
     });
   };
 
@@ -421,7 +441,11 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
             />
           </div>
           <div className="shrink-0">
-            <ChannelLivePollPanel broadcastId={broadcastId} messages={liveChatMessages} />
+            <ChannelLivePollPanel
+              broadcastId={broadcastId}
+              creatorId={creatorId}
+              messages={liveChatMessages}
+            />
           </div>
         </div>
 
@@ -433,7 +457,8 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
             chatRuleText={chatRuleText}
             liveState={liveState}
             onMessagesChange={setLiveChatMessages}
-            onToggleChatPaused={() => setIsChatPaused((currentValue) => !currentValue)}
+            isChatPausePending={isChatPausePending}
+            onToggleChatPaused={handleToggleChatPaused}
           />
         </div>
 

@@ -15,12 +15,15 @@ import { LiveDonationDialog } from "@/components/live/view/live-donation-dialog"
 import { LiveVotePopover } from "@/components/live/view/live-vote-popover";
 import { LIVE_CHAT_MESSAGE_MAX_LENGTH, LIVE_LABEL } from "@/constants/live/live";
 import { cn } from "@/lib/utils";
-import type { LivePoll, LiveViewerChatState } from "@/types/live/live";
+import type { LiveInteractionNotice, LivePoll, LiveViewerChatState } from "@/types/live/live";
 
 interface Props {
   polls: LivePoll[];
+  interactionNotices?: LiveInteractionNotice[];
   isPollsLoading?: boolean;
   isPollsError?: boolean;
+  isInteractionNoticesLoading?: boolean;
+  isInteractionNoticesError?: boolean;
   chatState: LiveViewerChatState;
   isLoggedIn: boolean;
   walletBalance: number;
@@ -59,6 +62,8 @@ function getChatPlaceholder({
   if (chatState.canChat) return LIVE_LABEL.chatPlaceholder;
 
   switch (chatState.chatUnavailableReason) {
+    case "chat_paused":
+      return LIVE_LABEL.chatPausedPlaceholder;
     // 규칙 미동의는 일반 채팅 placeholder를 유지하고, 클릭하면 동의 popover로 안내한다.
     case "chat_rule_acceptance_required":
       return LIVE_LABEL.chatPlaceholder;
@@ -80,8 +85,11 @@ function clampChatDraft(value: string): string {
 
 export function LiveChatInputBar({
   polls,
+  interactionNotices = [],
   isPollsLoading,
   isPollsError,
+  isInteractionNoticesLoading,
+  isInteractionNoticesError,
   chatState,
   isLoggedIn,
   walletBalance,
@@ -267,8 +275,11 @@ export function LiveChatInputBar({
           />
           <LiveVotePopover
             polls={polls}
+            interactionNotices={interactionNotices}
             isLoading={isPollsLoading}
             isError={isPollsError}
+            isInteractionNoticesLoading={isInteractionNoticesLoading}
+            isInteractionNoticesError={isInteractionNoticesError}
             isLoggedIn={isLoggedIn}
             onLoginPrompt={onLoginPrompt}
             onVote={onVote}

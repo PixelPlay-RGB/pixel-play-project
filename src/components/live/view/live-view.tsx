@@ -38,6 +38,9 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     polls,
     isPollsLoading,
     isPollsError,
+    interactionNotices,
+    isInteractionNoticesLoading,
+    isInteractionNoticesError,
     walletBalance,
     isWalletLoading,
     isWalletError,
@@ -132,9 +135,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
               isTheater && "md:gap-0 md:py-0",
             )}
           >
-            <div
-              className={cn("md:flex md:min-h-0 md:flex-1 md:items-center md:justify-center")}
-            >
+            <div className={cn("md:flex md:min-h-0 md:flex-1 md:items-center md:justify-center")}>
               <LiveVideoPlayer
                 broadcast={broadcast}
                 hlsSrc={hlsSrc}
@@ -190,6 +191,9 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
               polls={polls}
               isPollsLoading={isPollsLoading}
               isPollsError={isPollsError}
+              interactionNotices={interactionNotices}
+              isInteractionNoticesLoading={isInteractionNoticesLoading}
+              isInteractionNoticesError={isInteractionNoticesError}
               chatState={chatState}
               isLoggedIn={isLoggedIn}
               walletBalance={walletBalance}

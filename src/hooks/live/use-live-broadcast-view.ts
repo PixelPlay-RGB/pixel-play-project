@@ -3,6 +3,7 @@
 
 import { useState } from "react";
 import { useLiveViewData } from "@/hooks/live/use-live-view-data";
+import { useLiveInteractionNotices } from "@/hooks/live/use-live-interaction-notices";
 import { useLiveMessages } from "@/hooks/live/use-live-messages";
 import { useLivePolls } from "@/hooks/live/use-live-polls";
 import { useLiveChatSession } from "@/hooks/live/use-live-chat-session";
@@ -48,6 +49,7 @@ export function useLiveBroadcastView(creatorId: string) {
   const messages = messagesQuery.messages;
 
   const pollsQuery = useLivePolls(broadcast?.id, user?.id);
+  const interactionNoticesQuery = useLiveInteractionNotices(broadcast?.id);
   const donationRankingQuery = useLiveDonationRanking(creatorId);
   const donationEnabled = watchData?.settings.donationEnabled ?? false;
   const donationMinAmount = watchData?.settings.donationMinAmount ?? LIVE_DONATION_MIN_AMOUNT;
@@ -67,7 +69,8 @@ export function useLiveBroadcastView(creatorId: string) {
     const cachedPolls = broadcastId
       ? queryClient.getQueryData<LivePoll[]>(QUERY_KEYS.live.pollsForViewer(broadcastId, user?.id))
       : undefined;
-    const isUnvote = cachedPolls?.find((poll) => poll.id === pollId)?.userVotedOptionId === optionId;
+    const isUnvote =
+      cachedPolls?.find((poll) => poll.id === pollId)?.userVotedOptionId === optionId;
     try {
       const success = await voteLivePollAction(pollId, optionId);
       if (!success) {
@@ -178,6 +181,9 @@ export function useLiveBroadcastView(creatorId: string) {
     polls: pollsQuery.polls,
     isPollsLoading: pollsQuery.isLoading,
     isPollsError: Boolean(pollsQuery.error),
+    interactionNotices: interactionNoticesQuery.notices,
+    isInteractionNoticesLoading: interactionNoticesQuery.isLoading,
+    isInteractionNoticesError: Boolean(interactionNoticesQuery.error),
     walletBalance,
     isWalletLoading,
     isWalletError,

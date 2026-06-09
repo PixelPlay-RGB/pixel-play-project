@@ -21,28 +21,17 @@ interface Props {
   broadcastId?: string | null;
   creatorId?: string;
   chatRuleText?: string;
+  isChatPausePending?: boolean;
   liveState: ChannelLiveState;
   onMessagesChange?: (messages: ChannelLiveChatMessage[]) => void;
   onToggleChatPaused: () => void;
 }
 
-function getStudioChatState(
-  broadcastId: string | null | undefined,
-  isChatPaused: boolean,
-): LiveViewerChatState {
+function getStudioChatState(broadcastId: string | null | undefined): LiveViewerChatState {
   if (!broadcastId) {
     return {
       canChat: false,
       chatUnavailableReason: "live_offline",
-      remainingFollowWaitSeconds: 0,
-      remainingSlowModeSeconds: 0,
-    };
-  }
-
-  if (isChatPaused) {
-    return {
-      canChat: false,
-      chatUnavailableReason: "slow_mode_required",
       remainingFollowWaitSeconds: 0,
       remainingSlowModeSeconds: 0,
     };
@@ -78,6 +67,7 @@ export default function ChannelLiveChatPanel({
   broadcastId,
   creatorId,
   chatRuleText,
+  isChatPausePending,
   liveState,
   onMessagesChange,
   onToggleChatPaused,
@@ -86,10 +76,7 @@ export default function ChannelLiveChatPanel({
   const [isPopoutOpen, setIsPopoutOpen] = useState(false);
   const popoutWindowRef = useRef<Window | null>(null);
   const popoutCheckIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const chatState = useMemo(
-    () => getStudioChatState(broadcastId, liveState.isChatPaused),
-    [broadcastId, liveState.isChatPaused],
-  );
+  const chatState = useMemo(() => getStudioChatState(broadcastId), [broadcastId]);
   const { messages } = useLiveMessages(broadcastId, creatorId, creatorId);
   const { isLoggedIn, sendMessage } = useLiveChatSession({
     broadcastId,
@@ -139,6 +126,7 @@ export default function ChannelLiveChatPanel({
                   size="icon-sm"
                   variant="ghost"
                   aria-label={pauseLabel}
+                  disabled={isChatPausePending}
                   onClick={onToggleChatPaused}
                 />
               }

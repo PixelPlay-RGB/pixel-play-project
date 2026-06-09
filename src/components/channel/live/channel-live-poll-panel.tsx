@@ -2,28 +2,29 @@
 // 방송 운영 화면에서 채팅 기반 투표, DB 기준 추첨, 룰렛 도구를 렌더링합니다.
 
 import {
+  createChannelLivePollAction,
+  endChannelLivePollAction,
   getChannelLiveDrawParticipantsAction,
+  sendChannelLiveInteractionNoticeAction,
   type ChannelLiveChatMessage,
   type ChannelLiveDrawParticipant,
 } from "@/actions/channel/live";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
+import { QUERY_KEYS } from "@/constants/common/query-keys";
+import { useLivePolls } from "@/hooks/live/use-live-polls";
 import { cn } from "@/lib/utils";
+import type { LivePoll } from "@/types/live/live";
 import { toastAppError } from "@/utils/common/toast-message";
+import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, FerrisWheel, Gift, Plus, RotateCw, Trophy, Users, Vote, X } from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
 interface Props {
   broadcastId: string | null;
+  creatorId?: string;
   messages: ChannelLiveChatMessage[];
-}
-
-interface PollState {
-  endedAt: string | null;
-  options: string[];
-  startedAt: string;
-  title: string;
 }
 
 interface DrawState {
@@ -52,7 +53,6 @@ const ROULETTE_SEGMENT_COLORS = [
   "var(--muted-foreground)",
 ];
 const MAX_POLL_OPTION_COUNT = 4;
-const VOTE_COMMAND = "!투표";
 const DRAW_REEL_ROW_HEIGHT_PX = 40;
 const DRAW_REEL_REPEAT_COUNT = 9;
 const DRAW_REEL_DURATION_MS = 2200;
@@ -81,66 +81,15 @@ function isMessageInPeriod(
   return messageTime >= startedTime && messageTime <= endedTime;
 }
 
-function parseVoteIndex(content: string, options: string[]) {
-  const trimmedContent = content.trim();
-
-  if (!trimmedContent.startsWith(VOTE_COMMAND)) {
-    return null;
-  }
-
-  const voteValue = trimmedContent.slice(VOTE_COMMAND.length).trim();
-
-  if (!voteValue) {
-    return null;
-  }
-
-  const numericIndex = Number(voteValue);
-
-  if (Number.isInteger(numericIndex) && numericIndex >= 1 && numericIndex <= options.length) {
-    return numericIndex - 1;
-  }
-
-  const normalizedVoteValue = voteValue.toLocaleLowerCase();
-  const matchedIndex = options.findIndex(
-    (option) => option.toLocaleLowerCase() === normalizedVoteValue,
-  );
-
-  return matchedIndex >= 0 ? matchedIndex : null;
-}
-
-function getPollResults(messages: ChannelLiveChatMessage[], poll: PollState | null) {
+function getPollResults(poll: LivePoll | null) {
   if (!poll) {
     return [];
   }
 
-  const votesByAuthor = new Map<string, number>();
-
-  messages.forEach((message) => {
-    if (!isMessageInPeriod(message, poll.startedAt, poll.endedAt)) {
-      return;
-    }
-
-    const voteIndex = parseVoteIndex(message.content, poll.options);
-
-    if (voteIndex === null) {
-      return;
-    }
-
-    votesByAuthor.set(message.authorName, voteIndex);
-  });
-
-  const voteCounts = poll.options.map(() => 0);
-
-  votesByAuthor.forEach((voteIndex) => {
-    voteCounts[voteIndex] += 1;
-  });
-
-  const totalVotes = voteCounts.reduce((total, count) => total + count, 0);
-
-  return poll.options.map<PollResult>((option, index) => ({
-    count: voteCounts[index],
-    option,
-    percent: totalVotes > 0 ? Math.round((voteCounts[index] / totalVotes) * 100) : 0,
+  return poll.options.map<PollResult>((option) => ({
+    count: option.count,
+    option: option.label,
+    percent: poll.totalCount > 0 ? Math.round((option.count / poll.totalCount) * 100) : 0,
   }));
 }
 
@@ -203,11 +152,14 @@ function getRouletteWinnerIndex(rotation: number, itemCount: number) {
   return Math.floor(pointedDegree / segmentDegree);
 }
 
-export default function ChannelLivePollPanel({ broadcastId, messages }: Props) {
+export default function ChannelLivePollPanel({ broadcastId, creatorId, messages }: Props) {
+  const queryClient = useQueryClient();
+  const { polls, isLoading: isPollLoading } = useLivePolls(broadcastId, creatorId);
   const [selectedTool, setSelectedTool] = useState<InteractionTool | null>(null);
-  const [activePoll, setActivePoll] = useState<PollState | null>(null);
   const [title, setTitle] = useState("");
   const [options, setOptions] = useState(DEFAULT_POLL_OPTIONS);
+  const [isPollActionPending, setIsPollActionPending] = useState(false);
+  const [isPollFormOpen, setIsPollFormOpen] = useState(false);
   const [drawSession, setDrawSession] = useState<DrawState | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [isDrawParticipantLoading, setIsDrawParticipantLoading] = useState(false);
@@ -224,8 +176,12 @@ export default function ChannelLivePollPanel({ broadcastId, messages }: Props) {
   const rouletteTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const trimmedOptions = options.map((option) => option.trim()).filter(Boolean);
-  const canCreatePoll = title.trim().length > 0 && trimmedOptions.length >= 2;
-  const pollResults = useMemo(() => getPollResults(messages, activePoll), [activePoll, messages]);
+  const activePoll = polls.find((poll) => poll.status === "active") ?? null;
+  const latestEndedPoll = [...polls].reverse().find((poll) => poll.status === "ended") ?? null;
+  const visiblePoll = activePoll ?? (isPollFormOpen ? null : latestEndedPoll);
+  const canCreatePoll =
+    !!broadcastId && !activePoll && title.trim().length > 0 && trimmedOptions.length >= 2;
+  const pollResults = useMemo(() => getPollResults(visiblePoll), [visiblePoll]);
   const totalVotes = pollResults.reduce((total, result) => total + result.count, 0);
   const previewDrawParticipants = useMemo(
     () => getDrawParticipants(messages, drawSession),
@@ -305,25 +261,65 @@ export default function ChannelLivePollPanel({ broadcastId, messages }: Props) {
     );
   };
 
-  const handleCreatePoll = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const invalidatePolls = () => {
+    if (!broadcastId) return;
 
-    if (!canCreatePoll) return;
-
-    setActivePoll({
-      endedAt: null,
-      options: trimmedOptions,
-      startedAt: new Date().toISOString(),
-      title: title.trim(),
+    void queryClient.invalidateQueries({
+      queryKey: QUERY_KEYS.live.polls(broadcastId),
     });
-    setTitle("");
-    setOptions(DEFAULT_POLL_OPTIONS);
   };
 
-  const handleEndPoll = () => {
-    setActivePoll((currentPoll) =>
-      currentPoll ? { ...currentPoll, endedAt: new Date().toISOString() } : currentPoll,
-    );
+  const handleCreatePoll = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!broadcastId || !canCreatePoll || isPollActionPending) return;
+
+    setIsPollActionPending(true);
+
+    try {
+      const result = await createChannelLivePollAction({
+        broadcastId,
+        options: trimmedOptions,
+        title: title.trim(),
+      });
+
+      if (!result.success) {
+        toastAppError(result.code ?? APP_MESSAGE_CODE.error.common.unknown);
+        return;
+      }
+
+      setTitle("");
+      setOptions(DEFAULT_POLL_OPTIONS);
+      setIsPollFormOpen(false);
+      invalidatePolls();
+    } catch (error) {
+      console.error("방송 투표 생성 액션 실패", error);
+      toastAppError(APP_MESSAGE_CODE.error.common.unknown);
+    } finally {
+      setIsPollActionPending(false);
+    }
+  };
+
+  const handleEndPoll = async () => {
+    if (!activePoll || isPollActionPending) return;
+
+    setIsPollActionPending(true);
+
+    try {
+      const result = await endChannelLivePollAction({ pollId: activePoll.id });
+
+      if (!result.success) {
+        toastAppError(result.code ?? APP_MESSAGE_CODE.error.common.unknown);
+        return;
+      }
+
+      invalidatePolls();
+    } catch (error) {
+      console.error("방송 투표 종료 액션 실패", error);
+      toastAppError(APP_MESSAGE_CODE.error.common.unknown);
+    } finally {
+      setIsPollActionPending(false);
+    }
   };
 
   const handleStartDraw = () => {
@@ -365,6 +361,34 @@ export default function ChannelLivePollPanel({ broadcastId, messages }: Props) {
       return null;
     } finally {
       setIsDrawParticipantLoading(false);
+    }
+  };
+
+  const publishInteractionNotice = async ({
+    content,
+    interactionType,
+    metadata,
+  }: {
+    content: string;
+    interactionType: "draw" | "roulette";
+    metadata: Record<string, unknown>;
+  }) => {
+    if (!broadcastId) return;
+
+    try {
+      const result = await sendChannelLiveInteractionNoticeAction({
+        broadcastId,
+        content,
+        interactionType,
+        metadata,
+      });
+
+      if (!result.success) {
+        toastAppError(result.code ?? APP_MESSAGE_CODE.error.common.unknown);
+      }
+    } catch (error) {
+      console.error("라이브 상호작용 결과 공지 액션 실패", error);
+      toastAppError(APP_MESSAGE_CODE.error.common.unknown);
     }
   };
 
@@ -452,6 +476,15 @@ export default function ChannelLivePollPanel({ broadcastId, messages }: Props) {
           : currentSession,
       );
       setIsDrawing(false);
+      void publishInteractionNotice({
+        content: `추첨 결과 ${winner.nickname}`,
+        interactionType: "draw",
+        metadata: {
+          participantCount: nextSession.participants.length,
+          resultLabel: winner.nickname,
+          winnerNames: [winner.nickname],
+        },
+      });
     }, DRAW_REEL_DURATION_MS);
   };
 
@@ -494,7 +527,16 @@ export default function ChannelLivePollPanel({ broadcastId, messages }: Props) {
       const winnerIndex = getRouletteWinnerIndex(nextRotation, spinningItems.length);
 
       if (winnerIndex !== null) {
-        setRouletteResult(spinningItems[winnerIndex]);
+        const nextResult = spinningItems[winnerIndex];
+
+        setRouletteResult(nextResult);
+        void publishInteractionNotice({
+          content: `룰렛 결과 ${nextResult}`,
+          interactionType: "roulette",
+          metadata: {
+            resultLabel: nextResult,
+          },
+        });
       }
 
       setIsRouletteSpinning(false);
@@ -540,26 +582,30 @@ export default function ChannelLivePollPanel({ broadcastId, messages }: Props) {
 
           {selectedTool === "poll" && (
             <div className="flex flex-1 flex-col gap-3">
-              {activePoll ? (
+              {isPollLoading ? (
+                <div className="border-border text-muted-foreground flex min-h-32 items-center justify-center rounded-xl border text-sm font-semibold">
+                  투표를 불러오는 중입니다.
+                </div>
+              ) : visiblePoll ? (
                 <div className="flex flex-col gap-3">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <strong className="text-sm leading-5">{activePoll.title}</strong>
+                      <strong className="text-sm leading-5">{visiblePoll.title}</strong>
                       <p className="text-muted-foreground mt-1 text-xs font-semibold">
-                        {activePoll.endedAt
+                        {visiblePoll.status === "ended"
                           ? "투표가 종료되었습니다."
-                          : "`!투표 1` 또는 `!투표 선택지`로 참여합니다."}
+                          : "시청자는 투표 참여 버튼으로 참여합니다."}
                       </p>
                     </div>
-                    {activePoll.endedAt ? (
+                    {visiblePoll.status === "ended" ? (
                       <Button
                         type="button"
                         size="sm"
                         variant="outline"
                         className="rounded-xl font-bold"
-                        onClick={() => setActivePoll(null)}
+                        onClick={() => setIsPollFormOpen(true)}
                       >
-                        초기화
+                        새 투표
                       </Button>
                     ) : (
                       <Button
@@ -567,9 +613,10 @@ export default function ChannelLivePollPanel({ broadcastId, messages }: Props) {
                         size="sm"
                         variant="outline"
                         className="rounded-xl font-bold"
-                        onClick={handleEndPoll}
+                        disabled={isPollActionPending}
+                        onClick={() => void handleEndPoll()}
                       >
-                        종료
+                        {isPollActionPending ? "종료 중" : "종료"}
                       </Button>
                     )}
                   </div>
@@ -657,10 +704,10 @@ export default function ChannelLivePollPanel({ broadcastId, messages }: Props) {
 
                   <Button
                     type="submit"
-                    disabled={!canCreatePoll}
+                    disabled={!canCreatePoll || isPollActionPending}
                     className="bg-brand hover:bg-brand/90 mt-auto h-10 rounded-xl font-bold text-white"
                   >
-                    투표 시작
+                    {isPollActionPending ? "시작 중" : "투표 시작"}
                   </Button>
                 </form>
               )}
