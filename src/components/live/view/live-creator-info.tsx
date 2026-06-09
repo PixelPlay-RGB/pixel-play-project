@@ -3,20 +3,23 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatCount } from "@/utils/live/live-chat";
 import { LIVE_LABEL } from "@/constants/live/live";
+import { cn } from "@/lib/utils";
 import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
 import type { LiveCreator } from "@/types/live/live";
 
 interface Props {
   creator: LiveCreator;
+  // 라이브 중이면 사이드바 라이브 아바타와 동일한 라이브 링을 두른다.
+  isLive?: boolean;
 }
 
-export function LiveCreatorInfo({ creator }: Props) {
+export function LiveCreatorInfo({ creator, isLive = false }: Props) {
   const fallback = getAvatarFallbackText(creator.name);
   const avatarSrc = getAvatarImageSrc(creator.avatarUrl);
 
   return (
     <div className="flex items-center gap-3 py-1">
-      <Avatar size="lg">
+      <Avatar size="lg" className={cn(isLive && "ring-live/80 ring-2")}>
         <AvatarImage src={avatarSrc} alt={`${creator.name} 프로필`} />
         <AvatarFallback>{fallback}</AvatarFallback>
       </Avatar>

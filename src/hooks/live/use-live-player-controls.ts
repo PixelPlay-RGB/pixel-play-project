@@ -6,8 +6,12 @@ import { useCallback, useEffect, useRef, useState, type FocusEvent } from "react
 
 const DEFAULT_VOLUME = 1;
 const CONTROLS_HIDE_DELAY_MS = 2500;
+// 몰입 모드(전체화면·영화관)는 비디오가 화면 대부분을 차지해 마우스가 "벗어나는" 동작(pointerleave)이
+// 잘 일어나지 않아, 일반 모드가 마우스를 빼면 즉시 사라지는 것과 체감 속도가 달라진다.
+// 몰입 모드에선 멈춘 뒤 더 빨리 숨겨 감춤 속도를 맞춘다(커서도 함께 숨김).
+const IMMERSIVE_CONTROLS_HIDE_DELAY_MS = 1200;
 
-export function useLivePlayerControls() {
+export function useLivePlayerControls(isImmersive = false) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const focusWithinRef = useRef(false);
@@ -69,8 +73,9 @@ export function useLivePlayerControls() {
 
   const scheduleHide = useCallback(() => {
     clearHideTimer();
-    hideTimerRef.current = setTimeout(() => setControlsVisible(false), CONTROLS_HIDE_DELAY_MS);
-  }, [clearHideTimer]);
+    const delay = isImmersive ? IMMERSIVE_CONTROLS_HIDE_DELAY_MS : CONTROLS_HIDE_DELAY_MS;
+    hideTimerRef.current = setTimeout(() => setControlsVisible(false), delay);
+  }, [clearHideTimer, isImmersive]);
 
   // 언마운트 시 대기 중인 숨김 타이머를 정리한다.
   useEffect(() => () => clearHideTimer(), [clearHideTimer]);
@@ -105,19 +110,26 @@ export function useLivePlayerControls() {
     scheduleHide();
   }, [scheduleHide]);
 
-  // 마우스가 벗어나면 숨긴다. 단 포커스가 컨트롤 안에 있으면 유지한다.
+  // 마우스가 화면 밖으로 나가면 잔여 타이머를 정리하고 즉시 숨긴다(이탈 즉시 반영).
+  // 단 키보드 포커스가 컨트롤 안에 있으면(접근성) 표시를 유지한다.
   const handlePointerLeave = useCallback(() => {
-    if (focusWithinRef.current) return;
     clearHideTimer();
+    if (focusWithinRef.current) return;
     setControlsVisible(false);
   }, [clearHideTimer]);
 
-  // 키보드 포커스가 컨트롤에 들어오면 보이게 하고 자동 숨김을 멈춘다.
-  const handleFocus = useCallback(() => {
-    focusWithinRef.current = true;
-    clearHideTimer();
-    setControlsVisible(true);
-  }, [clearHideTimer]);
+  // 컨트롤 고정은 키보드 포커스(:focus-visible)일 때만 한다. 마우스 클릭 포커스까지 고정하면
+  // 버튼을 한 번 누른 뒤 마우스를 빼도 이탈 가드(focusWithinRef)에 걸려 즉시 사라지지 않는다.
+  // 마우스 클릭 포커스는 hover 로직(이동/이탈)에 맡겨 치지직처럼 곧바로 사라지게 둔다.
+  const handleFocus = useCallback(
+    (event: FocusEvent<HTMLElement>) => {
+      if (!event.target.matches?.(":focus-visible")) return;
+      focusWithinRef.current = true;
+      clearHideTimer();
+      setControlsVisible(true);
+    },
+    [clearHideTimer],
+  );
 
   // 포커스가 컨트롤 밖으로 나가면 다시 숨김 타이머를 건다.
   const handleBlur = useCallback(

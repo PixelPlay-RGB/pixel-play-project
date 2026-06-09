@@ -120,29 +120,24 @@ export function LiveChatMenu({
           <p className="text-foreground text-sm leading-relaxed whitespace-pre-wrap">
             {chatRuleText || LIVE_LABEL.chatRuleDefaultText}
           </p>
+          {/* 동의 여부는 액션이 아니라 상태 표시다. disabled <Button>은 AT에 "비활성 버튼"으로 읽혀
+              부적절하므로, 버튼 모양만 빌린 role=status 비대화형 요소로 둔다(동의는 입력칸 게이트에서만). */}
           {isRuleAccepted ? (
-            // 상태 표시(badge)용 — 비활성 액션이 아니므로 disabled:opacity-100으로 색을 선명히 유지한다
-            // (기본 disabled:opacity-50이면 brand색이 흐려져 입력칸 동의 버튼과 톤이 어긋난다).
-            <Button
-              type="button"
-              disabled
-              className="bg-brand text-brand-foreground gap-1.5 disabled:opacity-100"
+            <div
+              role="status"
+              className="bg-brand text-brand-foreground inline-flex h-9 items-center gap-1.5 self-start rounded-md px-4 text-sm font-medium"
             >
               <Check className="size-3.5" />
               {LIVE_LABEL.chatRuleAccepted}
-            </Button>
+            </div>
           ) : isRulePending ? (
-            // 미동의(입력칸 동의 popover를 아직 못 본 사용자)도 동의 완료 버튼과 같은 버튼 shape의
-            // 상태 badge로 보인다(중립 secondary). 동의는 입력칸에서만 가능하므로 여기선 안내 전용.
-            <Button
-              type="button"
-              variant="secondary"
-              disabled
-              className="gap-1.5 disabled:opacity-100"
+            <div
+              role="status"
+              className="bg-secondary text-secondary-foreground inline-flex h-9 items-center gap-1.5 self-start rounded-md px-4 text-sm font-medium"
             >
               <Info className="size-3.5" />
               {LIVE_LABEL.chatRulePending}
-            </Button>
+            </div>
           ) : null}
         </PopoverContent>
       </Popover>

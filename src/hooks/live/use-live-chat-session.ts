@@ -55,6 +55,9 @@ export function useLiveChatSession({
     const optimisticMessage: LiveChatMessage = {
       id: clientId,
       type: "text",
+      // realtime echo와 동일하게 senderId를 채운다. 누락하면 id 승격(아래) 뒤에도 senderId가 빈
+      // 채로 남아, 본인이 후원자/방장일 때 자기 화면에서만 후원자 뱃지가 안 뜬다(타인 화면은 정상).
+      senderId: user?.id,
       author: profile?.nickname ?? LIVE_LABEL.selfAuthorFallback,
       content: trimmed,
       isHost: !!user && user.id === creatorId,

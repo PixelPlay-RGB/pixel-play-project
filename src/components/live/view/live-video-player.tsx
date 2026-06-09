@@ -1,15 +1,25 @@
 "use client";
 // 라이브 비디오 플레이어 — MediaMTX HLS <video>에 컨테이너 전체화면/극장 모드와 하단 컨트롤 바를 조립합니다.
 
-import type { Ref } from "react";
+import { useCallback, useEffect, useState, type ReactNode, type Ref } from "react";
 
 import { LivePlayerControlBar } from "@/components/live/view/live-player-control-bar";
-import { LIVE_LABEL } from "@/constants/live/live";
+import { LivePlayerTopOverlay } from "@/components/live/view/live-player-top-overlay";
+import { LivePlayerWaitingOverlay } from "@/components/live/view/live-player-waiting-overlay";
+import { LIVE_FULLSCREEN_CHAT_INSET, LIVE_LABEL } from "@/constants/live/live";
 import { useFullscreen } from "@/hooks/live/use-fullscreen";
 import { useHlsPlayer } from "@/hooks/live/use-hls-player";
 import { useLivePlayerControls } from "@/hooks/live/use-live-player-controls";
 import { cn } from "@/lib/utils";
 import type { LiveBroadcast } from "@/types/live/live";
+
+// 전체화면 전용 채팅/후원 오버레이를 컨테이너 내부에 렌더하기 위한 렌더 프롭 컨텍스트.
+export interface FullscreenChatContext {
+  // 전체화면 요소(모달·popover 포털 대상).
+  container: HTMLElement | null;
+  isChatOpen: boolean;
+  onToggleChat: () => void;
+}
 
 interface Props {
   broadcast: LiveBroadcast;
@@ -21,6 +31,10 @@ interface Props {
   onToggleTheater?: () => void;
   openChatButtonRef?: Ref<HTMLButtonElement>;
   onOpenChat?: () => void;
+  // 전체화면일 때 컨테이너 내부에 렌더할 채팅/후원 오버레이. 데이터를 가진 상위(LiveView)가 주입한다.
+  renderFullscreenChat?: (ctx: FullscreenChatContext) => ReactNode;
+  // 전체화면 컨트롤 바에 둘 후원 버튼(모달 직접 오픈). 후원 데이터를 가진 LiveView가 container로 포털해 주입한다.
+  renderFullscreenDonation?: (ctx: { container: HTMLElement | null }) => ReactNode;
 }
 
 export function LiveVideoPlayer({
@@ -32,8 +46,31 @@ export function LiveVideoPlayer({
   onToggleTheater,
   openChatButtonRef,
   onOpenChat,
+  renderFullscreenChat,
+  renderFullscreenDonation,
 }: Props) {
   const { containerRef, isFullscreen, toggleFullscreen } = useFullscreen<HTMLDivElement>();
+  // 전체화면 채팅 패널 열림 상태. 컨트롤 바 폭(채팅이 가리지 않게)과 공유해야 해 여기서 소유한다.
+  const [isFsChatOpen, setIsFsChatOpen] = useState(false);
+  // 모달/popover 포털 대상으로 쓰려면 ref가 아닌 실제 노드가 필요해 상태로도 들고 있는다.
+  const [containerEl, setContainerEl] = useState<HTMLDivElement | null>(null);
+  const registerContainer = useCallback(
+    (node: HTMLDivElement | null) => {
+      containerRef.current = node;
+      setContainerEl(node);
+    },
+    [containerRef],
+  );
+
+  // 전체화면을 벗어나면 채팅 패널 상태를 닫아 다음 진입 시 깨끗한 상태로 시작한다.
+  useEffect(() => {
+    if (!isFullscreen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setIsFsChatOpen(false);
+    }
+  }, [isFullscreen]);
+  // 극장·전체화면(몰입 모드): 컨트롤 자동 숨김을 빠르게 하고 상단 정보 오버레이를 hover로 띄운다.
+  const isImmersive = isFullscreen || isTheater;
   const {
     videoRef,
     isPlaying,
@@ -47,16 +84,18 @@ export function LiveVideoPlayer({
     handlePointerLeave,
     handleFocus,
     handleBlur,
-  } = useLivePlayerControls();
-  const { levels, selectedLevel, setLevel } = useHlsPlayer({
+  } = useLivePlayerControls(isImmersive);
+  const { levels, selectedLevel, setLevel, playbackState } = useHlsPlayer({
     videoRef,
     src: hlsSrc ?? "",
     enabled: !!hlsSrc,
   });
 
+  const isFullscreenChatOpen = isFullscreen && isFsChatOpen;
+
   return (
     <div
-      ref={containerRef}
+      ref={registerContainer}
       onMouseMove={showControls}
       onMouseLeave={handlePointerLeave}
       onFocus={handleFocus}
@@ -66,27 +105,62 @@ export function LiveVideoPlayer({
         isTheater
           ? "aspect-video rounded-xl md:aspect-auto md:h-full md:rounded-none"
           : "aspect-video rounded-xl md:max-h-full",
+        // 몰입 모드(극장·전체화면)에서 컨트롤이 숨겨지면 커서도 함께 숨겨 몰입감을 준다.
+        isImmersive && !controlsVisible && "cursor-none",
       )}
     >
       {hlsSrc ? (
-        <video
-          ref={videoRef}
-          autoPlay
-          muted
-          playsInline
-          className="absolute inset-0 size-full bg-black object-contain"
-        />
+        // 전체화면 채팅이 열리면 비디오 영역을 패널 폭만큼 좌측으로 줄여, 채팅이 영상을 가리지 않게 한다.
+        // 래퍼 div가 left/right 인셋으로 폭을 결정한다(<video>는 replaced element라 left+right만으론
+        // width:auto가 본래 크기로 잡혀 줄어들지 않으므로, div로 감싸고 video는 size-full로 채운다).
+        <div
+          className={cn(
+            "absolute top-0 bottom-0 left-0 transition-[right] duration-200",
+            isFullscreenChatOpen ? LIVE_FULLSCREEN_CHAT_INSET : "right-0",
+          )}
+        >
+          <video
+            ref={videoRef}
+            autoPlay
+            muted
+            playsInline
+            className="size-full bg-black object-contain"
+          />
+          {/* 방송은 시작됐지만 송출 프레임이 아직 없으면(OBS 미송출/조인 지연) 비디오를 덮는다.
+              <video>는 언마운트하지 않고(언마운트 시 hls 재attach로 영원히 진행 안 됨) 위만 덮는다. */}
+          {playbackState !== "playing" ? <LivePlayerWaitingOverlay /> : null}
+        </div>
       ) : (
         <div className="absolute inset-0 flex items-center justify-center px-6 text-center">
           <p className="text-sm text-white/70">{LIVE_LABEL.broadcastOffline}</p>
         </div>
       )}
 
+      {/* 상단 정보 오버레이(스트리머 아바타·제목): 극장·전체화면에서 컨트롤과 함께 hover로 나타난다. */}
+      {hlsSrc && isImmersive ? (
+        <div
+          className={cn(
+            "absolute top-0 left-0 z-10 bg-linear-to-b from-black/60 to-transparent px-4 pt-4 pb-10 transition-[opacity,right] duration-200",
+            controlsVisible ? "opacity-100" : "pointer-events-none opacity-0",
+            isFullscreenChatOpen ? LIVE_FULLSCREEN_CHAT_INSET : "right-0",
+          )}
+        >
+          <LivePlayerTopOverlay
+            title={broadcast.title}
+            creator={broadcast.creator}
+            elapsedText={elapsedText}
+            viewerCount={broadcast.viewerCount}
+          />
+        </div>
+      ) : null}
+
       {hlsSrc ? (
         <div
           className={cn(
-            "absolute right-0 bottom-0 left-0 z-10 bg-linear-to-t from-black/60 to-transparent px-4 pt-8 pb-4 transition-opacity duration-200",
+            "absolute bottom-0 left-0 z-10 bg-linear-to-t from-black/60 to-transparent px-4 pt-8 pb-4 transition-[opacity,right] duration-200",
             controlsVisible ? "opacity-100" : "pointer-events-none opacity-0",
+            // 전체화면 채팅이 열리면 컨트롤 바가 채팅 패널 아래로 깔리지 않게 패널 폭만큼 좁힌다.
+            isFullscreenChatOpen ? LIVE_FULLSCREEN_CHAT_INSET : "right-0",
           )}
         >
           <LivePlayerControlBar
@@ -98,6 +172,7 @@ export function LiveVideoPlayer({
             onVolumeChange={setVolume}
             elapsedText={elapsedText}
             viewerCount={broadcast.viewerCount}
+            isImmersive={isImmersive}
             isFullscreen={isFullscreen}
             onToggleFullscreen={toggleFullscreen}
             isTheater={isTheater}
@@ -105,12 +180,26 @@ export function LiveVideoPlayer({
             isChatCollapsed={isChatCollapsed}
             openChatButtonRef={openChatButtonRef}
             onOpenChat={onOpenChat}
+            fullscreenDonationSlot={
+              isFullscreen && renderFullscreenDonation
+                ? renderFullscreenDonation({ container: containerEl })
+                : null
+            }
             qualityLevels={levels}
             selectedQualityLevel={selectedLevel}
             onSelectQualityLevel={setLevel}
           />
         </div>
       ) : null}
+
+      {/* 전체화면 전용 채팅/후원 오버레이(미니 사이드바). 전체화면일 때만 컨테이너 안에 렌더한다. */}
+      {hlsSrc && isFullscreen && renderFullscreenChat
+        ? renderFullscreenChat({
+            container: containerEl,
+            isChatOpen: isFsChatOpen,
+            onToggleChat: () => setIsFsChatOpen((prev) => !prev),
+          })
+        : null}
     </div>
   );
 }

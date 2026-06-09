@@ -35,6 +35,8 @@ export function mapLiveMessageRowToMessage(
     return {
       id: row.id,
       type: "donation",
+      // 익명 후원은 sender_id가 null로 저장돼 후원자 집합에서 자연 제외된다.
+      senderId: row.sender_id ?? undefined,
       author: row.sender?.nickname ?? metadataAuthor ?? LIVE_LABEL.anonymousAuthor,
       content: row.content,
       donationAmount: row.donation?.amount ?? metadataAmount ?? undefined,
@@ -52,6 +54,7 @@ export function mapLiveMessageRowToMessage(
   return {
     id: row.id,
     type: "text",
+    senderId: row.sender_id ?? undefined,
     author:
       row.sender?.nickname ?? readString(metadata.senderNickname) ?? LIVE_LABEL.anonymousAuthor,
     content: row.content,

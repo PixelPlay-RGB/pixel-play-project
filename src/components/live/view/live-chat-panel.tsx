@@ -4,12 +4,8 @@
 import { useEffect, useRef, useState, type Ref } from "react";
 import { ExternalLink, MessageSquareOff, PanelRightClose } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { LiveChatInputBar } from "@/components/live/view/live-chat-input-bar";
-import { LiveChatMessageList } from "@/components/live/chat/live-chat-message-list";
-import { LiveChatParticipationNotice } from "@/components/live/chat/live-chat-participation-notice";
-import { LiveDonationBanner } from "@/components/live/view/live-donation-banner";
+import { LiveChatBody } from "@/components/live/chat/live-chat-body";
 import { LiveChatMenu } from "@/components/live/view/live-chat-menu";
 import { LIVE_LABEL } from "@/constants/live/live";
 import type {
@@ -170,41 +166,31 @@ export function LiveChatPanel({
           <p className="text-muted-foreground text-sm">{LIVE_LABEL.chatPopoutActive}</p>
         </div>
       ) : (
-        <>
-          <div className="flex min-h-0 flex-1 flex-col">
-            <div className="shrink-0 px-2 pt-2">
-              <LiveDonationBanner donations={donations} />
-            </div>
-            <ScrollArea className="min-h-0 flex-1">
-              <LiveChatMessageList messages={messages} cleanbotEnabled={cleanbot} />
-            </ScrollArea>
-          </div>
-          {!isEnded ? (
-            <LiveChatParticipationNotice chatUnavailableReason={chatState.chatUnavailableReason} />
-          ) : null}
-          <LiveChatInputBar
-            isEnded={isEnded}
-            polls={polls}
-            isPollsLoading={isPollsLoading}
-            isPollsError={isPollsError}
-            chatState={chatState}
-            isLoggedIn={isLoggedIn}
-            walletBalance={walletBalance}
-            isWalletLoading={isWalletLoading}
-            isWalletError={isWalletError}
-            donationEnabled={donationEnabled}
-            donationMinAmount={donationMinAmount}
-            onLoginPrompt={onLoginPrompt}
-            onSendMessage={onSendMessage}
-            onVote={onVote}
-            onDonate={onDonate}
-            chatRuleText={chatRuleText}
-            onAcceptChatRule={onAcceptChatRule}
-            onFollow={onFollow}
-            isFollowing={isFollowing}
-            isFollowPending={isFollowPending}
-          />
-        </>
+        <LiveChatBody
+          messages={messages}
+          donations={donations}
+          polls={polls}
+          isPollsLoading={isPollsLoading}
+          isPollsError={isPollsError}
+          chatState={chatState}
+          isLoggedIn={isLoggedIn}
+          walletBalance={walletBalance}
+          isWalletLoading={isWalletLoading}
+          isWalletError={isWalletError}
+          donationEnabled={donationEnabled}
+          donationMinAmount={donationMinAmount}
+          onLoginPrompt={onLoginPrompt}
+          onSendMessage={onSendMessage}
+          onVote={onVote}
+          onDonate={onDonate}
+          chatRuleText={chatRuleText}
+          onAcceptChatRule={onAcceptChatRule}
+          onFollow={onFollow}
+          isFollowing={isFollowing}
+          isFollowPending={isFollowPending}
+          isEnded={isEnded}
+          cleanbotEnabled={cleanbot}
+        />
       )}
     </div>
   );

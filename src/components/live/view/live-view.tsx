@@ -2,11 +2,13 @@
 // 라이브 시청 메인 화면 — 비디오, 방송 정보, 채팅 패널을 조합합니다.
 
 import { useEffect, useRef, useState } from "react";
-import { Timer, Users } from "lucide-react";
+import { HandCoins, Timer, Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { LiveVideoPlayer } from "@/components/live/view/live-video-player";
+import { LiveDonationDialog } from "@/components/live/view/live-donation-dialog";
+import { LiveFullscreenChatOverlay } from "@/components/live/view/live-fullscreen-chat-overlay";
 import { LiveBroadcastInfo } from "@/components/live/view/live-broadcast-info";
-import { LiveCreatorActions } from "@/components/live/view/live-creator-actions";
-import { LiveCreatorInfo } from "@/components/live/view/live-creator-info";
+import { LiveStreamerRow } from "@/components/live/view/live-streamer-row";
 import { LiveChatPanel } from "@/components/live/view/live-chat-panel";
 import { LiveEndedScreen } from "@/components/live/view/live-ended-screen";
 import { LiveLoginPromptDialog } from "@/components/live/view/live-login-prompt-dialog";
@@ -19,39 +21,11 @@ import { useMoveToLogin } from "@/hooks/live/use-move-to-login";
 import { cn } from "@/lib/utils";
 import { formatCount } from "@/utils/live/live-chat";
 import { useLiveTheaterStore } from "@/stores/live-theater";
-import { LIVE_LABEL } from "@/constants/live/live";
-import type { LiveCreator } from "@/types/live/live";
+import { LIVE_LABEL, LIVE_PLAYER_ICON_BUTTON_CLASS } from "@/constants/live/live";
 
 interface Props {
   creatorId: string;
   hlsSrc: string | null;
-}
-
-// 스트리머 정보 행(아바타·이름·팔로워 + 팔로우/공유). 라이브·방송 종료 양쪽에서 동일하게 쓴다.
-function LiveStreamerRow({
-  creator,
-  isFollowing,
-  isPending,
-  onFollow,
-  className,
-}: {
-  creator: LiveCreator;
-  isFollowing: boolean;
-  isPending: boolean;
-  onFollow: () => void;
-  className?: string;
-}) {
-  return (
-    <div className={cn("flex items-center justify-between gap-3", className)}>
-      <LiveCreatorInfo creator={creator} />
-      <LiveCreatorActions
-        creatorNickname={creator.name}
-        isFollowing={isFollowing}
-        isPending={isPending}
-        onFollow={onFollow}
-      />
-    </div>
-  );
 }
 
 export function LiveView({ creatorId, hlsSrc }: Props) {
@@ -108,7 +82,9 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
   // 종료 시간은 ended_at 기반 endedElapsedSeconds를 우선 쓰고, 도착 전 한 프레임은 스냅샷 경과로 메워 깜빡임을 막는다.
   const displayBroadcast = broadcast ?? lastBroadcast;
   const elapsedText = useLiveElapsed(
-    broadcast ? broadcast.elapsedSeconds : (endedElapsedSeconds ?? lastBroadcast?.elapsedSeconds ?? 0),
+    broadcast
+      ? broadcast.elapsedSeconds
+      : (endedElapsedSeconds ?? lastBroadcast?.elapsedSeconds ?? 0),
     !!broadcast,
   );
 
@@ -185,12 +161,11 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
               "flex min-w-0 flex-1 flex-col gap-4 py-4",
               "md:pl-4 2xl:pl-6",
               "md:overflow-hidden",
-              isTheater && "md:gap-0 md:py-0",
+              // 극장 모드: 접힌 사이드바 자리를 좌측 패딩이 메워 여백처럼 보이므로 패딩을 없애 full-bleed로 둔다.
+              isTheater && "md:gap-0 md:py-0 md:pl-0 2xl:pl-0",
             )}
           >
-            <div
-              className={cn("md:flex md:min-h-0 md:flex-1 md:items-center md:justify-center")}
-            >
+            <div className={cn("md:flex md:min-h-0 md:flex-1 md:items-center md:justify-center")}>
               {broadcast ? (
                 <LiveVideoPlayer
                   broadcast={broadcast}
@@ -201,6 +176,58 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
                   onToggleTheater={toggleTheater}
                   openChatButtonRef={openChatButtonRef}
                   onOpenChat={expandDesktopChat}
+                  renderFullscreenDonation={({ container }) => (
+                    <LiveDonationDialog
+                      portalContainer={container}
+                      isLoggedIn={isLoggedIn}
+                      walletBalance={walletBalance}
+                      isWalletLoading={isWalletLoading}
+                      isWalletError={isWalletError}
+                      donationEnabled={donationEnabled}
+                      donationMinAmount={donationMinAmount}
+                      onLoginPrompt={openLoginPrompt}
+                      onDonate={sendDonation}
+                      trigger={
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="ghost"
+                          aria-label={LIVE_LABEL.donate}
+                          className={LIVE_PLAYER_ICON_BUTTON_CLASS}
+                        >
+                          <HandCoins className="size-5" />
+                        </Button>
+                      }
+                    />
+                  )}
+                  renderFullscreenChat={({ container, isChatOpen, onToggleChat }) => (
+                    <LiveFullscreenChatOverlay
+                      container={container}
+                      isChatOpen={isChatOpen}
+                      onToggleChat={onToggleChat}
+                      messages={messages}
+                      donations={donations}
+                      polls={polls}
+                      isPollsLoading={isPollsLoading}
+                      isPollsError={isPollsError}
+                      chatState={chatState}
+                      isLoggedIn={isLoggedIn}
+                      walletBalance={walletBalance}
+                      isWalletLoading={isWalletLoading}
+                      isWalletError={isWalletError}
+                      donationEnabled={donationEnabled}
+                      donationMinAmount={donationMinAmount}
+                      onLoginPrompt={openLoginPrompt}
+                      onSendMessage={sendMessage}
+                      onVote={votePoll}
+                      onDonate={sendDonation}
+                      chatRuleText={chatRuleText}
+                      onAcceptChatRule={acceptChatRule}
+                      onFollow={handleFollow}
+                      isFollowing={isFollowing}
+                      isFollowPending={isFollowPending}
+                    />
+                  )}
                 />
               ) : (
                 <LiveEndedScreen creator={creator} />
@@ -238,6 +265,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
             {creator ? (
               <LiveStreamerRow
                 creator={creator}
+                isLive={!!broadcast}
                 isFollowing={isFollowing}
                 isPending={isFollowPending}
                 onFollow={handleFollow}

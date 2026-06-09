@@ -40,12 +40,15 @@ function DialogContent({
   className,
   children,
   showCloseButton = true,
+  container,
   ...props
 }: DialogPrimitive.Popup.Props & {
   showCloseButton?: boolean;
+  // 포털 대상 컨테이너. 미지정 시 기본 body. 전체화면 요소 안에 띄울 때만 지정한다.
+  container?: DialogPrimitive.Portal.Props["container"];
 }) {
   return (
-    <DialogPortal>
+    <DialogPortal container={container}>
       <DialogOverlay />
       <DialogPrimitive.Popup
         data-slot="dialog-content"

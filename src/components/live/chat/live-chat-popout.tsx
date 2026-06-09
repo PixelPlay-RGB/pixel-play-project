@@ -3,11 +3,7 @@
 
 import { Radio } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { LiveChatInputBar } from "@/components/live/view/live-chat-input-bar";
-import { LiveChatMessageList } from "@/components/live/chat/live-chat-message-list";
-import { LiveChatParticipationNotice } from "@/components/live/chat/live-chat-participation-notice";
-import { LiveDonationBanner } from "@/components/live/view/live-donation-banner";
+import { LiveChatBody } from "@/components/live/chat/live-chat-body";
 import { LIVE_LABEL } from "@/constants/live/live";
 import { useLiveBroadcastView } from "@/hooks/live/use-live-broadcast-view";
 import { useLiveFollowAction } from "@/hooks/live/use-live-follow-action";
@@ -86,22 +82,9 @@ export function LiveChatPopout({ creatorId }: Props) {
         </span>
       </div>
 
-      <div className="w-full shrink-0 px-2 pt-2">
-        <LiveDonationBanner donations={donations} />
-      </div>
-
-      <ScrollArea className="min-h-0 w-full flex-1">
-        <LiveChatMessageList messages={messages} fillHeight />
-      </ScrollArea>
-
-      <LiveChatParticipationNotice
-        chatUnavailableReason={chatState.chatUnavailableReason}
-        actionLabel={LIVE_LABEL.openLiveWatch}
-        onAction={moveToLiveWatch}
-      />
-
-      <LiveChatInputBar
-        className="shrink-0"
+      <LiveChatBody
+        messages={messages}
+        donations={donations}
         polls={polls}
         isPollsLoading={isPollsLoading}
         isPollsError={isPollsError}
@@ -122,6 +105,10 @@ export function LiveChatPopout({ creatorId }: Props) {
         onFollow={handleFollow}
         isFollowing={isFollowing}
         isFollowPending={isFollowPending}
+        fillMessages
+        noticeActionLabel={LIVE_LABEL.openLiveWatch}
+        onNoticeAction={moveToLiveWatch}
+        inputClassName="shrink-0"
       />
     </div>
   );

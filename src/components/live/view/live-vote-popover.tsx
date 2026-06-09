@@ -44,6 +44,8 @@ interface Props {
   anchorRef?: RefObject<HTMLElement | null>;
   // 방송 종료 등으로 투표 참여를 막을 때 트리거를 비활성화한다.
   disabled?: boolean;
+  // 전체화면 오버레이 등에서 popover/dialog 포털 컨테이너를 전체화면 요소로 지정한다(미지정=body).
+  portalContainer?: HTMLElement | null;
 }
 
 // 진행 중 투표를 우선 노출하고, 없으면 가장 최근 종료된 투표 결과를 노출한다.
@@ -144,9 +146,7 @@ function VoteContent({ activePoll, onVote, onClose }: VoteContentProps) {
                 variant="outline"
                 aria-checked={isSelected}
                 disabled={isVoting}
-                onClick={() =>
-                  setSelectedOption((prev) => (prev === option.id ? null : option.id))
-                }
+                onClick={() => setSelectedOption((prev) => (prev === option.id ? null : option.id))}
                 className={cn(
                   "relative h-auto w-full justify-start overflow-hidden px-3 py-2.5",
                   isSelected ? "border-live text-live" : "hover:border-live/40",
@@ -342,6 +342,7 @@ export function LiveVotePopover({
   presentation = "popover",
   anchorRef,
   disabled = false,
+  portalContainer,
 }: Props) {
   const [open, setOpen] = useState(false);
   const relevantPoll = selectRelevantPoll(polls);
@@ -379,7 +380,11 @@ export function LiveVotePopover({
           {triggerLabel}
         </Button>
         <Dialog open={open} onOpenChange={handleOpenChange}>
-          <DialogContent className="max-h-[calc(100vh-1rem)] gap-4 overflow-y-auto" showCloseButton>
+          <DialogContent
+            container={portalContainer}
+            className="max-h-[calc(100vh-1rem)] gap-4 overflow-y-auto"
+            showCloseButton
+          >
             <DialogHeader>
               <DialogTitle>{headerTitle}</DialogTitle>
               <DialogDescription>{headerDescription}</DialogDescription>
@@ -402,12 +407,15 @@ export function LiveVotePopover({
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger
-        render={<Button size="sm" variant="outline" className={VOTE_TRIGGER_CLASS} disabled={disabled} />}
+        render={
+          <Button size="sm" variant="outline" className={VOTE_TRIGGER_CLASS} disabled={disabled} />
+        }
       >
         {triggerLabel}
       </PopoverTrigger>
       <PopoverContent
         anchor={anchorRef ? () => anchorRef.current : undefined}
+        container={portalContainer}
         align="start"
         side="top"
         sideOffset={0}

@@ -46,8 +46,10 @@ interface Props {
   onFollow?: () => void;
   isFollowing?: boolean;
   isFollowPending?: boolean;
-  // 방송 종료 시: 메시지 목록은 유지하되 입력칸만 비활성화한다(후원/투표 액션도 숨김).
+  // 방송 종료 시: 메시지 목록은 유지하되 입력칸을 비활성화하고 후원/투표 액션도 비활성화(disabled)한다.
   isEnded?: boolean;
+  // 전체화면 오버레이 등에서 사용할 때 popover/dialog 포털 컨테이너를 전체화면 요소로 지정한다(미지정=body).
+  portalContainer?: HTMLElement | null;
 }
 
 function getChatPlaceholder({
@@ -104,6 +106,7 @@ export function LiveChatInputBar({
   isFollowing,
   isFollowPending,
   isEnded = false,
+  portalContainer,
 }: Props) {
   const [draft, setDraft] = useState("");
   const [isSending, setIsSending] = useState(false);
@@ -126,7 +129,9 @@ export function LiveChatInputBar({
   const isRuleGate = !isEnded && isLoggedIn && reason === "chat_rule_acceptance_required";
   const isClickGate = isLoginGate || isRuleGate;
   // 그 외 사유(팔로우 필요·대기·슬로우모드·매니저 전용)·방송 종료는 입력칸 자체를 비활성화한다.
-  const isInputDisabled = isEnded || isSending || (!isEditable && !isClickGate);
+  // 전송 중(isSending)에는 비활성화하지 않는다 — disabled 전환은 input을 blur시켜
+  // "한 번 보내면 포커스가 풀린다"는 문제를 만든다. 중복 전송은 handleSend 내부 가드가 막는다.
+  const isInputDisabled = isEnded || (!isEditable && !isClickGate);
 
   const placeholder = isEnded
     ? LIVE_LABEL.chatEndedPlaceholder
@@ -157,7 +162,9 @@ export function LiveChatInputBar({
     setDraftValue("");
     try {
       const isSuccess = await onSendMessage(trimmed);
-      if (!isSuccess) setDraftValue(trimmed);
+      // 실패 시 원문을 복원하되, 전송 중에 사용자가 이미 새 메시지를 입력했다면 덮어쓰지 않는다
+      // (입력칸이 전송 중에도 활성이라 연속 입력이 가능해졌기 때문).
+      if (!isSuccess) setDraft((current) => (current ? current : clampChatDraft(trimmed)));
     } finally {
       setIsSending(false);
     }
@@ -224,6 +231,7 @@ export function LiveChatInputBar({
       <Popover open={isFollowGate} onOpenChange={() => {}} modal={false}>
         <PopoverContent
           anchor={() => inputBarRef.current}
+          container={portalContainer}
           align="start"
           side="top"
           sideOffset={0}
@@ -251,6 +259,7 @@ export function LiveChatInputBar({
       >
         <PopoverContent
           anchor={() => inputBarRef.current}
+          container={portalContainer}
           align="start"
           side="top"
           sideOffset={0}
@@ -286,6 +295,7 @@ export function LiveChatInputBar({
             onLoginPrompt={onLoginPrompt}
             onDonate={onDonate}
             disabled={isEnded}
+            portalContainer={portalContainer}
           />
           <LiveVotePopover
             polls={polls}
@@ -297,6 +307,7 @@ export function LiveChatInputBar({
             presentation={votePresentation}
             anchorRef={inputBarRef}
             disabled={isEnded}
+            portalContainer={portalContainer}
           />
         </div>
       ) : null}

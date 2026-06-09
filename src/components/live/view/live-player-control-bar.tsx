@@ -1,7 +1,7 @@
 "use client";
 // 라이브 플레이어 하단 컨트롤 바 — 재생·음량·경과시간·화질·극장·전체화면 컨트롤을 배치합니다.
 
-import type { Ref } from "react";
+import type { ReactNode, Ref } from "react";
 import {
   Maximize2,
   Minimize2,
@@ -31,6 +31,8 @@ interface Props {
   onVolumeChange: (value: number) => void;
   elapsedText: string;
   viewerCount: number;
+  // 몰입 모드(극장·전체화면)에선 시간·시청자 수를 상단 오버레이로 옮기므로 하단에선 LIVE 표시만 남긴다.
+  isImmersive: boolean;
   isFullscreen: boolean;
   onToggleFullscreen: () => void;
   isTheater: boolean;
@@ -38,6 +40,8 @@ interface Props {
   isChatCollapsed: boolean;
   openChatButtonRef?: Ref<HTMLButtonElement>;
   onOpenChat?: () => void;
+  // 전체화면 전용 후원 버튼(모달 직접 오픈). 채팅을 열지 않고 후원하려는 시청자를 위해 영화관 버튼 옆에 둔다.
+  fullscreenDonationSlot?: ReactNode;
   qualityLevels: HlsQualityLevel[];
   selectedQualityLevel: number;
   onSelectQualityLevel: (index: number) => void;
@@ -52,6 +56,7 @@ export function LivePlayerControlBar({
   onVolumeChange,
   elapsedText,
   viewerCount,
+  isImmersive,
   isFullscreen,
   onToggleFullscreen,
   isTheater,
@@ -59,6 +64,7 @@ export function LivePlayerControlBar({
   isChatCollapsed,
   openChatButtonRef,
   onOpenChat,
+  fullscreenDonationSlot,
   qualityLevels,
   selectedQualityLevel,
   onSelectQualityLevel,
@@ -88,14 +94,19 @@ export function LivePlayerControlBar({
           <Radio className="size-3 animate-pulse" />
           {LIVE_LABEL.live}
         </span>
-        <span>· {elapsedText}</span>
-        <span className="flex items-center gap-1">
-          ·
-          <span className="text-brand flex items-center gap-1">
-            <Users className="size-3" />
-            {formatCount(viewerCount)}
-          </span>
-        </span>
+        {/* 몰입 모드에선 시간·시청자 수가 상단 오버레이로 이동하므로 하단에선 생략한다. */}
+        {!isImmersive ? (
+          <>
+            <span>· {elapsedText}</span>
+            <span className="flex items-center gap-1">
+              ·
+              <span className="text-brand flex items-center gap-1">
+                <Users className="size-3" />
+                {formatCount(viewerCount)}
+              </span>
+            </span>
+          </>
+        ) : null}
       </span>
 
       <div className="ml-auto flex items-center gap-1">
@@ -104,6 +115,8 @@ export function LivePlayerControlBar({
           selectedLevel={selectedQualityLevel}
           onSelectLevel={onSelectQualityLevel}
         />
+
+        {fullscreenDonationSlot}
 
         {onToggleTheater ? (
           <Button

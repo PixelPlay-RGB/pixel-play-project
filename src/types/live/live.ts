@@ -86,6 +86,9 @@ export interface LiveChatMessage {
   author?: string;
   content: string;
   donationAmount?: number;
+  // 작성자 user UUID(있을 때). 후원자 뱃지처럼 발신자 신원 기반 표식에 쓴다.
+  // 익명 후원·시스템 메시지에는 없다(익명 후원은 sender_id가 null로 저장됨).
+  senderId?: string;
   // 작성자가 방송 진행자(크리에이터) 본인인지 여부. 채팅에서 호스트 메시지를 강조하는 데 쓴다.
   isHost?: boolean;
   // 클린봇 자동 비속어 사전에 걸린 text 메시지. 클린봇 토글 ON이면 가리고 펼쳐볼 수 있다.
