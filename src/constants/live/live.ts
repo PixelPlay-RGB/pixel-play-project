@@ -92,6 +92,10 @@ export const LIVE_DONATION_LABEL = {
 } as const;
 
 export const LIVE_VOTE_LABEL = {
+  interactionTitle: "라이브 상호작용",
+  interactionDescription: "방송자가 진행 중인 투표, 추첨, 룰렛을 확인합니다.",
+  interactionResultTitle: "상호작용 결과",
+  interactionResultDescription: "최근 투표, 추첨, 룰렛 결과입니다.",
   title: "투표 참여",
   description: "진행 중인 투표 항목을 선택하고 참여할 수 있습니다.",
   resultTitle: "투표 결과",
@@ -99,9 +103,8 @@ export const LIVE_VOTE_LABEL = {
   loading: "투표를 불러오는 중입니다.",
   error: "투표를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.",
   empty: "현재 진행 중인 투표가 없습니다.",
-  emptyTitle: "진행 중인 투표가 없어요",
-  emptyDesc:
-    "투표 버튼은 항상 열 수 있고, 투표가 시작되면 이 영역에서 실시간으로 참여 화면을 볼 수 있습니다.",
+  emptyTitle: "진행 중인 상호작용이 없어요",
+  emptyDesc: "방송자가 투표, 추첨, 룰렛을 시작하면 이 영역에서 바로 확인할 수 있습니다.",
   waiting: "대기 중",
   active: "진행 중",
   submit: "참여하기",
@@ -125,7 +128,13 @@ export const LIVE_VOTE_LABEL = {
   resultLoading: "결과를 불러오는 중입니다.",
   resultError: "결과를 불러오지 못했습니다.",
   recentResults: "최근 결과",
+  drawActiveTitle: "추첨 진행 중",
+  drawActiveDescription: "방송자가 추첨을 진행하고 있습니다.",
+  drawCheck: "추첨 확인",
   drawResult: "추첨 결과",
+  rouletteActiveTitle: "룰렛 진행 중",
+  rouletteActiveDescription: "방송자가 룰렛을 돌리고 있습니다.",
+  rouletteCheck: "룰렛 확인",
   rouletteResult: "룰렛 결과",
 } as const;
 

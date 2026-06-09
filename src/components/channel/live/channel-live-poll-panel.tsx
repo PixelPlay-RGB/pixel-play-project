@@ -332,6 +332,14 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
     setDrawRollingName(null);
     setDrawReelNames([]);
     setDrawReelTargetIndex(0);
+    void publishInteractionNotice({
+      content: "추첨 모집이 시작되었습니다.",
+      interactionType: "draw",
+      metadata: {
+        resultLabel: "추첨 모집 중",
+        status: "active",
+      },
+    });
   };
 
   const loadDrawParticipants = async (targetSession: DrawState, endedAt: string) => {
@@ -482,6 +490,7 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
         metadata: {
           participantCount: nextSession.participants.length,
           resultLabel: winner.nickname,
+          status: "ended",
           winnerNames: [winner.nickname],
         },
       });
@@ -518,6 +527,14 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
     setIsRouletteSpinning(true);
     setRouletteResult(null);
     setRouletteRotation(nextRotation);
+    void publishInteractionNotice({
+      content: "룰렛을 돌리는 중입니다.",
+      interactionType: "roulette",
+      metadata: {
+        resultLabel: "룰렛 진행 중",
+        status: "active",
+      },
+    });
 
     if (rouletteTimeoutRef.current) {
       clearTimeout(rouletteTimeoutRef.current);
@@ -535,6 +552,7 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
           interactionType: "roulette",
           metadata: {
             resultLabel: nextResult,
+            status: "ended",
           },
         });
       }

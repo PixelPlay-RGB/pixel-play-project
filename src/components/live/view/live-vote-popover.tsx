@@ -2,7 +2,7 @@
 // 투표 참여와 라이브 상호작용 결과를 채팅 패널 액션 팝오버로 제공합니다.
 
 import { useId, useState } from "react";
-import { Check, Crown, Gift, Trophy } from "lucide-react";
+import { Check, Crown, FerrisWheel, Trophy } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -38,15 +38,103 @@ interface Props {
   presentation?: "popover" | "dialog";
 }
 
-function selectRelevantPoll(polls: LivePoll[]): LivePoll | null {
-  const activePoll = polls.find((poll) => poll.status === "active");
-  if (activePoll) return activePoll;
+type CurrentInteraction =
+  | { type: "empty" }
+  | { createdAt: string; mode: "active" | "result"; poll: LivePoll; type: "poll" }
+  | {
+      createdAt: string;
+      mode: "active" | "result";
+      notice: LiveInteractionNotice;
+      type: "draw" | "roulette";
+    };
 
-  for (let index = polls.length - 1; index >= 0; index -= 1) {
-    if (polls[index].status === "ended") return polls[index];
+function getCreatedTime(value: string): number {
+  const time = new Date(value).getTime();
+
+  return Number.isFinite(time) ? time : 0;
+}
+
+function selectLatestByCreatedAt<T extends { createdAt: string }>(items: T[]): T | null {
+  return items.reduce<T | null>((latestItem, item) => {
+    if (!latestItem) return item;
+
+    return getCreatedTime(item.createdAt) > getCreatedTime(latestItem.createdAt)
+      ? item
+      : latestItem;
+  }, null);
+}
+
+function selectCurrentInteraction(
+  polls: LivePoll[],
+  notices: LiveInteractionNotice[],
+): CurrentInteraction {
+  const latestActivePoll = selectLatestByCreatedAt(
+    polls.filter((poll) => poll.status === "active"),
+  );
+  const latestNoticeByType = {
+    draw: selectLatestByCreatedAt(notices.filter((notice) => notice.type === "draw")),
+    roulette: selectLatestByCreatedAt(notices.filter((notice) => notice.type === "roulette")),
+  };
+  const latestActiveNotice = selectLatestByCreatedAt(
+    [latestNoticeByType.draw, latestNoticeByType.roulette].flatMap((notice) =>
+      notice?.status === "active" ? [notice] : [],
+    ),
+  );
+  const latestActiveInteraction = selectLatestByCreatedAt(
+    [
+      latestActivePoll
+        ? {
+            createdAt: latestActivePoll.createdAt,
+            mode: "active" as const,
+            poll: latestActivePoll,
+            type: "poll" as const,
+          }
+        : null,
+      latestActiveNotice
+        ? {
+            createdAt: latestActiveNotice.createdAt,
+            mode: "active" as const,
+            notice: latestActiveNotice,
+            type: latestActiveNotice.type,
+          }
+        : null,
+    ].flatMap((interaction) => (interaction ? [interaction] : [])),
+  );
+
+  if (latestActiveInteraction) {
+    return latestActiveInteraction;
   }
 
-  return null;
+  const latestEndedPollInteraction = selectLatestByCreatedAt(
+    polls
+      .filter((poll) => poll.status === "ended")
+      .map((poll) => ({
+        createdAt: poll.endedAt ?? poll.createdAt,
+        mode: "result" as const,
+        poll,
+        type: "poll" as const,
+      })),
+  );
+  const latestEndedNotice = selectLatestByCreatedAt(
+    [latestNoticeByType.draw, latestNoticeByType.roulette].flatMap((notice) =>
+      notice?.status === "ended" ? [notice] : [],
+    ),
+  );
+  const latestResultInteraction = selectLatestByCreatedAt(
+    [
+      latestEndedPollInteraction,
+      latestEndedNotice
+        ? {
+            createdAt: latestEndedNotice.createdAt,
+            mode: "result" as const,
+            notice: latestEndedNotice,
+            type: latestEndedNotice.type,
+          }
+        : null,
+    ].flatMap((interaction) => (interaction ? [interaction] : [])),
+  );
+
+  return latestResultInteraction ?? { type: "empty" };
 }
 
 function getVotePercent(count: number, total: number): number {
@@ -271,58 +359,77 @@ function VoteResults({ poll, onClose }: { onClose: () => void; poll: LivePoll })
   );
 }
 
-function InteractionNoticeList({
-  isError,
-  isLoading,
-  notices,
+function InteractionNoticeCard({
+  notice,
+  onClose,
 }: {
-  isError?: boolean;
-  isLoading?: boolean;
-  notices: LiveInteractionNotice[];
+  notice: LiveInteractionNotice;
+  onClose: () => void;
 }) {
-  if (isLoading) {
-    return <p className="text-muted-foreground text-xs">{LIVE_VOTE_LABEL.resultLoading}</p>;
-  }
-
-  if (isError) {
-    return <p className="text-muted-foreground text-xs">{LIVE_VOTE_LABEL.resultError}</p>;
-  }
-
-  if (notices.length === 0) {
-    return null;
-  }
+  const isActive = notice.status === "active";
+  const Icon = notice.type === "draw" ? Trophy : FerrisWheel;
+  const title =
+    notice.type === "draw"
+      ? isActive
+        ? LIVE_VOTE_LABEL.drawActiveTitle
+        : LIVE_VOTE_LABEL.drawResult
+      : isActive
+        ? LIVE_VOTE_LABEL.rouletteActiveTitle
+        : LIVE_VOTE_LABEL.rouletteResult;
+  const description =
+    notice.type === "draw"
+      ? LIVE_VOTE_LABEL.drawActiveDescription
+      : LIVE_VOTE_LABEL.rouletteActiveDescription;
+  const detail = notice.winnerNames?.join(", ") ?? notice.resultLabel ?? notice.content;
 
   return (
-    <div className="flex flex-col gap-2">
-      <p className="text-foreground text-xs font-bold">{LIVE_VOTE_LABEL.recentResults}</p>
-      {notices.slice(0, 3).map((notice) => {
-        const Icon = notice.type === "draw" ? Trophy : Gift;
-        const title =
-          notice.type === "draw" ? LIVE_VOTE_LABEL.drawResult : LIVE_VOTE_LABEL.rouletteResult;
-        const detail = notice.winnerNames?.join(", ") ?? notice.resultLabel ?? notice.content;
-
-        return (
-          <div key={notice.id} className="border-border rounded-lg border px-3 py-2">
-            <div className="mb-1 flex items-center gap-2">
-              <Icon className="text-brand size-4 shrink-0" />
-              <span className="text-foreground text-xs font-bold">{title}</span>
-            </div>
-            <p className="text-foreground text-sm font-bold wrap-break-word">{detail}</p>
-            {notice.participantCount !== undefined ? (
-              <p className="text-muted-foreground mt-1 text-xs">
-                {formatCount(notice.participantCount)}
-                {LIVE_VOTE_LABEL.participantsUnit}
-              </p>
-            ) : null}
-          </div>
-        );
-      })}
+    <div
+      className={cn(
+        "flex flex-col gap-3 rounded-lg border p-3",
+        isActive ? "border-brand/40" : "border-border",
+      )}
+    >
+      <StatusPill tone={isActive ? "brand" : "muted"}>
+        {isActive ? LIVE_VOTE_LABEL.active : LIVE_VOTE_LABEL.ended}
+      </StatusPill>
+      <div className="flex items-center gap-2">
+        <span className="bg-brand/10 text-brand flex size-9 shrink-0 items-center justify-center rounded-full">
+          <Icon className="size-5" />
+        </span>
+        <div className="min-w-0">
+          <p className="text-foreground text-sm font-bold">{title}</p>
+          {isActive ? (
+            <p className="text-muted-foreground text-xs leading-relaxed">{description}</p>
+          ) : null}
+        </div>
+      </div>
+      <div className="border-border bg-background rounded-lg border px-3 py-2">
+        <p className="text-foreground text-sm font-bold wrap-break-word">{detail}</p>
+        {notice.participantCount !== undefined ? (
+          <p className="text-muted-foreground mt-1 text-xs">
+            {formatCount(notice.participantCount)}
+            {LIVE_VOTE_LABEL.participantsUnit}
+          </p>
+        ) : null}
+      </div>
+      <Button
+        type="button"
+        variant={isActive ? "default" : "outline"}
+        disabled={isActive}
+        className={cn(
+          isActive && "bg-live/80 text-live-foreground",
+          "h-9 w-full text-xs font-bold",
+        )}
+        onClick={onClose}
+      >
+        {isActive ? LIVE_VOTE_LABEL.active : LIVE_LABEL.close}
+      </Button>
     </div>
   );
 }
 
 function VoteBody({
-  interactionNotices,
+  currentInteraction,
   isError,
   isInteractionNoticesError,
   isInteractionNoticesLoading,
@@ -331,9 +438,8 @@ function VoteBody({
   onClose,
   onLoginPrompt,
   onVote,
-  relevantPoll,
 }: {
-  interactionNotices: LiveInteractionNotice[];
+  currentInteraction: CurrentInteraction;
   isError?: boolean;
   isInteractionNoticesError?: boolean;
   isInteractionNoticesLoading?: boolean;
@@ -342,75 +448,126 @@ function VoteBody({
   onClose: () => void;
   onLoginPrompt: () => void;
   onVote: (pollId: string, optionId: string) => Promise<boolean>;
-  relevantPoll: LivePoll | null;
 }) {
-  if (isLoading) {
+  if (currentInteraction.type === "empty" && (isLoading || isInteractionNoticesLoading)) {
     return <p className="text-muted-foreground text-sm">{LIVE_VOTE_LABEL.loading}</p>;
   }
 
-  if (isError) {
+  if (currentInteraction.type === "empty" && (isError || isInteractionNoticesError)) {
     return <p className="text-muted-foreground text-sm">{LIVE_VOTE_LABEL.error}</p>;
   }
 
-  const noticeList = (
-    <InteractionNoticeList
-      notices={interactionNotices}
-      isLoading={isInteractionNoticesLoading}
-      isError={isInteractionNoticesError}
-    />
-  );
-
-  if (!relevantPoll) {
-    return (
-      <div className="flex flex-col gap-4">
-        <StandbyCard />
-        {noticeList}
-      </div>
-    );
+  if (currentInteraction.type === "empty") {
+    return <StandbyCard />;
   }
 
-  if (relevantPoll.status === "ended") {
-    return (
-      <div className="flex flex-col gap-4">
-        <VoteResults poll={relevantPoll} onClose={onClose} />
-        {noticeList}
-      </div>
-    );
+  if (currentInteraction.type === "draw" || currentInteraction.type === "roulette") {
+    return <InteractionNoticeCard notice={currentInteraction.notice} onClose={onClose} />;
+  }
+
+  if (currentInteraction.type !== "poll") {
+    return null;
+  }
+
+  const pollInteraction = currentInteraction;
+
+  if (pollInteraction.mode === "result") {
+    return <VoteResults poll={pollInteraction.poll} onClose={onClose} />;
   }
 
   if (!isLoggedIn) {
     return (
-      <div className="flex flex-col gap-4">
-        <div className="border-border flex flex-col gap-3 rounded-lg border p-3">
-          <StatusPill tone="brand">{LIVE_VOTE_LABEL.active}</StatusPill>
-          <p className="text-foreground text-sm font-bold">{relevantPoll.title}</p>
-          <p className="text-muted-foreground text-sm">{LIVE_LABEL.loginDescription}</p>
-          <Button
-            type="button"
-            onClick={() => {
-              onClose();
-              onLoginPrompt();
-            }}
-            className="bg-brand hover:bg-brand/90 text-brand-foreground h-9 w-full"
-          >
-            {LIVE_LABEL.loginButton}
-          </Button>
-        </div>
-        {noticeList}
+      <div className="border-border flex flex-col gap-3 rounded-lg border p-3">
+        <StatusPill tone="brand">{LIVE_VOTE_LABEL.active}</StatusPill>
+        <p className="text-foreground text-sm font-bold">{pollInteraction.poll.title}</p>
+        <p className="text-muted-foreground text-sm">{LIVE_LABEL.loginDescription}</p>
+        <Button
+          type="button"
+          onClick={() => {
+            onClose();
+            onLoginPrompt();
+          }}
+          className="bg-brand hover:bg-brand/90 text-brand-foreground h-9 w-full"
+        >
+          {LIVE_LABEL.loginButton}
+        </Button>
       </div>
     );
   }
 
-  return (
-    <div className="flex flex-col gap-4">
-      {relevantPoll.userVotedOptionId ? (
-        <ParticipatedCard poll={relevantPoll} />
-      ) : (
-        <ActiveVoteCard activePoll={relevantPoll} onVote={onVote} onClose={onClose} />
-      )}
-      {noticeList}
-    </div>
+  return pollInteraction.poll.userVotedOptionId ? (
+    <ParticipatedCard poll={pollInteraction.poll} />
+  ) : (
+    <ActiveVoteCard activePoll={pollInteraction.poll} onVote={onVote} onClose={onClose} />
   );
+}
+
+function getTriggerLabel(currentInteraction: CurrentInteraction) {
+  if (currentInteraction.type === "poll") {
+    return currentInteraction.mode === "active" ? LIVE_LABEL.vote : LIVE_VOTE_LABEL.resultTitle;
+  }
+
+  if (currentInteraction.type === "draw") {
+    return currentInteraction.mode === "active"
+      ? LIVE_VOTE_LABEL.drawCheck
+      : LIVE_VOTE_LABEL.drawResult;
+  }
+
+  if (currentInteraction.type === "roulette") {
+    return currentInteraction.mode === "active"
+      ? LIVE_VOTE_LABEL.rouletteCheck
+      : LIVE_VOTE_LABEL.rouletteResult;
+  }
+
+  return LIVE_VOTE_LABEL.interactionTitle;
+}
+
+function getHeaderTitle(currentInteraction: CurrentInteraction) {
+  if (currentInteraction.type === "poll") {
+    return currentInteraction.mode === "active"
+      ? LIVE_VOTE_LABEL.title
+      : LIVE_VOTE_LABEL.resultTitle;
+  }
+
+  if (currentInteraction.type === "draw") {
+    return currentInteraction.mode === "active"
+      ? LIVE_VOTE_LABEL.drawActiveTitle
+      : LIVE_VOTE_LABEL.drawResult;
+  }
+
+  if (currentInteraction.type === "roulette") {
+    return currentInteraction.mode === "active"
+      ? LIVE_VOTE_LABEL.rouletteActiveTitle
+      : LIVE_VOTE_LABEL.rouletteResult;
+  }
+
+  return LIVE_VOTE_LABEL.interactionTitle;
+}
+
+function getHeaderDescription(currentInteraction: CurrentInteraction) {
+  if (currentInteraction.type === "poll") {
+    return currentInteraction.mode === "active"
+      ? LIVE_VOTE_LABEL.description
+      : LIVE_VOTE_LABEL.resultDescription;
+  }
+
+  if (currentInteraction.type === "draw") {
+    return currentInteraction.mode === "active"
+      ? LIVE_VOTE_LABEL.drawActiveDescription
+      : LIVE_VOTE_LABEL.interactionResultDescription;
+  }
+
+  if (currentInteraction.type === "roulette") {
+    return currentInteraction.mode === "active"
+      ? LIVE_VOTE_LABEL.rouletteActiveDescription
+      : LIVE_VOTE_LABEL.interactionResultDescription;
+  }
+
+  return LIVE_VOTE_LABEL.interactionDescription;
+}
+
+function shouldPromptLoginOnOpen(currentInteraction: CurrentInteraction) {
+  return currentInteraction.type === "poll" && currentInteraction.mode === "active";
 }
 
 export function LiveVotePopover({
@@ -426,17 +583,13 @@ export function LiveVotePopover({
   presentation = "popover",
 }: Props) {
   const [open, setOpen] = useState(false);
-  const relevantPoll = selectRelevantPoll(polls);
-  const isResult = relevantPoll?.status === "ended";
-
-  const triggerLabel = isResult ? LIVE_VOTE_LABEL.resultTitle : LIVE_LABEL.vote;
-  const headerTitle = isResult ? LIVE_VOTE_LABEL.resultTitle : LIVE_VOTE_LABEL.title;
-  const headerDescription = isResult
-    ? LIVE_VOTE_LABEL.resultDescription
-    : LIVE_VOTE_LABEL.description;
+  const currentInteraction = selectCurrentInteraction(polls, interactionNotices);
+  const triggerLabel = getTriggerLabel(currentInteraction);
+  const headerTitle = getHeaderTitle(currentInteraction);
+  const headerDescription = getHeaderDescription(currentInteraction);
 
   function handleOpenChange(next: boolean) {
-    if (next && !isLoggedIn && relevantPoll?.status === "active") {
+    if (next && !isLoggedIn && shouldPromptLoginOnOpen(currentInteraction)) {
       onLoginPrompt();
       return;
     }
@@ -450,12 +603,11 @@ export function LiveVotePopover({
 
   const body = (
     <VoteBody
-      interactionNotices={interactionNotices}
+      currentInteraction={currentInteraction}
       isLoading={isLoading}
       isError={isError}
       isInteractionNoticesLoading={isInteractionNoticesLoading}
       isInteractionNoticesError={isInteractionNoticesError}
-      relevantPoll={relevantPoll}
       isLoggedIn={isLoggedIn}
       onLoginPrompt={onLoginPrompt}
       onVote={onVote}

@@ -7,7 +7,11 @@ import { createClient } from "@/lib/supabase/client";
 import { QUERY_KEYS } from "@/constants/common/query-keys";
 import { readJsonObject, readNumber, readString } from "@/utils/common/json";
 import type { Json } from "@/types/database.types";
-import type { LiveInteractionNotice, LiveInteractionNoticeType } from "@/types/live/live";
+import type {
+  LiveInteractionNotice,
+  LiveInteractionNoticeStatus,
+  LiveInteractionNoticeType,
+} from "@/types/live/live";
 
 interface LiveInteractionNoticeRow {
   content: string;
@@ -26,6 +30,12 @@ function readNoticeType(value: Json | undefined): LiveInteractionNoticeType | nu
   }
 
   return null;
+}
+
+function readNoticeStatus(value: Json | undefined): LiveInteractionNoticeStatus {
+  const status = readString(value);
+
+  return status === "active" ? "active" : "ended";
 }
 
 function readStringArray(value: Json | undefined): string[] | undefined {
@@ -55,6 +65,7 @@ function mapNoticeRow(row: LiveInteractionNoticeRow): LiveInteractionNotice | nu
     id: row.id,
     participantCount: readNumber(metadata.participantCount) ?? undefined,
     resultLabel: readString(metadata.resultLabel) ?? undefined,
+    status: readNoticeStatus(metadata.status),
     type,
     winnerNames: readStringArray(metadata.winnerNames),
   };

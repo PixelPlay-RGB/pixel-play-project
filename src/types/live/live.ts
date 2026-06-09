@@ -115,16 +115,19 @@ export interface LivePollOption {
 }
 
 export interface LivePoll {
+  createdAt: string;
   id: string;
   title: string;
   options: LivePollOption[];
   status: LivePollStatus;
   endsAt: string | null;
+  endedAt: string | null;
   totalCount: number;
   userVotedOptionId: string | null;
 }
 
 export type LiveInteractionNoticeType = "draw" | "roulette";
+export type LiveInteractionNoticeStatus = "active" | "ended";
 
 export interface LiveInteractionNotice {
   content: string;
@@ -132,6 +135,7 @@ export interface LiveInteractionNotice {
   id: string;
   participantCount?: number;
   resultLabel?: string;
+  status: LiveInteractionNoticeStatus;
   type: LiveInteractionNoticeType;
   winnerNames?: string[];
 }
