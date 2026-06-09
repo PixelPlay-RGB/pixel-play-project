@@ -28,7 +28,7 @@ export default function FollowingEmptyState({
       </div>
       {showBrowseCta && (
         <Link
-          href="/live"
+          href="/"
           className={cn(
             buttonVariants({ size: "lg" }),
             "bg-brand hover:bg-brand/90 mt-1 rounded-xl px-6 font-bold text-white",

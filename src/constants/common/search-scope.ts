@@ -2,13 +2,13 @@
 
 import type { SearchScope } from "@/stores/search-scope";
 import type { LucideIcon } from "lucide-react";
-import { MessageSquare, Radio } from "lucide-react";
+import { Radio } from "lucide-react";
 
 export interface SearchScopeConfig {
   value: SearchScope;
   label: string;
   icon: LucideIcon;
-  path: "/live/search" | "/chat/search";
+  path: "/live/search";
   placeholder: string;
 }
 
@@ -19,13 +19,6 @@ export const SEARCH_SCOPES: SearchScopeConfig[] = [
     icon: Radio,
     path: "/live/search",
     placeholder: "방송 제목·크리에이터 검색",
-  },
-  {
-    value: "chat",
-    label: "채팅",
-    icon: MessageSquare,
-    path: "/chat/search",
-    placeholder: "채팅방 전체 검색",
   },
 ];
 
