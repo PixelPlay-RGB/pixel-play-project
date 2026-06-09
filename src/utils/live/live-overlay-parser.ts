@@ -149,7 +149,8 @@ function parseLiveChatOverlayMessage(value: Json | undefined): LiveChatOverlayMe
   const createdAt = readString(object.createdAt);
   const kind = object.kind === "donation" ? "donation" : "chat";
   const amount = readNumber(object.amount);
-  const role = object.role === "creator" ? "creator" : undefined;
+  const role =
+    object.role === "creator" ? "creator" : object.role === "donor" ? "donor" : undefined;
   const tone = readMessageTone(object.tone);
 
   if (!id || !author || content === null || !createdAt) {

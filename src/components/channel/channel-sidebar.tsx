@@ -18,7 +18,7 @@ import { Spinner } from "@/components/ui/spinner";
 import UserAccountMenuItemRenderer from "@/components/common/user-account-menu-item";
 import { SidebarCredits } from "@/components/common/sidebar-credits";
 import IdentityCard from "@/components/common/identity-card";
-import { CHANNEL_MENU_ITEMS } from "@/constants/channel/channel-menu";
+import { CHANNEL_MENU_GROUPS } from "@/constants/channel/channel-menu";
 import type { ChannelMenuItem } from "@/types/channel/channel-menu";
 import { USER_ACCOUNT_PROFILE_MENU_ITEM } from "@/constants/common/user-account-menu";
 import { useLogout } from "@/hooks/auth/use-logout";
@@ -69,21 +69,23 @@ export default function ChannelSidebar({ isMobile, profile }: Props) {
             />
           </div>
         )}
-        <SidebarGroup>
-          <SidebarGroupLabel>채널 관리</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu className="gap-1.5">
-              {CHANNEL_MENU_ITEMS.map((item) => (
-                <ChannelSidebarMenuItem
-                  key={item.id}
-                  item={item}
-                  isActive={isItemActive(item)}
-                  isChildActive={isActive}
-                />
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {CHANNEL_MENU_GROUPS.map((group) => (
+          <SidebarGroup key={group.label}>
+            <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu className="gap-1.5">
+                {group.items.map((item) => (
+                  <ChannelSidebarMenuItem
+                    key={item.id}
+                    item={item}
+                    isActive={isItemActive(item)}
+                    isChildActive={isActive}
+                  />
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
       </SidebarContent>
 
       <SidebarFooter className="gap-0 p-0">
