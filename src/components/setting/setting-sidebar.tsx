@@ -49,12 +49,9 @@ export default function SettingSidebar({ isMobile, profile }: Props) {
   const isCanChangePassword = profile?.linked_providers.includes("email") ?? false;
 
   // 프로필 설정은 상단 UserCard가 대신하므로 메뉴에서 제외하고, 성격별 섹션으로 나눕니다.
-  // 계정(비밀번호 변경) / 활동(팔로잉·후원) / 내 채널(내 채널·채널 관리).
+  // 활동(팔로잉·후원) / 내 채널(내 채널·채널 관리). 비밀번호 변경·로그아웃은 Footer에 둡니다.
   const menuGroups: SettingMenuGroup[] = profile
     ? [
-        ...(isCanChangePassword
-          ? [{ label: "계정", items: [USER_ACCOUNT_PASSWORD_MENU_ITEM] }]
-          : []),
         {
           label: "활동",
           items: [USER_ACCOUNT_FOLLOWING_MENU_ITEM, USER_ACCOUNT_DONATION_MENU_ITEM],
@@ -116,6 +113,10 @@ export default function SettingSidebar({ isMobile, profile }: Props) {
         <Separator />
         <div className="px-2 py-2">
           <SidebarMenu className="gap-1.5">
+            {UserAccountMenuItemRenderer(USER_ACCOUNT_PASSWORD_MENU_ITEM, {
+              context: "sidebar",
+              isCanChangePassword,
+            })}
             <SidebarMenuItem>
               <SidebarMenuButton
                 onClick={() => void handleLogout()}
