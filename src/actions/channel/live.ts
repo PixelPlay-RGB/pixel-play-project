@@ -37,6 +37,8 @@ const LIVE_THUMBNAIL_EXTENSION_BY_TYPE: Record<string, string> = {
   "image/webp": "webp",
 };
 const CHANNEL_LIVE_DRAW_PARTICIPANT_PAGE_SIZE = 1000;
+const ACTIVE_LIVE_BROADCAST_NOT_FOUND_CODE = "PX404";
+const ACTIVE_LIVE_BROADCAST_NOT_FOUND_MESSAGE = "active live broadcast not found";
 
 type UpsertCreatorStudioSettingArgs =
   Database["public"]["Functions"]["upsert_creator_studio_setting"]["Args"];
@@ -105,6 +107,15 @@ export interface ChannelLiveStudioSettings {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isActiveLiveBroadcastNotFoundError(error: unknown) {
+  if (!isRecord(error)) return false;
+
+  return (
+    error.code === ACTIVE_LIVE_BROADCAST_NOT_FOUND_CODE &&
+    error.message === ACTIVE_LIVE_BROADCAST_NOT_FOUND_MESSAGE
+  );
 }
 
 function readString(value: unknown) {
@@ -694,6 +705,12 @@ export async function endLiveBroadcastAction({
   });
 
   if (error) {
+    if (isActiveLiveBroadcastNotFoundError(error)) {
+      revalidatePath("/channel/live");
+
+      return { success: true };
+    }
+
     console.error("방송 종료 RPC 실패", error);
     return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
   }
