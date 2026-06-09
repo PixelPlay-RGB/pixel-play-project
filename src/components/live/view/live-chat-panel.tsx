@@ -2,7 +2,7 @@
 // 채팅 패널 컨테이너 — 메시지 목록, 입력창, 참여 조건 안내, 클린봇 상태를 조합합니다.
 
 import { useEffect, useRef, useState, type Ref } from "react";
-import { ExternalLink, PanelRightClose } from "lucide-react";
+import { ExternalLink, MessageSquareOff, PanelRightClose } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -49,6 +49,11 @@ interface Props {
   isFollowPending?: boolean;
   onCollapse?: () => void;
   collapseButtonRef?: Ref<HTMLButtonElement>;
+  // 방송 종료(broadcast=null): 입력만 비활성화하고 메시지 목록은 유지한다.
+  isEnded?: boolean;
+  // 재진입·새로고침으로 처음부터 종료 상태일 때만 채팅 본문 전체를 "이용 불가"로 덮는다
+  // (시청 중 종료는 그동안 받은 메시지를 그대로 보여주므로 덮지 않는다).
+  showEndedOverlay?: boolean;
 }
 
 export function LiveChatPanel({
@@ -76,6 +81,8 @@ export function LiveChatPanel({
   isFollowPending,
   onCollapse,
   collapseButtonRef,
+  isEnded = false,
+  showEndedOverlay = false,
 }: Props) {
   const [cleanbot, setCleanbot] = useState(true);
   const [isPopoutOpen, setIsPopoutOpen] = useState(false);
@@ -152,7 +159,12 @@ export function LiveChatPanel({
         </div>
       </div>
 
-      {isPopoutOpen ? (
+      {showEndedOverlay ? (
+        <div className="flex flex-1 flex-col items-center justify-center gap-2 px-4 text-center">
+          <MessageSquareOff className="text-muted-foreground size-5" />
+          <p className="text-muted-foreground text-sm">{LIVE_LABEL.chatUnavailable}</p>
+        </div>
+      ) : isPopoutOpen ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-2 px-4 text-center">
           <ExternalLink className="text-muted-foreground size-5" />
           <p className="text-muted-foreground text-sm">{LIVE_LABEL.chatPopoutActive}</p>
@@ -167,8 +179,11 @@ export function LiveChatPanel({
               <LiveChatMessageList messages={messages} cleanbotEnabled={cleanbot} />
             </ScrollArea>
           </div>
-          <LiveChatParticipationNotice chatUnavailableReason={chatState.chatUnavailableReason} />
+          {!isEnded ? (
+            <LiveChatParticipationNotice chatUnavailableReason={chatState.chatUnavailableReason} />
+          ) : null}
           <LiveChatInputBar
+            isEnded={isEnded}
             polls={polls}
             isPollsLoading={isPollsLoading}
             isPollsError={isPollsError}

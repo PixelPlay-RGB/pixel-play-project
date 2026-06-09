@@ -208,6 +208,18 @@ export interface LiveWatchData {
   viewerChatState: LiveViewerChatState;
 }
 
+// RPC의 크리에이터 응답을 UI에서 쓰는 LiveCreator로 정규화한다.
+// 방송이 종료/오프라인이라 broadcast가 null이어도 크리에이터 정보는 살아 있어 종료 화면에서 쓴다.
+export function mapLiveWatchCreator(creator: LiveWatchCreator): LiveCreator {
+  return {
+    id: creator.id,
+    name: creator.nickname,
+    avatarUrl: creator.photoUrl,
+    followerCount: creator.followerCount,
+    broadcastCount: creator.broadcastCount,
+  };
+}
+
 export function mapLiveWatchToBroadcast(
   data: LiveWatchData | null | undefined,
 ): LiveBroadcast | null {
@@ -225,12 +237,6 @@ export function mapLiveWatchToBroadcast(
     tags: data.broadcast.tags,
     viewerCount: data.broadcast.currentViewerCount,
     elapsedSeconds,
-    creator: {
-      id: data.creator.id,
-      name: data.creator.nickname,
-      avatarUrl: data.creator.photoUrl,
-      followerCount: data.creator.followerCount,
-      broadcastCount: data.creator.broadcastCount,
-    },
+    creator: mapLiveWatchCreator(data.creator),
   };
 }

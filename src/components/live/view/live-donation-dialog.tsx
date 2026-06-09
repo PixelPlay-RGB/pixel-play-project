@@ -37,6 +37,8 @@ interface Props {
     isAnonymous: boolean;
     idempotencyKey: string;
   }) => Promise<boolean>;
+  // 방송 종료 등으로 후원 자체를 막을 때 트리거를 비활성화한다.
+  disabled?: boolean;
 }
 
 export function LiveDonationDialog({
@@ -48,6 +50,7 @@ export function LiveDonationDialog({
   donationEnabled,
   donationMinAmount,
   onDonate,
+  disabled = false,
 }: Props) {
   const minimumAmount = donationMinAmount > 0 ? donationMinAmount : LIVE_DONATION_MIN_AMOUNT;
   const [open, setOpen] = useState(false);
@@ -96,7 +99,7 @@ export function LiveDonationDialog({
           <Button
             className="bg-live hover:bg-live/90 text-live-foreground h-8 flex-1 text-xs"
             size="sm"
-            disabled={!donationEnabled}
+            disabled={!donationEnabled || disabled}
             title={!donationEnabled ? LIVE_DONATION_LABEL.disabled : undefined}
           />
         }

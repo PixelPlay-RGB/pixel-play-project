@@ -16,14 +16,21 @@ import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { toastAppError, toastAppInfo } from "@/utils/common/toast-message";
 import { LIVE_DONATION_MIN_AMOUNT } from "@/constants/live/live";
 import { parseLiveVoteCommand } from "@/utils/live/live-vote-command";
-import { mapLiveWatchToBroadcast, type LivePoll } from "@/types/live/live";
+import {
+  mapLiveWatchCreator,
+  mapLiveWatchToBroadcast,
+  type LiveBroadcast,
+  type LivePoll,
+} from "@/types/live/live";
 
 export function useLiveBroadcastView(creatorId: string) {
   const user = useAuthStore((state) => state.user);
   const queryClient = useQueryClient();
-  const { data: watchData, isLoading, refetch } = useLiveViewData(creatorId);
+  const { data: watchData, isLoading, refetch, endedElapsedSeconds } = useLiveViewData(creatorId);
 
   const broadcast = mapLiveWatchToBroadcast(watchData);
+  // 방송이 종료/오프라인(broadcast=null)이어도 크리에이터 정보는 남아 종료 화면에서 쓴다.
+  const creator = watchData?.creator ? mapLiveWatchCreator(watchData.creator) : null;
 
   const [optimisticFollowing, setOptimisticFollowing] = useState<boolean | null>(null);
   const isFollowing = optimisticFollowing ?? watchData?.viewerRelation?.isFollowing ?? false;
@@ -44,7 +51,23 @@ export function useLiveBroadcastView(creatorId: string) {
       });
   }
 
-  const messagesQuery = useLiveMessages(broadcast?.id, creatorId, user?.id);
+  // 시청 중 방송이 종료되면 broadcast가 null이 된다(realtime/refetch). 이때도 마지막 방송 정보
+  // (제목·태그·참여자 수)와 채팅 메시지를 그대로 보여주기 위해 마지막 라이브 스냅샷을 유지한다.
+  // 라이브 동안 의미 있는 필드(참여자 수·제목)가 바뀔 때만 갱신해(렌더 중 가드된 setState)
+  // 무한 루프를 피한다. elapsedSeconds는 매 렌더 변하므로 비교에서 제외하고, 시간은 아래서 따로 고정.
+  const [lastBroadcast, setLastBroadcast] = useState<LiveBroadcast | null>(null);
+  if (
+    broadcast &&
+    (broadcast.id !== lastBroadcast?.id ||
+      broadcast.viewerCount !== lastBroadcast?.viewerCount ||
+      broadcast.title !== lastBroadcast?.title)
+  ) {
+    setLastBroadcast(broadcast);
+  }
+  // 한 번이라도 라이브였는지(=시청 중 종료) vs 처음부터 종료된 방송 재진입 구분에 쓴다.
+  const hadLiveBroadcast = lastBroadcast !== null;
+
+  const messagesQuery = useLiveMessages(broadcast?.id ?? lastBroadcast?.id, creatorId, user?.id);
   const messages = messagesQuery.messages;
 
   const pollsQuery = useLivePolls(broadcast?.id, user?.id);
@@ -173,6 +196,11 @@ export function useLiveBroadcastView(creatorId: string) {
   return {
     isLoading,
     broadcast,
+    // 시청 중 종료 시 정보 행(제목·참여자)에 쓰는 마지막 라이브 스냅샷 + 멈춘 경과 시간.
+    lastBroadcast,
+    endedElapsedSeconds,
+    creator,
+    hadLiveBroadcast,
     messages,
     donations,
     polls: pollsQuery.polls,

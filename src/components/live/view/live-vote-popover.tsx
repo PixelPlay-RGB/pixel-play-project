@@ -42,6 +42,8 @@ interface Props {
   presentation?: "popover" | "dialog";
   // 팝오버를 채팅 입력칸 위로 띄워 입력칸을 가리지 않게 한다(규칙·팔로우 popover와 동일 anchor).
   anchorRef?: RefObject<HTMLElement | null>;
+  // 방송 종료 등으로 투표 참여를 막을 때 트리거를 비활성화한다.
+  disabled?: boolean;
 }
 
 // 진행 중 투표를 우선 노출하고, 없으면 가장 최근 종료된 투표 결과를 노출한다.
@@ -339,6 +341,7 @@ export function LiveVotePopover({
   onVote,
   presentation = "popover",
   anchorRef,
+  disabled = false,
 }: Props) {
   const [open, setOpen] = useState(false);
   const relevantPoll = selectRelevantPoll(polls);
@@ -366,7 +369,13 @@ export function LiveVotePopover({
   if (presentation === "dialog") {
     return (
       <>
-        <Button size="sm" variant="outline" className={VOTE_TRIGGER_CLASS} onClick={handleOpen}>
+        <Button
+          size="sm"
+          variant="outline"
+          className={VOTE_TRIGGER_CLASS}
+          disabled={disabled}
+          onClick={handleOpen}
+        >
           {triggerLabel}
         </Button>
         <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -392,7 +401,9 @@ export function LiveVotePopover({
 
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
-      <PopoverTrigger render={<Button size="sm" variant="outline" className={VOTE_TRIGGER_CLASS} />}>
+      <PopoverTrigger
+        render={<Button size="sm" variant="outline" className={VOTE_TRIGGER_CLASS} disabled={disabled} />}
+      >
         {triggerLabel}
       </PopoverTrigger>
       <PopoverContent

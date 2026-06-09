@@ -3,11 +3,17 @@
 
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
+import { motion, useReducedMotion } from "motion/react";
 
 import LiveSidebar from "@/components/live/live-sidebar";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/common/use-mobile";
+import {
+  liveSidebarCollapseTransition,
+  liveSidebarCollapseVariants,
+} from "@/lib/framer-motion/live-sidebar";
 import { cn } from "@/lib/utils";
+import { useLiveTheaterStore } from "@/stores/live-theater";
 
 interface LiveShellProps {
   children: ReactNode;
@@ -24,6 +30,9 @@ export default function LiveShell({
 }: LiveShellProps) {
   const isMobile = useIsMobile();
   const [isMounted, setIsMounted] = useState(false);
+  // 와이드(극장) 모드 진입 시 데스크탑 전역 사이드바를 접는다(시청 화면에서만 true가 됨).
+  const isWideMode = useLiveTheaterStore((state) => state.isWideMode);
+  const prefersReducedMotion = useReducedMotion();
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -34,7 +43,23 @@ export default function LiveShell({
   // (루트 트리를 교체하면 children 전체가 재마운트되어 쿼리 중복 실행·로컬 상태 초기화가 발생함)
   return (
     <SidebarProvider className="h-chat-content min-h-0 overflow-hidden">
-      {isMounted && <LiveSidebar isMobile={isMobile} />}
+      {isMounted &&
+        (isMobile ? (
+          // 모바일 사이드바는 Sheet(오프캔버스)라 레이아웃 폭을 차지하지 않으므로 래퍼 없이 그대로 둔다.
+          <LiveSidebar isMobile />
+        ) : (
+          // 데스크탑 사이드바는 collapsible="none"(고정폭)이라 내장 collapse가 없어,
+          // 와이드 모드에서 motion으로 폭을 접어 시청 영역을 넓힌다.
+          <motion.div
+            className="h-full shrink-0 overflow-hidden"
+            initial={false}
+            animate={isWideMode ? "collapsed" : "expanded"}
+            variants={liveSidebarCollapseVariants}
+            transition={prefersReducedMotion ? { duration: 0 } : liveSidebarCollapseTransition}
+          >
+            <LiveSidebar isMobile={false} />
+          </motion.div>
+        ))}
       <SidebarInset className="min-w-0 overflow-hidden">
         {isMounted && isMobile && (
           <div className="border-border flex shrink-0 items-center gap-3 border-b p-4">

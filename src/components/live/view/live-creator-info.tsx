@@ -4,14 +4,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatCount } from "@/utils/live/live-chat";
 import { LIVE_LABEL } from "@/constants/live/live";
 import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
-import type { LiveBroadcast } from "@/types/live/live";
+import type { LiveCreator } from "@/types/live/live";
 
 interface Props {
-  broadcast: LiveBroadcast;
+  creator: LiveCreator;
 }
 
-export function LiveCreatorInfo({ broadcast }: Props) {
-  const { creator } = broadcast;
+export function LiveCreatorInfo({ creator }: Props) {
   const fallback = getAvatarFallbackText(creator.name);
   const avatarSrc = getAvatarImageSrc(creator.avatarUrl);
 

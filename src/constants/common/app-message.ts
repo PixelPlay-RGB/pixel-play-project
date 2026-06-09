@@ -654,6 +654,11 @@ export const APP_MESSAGE = {
         description: "조금만 기다려주세요. 곧 제공될 예정이에요.",
       },
     },
+    live: {
+      broadcastEnded: {
+        title: "방송이 종료되었습니다",
+      },
+    },
   },
 } as const satisfies {
   success: Record<string, Record<string, AppMessage>>;

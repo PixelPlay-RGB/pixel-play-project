@@ -217,6 +217,9 @@ export const APP_MESSAGE_CODE = {
     common: {
       featureNotReady: "info.common.featureNotReady",
     },
+    live: {
+      broadcastEnded: "info.live.broadcastEnded",
+    },
   },
 } as const satisfies AppMessageCodeSchema<typeof APP_MESSAGE>;
 
