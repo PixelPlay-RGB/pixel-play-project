@@ -5,6 +5,7 @@ import {
   endLiveBroadcastAction,
   saveChannelLiveThumbnailAction,
   startLiveBroadcastAction,
+  type ChannelLiveChatMessage,
   type ChannelLiveStudioSnapshot,
   updateChannelLiveSettingsAction,
   uploadChannelLiveThumbnailAction,
@@ -68,6 +69,7 @@ function getBroadcastActionErrorMessage(code: Parameters<typeof getAppMessage>[0
 export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
   const activeBroadcast = initialSnapshot?.activeBroadcast ?? null;
   const initialSettings = initialSnapshot?.settings;
+  const creatorId = initialSnapshot?.creatorId;
   const streamPath = initialSnapshot?.streamPath ?? CHANNEL_LIVE_MEDIA_CONFIG.streamPath;
   const [title, setTitle] = useState(
     activeBroadcast?.title || initialSettings?.defaultTitle || DEFAULT_TITLE,
@@ -129,7 +131,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
   const [alertVolume, setAlertVolume] = useState(initialSettings?.alertVolume ?? 32);
   const [isTtsEnabled, setIsTtsEnabled] = useState(initialSettings?.ttsEnabled ?? true);
   const [ttsRate, setTtsRate] = useState(initialSettings?.ttsRate ?? 1);
-  const [liveChatMessages, setLiveChatMessages] = useState(initialSnapshot?.chatMessages ?? []);
+  const [liveChatMessages, setLiveChatMessages] = useState<ChannelLiveChatMessage[]>([]);
   const [isBroadcastActionPending, startBroadcastTransition] = useTransition();
   const [isSettingsActionPending, startSettingsTransition] = useTransition();
 
@@ -397,7 +399,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
           <ChannelLiveChatPanel
             key={broadcastId ?? "channel-live-chat-idle"}
             broadcastId={broadcastId}
-            initialMessages={initialSnapshot?.chatMessages ?? []}
+            creatorId={creatorId}
             liveState={liveState}
             onMessagesChange={setLiveChatMessages}
             onToggleChatPaused={() => setIsChatPaused((currentValue) => !currentValue)}

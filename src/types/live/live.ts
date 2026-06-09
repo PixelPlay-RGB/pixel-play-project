@@ -85,6 +85,7 @@ export interface LiveChatMessage {
   type: LiveChatMessageType;
   author?: string;
   content: string;
+  createdAt?: string;
   donationAmount?: number;
   // 작성자가 방송 진행자(크리에이터) 본인인지 여부. 채팅에서 호스트 메시지를 강조하는 데 쓴다.
   isHost?: boolean;

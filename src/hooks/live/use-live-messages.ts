@@ -13,7 +13,7 @@ import {
 import { appendLiveMessage } from "@/utils/live/live-chat";
 import type { LiveChatMessage } from "@/types/live/live";
 const LIVE_MESSAGE_SELECT =
-  "id, sender_id, message_type, content, metadata, sender:sender_id(nickname, photo_url), donation:donation_id(amount)" as const;
+  "id, created_at, sender_id, message_type, content, metadata, sender:sender_id(nickname, photo_url), donation:donation_id(amount)" as const;
 
 export function useLiveMessages(
   broadcastId: string | null | undefined,

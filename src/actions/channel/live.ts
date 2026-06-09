@@ -8,8 +8,6 @@ import { createAdminClient } from "@/lib/supabase/admin-client";
 import {
   getChannelLiveDrawParticipantsSchema,
   type GetChannelLiveDrawParticipantsInput,
-  sendChannelLiveChatMessageSchema,
-  type SendChannelLiveChatMessageInput,
   startLiveBroadcastSchema,
   type StartLiveBroadcastInput,
   updateChannelLiveSettingsSchema,
@@ -17,7 +15,6 @@ import {
 } from "@/lib/zod/channel-live";
 import type { AppActionResult } from "@/types/common/action";
 import type { Database, Json } from "@/types/database.types";
-import { isKnownMessageRpcError, resolveMessageRpcErrorCode } from "@/utils/common/app-message";
 import { buildLiveStreamKey } from "@/utils/live/live-security";
 import { revalidatePath } from "next/cache";
 
@@ -39,7 +36,6 @@ const LIVE_THUMBNAIL_EXTENSION_BY_TYPE: Record<string, string> = {
   "image/png": "png",
   "image/webp": "webp",
 };
-const CHANNEL_LIVE_CHAT_MESSAGE_LIMIT = 50;
 const CHANNEL_LIVE_DRAW_PARTICIPANT_PAGE_SIZE = 1000;
 
 type UpsertCreatorStudioSettingArgs =
@@ -60,7 +56,7 @@ export interface ChannelLiveActiveBroadcast {
 
 export interface ChannelLiveStudioSnapshot {
   activeBroadcast: ChannelLiveActiveBroadcast | null;
-  chatMessages: ChannelLiveChatMessage[];
+  creatorId: string;
   settings: ChannelLiveStudioSettings;
   streamPath: string;
 }
@@ -318,7 +314,7 @@ function toChannelLiveStudioSnapshot(value: Json, creatorId: string): ChannelLiv
 
     return {
       activeBroadcast: null,
-      chatMessages: [],
+      creatorId,
       settings,
       streamPath: createChannelLiveStreamPath(creatorId, settings),
     };
@@ -330,7 +326,7 @@ function toChannelLiveStudioSnapshot(value: Json, creatorId: string): ChannelLiv
   if (!isRecord(activeBroadcast)) {
     return {
       activeBroadcast: null,
-      chatMessages: [],
+      creatorId,
       settings,
       streamPath: createChannelLiveStreamPath(creatorId, settings),
     };
@@ -350,52 +346,10 @@ function toChannelLiveStudioSnapshot(value: Json, creatorId: string): ChannelLiv
         typeof activeBroadcast.thumbnailUrl === "string" ? activeBroadcast.thumbnailUrl : null,
       title: readString(activeBroadcast.title),
     },
-    chatMessages: [],
+    creatorId,
     settings,
     streamPath: createChannelLiveStreamPath(creatorId, settings),
   };
-}
-
-function toChannelLiveChatMessage(
-  message: {
-    content: string;
-    created_at: string;
-    id: string;
-    metadata: Json;
-    sender_id: string | null;
-  },
-  creatorId: string,
-): ChannelLiveChatMessage {
-  const metadata = readJsonObject(message.metadata);
-
-  return {
-    authorName: readMetadataString(metadata.senderNickname) ?? "시청자",
-    content: message.content,
-    createdAt: message.created_at,
-    id: message.id,
-    isCreator: message.sender_id === creatorId,
-  };
-}
-
-async function getChannelLiveChatMessagesByBroadcastId(
-  supabase: ReturnType<typeof createAdminClient>,
-  broadcastId: string,
-  creatorId: string,
-) {
-  const { data, error } = await supabase
-    .from("live_message")
-    .select("content, created_at, id, metadata, sender_id")
-    .eq("broadcast_id", broadcastId)
-    .eq("message_type", "chat")
-    .order("created_at", { ascending: false })
-    .limit(CHANNEL_LIVE_CHAT_MESSAGE_LIMIT);
-
-  if (error) {
-    console.error("방송 운영 채팅 메시지 조회 실패", error);
-    return [];
-  }
-
-  return [...(data ?? [])].reverse().map((message) => toChannelLiveChatMessage(message, creatorId));
 }
 
 async function getChannelLiveDrawParticipantsByPeriod({
@@ -474,19 +428,9 @@ export async function getChannelLiveStudioSnapshotAction(): Promise<
     return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
   }
 
-  const snapshot = toChannelLiveStudioSnapshot(data, actor.userId);
-
-  if (snapshot.activeBroadcast) {
-    snapshot.chatMessages = await getChannelLiveChatMessagesByBroadcastId(
-      supabase,
-      snapshot.activeBroadcast.id,
-      actor.userId,
-    );
-  }
-
   return {
     success: true,
-    data: snapshot,
+    data: toChannelLiveStudioSnapshot(data, actor.userId),
   };
 }
 
@@ -678,63 +622,6 @@ export async function saveChannelLiveThumbnailAction({
   return {
     success: true,
     data: { thumbnailUrl: data.thumbnail_url },
-  };
-}
-
-export async function sendChannelLiveChatMessageAction(
-  input: SendChannelLiveChatMessageInput,
-): Promise<AppActionResult<{ message: ChannelLiveChatMessage }>> {
-  const parsed = sendChannelLiveChatMessageSchema.safeParse(input);
-
-  if (!parsed.success) {
-    return { success: false, code: APP_MESSAGE_CODE.error.message.invalidInput };
-  }
-
-  const actor = await getAuthenticatedActorId({
-    logLabel: "방송 채팅 전송 중 인증 사용자 조회 실패",
-  });
-
-  if (!actor.success) {
-    return { success: false, code: actor.result.code };
-  }
-
-  const supabase = createAdminClient();
-  const { data: messageId, error } = await supabase.rpc("send_live_message", {
-    p_actor_user_id: actor.userId,
-    p_broadcast_id: parsed.data.broadcastId,
-    p_content: parsed.data.content,
-  });
-
-  if (error) {
-    if (!isKnownMessageRpcError(error)) {
-      console.error("방송 채팅 전송 RPC 실패", error);
-    }
-
-    return {
-      success: false,
-      code: resolveMessageRpcErrorCode(error, APP_MESSAGE_CODE.error.message.sendFailed),
-    };
-  }
-
-  if (!messageId) {
-    console.error("방송 채팅 전송 RPC가 생성 메시지 id를 반환하지 않음");
-    return { success: false, code: APP_MESSAGE_CODE.error.message.sendFailed };
-  }
-
-  const { data: message, error: messageError } = await supabase
-    .from("live_message")
-    .select("content, created_at, id, metadata, sender_id")
-    .eq("id", messageId)
-    .single();
-
-  if (messageError || !message) {
-    console.error("방송 채팅 전송 메시지 조회 실패", messageError);
-    return { success: false, code: APP_MESSAGE_CODE.error.message.sendFailed };
-  }
-
-  return {
-    success: true,
-    data: { message: toChannelLiveChatMessage(message, actor.userId) },
   };
 }
 
