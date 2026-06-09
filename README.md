@@ -235,17 +235,17 @@ npm run dev
 
 ```text
 src/
-├── actions/               # Server Actions (auth, channel, chat-room, common, community, donations, following, live, message, profile)
+├── actions/               # Server Actions (auth, channel, common, community, donations, following, live, notification, profile)
 ├── app/                   # Next.js App Router
+│   ├── page.tsx           # 인덱스(/) = 라이브 목록
 │   ├── api/               # Route Handler (auth/withdraw, payments/toss, channel/live/stream-status)
 │   ├── auth/              # 로그인, 회원가입, OAuth callback, 프로필 완성
 │   ├── channel/           # (studio) 스튜디오(live, chat, security, donation, settlement, analytics)
 │   │                      #   + [creatorId] 공개 채널(홈, community, setting)
-│   ├── chat/              # 채팅방 목록, 상세, 검색
-│   ├── live/              # 라이브 목록, 시청, 검색, OBS 오버레이
+│   ├── live/              # 라이브 시청, 검색, OBS 오버레이 (목록 인덱스는 app/page.tsx)
 │   └── user/              # 프로필, 팔로잉, 후원
-├── components/            # 도메인별 UI (auth, channel, chat-room, chat-room-list, common,
-│                          #   community, creator, donations, following, live, preview, search, setting, ui)
+├── components/            # 도메인별 UI (auth, channel, common, community, creator,
+│                          #   donations, following, live, notification, search, setting, ui)
 ├── constants/             # 도메인별 상수와 Query Key Factory
 ├── hooks/                 # 도메인별 custom hooks (조회/뮤테이션/UI 로직)
 ├── lib/
@@ -258,7 +258,7 @@ src/
 └── utils/                 # 도메인 보조 유틸과 서버 snapshot helper
 ```
 
-- 라우트 전용 서버 데이터 페칭 함수는 라우트 폴더의 `_data/` 프라이빗 폴더에 둡니다. (예: `app/channel/chat/_data/`, `app/live/[creatorId]/_data/`)
+- 라우트 전용 서버 데이터 페칭 함수는 라우트 폴더의 `_data/` 프라이빗 폴더에 둡니다. (예: `app/channel/(studio)/chat/_data/`, `app/live/[creatorId]/_data/`)
 - 자세한 폴더 규칙은 `.agents/code-convention/SRP_CONVENTION.md`를 참고합니다.
 
 ---
@@ -269,10 +269,7 @@ src/
 
 | 테이블                        | 설명                                                           |
 | ----------------------------- | -------------------------------------------------------------- |
-| `user`                        | 서비스 유저 프로필. Supabase Auth user id와 동일한 `id`를 사용 |
-| `chat_room`                   | 채팅방 메타데이터, 정원, 현재 참여자 수                        |
-| `chat_room_member`            | 채팅방 참여 상태, 강퇴 여부, 마지막 입장·읽음 시각             |
-| `message`                     | 채팅 메시지와 시스템 메시지                                    |
+| `user`                        | 서비스 유저 프로필(`notifications_last_seen_at` 포함). Supabase Auth user id와 동일한 `id`를 사용 |
 | `creator_studio_setting`      | 크리에이터 채널 설정(채팅·보안 key 버전·후원·알림 등)          |
 | `live_broadcast`              | 라이브 방송과 시청자·채팅·후원 통계                            |
 | `live_message`                | 라이브 채팅·후원·운영 알림 메시지                              |
@@ -287,6 +284,7 @@ src/
 | `community_comment_like`      | 댓글 좋아요                                                    |
 | `channel_banner`              | 채널 홈 배너(이미지·제목·링크·정렬 순서)                       |
 | `creator_follow_event`        | 크리에이터 통계용 팔로우/언팔로우 상호작용 이벤트 로그         |
+| `notification`                | 인앱 알림(팔로잉 라이브 시작·커뮤니티 글). 방문 기준 읽음      |
 
 ### Enum
 
@@ -294,7 +292,6 @@ src/
 | --------------------------- | -------------------------------------------- |
 | `gender`                    | `male`, `female`, `none`                     |
 | `oauth_provider`            | `google`, `github`, `email`                  |
-| `message_type`              | `text`, `system`                             |
 | `live_chat_scope`           | `authenticated`, `follower`, `manager`       |
 | `live_message_type`         | `chat`, `moderation_notice`, `donation`      |
 | `wallet_transaction_type`   | `charge`, `donation_spend`, `refund`         |
@@ -305,9 +302,7 @@ src/
 | 도메인        | 함수                                                                                                                                                                                                                                                                                                                                                                   |
 | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 인증/프로필   | `check_email_exists`                                                                                                                                                                                                                                                                                                                                                   |
-| 채팅방        | `create_chat_room`, `get_chat_room_list`, `get_chat_room_detail`, `get_public_chat_room_metadata`, `join_chat_room`, `leave_chat_room`, `mark_room_read`, `kick_chat_room_member`, `transfer_chat_room_owner`, `search_chat_rooms`                                                                                                                                     |
-| 메시지        | `send_chat_message`                                                                                                                                                                                                                                                                                                                                                    |
-| 라이브        | `get_landing_snapshot`, `get_live_hero`, `get_live_list`, `get_live_popular_keywords`, `search_live_results`, `get_live_watch`, `get_live_watch_count`, `start_live_broadcast`, `end_live_broadcast`, `send_live_message`, `send_live_message_v2`, `get_live_donation_ranking`, `accept_live_chat_rule`                                                                |
+| 라이브        | `get_live_hero`, `get_live_list`, `get_live_popular_keywords`, `search_live_results`, `get_live_watch`, `get_live_watch_count`, `start_live_broadcast`, `end_live_broadcast`, `send_live_message`, `send_live_message_v2`, `get_live_donation_ranking`, `accept_live_chat_rule`                                                                |
 | 오버레이      | `get_live_chat_overlay_snapshot`, `get_live_donation_alert_overlay_snapshot`                                                                                                                                                                                                                                                                                           |
 | 투표          | `create_live_poll`, `end_live_poll`, `vote_live_poll`                                                                                                                                                                                                                                                                                                                  |
 | 채널/스튜디오 | `get_creator_studio_snapshot`, `upsert_creator_studio_setting`, `rotate_live_security_token_version`, `get_creator_donation_dashboard`                                                                                                                                                                                                                                 |
@@ -315,6 +310,7 @@ src/
 | 채널(공개)    | `get_channel_profile`, `update_channel_profile`, `get_channel_live_hero`, `get_channel_banners`, `insert_channel_banner`, `delete_channel_banner`, `reorder_channel_banners`                                                                                                                                                                                           |
 | 커뮤니티      | `get_channel_community_posts`, `get_community_post`, `get_community_adjacent_posts`, `get_community_comments`, `get_community_comment_replies`, `create_community_post`, `update_community_post`, `delete_community_post`, `create_community_comment`, `update_community_comment`, `delete_community_comment`, `set_community_post_like`, `set_community_comment_like` |
 | 팔로잉        | `follow_creator`, `unfollow_creator`, `get_following_channel_list`, `get_following_channel_page`                                                                                                                                                                                                                                                                       |
+| 알림          | `mark_notifications_seen`, `delete_notification`, `delete_all_notifications`, `emit_follower_notification`                                                                                                                                                                                                                                                              |
 | 후원/지갑     | `send_live_donation`, `confirm_wallet_charge`, `get_user_donation_snapshot`                                                                                                                                                                                                                                                                                            |
 
 쓰기 RPC는 클라이언트에서 직접 호출하지 않고 Server Action이 인증 사용자 id를 확인한 뒤 `service_role` 경계로 호출합니다. 읽기 RPC는 실행 권한에 따라 브라우저 client(TanStack Query) 또는 Server Component(SSR)에서 호출합니다. read 전략 기준은 `.agents/supabase-convention/SKILLS.md` 4장을 따릅니다.
@@ -333,12 +329,9 @@ src/
 
 | 트리거                                                    | 설명                                                                                                |
 | --------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `trigger_insert_date_divider_message`                     | 매일 첫 메시지 INSERT 시 날짜 구분 system 메시지를 자동 삽입                                        |
-| `trigger_insert_chat_room_member_system_message`          | 채팅방 참여/나가기 시 system 메시지를 자동 삽입                                                     |
-| `trigger_update_member_count`                             | 멤버 변경 시 채팅방 현재 인원 수를 갱신                                                             |
-| `trigger_check_capacity_on_rejoin`                        | 재입장 시 정원 초과를 검증                                                                          |
-| `trigger_delete_empty_chat_room`                          | 멤버가 모두 나간 채팅방을 정리                                                                      |
 | `increment_live_broadcast_message_count_on_live_message`  | 라이브 메시지 INSERT 시 방송 채팅 수를 증가                                                         |
+| `notify_followers_on_live_start`                          | 라이브 시작(`live_broadcast` INSERT) 시 팔로워에게 알림을 fan-out                                   |
+| `notify_followers_on_community_post`                      | 커뮤니티 글 작성(`community_post` INSERT) 시 팔로워에게 알림을 fan-out                              |
 | `increment_live_broadcast_donation_stats_on_donation`     | 후원 발생 시 방송 후원 합계·횟수를 증가                                                             |
 | `sync_live_broadcast_peak_viewer_count_on_live_broadcast` | 현재 시청자 수 변경 시 최고 시청자 수를 동기화                                                      |
 | `community_comment_count_trigger`                         | 댓글·대댓글 INSERT·DELETE 시 게시글 댓글 수를 갱신                                                  |
@@ -357,7 +350,7 @@ npm run db:types
 ```
 
 - migration 파일명은 `YYYYMMDDHHMMSS_작업_내용.sql` 형식이며, 파일의 version 접두사는 원격 `schema_migrations` 이력과 일치해야 합니다.
-- 마이그레이션은 도메인별로 채팅(`~20260519`), 라이브·후원·정산(`20260527~`), 커뮤니티 게시판·채널 프로필/배너·통계 이벤트 로그(`20260602~20260605`)로 누적되어 있습니다. 전체 목록과 최신 version은 `supabase/migrations/`를 기준으로 확인합니다.
+- 마이그레이션은 도메인별로 라이브·후원·정산(`20260527~`), 커뮤니티 게시판·채널 프로필/배너·통계 이벤트 로그(`20260602~20260605`), 인앱 알림(`20260608~`)으로 누적되어 있습니다. 초기 독립 채팅(`~20260519`) 마이그레이션은 기능 제거(#105) 이후에도 이력으로 남아 있습니다. 전체 목록과 최신 version은 `supabase/migrations/`를 기준으로 확인합니다.
 - 적용·기록 규칙의 상세는 `.agents/supabase-convention/SKILLS.md`를 참고합니다.
 
 ---
@@ -365,7 +358,7 @@ npm run db:types
 ## 상태 관리와 캐싱
 
 - 인증 세션은 `useAuthStore`가 관리하고 `AuthListener`가 Supabase 세션 변화를 동기화합니다.
-- 채팅방 목록 탭, 정렬값, 검색어는 `useChatRoomStore`가, 라이브 목록 필터·정렬·표시 개수는 `useLiveStore`가 관리합니다.
+- 라이브 목록 필터·정렬·표시 개수는 `useLiveStore`가 관리합니다.
 - 서버 데이터는 TanStack Query로 관리하고, Server Action 호출의 pending·toast·router 이동·query invalidation은 `src/hooks/{domain}`의 도메인별 mutation hook에서 처리합니다.
 - 헤더 사용자 계정 메뉴와 설정 사이드바는 표시용 프로필 snapshot을 Server Component 경계에서 받아 사용하며, 프로필 수정과 OAuth unlink 후에는 `router.refresh()`로 갱신합니다.
 - Query Key는 `src/constants/common/query-keys.ts`의 `QUERY_KEYS`를 기준으로 생성합니다.
@@ -384,11 +377,8 @@ npm run db:types
 
 ## 실시간 처리
 
-현재 앱은 Supabase Realtime의 Postgres Changes, Presence, Broadcast를 사용합니다.
+현재 앱은 Supabase Realtime의 Postgres Changes를 사용합니다.
 
-- 채팅방의 `message` INSERT 이벤트로 새 메시지를, `chat_room_member` 변경 이벤트로 참여자 목록·방 정보·목록 count를 갱신합니다.
-- 강퇴 상태는 현재 유저의 `chat_room_member.is_banned` 변경을 감지해 UI에 반영합니다.
 - 라이브 OBS 오버레이는 `live_message` INSERT 이벤트로 채팅·후원 알림을 실시간 반영합니다.
+- 인앱 알림은 현재 유저 대상 `notification` INSERT 이벤트로 헤더 종 배지와 수신함을 폴링 없이 갱신합니다.
 - 크리에이터 통계 화면은 `creator_follow_event` INSERT 이벤트로 팔로우/언팔로우 상호작용 로그를 폴링 없이 즉시 반영합니다.
-- Presence는 채팅방 접속 상태 표시 전용으로 사용하며, 권한 판단이나 DB 저장에는 사용하지 않습니다.
-- Broadcast는 채팅방 typing indicator 표시 전용으로 사용하고 DB에는 저장하지 않습니다.
