@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
-const LOCAL_MEDIAMTX_API_BASE_URL = "http://127.0.0.1:9997";
+const DEFAULT_MEDIAMTX_API_BASE_URL = "http://live.pixel-play.studio:9997";
 const REQUEST_TIMEOUT_MS = 3000;
 const DEFAULT_CONFIGURED_FPS = 30;
 
@@ -29,11 +29,7 @@ function getMediaMtxApiBaseUrl() {
     return configuredBaseUrl;
   }
 
-  if (process.env.NODE_ENV !== "production") {
-    return LOCAL_MEDIAMTX_API_BASE_URL;
-  }
-
-  throw new Error("MEDIAMTX_API_BASE_URL 환경 변수가 필요합니다.");
+  return DEFAULT_MEDIAMTX_API_BASE_URL;
 }
 
 function getVideoDimensions(pathData: MediaMtxPathResponse) {
