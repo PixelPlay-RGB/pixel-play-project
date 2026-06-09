@@ -17,6 +17,7 @@ import ChannelLivePreviewPanel from "@/components/channel/live/channel-live-prev
 import ChannelLiveQuickSettingsPanel from "@/components/channel/live/channel-live-quick-settings-panel";
 import ChannelLiveSettingsPanel from "@/components/channel/live/channel-live-settings-panel";
 import ChannelLiveStreamStatusPanel from "@/components/channel/live/channel-live-stream-status-panel";
+import ChannelLiveStatusMetricsCard from "@/components/channel/live/channel-live-status-metrics-card";
 import { CHANNEL_LIVE_MEDIA_CONFIG } from "@/constants/channel/channel-live-media";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { cn } from "@/lib/utils";
@@ -159,6 +160,21 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
   };
   const isStreamOnline = streamStatus?.state === "online";
   const shouldCaptureAutoThumbnail = !thumbnailFile && !thumbnailPreviewUrl.trim();
+  const statusMetricsBroadcast = broadcastId
+    ? {
+        chatMessageCount:
+          activeBroadcast?.id === broadcastId ? activeBroadcast.chatMessageCount : 0,
+        currentViewerCount:
+          activeBroadcast?.id === broadcastId ? activeBroadcast.currentViewerCount : 0,
+        donationAmountTotal:
+          activeBroadcast?.id === broadcastId ? activeBroadcast.donationAmountTotal : 0,
+        donationCount: activeBroadcast?.id === broadcastId ? activeBroadcast.donationCount : 0,
+        id: broadcastId,
+        peakViewerCount: activeBroadcast?.id === broadcastId ? activeBroadcast.peakViewerCount : 0,
+        startedAt: broadcastStartedAt ?? activeBroadcast?.startedAt ?? "",
+        title,
+      }
+    : null;
 
   const handleStreamStatusChange = useCallback(
     (nextStatus: ChannelLiveStreamStatusResponse) => {
@@ -439,6 +455,9 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
               onStartBroadcast={handleStartBroadcast}
               onEndBroadcast={handleEndBroadcast}
             />
+          </div>
+          <div className="shrink-0">
+            <ChannelLiveStatusMetricsCard broadcast={statusMetricsBroadcast} />
           </div>
           <div className="shrink-0">
             <ChannelLivePollPanel
