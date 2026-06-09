@@ -25,7 +25,7 @@ export function LiveChatOverlay({ initialSnapshot }: { initialSnapshot: LiveChat
         <div
           ref={chatStackRef}
           className={cn(
-            "flex h-full min-h-0 flex-col items-start justify-end gap-1.5 overflow-hidden",
+            "flex h-full min-h-0 flex-col items-start justify-end gap-2 overflow-hidden",
             "live-chat-overlay-stack",
           )}
         >
@@ -91,7 +91,7 @@ function MessagePrefix({ role }: { role?: LiveChatOverlayMessage["role"] }) {
     return (
       <span
         className={cn(
-          "mt-0.5 mr-1.5 inline-flex size-8 shrink-0 items-center justify-center rounded-md",
+          "mr-1.5 inline-flex size-8 shrink-0 items-center justify-center rounded-md align-middle",
           "text-brand ring-brand/30 bg-black/50 shadow-md ring-1",
         )}
         aria-label="방장"
@@ -105,7 +105,7 @@ function MessagePrefix({ role }: { role?: LiveChatOverlayMessage["role"] }) {
     return (
       <span
         className={cn(
-          "mt-0.5 mr-1.5 inline-flex size-8 shrink-0 items-center justify-center rounded-md",
+          "mr-1.5 inline-flex size-8 shrink-0 items-center justify-center rounded-md align-middle",
           "bg-live/80 ring-live/40 text-white shadow-md ring-1",
         )}
         aria-label="후원자"
