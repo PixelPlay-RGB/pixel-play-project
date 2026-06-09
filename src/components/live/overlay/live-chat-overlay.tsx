@@ -1,6 +1,6 @@
 "use client";
 // OBS 브라우저 소스에 붙이는 라이브 채팅 출력 화면을 렌더링합니다.
-import { Crown, HandCoins } from "lucide-react";
+import { Crown, Heart } from "lucide-react";
 
 import { useLiveChatOverlay } from "@/hooks/live/use-live-chat-overlay";
 import { cn } from "@/lib/utils";
@@ -73,7 +73,16 @@ function DonationMessageItem({ message }: { message: LiveChatOverlayMessage }) {
         "text-3xl leading-9 font-normal",
       )}
     >
-      <HandCoins className="text-live mr-1.5 inline size-[1em] align-[-0.12em]" aria-hidden />
+      <span
+        className={cn(
+          "mt-0.5 mr-1.5 inline-flex size-8 shrink-0 items-center justify-center rounded-md",
+          "bg-live/80 ring-live/40 text-white shadow-md ring-1",
+        )}
+        aria-label="후원자"
+        title="후원자"
+      >
+        <Heart className="size-4.5 fill-current" aria-hidden />
+      </span>
       <span className="text-live mr-1.5 font-medium">{message.author}</span>
       {typeof message.amount === "number" && (
         <span className="text-live mr-1.5 font-medium">
