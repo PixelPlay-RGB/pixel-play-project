@@ -400,6 +400,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
             key={broadcastId ?? "channel-live-chat-idle"}
             broadcastId={broadcastId}
             creatorId={creatorId}
+            chatRuleText={chatRuleText}
             liveState={liveState}
             onMessagesChange={setLiveChatMessages}
             onToggleChatPaused={() => setIsChatPaused((currentValue) => !currentValue)}
