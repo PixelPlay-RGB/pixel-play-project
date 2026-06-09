@@ -19,7 +19,7 @@ interface BitrateSample {
   inboundBytes: number;
 }
 
-const STREAM_STATUS_POLL_INTERVAL_MS = 3000;
+const STREAM_STATUS_POLL_INTERVAL_MS = 10000;
 const STREAM_DURATION_TICK_INTERVAL_MS = 1000;
 const DEFAULT_STREAM_DURATION = "00:00:00";
 
