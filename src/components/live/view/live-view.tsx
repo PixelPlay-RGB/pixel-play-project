@@ -167,6 +167,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
             >
               <LiveCreatorInfo broadcast={broadcast} />
               <LiveCreatorActions
+                creatorNickname={broadcast.creator.name}
                 isFollowing={isFollowing}
                 isPending={isFollowPending}
                 onFollow={handleFollow}

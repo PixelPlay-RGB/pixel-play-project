@@ -79,8 +79,14 @@ export function LiveChatPanel({
 }: Props) {
   const [cleanbot, setCleanbot] = useState(true);
   const [isPopoutOpen, setIsPopoutOpen] = useState(false);
+  // 동의 여부 전용 필드가 없어 채팅 상태로 파생한다. 채팅 가능=동의 완료로 본다.
+  const isRuleAccepted = isLoggedIn && chatState.canChat;
+  const isRulePending =
+    isLoggedIn && chatState.chatUnavailableReason === "chat_rule_acceptance_required";
   const popoutWindowRef = useRef<Window | null>(null);
   const popoutCheckIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // 채팅 규칙 popover를 패널 폭에 맞추기 위한 anchor(헤더 전체 폭). 입력바 popover와 동일 방식.
+  const chatHeaderRef = useRef<HTMLDivElement>(null);
 
   function handlePopoutOpen(win: Window) {
     popoutWindowRef.current = win;
@@ -107,7 +113,10 @@ export function LiveChatPanel({
 
   return (
     <div className="border-border bg-card flex h-full min-h-96 flex-col overflow-hidden rounded-xl border md:min-h-0">
-      <div className="border-border flex items-center justify-between border-b px-4 py-3">
+      <div
+        ref={chatHeaderRef}
+        className="border-border flex items-center justify-between border-b px-4 py-3"
+      >
         <span className="text-foreground text-sm font-semibold">{LIVE_LABEL.chat}</span>
         <div className="flex items-center gap-1">
           {onCollapse ? (
@@ -133,9 +142,12 @@ export function LiveChatPanel({
           <LiveChatMenu
             creatorId={creatorId}
             chatRuleText={chatRuleText}
+            isRuleAccepted={isRuleAccepted}
+            isRulePending={isRulePending}
             cleanbot={cleanbot}
             onCleanbot={() => setCleanbot((prev) => !prev)}
             onPopoutOpen={handlePopoutOpen}
+            anchorRef={chatHeaderRef}
           />
         </div>
       </div>

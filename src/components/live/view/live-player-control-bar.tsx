@@ -10,6 +10,7 @@ import {
   Play,
   Radio,
   RectangleHorizontal,
+  Users,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ import { LivePlayerVolumeControl } from "@/components/live/view/live-player-volu
 import { LIVE_LABEL, LIVE_PLAYER_ICON_BUTTON_CLASS } from "@/constants/live/live";
 import type { HlsQualityLevel } from "@/hooks/live/use-hls-player";
 import { cn } from "@/lib/utils";
+import { formatCount } from "@/utils/live/live-chat";
 
 interface Props {
   isPlaying: boolean;
@@ -28,6 +30,7 @@ interface Props {
   onToggleMute: () => void;
   onVolumeChange: (value: number) => void;
   elapsedText: string;
+  viewerCount: number;
   isFullscreen: boolean;
   onToggleFullscreen: () => void;
   isTheater: boolean;
@@ -48,6 +51,7 @@ export function LivePlayerControlBar({
   onToggleMute,
   onVolumeChange,
   elapsedText,
+  viewerCount,
   isFullscreen,
   onToggleFullscreen,
   isTheater,
@@ -79,9 +83,19 @@ export function LivePlayerControlBar({
         onVolumeChange={onVolumeChange}
       />
 
-      <span className="ml-1 flex items-center gap-1 font-mono text-xs font-bold text-white">
-        <Radio className="size-3" />
-        {LIVE_LABEL.live} · {elapsedText}
+      <span className="ml-1 flex items-center gap-1.5 font-mono text-xs font-bold text-white">
+        <span className="text-live flex items-center gap-1">
+          <Radio className="size-3 animate-pulse" />
+          {LIVE_LABEL.live}
+        </span>
+        <span>· {elapsedText}</span>
+        <span className="flex items-center gap-1">
+          ·
+          <span className="text-brand flex items-center gap-1">
+            <Users className="size-3" />
+            {formatCount(viewerCount)}
+          </span>
+        </span>
       </span>
 
       <div className="ml-auto flex items-center gap-1">

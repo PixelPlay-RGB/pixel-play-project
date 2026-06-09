@@ -138,8 +138,8 @@ export const APP_MESSAGE = {
     },
     live: {
       urlCopied: {
-        title: "URL 복사 완료",
-        description: "URL 복사가 완료되었습니다.",
+        title: "링크 복사 완료",
+        description: "방송 링크 복사가 완료되었습니다.",
       },
       voteUnchanged: {
         title: "이미 선택한 항목",

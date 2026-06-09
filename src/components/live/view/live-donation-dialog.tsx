@@ -94,7 +94,7 @@ export function LiveDonationDialog({
       <DialogTrigger
         render={
           <Button
-            className="bg-live hover:bg-live/90 text-live-foreground flex-1 text-xs"
+            className="bg-live hover:bg-live/90 text-live-foreground h-8 flex-1 text-xs"
             size="sm"
             disabled={!donationEnabled}
             title={!donationEnabled ? LIVE_DONATION_LABEL.disabled : undefined}
@@ -194,7 +194,7 @@ export function LiveDonationDialog({
           </div>
         </div>
 
-        <DialogFooter className="gap-2 sm:gap-0">
+        <DialogFooter>
           <Button variant="outline" disabled={isSubmitting} onClick={() => handleOpenChange(false)}>
             {LIVE_DONATION_LABEL.cancel}
           </Button>

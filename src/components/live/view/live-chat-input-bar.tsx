@@ -106,7 +106,9 @@ export function LiveChatInputBar({
   const [isSending, setIsSending] = useState(false);
   const [isRuleOpen, setIsRuleOpen] = useState(false);
   const [isAcceptingRule, setIsAcceptingRule] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  // 입력바 컨테이너(좌우 px-3 패딩 포함) 전체를 popover anchor로 삼아, 팝오버 폭(--anchor-width)을
+  // 채팅 패널 테두리 안쪽 폭에 꽉 맞춘다(입력칸·버튼행보다 좌우 패딩만큼 더 넓게 테두리까지).
+  const inputBarRef = useRef<HTMLDivElement>(null);
 
   // 타이핑은 채팅 가능 상태에서만 허용한다.
   const isEditable = isLoggedIn && chatState.canChat;
@@ -167,14 +169,13 @@ export function LiveChatInputBar({
   }
 
   return (
-    <div className={cn("border-border flex flex-col gap-2 border-t px-3 py-3", className)}>
-      <div className="flex items-center gap-2">
-        <ChatEmojiPicker
-          onEmojiSelect={(emoji) => setDraftValue(draftValue + emoji)}
-          disabled={!isEditable}
-        />
+    <div
+      ref={inputBarRef}
+      className={cn("border-border flex flex-col gap-2 border-t px-3 py-2", className)}
+    >
+      {/* 이모지 버튼을 입력 필드 안(오른쪽 trailing)에 넣어, 입력 필드 좌측이 아래 버튼행과 정렬되게 한다. */}
+      <div className="relative">
         <Input
-          ref={inputRef}
           value={draftValue}
           maxLength={LIVE_CHAT_MESSAGE_MAX_LENGTH}
           placeholder={placeholder}
@@ -198,8 +199,14 @@ export function LiveChatInputBar({
             }
           }}
           aria-label={placeholder}
-          className="read-only:bg-muted/70 h-8 flex-1 text-sm read-only:cursor-pointer"
+          className="read-only:bg-muted/70 h-8 w-full pr-10 text-sm read-only:cursor-pointer"
         />
+        <div className="absolute inset-y-0 right-1 flex items-center">
+          <ChatEmojiPicker
+            onEmojiSelect={(emoji) => setDraftValue(draftValue + emoji)}
+            disabled={!isEditable}
+          />
+        </div>
       </div>
 
       {/*
@@ -208,7 +215,13 @@ export function LiveChatInputBar({
         대신 modal={false}로 포커스 트랩 없이 띄워, 키보드·스크린리더 사용자가 갇히지 않게 한다.
       */}
       <Popover open={isFollowGate} onOpenChange={() => {}} modal={false}>
-        <PopoverContent anchor={() => inputRef.current} align="start" side="top" className="w-80">
+        <PopoverContent
+          anchor={() => inputBarRef.current}
+          align="start"
+          side="top"
+          sideOffset={0}
+          className="w-(--anchor-width)"
+        >
           <PopoverHeader>
             <PopoverTitle>{LIVE_LABEL.participationFollowerTitle}</PopoverTitle>
             <PopoverDescription>{LIVE_LABEL.participationFollowerDesc}</PopoverDescription>
@@ -230,10 +243,11 @@ export function LiveChatInputBar({
         onOpenChange={(next) => setIsRuleOpen(isRuleGate && next)}
       >
         <PopoverContent
-          anchor={() => inputRef.current}
+          anchor={() => inputBarRef.current}
           align="start"
           side="top"
-          className="max-h-[calc(100vh-1rem)] w-80 overflow-y-auto"
+          sideOffset={0}
+          className="max-h-[calc(100vh-1rem)] w-(--anchor-width) overflow-y-auto"
         >
           <PopoverHeader>
             <PopoverTitle>{LIVE_LABEL.chatRuleTitle}</PopoverTitle>
@@ -273,6 +287,7 @@ export function LiveChatInputBar({
             onLoginPrompt={onLoginPrompt}
             onVote={onVote}
             presentation={votePresentation}
+            anchorRef={inputBarRef}
           />
         </div>
       ) : null}

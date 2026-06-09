@@ -2,7 +2,6 @@
 // 라이브 비디오 플레이어 — MediaMTX HLS <video>에 컨테이너 전체화면/극장 모드와 하단 컨트롤 바를 조립합니다.
 
 import type { Ref } from "react";
-import { Radio, Users } from "lucide-react";
 
 import { LivePlayerControlBar } from "@/components/live/view/live-player-control-bar";
 import { LIVE_LABEL } from "@/constants/live/live";
@@ -10,7 +9,6 @@ import { useFullscreen } from "@/hooks/live/use-fullscreen";
 import { useHlsPlayer } from "@/hooks/live/use-hls-player";
 import { useLivePlayerControls } from "@/hooks/live/use-live-player-controls";
 import { cn } from "@/lib/utils";
-import { formatCount } from "@/utils/live/live-chat";
 import type { LiveBroadcast } from "@/types/live/live";
 
 interface Props {
@@ -84,22 +82,6 @@ export function LiveVideoPlayer({
         </div>
       )}
 
-      <div
-        className={cn(
-          "absolute top-0 left-0 z-10 flex items-center gap-2 px-4 pt-4 transition-opacity duration-200",
-          controlsVisible ? "opacity-100" : "pointer-events-none opacity-0",
-        )}
-      >
-        <span className="bg-live flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold text-white">
-          <Radio className="size-3" />
-          {LIVE_LABEL.live}
-        </span>
-        <span className="flex items-center gap-1 rounded-full bg-black/50 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-sm">
-          <Users className="size-3" />
-          {formatCount(broadcast.viewerCount)}
-        </span>
-      </div>
-
       {hlsSrc ? (
         <div
           className={cn(
@@ -115,6 +97,7 @@ export function LiveVideoPlayer({
             onToggleMute={toggleMute}
             onVolumeChange={setVolume}
             elapsedText={elapsedText}
+            viewerCount={broadcast.viewerCount}
             isFullscreen={isFullscreen}
             onToggleFullscreen={toggleFullscreen}
             isTheater={isTheater}

@@ -1,16 +1,16 @@
 "use client";
 // 채팅 패널 메뉴 — 클린봇 토글, 채팅 규칙 보기, 채팅창 팝업 항목을 제공합니다.
 
-import { useState } from "react";
-import { ExternalLink, MoreHorizontal, ScrollText, ShieldCheck } from "lucide-react";
+import { useRef, useState, type RefObject } from "react";
+import { Check, ExternalLink, Info, MoreHorizontal, ScrollText, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Popover,
+  PopoverContent,
+  PopoverDescription,
+  PopoverHeader,
+  PopoverTitle,
+} from "@/components/ui/popover";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,19 +26,28 @@ import { toastAppError } from "@/utils/common/toast-message";
 interface Props {
   creatorId: string;
   chatRuleText?: string;
+  // 메뉴 규칙 보기에 동의 상태를 표시한다. 실제 동의는 입력바 게이트가 담당한다.
+  isRuleAccepted?: boolean;
+  isRulePending?: boolean;
   cleanbot: boolean;
   onCleanbot: () => void;
   onPopoutOpen: (win: Window) => void;
+  // 규칙 popover를 채팅 패널 폭에 맞추기 위한 anchor(패널 헤더). 입력바 popover와 동일 방식.
+  anchorRef?: RefObject<HTMLElement | null>;
 }
 
 export function LiveChatMenu({
   creatorId,
   chatRuleText,
+  isRuleAccepted,
+  isRulePending,
   cleanbot,
   onCleanbot,
   onPopoutOpen,
+  anchorRef,
 }: Props) {
   const [isRulesOpen, setIsRulesOpen] = useState(false);
+  const menuTriggerRef = useRef<HTMLButtonElement>(null);
 
   function openChatPopout() {
     const width = LIVE_CHAT_POPOUT_WINDOW.width;
@@ -65,6 +74,7 @@ export function LiveChatMenu({
         <DropdownMenuTrigger
           render={
             <Button
+              ref={menuTriggerRef}
               size="sm"
               variant="outline"
               aria-label={LIVE_LABEL.chatMenu}
@@ -95,17 +105,47 @@ export function LiveChatMenu({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <Dialog open={isRulesOpen} onOpenChange={setIsRulesOpen}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>{LIVE_LABEL.chatRuleTitle}</DialogTitle>
-            <DialogDescription>{LIVE_LABEL.chatRuleDescription}</DialogDescription>
-          </DialogHeader>
+      <Popover open={isRulesOpen} onOpenChange={setIsRulesOpen}>
+        <PopoverContent
+          anchor={() => anchorRef?.current ?? menuTriggerRef.current}
+          align="start"
+          side="bottom"
+          sideOffset={0}
+          className="max-h-[calc(100vh-1rem)] w-(--anchor-width) overflow-y-auto"
+        >
+          <PopoverHeader>
+            <PopoverTitle>{LIVE_LABEL.chatRuleTitle}</PopoverTitle>
+            <PopoverDescription>{LIVE_LABEL.chatRuleDescription}</PopoverDescription>
+          </PopoverHeader>
           <p className="text-foreground text-sm leading-relaxed whitespace-pre-wrap">
             {chatRuleText || LIVE_LABEL.chatRuleDefaultText}
           </p>
-        </DialogContent>
-      </Dialog>
+          {isRuleAccepted ? (
+            // 상태 표시(badge)용 — 비활성 액션이 아니므로 disabled:opacity-100으로 색을 선명히 유지한다
+            // (기본 disabled:opacity-50이면 brand색이 흐려져 입력칸 동의 버튼과 톤이 어긋난다).
+            <Button
+              type="button"
+              disabled
+              className="bg-brand text-brand-foreground gap-1.5 disabled:opacity-100"
+            >
+              <Check className="size-3.5" />
+              {LIVE_LABEL.chatRuleAccepted}
+            </Button>
+          ) : isRulePending ? (
+            // 미동의(입력칸 동의 popover를 아직 못 본 사용자)도 동의 완료 버튼과 같은 버튼 shape의
+            // 상태 badge로 보인다(중립 secondary). 동의는 입력칸에서만 가능하므로 여기선 안내 전용.
+            <Button
+              type="button"
+              variant="secondary"
+              disabled
+              className="gap-1.5 disabled:opacity-100"
+            >
+              <Info className="size-3.5" />
+              {LIVE_LABEL.chatRulePending}
+            </Button>
+          ) : null}
+        </PopoverContent>
+      </Popover>
     </>
   );
 }

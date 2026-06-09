@@ -1,7 +1,7 @@
 "use client";
 // 투표 참여(진행 중 실시간 중간집계)와 종료 후 결과를 채팅 패널 액션으로 제공합니다.
 
-import { useId, useState } from "react";
+import { useId, useState, type RefObject } from "react";
 import { Crown } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,13 @@ import { cn } from "@/lib/utils";
 import { formatCount } from "@/utils/live/live-chat";
 import type { LivePoll, LivePollOption } from "@/types/live/live";
 
+// 후원(코랄 채움) 옆에 나란히 놓이는 투표 트리거는 라이브 코랄 아웃라인으로 페어를 맞춘다.
+const VOTE_TRIGGER_CLASS = cn(
+  "h-8 flex-1 text-xs",
+  "border-live/30 bg-live/10 text-live",
+  "hover:border-live/50 hover:bg-live/18 dark:border-live/30 dark:bg-live/15 dark:text-live",
+);
+
 interface Props {
   polls: LivePoll[];
   isLoading?: boolean;
@@ -33,6 +40,8 @@ interface Props {
   isLoggedIn: boolean;
   onVote: (pollId: string, optionId: string) => Promise<boolean>;
   presentation?: "popover" | "dialog";
+  // 팝오버를 채팅 입력칸 위로 띄워 입력칸을 가리지 않게 한다(규칙·팔로우 popover와 동일 anchor).
+  anchorRef?: RefObject<HTMLElement | null>;
 }
 
 // 진행 중 투표를 우선 노출하고, 없으면 가장 최근 종료된 투표 결과를 노출한다.
@@ -329,6 +338,7 @@ export function LiveVotePopover({
   isLoggedIn,
   onVote,
   presentation = "popover",
+  anchorRef,
 }: Props) {
   const [open, setOpen] = useState(false);
   const relevantPoll = selectRelevantPoll(polls);
@@ -356,7 +366,7 @@ export function LiveVotePopover({
   if (presentation === "dialog") {
     return (
       <>
-        <Button size="sm" variant="outline" className="flex-1 text-xs" onClick={handleOpen}>
+        <Button size="sm" variant="outline" className={VOTE_TRIGGER_CLASS} onClick={handleOpen}>
           {triggerLabel}
         </Button>
         <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -382,13 +392,15 @@ export function LiveVotePopover({
 
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
-      <PopoverTrigger render={<Button size="sm" variant="outline" className="flex-1 text-xs" />}>
+      <PopoverTrigger render={<Button size="sm" variant="outline" className={VOTE_TRIGGER_CLASS} />}>
         {triggerLabel}
       </PopoverTrigger>
       <PopoverContent
-        align="end"
+        anchor={anchorRef ? () => anchorRef.current : undefined}
+        align="start"
         side="top"
-        className="max-h-[calc(100vh-1rem)] w-[calc((var(--anchor-width)*2)+0.5rem)] max-w-[calc(100vw-1rem)] gap-4 overflow-y-auto"
+        sideOffset={0}
+        className="max-h-[calc(100vh-1rem)] w-(--anchor-width) overflow-y-auto"
       >
         <PopoverHeader>
           <PopoverTitle>{headerTitle}</PopoverTitle>

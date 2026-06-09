@@ -2,6 +2,7 @@
 // 라이브 채팅 메시지 목록을 렌더링하고 하단 근접 시 자동 스크롤을 처리합니다.
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LIVE_LABEL } from "@/constants/live/live";
 import { cn } from "@/lib/utils";
@@ -165,7 +166,13 @@ function CleanbotMessage({
 function TextMessage({ message }: { message: LiveChatMessage }) {
   return (
     <p className="py-0.5 text-sm leading-snug wrap-break-word">
-      <span className={cn("mr-1.5 font-medium", message.isHost ? "text-live" : "text-brand")}>
+      <span
+        className={cn(
+          "mr-1.5 inline-flex items-center gap-0.5 align-middle font-medium",
+          message.isHost ? "text-live" : "text-brand",
+        )}
+      >
+        {message.isHost ? <Crown aria-label={LIVE_LABEL.hostBadge} className="size-3.5" /> : null}
         {message.author}
       </span>
       <span className="text-foreground">{message.content}</span>
