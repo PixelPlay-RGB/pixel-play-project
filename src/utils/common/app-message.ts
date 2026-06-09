@@ -13,60 +13,6 @@ interface SupabaseLikeError {
   message?: string;
 }
 
-const CHAT_ROOM_RPC_ERROR_CODE_MAP: Array<{
-  errorCode: string;
-  code: AppMessageCode;
-}> = [
-  {
-    errorCode: "PX400",
-    code: APP_MESSAGE_CODE.error.chatRoom.invalidInput,
-  },
-  {
-    errorCode: "PX401",
-    code: APP_MESSAGE_CODE.error.auth.authInfoNotFound,
-  },
-  {
-    errorCode: "PX404",
-    code: APP_MESSAGE_CODE.error.chatRoom.notFound,
-  },
-  {
-    errorCode: "PX409",
-    code: APP_MESSAGE_CODE.error.chatRoom.full,
-  },
-  {
-    errorCode: "PX423",
-    code: APP_MESSAGE_CODE.error.chatRoom.isKicked,
-  },
-  {
-    errorCode: "PX460",
-    code: APP_MESSAGE_CODE.error.chatRoom.leaveOwnerBlocked,
-  },
-  {
-    errorCode: "PX461",
-    code: APP_MESSAGE_CODE.error.chatRoom.notActiveMember,
-  },
-  {
-    errorCode: "PX462",
-    code: APP_MESSAGE_CODE.error.chatRoomMember.notOwner,
-  },
-  {
-    errorCode: "PX463",
-    code: APP_MESSAGE_CODE.error.chatRoomMember.ownerCannotKickSelf,
-  },
-  {
-    errorCode: "PX464",
-    code: APP_MESSAGE_CODE.error.chatRoomMember.targetNotActive,
-  },
-  {
-    errorCode: "PX465",
-    code: APP_MESSAGE_CODE.error.chatRoomMember.ownerCannotTransferSelf,
-  },
-  {
-    errorCode: "PX466",
-    code: APP_MESSAGE_CODE.error.chatRoomMember.ownerTransferFailed,
-  },
-];
-
 const MESSAGE_RPC_ERROR_CODE_MAP: Array<{
   errorCode: string;
   code: AppMessageCode;
@@ -197,17 +143,6 @@ function isKnownRpcError(error: unknown, map: RpcErrorCodeMap): boolean {
   const code = readSupabaseErrorCode(error);
 
   return map.some((item) => item.errorCode === code);
-}
-
-export function resolveChatRoomRpcErrorCode(
-  error: unknown,
-  fallbackCode: AppMessageCode = APP_MESSAGE_CODE.error.common.unknown,
-): AppMessageCode {
-  return resolveRpcErrorCode(error, CHAT_ROOM_RPC_ERROR_CODE_MAP, fallbackCode);
-}
-
-export function isKnownChatRoomRpcError(error: unknown) {
-  return isKnownRpcError(error, CHAT_ROOM_RPC_ERROR_CODE_MAP);
 }
 
 export function resolveMessageRpcErrorCode(

@@ -14,14 +14,6 @@ export const APP_MESSAGE_CODE = {
       signupCanceled: "success.auth.signupCanceled",
       passwordChanged: "success.auth.passwordChanged",
     },
-    chatRoom: {
-      created: "success.chatRoom.created",
-      left: "success.chatRoom.left",
-    },
-    chatRoomMember: {
-      kicked: "success.chatRoomMember.kicked",
-      ownerTransferred: "success.chatRoomMember.ownerTransferred",
-    },
     profile: {
       updated: "success.profile.updated",
     },
@@ -86,25 +78,10 @@ export const APP_MESSAGE_CODE = {
       oauthInfoLoadFailed: "error.auth.oauthInfoLoadFailed",
       oauthSyncFailed: "error.auth.oauthSyncFailed",
     },
+    // 라이브 메시지 RPC 에러 매핑(MESSAGE_RPC_ERROR_CODE_MAP)에서 사용.
     chatRoom: {
-      createAuthRequired: "error.chatRoom.createAuthRequired",
-      invalidInput: "error.chatRoom.invalidInput",
-      createFailed: "error.chatRoom.createFailed",
-      createMemberFailed: "error.chatRoom.createMemberFailed",
-      joinFailed: "error.chatRoom.joinFailed",
-      full: "error.chatRoom.full",
-      leaveFailed: "error.chatRoom.leaveFailed",
-      leaveOwnerBlocked: "error.chatRoom.leaveOwnerBlocked",
-      missingRoomId: "error.chatRoom.missingRoomId",
       notFound: "error.chatRoom.notFound",
-      notFoundOrLoadFailed: "error.chatRoom.notFoundOrLoadFailed",
-      notActiveMember: "error.chatRoom.notActiveMember",
-      notMember: "error.chatRoom.notMember",
-      inputLocked: "error.chatRoom.inputLocked",
       isKicked: "error.chatRoom.isKicked",
-    },
-    chatRoomList: {
-      loadFailed: "error.chatRoomList.loadFailed",
     },
     liveList: {
       loadFailed: "error.liveList.loadFailed",
@@ -128,15 +105,6 @@ export const APP_MESSAGE_CODE = {
       sendFailed: "error.message.sendFailed",
       slowMode: "error.message.slowMode",
       linkBlocked: "error.message.linkBlocked",
-    },
-    chatRoomMember: {
-      kickFailed: "error.chatRoomMember.kickFailed",
-      transferFailed: "error.chatRoomMember.transferFailed",
-      notOwner: "error.chatRoomMember.notOwner",
-      ownerCannotKickSelf: "error.chatRoomMember.ownerCannotKickSelf",
-      ownerCannotTransferSelf: "error.chatRoomMember.ownerCannotTransferSelf",
-      targetNotActive: "error.chatRoomMember.targetNotActive",
-      ownerTransferFailed: "error.chatRoomMember.ownerTransferFailed",
     },
     profile: {
       notFound: "error.profile.notFound",
