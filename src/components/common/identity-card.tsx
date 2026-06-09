@@ -1,4 +1,4 @@
-// 사이드바·팝오버 상단에 표시하는 신원 카드(아바타 + 배지 + 제목)를 렌더링합니다.
+// 사이드바·팝오버 상단에 표시하는 신원 카드(아바타 + 이름 + 라벨)를 렌더링합니다.
 // 헤더 계정 팝오버(UserCard), 유저 설정 사이드바(UserCard), 채널 관리 사이드바(ChannelCard)에서 공용으로 사용합니다.
 
 import Link from "next/link";
@@ -33,26 +33,33 @@ export default function IdentityCard({
       href={href}
       onClick={onClick}
       className={cn(
-        "group/identity flex items-center gap-3 rounded-xl border p-3 transition-colors",
-        "border-brand/20 bg-brand/5 hover:border-brand/40 hover:bg-brand/10",
-        "dark:bg-brand/10 dark:hover:bg-brand/15",
+        "group/identity relative flex items-center gap-3.5 overflow-hidden rounded-xl border py-4 pr-4 pl-5 transition-all duration-200",
+        "border-border/60 bg-card/40",
+        "hover:border-brand/35 hover:bg-brand/[0.06]",
         className,
       )}
     >
-      <Avatar className="ring-brand/30 size-11 shrink-0 ring-2">
+      <span
+        className="bg-brand/70 group-hover/identity:bg-brand absolute inset-y-0 left-0 w-1.5 transition-colors"
+        aria-hidden
+      />
+
+      <Avatar className="size-12 shrink-0">
         <AvatarImage src={avatarSrc} alt={avatarAlt} />
-        <AvatarFallback className="bg-brand/10 text-brand font-black">{fallbackText}</AvatarFallback>
+        <AvatarFallback className="bg-brand/15 text-brand text-base font-black">
+          {fallbackText}
+        </AvatarFallback>
       </Avatar>
 
       <div className="flex min-w-0 flex-col gap-1">
-        <span className="bg-brand/10 text-brand w-fit rounded-md px-1.5 py-0.5 text-[11px] font-black tracking-wide">
+        <span className="text-brand text-[10px] font-extrabold tracking-wide uppercase">
           {badgeLabel}
         </span>
-        <span className="text-foreground truncate text-sm font-bold">{title}</span>
+        <span className="text-foreground truncate text-sm font-bold leading-tight">{title}</span>
       </div>
 
       <ChevronRight
-        className="text-brand/40 group-hover/identity:text-brand ml-auto size-4 shrink-0 transition-colors"
+        className="text-muted-foreground group-hover/identity:text-brand ml-auto size-4 shrink-0 transition-colors"
         aria-hidden
       />
     </Link>

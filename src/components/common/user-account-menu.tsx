@@ -8,8 +8,10 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Separator } from "@/components/ui/separator";
 import {
   createMyChannelMenuItem,
+  USER_ACCOUNT_DONATION_MENU_ITEM,
+  USER_ACCOUNT_FOLLOWING_MENU_ITEM,
   USER_ACCOUNT_HEADER_ACCOUNT_MENU_ITEMS,
-  USER_ACCOUNT_HEADER_PRIMARY_MENU_ITEMS,
+  USER_ACCOUNT_PRIMARY_MENU_ITEMS,
   USER_ACCOUNT_PROFILE_MENU_ITEM,
 } from "@/constants/common/user-account-menu";
 import type { UserAccountMenuItem } from "@/constants/common/user-account-menu";
@@ -21,6 +23,11 @@ import { useState } from "react";
 
 interface Props {
   profile: CurrentProfileSnapshot;
+}
+
+interface AccountMenuGroup {
+  label: string;
+  items: UserAccountMenuItem[];
 }
 
 export default function UserAccountMenu({ profile }: Props) {
@@ -38,11 +45,27 @@ export default function UserAccountMenu({ profile }: Props) {
   const isCanChangePassword = profile.linked_providers.includes("email");
   const avatarSrc = getAvatarImageSrc(profile.photo_url);
   const avatarAlt = `${profile.nickname}의 프로필 사진`;
-  // "내 채널"을 "채널 관리" 위에 노출합니다.
-  const primaryMenuItems: UserAccountMenuItem[] = [
-    createMyChannelMenuItem(profile.id),
-    ...USER_ACCOUNT_HEADER_PRIMARY_MENU_ITEMS,
+  // 설정 사이드바와 동일하게 성격별 섹션으로 나눕니다.
+  // 활동(팔로잉·후원) / 내 채널(내 채널·채널 관리). 비밀번호 변경·로그아웃은 하단에 둡니다.
+  const menuGroups: AccountMenuGroup[] = [
+    {
+      label: "활동",
+      items: [USER_ACCOUNT_FOLLOWING_MENU_ITEM, USER_ACCOUNT_DONATION_MENU_ITEM],
+    },
+    {
+      label: "내 채널",
+      items: [createMyChannelMenuItem(profile.id), ...USER_ACCOUNT_PRIMARY_MENU_ITEMS],
+    },
   ];
+
+  const renderItem = (item: UserAccountMenuItem) =>
+    UserAccountMenuItemRenderer(item, {
+      context: "popover",
+      onClose: () => setOpen(false),
+      onLogout: handleLogout,
+      isLogoutPending: logoutMutation.isPending,
+      isCanChangePassword,
+    });
 
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
@@ -76,30 +99,19 @@ export default function UserAccountMenu({ profile }: Props) {
 
         <Separator className="my-2" />
 
-        <div className="flex flex-col gap-1">
-          {primaryMenuItems.map((item) =>
-            UserAccountMenuItemRenderer(item, {
-              context: "popover",
-              onClose: () => setOpen(false),
-              onLogout: handleLogout,
-              isLogoutPending: logoutMutation.isPending,
-              isCanChangePassword,
-            }),
-          )}
+        <div className="flex flex-col gap-2.5">
+          {menuGroups.map((group) => (
+            <div key={group.label} className="flex flex-col gap-1">
+              <p className="text-muted-foreground px-2 text-[11px] font-semibold">{group.label}</p>
+              <div className="flex flex-col gap-1">{group.items.map(renderItem)}</div>
+            </div>
+          ))}
         </div>
 
         <Separator className="my-2" />
 
         <div className="flex flex-col gap-1">
-          {USER_ACCOUNT_HEADER_ACCOUNT_MENU_ITEMS.map((item) =>
-            UserAccountMenuItemRenderer(item, {
-              context: "popover",
-              onClose: () => setOpen(false),
-              onLogout: handleLogout,
-              isLogoutPending: logoutMutation.isPending,
-              isCanChangePassword,
-            }),
-          )}
+          {USER_ACCOUNT_HEADER_ACCOUNT_MENU_ITEMS.map(renderItem)}
         </div>
       </PopoverContent>
     </Popover>
