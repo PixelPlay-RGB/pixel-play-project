@@ -26,7 +26,6 @@ export default function FollowingChannelRow({ item }: FollowingChannelRowProps) 
           isFollowing
           isLive={item.isLive}
           showLiveRing={item.isLive}
-          showLivePill={item.isLive}
           confirmUnfollow
           avatarSize="sm"
           avatarClassName="size-14"

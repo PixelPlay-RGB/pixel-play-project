@@ -9,6 +9,7 @@ import DonationAlertPreview from "@/components/channel/donation/donation-alert-p
 import { DonationPreviewButton } from "@/components/channel/donation/donation-preview-button";
 import DonationTestAlertButton from "@/components/channel/donation/donation-test-alert-button";
 import { DonationVolumeSlider } from "@/components/channel/donation/donation-volume-slider";
+import { HintNote } from "@/components/common/hint-note";
 import { SettingFieldRow } from "@/components/common/setting-field-row";
 import { SettingNumberSelectControl } from "@/components/common/setting-number-select-control";
 import { SettingSegmentedControl } from "@/components/common/setting-segmented-control";
@@ -511,10 +512,11 @@ export function ChannelDonationControls({ initialSnapshot }: Props) {
                 {isSendingTest ? <Spinner /> : <Send className="size-4" />}
                 OBS에 테스트 후원 보내기
               </Button>
-              <p className="text-muted-foreground text-center text-xs leading-5">
-                현재 설정 그대로 OBS 후원 알림 화면에 한 번 띄워봐요. 방송에는 보이지 않고 통계에도
-                잡히지 않아요.
-              </p>
+              <HintNote>
+                OBS에 후원 알림 주소를 연결해 두면, 보낸 테스트 후원이 실제 알림으로 화면에 떠요.
+                <br />
+                방송 시청자에게는 보이지 않고, 후원 통계에도 잡히지 않아요.
+              </HintNote>
             </SettingsCard>
 
             <SideTipCard
