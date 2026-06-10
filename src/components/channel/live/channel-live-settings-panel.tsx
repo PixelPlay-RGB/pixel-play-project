@@ -164,9 +164,6 @@ export default function ChannelLiveSettingsPanel({
                 <ImageIcon className="text-brand size-4" />
                 <h3 className="text-foreground text-sm font-bold">미리보기 이미지</h3>
               </div>
-              <p className="text-muted-foreground text-xs leading-relaxed">
-                이미지를 등록하지 않으면 방송 중인 화면을 자동으로 캡처해 썸네일로 사용합니다.
-              </p>
             </div>
             <div className="border-border bg-muted/40 flex flex-1 flex-col rounded-xl border p-4">
               <input
@@ -204,6 +201,10 @@ export default function ChannelLiveSettingsPanel({
                     <div className="text-muted-foreground flex flex-col items-center gap-2 text-xs">
                       <Upload className="size-6" />
                       <span>이미지를 끌어오거나 추가하세요</span>
+                      <span className="max-w-58 leading-relaxed">
+                        이미지를 등록하지 않으면 방송 중인 화면을 자동으로 캡처해 썸네일로
+                        사용합니다.
+                      </span>
                     </div>
                   )}
                 </div>

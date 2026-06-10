@@ -22,6 +22,7 @@ import { CHANNEL_LIVE_MEDIA_CONFIG } from "@/constants/channel/channel-live-medi
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { cn } from "@/lib/utils";
 import type { ChannelLiveStreamStatusResponse } from "@/types/channel/channel-live-stream";
+import { isAutoLiveThumbnailUrl } from "@/utils/channel/channel-live-thumbnail";
 import { getAppMessage } from "@/utils/common/app-message";
 import { toastAppError, toastAppSuccess } from "@/utils/common/toast-message";
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
@@ -134,7 +135,9 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
   const [broadcastActionError, setBroadcastActionError] = useState<string | null>(null);
   const [chatRuleText, setChatRuleText] = useState(initialSettings?.chatRuleText ?? "");
   const [thumbnailPreviewUrl, setThumbnailPreviewUrl] = useState(
-    activeBroadcast?.thumbnailUrl ?? "",
+    isAutoLiveThumbnailUrl(activeBroadcast?.thumbnailUrl)
+      ? ""
+      : (activeBroadcast?.thumbnailUrl ?? ""),
   );
   const [thumbnailPreviewName, setThumbnailPreviewName] = useState("");
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
@@ -272,20 +275,9 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
       }
     : null;
 
-  const handleStreamStatusChange = useCallback(
-    (nextStatus: ChannelLiveStreamStatusResponse) => {
-      setStreamStatus(nextStatus);
-
-      if (thumbnailFile || thumbnailPreviewUrl.trim() || !nextStatus.autoThumbnailUrl) {
-        return;
-      }
-
-      setThumbnailPreviewUrl(nextStatus.autoThumbnailUrl);
-      setThumbnailPreviewName("자동 캡쳐 이미지");
-      setIsThumbnailRemoved(false);
-    },
-    [thumbnailFile, thumbnailPreviewUrl],
-  );
+  const handleStreamStatusChange = useCallback((nextStatus: ChannelLiveStreamStatusResponse) => {
+    setStreamStatus(nextStatus);
+  }, []);
 
   const clearOfflineAutoEndTimer = useCallback(() => {
     if (!offlineAutoEndTimerRef.current) return;

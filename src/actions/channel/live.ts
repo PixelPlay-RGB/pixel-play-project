@@ -24,6 +24,10 @@ import {
 } from "@/lib/zod/channel-live";
 import type { AppActionResult } from "@/types/common/action";
 import type { Database, Json } from "@/types/database.types";
+import {
+  isManualLiveThumbnailFileName,
+  LIVE_THUMBNAIL_DIRECTORY,
+} from "@/utils/channel/channel-live-thumbnail";
 import { buildLiveStreamKey } from "@/utils/live/live-security";
 import { revalidatePath } from "next/cache";
 
@@ -38,7 +42,6 @@ interface SaveLiveThumbnailInput {
 }
 
 const LIVE_THUMBNAIL_BUCKET = "user-media";
-const LIVE_THUMBNAIL_DIRECTORY = "live-thumbnail";
 const LIVE_THUMBNAIL_MAX_BYTES = 5 * 1024 * 1024;
 const LIVE_THUMBNAIL_EXTENSION_BY_TYPE: Record<string, string> = {
   "image/jpeg": "jpg",
@@ -212,7 +215,7 @@ async function removeLiveThumbnailFiles(
   }
 
   const filePaths = (files ?? [])
-    .filter((file) => file.name)
+    .filter((file) => file.name && isManualLiveThumbnailFileName(file.name))
     .map((file) => `${directoryPath}/${file.name}`);
 
   if (filePaths.length === 0) {

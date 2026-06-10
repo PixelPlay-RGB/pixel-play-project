@@ -1,10 +1,12 @@
 // MediaMTX HLS 스트림에서 자동 라이브 썸네일을 캡쳐하고 Storage에 저장합니다.
 
 import { createAdminClient } from "@/lib/supabase/admin-client";
+import {
+  LIVE_AUTO_THUMBNAIL_FILE_NAME,
+  LIVE_THUMBNAIL_DIRECTORY,
+} from "@/utils/channel/channel-live-thumbnail";
 
 const LIVE_THUMBNAIL_BUCKET = "user-media";
-const LIVE_THUMBNAIL_DIRECTORY = "live-thumbnail";
-const AUTO_THUMBNAIL_FILE_NAME = "auto.jpg";
 const AUTO_THUMBNAIL_CONTENT_TYPE = "image/jpeg";
 const AUTO_THUMBNAIL_MIN_CAPTURE_INTERVAL_MS = 60_000;
 const AUTO_THUMBNAIL_CAPTURE_TIMEOUT_MS = 5_000;
@@ -27,7 +29,7 @@ function getFfmpegPath() {
 }
 
 function getAutoThumbnailStoragePath(userId: string) {
-  return `${userId}/${LIVE_THUMBNAIL_DIRECTORY}/${AUTO_THUMBNAIL_FILE_NAME}`;
+  return `${userId}/${LIVE_THUMBNAIL_DIRECTORY}/${LIVE_AUTO_THUMBNAIL_FILE_NAME}`;
 }
 
 function appendCacheBuster(url: string) {
