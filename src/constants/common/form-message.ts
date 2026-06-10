@@ -1,5 +1,7 @@
 // 폼 검증과 필드 오류에 사용하는 문장형 메시지를 관리하는 상수
 
+import { formatNumber } from "@/utils/common/format";
+
 export const FORM_MESSAGE = {
   auth: {
     emailInvalid: "올바른 이메일 형식을 입력해주세요.",
@@ -33,5 +35,36 @@ export const FORM_MESSAGE = {
     capacityInteger: "참여 가능 인원은 정수로 입력해주세요.",
     capacityMin: (min: number) => `최소 ${min}명 이상이어야 합니다.`,
     capacityMax: (max: number) => `최대 ${max}명까지 가능합니다.`,
+  },
+  channelChat: {
+    chatScopeRequired: "채팅 참여 범위를 선택해주세요.",
+    followerWaitInvalid: "선택할 수 있는 대기 시간을 골라주세요.",
+    slowModeSecondsInvalid: "선택할 수 있는 채팅 간격을 골라주세요.",
+    chatRuleTextMax: (max: number) => `안내문은 ${max}자 이하여야 합니다.`,
+    forbiddenWordsMax: (max: number) => `금칙어는 최대 ${max}개까지 등록할 수 있습니다.`,
+    forbiddenWordRequired: "금칙어를 입력해주세요.",
+    forbiddenWordMax: (max: number) => `금칙어는 ${max}자 이하여야 합니다.`,
+  },
+  community: {
+    postRequired: "내용을 입력해주세요.",
+    postMax: (max: number) => `게시글은 ${max}자 이하여야 합니다.`,
+    commentRequired: "댓글 내용을 입력해주세요.",
+    commentMax: (max: number) => `댓글은 ${max}자 이하여야 합니다.`,
+  },
+  channelDonation: {
+    minAmountRange: (min: number, max: number) =>
+      `최소 후원 금액은 ${formatNumber(min)}P 이상 ${formatNumber(max)}P 이하여야 합니다.`,
+    alertDurationInvalid: "선택할 수 있는 알림 표시 시간을 골라주세요.",
+    alertSoundInvalid: "선택할 수 있는 알림음을 골라주세요.",
+    alertVolumeRange: "알림 볼륨은 0부터 100 사이여야 합니다.",
+    ttsRateInvalid: "선택할 수 있는 읽기 속도를 골라주세요.",
+    ttsVolumeRange: "음성 볼륨은 0부터 100 사이여야 합니다.",
+    ttsVoiceUriMax: (max: number) => `음성 식별자는 ${max}자 이하여야 합니다.`,
+  },
+  channelProfile: {
+    bioMax: (max: number) => `채널 소개는 ${max}자 이하여야 합니다.`,
+    bannerTitleMax: (max: number) => `배너 제목은 ${max}자 이하여야 합니다.`,
+    bannerLinkInvalid: "http(s)로 시작하는 올바른 링크를 입력해주세요.",
+    bannerLinkMax: (max: number) => `배너 링크는 ${max}자 이하여야 합니다.`,
   },
 } as const;

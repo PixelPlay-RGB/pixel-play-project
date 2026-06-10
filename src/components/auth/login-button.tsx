@@ -15,7 +15,7 @@ export default function LoginButton() {
 
   const handleAuth = () => {
     const query = searchParams.toString();
-    const next = pathname === "/" ? "/live" : `${pathname}${query ? `?${query}` : ""}`;
+    const next = pathname === "/" ? "/" : `${pathname}${query ? `?${query}` : ""}`;
     router.push(createPathWithNext("/auth/login", next));
   };
 
@@ -25,10 +25,10 @@ export default function LoginButton() {
   return (
     <button
       className={cn(
-        "rounded-lg border border-transparent bg-transparent px-4 py-2",
-        "text-foreground text-sm font-medium",
+        "rounded-lg border border-transparent bg-transparent px-2 py-2 sm:px-4",
+        "text-foreground text-sm font-medium whitespace-nowrap",
         "hover:bg-muted hover:text-foreground dark:hover:bg-muted/50",
-        "cursor-pointer tracking-widest",
+        "cursor-pointer tracking-normal sm:tracking-widest",
         "transition-all duration-200",
       )}
       onClick={handleAuth}

@@ -1,5 +1,4 @@
-﻿// 설정 페이지 레이아웃 - SettingsShell로 사이드바와 콘텐츠 영역 구성
-
+// 유저 설정 페이지 레이아웃을 구성합니다.
 import { SettingShell } from "@/components/setting/setting-shell";
 import { getCurrentProfileSnapshot } from "@/utils/profile/profile-server";
 import { ReactNode } from "react";

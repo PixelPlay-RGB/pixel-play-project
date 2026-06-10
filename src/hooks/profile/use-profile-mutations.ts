@@ -19,7 +19,7 @@ export function useUpdateProfileMutation() {
         return;
       }
 
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth.profiles() });
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth.profileAll() });
       router.refresh();
       toastAppSuccess(APP_MESSAGE_CODE.success.profile.updated);
     },

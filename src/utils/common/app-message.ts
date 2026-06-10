@@ -13,60 +13,6 @@ interface SupabaseLikeError {
   message?: string;
 }
 
-const CHAT_ROOM_RPC_ERROR_CODE_MAP: Array<{
-  errorCode: string;
-  code: AppMessageCode;
-}> = [
-  {
-    errorCode: "PX400",
-    code: APP_MESSAGE_CODE.error.chatRoom.invalidInput,
-  },
-  {
-    errorCode: "PX401",
-    code: APP_MESSAGE_CODE.error.auth.authInfoNotFound,
-  },
-  {
-    errorCode: "PX404",
-    code: APP_MESSAGE_CODE.error.chatRoom.notFound,
-  },
-  {
-    errorCode: "PX409",
-    code: APP_MESSAGE_CODE.error.chatRoom.full,
-  },
-  {
-    errorCode: "PX423",
-    code: APP_MESSAGE_CODE.error.chatRoom.isKicked,
-  },
-  {
-    errorCode: "PX460",
-    code: APP_MESSAGE_CODE.error.chatRoom.leaveOwnerBlocked,
-  },
-  {
-    errorCode: "PX461",
-    code: APP_MESSAGE_CODE.error.chatRoom.notActiveMember,
-  },
-  {
-    errorCode: "PX462",
-    code: APP_MESSAGE_CODE.error.chatRoomMember.notOwner,
-  },
-  {
-    errorCode: "PX463",
-    code: APP_MESSAGE_CODE.error.chatRoomMember.ownerCannotKickSelf,
-  },
-  {
-    errorCode: "PX464",
-    code: APP_MESSAGE_CODE.error.chatRoomMember.targetNotActive,
-  },
-  {
-    errorCode: "PX465",
-    code: APP_MESSAGE_CODE.error.chatRoomMember.ownerCannotTransferSelf,
-  },
-  {
-    errorCode: "PX466",
-    code: APP_MESSAGE_CODE.error.chatRoomMember.ownerTransferFailed,
-  },
-];
-
 const MESSAGE_RPC_ERROR_CODE_MAP: Array<{
   errorCode: string;
   code: AppMessageCode;
@@ -80,16 +26,61 @@ const MESSAGE_RPC_ERROR_CODE_MAP: Array<{
     code: APP_MESSAGE_CODE.error.auth.authInfoNotFound,
   },
   {
+    errorCode: "PX403",
+    code: APP_MESSAGE_CODE.error.message.sendForbidden,
+  },
+  {
     errorCode: "PX404",
     code: APP_MESSAGE_CODE.error.chatRoom.notFound,
+  },
+  {
+    errorCode: "PX422",
+    code: APP_MESSAGE_CODE.error.message.linkBlocked,
   },
   {
     errorCode: "PX423",
     code: APP_MESSAGE_CODE.error.chatRoom.isKicked,
   },
   {
+    // 채팅 규칙 미동의 — 정상적으로는 클라가 먼저 규칙 팝오버로 막지만 경합 시 방어한다.
+    errorCode: "PX428",
+    code: APP_MESSAGE_CODE.error.message.sendForbidden,
+  },
+  {
+    // 슬로우모드 — 실시간 채팅에서 정상 거부이므로 실패가 아닌 안내로 다룬다.
+    errorCode: "PX429",
+    code: APP_MESSAGE_CODE.error.message.slowMode,
+  },
+  {
     errorCode: "PX461",
     code: APP_MESSAGE_CODE.error.message.sendForbidden,
+  },
+];
+
+// 후원 RPC(send_live_donation)의 sqlstate를 사용자 메시지 코드로 매핑한다.
+const DONATION_RPC_ERROR_CODE_MAP: Array<{
+  errorCode: string;
+  code: AppMessageCode;
+}> = [
+  {
+    errorCode: "PX400",
+    code: APP_MESSAGE_CODE.error.live.donationInvalid,
+  },
+  {
+    errorCode: "PX401",
+    code: APP_MESSAGE_CODE.error.auth.authInfoNotFound,
+  },
+  {
+    errorCode: "PX402",
+    code: APP_MESSAGE_CODE.error.live.donationInsufficientBalance,
+  },
+  {
+    errorCode: "PX403",
+    code: APP_MESSAGE_CODE.error.live.donationDisabled,
+  },
+  {
+    errorCode: "PX409",
+    code: APP_MESSAGE_CODE.error.live.donationDuplicate,
   },
 ];
 
@@ -114,11 +105,7 @@ export function resolveSupabaseErrorCode(
   error: unknown,
   fallbackCode: AppMessageCode = APP_MESSAGE_CODE.error.common.unknown,
 ): AppMessageCode {
-  if (typeof error !== "object" || error === null) {
-    return fallbackCode;
-  }
-
-  const code = (error as SupabaseLikeError).code;
+  const code = readSupabaseErrorCode(error);
 
   if (code === "42501") {
     return APP_MESSAGE_CODE.error.supabase.permissionDenied;
@@ -131,48 +118,51 @@ export function resolveSupabaseErrorCode(
   return fallbackCode;
 }
 
-export function resolveChatRoomRpcErrorCode(
-  error: unknown,
-  fallbackCode: AppMessageCode = APP_MESSAGE_CODE.error.common.unknown,
-): AppMessageCode {
+type RpcErrorCodeMap = Array<{ errorCode: string; code: AppMessageCode }>;
+
+function readSupabaseErrorCode(error: unknown): string | undefined {
   if (typeof error !== "object" || error === null) {
-    return fallbackCode;
+    return undefined;
   }
 
-  const code = (error as SupabaseLikeError).code;
-
-  return CHAT_ROOM_RPC_ERROR_CODE_MAP.find((item) => item.errorCode === code)?.code ?? fallbackCode;
+  return (error as SupabaseLikeError).code;
 }
 
-export function isKnownChatRoomRpcError(error: unknown) {
-  if (typeof error !== "object" || error === null) {
-    return false;
-  }
+// RPC 에러코드 → 앱 메시지 코드 변환의 공통 구현(도메인은 map/fallback만 주입).
+function resolveRpcErrorCode(
+  error: unknown,
+  map: RpcErrorCodeMap,
+  fallbackCode: AppMessageCode,
+): AppMessageCode {
+  const code = readSupabaseErrorCode(error);
 
-  const code = (error as SupabaseLikeError).code;
+  return map.find((item) => item.errorCode === code)?.code ?? fallbackCode;
+}
 
-  return CHAT_ROOM_RPC_ERROR_CODE_MAP.some((item) => item.errorCode === code);
+function isKnownRpcError(error: unknown, map: RpcErrorCodeMap): boolean {
+  const code = readSupabaseErrorCode(error);
+
+  return map.some((item) => item.errorCode === code);
 }
 
 export function resolveMessageRpcErrorCode(
   error: unknown,
   fallbackCode: AppMessageCode = APP_MESSAGE_CODE.error.common.unknown,
 ): AppMessageCode {
-  if (typeof error !== "object" || error === null) {
-    return fallbackCode;
-  }
-
-  const code = (error as SupabaseLikeError).code;
-
-  return MESSAGE_RPC_ERROR_CODE_MAP.find((item) => item.errorCode === code)?.code ?? fallbackCode;
+  return resolveRpcErrorCode(error, MESSAGE_RPC_ERROR_CODE_MAP, fallbackCode);
 }
 
 export function isKnownMessageRpcError(error: unknown) {
-  if (typeof error !== "object" || error === null) {
-    return false;
-  }
+  return isKnownRpcError(error, MESSAGE_RPC_ERROR_CODE_MAP);
+}
 
-  const code = (error as SupabaseLikeError).code;
+export function resolveDonationRpcErrorCode(
+  error: unknown,
+  fallbackCode: AppMessageCode = APP_MESSAGE_CODE.error.live.donationFailed,
+): AppMessageCode {
+  return resolveRpcErrorCode(error, DONATION_RPC_ERROR_CODE_MAP, fallbackCode);
+}
 
-  return MESSAGE_RPC_ERROR_CODE_MAP.some((item) => item.errorCode === code);
+export function isKnownDonationRpcError(error: unknown) {
+  return isKnownRpcError(error, DONATION_RPC_ERROR_CODE_MAP);
 }

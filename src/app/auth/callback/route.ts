@@ -1,5 +1,5 @@
 // 라우트 핸들러를 처리합니다.
-import { LINKED_PARAM, LOGIN_PARAM } from "@/constants/auth/auth";
+import { LINKED_PARAM, LOGIN_PARAM, OAUTH_NEXT_COOKIE } from "@/constants/auth/auth";
 import { createClient } from "@/lib/supabase/server";
 import { LoginProvider } from "@/types/auth/auth";
 import {
@@ -9,6 +9,28 @@ import {
 } from "@/utils/common/redirect";
 import { NextResponse, type NextRequest } from "next/server";
 
+// next는 OAuth 시작 시 저장한 쿠키에서 읽습니다. (redirectTo 쿼리를 쓰지 않아 Redirect URL이 정확 일치로 유지됨)
+function readOAuthNext(request: NextRequest): string {
+  const raw = request.cookies.get(OAUTH_NEXT_COOKIE)?.value;
+
+  if (!raw) {
+    return sanitizeRedirectPath(null);
+  }
+
+  try {
+    return sanitizeRedirectPath(decodeURIComponent(raw));
+  } catch {
+    return sanitizeRedirectPath(null);
+  }
+}
+
+// 콜백 처리 후에는 더 이상 필요 없는 next 쿠키를 함께 제거합니다.
+function redirectClearingNext(url: string): NextResponse {
+  const response = NextResponse.redirect(url);
+  response.cookies.set(OAUTH_NEXT_COOKIE, "", { path: "/", maxAge: 0 });
+  return response;
+}
+
 /**
  * OAuth 콜백 핸들러.
  * Supabase OAuth 플로우에서 provider가 code를 query string으로 전달하면,
@@ -17,7 +39,7 @@ import { NextResponse, type NextRequest } from "next/server";
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = sanitizeRedirectPath(searchParams.get("next"));
+  const next = readOAuthNext(request);
 
   if (code) {
     const supabase = await createClient();
@@ -35,12 +57,12 @@ export async function GET(request: NextRequest) {
 
       if (existingUserError) {
         console.error("OAuth 콜백 중 사용자 프로필 조회 실패", existingUserError);
-        return NextResponse.redirect(`${origin}/auth/login?error=oauth_callback_failed`);
+        return redirectClearingNext(`${origin}/auth/login?error=oauth_callback_failed`);
       }
 
       if (!existingUser) {
         // 신규 OAuth 유저라면 추가 정보 입력 페이지로 보냄
-        return NextResponse.redirect(
+        return redirectClearingNext(
           `${origin}${createPathWithNext("/auth/complete-profile", next)}`,
         );
       }
@@ -74,15 +96,15 @@ export async function GET(request: NextRequest) {
 
         if (updateError) {
           console.error("OAuth 콜백 중 사용자 프로필 업데이트 실패", updateError);
-          return NextResponse.redirect(`${origin}/auth/login?error=oauth_callback_failed`);
+          return redirectClearingNext(`${origin}/auth/login?error=oauth_callback_failed`);
         }
       }
 
-      return NextResponse.redirect(
+      return redirectClearingNext(
         `${origin}${appendSearchParam(next, newProviders.length > 0 ? LINKED_PARAM : LOGIN_PARAM)}`,
       );
     }
   }
 
-  return NextResponse.redirect(`${origin}/auth/login?error=oauth_callback_failed`);
+  return redirectClearingNext(`${origin}/auth/login?error=oauth_callback_failed`);
 }

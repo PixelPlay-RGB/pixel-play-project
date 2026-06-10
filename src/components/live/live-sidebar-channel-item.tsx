@@ -1,0 +1,39 @@
+// 라이브 Sidebar의 채널 항목을 렌더링합니다.
+
+import Link from "next/link";
+
+import CreatorAvatarPopover from "@/components/creator/creator-avatar-popover";
+import LiveSidebarLiveStatus from "@/components/live/live-sidebar-live-status";
+import { SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
+import type { LiveListItem } from "@/types/live/live";
+
+interface LiveSidebarChannelItemProps {
+  item: LiveListItem;
+}
+
+export default function LiveSidebarChannelItem({ item }: LiveSidebarChannelItemProps) {
+  return (
+    <SidebarMenuItem className="flex items-center gap-1">
+      <CreatorAvatarPopover
+        creatorId={item.creatorId}
+        creatorNickname={item.creatorNickname}
+        creatorPhotoUrl={item.creatorPhotoUrl}
+        isFollowing={item.isFollowing}
+        isLive
+        showLiveRing
+        avatarSize="sm"
+        avatarClassName="size-7"
+        triggerClassName="ml-1"
+      />
+      <SidebarMenuButton
+        render={<Link href={`/live/${item.creatorId}`} />}
+        className="h-auto w-auto min-w-0 flex-1 gap-2 py-2"
+      >
+        <span className="text-sidebar-foreground min-w-0 flex-1 truncate text-xs font-bold">
+          {item.creatorNickname}
+        </span>
+        <LiveSidebarLiveStatus isLive viewerCount={item.currentViewerCount} />
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  );
+}

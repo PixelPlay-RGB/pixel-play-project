@@ -1,10 +1,13 @@
-// 라우트 페이지를 렌더링합니다.
-import LandingPreview from "@/components/preview/landing-preview";
+// 인덱스(홈) = 라이브 목록 페이지를 렌더링합니다.
+import { getLiveHero } from "@/app/live/data";
+import LiveHero from "@/components/live/live-hero";
+import LiveList from "@/components/live/live-list";
+import LiveShell from "@/components/live/live-shell";
 import type { Metadata } from "next";
 
 const HOME_METADATA_TITLE = "PixelPlay - RGB";
 const HOME_METADATA_DESCRIPTION =
-  "화면의 최소 단위인 픽셀을 즐긴다! 화면에 보여지는 스트리밍 서비스를 즐겨보세요";
+  "화면의 최소 단위인 픽셀을 즐긴다! PixelPlay에서 진행 중인 라이브 방송을 둘러보세요.";
 
 export const metadata: Metadata = {
   title: {
@@ -33,5 +36,11 @@ export const metadata: Metadata = {
 };
 
 export default async function Home() {
-  return <LandingPreview />;
+  const hero = await getLiveHero();
+
+  return (
+    <LiveShell>
+      <LiveList heroSlot={<LiveHero hero={hero} />} heroId={hero?.id ?? null} />
+    </LiveShell>
+  );
 }

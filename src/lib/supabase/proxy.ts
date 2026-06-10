@@ -11,12 +11,26 @@ function getCurrentPathWithSearch(request: NextRequest) {
   return `${pathname}${request.nextUrl.search}`;
 }
 
+// 공개 채널: /channel/<creatorId(UUID)>/... 이하. 스튜디오(/channel/live·chat 등)는
+// UUID가 아니라 이 패턴에 안 걸리므로 로그인 보호가 유지된다.
+// (설정 등 소유자 전용 하위 페이지는 각 page가 isOwnChannel로 자체 가드한다.)
+const PUBLIC_CHANNEL_PATTERN =
+  /^\/channel\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\/|$)/i;
+
 function isPublicRoute(pathname: string) {
-  return pathname === "/" || pathname === "/live" || pathname.startsWith("/chat/room/");
+  return (
+    pathname === "/" ||
+    pathname.startsWith("/live/") ||
+    PUBLIC_CHANNEL_PATTERN.test(pathname)
+  );
 }
 
 function isPublicAuthRoute(pathname: string) {
   return pathname === "/auth/login" || pathname === "/auth/signup" || pathname === "/auth/callback";
+}
+
+function isApiRoute(pathname: string) {
+  return pathname.startsWith("/api/");
 }
 
 export async function updateSession(request: NextRequest) {
@@ -57,7 +71,7 @@ export async function updateSession(request: NextRequest) {
   const currentPath = getCurrentPathWithSearch(request);
 
   // 비로그인 처리
-  if (!user && !isPublicRoute(pathname) && !isPublicAuthRoute(pathname)) {
+  if (!user && !isApiRoute(pathname) && !isPublicRoute(pathname) && !isPublicAuthRoute(pathname)) {
     const url = request.nextUrl.clone();
     const loginPath = createPathWithNext("/auth/login", currentPath);
     url.pathname = "/auth/login";

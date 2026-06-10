@@ -1,0 +1,189 @@
+-- 라이브 검색의 태그 매칭을 부분일치(unnest+ILIKE)에서 정확일치(tags @> array[query])로 변경.
+-- 태그는 고정된 칩 값이라 부분일치가 불필요하고, 정확일치를 title/nickname ILIKE와 OR로 묶으면
+-- GIN(tags) 인덱스를 못 타므로 broadcast 후보를 UNION으로 분리한다:
+--   (1) 제목/닉네임 부분일치(seq scan)  UNION  (2) 태그 정확일치(GIN 인덱스).
+-- 시그니처/반환 동일 → create or replace로 ACL 보존, 클라이언트·타입 변경 없음.
+
+create or replace function public.search_live_results(
+  p_query text,
+  p_limit integer default 6,
+  p_section text default null,
+  p_offset integer default 0
+)
+returns table(
+  section text,
+  creator_id uuid,
+  creator_nickname text,
+  creator_photo_url text,
+  broadcast_id uuid,
+  title text,
+  tags text[],
+  thumbnail_url text,
+  current_viewer_count integer,
+  started_at timestamp with time zone,
+  is_live boolean,
+  follower_count integer,
+  is_following boolean,
+  has_more boolean
+)
+language plpgsql
+stable
+security definer
+set search_path to ''
+as $function$
+declare
+  v_query text := btrim(coalesce(p_query, ''));
+  v_normalized_query text := regexp_replace(btrim(coalesce(p_query, '')), '\s+', '', 'g');
+  v_limit integer := least(greatest(coalesce(p_limit, 6), 1), 24);
+  v_offset integer := greatest(coalesce(p_offset, 0), 0);
+  v_broadcast_offset integer := case when p_section = 'broadcast' then v_offset else 0 end;
+  v_creator_offset integer := case when p_section = 'creator' then v_offset else 0 end;
+  v_actor_user_id uuid := auth.uid();
+begin
+  if v_query = '' then
+    return;
+  end if;
+
+  if p_section is null or p_section = 'broadcast' then
+    return query
+    with broadcast_candidates as (
+      -- 제목/닉네임 부분일치 경로(seq scan).
+      select broadcast.id as broadcast_id
+      from public.live_broadcast as broadcast
+      join public."user" as creator
+        on creator.id = broadcast.creator_id
+      where broadcast.ended_at is null
+        and (
+          broadcast.title ilike '%' || v_query || '%'
+          or regexp_replace(creator.nickname, '\s+', '', 'g') ilike '%' || v_normalized_query || '%'
+        )
+      union
+      -- 태그 정확일치 경로(GIN(tags) 인덱스 대상).
+      select broadcast.id as broadcast_id
+      from public.live_broadcast as broadcast
+      where broadcast.ended_at is null
+        and broadcast.tags @> array[v_query]
+    ),
+    matched_broadcasts as (
+      select
+        count(*) over () as total_count,
+        broadcast.creator_id,
+        creator.nickname as creator_nickname,
+        creator.photo_url as creator_photo_url,
+        broadcast.id as broadcast_id,
+        broadcast.title,
+        broadcast.tags,
+        broadcast.thumbnail_url,
+        broadcast.current_viewer_count,
+        broadcast.started_at
+      from broadcast_candidates
+      join public.live_broadcast as broadcast
+        on broadcast.id = broadcast_candidates.broadcast_id
+      join public."user" as creator
+        on creator.id = broadcast.creator_id
+      order by broadcast.current_viewer_count desc, broadcast.started_at desc, broadcast.id desc
+      limit v_limit
+      offset v_broadcast_offset
+    )
+    select
+      'broadcast'::text,
+      matched_broadcasts.creator_id,
+      matched_broadcasts.creator_nickname,
+      matched_broadcasts.creator_photo_url,
+      matched_broadcasts.broadcast_id,
+      matched_broadcasts.title,
+      matched_broadcasts.tags,
+      matched_broadcasts.thumbnail_url,
+      matched_broadcasts.current_viewer_count,
+      matched_broadcasts.started_at,
+      true,
+      (
+        select count(*)::integer
+        from public.viewer_creator_relation as relation
+        where relation.creator_id = matched_broadcasts.creator_id
+          and relation.followed_at is not null
+      ),
+      exists (
+        select 1
+        from public.viewer_creator_relation as relation
+        where relation.viewer_id = v_actor_user_id
+          and relation.creator_id = matched_broadcasts.creator_id
+          and relation.followed_at is not null
+      ),
+      matched_broadcasts.total_count > v_broadcast_offset + v_limit
+    from matched_broadcasts;
+  end if;
+
+  if p_section is null or p_section = 'creator' then
+    return query
+    with creators as (
+      select
+        creator.id as creator_id,
+        creator.nickname as creator_nickname,
+        creator.photo_url as creator_photo_url
+      from public."user" as creator
+      where regexp_replace(creator.nickname, '\s+', '', 'g') ilike '%' || v_normalized_query || '%'
+    ),
+    creator_rows as (
+      select
+        creators.creator_id,
+        creators.creator_nickname,
+        creators.creator_photo_url,
+        broadcast.id as broadcast_id,
+        broadcast.title,
+        broadcast.tags,
+        broadcast.thumbnail_url,
+        coalesce(broadcast.current_viewer_count, 0)::integer as current_viewer_count,
+        broadcast.started_at,
+        (broadcast.id is not null) as is_live,
+        (
+          select count(*)::integer
+          from public.viewer_creator_relation as relation
+          where relation.creator_id = creators.creator_id
+            and relation.followed_at is not null
+        ) as follower_count,
+        exists (
+          select 1
+          from public.viewer_creator_relation as relation
+          where relation.viewer_id = v_actor_user_id
+            and relation.creator_id = creators.creator_id
+            and relation.followed_at is not null
+        ) as is_following
+      from creators
+      left join lateral (
+        select active_broadcast.*
+        from public.live_broadcast as active_broadcast
+        where active_broadcast.creator_id = creators.creator_id
+          and active_broadcast.ended_at is null
+        order by active_broadcast.current_viewer_count desc, active_broadcast.started_at desc
+        limit 1
+      ) as broadcast on true
+    ),
+    ranked_creators as (
+      select
+        count(*) over () as total_count,
+        creator_rows.*
+      from creator_rows
+      order by creator_rows.is_live desc, creator_rows.current_viewer_count desc, creator_rows.creator_nickname asc
+      limit v_limit
+      offset v_creator_offset
+    )
+    select
+      'creator'::text,
+      ranked_creators.creator_id,
+      ranked_creators.creator_nickname,
+      ranked_creators.creator_photo_url,
+      ranked_creators.broadcast_id,
+      ranked_creators.title,
+      coalesce(ranked_creators.tags, '{}'::text[]),
+      ranked_creators.thumbnail_url,
+      ranked_creators.current_viewer_count,
+      ranked_creators.started_at,
+      ranked_creators.is_live,
+      ranked_creators.follower_count,
+      ranked_creators.is_following,
+      ranked_creators.total_count > v_creator_offset + v_limit
+    from ranked_creators;
+  end if;
+end;
+$function$;

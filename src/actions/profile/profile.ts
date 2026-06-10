@@ -1,6 +1,7 @@
 "use server";
 // 프로필 수정 Server Action을 관리합니다.
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
+import { USER_MEDIA_BUCKET } from "@/constants/common/storage";
 import type { ActionResponse } from "@/types/common/action";
 import { createClient } from "@/lib/supabase/server";
 import { isAuthSessionMissingError } from "@/utils/auth/auth-error";
@@ -43,16 +44,16 @@ export async function updateProfileAction(formData: FormData): Promise<ActionRes
   // 이미지 처리
   if (file || shouldDeleteImage) {
     const { data: existingFiles } = await supabase.storage
-      .from("profiles")
-      .list(`avatars/${user.id}`);
-    const existingPaths = (existingFiles ?? []).map((f) => `avatars/${user.id}/${f.name}`);
+      .from(USER_MEDIA_BUCKET)
+      .list(`${user.id}/avatar`);
+    const existingPaths = (existingFiles ?? []).map((f) => `${user.id}/avatar/${f.name}`);
 
     if (file) {
       const fileExt = file.name.split(".").pop();
-      const filePath = `avatars/${user.id}/avatar.${fileExt}`;
+      const filePath = `${user.id}/avatar/avatar.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
-        .from("profiles")
+        .from(USER_MEDIA_BUCKET)
         .upload(filePath, file, { upsert: true, contentType: file.type });
 
       if (uploadError) {
@@ -66,16 +67,16 @@ export async function updateProfileAction(formData: FormData): Promise<ActionRes
       // 업로드 성공 후 다른 확장자의 잔재 파일 정리
       const orphans = existingPaths.filter((p) => p !== filePath);
       if (orphans.length > 0) {
-        await supabase.storage.from("profiles").remove(orphans);
+        await supabase.storage.from(USER_MEDIA_BUCKET).remove(orphans);
       }
 
       const {
         data: { publicUrl },
-      } = supabase.storage.from("profiles").getPublicUrl(filePath);
+      } = supabase.storage.from(USER_MEDIA_BUCKET).getPublicUrl(filePath);
       photoUrl = `${publicUrl}?t=${Date.now()}`;
     } else {
       if (existingPaths.length > 0) {
-        await supabase.storage.from("profiles").remove(existingPaths);
+        await supabase.storage.from(USER_MEDIA_BUCKET).remove(existingPaths);
       }
       photoUrl = null;
     }
