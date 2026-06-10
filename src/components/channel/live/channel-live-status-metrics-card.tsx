@@ -45,16 +45,16 @@ function buildMetricItems({
 
 function ChannelLiveStatusMetricsFrame({ items }: { items: MetricItem[] }) {
   return (
-    // 풀블리드 섹션(ChannelLiveCollapsibleSection) 안에 들어가므로 카드 래퍼·제목 없이 내용만 둔다.
+    // 풀블리드 섹션(ChannelLiveCollapsibleSection) 안 — 실시간 통계와 같은 미니 카드 그리드로 보여준다.
     <section className="flex min-w-0 flex-col">
-      <dl className="divide-border flex flex-col divide-y divide-dashed">
+      <dl className="grid grid-cols-2 gap-2.5">
         {items.map((item) => (
           <div
             key={item.label}
-            className="flex min-h-8 items-center justify-between gap-4 py-1.5 text-sm font-bold"
+            className="border-border bg-muted/30 flex min-w-0 flex-col gap-1 rounded-lg border px-3 py-2.5"
           >
-            <dt className="text-muted-foreground">{item.label}</dt>
-            <dd className="text-foreground shrink-0 text-right font-black tabular-nums">
+            <dt className="text-muted-foreground truncate text-xs font-bold">{item.label}</dt>
+            <dd className="text-foreground truncate text-base font-black tabular-nums">
               {item.value}
             </dd>
           </div>

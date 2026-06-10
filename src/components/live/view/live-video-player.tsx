@@ -106,6 +106,40 @@ export function LiveVideoPlayer({
     handleFocus,
     handleBlur,
   } = useLivePlayerControls(isImmersive);
+  // 유튜브식 플레이어 단축키 — k(재생/일시정지)·m(음소거)·f(전체화면)·t(영화관).
+  // 입력 요소에 포커스가 있거나 조합키가 눌린 경우는 건드리지 않는다.
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
+      const target = event.target as HTMLElement | null;
+      if (target?.closest("input, textarea, select, [contenteditable=true]")) return;
+
+      switch (event.key.toLowerCase()) {
+        case "k":
+          event.preventDefault();
+          togglePlay();
+          break;
+        case "m":
+          event.preventDefault();
+          toggleMute();
+          break;
+        case "f":
+          event.preventDefault();
+          void toggleFullscreen();
+          break;
+        case "t":
+          if (onToggleTheater && !isFullscreen) {
+            event.preventDefault();
+            onToggleTheater();
+          }
+          break;
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [togglePlay, toggleMute, toggleFullscreen, onToggleTheater, isFullscreen]);
+
   const { levels, selectedLevel, setLevel, playbackState } = useHlsPlayer({
     videoRef,
     src: hlsSrc ?? "",

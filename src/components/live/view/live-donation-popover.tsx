@@ -207,8 +207,8 @@ export function LiveDonationPopover({
                   variant="outline"
                   onClick={() => addAmount(preset)}
                   className={cn(
-                    "h-auto px-2 py-2 text-sm",
-                    "border-border text-foreground hover:border-live/50",
+                    "h-auto px-2 py-2 text-sm font-semibold",
+                    "border-border text-foreground hover:border-live/50 hover:bg-live/10 hover:text-live",
                   )}
                 >
                   +{formatDonationAmount(preset)}
@@ -248,7 +248,7 @@ export function LiveDonationPopover({
             />
           </div>
 
-          <div className="bg-muted/50 text-muted-foreground flex flex-col gap-1 rounded-lg px-3 py-2 text-xs">
+          <div className="from-brand/10 to-live/10 border-border/60 text-muted-foreground flex flex-col gap-1 rounded-lg border bg-linear-to-r px-3 py-2.5 text-xs">
             <div className="flex justify-between">
               <span>{LIVE_DONATION_LABEL.balance}</span>
               <span>

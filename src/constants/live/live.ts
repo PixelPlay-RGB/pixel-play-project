@@ -88,7 +88,9 @@ export const LIVE_PLAYER_ICON_BUTTON_CLASS = "text-white/80 hover:bg-white/10 ho
 // 같은 값(20rem)이어야 한다. 한쪽만 바꾸면 영상이 패널 밑으로 깔리거나 빈틈이 생기므로 여기 한 곳에서 관리한다.
 // 일반 시청 화면의 채팅 패널 폭(md:w-88)과 동일하게 유지한다.
 export const LIVE_FULLSCREEN_CHAT_PANEL_WIDTH = "w-88";
-export const LIVE_FULLSCREEN_CHAT_INSET = "right-80";
+// 전체화면 채팅 패널 폭(LIVE_FULLSCREEN_CHAT_PANEL_WIDTH=w-88)과 반드시 함께 갱신한다 —
+// 어긋나면 우상단 hover 버튼·컨트롤 바가 패널에 가려진다.
+export const LIVE_FULLSCREEN_CHAT_INSET = "right-88";
 
 export const LIVE_DONATION_MIN_AMOUNT = 1000;
 export const LIVE_DONATION_AMOUNTS = [1000, 3000, 5000, 10000, 50000] as const;
@@ -117,7 +119,7 @@ export const LIVE_DONATION_LABEL = {
 } as const;
 
 export const LIVE_VOTE_LABEL = {
-  interactionTitle: "라이브 상호작용",
+  interactionTitle: "참여하기",
   interactionDescription: "방송자가 진행 중인 투표, 추첨, 룰렛을 확인합니다.",
   interactionResultTitle: "상호작용 결과",
   interactionResultDescription: "최근 투표, 추첨, 룰렛 결과입니다.",

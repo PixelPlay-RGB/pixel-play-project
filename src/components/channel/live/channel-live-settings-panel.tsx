@@ -144,7 +144,8 @@ export default function ChannelLiveSettingsPanel({
             <button
               key={tag}
               type="button"
-              className="bg-live/10 text-live inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold"
+              // 라이브 키워드 chip(LiveTagLink)과 동일한 brand 톤으로 맞춘다.
+              className="bg-brand/15 text-brand border-brand/20 inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-bold"
               onClick={() => onRemoveTag(tag)}
             >
               #{tag}
@@ -164,7 +165,8 @@ export default function ChannelLiveSettingsPanel({
               <h3 className="text-foreground text-sm font-bold">미리보기 이미지</h3>
             </div>
           </div>
-          <div className="border-border bg-muted/40 flex flex-1 flex-col rounded-xl border p-4">
+          {/* 카드 래퍼 없이 사각 이미지 영역 + 하단 액션만 둔다. */}
+          <div className="flex flex-1 flex-col">
             <input
               ref={thumbnailInputRef}
               className="sr-only"
@@ -173,41 +175,39 @@ export default function ChannelLiveSettingsPanel({
               accept="image/*"
               onChange={handleThumbnailInputChange}
             />
-            <div className="flex justify-center">
-              <div
-                className={cn(
-                  "border-border bg-background inline-flex aspect-video h-40 max-w-full flex-col items-center justify-center overflow-hidden rounded-xl border border-dashed bg-cover bg-center p-3 text-center sm:h-44",
-                  trimmedThumbnailPreviewUrl && "border-solid",
-                )}
-                role="button"
-                tabIndex={0}
-                style={
-                  trimmedThumbnailPreviewUrl
-                    ? { backgroundImage: `url(${trimmedThumbnailPreviewUrl})` }
-                    : undefined
+            <div
+              className={cn(
+                "border-border bg-muted/30 flex aspect-video w-full flex-col items-center justify-center overflow-hidden rounded-lg border border-dashed bg-cover bg-center p-3 text-center",
+                trimmedThumbnailPreviewUrl && "border-solid",
+              )}
+              role="button"
+              tabIndex={0}
+              style={
+                trimmedThumbnailPreviewUrl
+                  ? { backgroundImage: `url(${trimmedThumbnailPreviewUrl})` }
+                  : undefined
+              }
+              onClick={() => thumbnailInputRef.current?.click()}
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={handleThumbnailDrop}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  thumbnailInputRef.current?.click();
                 }
-                onClick={() => thumbnailInputRef.current?.click()}
-                onDragOver={(event) => event.preventDefault()}
-                onDrop={handleThumbnailDrop}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    thumbnailInputRef.current?.click();
-                  }
-                }}
-              >
-                {!trimmedThumbnailPreviewUrl && (
-                  <div className="text-muted-foreground flex flex-col items-center gap-2 text-xs">
-                    <Upload className="size-6" />
-                    <span>이미지를 끌어오거나 추가하세요</span>
-                    <span className="max-w-58 leading-relaxed">
-                      이미지를 등록하지 않으면 방송 중인 화면을 자동으로 캡처해 썸네일로 사용합니다.
-                    </span>
-                  </div>
-                )}
-              </div>
+              }}
+            >
+              {!trimmedThumbnailPreviewUrl && (
+                <div className="text-muted-foreground flex flex-col items-center gap-2 text-xs">
+                  <Upload className="size-6" />
+                  <span>이미지를 끌어오거나 추가하세요</span>
+                  <span className="max-w-58 leading-relaxed">
+                    이미지를 등록하지 않으면 방송 중인 화면을 자동으로 캡처해 썸네일로 사용합니다.
+                  </span>
+                </div>
+              )}
             </div>
-            <div className="mt-auto flex items-center justify-between gap-2 pt-4">
+            <div className="mt-auto flex items-center justify-between gap-2 pt-3">
               <span className="text-muted-foreground min-w-0 truncate text-xs font-semibold">
                 {thumbnailPreviewName || "이미지 없음"}
               </span>

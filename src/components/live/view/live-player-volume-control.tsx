@@ -5,6 +5,7 @@ import { Volume2, VolumeX } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { LIVE_LABEL, LIVE_PLAYER_ICON_BUTTON_CLASS } from "@/constants/live/live";
 
 interface Props {
@@ -17,16 +18,25 @@ interface Props {
 export function LivePlayerVolumeControl({ muted, volume, onToggleMute, onVolumeChange }: Props) {
   return (
     <div className="group/volume flex items-center">
-      <Button
-        type="button"
-        size="icon"
-        variant="ghost"
-        aria-label={muted ? LIVE_LABEL.playerUnmute : LIVE_LABEL.playerMute}
-        className={LIVE_PLAYER_ICON_BUTTON_CLASS}
-        onClick={onToggleMute}
-      >
-        {muted ? <VolumeX className="size-5" /> : <Volume2 className="size-5" />}
-      </Button>
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              aria-label={muted ? LIVE_LABEL.playerUnmute : LIVE_LABEL.playerMute}
+              className={LIVE_PLAYER_ICON_BUTTON_CLASS}
+              onClick={onToggleMute}
+            />
+          }
+        >
+          {muted ? <VolumeX className="size-5" /> : <Volume2 className="size-5" />}
+        </TooltipTrigger>
+        <TooltipContent>
+          {muted ? LIVE_LABEL.playerUnmute : LIVE_LABEL.playerMute} (m)
+        </TooltipContent>
+      </Tooltip>
       <div className="w-0 overflow-hidden transition-all duration-200 group-focus-within/volume:w-20 group-hover/volume:w-20">
         <Slider
           aria-label={LIVE_LABEL.playerVolume}

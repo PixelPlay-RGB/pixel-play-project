@@ -68,16 +68,25 @@ export function LivePlayerControlBar({
 }: Props) {
   return (
     <div className="flex items-center gap-2">
-      <Button
-        type="button"
-        size="icon"
-        variant="ghost"
-        aria-label={isPlaying ? LIVE_LABEL.playerPause : LIVE_LABEL.playerPlay}
-        className={LIVE_PLAYER_ICON_BUTTON_CLASS}
-        onClick={onTogglePlay}
-      >
-        {isPlaying ? <Pause className="size-5" /> : <Play className="size-5" />}
-      </Button>
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              aria-label={isPlaying ? LIVE_LABEL.playerPause : LIVE_LABEL.playerPlay}
+              className={LIVE_PLAYER_ICON_BUTTON_CLASS}
+              onClick={onTogglePlay}
+            />
+          }
+        >
+          {isPlaying ? <Pause className="size-5" /> : <Play className="size-5" />}
+        </TooltipTrigger>
+        <TooltipContent>
+          {isPlaying ? LIVE_LABEL.playerPause : LIVE_LABEL.playerPlay} (k)
+        </TooltipContent>
+      </Tooltip>
 
       <LivePlayerVolumeControl
         muted={muted}
@@ -117,20 +126,29 @@ export function LivePlayerControlBar({
         />
 
         {onToggleTheater ? (
-          <Button
-            type="button"
-            size="icon"
-            variant="ghost"
-            aria-label={isTheater ? LIVE_LABEL.playerTheaterExit : LIVE_LABEL.playerTheater}
-            className={cn(
-              LIVE_PLAYER_ICON_BUTTON_CLASS,
-              "hidden md:inline-flex",
-              isTheater && "text-live",
-            )}
-            onClick={onToggleTheater}
-          >
-            <RectangleHorizontal className="size-5" />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  aria-label={isTheater ? LIVE_LABEL.playerTheaterExit : LIVE_LABEL.playerTheater}
+                  className={cn(
+                    LIVE_PLAYER_ICON_BUTTON_CLASS,
+                    "hidden md:inline-flex",
+                    isTheater && "text-live",
+                  )}
+                  onClick={onToggleTheater}
+                />
+              }
+            >
+              <RectangleHorizontal className="size-5" />
+            </TooltipTrigger>
+            <TooltipContent>
+              {isTheater ? LIVE_LABEL.playerTheaterExit : LIVE_LABEL.playerTheater} (t)
+            </TooltipContent>
+          </Tooltip>
         ) : null}
 
         {isChatCollapsed && onOpenChat ? (
@@ -154,16 +172,27 @@ export function LivePlayerControlBar({
           </Tooltip>
         ) : null}
 
-        <Button
-          type="button"
-          size="icon"
-          variant="ghost"
-          aria-label={isFullscreen ? LIVE_LABEL.playerFullscreenExit : LIVE_LABEL.playerFullscreen}
-          className={LIVE_PLAYER_ICON_BUTTON_CLASS}
-          onClick={onToggleFullscreen}
-        >
-          {isFullscreen ? <Minimize2 className="size-5" /> : <Maximize2 className="size-5" />}
-        </Button>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                aria-label={
+                  isFullscreen ? LIVE_LABEL.playerFullscreenExit : LIVE_LABEL.playerFullscreen
+                }
+                className={LIVE_PLAYER_ICON_BUTTON_CLASS}
+                onClick={onToggleFullscreen}
+              />
+            }
+          >
+            {isFullscreen ? <Minimize2 className="size-5" /> : <Maximize2 className="size-5" />}
+          </TooltipTrigger>
+          <TooltipContent>
+            {isFullscreen ? LIVE_LABEL.playerFullscreenExit : LIVE_LABEL.playerFullscreen} (f)
+          </TooltipContent>
+        </Tooltip>
       </div>
     </div>
   );

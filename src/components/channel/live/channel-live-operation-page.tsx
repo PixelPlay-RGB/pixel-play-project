@@ -183,7 +183,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
           <ChannelLiveCollapsibleSection title="방송 상태">
             <ChannelLiveStatusMetricsCard broadcast={statusMetricsBroadcast} />
           </ChannelLiveCollapsibleSection>
-          <ChannelLiveCollapsibleSection title="라이브 상호작용">
+          <ChannelLiveCollapsibleSection title="시청자 참여">
             <ChannelLivePollPanel broadcastId={broadcastId} creatorId={creatorId} />
           </ChannelLiveCollapsibleSection>
         </div>

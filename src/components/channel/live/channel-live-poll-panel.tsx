@@ -2,7 +2,8 @@
 // 방송 운영 화면에서 채팅 기반 투표, DB 기준 추첨, 룰렛 도구를 선택·조립합니다.
 
 import { ArrowLeft } from "lucide-react";
-import { useState } from "react";
+import { motion, useReducedMotion } from "motion/react";
+import { useEffect, useRef, useState } from "react";
 
 import { ChannelLiveDrawToolView } from "@/components/channel/live/channel-live-draw-tool";
 import { ChannelLiveRouletteToolView } from "@/components/channel/live/channel-live-roulette-tool";
@@ -25,6 +26,13 @@ interface Props {
 export default function ChannelLivePollPanel({ broadcastId, creatorId }: Props) {
   const { polls, isLoading: isPollLoading } = useLivePolls(broadcastId, creatorId);
   const [selectedTool, setSelectedTool] = useState<InteractionTool | null>(null);
+  const prefersReducedMotion = useReducedMotion();
+  // 도구 화면이 펼쳐지면(높이 확장) 좌측 칼럼 스크롤을 따라 내려 바로 보이게 한다.
+  const toolViewRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!selectedTool) return;
+    toolViewRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [selectedTool]);
 
   // 도구를 오가도 진행 상태가 유지되도록 세 도구의 상태를 패널 수명으로 관리한다.
   const { publishInteractionNotice } = useChannelLiveInteractionNotice(broadcastId);
@@ -72,7 +80,13 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId }: Props) 
           ))}
         </div>
       ) : (
-        <div className="flex min-h-0 flex-1 flex-col gap-4">
+        <motion.div
+          ref={toolViewRef}
+          initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
+          className="flex min-h-0 flex-1 flex-col gap-4"
+        >
           <div className="flex items-center justify-between gap-3">
             <Button
               type="button"
@@ -97,7 +111,7 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId }: Props) 
           )}
 
           {selectedTool === "roulette" && <ChannelLiveRouletteToolView tool={rouletteTool} />}
-        </div>
+        </motion.div>
       )}
     </section>
   );
