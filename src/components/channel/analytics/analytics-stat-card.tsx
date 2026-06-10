@@ -17,9 +17,9 @@ interface Props {
 
 export function AnalyticsStatCard({ icon: Icon, label, value, hint, trend }: Props) {
   return (
-    <Card className="gap-3 p-5">
+    <Card className="gap-3 p-5 shadow-sm">
       <div className="text-muted-foreground flex items-center gap-2">
-        <Icon className="size-4" />
+        <Icon className="text-live size-4" />
         <span className="text-sm font-medium">{label}</span>
       </div>
       <div className="flex items-end justify-between gap-2">

@@ -39,6 +39,7 @@ export function ReportPeriodSelector({ value }: Props) {
 
   return (
     <SegmentedButtonGroup
+      ariaLabel={ANALYTICS_LABEL.reportPeriodAriaLabel}
       options={REPORT_PERIOD_OPTIONS.map((option) => ({
         value: option.value,
         label: ANALYTICS_LABEL[option.labelKey],
