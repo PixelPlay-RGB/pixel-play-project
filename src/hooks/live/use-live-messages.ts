@@ -8,12 +8,13 @@ import { LIVE_MESSAGE_LIMIT } from "@/constants/live/live";
 import {
   mapLiveMessageRealtimePayload,
   mapLiveMessageRowToMessage,
-  type LiveMessageJoinedRow,
+  type LiveMessageRow,
 } from "@/utils/live/live-message";
 import { appendLiveMessage } from "@/utils/live/live-chat";
 import type { LiveChatMessage } from "@/types/live/live";
-const LIVE_MESSAGE_SELECT =
-  "id, created_at, sender_id, message_type, content, metadata, sender:sender_id(nickname, photo_url), donation:donation_id(amount)" as const;
+// 닉네임·후원 금액은 metadata에 스냅샷으로 들어 있어 join이 필요 없다(Realtime payload와 동일 경로).
+// user·donation join을 빼야 anon RLS("Anyone can read active live messages")만으로 비로그인도 조회된다.
+const LIVE_MESSAGE_SELECT = "id, created_at, sender_id, message_type, content, metadata" as const;
 const EMPTY_LIVE_MESSAGES: LiveChatMessage[] = [];
 
 export function useLiveMessages(
@@ -23,8 +24,7 @@ export function useLiveMessages(
 ) {
   const supabase = useMemo(() => createClient(), []);
   const queryClient = useQueryClient();
-  // live_message 조회는 authenticated 전용(RLS)이라 비로그인 요청은 401 콘솔 에러만 남긴다 — viewerId 있을 때만 가져온다.
-  const enabled = !!broadcastId && !!viewerId;
+  const enabled = !!broadcastId;
 
   const query = useQuery<LiveChatMessage[]>({
     queryKey: QUERY_KEYS.live.messages(broadcastId ?? undefined),
@@ -38,7 +38,7 @@ export function useLiveMessages(
         .eq("broadcast_id", broadcastId)
         .order("created_at", { ascending: false })
         .limit(LIVE_MESSAGE_LIMIT)
-        .returns<LiveMessageJoinedRow[]>();
+        .returns<LiveMessageRow[]>();
 
       if (error) throw error;
 
