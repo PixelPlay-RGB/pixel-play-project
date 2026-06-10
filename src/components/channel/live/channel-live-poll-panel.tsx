@@ -52,7 +52,8 @@ const ROULETTE_SEGMENT_COLORS = [
   "var(--success)",
   "var(--muted-foreground)",
 ];
-const MAX_POLL_OPTION_COUNT = 4;
+const MAX_POLL_OPTION_COUNT = 5;
+const POLL_TIMER_MAX_SECONDS = 3600;
 const DRAW_REEL_ROW_HEIGHT_PX = 40;
 const DRAW_REEL_REPEAT_COUNT = 9;
 const DRAW_REEL_DURATION_MS = 2200;
@@ -160,6 +161,8 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
   const [options, setOptions] = useState(DEFAULT_POLL_OPTIONS);
   const [isPollActionPending, setIsPollActionPending] = useState(false);
   const [isPollFormOpen, setIsPollFormOpen] = useState(false);
+  const [isPollTimerEnabled, setIsPollTimerEnabled] = useState(false);
+  const [pollTimerSeconds, setPollTimerSeconds] = useState(0);
   const [drawSession, setDrawSession] = useState<DrawState | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [isDrawParticipantLoading, setIsDrawParticipantLoading] = useState(false);
@@ -179,8 +182,16 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
   const activePoll = polls.find((poll) => poll.status === "active") ?? null;
   const latestEndedPoll = [...polls].reverse().find((poll) => poll.status === "ended") ?? null;
   const visiblePoll = activePoll ?? (isPollFormOpen ? null : latestEndedPoll);
+  const normalizedPollTimerSeconds = Math.min(
+    Math.max(Math.floor(pollTimerSeconds), 0),
+    POLL_TIMER_MAX_SECONDS,
+  );
   const canCreatePoll =
-    !!broadcastId && !activePoll && title.trim().length > 0 && trimmedOptions.length >= 2;
+    !!broadcastId &&
+    !activePoll &&
+    title.trim().length > 0 &&
+    trimmedOptions.length >= 2 &&
+    (!isPollTimerEnabled || normalizedPollTimerSeconds > 0);
   const pollResults = useMemo(() => getPollResults(visiblePoll), [visiblePoll]);
   const totalVotes = pollResults.reduce((total, result) => total + result.count, 0);
   const previewDrawParticipants = useMemo(
@@ -261,6 +272,17 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
     );
   };
 
+  const handlePollTimerSecondsChange = (value: string) => {
+    const nextValue = Number(value);
+
+    if (!Number.isFinite(nextValue)) {
+      setPollTimerSeconds(0);
+      return;
+    }
+
+    setPollTimerSeconds(Math.min(Math.max(Math.floor(nextValue), 0), POLL_TIMER_MAX_SECONDS));
+  };
+
   const invalidatePolls = () => {
     if (!broadcastId) return;
 
@@ -279,6 +301,10 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
     try {
       const result = await createChannelLivePollAction({
         broadcastId,
+        endsAt:
+          isPollTimerEnabled && normalizedPollTimerSeconds > 0
+            ? new Date(Date.now() + normalizedPollTimerSeconds * 1000).toISOString()
+            : null,
         options: trimmedOptions,
         title: title.trim(),
       });
@@ -290,6 +316,8 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
 
       setTitle("");
       setOptions(DEFAULT_POLL_OPTIONS);
+      setIsPollTimerEnabled(false);
+      setPollTimerSeconds(0);
       setIsPollFormOpen(false);
       invalidatePolls();
     } catch (error) {
@@ -679,54 +707,79 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
                     />
                   </div>
 
-                  <div className="flex flex-col gap-2">
-                    <div className="flex items-center justify-between gap-3">
-                      <label className="text-muted-foreground text-xs font-semibold">선택지</label>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        className="rounded-xl font-bold"
-                        disabled={options.length >= MAX_POLL_OPTION_COUNT}
-                        onClick={handleAddOption}
-                      >
-                        <Plus className="size-3.5" />
-                        추가
-                      </Button>
-                    </div>
-                    <div className="grid gap-2">
+                  <div className="flex min-h-0 flex-col gap-3">
+                    <div className="grid max-h-56 gap-3 overflow-y-auto pr-1">
                       {options.map((option, index) => (
-                        <div key={index} className="flex gap-2">
+                        <div
+                          key={index}
+                          className="grid grid-cols-[4.25rem_minmax(0,1fr)_2.5rem] items-center gap-2"
+                        >
+                          <span className="text-foreground text-sm font-black">
+                            항목 {index + 1}
+                          </span>
                           <Input
                             value={option}
                             maxLength={24}
-                            placeholder={`선택지 ${index + 1}`}
+                            placeholder="투표 이름"
                             className="border-border bg-muted/30 h-10 rounded-xl px-4 text-sm"
                             onChange={(event) => handleOptionChange(index, event.target.value)}
                           />
                           <Button
                             type="button"
                             size="icon"
-                            variant="outline"
-                            className="rounded-xl"
+                            variant="ghost"
+                            className="text-muted-foreground hover:text-foreground rounded-xl"
                             disabled={options.length <= 2}
                             onClick={() => handleRemoveOption(index)}
                           >
-                            <X className="size-4" />
-                            <span className="sr-only">선택지 삭제</span>
+                            <X className="size-5" />
+                            <span className="sr-only">항목 삭제</span>
                           </Button>
                         </div>
                       ))}
                     </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="border-brand text-brand hover:bg-brand/10 hover:text-brand h-10 rounded-xl font-bold"
+                      disabled={options.length >= MAX_POLL_OPTION_COUNT}
+                      onClick={handleAddOption}
+                    >
+                      <Plus className="size-3.5" />
+                      항목 추가
+                    </Button>
                   </div>
 
-                  <Button
-                    type="submit"
-                    disabled={!canCreatePoll || isPollActionPending}
-                    className="bg-brand hover:bg-brand/90 mt-auto h-10 rounded-xl font-bold text-white"
-                  >
-                    {isPollActionPending ? "시작 중" : "투표 시작"}
-                  </Button>
+                  <div className="mt-auto flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-end">
+                    <label className="text-foreground flex items-center gap-2 text-sm font-bold">
+                      <input
+                        type="checkbox"
+                        checked={isPollTimerEnabled}
+                        className="accent-brand size-4"
+                        onChange={(event) => setIsPollTimerEnabled(event.target.checked)}
+                      />
+                      타이머 사용하기
+                    </label>
+                    <div className="flex items-center justify-end gap-2">
+                      <Input
+                        type="number"
+                        min={0}
+                        max={POLL_TIMER_MAX_SECONDS}
+                        value={pollTimerSeconds}
+                        disabled={!isPollTimerEnabled}
+                        className="border-border bg-muted/30 h-10 w-25 rounded-xl text-center text-sm font-bold"
+                        onChange={(event) => handlePollTimerSecondsChange(event.target.value)}
+                      />
+                      <span className="text-foreground text-sm font-bold">초</span>
+                    </div>
+                    <Button
+                      type="submit"
+                      disabled={!canCreatePoll || isPollActionPending}
+                      className="bg-brand hover:bg-brand/90 h-11 rounded-xl px-7 font-bold text-white shadow-sm transition-all active:scale-95"
+                    >
+                      {isPollActionPending ? "시작 중" : "투표 시작"}
+                    </Button>
+                  </div>
                 </form>
               )}
             </div>
