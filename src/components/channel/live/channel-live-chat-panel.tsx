@@ -8,25 +8,21 @@ import { LiveChatMessageList } from "@/components/live/chat/live-chat-message-li
 import { LiveChatInputBar } from "@/components/live/view/live-chat-input-bar";
 import { LiveChatMenu } from "@/components/live/view/live-chat-menu";
 import { LiveDonationBanner } from "@/components/live/view/live-donation-banner";
-import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { LIVE_DONATION_MIN_AMOUNT, LIVE_LABEL } from "@/constants/live/live";
 import { useLiveChatSession } from "@/hooks/live/use-live-chat-session";
 import { useLiveDonationRanking } from "@/hooks/live/use-live-donation-ranking";
 import { useLiveMessages } from "@/hooks/live/use-live-messages";
 import type { LiveChatMessage, LiveViewerChatState } from "@/types/live/live";
-import { ExternalLink, Pause, Play } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 interface Props {
   broadcastId?: string | null;
   creatorId?: string;
   chatRuleText?: string;
-  isChatPausePending?: boolean;
   liveState: ChannelLiveState;
   onMessagesChange?: (messages: ChannelLiveChatMessage[]) => void;
-  onToggleChatPaused: () => void;
 }
 
 function getStudioChatState(broadcastId: string | null | undefined): LiveViewerChatState {
@@ -69,10 +65,8 @@ export default function ChannelLiveChatPanel({
   broadcastId,
   creatorId,
   chatRuleText,
-  isChatPausePending,
   liveState,
   onMessagesChange,
-  onToggleChatPaused,
 }: Props) {
   const [cleanbot, setCleanbot] = useState(true);
   const [isPopoutOpen, setIsPopoutOpen] = useState(false);
@@ -87,7 +81,6 @@ export default function ChannelLiveChatPanel({
     viewerChatState: chatState,
   });
   const channelLiveChatMessages = useMemo(() => toChannelLiveChatMessages(messages), [messages]);
-  const pauseLabel = liveState.isChatPaused ? "채팅 재개" : "채팅 일시정지";
 
   function handlePopoutOpen(win: Window) {
     popoutWindowRef.current = win;
@@ -120,34 +113,15 @@ export default function ChannelLiveChatPanel({
     <div className="border-border bg-card flex h-full min-h-96 flex-col overflow-hidden rounded-xl border md:min-h-0">
       <div className="border-border flex items-center justify-between border-b px-4 py-3">
         <span className="text-foreground text-sm font-semibold">{LIVE_LABEL.chat}</span>
-        <div className="flex items-center gap-1">
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <Button
-                  type="button"
-                  size="icon-sm"
-                  variant="ghost"
-                  aria-label={pauseLabel}
-                  disabled={isChatPausePending}
-                  onClick={onToggleChatPaused}
-                />
-              }
-            >
-              {liveState.isChatPaused ? <Play className="size-4" /> : <Pause className="size-4" />}
-            </TooltipTrigger>
-            <TooltipContent>{pauseLabel}</TooltipContent>
-          </Tooltip>
-          {creatorId ? (
-            <LiveChatMenu
-              creatorId={creatorId}
-              chatRuleText={chatRuleText}
-              cleanbot={cleanbot}
-              onCleanbot={() => setCleanbot((prev) => !prev)}
-              onPopoutOpen={handlePopoutOpen}
-            />
-          ) : null}
-        </div>
+        {creatorId ? (
+          <LiveChatMenu
+            creatorId={creatorId}
+            chatRuleText={chatRuleText}
+            cleanbot={cleanbot}
+            onCleanbot={() => setCleanbot((prev) => !prev)}
+            onPopoutOpen={handlePopoutOpen}
+          />
+        ) : null}
       </div>
 
       {isPopoutOpen ? (
