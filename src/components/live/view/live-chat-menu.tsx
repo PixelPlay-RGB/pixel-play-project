@@ -81,7 +81,7 @@ export function LiveChatMenu({
             <Button
               ref={menuTriggerRef}
               size="sm"
-              variant="outline"
+              variant="ghost"
               aria-label={LIVE_LABEL.chatMenu}
               className="size-8 p-0"
             />
@@ -91,12 +91,30 @@ export function LiveChatMenu({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-44">
           <DropdownMenuGroup>
+            {/* 클린봇은 토글이라 클릭해도 메뉴를 닫지 않고, 스위치로 켜짐/꺼짐 상태를 보여준다. */}
             <DropdownMenuItem
+              role="menuitemcheckbox"
+              aria-checked={cleanbot}
+              closeOnClick={false}
               className={cn("gap-2", cleanbot && "text-brand")}
               onClick={onCleanbot}
             >
               <ShieldCheck className="size-4" />
-              {cleanbot ? LIVE_CHAT_MENU_LABEL.cleanbot : LIVE_CHAT_MENU_LABEL.cleanbotOff}
+              <span className="flex-1">{LIVE_CHAT_MENU_LABEL.cleanbot}</span>
+              <span
+                aria-hidden
+                className={cn(
+                  "relative inline-flex h-4 w-7 shrink-0 rounded-full transition-colors",
+                  cleanbot ? "bg-brand" : "bg-muted-foreground/30",
+                )}
+              >
+                <span
+                  className={cn(
+                    "bg-background absolute top-0.5 left-0.5 size-3 rounded-full shadow-sm transition-transform",
+                    cleanbot && "translate-x-3",
+                  )}
+                />
+              </span>
             </DropdownMenuItem>
             <DropdownMenuItem className="gap-2" onClick={() => setIsRulesOpen(true)}>
               <ScrollText className="size-4" />
@@ -125,24 +143,29 @@ export function LiveChatMenu({
           <p className="text-foreground text-sm leading-relaxed whitespace-pre-wrap">
             {chatRuleText || LIVE_LABEL.chatRuleDefaultText}
           </p>
-          {/* 동의 여부는 액션이 아니라 상태 표시다. disabled <Button>은 AT에 "비활성 버튼"으로 읽혀
-              부적절하므로, 버튼 모양만 빌린 role=status 비대화형 요소로 둔다(동의는 입력칸 게이트에서만). */}
+          {/* 동의 상태 표시 겸 닫기 버튼 — 클릭하면 규칙 popover를 닫는다(실제 동의는 입력칸 게이트에서만). */}
           {isRuleAccepted ? (
-            <div
-              role="status"
-              className={cn(RULE_STATUS_CHIP_CLASS, "bg-brand text-brand-foreground")}
+            <Button
+              type="button"
+              className={cn(
+                RULE_STATUS_CHIP_CLASS,
+                "bg-brand hover:bg-brand/90 text-brand-foreground",
+              )}
+              onClick={() => setIsRulesOpen(false)}
             >
               <Check className="size-3.5" />
               {LIVE_LABEL.chatRuleAccepted}
-            </div>
+            </Button>
           ) : isRulePending ? (
-            <div
-              role="status"
-              className={cn(RULE_STATUS_CHIP_CLASS, "bg-secondary text-secondary-foreground")}
+            <Button
+              type="button"
+              variant="secondary"
+              className={cn(RULE_STATUS_CHIP_CLASS)}
+              onClick={() => setIsRulesOpen(false)}
             >
               <Info className="size-3.5" />
               {LIVE_LABEL.chatRulePending}
-            </div>
+            </Button>
           ) : null}
         </PopoverContent>
       </Popover>

@@ -1,7 +1,8 @@
 "use client";
 // OBS 브라우저 소스에 붙이는 라이브 채팅 출력 화면을 렌더링합니다.
-import { Crown, HandCoins, Heart } from "lucide-react";
+import { HandCoins } from "lucide-react";
 
+import { LiveChatRoleBadge } from "@/components/live/chat/live-chat-role-badge";
 import { useLiveChatOverlay } from "@/hooks/live/use-live-chat-overlay";
 import { cn } from "@/lib/utils";
 import type {
@@ -81,34 +82,11 @@ function DonationMessageItem({ message }: { message: LiveChatOverlayMessage }) {
   );
 }
 
+// 시청 채팅과 같은 마크 컴포넌트를 쓰되, OBS 출력용이라 tooltip은 끈다.
 function MessagePrefix({ role }: { role?: LiveChatOverlayMessage["role"] }) {
-  if (role === "creator") {
-    return (
-      <span
-        className={cn(
-          "mt-0.5 inline-flex size-8 shrink-0 items-center justify-center rounded-md",
-          "text-brand ring-brand/30 bg-black/50 shadow-md ring-1",
-        )}
-        aria-label="방장"
-        title="방장"
-      >
-        <Crown className="size-4.5" aria-hidden />
-      </span>
-    );
+  if (role !== "creator" && role !== "donor") {
+    return null;
   }
-  if (role === "donor") {
-    return (
-      <span
-        className={cn(
-          "mt-0.5 inline-flex size-8 shrink-0 items-center justify-center rounded-md",
-          "bg-live/80 ring-live/40 text-live-foreground shadow-md ring-1",
-        )}
-        aria-label="후원자"
-        title="후원자"
-      >
-        <Heart className="size-4.5 fill-current" aria-hidden />
-      </span>
-    );
-  }
-  return null;
+
+  return <LiveChatRoleBadge role={role} size="lg" />;
 }

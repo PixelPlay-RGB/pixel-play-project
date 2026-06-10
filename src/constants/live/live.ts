@@ -35,9 +35,13 @@ export const LIVE_LABEL = {
   viewers: "명 시청 중",
   followers: "팔로워",
   broadcasts: "방송",
-  cleanbotHidden: "클린봇이 가린 메시지입니다.",
-  cleanbotReveal: "보기",
+  cleanbotHidden: "클린봇이 부적절한 표현을 가렸습니다.",
+  // 첫 진입 시 채팅 목록 상단에 항상 보여주는 필터링 안내.
+  chatFilterNotice:
+    "쾌적한 시청 환경을 위해 일부 메시지는 필터링 됩니다. 클린 라이브 채팅 문화 만들기에 동참해 주세요.",
   donationRankingTitle: "이번 주 후원 랭킹",
+  donationRankingCollapse: "후원 랭킹 접기",
+  donationRankingExpand: "후원 랭킹 펼치기",
   emptyWeeklyDonation: "이번 주 첫 번째 팬이 되어보세요!",
   chatLoginPlaceholder: "로그인 후 채팅할 수 있습니다.",
   chatPlaceholder: "채팅 입력...",
@@ -159,8 +163,7 @@ export const LIVE_VOTE_LABEL = {
 } as const;
 
 export const LIVE_CHAT_MENU_LABEL = {
-  cleanbot: "클린봇 켜짐",
-  cleanbotOff: "클린봇 꺼짐",
+  cleanbot: "클린봇",
   rules: "채팅 규칙",
   popout: "채팅창 팝업",
 } as const;

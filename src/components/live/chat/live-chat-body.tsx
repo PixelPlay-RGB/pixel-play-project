@@ -102,8 +102,9 @@ export function LiveChatBody({
 }: Props) {
   return (
     <>
-      <div className="flex min-h-0 flex-1 flex-col">
-        <div className="shrink-0 px-2 pt-2">
+      <div className="relative flex min-h-0 flex-1 flex-col">
+        {/* 배너는 메시지 영역 위에 absolute로 띄워, 접고 펼쳐도 채팅 목록이 밀리지 않는다. */}
+        <div className="absolute inset-x-0 top-0 z-10">
           <LiveDonationBanner donations={donations} />
         </div>
         <ScrollArea className="min-h-0 flex-1">
