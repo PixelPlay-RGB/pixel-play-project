@@ -14,12 +14,5 @@ namespace NodeJS {
     TOSS_PAYMENTS_SECRET_KEY?: string;
     MEDIAMTX_API_BASE_URL?: string;
     VERCEL_URL?: string;
-
-    // 코드에서 직접 사용하지 않음 — Supabase 대시보드 OAuth 설정값 기록용.
-    AUTH_SECRET?: string;
-    AUTH_GOOGLE_CLIENT_ID?: string;
-    AUTH_GOOGLE_CLIENT_SECRET?: string;
-    AUTH_GITHUB_CLIENT_ID?: string;
-    AUTH_GITHUB_CLIENT_SECRET?: string;
   }
 }
