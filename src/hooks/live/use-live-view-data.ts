@@ -122,8 +122,15 @@ export function useLiveViewData(creatorId: string) {
   // 종료/오프라인 상태에서 같은 크리에이터가 새 방송을 시작하면(INSERT) 다시 불러와 video로 되돌린다.
   // 새 방송 행은 ended_at=null이라 RLS SELECT를 통과해 시청자에게도 INSERT 이벤트가 전달된다.
   // (종료 UPDATE와 달리 트리거가 필요 없다.) creator 범위로 구독해 방송 유무와 무관하게 항상 듣는다.
+  // 채팅 설정(creator_studio_setting) 변경도 같은 채널에서 듣고 다시 불러온다(채팅 일시정지 등).
   useEffect(() => {
     if (!isValidCreatorId) return;
+
+    const invalidateWatch = () => {
+      void queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.live.watch(creatorId, user?.id),
+      });
+    };
 
     const channel = supabase
       .channel(`live-creator-${creatorId}`)
@@ -135,11 +142,17 @@ export function useLiveViewData(creatorId: string) {
           table: "live_broadcast",
           filter: `creator_id=eq.${creatorId}`,
         },
-        () => {
-          void queryClient.invalidateQueries({
-            queryKey: QUERY_KEYS.live.watch(creatorId, user?.id),
-          });
+        invalidateWatch,
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "creator_studio_setting",
+          filter: `creator_id=eq.${creatorId}`,
         },
+        invalidateWatch,
       )
       .subscribe();
 

@@ -2,16 +2,28 @@
 // 방송 제목, 태그, 미리보기 이미지와 방송 시작 제어를 렌더링합니다.
 
 import type { ChannelLiveState } from "@/components/channel/live/channel-live-operation-page";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { CircleStop, ImageIcon, Play, Save, Tag, Upload, X } from "lucide-react";
-import { type ChangeEvent, type DragEvent, type ReactNode, useRef } from "react";
+import { type ChangeEvent, type DragEvent, type ReactNode, useRef, useState } from "react";
 
 interface Props {
   broadcastActionError: string | null;
+  canSaveSettings: boolean;
   isBroadcastActionPending: boolean;
   isSettingsActionPending: boolean;
   secondaryPanel: ReactNode;
@@ -34,6 +46,7 @@ interface Props {
 
 export default function ChannelLiveSettingsPanel({
   broadcastActionError,
+  canSaveSettings,
   isBroadcastActionPending,
   isSettingsActionPending,
   secondaryPanel,
@@ -55,6 +68,7 @@ export default function ChannelLiveSettingsPanel({
 }: Props) {
   const trimmedThumbnailPreviewUrl = thumbnailPreviewUrl.trim();
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
+  const [isEndDialogOpen, setIsEndDialogOpen] = useState(false);
 
   const handleThumbnailInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -72,6 +86,11 @@ export default function ChannelLiveSettingsPanel({
     if (!file) return;
 
     onThumbnailFileChange(file);
+  };
+
+  const handleConfirmEndBroadcast = () => {
+    onEndBroadcast();
+    setIsEndDialogOpen(false);
   };
 
   return (
@@ -140,9 +159,11 @@ export default function ChannelLiveSettingsPanel({
           {secondaryPanel}
 
           <section className="flex min-w-0 flex-col gap-3">
-            <div className="flex items-center gap-2">
-              <ImageIcon className="text-brand size-4" />
-              <h3 className="text-foreground text-sm font-bold">미리보기 이미지</h3>
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2">
+                <ImageIcon className="text-brand size-4" />
+                <h3 className="text-foreground text-sm font-bold">미리보기 이미지</h3>
+              </div>
             </div>
             <div className="border-border bg-muted/40 flex flex-1 flex-col rounded-xl border p-4">
               <input
@@ -180,6 +201,10 @@ export default function ChannelLiveSettingsPanel({
                     <div className="text-muted-foreground flex flex-col items-center gap-2 text-xs">
                       <Upload className="size-6" />
                       <span>이미지를 끌어오거나 추가하세요</span>
+                      <span className="max-w-58 leading-relaxed">
+                        이미지를 등록하지 않으면 방송 중인 화면을 자동으로 캡처해 썸네일로
+                        사용합니다.
+                      </span>
                     </div>
                   )}
                 </div>
@@ -212,23 +237,50 @@ export default function ChannelLiveSettingsPanel({
             type="button"
             variant="outline"
             onClick={onSaveSettings}
-            disabled={isSettingsActionPending}
+            disabled={isSettingsActionPending || !canSaveSettings}
             className="h-11 rounded-xl px-7 font-bold shadow-sm transition-all active:scale-95"
           >
             <Save className="size-4" />
             설정 저장
           </Button>
           {liveState.isBroadcasting ? (
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={onEndBroadcast}
-              disabled={isBroadcastActionPending}
-              className="h-11 rounded-xl px-7 font-bold shadow-sm transition-all active:scale-95"
+            <AlertDialog
+              open={isEndDialogOpen}
+              onOpenChange={(next) => !isBroadcastActionPending && setIsEndDialogOpen(next)}
             >
-              <CircleStop className="size-4" />
-              방송 종료
-            </Button>
+              <AlertDialogTrigger
+                render={
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    disabled={isBroadcastActionPending}
+                    className="h-11 rounded-xl px-7 font-bold shadow-sm transition-all active:scale-95"
+                  >
+                    <CircleStop className="size-4" />
+                    방송 종료
+                  </Button>
+                }
+              />
+              <AlertDialogContent size="sm" showCloseButton={false}>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>방송을 종료할까요?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    종료하면 시청자에게 더 이상 라이브가 공개되지 않습니다. OBS 송출은 별도로
+                    중지해주세요.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel disabled={isBroadcastActionPending}>취소</AlertDialogCancel>
+                  <AlertDialogAction
+                    variant="destructive"
+                    disabled={isBroadcastActionPending}
+                    onClick={handleConfirmEndBroadcast}
+                  >
+                    방송 종료
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           ) : (
             <Button
               type="button"

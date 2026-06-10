@@ -85,6 +85,7 @@ export interface LiveChatMessage {
   type: LiveChatMessageType;
   author?: string;
   content: string;
+  createdAt?: string;
   donationAmount?: number;
   // 작성자 user UUID(있을 때). 후원자 뱃지처럼 발신자 신원 기반 표식에 쓴다.
   // 익명 후원·시스템 메시지에는 없다(익명 후원은 sender_id가 null로 저장됨).
@@ -117,13 +118,32 @@ export interface LivePollOption {
 }
 
 export interface LivePoll {
+  createdAt: string;
   id: string;
   title: string;
   options: LivePollOption[];
   status: LivePollStatus;
   endsAt: string | null;
+  endedAt: string | null;
   totalCount: number;
   userVotedOptionId: string | null;
+}
+
+export type LiveInteractionNoticeType = "draw" | "roulette";
+export type LiveInteractionNoticeStatus = "active" | "ended";
+
+export interface LiveInteractionNotice {
+  content: string;
+  createdAt: string;
+  drawNoticeId?: string;
+  hasJoined?: boolean;
+  id: string;
+  participantCount?: number;
+  participantNames?: string[];
+  resultLabel?: string;
+  status: LiveInteractionNoticeStatus;
+  type: LiveInteractionNoticeType;
+  winnerNames?: string[];
 }
 
 export interface LiveCreator {
@@ -169,6 +189,7 @@ export interface LiveWatchBroadcast {
 export interface LiveWatchSettings {
   chatScope: "authenticated" | "follower" | "manager";
   followerWaitSeconds: number;
+  chatPaused: boolean;
   slowModeEnabled: boolean;
   slowModeSeconds: number;
   linkBlocked: boolean;
@@ -188,6 +209,7 @@ export interface LiveWatchViewerRelation {
 
 // RPC가 계산해 주는 채팅 불가 사유 — 차단/블랙리스트가 아닌 채팅 가능 여부 판단용
 export type LiveChatUnavailableReason =
+  | "chat_paused"
   | "login_required"
   | "live_offline"
   | "manager_only"

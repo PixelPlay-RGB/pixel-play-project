@@ -23,7 +23,7 @@ interface Props {
 
 export function AnalyticsReportTable({ reports }: Props) {
   return (
-    <div className="bg-card overflow-hidden rounded-xl border">
+    <div className="ring-foreground/10 bg-card overflow-hidden rounded-xl shadow-sm ring-1">
       <Table className="table-fixed">
         <TableHeader>
           <TableRow className="hover:bg-transparent">

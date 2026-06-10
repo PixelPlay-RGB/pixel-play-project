@@ -11,6 +11,7 @@ import { LiveDonationBanner } from "@/components/live/view/live-donation-banner"
 import type {
   LiveChatMessage,
   LiveDonation,
+  LiveInteractionNotice,
   LivePoll,
   LiveViewerChatState,
 } from "@/types/live/live";
@@ -19,8 +20,11 @@ interface Props {
   messages: LiveChatMessage[];
   donations: LiveDonation[];
   polls: LivePoll[];
+  interactionNotices?: LiveInteractionNotice[];
   isPollsLoading?: boolean;
   isPollsError?: boolean;
+  isInteractionNoticesLoading?: boolean;
+  isInteractionNoticesError?: boolean;
   chatState: LiveViewerChatState;
   isLoggedIn: boolean;
   walletBalance: number;
@@ -31,6 +35,7 @@ interface Props {
   onLoginPrompt: () => void;
   onSendMessage: (content: string) => Promise<boolean>;
   onVote?: (pollId: string, optionId: string) => Promise<boolean>;
+  onJoinDraw?: (drawNoticeId: string) => Promise<boolean>;
   onDonate?: (params: {
     amount: number;
     message: string;
@@ -63,8 +68,11 @@ export function LiveChatBody({
   messages,
   donations,
   polls,
+  interactionNotices,
   isPollsLoading,
   isPollsError,
+  isInteractionNoticesLoading,
+  isInteractionNoticesError,
   chatState,
   isLoggedIn,
   walletBalance,
@@ -75,6 +83,7 @@ export function LiveChatBody({
   onLoginPrompt,
   onSendMessage,
   onVote,
+  onJoinDraw,
   onDonate,
   chatRuleText,
   onAcceptChatRule,
@@ -116,8 +125,11 @@ export function LiveChatBody({
         className={inputClassName}
         isEnded={isEnded}
         polls={polls}
+        interactionNotices={interactionNotices}
         isPollsLoading={isPollsLoading}
         isPollsError={isPollsError}
+        isInteractionNoticesLoading={isInteractionNoticesLoading}
+        isInteractionNoticesError={isInteractionNoticesError}
         chatState={chatState}
         isLoggedIn={isLoggedIn}
         walletBalance={walletBalance}
@@ -128,6 +140,7 @@ export function LiveChatBody({
         onLoginPrompt={onLoginPrompt}
         onSendMessage={onSendMessage}
         onVote={onVote}
+        onJoinDraw={onJoinDraw}
         onDonate={onDonate}
         showActions={showActions}
         votePresentation={votePresentation}

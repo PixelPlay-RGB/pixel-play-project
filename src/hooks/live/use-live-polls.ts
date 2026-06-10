@@ -37,7 +37,7 @@ export function useLivePolls(broadcastId: string | null | undefined, userId?: st
 
       const { data: pollRows, error } = await supabase
         .from("live_poll")
-        .select("id, title, options, ends_at, ended_at")
+        .select("id, title, options, created_at, ends_at, ended_at")
         .eq("broadcast_id", broadcastId)
         .order("created_at", { ascending: true });
 
@@ -71,11 +71,13 @@ export function useLivePolls(broadcastId: string | null | undefined, userId?: st
         const hasEndedByTime =
           row.ends_at !== null && new Date(row.ends_at).getTime() <= Date.now();
         return {
+          createdAt: row.created_at,
           id: row.id,
           title: row.title,
           options,
           status: row.ended_at || hasEndedByTime ? ("ended" as const) : ("active" as const),
           endsAt: row.ends_at,
+          endedAt: row.ended_at,
           totalCount: options.reduce((sum, o) => sum + o.count, 0),
           userVotedOptionId: userVoteMap.get(row.id) ?? null,
         };

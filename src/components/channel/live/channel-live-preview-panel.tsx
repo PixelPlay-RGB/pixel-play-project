@@ -6,23 +6,30 @@ import { getChannelLiveHlsUrl } from "@/constants/channel/channel-live-media";
 import { Radio } from "lucide-react";
 
 interface Props {
+  isStreamOnline: boolean;
   liveState: ChannelLiveState;
   streamPath: string;
   title: string;
 }
 
-export default function ChannelLivePreviewPanel({ liveState, streamPath, title }: Props) {
+export default function ChannelLivePreviewPanel({
+  isStreamOnline,
+  liveState,
+  streamPath,
+  title,
+}: Props) {
   const hlsUrl = getChannelLiveHlsUrl(streamPath);
+  const canShowPreview = liveState.isBroadcasting || isStreamOnline;
 
   return (
     <Card className="border-brand/10 from-brand/10 via-background to-live/10 aspect-video min-h-56 gap-0 overflow-hidden bg-linear-to-br py-0">
-      {liveState.isBroadcasting ? (
+      {canShowPreview ? (
         <ChannelLivePreviewPlayer src={hlsUrl} title={title || "방송 미리보기"} />
       ) : (
         <div className="text-muted-foreground flex size-full flex-col items-center justify-center gap-2 text-center text-sm">
           <Radio className="text-brand size-8" />
-          <span className="text-foreground font-semibold">송출 대기 중</span>
-          <span>방송 시작 후 OBS 송출 화면이 표시됩니다.</span>
+          <span className="text-foreground font-semibold">OBS 송출 대기 중</span>
+          <span>OBS를 연결하면 방송 시작 전 미리보기가 표시됩니다.</span>
         </div>
       )}
     </Card>

@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import type {
   LiveChatMessage,
   LiveDonation,
+  LiveInteractionNotice,
   LivePoll,
   LiveViewerChatState,
 } from "@/types/live/live";
@@ -28,8 +29,11 @@ interface Props {
   messages: LiveChatMessage[];
   donations: LiveDonation[];
   polls: LivePoll[];
+  interactionNotices?: LiveInteractionNotice[];
   isPollsLoading?: boolean;
   isPollsError?: boolean;
+  isInteractionNoticesLoading?: boolean;
+  isInteractionNoticesError?: boolean;
   chatState: LiveViewerChatState;
   isLoggedIn: boolean;
   walletBalance: number;
@@ -40,6 +44,7 @@ interface Props {
   onLoginPrompt: () => void;
   onSendMessage: (content: string) => Promise<boolean>;
   onVote?: (pollId: string, optionId: string) => Promise<boolean>;
+  onJoinDraw?: (drawNoticeId: string) => Promise<boolean>;
   onDonate: (params: {
     amount: number;
     message: string;
@@ -61,8 +66,11 @@ export function LiveFullscreenChatOverlay({
   messages,
   donations,
   polls,
+  interactionNotices,
   isPollsLoading,
   isPollsError,
+  isInteractionNoticesLoading,
+  isInteractionNoticesError,
   chatState,
   isLoggedIn,
   walletBalance,
@@ -73,6 +81,7 @@ export function LiveFullscreenChatOverlay({
   onLoginPrompt,
   onSendMessage,
   onVote,
+  onJoinDraw,
   onDonate,
   chatRuleText,
   onAcceptChatRule,
@@ -124,8 +133,11 @@ export function LiveFullscreenChatOverlay({
         messages={messages}
         donations={donations}
         polls={polls}
+        interactionNotices={interactionNotices}
         isPollsLoading={isPollsLoading}
         isPollsError={isPollsError}
+        isInteractionNoticesLoading={isInteractionNoticesLoading}
+        isInteractionNoticesError={isInteractionNoticesError}
         chatState={chatState}
         isLoggedIn={isLoggedIn}
         walletBalance={walletBalance}
@@ -136,6 +148,7 @@ export function LiveFullscreenChatOverlay({
         onLoginPrompt={onLoginPrompt}
         onSendMessage={onSendMessage}
         onVote={onVote}
+        onJoinDraw={onJoinDraw}
         onDonate={onDonate}
         chatRuleText={chatRuleText}
         onAcceptChatRule={onAcceptChatRule}

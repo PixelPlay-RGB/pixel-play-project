@@ -46,12 +46,16 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     polls,
     isPollsLoading,
     isPollsError,
+    interactionNotices,
+    isInteractionNoticesLoading,
+    isInteractionNoticesError,
     walletBalance,
     isWalletLoading,
     isWalletError,
     donationEnabled,
     donationMinAmount,
     votePoll,
+    joinDraw,
     sendDonation,
     isFollowing,
     onFollowToggled,
@@ -213,8 +217,11 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
                       messages={messages}
                       donations={donations}
                       polls={polls}
+                      interactionNotices={interactionNotices}
                       isPollsLoading={isPollsLoading}
                       isPollsError={isPollsError}
+                      isInteractionNoticesLoading={isInteractionNoticesLoading}
+                      isInteractionNoticesError={isInteractionNoticesError}
                       chatState={chatState}
                       isLoggedIn={isLoggedIn}
                       walletBalance={walletBalance}
@@ -225,6 +232,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
                       onLoginPrompt={openLoginPrompt}
                       onSendMessage={sendMessage}
                       onVote={votePoll}
+                      onJoinDraw={joinDraw}
                       onDonate={sendDonation}
                       chatRuleText={chatRuleText}
                       onAcceptChatRule={acceptChatRule}
@@ -295,6 +303,9 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
               polls={polls}
               isPollsLoading={isPollsLoading}
               isPollsError={isPollsError}
+              interactionNotices={interactionNotices}
+              isInteractionNoticesLoading={isInteractionNoticesLoading}
+              isInteractionNoticesError={isInteractionNoticesError}
               chatState={chatState}
               isLoggedIn={isLoggedIn}
               walletBalance={walletBalance}
@@ -305,6 +316,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
               onLoginPrompt={openLoginPrompt}
               onSendMessage={sendMessage}
               onVote={votePoll}
+              onJoinDraw={joinDraw}
               onDonate={sendDonation}
               chatRuleText={chatRuleText}
               isRuleAccepted={isChatRuleAccepted}
