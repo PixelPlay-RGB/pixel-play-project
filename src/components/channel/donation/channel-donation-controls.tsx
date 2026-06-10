@@ -539,7 +539,7 @@ export function ChannelDonationControls({ initialSnapshot }: Props) {
               <SideTipStep
                 number="3"
                 title="알림 주소를 연결해요"
-                description={`OBS 후원 알림 오버레이 주소는 채널 보안 설정에서 확인할 수 있어요.\n표시 시간은 오버레이에 그대로 적용돼요.`}
+                description={`OBS 후원 알림 오버레이 주소는 방송 연결 페이지에서 확인할 수 있어요.\n표시 시간은 오버레이에 그대로 적용돼요.`}
               />
             </SideTipCard>
           </div>

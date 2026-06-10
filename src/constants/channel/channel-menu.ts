@@ -48,7 +48,7 @@ export const CHANNEL_MENU_GROUPS: ChannelMenuGroup[] = [
           { id: "analytics-report", label: "지난 방송 분석", href: "/channel/analytics/report" },
         ],
       },
-      { id: "security", label: "보안 설정", href: "/channel/security", icon: ShieldCheck },
+      { id: "security", label: "방송 연결", href: "/channel/security", icon: ShieldCheck },
     ],
   },
 ];

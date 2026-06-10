@@ -18,7 +18,7 @@ export function ChannelSecurityPageContent({ initialSnapshot }: Props) {
 
   return (
     <SettingsPage
-      kicker="방송 연결 보안"
+      kicker="방송 연결"
       title="방송 연결 정보를 안전하게 관리해요"
       description={
         <>
