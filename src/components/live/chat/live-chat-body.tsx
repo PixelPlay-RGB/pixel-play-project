@@ -3,6 +3,8 @@
 // 시청 패널(LiveChatPanel)·팝아웃(LiveChatPopout)·전체화면 오버레이(LiveFullscreenChatOverlay)가
 // 머리말/컨테이너만 각자 두고 본문은 이 컴포넌트를 재사용한다(복붙 금지·추출).
 
+import { useRef } from "react";
+
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { LiveChatInputBar } from "@/components/live/view/live-chat-input-bar";
 import { LiveChatMessageList } from "@/components/live/chat/live-chat-message-list";
@@ -105,6 +107,9 @@ export function LiveChatBody({
   donationOpenRequested,
   onDonationOpenSettled,
 }: Props) {
+  // 가상화 목록의 스크롤 컨테이너(ScrollArea viewport) ref — 목록 컴포넌트와 공유한다.
+  const chatScrollRef = useRef<HTMLDivElement>(null);
+
   return (
     <>
       <div className="relative flex min-h-0 flex-1 flex-col">
@@ -113,12 +118,18 @@ export function LiveChatBody({
           <LiveDonationBanner donations={donations} />
         </div>
         {/* 채팅 목록: 스크롤바는 숨기고(몰입), overscroll-contain으로 바깥 스크롤 전파를 막는다. */}
-        <ScrollArea className="min-h-0 flex-1" hideScrollbar viewportClassName="overscroll-contain">
+        <ScrollArea
+          ref={chatScrollRef}
+          className="min-h-0 flex-1"
+          hideScrollbar
+          viewportClassName="overscroll-contain"
+        >
           <LiveChatMessageList
             messages={messages}
             cleanbotEnabled={cleanbotEnabled}
             fillHeight={fillMessages}
             topInset
+            scrollRef={chatScrollRef}
           />
         </ScrollArea>
       </div>

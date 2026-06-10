@@ -69,6 +69,8 @@ export default function ChannelLiveChatPanel({
   const [isPopoutOpen, setIsPopoutOpen] = useState(false);
   const popoutWindowRef = useRef<Window | null>(null);
   const popoutCheckIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // 가상화 메시지 목록의 스크롤 컨테이너(ScrollArea viewport) ref.
+  const chatScrollRef = useRef<HTMLDivElement>(null);
   const chatState = useMemo(() => getStudioChatState(broadcastId), [broadcastId]);
   const { messages } = useLiveMessages(broadcastId, creatorId, creatorId);
   const { donations } = useLiveDonationRanking(creatorId ?? "");
@@ -135,8 +137,12 @@ export default function ChannelLiveChatPanel({
             <div className="shrink-0 px-2 pt-2">
               <LiveDonationBanner donations={donations} />
             </div>
-            <ScrollArea className="min-h-0 flex-1">
-              <LiveChatMessageList messages={messages} cleanbotEnabled={cleanbot} />
+            <ScrollArea ref={chatScrollRef} className="min-h-0 flex-1">
+              <LiveChatMessageList
+                messages={messages}
+                cleanbotEnabled={cleanbot}
+                scrollRef={chatScrollRef}
+              />
             </ScrollArea>
           </div>
           <LiveChatParticipationNotice chatUnavailableReason={chatState.chatUnavailableReason} />

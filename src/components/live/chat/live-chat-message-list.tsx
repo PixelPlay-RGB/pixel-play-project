@@ -1,7 +1,10 @@
 "use client";
-// 라이브 채팅 메시지 목록을 렌더링하고 하단 근접 시 자동 스크롤을 처리합니다.
+// 라이브 채팅 메시지 목록 — TanStack Virtual로 보이는 구간만 렌더링하고 하단 근접 시 자동 스크롤한다.
+// 지금은 LIVE_MESSAGE_LIMIT(100) 캡이지만, 추후 이전 채팅 무한 스크롤(히스토리 적재)을 붙여도
+// DOM이 화면 분량으로 고정되도록 미리 가상화 구조를 깔아 둔다.
 
-import { memo, useEffect, useLayoutEffect, useRef } from "react";
+import { memo, useEffect, useLayoutEffect, useRef, type RefObject } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { LiveChatRoleBadge, type LiveChatRole } from "@/components/live/chat/live-chat-role-badge";
 import { LIVE_LABEL } from "@/constants/live/live";
 import { cn } from "@/lib/utils";
@@ -9,23 +12,22 @@ import { formatDonationAmount } from "@/utils/live/live-chat";
 import { getLiveChatOverlayNicknameColor } from "@/utils/live/live-chat-overlay-style";
 import type { LiveChatMessage } from "@/types/live/live";
 
+// 한 줄 텍스트 채팅 기준 추정 높이(px). 실제 높이는 measureElement가 행마다 보정한다.
+const ESTIMATED_ROW_HEIGHT = 32;
+// 행 간 간격(px) — 기존 목록의 gap-3과 동일.
+const ROW_GAP = 12;
+// 후원 랭킹 배너(absolute 오버레이)가 덮는 높이만큼 목록 상단을 비우는 패딩(px) — pt-26과 동일.
+const TOP_INSET_PADDING = 104;
+
 interface Props {
   messages: LiveChatMessage[];
   fillHeight?: boolean;
   // 클린봇 토글 상태. ON이면 비속어로 걸린 메시지를 가린다. 기본 ON.
   cleanbotEnabled?: boolean;
-  // 후원 랭킹 배너(absolute 오버레이)가 덮는 높이만큼 목록 상단을 비워, 맨 위 스크롤 시 채팅이 가려지지 않게 한다.
+  // 후원 랭킹 배너가 덮는 높이만큼 목록 상단을 비워, 맨 위 스크롤 시 채팅이 가려지지 않게 한다.
   topInset?: boolean;
-}
-
-function getScrollContainer(el: HTMLElement): HTMLElement | null {
-  let parent: HTMLElement | null = el.parentElement;
-  while (parent) {
-    const { overflowY } = window.getComputedStyle(parent);
-    if (overflowY === "auto" || overflowY === "scroll") return parent;
-    parent = parent.parentElement;
-  }
-  return null;
+  // 가상화 스크롤 컨테이너(ScrollArea viewport)의 ref. 호출부가 ScrollArea에 단 ref를 그대로 넘긴다.
+  scrollRef: RefObject<HTMLDivElement | null>;
 }
 
 export function LiveChatMessageList({
@@ -33,15 +35,27 @@ export function LiveChatMessageList({
   fillHeight = false,
   cleanbotEnabled = true,
   topInset = false,
+  scrollRef,
 }: Props) {
-  const bottomRef = useRef<HTMLDivElement>(null);
   const isInitialMount = useRef(true);
   const wasNearBottomRef = useRef(true);
 
+  // 행 0 = 첫 진입 필터링 안내(항상 표시), 행 i+1 = messages[i].
+  const rowCount = messages.length + 1;
+
+  const virtualizer = useVirtualizer({
+    count: rowCount,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => ESTIMATED_ROW_HEIGHT,
+    overscan: 12,
+    gap: ROW_GAP,
+    paddingStart: topInset ? TOP_INSET_PADDING : 8,
+    paddingEnd: 8,
+    getItemKey: (index) => (index === 0 ? "__filter-notice__" : messages[index - 1].id),
+  });
+
   useEffect(() => {
-    const el = bottomRef.current;
-    if (!el) return;
-    const container = getScrollContainer(el);
+    const container = scrollRef.current;
     if (!container) return;
 
     const updateNearBottom = () => {
@@ -56,45 +70,41 @@ export function LiveChatMessageList({
     return () => {
       container.removeEventListener("scroll", updateNearBottom);
     };
-  }, []);
+  }, [scrollRef]);
 
   useLayoutEffect(() => {
-    const el = bottomRef.current;
-    if (!el) return;
-
     if (isInitialMount.current) {
       isInitialMount.current = false;
-      el.scrollIntoView({ block: "end" });
-      return;
-    }
-
-    const container = getScrollContainer(el);
-    if (!container) {
-      el.scrollIntoView({ block: "end" });
+      virtualizer.scrollToIndex(rowCount - 1, { align: "end" });
       return;
     }
 
     if (wasNearBottomRef.current) {
-      el.scrollIntoView({ block: "end" });
+      virtualizer.scrollToIndex(rowCount - 1, { align: "end" });
     }
-  }, [messages]);
+  }, [rowCount, virtualizer]);
 
   return (
     <div className={cn(fillHeight && "flex min-h-full flex-col justify-end")}>
-      <ul className={cn("flex flex-col gap-3 px-3 py-2", topInset && "pt-26")}>
-        {/* 진입할 때마다 항상 보여주는 필터링 안내(클라이언트 전용, 저장하지 않음). */}
-        <li>
-          <p className="border-border bg-muted/70 text-muted-foreground rounded-lg border px-3 py-2 text-center text-sm leading-relaxed font-semibold whitespace-pre-line">
-            {LIVE_LABEL.chatFilterNotice}
-          </p>
-        </li>
-        {messages.map((msg) => (
-          <li key={msg.id}>
-            <MessageItem message={msg} cleanbotEnabled={cleanbotEnabled} />
-          </li>
+      <div className="relative w-full" style={{ height: virtualizer.getTotalSize() }}>
+        {virtualizer.getVirtualItems().map((item) => (
+          <div
+            key={item.key}
+            data-index={item.index}
+            ref={virtualizer.measureElement}
+            className="absolute inset-x-0 top-0 px-3"
+            style={{ transform: `translateY(${item.start}px)` }}
+          >
+            {item.index === 0 ? (
+              <p className="border-border bg-muted/70 text-muted-foreground rounded-lg border px-3 py-2 text-center text-sm leading-relaxed font-semibold whitespace-pre-line">
+                {LIVE_LABEL.chatFilterNotice}
+              </p>
+            ) : (
+              <MessageItem message={messages[item.index - 1]} cleanbotEnabled={cleanbotEnabled} />
+            )}
+          </div>
         ))}
-      </ul>
-      <div ref={bottomRef} />
+      </div>
     </div>
   );
 }
