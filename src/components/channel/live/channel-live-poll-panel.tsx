@@ -228,7 +228,7 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId }: Props) 
   const drawTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const drawTimerTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const trimmedOptions = options.map((option) => option.trim()).filter(Boolean);
+  const trimmedOptions = options.map((option) => option.trim()).filter((option) => option !== "");
   const activePoll = polls.find((poll) => poll.status === "active") ?? null;
   const latestEndedPoll = [...polls].reverse().find((poll) => poll.status === "ended") ?? null;
   const visiblePoll = activePoll ?? (isPollFormOpen ? null : latestEndedPoll);

@@ -1,3 +1,6 @@
+// service role 키를 다루므로 클라이언트 번들 유입을 import 시점에 차단한다.
+import "server-only";
+
 import { Database } from "@/types/database.types";
 import { createClient } from "@supabase/supabase-js";
 

@@ -61,7 +61,7 @@ export function AnalyticsReportTable({ reports }: Props) {
                       />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-foreground font-medium break-words">{report.title}</p>
+                      <p className="text-foreground font-medium wrap-break-word">{report.title}</p>
                       <p className="text-muted-foreground flex items-center gap-1 text-xs">
                         <Calendar className="size-3.5 shrink-0" />
                         {formatKstDateTimeNumeric(report.startedAt)}{" "}
