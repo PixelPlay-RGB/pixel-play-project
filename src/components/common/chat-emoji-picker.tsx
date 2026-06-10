@@ -1,5 +1,5 @@
 "use client";
-// chat-emoji-picker 컴포넌트를 제공합니다.
+// 이모지 선택 팝오버(공용). 라이브 채팅 입력바·커뮤니티 작성/댓글 등에서 재사용.
 
 import { Smile } from "lucide-react";
 import { useTheme } from "next-themes";

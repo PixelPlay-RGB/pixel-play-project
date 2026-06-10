@@ -20,9 +20,7 @@ const PUBLIC_CHANNEL_PATTERN =
 function isPublicRoute(pathname: string) {
   return (
     pathname === "/" ||
-    pathname === "/live" ||
     pathname.startsWith("/live/") ||
-    pathname.startsWith("/chat/room/") ||
     PUBLIC_CHANNEL_PATTERN.test(pathname)
   );
 }

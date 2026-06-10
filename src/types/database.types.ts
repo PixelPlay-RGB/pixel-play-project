@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -1359,6 +1359,7 @@ export type Database = {
           tags: string[]
           thumbnail_url: string
           title: string
+          total_count: number
         }[]
       }
       send_chat_message: {

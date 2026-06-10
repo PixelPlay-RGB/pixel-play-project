@@ -6,14 +6,16 @@ import { SidebarAutoClose } from "@/components/common/sidebar-auto-close";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/common/use-mobile";
 import { cn } from "@/lib/utils";
+import type { CurrentProfileSnapshot } from "@/types/profile/user";
 import { usePathname } from "next/navigation";
 import { ReactNode, useEffect, useState } from "react";
 
 interface Props {
   children: ReactNode;
+  profile: CurrentProfileSnapshot | null;
 }
 
-export default function ChannelShell({ children }: Props) {
+export default function ChannelShell({ children, profile }: Props) {
   const isMobile = useIsMobile();
   const pathname = usePathname();
   const [isMounted, setIsMounted] = useState(false);
@@ -29,7 +31,7 @@ export default function ChannelShell({ children }: Props) {
   return (
     <SidebarProvider className="h-chat-content min-h-0 overflow-hidden">
       <SidebarAutoClose />
-      {isMounted && <ChannelSidebar isMobile={isMobile} />}
+      {isMounted && <ChannelSidebar isMobile={isMobile} profile={profile} />}
       <SidebarInset className="min-w-0 overflow-hidden">
         {isMounted && isMobile && (
           <div className="border-border flex shrink-0 items-center gap-3 border-b p-4">

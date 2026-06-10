@@ -43,7 +43,7 @@ export default function LiveList({ heroSlot, heroId }: LiveListProps) {
   const listTitle = LIVE_LIST_SORT_TITLE[query.sort];
 
   return (
-    <div className="flex min-w-0 flex-col gap-5 md:gap-6">
+    <div className="flex min-h-full min-w-0 flex-col gap-5 md:gap-6">
       {heroSlot}
       <LiveMobileFilterChips
         activeFilter={query.effectiveFilter}
@@ -51,7 +51,7 @@ export default function LiveList({ heroSlot, heroId }: LiveListProps) {
         isFetching={query.isFetching}
         onFilterChange={setFilter}
       />
-      <section className="flex min-w-0 flex-1 flex-col gap-4">
+      <section className="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
         <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-foreground text-xl font-bold md:text-2xl">{listTitle}</h2>
