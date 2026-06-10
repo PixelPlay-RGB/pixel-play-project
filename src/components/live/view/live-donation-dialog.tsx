@@ -112,8 +112,14 @@ export function LiveDonationDialog({
         <DialogTrigger
           render={
             <Button
-              className="bg-live hover:bg-live/90 text-live-foreground h-8 flex-1 text-xs"
+              // 라이브 상호작용(브랜드 민트 네온)과 같은 형태의 live 코랄 네온으로 톤을 맞춘다.
+              className={cn(
+                "h-11 flex-1 text-sm",
+                "border-live/30 bg-live/10 text-live",
+                "hover:border-live/50 hover:bg-live/18 dark:border-live/30 dark:bg-live/15 dark:text-live",
+              )}
               size="sm"
+              variant="outline"
               disabled={!donationEnabled || disabled}
               title={!donationEnabled ? LIVE_DONATION_LABEL.disabled : undefined}
             />

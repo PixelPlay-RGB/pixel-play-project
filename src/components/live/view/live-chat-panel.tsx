@@ -127,7 +127,7 @@ export function LiveChatPanel({
   }, [isPopoutOpen]);
 
   return (
-    <div className="border-border bg-card flex h-full min-h-96 flex-col overflow-hidden rounded-xl border md:min-h-0">
+    <div className="border-border bg-card flex h-full min-h-96 flex-col overflow-hidden border-t md:min-h-0 md:border-t-0 md:border-l">
       <div
         ref={chatHeaderRef}
         className="border-border flex items-center justify-between border-b px-4 py-3"

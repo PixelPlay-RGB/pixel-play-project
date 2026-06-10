@@ -193,7 +193,8 @@ export function LiveChatInputBar({
   return (
     <div
       ref={inputBarRef}
-      className={cn("border-border flex flex-col gap-2 border-t px-3 py-2", className)}
+      // 입력 섹션 총 높이(24+44+12+44+24+보더1=149px)를 좌측 비디오 하단 정보 영역(~149px)과 맞춘다.
+      className={cn("border-border flex flex-col gap-3 border-t px-3 py-6", className)}
     >
       {/* 이모지 버튼을 입력 필드 안(오른쪽 trailing)에 넣어, 입력 필드 좌측이 아래 버튼행과 정렬되게 한다. */}
       <div className="relative">
@@ -221,7 +222,11 @@ export function LiveChatInputBar({
             }
           }}
           aria-label={placeholder}
-          className="read-only:bg-muted/70 h-8 w-full pr-10 text-sm read-only:cursor-pointer"
+          className={cn(
+            "read-only:bg-muted/70 h-11 w-full pr-10 text-sm read-only:cursor-pointer",
+            // 기본 ring(무채색) 대신 브랜드 민트 포커스로 시청 화면의 입력임을 또렷하게 한다.
+            "focus-visible:border-brand focus-visible:ring-brand/30",
+          )}
         />
         <div className="absolute inset-y-0 right-1 flex items-center">
           <ChatEmojiPicker

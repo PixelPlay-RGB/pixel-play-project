@@ -152,24 +152,9 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
       <div
         className={cn("bg-background overflow-hidden", "min-h-app-content", "md:h-full md:min-h-0")}
       >
-        <div
-          className={cn(
-            "h-full",
-            "mx-auto w-full max-w-screen-2xl px-4",
-            "md:mx-0 md:max-w-none md:px-0",
-            "md:flex md:flex-row md:gap-4",
-            isChatCollapsed && "md:gap-0",
-          )}
-        >
-          <div
-            className={cn(
-              "flex min-w-0 flex-1 flex-col gap-4 py-4",
-              "md:pl-4 2xl:pl-6",
-              "md:overflow-hidden",
-              // 극장 모드: 접힌 사이드바 자리를 좌측 패딩이 메워 여백처럼 보이므로 패딩을 없애 full-bleed로 둔다.
-              isTheater && "md:gap-0 md:py-0 md:pl-0 2xl:pl-0",
-            )}
-          >
+        {/* 치지직형 Box 레이아웃: 섹션 사이 여백·라운드 없이 보더로만 구분하고, 텍스트 행에만 자체 패딩을 준다. */}
+        <div className={cn("h-full", "w-full", "md:flex md:flex-row")}>
+          <div className={cn("flex min-w-0 flex-1 flex-col", "md:overflow-hidden")}>
             <div className={cn("md:flex md:min-h-0 md:flex-1 md:items-center md:justify-center")}>
               {broadcast ? (
                 <LiveVideoPlayer
@@ -255,7 +240,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
             {displayBroadcast ? (
               <div
                 className={cn(
-                  "flex items-start justify-between gap-3",
+                  "flex items-start justify-between gap-3 px-4 pt-4",
                   broadcast && isTheater && "md:hidden",
                 )}
               >
@@ -282,16 +267,16 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
                 isFollowing={isFollowing}
                 isPending={isFollowPending}
                 onFollow={handleFollow}
-                className={cn(broadcast && isTheater && "md:hidden")}
+                className={cn("px-4 py-4", broadcast && isTheater && "md:hidden")}
               />
             ) : null}
           </div>
 
           <aside
             className={cn(
-              "mt-4 transition-all duration-200 ease-out",
-              "md:mt-0 md:w-88 md:shrink-0 md:overflow-hidden md:py-4 md:pr-4 md:opacity-100",
-              isChatCollapsed && "md:w-0 md:pr-0 md:opacity-0",
+              "transition-all duration-200 ease-out",
+              "md:w-88 md:shrink-0 md:overflow-hidden md:opacity-100",
+              isChatCollapsed && "md:w-0 md:opacity-0",
             )}
             aria-hidden={isChatCollapsed}
             inert={isChatCollapsed ? true : undefined}

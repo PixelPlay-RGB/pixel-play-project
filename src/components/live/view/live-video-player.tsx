@@ -119,9 +119,7 @@ export function LiveVideoPlayer({
       onBlur={handleBlur}
       className={cn(
         "relative w-full overflow-hidden bg-black",
-        isTheater
-          ? "aspect-video rounded-xl md:aspect-auto md:h-full md:rounded-none"
-          : "aspect-video rounded-xl md:max-h-full",
+        isTheater ? "aspect-video md:aspect-auto md:h-full" : "aspect-video md:max-h-full",
         // 몰입 모드(극장·전체화면)에서 컨트롤이 숨겨지면 커서도 함께 숨겨 몰입감을 준다.
         isImmersive && !controlsVisible && "cursor-none",
       )}
