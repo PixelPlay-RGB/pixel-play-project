@@ -1,11 +1,30 @@
 // 라이브 시청 페이지 — creatorId로 방송을 조회해 LiveView를 렌더링합니다.
 
+import type { Metadata } from "next";
+
 import { getLivePlaybackUrl } from "@/app/live/[creatorId]/_data/live-playback-data";
 import LiveShell from "@/components/live/live-shell";
 import { LiveView } from "@/components/live/view/live-view";
+import { getChannelProfile } from "@/utils/channel/channel-server";
 
 interface Props {
   params: Promise<{ creatorId: string }>;
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { creatorId } = await params;
+  const result = await getChannelProfile(creatorId);
+
+  if (!result.success || !result.data) {
+    return { title: "라이브" };
+  }
+
+  const { nickname, isLive } = result.data;
+
+  return {
+    title: isLive ? `${nickname}의 라이브` : `${nickname}의 라이브 채널`,
+    description: `${nickname}님의 PixelPlay 라이브 방송을 실시간 채팅과 함께 시청해 보세요.`,
+  };
 }
 
 export default async function LiveWatchPage({ params }: Props) {

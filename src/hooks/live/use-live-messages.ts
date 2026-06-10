@@ -23,7 +23,8 @@ export function useLiveMessages(
 ) {
   const supabase = useMemo(() => createClient(), []);
   const queryClient = useQueryClient();
-  const enabled = !!broadcastId;
+  // live_message 조회는 authenticated 전용(RLS)이라 비로그인 요청은 401 콘솔 에러만 남긴다 — viewerId 있을 때만 가져온다.
+  const enabled = !!broadcastId && !!viewerId;
 
   const query = useQuery<LiveChatMessage[]>({
     queryKey: QUERY_KEYS.live.messages(broadcastId ?? undefined),
