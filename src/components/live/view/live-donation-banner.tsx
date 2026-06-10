@@ -46,7 +46,8 @@ export function LiveDonationBanner({ donations }: Props) {
             isOpen ? LIVE_LABEL.donationRankingCollapse : LIVE_LABEL.donationRankingExpand
           }
           // 사이드바 섹션 토글과 같은 plain 아이콘 톤(배경 없는 chevron)으로 맞춘다.
-          className="text-muted-foreground hover:text-foreground size-6 p-0 hover:bg-transparent dark:hover:bg-transparent"
+          // ghost variant의 aria-expanded:bg-muted가 열림 상태에서 fill로 보여 함께 무력화한다.
+          className="text-muted-foreground hover:text-foreground aria-expanded:text-muted-foreground aria-expanded:hover:text-foreground size-6 p-0 hover:bg-transparent aria-expanded:bg-transparent dark:hover:bg-transparent"
           onClick={() => setIsOpen((value) => !value)}
         >
           <ChevronDown
