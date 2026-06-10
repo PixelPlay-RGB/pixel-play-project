@@ -62,6 +62,9 @@ interface Props {
   // 전체화면 오버레이 등에서 popover/dialog를 띄울 포털 컨테이너(미지정=body).
   portalContainer?: HTMLElement | null;
   inputClassName?: string;
+  // 전체화면 후원 버튼의 후원 popover 열기 요청(입력바로 그대로 전달).
+  donationOpenRequested?: boolean;
+  onDonationOpenSettled?: (reason: "donated" | "dismissed") => void;
 }
 
 export function LiveChatBody({
@@ -99,6 +102,8 @@ export function LiveChatBody({
   votePresentation = "popover",
   portalContainer,
   inputClassName,
+  donationOpenRequested,
+  onDonationOpenSettled,
 }: Props) {
   return (
     <>
@@ -107,7 +112,8 @@ export function LiveChatBody({
         <div className="absolute inset-x-0 top-0 z-10">
           <LiveDonationBanner donations={donations} />
         </div>
-        <ScrollArea className="min-h-0 flex-1">
+        {/* 채팅 목록: 스크롤바는 숨기고(몰입), overscroll-contain으로 바깥 스크롤 전파를 막는다. */}
+        <ScrollArea className="min-h-0 flex-1" hideScrollbar viewportClassName="overscroll-contain">
           <LiveChatMessageList
             messages={messages}
             cleanbotEnabled={cleanbotEnabled}
@@ -146,6 +152,8 @@ export function LiveChatBody({
         showActions={showActions}
         votePresentation={votePresentation}
         portalContainer={portalContainer}
+        donationOpenRequested={donationOpenRequested}
+        onDonationOpenSettled={onDonationOpenSettled}
         chatRuleText={chatRuleText}
         onAcceptChatRule={onAcceptChatRule}
         onFollow={onFollow}

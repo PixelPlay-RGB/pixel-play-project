@@ -57,6 +57,9 @@ interface Props {
   isFollowing?: boolean;
   isFollowPending?: boolean;
   isEnded?: boolean;
+  // 플레이어 우상단 후원 버튼의 후원 popover 열기 요청(채팅 본문 입력바로 전달).
+  donationOpenRequested?: boolean;
+  onDonationOpenSettled?: (reason: "donated" | "dismissed") => void;
 }
 
 export function LiveFullscreenChatOverlay({
@@ -89,6 +92,8 @@ export function LiveFullscreenChatOverlay({
   isFollowing,
   isFollowPending,
   isEnded = false,
+  donationOpenRequested,
+  onDonationOpenSettled,
 }: Props) {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const prevChatOpenRef = useRef(isChatOpen);
@@ -157,6 +162,8 @@ export function LiveFullscreenChatOverlay({
         isFollowPending={isFollowPending}
         isEnded={isEnded}
         portalContainer={container}
+        donationOpenRequested={donationOpenRequested}
+        onDonationOpenSettled={onDonationOpenSettled}
       />
     </aside>
   );

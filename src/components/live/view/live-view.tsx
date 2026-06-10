@@ -2,10 +2,8 @@
 // 라이브 시청 메인 화면 — 비디오, 방송 정보, 채팅 패널을 조합합니다.
 
 import { useEffect, useRef, useState } from "react";
-import { HandCoins, Timer, Users } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Timer, Users } from "lucide-react";
 import { LiveVideoPlayer } from "@/components/live/view/live-video-player";
-import { LiveDonationDialog } from "@/components/live/view/live-donation-dialog";
 import { LiveFullscreenChatOverlay } from "@/components/live/view/live-fullscreen-chat-overlay";
 import { LiveBroadcastInfo } from "@/components/live/view/live-broadcast-info";
 import { LiveStreamerRow } from "@/components/live/view/live-streamer-row";
@@ -21,7 +19,7 @@ import { useMoveToLogin } from "@/hooks/live/use-move-to-login";
 import { cn } from "@/lib/utils";
 import { formatCount } from "@/utils/live/live-chat";
 import { useLiveTheaterStore } from "@/stores/live-theater";
-import { LIVE_LABEL, LIVE_PLAYER_ICON_BUTTON_CLASS } from "@/constants/live/live";
+import { LIVE_LABEL } from "@/constants/live/live";
 
 interface Props {
   creatorId: string;
@@ -166,39 +164,19 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
                   onToggleTheater={toggleTheater}
                   openChatButtonRef={openChatButtonRef}
                   onOpenChat={expandDesktopChat}
-                  renderFullscreenDonation={({ container }) => (
-                    <LiveDonationDialog
-                      portalContainer={container}
-                      isLoggedIn={isLoggedIn}
-                      walletBalance={walletBalance}
-                      isWalletLoading={isWalletLoading}
-                      isWalletError={isWalletError}
-                      donationEnabled={donationEnabled}
-                      donationMinAmount={donationMinAmount}
-                      onLoginPrompt={openLoginPrompt}
-                      onDonate={sendDonation}
-                      trigger={
-                        <Button
-                          type="button"
-                          size="icon"
-                          variant="ghost"
-                          aria-label={LIVE_LABEL.donate}
-                          // 우상단 스택의 채팅 토글과 같은 원형 다크 배경으로 통일.
-                          className={cn(
-                            LIVE_PLAYER_ICON_BUTTON_CLASS,
-                            "rounded-full bg-black/45 backdrop-blur-sm",
-                          )}
-                        >
-                          <HandCoins className="size-5" />
-                        </Button>
-                      }
-                    />
-                  )}
-                  renderFullscreenChat={({ container, isChatOpen, onToggleChat }) => (
+                  renderFullscreenChat={({
+                    container,
+                    isChatOpen,
+                    onToggleChat,
+                    isDonationRequested,
+                    onDonationSettled,
+                  }) => (
                     <LiveFullscreenChatOverlay
                       container={container}
                       isChatOpen={isChatOpen}
                       onToggleChat={onToggleChat}
+                      donationOpenRequested={isDonationRequested}
+                      onDonationOpenSettled={onDonationSettled}
                       messages={messages}
                       donations={donations}
                       polls={polls}

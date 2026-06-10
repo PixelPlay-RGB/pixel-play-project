@@ -1,17 +1,18 @@
 "use client";
+// 후원 popover — 라이브 상호작용(투표)과 같은 형태로 채팅 입력바 위에 띄웁니다.
+// 전체화면 후원 버튼은 openRequested로 외부에서 열기를 요청하고, 닫힐 때 사유(donated/dismissed)를 돌려받는다.
 
-import { useState, type ReactElement } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverDescription,
+  PopoverHeader,
+  PopoverTitle,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
 import {
   LIVE_DONATION_AMOUNTS,
@@ -22,6 +23,8 @@ import {
 } from "@/constants/live/live";
 import { cn } from "@/lib/utils";
 import { formatDonationAmount } from "@/utils/live/live-chat";
+
+export type LiveDonationCloseReason = "donated" | "dismissed";
 
 interface Props {
   onLoginPrompt: () => void;
@@ -39,13 +42,17 @@ interface Props {
   }) => Promise<boolean>;
   // 방송 종료 등으로 후원 자체를 막을 때 트리거를 비활성화한다.
   disabled?: boolean;
-  // 후원 모달을 전체화면 등 특정 요소 안에 띄울 때 포털 컨테이너를 지정한다(미지정=body).
+  // 후원 popover를 전체화면 등 특정 요소 안에 띄울 때 포털 컨테이너를 지정한다(미지정=body).
   portalContainer?: HTMLElement | null;
-  // 트리거를 커스텀(예: 전체화면 미니 사이드바의 아이콘 버튼)으로 교체한다. 미지정 시 기본 후원 버튼.
-  trigger?: ReactElement;
+  // popover 폭을 채팅 패널에 맞추기 위한 anchor(입력바 컨테이너). 투표 popover와 동일 방식.
+  anchorRef?: RefObject<HTMLElement | null>;
+  // 외부(전체화면 후원 버튼)에서 popover 열기를 요청한다. false→true 전이에 가드를 거쳐 연다.
+  openRequested?: boolean;
+  // 외부 요청으로 열린 popover가 닫힐 때 사유를 알린다(후원 완료/미완료 — 전체화면 복귀 판단용).
+  onOpenRequestSettled?: (reason: LiveDonationCloseReason) => void;
 }
 
-export function LiveDonationDialog({
+export function LiveDonationPopover({
   onLoginPrompt,
   isLoggedIn,
   walletBalance,
@@ -56,7 +63,9 @@ export function LiveDonationDialog({
   onDonate,
   disabled = false,
   portalContainer,
-  trigger,
+  anchorRef,
+  openRequested = false,
+  onOpenRequestSettled,
 }: Props) {
   const minimumAmount = donationMinAmount > 0 ? donationMinAmount : LIVE_DONATION_MIN_AMOUNT;
   const [open, setOpen] = useState(false);
@@ -65,6 +74,9 @@ export function LiveDonationDialog({
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // 외부 요청으로 열렸는지 — 닫힐 때 onOpenRequestSettled를 호출할지 결정한다.
+  const isExternallyOpenedRef = useRef(false);
+  const prevRequestedRef = useRef(openRequested);
 
   const amount = Number(amountInput) || 0;
 
@@ -74,23 +86,27 @@ export function LiveDonationDialog({
     setMessage("");
   }
 
+  function closeWith(reason: LiveDonationCloseReason) {
+    setOpen(false);
+    resetForm();
+    if (isExternallyOpenedRef.current) {
+      isExternallyOpenedRef.current = false;
+      onOpenRequestSettled?.(reason);
+    }
+  }
+
   function addAmount(delta: number) {
     setAmountInput(String(amount + delta));
   }
 
   function handleOpenChange(next: boolean) {
     if (!next) {
-      setOpen(false);
-      resetForm();
+      closeWith("dismissed");
       return;
     }
-    // 방송 종료 등으로 막힌 경우 열지 않는다(커스텀 trigger는 버튼 disabled가 없어 여기서 함께 막아야 한다).
-    // 이미 연 채 종료되면 닫지 않고(작성 중 메시지 보존) 제출 버튼만 disabled로 막는다 —
-    // 투표 popover(무상태라 즉시 닫음)와 의도적으로 다른 정책. 종료 안내는 전역 토스트가 담당.
-    if (disabled) {
-      return;
-    }
-    if (!donationEnabled) {
+    // 방송 종료 등으로 막힌 경우 열지 않는다. 이미 연 채 종료되면 닫지 않고(작성 중 메시지 보존)
+    // 제출 버튼만 disabled로 막는다 — 투표 popover(무상태라 즉시 닫음)와 의도적으로 다른 정책.
+    if (disabled || !donationEnabled) {
       return;
     }
     if (!isLoggedIn) {
@@ -100,44 +116,62 @@ export function LiveDonationDialog({
     setOpen(true);
   }
 
+  // 외부 열기 요청 수신(false→true 전이): 가드를 통과하면 열고, 불가하면 즉시 dismissed로 응답한다.
+  useEffect(() => {
+    const isNewRequest = openRequested && !prevRequestedRef.current;
+    prevRequestedRef.current = openRequested;
+    if (!isNewRequest) return;
+
+    if (disabled || !donationEnabled || !isLoggedIn) {
+      if (!isLoggedIn) onLoginPrompt();
+      onOpenRequestSettled?.("dismissed");
+      return;
+    }
+    isExternallyOpenedRef.current = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setOpen(true);
+  }, [openRequested, disabled, donationEnabled, isLoggedIn, onLoginPrompt, onOpenRequestSettled]);
+
   const remaining = walletBalance - amount;
   const isBelowMin = amount < minimumAmount;
   const minAmountLabel = `${formatDonationAmount(minimumAmount)}${LIVE_DONATION_LABEL.unit}`;
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      {trigger ? (
-        <DialogTrigger render={trigger} />
-      ) : (
-        <DialogTrigger
-          render={
-            <Button
-              // 라이브 상호작용(브랜드 민트 네온)과 같은 형태의 live 코랄 네온으로 톤을 맞춘다.
-              className={cn(
-                "h-9 flex-1 text-sm",
-                "border-live/30 bg-live/10 text-live",
-                "hover:border-live/50 hover:bg-live/18 dark:border-live/30 dark:bg-live/15 dark:text-live",
-              )}
-              size="sm"
-              variant="outline"
-              disabled={!donationEnabled || disabled}
-              title={!donationEnabled ? LIVE_DONATION_LABEL.disabled : undefined}
-            />
-          }
-        >
-          {LIVE_LABEL.donate}
-        </DialogTrigger>
-      )}
-      <DialogContent
-        container={portalContainer}
-        className="max-h-[calc(100vh-1rem)] overflow-y-auto sm:max-w-sm"
+    <Popover open={open} onOpenChange={handleOpenChange}>
+      <PopoverTrigger
+        render={
+          <Button
+            // 라이브 상호작용(브랜드 민트 네온)과 같은 형태의 live 코랄 네온으로 톤을 맞춘다.
+            className={cn(
+              "h-9 flex-1 text-sm",
+              "border-live/30 bg-live/10 text-live",
+              "hover:border-live/50 hover:bg-live/18 dark:border-live/30 dark:bg-live/15 dark:text-live",
+            )}
+            size="sm"
+            variant="outline"
+            disabled={!donationEnabled || disabled}
+            title={!donationEnabled ? LIVE_DONATION_LABEL.disabled : undefined}
+          />
+        }
       >
-        <DialogHeader>
-          <DialogTitle>{LIVE_DONATION_LABEL.title}</DialogTitle>
-          <DialogDescription>
+        {LIVE_LABEL.donate}
+      </PopoverTrigger>
+      <PopoverContent
+        anchor={anchorRef ? () => anchorRef.current : undefined}
+        container={portalContainer}
+        align="start"
+        side="top"
+        sideOffset={0}
+        // 기본 collisionPadding(5px)이 popover를 패널 밖으로 밀어내므로 0으로 고정해 패널 안에 둔다.
+        collisionPadding={0}
+        className="max-h-[calc(100vh-1rem)] w-(--anchor-width) overflow-y-auto"
+      >
+        <PopoverHeader>
+          <PopoverTitle>{LIVE_DONATION_LABEL.title}</PopoverTitle>
+          <PopoverDescription>
             {LIVE_DONATION_LABEL.description.replace("{amount}", minAmountLabel)}
-          </DialogDescription>
-        </DialogHeader>
+          </PopoverDescription>
+        </PopoverHeader>
 
         <div className="flex flex-col gap-4">
           <label className="flex cursor-pointer items-center gap-2 text-sm">
@@ -222,12 +256,18 @@ export function LiveDonationDialog({
           </div>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" disabled={isSubmitting} onClick={() => handleOpenChange(false)}>
+        <div className="flex justify-end gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={isSubmitting}
+            onClick={() => closeWith("dismissed")}
+          >
             {LIVE_DONATION_LABEL.cancel}
           </Button>
           <Button
             type="button"
+            size="sm"
             disabled={
               disabled ||
               !donationEnabled ||
@@ -249,8 +289,7 @@ export function LiveDonationDialog({
                     idempotencyKey: crypto.randomUUID(),
                   });
                   if (success) {
-                    setOpen(false);
-                    resetForm();
+                    closeWith("donated");
                   }
                 } finally {
                   setIsSubmitting(false);
@@ -260,8 +299,8 @@ export function LiveDonationDialog({
           >
             {LIVE_DONATION_LABEL.submit}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }

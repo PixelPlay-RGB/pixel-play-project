@@ -2,7 +2,7 @@
 // 라이브 비디오 플레이어 — MediaMTX HLS <video>에 컨테이너 전체화면/극장 모드와 하단 컨트롤 바를 조립합니다.
 
 import { useCallback, useEffect, useRef, useState, type ReactNode, type Ref } from "react";
-import { MessageSquare } from "lucide-react";
+import { HandCoins, MessageSquare } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import LiveBadge from "@/components/live/live-badge";
@@ -26,6 +26,10 @@ export interface FullscreenChatContext {
   container: HTMLElement | null;
   isChatOpen: boolean;
   onToggleChat: () => void;
+  // 우상단 후원 버튼이 채팅을 열며 후원 popover 열기를 요청한 상태.
+  isDonationRequested: boolean;
+  // 후원 popover가 닫히면 사유를 받는다. 후원 없이 닫혔으면 채팅도 닫아 전체화면으로 복귀한다.
+  onDonationSettled: (reason: "donated" | "dismissed") => void;
 }
 
 interface Props {
@@ -40,8 +44,6 @@ interface Props {
   onOpenChat?: () => void;
   // 전체화면일 때 컨테이너 내부에 렌더할 채팅/후원 오버레이. 데이터를 가진 상위(LiveView)가 주입한다.
   renderFullscreenChat?: (ctx: FullscreenChatContext) => ReactNode;
-  // 전체화면 우상단 스택에 둘 후원 버튼(모달 직접 오픈). 후원 데이터를 가진 LiveView가 container로 포털해 주입한다.
-  renderFullscreenDonation?: (ctx: { container: HTMLElement | null }) => ReactNode;
 }
 
 export function LiveVideoPlayer({
@@ -54,11 +56,12 @@ export function LiveVideoPlayer({
   openChatButtonRef,
   onOpenChat,
   renderFullscreenChat,
-  renderFullscreenDonation,
 }: Props) {
   const { containerRef, isFullscreen, toggleFullscreen } = useFullscreen<HTMLDivElement>();
   // 전체화면 채팅 패널 열림 상태. 컨트롤 바 폭(채팅이 가리지 않게)과 공유해야 해 여기서 소유한다.
   const [isFsChatOpen, setIsFsChatOpen] = useState(false);
+  // 전체화면 후원 버튼 → 채팅을 열며 입력바의 후원 popover 열기를 요청한다.
+  const [isFsDonationRequested, setIsFsDonationRequested] = useState(false);
   // 모달/popover 포털 대상으로 쓰려면 ref가 아닌 실제 노드가 필요해 상태로도 들고 있는다.
   const [containerEl, setContainerEl] = useState<HTMLDivElement | null>(null);
   const registerContainer = useCallback(
@@ -69,11 +72,12 @@ export function LiveVideoPlayer({
     [containerRef],
   );
 
-  // 전체화면을 벗어나면 채팅 패널 상태를 닫아 다음 진입 시 깨끗한 상태로 시작한다.
+  // 전체화면을 벗어나면 채팅 패널·후원 요청 상태를 닫아 다음 진입 시 깨끗한 상태로 시작한다.
   useEffect(() => {
     if (!isFullscreen) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsFsChatOpen(false);
+      setIsFsDonationRequested(false);
     }
   }, [isFullscreen]);
 
@@ -231,7 +235,25 @@ export function LiveVideoPlayer({
               <MessageSquare className="size-5" />
             </Button>
           ) : null}
-          {renderFullscreenDonation ? renderFullscreenDonation({ container: containerEl }) : null}
+          {renderFullscreenChat ? (
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              aria-label={LIVE_LABEL.donate}
+              className={cn(
+                LIVE_PLAYER_ICON_BUTTON_CLASS,
+                "rounded-full bg-black/45 backdrop-blur-sm",
+              )}
+              // 후원은 채팅 패널의 입력바 popover로 진행한다 — 패널을 열며 popover 열기를 요청.
+              onClick={() => {
+                setIsFsChatOpen(true);
+                setIsFsDonationRequested(true);
+              }}
+            >
+              <HandCoins className="size-5" />
+            </Button>
+          ) : null}
         </div>
       ) : null}
 
@@ -241,6 +263,14 @@ export function LiveVideoPlayer({
             container: containerEl,
             isChatOpen: isFsChatOpen,
             onToggleChat: () => setIsFsChatOpen((prev) => !prev),
+            isDonationRequested: isFsDonationRequested,
+            onDonationSettled: (reason) => {
+              setIsFsDonationRequested(false);
+              // 후원 없이 닫았다면 채팅 패널도 닫아 전체화면 영상으로 복귀한다(후원 완료 시엔 채팅 유지).
+              if (reason === "dismissed") {
+                setIsFsChatOpen(false);
+              }
+            },
           })
         : null}
     </div>

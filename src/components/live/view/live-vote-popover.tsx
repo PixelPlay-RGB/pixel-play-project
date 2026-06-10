@@ -868,6 +868,8 @@ export function LiveVotePopover({
         align="start"
         side="top"
         sideOffset={0}
+        // 기본 collisionPadding(5px)이 popover를 패널 밖으로 밀어내므로 0으로 고정해 패널 안에 둔다.
+        collisionPadding={0}
         className="max-h-[calc(100vh-1rem)] w-(--anchor-width) overflow-y-auto"
       >
         {showHeader ? (

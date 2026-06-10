@@ -11,7 +11,10 @@ import {
   PopoverHeader,
   PopoverTitle,
 } from "@/components/ui/popover";
-import { LiveDonationDialog } from "@/components/live/view/live-donation-dialog";
+import {
+  LiveDonationPopover,
+  type LiveDonationCloseReason,
+} from "@/components/live/view/live-donation-popover";
 import { LiveVotePopover } from "@/components/live/view/live-vote-popover";
 import { LIVE_CHAT_MESSAGE_MAX_LENGTH, LIVE_LABEL } from "@/constants/live/live";
 import { cn } from "@/lib/utils";
@@ -54,6 +57,9 @@ interface Props {
   isEnded?: boolean;
   // 전체화면 오버레이 등에서 사용할 때 popover/dialog 포털 컨테이너를 전체화면 요소로 지정한다(미지정=body).
   portalContainer?: HTMLElement | null;
+  // 전체화면 후원 버튼이 후원 popover 열기를 요청한다(LiveDonationPopover로 그대로 전달).
+  donationOpenRequested?: boolean;
+  onDonationOpenSettled?: (reason: LiveDonationCloseReason) => void;
 }
 
 function getChatPlaceholder({
@@ -115,6 +121,8 @@ export function LiveChatInputBar({
   isFollowPending,
   isEnded = false,
   portalContainer,
+  donationOpenRequested,
+  onDonationOpenSettled,
 }: Props) {
   const [draft, setDraft] = useState("");
   const [isSending, setIsSending] = useState(false);
@@ -252,6 +260,7 @@ export function LiveChatInputBar({
           align="start"
           side="top"
           sideOffset={0}
+          collisionPadding={0}
           className="w-(--anchor-width)"
         >
           <PopoverHeader>
@@ -280,6 +289,7 @@ export function LiveChatInputBar({
           align="start"
           side="top"
           sideOffset={0}
+          collisionPadding={0}
           className="max-h-[calc(100vh-1rem)] w-(--anchor-width) overflow-y-auto"
         >
           <PopoverHeader>
@@ -302,7 +312,7 @@ export function LiveChatInputBar({
 
       {showActions && onVote && onDonate ? (
         <div className="flex items-center gap-2">
-          <LiveDonationDialog
+          <LiveDonationPopover
             isLoggedIn={isLoggedIn}
             walletBalance={walletBalance}
             isWalletLoading={isWalletLoading}
@@ -313,6 +323,9 @@ export function LiveChatInputBar({
             onDonate={onDonate}
             disabled={isEnded}
             portalContainer={portalContainer}
+            anchorRef={inputBarRef}
+            openRequested={donationOpenRequested}
+            onOpenRequestSettled={onDonationOpenSettled}
           />
           <LiveVotePopover
             polls={polls}
