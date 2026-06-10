@@ -24,7 +24,7 @@ import { cn } from "@/lib/utils";
 import type { ChannelLiveStreamStatusResponse } from "@/types/channel/channel-live-stream";
 import { getAppMessage } from "@/utils/common/app-message";
 import { toastAppError, toastAppSuccess } from "@/utils/common/toast-message";
-import { useCallback, useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 
 export type ChannelLiveVisibility = "public" | "private" | "unlisted";
 export type ChannelLiveChatScope = "authenticated" | "follower" | "manager";
@@ -42,6 +42,31 @@ interface Props {
 
 const DEFAULT_TITLE = "";
 const DEFAULT_TAGS: string[] = [];
+
+interface ChannelLiveSavedSettingsSnapshot {
+  alertSoundEnabled: boolean;
+  alertVolume: number;
+  chatDonationMessageEnabled: boolean;
+  chatRuleText: string;
+  chatScope: ChannelLiveChatScope;
+  defaultTags: string[];
+  defaultTitle: string;
+  donationAlertDurationSeconds: number;
+  donationAmountVisible: boolean;
+  donationEnabled: boolean;
+  donationMinAmount: number;
+  forbiddenWords: string[];
+  followerWaitSeconds: number;
+  linkBlocked: boolean;
+  slowModeEnabled: boolean;
+  slowModeSeconds: number;
+  ttsEnabled: boolean;
+  ttsRate: number;
+}
+
+function areStringArraysEqual(left: string[], right: string[]) {
+  return left.length === right.length && left.every((value, index) => value === right[index]);
+}
 
 function getBroadcastStatusLabel(liveState: ChannelLiveState, isStreamOnline: boolean) {
   if (liveState.isBroadcasting) return "방송 중";
@@ -146,6 +171,27 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
   const [alertVolume, setAlertVolume] = useState(initialSettings?.alertVolume ?? 32);
   const [isTtsEnabled, setIsTtsEnabled] = useState(initialSettings?.ttsEnabled ?? true);
   const [ttsRate, setTtsRate] = useState(initialSettings?.ttsRate ?? 1);
+  const [savedSettingsSnapshot, setSavedSettingsSnapshot] =
+    useState<ChannelLiveSavedSettingsSnapshot>(() => ({
+      alertSoundEnabled: isAlertSoundEnabled,
+      alertVolume,
+      chatDonationMessageEnabled: isChatDonationMessageEnabled,
+      chatRuleText,
+      chatScope,
+      defaultTags: [...tags],
+      defaultTitle: title,
+      donationAlertDurationSeconds,
+      donationAmountVisible: isDonationAmountVisible,
+      donationEnabled: isDonationEnabled,
+      donationMinAmount,
+      forbiddenWords: [...forbiddenWords],
+      followerWaitSeconds,
+      linkBlocked: isLinkBlocked,
+      slowModeEnabled: isSlowModeEnabled,
+      slowModeSeconds,
+      ttsEnabled: isTtsEnabled,
+      ttsRate,
+    }));
   const [liveChatMessages, setLiveChatMessages] = useState<ChannelLiveChatMessage[]>([]);
   const [streamStatus, setStreamStatus] = useState<ChannelLiveStreamStatusResponse | null>(null);
   const [isBroadcastActionPending, startBroadcastTransition] = useTransition();
@@ -158,6 +204,52 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
     isChatPaused,
     visibility,
   };
+  const isSettingsDirty = useMemo(() => {
+    return (
+      thumbnailFile !== null ||
+      isThumbnailRemoved ||
+      savedSettingsSnapshot.alertSoundEnabled !== isAlertSoundEnabled ||
+      savedSettingsSnapshot.alertVolume !== alertVolume ||
+      savedSettingsSnapshot.chatDonationMessageEnabled !== isChatDonationMessageEnabled ||
+      savedSettingsSnapshot.chatRuleText !== chatRuleText ||
+      savedSettingsSnapshot.chatScope !== chatScope ||
+      !areStringArraysEqual(savedSettingsSnapshot.defaultTags, tags) ||
+      savedSettingsSnapshot.defaultTitle !== title ||
+      savedSettingsSnapshot.donationAlertDurationSeconds !== donationAlertDurationSeconds ||
+      savedSettingsSnapshot.donationAmountVisible !== isDonationAmountVisible ||
+      savedSettingsSnapshot.donationEnabled !== isDonationEnabled ||
+      savedSettingsSnapshot.donationMinAmount !== donationMinAmount ||
+      !areStringArraysEqual(savedSettingsSnapshot.forbiddenWords, forbiddenWords) ||
+      savedSettingsSnapshot.followerWaitSeconds !== followerWaitSeconds ||
+      savedSettingsSnapshot.linkBlocked !== isLinkBlocked ||
+      savedSettingsSnapshot.slowModeEnabled !== isSlowModeEnabled ||
+      savedSettingsSnapshot.slowModeSeconds !== slowModeSeconds ||
+      savedSettingsSnapshot.ttsEnabled !== isTtsEnabled ||
+      savedSettingsSnapshot.ttsRate !== ttsRate
+    );
+  }, [
+    alertVolume,
+    chatRuleText,
+    chatScope,
+    donationAlertDurationSeconds,
+    donationMinAmount,
+    forbiddenWords,
+    followerWaitSeconds,
+    isAlertSoundEnabled,
+    isChatDonationMessageEnabled,
+    isDonationAmountVisible,
+    isDonationEnabled,
+    isLinkBlocked,
+    isSlowModeEnabled,
+    isThumbnailRemoved,
+    isTtsEnabled,
+    savedSettingsSnapshot,
+    slowModeSeconds,
+    tags,
+    thumbnailFile,
+    title,
+    ttsRate,
+  ]);
   const isStreamOnline = streamStatus?.state === "online";
   const shouldCaptureAutoThumbnail = !thumbnailFile && !thumbnailPreviewUrl.trim();
   const statusMetricsBroadcast = broadcastId
@@ -299,6 +391,8 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
   };
 
   const handleSaveSettings = () => {
+    if (!isSettingsDirty || isSettingsActionPending) return;
+
     startSettingsTransition(async () => {
       const result = await updateChannelLiveSettingsAction({
         alertSoundEnabled: isAlertSoundEnabled,
@@ -361,6 +455,26 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
       setAlertVolume(result.data.settings.alertVolume);
       setIsTtsEnabled(result.data.settings.ttsEnabled);
       setTtsRate(result.data.settings.ttsRate);
+      setSavedSettingsSnapshot({
+        alertSoundEnabled: result.data.settings.alertSoundEnabled,
+        alertVolume: result.data.settings.alertVolume,
+        chatDonationMessageEnabled: result.data.settings.chatDonationMessageEnabled,
+        chatRuleText: result.data.settings.chatRuleText,
+        chatScope: result.data.settings.chatScope,
+        defaultTags: [...result.data.settings.defaultTags],
+        defaultTitle: result.data.settings.defaultTitle,
+        donationAlertDurationSeconds: result.data.settings.donationAlertDurationSeconds,
+        donationAmountVisible: result.data.settings.donationAmountVisible,
+        donationEnabled: result.data.settings.donationEnabled,
+        donationMinAmount: result.data.settings.donationMinAmount,
+        forbiddenWords: [...result.data.settings.forbiddenWords],
+        followerWaitSeconds: result.data.settings.followerWaitSeconds,
+        linkBlocked: result.data.settings.linkBlocked,
+        slowModeEnabled: result.data.settings.slowModeEnabled,
+        slowModeSeconds: result.data.settings.slowModeSeconds,
+        ttsEnabled: result.data.settings.ttsEnabled,
+        ttsRate: result.data.settings.ttsRate,
+      });
       toastAppSuccess(APP_MESSAGE_CODE.success.channel.liveSettingsSaved);
     });
   };
@@ -427,6 +541,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
           <div className="shrink-0">
             <ChannelLiveSettingsPanel
               broadcastActionError={broadcastActionError}
+              canSaveSettings={isSettingsDirty}
               isBroadcastActionPending={isBroadcastActionPending}
               isSettingsActionPending={isSettingsActionPending}
               secondaryPanel={
@@ -483,6 +598,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
 
         <div className="min-w-0 xl:h-full xl:min-h-0 xl:overflow-y-auto xl:pr-2 xl:pb-2">
           <ChannelLiveQuickSettingsPanel
+            canSaveSettings={isSettingsDirty}
             isAlertSoundEnabled={isAlertSoundEnabled}
             isChatDonationMessageEnabled={isChatDonationMessageEnabled}
             isDonationAmountVisible={isDonationAmountVisible}
@@ -491,6 +607,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
             isSettingsActionPending={isSettingsActionPending}
             isSlowModeEnabled={isSlowModeEnabled}
             isTtsEnabled={isTtsEnabled}
+            slowModeSeconds={slowModeSeconds}
             onAlertSoundEnabledChange={setIsAlertSoundEnabled}
             onChatDonationMessageEnabledChange={setIsChatDonationMessageEnabled}
             onDonationAmountVisibleChange={setIsDonationAmountVisible}
@@ -498,6 +615,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
             onLinkBlockedChange={setIsLinkBlocked}
             onSaveSettings={handleSaveSettings}
             onSlowModeEnabledChange={setIsSlowModeEnabled}
+            onSlowModeSecondsChange={setSlowModeSeconds}
             onTtsEnabledChange={setIsTtsEnabled}
           />
         </div>

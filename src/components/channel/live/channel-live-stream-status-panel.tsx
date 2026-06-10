@@ -23,6 +23,7 @@ interface BitrateSample {
 
 const STREAM_STATUS_POLL_INTERVAL_MS = 10000;
 const STREAM_DURATION_TICK_INTERVAL_MS = 1000;
+const PENDING_STREAM_TIMEOUT_MS = 30 * 60 * 1000;
 const DEFAULT_STREAM_DURATION = "00:00:00";
 
 function formatDuration(startedAt?: string | null) {
@@ -66,6 +67,36 @@ function getStatusClassName(status: ChannelLiveStreamStatusResponse | null) {
   }
 
   return "bg-muted text-muted-foreground inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold";
+}
+
+function isPendingStreamExpired(status: ChannelLiveStreamStatusResponse, isBroadcasting: boolean) {
+  if (isBroadcasting || status.state !== "online" || !status.onlineTime) {
+    return false;
+  }
+
+  const onlineTime = new Date(status.onlineTime).getTime();
+
+  return Number.isFinite(onlineTime) && Date.now() - onlineTime >= PENDING_STREAM_TIMEOUT_MS;
+}
+
+function resolvePendingStreamStatus(
+  status: ChannelLiveStreamStatusResponse,
+  isBroadcasting: boolean,
+): ChannelLiveStreamStatusResponse {
+  if (!isPendingStreamExpired(status, isBroadcasting)) {
+    return status;
+  }
+
+  return {
+    ...status,
+    errorMessage: "OBS 연결 후 30분 안에 방송을 시작하지 않아 준비 상태를 종료했습니다.",
+    fps: null,
+    height: null,
+    inboundBytes: null,
+    onlineTime: null,
+    state: "offline",
+    width: null,
+  };
 }
 
 function StreamStatusContent({
@@ -114,6 +145,7 @@ function StreamStatusContent({
 
 export default function ChannelLiveStreamStatusPanel({
   activeBroadcastStartedAt,
+  liveState,
   onStatusChange,
   shouldCaptureAutoThumbnail = false,
   streamPath,
@@ -123,6 +155,7 @@ export default function ChannelLiveStreamStatusPanel({
   const [bitrateKbps, setBitrateKbps] = useState<number | null>(null);
   const [durationLabel, setDurationLabel] = useState(DEFAULT_STREAM_DURATION);
   const previousSampleRef = useRef<BitrateSample | null>(null);
+  const isBroadcasting = liveState.isBroadcasting;
 
   useEffect(() => {
     let isMounted = true;
@@ -143,7 +176,10 @@ export default function ChannelLiveStreamStatusPanel({
 
         if (!response.ok) return;
 
-        const nextStatus = (await response.json()) as ChannelLiveStreamStatusResponse;
+        const nextStatus = resolvePendingStreamStatus(
+          (await response.json()) as ChannelLiveStreamStatusResponse,
+          isBroadcasting,
+        );
 
         if (!isMounted) return;
 
@@ -184,7 +220,7 @@ export default function ChannelLiveStreamStatusPanel({
       abortController.abort();
       clearInterval(interval);
     };
-  }, [onStatusChange, shouldCaptureAutoThumbnail, streamPath]);
+  }, [isBroadcasting, onStatusChange, shouldCaptureAutoThumbnail, streamPath]);
 
   useEffect(() => {
     const startedAt = streamStatus?.onlineTime ?? activeBroadcastStartedAt;
