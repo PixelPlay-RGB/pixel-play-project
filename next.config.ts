@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // 비동기 generateMetadata는 기본적으로 body로 스트리밍되는데, JS를 못 돌리는 클라이언트는
+  // head의 메타만 읽는다. 기본 봇 목록에 Lighthouse를 더해 이런 클라이언트에는 blocking으로 제공한다.
+  htmlLimitedBots:
+    /Chrome-Lighthouse|Mediapartners-Google|Slurp|DuckDuckBot|baiduspider|yandex|sogou|bitlybot|tumblr|vkShare|quora link preview|redditbot|ia_archiver|Bingbot|BingPreview|applebot|facebookexternalhit|facebookcatalog|Twitterbot|LinkedInBot|Slackbot|Discordbot|WhatsApp|SkypeUriPreview/i,
   async redirects() {
     return [
       // 라이브 목록을 인덱스("/")로 옮겼으므로 구 목록 경로 /live 진입은 "/"로 보냅니다.
