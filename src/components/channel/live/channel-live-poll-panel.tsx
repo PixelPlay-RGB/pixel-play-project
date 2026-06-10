@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 import type { LivePoll } from "@/types/live/live";
 import { toastAppError } from "@/utils/common/toast-message";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, FerrisWheel, Gift, Plus, RotateCw, Trophy, Users, Vote, X } from "lucide-react";
+import { ArrowLeft, Check, FerrisWheel, Gift, Plus, RotateCw, Vote, X } from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
 interface Props {
@@ -428,19 +428,6 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
     }
   };
 
-  const handleEndDraw = async () => {
-    if (!drawSession || drawSession.endedAt) return;
-
-    const endedAt = new Date().toISOString();
-    const participants = await loadDrawParticipants(drawSession, endedAt);
-
-    if (!participants) return;
-
-    setDrawSession((currentSession) =>
-      currentSession ? { ...currentSession, endedAt, participants } : currentSession,
-    );
-  };
-
   const handlePickDrawWinner = async () => {
     if (!drawSession) return;
 
@@ -797,58 +784,43 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
           )}
 
           {selectedTool === "draw" && (
-            <div className="flex flex-1 flex-col gap-3">
-              <div className="bg-background border-border flex flex-col gap-3 rounded-xl border p-3">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-2">
-                    <Users className="text-brand size-4" />
-                    <span className="text-sm font-bold">
-                      {isDrawParticipantLoading
-                        ? "참여자 조회 중"
-                        : `참여자 ${drawParticipants.length}명`}
-                    </span>
-                  </div>
-                  <span className="text-muted-foreground text-xs font-semibold">
-                    {drawSession
-                      ? drawSession.endedAt
-                        ? "DB 기준 모집 종료"
-                        : "모집 중"
-                      : "모집 대기"}
-                  </span>
-                </div>
-                {drawParticipants.length > 0 ? (
-                  <div className="flex flex-wrap gap-1.5">
-                    {drawParticipants.slice(0, 12).map((participant) => (
-                      <span
-                        key={participant}
-                        className="bg-brand/10 text-brand rounded-full px-2.5 py-1 text-xs font-bold"
-                      >
-                        {participant}
-                      </span>
-                    ))}
-                    {drawParticipants.length > 12 && (
-                      <span className="text-muted-foreground px-2.5 py-1 text-xs font-bold">
-                        +{drawParticipants.length - 12}
-                      </span>
-                    )}
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground text-xs font-semibold">
-                    모집 시작 후 채팅을 친 사람이 추첨 후보에 들어갑니다.
-                  </p>
-                )}
+            <div className="flex flex-1 flex-col gap-5">
+              <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:justify-center">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="border-brand text-brand hover:bg-brand/10 hover:text-brand h-16 rounded-lg px-8 text-base font-black"
+                  disabled={!broadcastId || isDrawParticipantLoading || isDrawing}
+                  onClick={handleStartDraw}
+                >
+                  참여자 다시 모집하기
+                </Button>
+                <Button
+                  type="button"
+                  className="bg-brand hover:bg-brand/90 h-16 rounded-lg px-8 text-base font-black text-white"
+                  disabled={!broadcastId || !drawSession || isDrawing || isDrawParticipantLoading}
+                  onClick={handlePickDrawWinner}
+                >
+                  {isDrawParticipantLoading ? "조회 중" : isDrawing ? "추첨 중" : "추첨하기"}
+                </Button>
               </div>
 
-              <div
-                className={cn(
-                  "border-border bg-background mt-auto flex min-h-24 items-center justify-center overflow-hidden rounded-xl border px-4 py-3 text-center",
-                  isDrawing && "border-live/40 bg-live/10",
-                )}
-              >
+              <div className="flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-10">
+                <span className="text-muted-foreground/60 flex items-center gap-2 text-sm font-black">
+                  <Check className="size-4" />
+                  구독자만 추첨하기
+                </span>
+                <span className="text-foreground flex items-center gap-2 text-sm font-black">
+                  <Check className="size-4" />
+                  이미 뽑힌 참여자 제외하기
+                </span>
+              </div>
+
+              <div className="border-border bg-background/60 flex min-h-96 flex-1 flex-col rounded-lg border">
                 {isDrawing && drawReelNames.length > 0 ? (
-                  <div className="relative h-10 w-full overflow-hidden">
-                    <div className="from-background pointer-events-none absolute inset-x-0 top-0 z-10 h-3 bg-linear-to-b to-transparent" />
-                    <div className="from-background pointer-events-none absolute inset-x-0 bottom-0 z-10 h-3 bg-linear-to-t to-transparent" />
+                  <div className="relative m-auto h-10 w-full max-w-md overflow-hidden px-4">
+                    <div className="from-background pointer-events-none absolute inset-x-4 top-0 z-10 h-3 bg-linear-to-b to-transparent" />
+                    <div className="from-background pointer-events-none absolute inset-x-4 bottom-0 z-10 h-3 bg-linear-to-t to-transparent" />
                     <div
                       className="flex flex-col transition-transform ease-out"
                       style={{
@@ -868,64 +840,49 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
                     </div>
                   </div>
                 ) : (
-                  <span className="text-foreground text-lg font-black">
-                    {drawRollingName ?? "추첨 대기"}
-                  </span>
+                  <div className="min-h-0 flex-1 overflow-y-auto p-4">
+                    {drawWinnerNames.length ? (
+                      <div className="border-border mb-4 flex flex-wrap items-center gap-2 border-b pb-4">
+                        <span className="text-brand text-sm font-black">당첨자</span>
+                        {drawWinnerNames.map((winnerName, index) => (
+                          <span
+                            key={`${winnerName}-${index}`}
+                            className="bg-brand/10 text-brand rounded-lg px-3 py-2 text-sm font-black"
+                          >
+                            {index + 1}. {winnerName}
+                          </span>
+                        ))}
+                      </div>
+                    ) : null}
+
+                    {drawParticipants.length > 0 ? (
+                      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                        {drawParticipants.map((participant) => (
+                          <span
+                            key={participant}
+                            className="bg-muted/50 text-foreground rounded-lg px-3 py-2 text-sm font-bold"
+                          >
+                            {participant}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex h-full min-h-72 items-center justify-center text-center">
+                        <p className="text-muted-foreground text-sm font-semibold">
+                          {drawRollingName
+                            ? `최근 당첨자 ${drawRollingName}`
+                            : "모집 시작 후 채팅을 친 사람이 추첨 후보에 들어갑니다."}
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
 
-              {drawWinnerNames.length ? (
-                <div className="bg-brand/10 text-brand flex flex-col gap-2 rounded-xl px-3 py-3 text-sm font-bold">
-                  <div className="flex items-center gap-2">
-                    <Trophy className="size-4" />
-                    당첨자
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {drawWinnerNames.map((winnerName, index) => (
-                      <span
-                        key={`${winnerName}-${index}`}
-                        className="bg-background text-brand rounded-full px-2.5 py-1 text-xs font-bold"
-                      >
-                        {index + 1}. {winnerName}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
-
-              <div className="grid grid-cols-3 gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="h-10 rounded-xl font-bold"
-                  disabled={!broadcastId || isDrawParticipantLoading || isDrawing}
-                  onClick={handleStartDraw}
-                >
-                  모집 시작
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="h-10 rounded-xl font-bold"
-                  disabled={
-                    !broadcastId ||
-                    !drawSession ||
-                    Boolean(drawSession.endedAt) ||
-                    isDrawParticipantLoading ||
-                    isDrawing
-                  }
-                  onClick={handleEndDraw}
-                >
-                  {isDrawParticipantLoading ? "조회 중" : "모집 종료"}
-                </Button>
-                <Button
-                  type="button"
-                  className="bg-brand hover:bg-brand/90 h-10 rounded-xl font-bold text-white"
-                  disabled={!broadcastId || !drawSession || isDrawing || isDrawParticipantLoading}
-                  onClick={handlePickDrawWinner}
-                >
-                  {isDrawParticipantLoading ? "조회 중" : isDrawing ? "추첨 중" : "추첨"}
-                </Button>
+              <div className="flex justify-end">
+                <span className="text-foreground text-sm font-black">
+                  총 {drawParticipants.length}명
+                </span>
               </div>
             </div>
           )}
