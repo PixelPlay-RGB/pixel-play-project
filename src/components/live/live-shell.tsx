@@ -51,7 +51,10 @@ export default function LiveShell({
           // 데스크탑 사이드바는 collapsible="none"(고정폭)이라 내장 collapse가 없어,
           // 와이드 모드에서 motion으로 폭을 접어 시청 영역을 넓힌다.
           <motion.div
-            className="h-full shrink-0 overflow-hidden"
+            className={cn("h-full shrink-0 overflow-hidden", isWideMode && "pointer-events-none")}
+            // 접힘은 폭/투명도만 줄이므로 내부 링크가 Tab 포커스·AT 트리에 남는다 → 상호작용도 함께 차단.
+            aria-hidden={isWideMode || undefined}
+            inert={isWideMode || undefined}
             initial={false}
             animate={isWideMode ? "collapsed" : "expanded"}
             variants={liveSidebarCollapseVariants}

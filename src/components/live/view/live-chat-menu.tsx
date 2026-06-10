@@ -23,12 +23,17 @@ import { LIVE_CHAT_MENU_LABEL, LIVE_CHAT_POPOUT_WINDOW, LIVE_LABEL } from "@/con
 import { cn } from "@/lib/utils";
 import { toastAppError } from "@/utils/common/toast-message";
 
+// 동의/미동의 상태 칩 공통 모양(색 토큰만 호출부에서 주입).
+const RULE_STATUS_CHIP_CLASS =
+  "flex h-9 w-full items-center justify-center gap-1.5 rounded-md px-4 text-sm font-medium";
+
 interface Props {
   creatorId: string;
   chatRuleText?: string;
   // 메뉴 규칙 보기에 동의 상태를 표시한다. 실제 동의는 입력바 게이트가 담당한다.
-  isRuleAccepted?: boolean;
-  isRulePending?: boolean;
+  // required — optional+기본값이면 새 콜사이트가 배선을 빠뜨려도 조용히 '미동의'로 퇴화한다.
+  isRuleAccepted: boolean;
+  isRulePending: boolean;
   cleanbot: boolean;
   onCleanbot: () => void;
   onPopoutOpen: (win: Window) => void;
@@ -125,7 +130,7 @@ export function LiveChatMenu({
           {isRuleAccepted ? (
             <div
               role="status"
-              className="bg-brand text-brand-foreground inline-flex h-9 items-center gap-1.5 self-start rounded-md px-4 text-sm font-medium"
+              className={cn(RULE_STATUS_CHIP_CLASS, "bg-brand text-brand-foreground")}
             >
               <Check className="size-3.5" />
               {LIVE_LABEL.chatRuleAccepted}
@@ -133,7 +138,7 @@ export function LiveChatMenu({
           ) : isRulePending ? (
             <div
               role="status"
-              className="bg-secondary text-secondary-foreground inline-flex h-9 items-center gap-1.5 self-start rounded-md px-4 text-sm font-medium"
+              className={cn(RULE_STATUS_CHIP_CLASS, "bg-secondary text-secondary-foreground")}
             >
               <Info className="size-3.5" />
               {LIVE_LABEL.chatRulePending}

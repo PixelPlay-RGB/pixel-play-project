@@ -345,6 +345,13 @@ export function LiveVotePopover({
   portalContainer,
 }: Props) {
   const [open, setOpen] = useState(false);
+
+  // 열어둔 채 방송이 종료되면(disabled 전환) 즉시 닫는다.
+  // effect 내 setState는 lint 에러(set-state-in-effect)라 렌더 중 가드된 setState 패턴을 쓴다.
+  if (disabled && open) {
+    setOpen(false);
+  }
+
   const relevantPoll = selectRelevantPoll(polls);
   const isResult = relevantPoll?.status === "ended";
 

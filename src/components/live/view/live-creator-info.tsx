@@ -1,6 +1,12 @@
-// 크리에이터 아바타, 이름, 팔로워 수를 표시합니다.
+// 크리에이터 아바타(채널 페이지 링크), 이름, 팔로워 수를 표시합니다.
+
+import Link from "next/link";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  CREATOR_AVATAR_TRIGGER_AVATAR_CLASS,
+  CREATOR_AVATAR_TRIGGER_CLASS,
+} from "@/constants/creator/creator";
 import { formatCount } from "@/utils/live/live-chat";
 import { LIVE_LABEL } from "@/constants/live/live";
 import { cn } from "@/lib/utils";
@@ -19,10 +25,22 @@ export function LiveCreatorInfo({ creator, isLive = false }: Props) {
 
   return (
     <div className="flex items-center gap-3 py-1">
-      <Avatar size="lg" className={cn(isLive && "ring-live/80 ring-2")}>
-        <AvatarImage src={avatarSrc} alt={`${creator.name} 프로필`} />
-        <AvatarFallback>{fallback}</AvatarFallback>
-      </Avatar>
+      {/* 이미 이 스트리머를 시청 중이라 아바타는 라이브 이동 대신 채널 페이지로 보낸다.
+          항상 화면에 떠 있는 링크라 prefetch는 끈다(시청자마다 채널 페이지 선요청 방지). */}
+      <Link
+        href={`/channel/${creator.id}`}
+        prefetch={false}
+        aria-label={`${creator.name} 채널 보기`}
+        className={CREATOR_AVATAR_TRIGGER_CLASS}
+      >
+        <Avatar
+          size="lg"
+          className={cn(CREATOR_AVATAR_TRIGGER_AVATAR_CLASS, isLive && "ring-live/80 ring-2")}
+        >
+          <AvatarImage src={avatarSrc} alt={`${creator.name} 프로필`} />
+          <AvatarFallback>{fallback}</AvatarFallback>
+        </Avatar>
+      </Link>
 
       <div className="flex min-w-0 flex-col gap-0.5">
         <span className="text-foreground text-sm font-semibold">{creator.name}</span>

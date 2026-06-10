@@ -85,6 +85,8 @@ export function LiveDonationDialog({
       return;
     }
     // 방송 종료 등으로 막힌 경우 열지 않는다(커스텀 trigger는 버튼 disabled가 없어 여기서 함께 막아야 한다).
+    // 이미 연 채 종료되면 닫지 않고(작성 중 메시지 보존) 제출 버튼만 disabled로 막는다 —
+    // 투표 popover(무상태라 즉시 닫음)와 의도적으로 다른 정책. 종료 안내는 전역 토스트가 담당.
     if (disabled) {
       return;
     }
@@ -221,6 +223,7 @@ export function LiveDonationDialog({
           <Button
             type="button"
             disabled={
+              disabled ||
               !donationEnabled ||
               isBelowMin ||
               remaining < 0 ||

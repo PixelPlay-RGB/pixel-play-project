@@ -39,6 +39,9 @@ interface Props {
     idempotencyKey: string;
   }) => Promise<boolean>;
   chatRuleText?: string;
+  // 채팅 규칙 동의 여부(훅이 RPC 신호로 판정). 메뉴 동의 칩 표시용.
+  // required — optional+기본값이면 새 콜사이트가 배선을 빠뜨려도 조용히 '미동의'로 퇴화한다.
+  isRuleAccepted: boolean;
   onAcceptChatRule?: () => Promise<boolean>;
   onFollow?: () => void;
   isFollowing?: boolean;
@@ -71,6 +74,7 @@ export function LiveChatPanel({
   onVote,
   onDonate,
   chatRuleText,
+  isRuleAccepted,
   onAcceptChatRule,
   onFollow,
   isFollowing,
@@ -82,8 +86,7 @@ export function LiveChatPanel({
 }: Props) {
   const [cleanbot, setCleanbot] = useState(true);
   const [isPopoutOpen, setIsPopoutOpen] = useState(false);
-  // 동의 여부 전용 필드가 없어 채팅 상태로 파생한다. 채팅 가능=동의 완료로 본다.
-  const isRuleAccepted = isLoggedIn && chatState.canChat;
+  // 동의 완료는 prop(RPC 전용 필드 기반)으로 받고, "동의 필요" 안내만 사유로 파생한다.
   const isRulePending =
     isLoggedIn && chatState.chatUnavailableReason === "chat_rule_acceptance_required";
   const popoutWindowRef = useRef<Window | null>(null);

@@ -56,6 +56,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     isFollowing,
     onFollowToggled,
     chatRuleText,
+    isChatRuleAccepted,
     isLoggedIn,
     isAuthLoading,
     chatState,
@@ -193,7 +194,11 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
                           size="icon"
                           variant="ghost"
                           aria-label={LIVE_LABEL.donate}
-                          className={LIVE_PLAYER_ICON_BUTTON_CLASS}
+                          // 우상단 스택의 채팅 토글과 같은 원형 다크 배경으로 통일.
+                          className={cn(
+                            LIVE_PLAYER_ICON_BUTTON_CLASS,
+                            "rounded-full bg-black/45 backdrop-blur-sm",
+                          )}
                         >
                           <HandCoins className="size-5" />
                         </Button>
@@ -302,6 +307,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
               onVote={votePoll}
               onDonate={sendDonation}
               chatRuleText={chatRuleText}
+              isRuleAccepted={isChatRuleAccepted}
               onAcceptChatRule={acceptChatRule}
               onFollow={handleFollow}
               isFollowing={isFollowing}

@@ -656,7 +656,8 @@ export const APP_MESSAGE = {
     },
     live: {
       broadcastEnded: {
-        title: "방송이 종료되었습니다",
+        title: "방송 종료",
+        description: "방송이 종료되었습니다.",
       },
     },
   },

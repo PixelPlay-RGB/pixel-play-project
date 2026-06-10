@@ -35,6 +35,17 @@ export function useLiveBroadcastView(creatorId: string) {
   const [optimisticFollowing, setOptimisticFollowing] = useState<boolean | null>(null);
   const isFollowing = optimisticFollowing ?? watchData?.viewerRelation?.isFollowing ?? false;
 
+  // 채팅 규칙 게이트 통과 여부(메뉴 동의 칩 표시용) — 두 신호의 합집합.
+  // ① canChat=true: RPC가 규칙 게이트를 통과시킨 상태(본인 채널·규칙 미설정 채널 포함 — 이들은
+  //    동의 절차가 없어 chatRuleAcceptedVersion이 null이므로 전용 필드만으론 누락된다).
+  // ② 전용 필드(chatRuleAcceptedVersion>=chatRuleVersion): canChat이 follower_required 등
+  //    다른 사유로 false여도 동의 이력이 있으면 동의 완료로 본다.
+  // 동의 직후엔 acceptChatRule→onChatRuleAccepted(refetch)로 watchData가 갱신돼 신선하다.
+  const isChatRuleAccepted =
+    watchData?.viewerChatState.canChat === true ||
+    (watchData?.viewerRelation?.chatRuleAcceptedVersion != null &&
+      watchData.viewerRelation.chatRuleAcceptedVersion >= watchData.settings.chatRuleVersion);
+
   function onFollowToggled() {
     const next = !isFollowing;
     setOptimisticFollowing(next);
@@ -90,7 +101,8 @@ export function useLiveBroadcastView(creatorId: string) {
     const cachedPolls = broadcastId
       ? queryClient.getQueryData<LivePoll[]>(QUERY_KEYS.live.pollsForViewer(broadcastId, user?.id))
       : undefined;
-    const isUnvote = cachedPolls?.find((poll) => poll.id === pollId)?.userVotedOptionId === optionId;
+    const isUnvote =
+      cachedPolls?.find((poll) => poll.id === pollId)?.userVotedOptionId === optionId;
     try {
       const success = await voteLivePollAction(pollId, optionId);
       if (!success) {
@@ -125,7 +137,11 @@ export function useLiveBroadcastView(creatorId: string) {
     isAnonymous: boolean;
     idempotencyKey: string;
   }): Promise<boolean> {
-    if (!broadcast?.id) return false;
+    // 최심층 가드 — UI disabled를 빠뜨린 표면이 생겨도 조용히 실패하지 않게 안내한다.
+    if (!broadcast?.id) {
+      toastAppInfo(APP_MESSAGE_CODE.info.live.broadcastEnded);
+      return false;
+    }
     // 크리에이터는 본인 방송에 후원할 수 없다(서버도 거부하지만 즉시 명확히 안내한다).
     if (user?.id && user.id === creatorId) {
       toastAppError(APP_MESSAGE_CODE.error.live.donationSelf);
@@ -216,6 +232,7 @@ export function useLiveBroadcastView(creatorId: string) {
     isFollowing,
     onFollowToggled,
     chatRuleText: watchData?.settings.chatRuleText,
+    isChatRuleAccepted,
     ...chatSession,
     sendMessage,
   };

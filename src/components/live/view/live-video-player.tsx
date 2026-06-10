@@ -1,12 +1,19 @@
 "use client";
 // 라이브 비디오 플레이어 — MediaMTX HLS <video>에 컨테이너 전체화면/극장 모드와 하단 컨트롤 바를 조립합니다.
 
-import { useCallback, useEffect, useState, type ReactNode, type Ref } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode, type Ref } from "react";
+import { MessageSquare } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
+import LiveBadge from "@/components/live/live-badge";
 import { LivePlayerControlBar } from "@/components/live/view/live-player-control-bar";
 import { LivePlayerTopOverlay } from "@/components/live/view/live-player-top-overlay";
 import { LivePlayerWaitingOverlay } from "@/components/live/view/live-player-waiting-overlay";
-import { LIVE_FULLSCREEN_CHAT_INSET, LIVE_LABEL } from "@/constants/live/live";
+import {
+  LIVE_FULLSCREEN_CHAT_INSET,
+  LIVE_LABEL,
+  LIVE_PLAYER_ICON_BUTTON_CLASS,
+} from "@/constants/live/live";
 import { useFullscreen } from "@/hooks/live/use-fullscreen";
 import { useHlsPlayer } from "@/hooks/live/use-hls-player";
 import { useLivePlayerControls } from "@/hooks/live/use-live-player-controls";
@@ -33,7 +40,7 @@ interface Props {
   onOpenChat?: () => void;
   // 전체화면일 때 컨테이너 내부에 렌더할 채팅/후원 오버레이. 데이터를 가진 상위(LiveView)가 주입한다.
   renderFullscreenChat?: (ctx: FullscreenChatContext) => ReactNode;
-  // 전체화면 컨트롤 바에 둘 후원 버튼(모달 직접 오픈). 후원 데이터를 가진 LiveView가 container로 포털해 주입한다.
+  // 전체화면 우상단 스택에 둘 후원 버튼(모달 직접 오픈). 후원 데이터를 가진 LiveView가 container로 포털해 주입한다.
   renderFullscreenDonation?: (ctx: { container: HTMLElement | null }) => ReactNode;
 }
 
@@ -69,6 +76,16 @@ export function LiveVideoPlayer({
       setIsFsChatOpen(false);
     }
   }, [isFullscreen]);
+
+  // 채팅을 닫으면 우상단 스택의 토글 버튼으로 포커스를 되돌린다(패널 X에 갇힌 포커스 회수).
+  // 여는 방향은 오버레이가 패널 X 버튼으로 포커스를 옮긴다. 초기 마운트엔 가로채지 않는다.
+  const fsChatToggleRef = useRef<HTMLButtonElement>(null);
+  const prevFsChatOpenRef = useRef(isFsChatOpen);
+  useEffect(() => {
+    if (prevFsChatOpenRef.current === isFsChatOpen) return;
+    prevFsChatOpenRef.current = isFsChatOpen;
+    if (!isFsChatOpen) fsChatToggleRef.current?.focus();
+  }, [isFsChatOpen]);
   // 극장·전체화면(몰입 모드): 컨트롤 자동 숨김을 빠르게 하고 상단 정보 오버레이를 hover로 띄운다.
   const isImmersive = isFullscreen || isTheater;
   const {
@@ -143,6 +160,8 @@ export function LiveVideoPlayer({
             "absolute top-0 left-0 z-10 bg-linear-to-b from-black/60 to-transparent px-4 pt-4 pb-10 transition-[opacity,right] duration-200",
             controlsVisible ? "opacity-100" : "pointer-events-none opacity-0",
             isFullscreenChatOpen ? LIVE_FULLSCREEN_CHAT_INSET : "right-0",
+            // 전체화면에선 우상단 스택(LIVE·채팅·후원)과 제목이 겹치지 않게 오른쪽을 비워 둔다.
+            isFullscreen && "pr-20",
           )}
         >
           <LivePlayerTopOverlay
@@ -180,11 +199,6 @@ export function LiveVideoPlayer({
             isChatCollapsed={isChatCollapsed}
             openChatButtonRef={openChatButtonRef}
             onOpenChat={onOpenChat}
-            fullscreenDonationSlot={
-              isFullscreen && renderFullscreenDonation
-                ? renderFullscreenDonation({ container: containerEl })
-                : null
-            }
             qualityLevels={levels}
             selectedQualityLevel={selectedLevel}
             onSelectQualityLevel={setLevel}
@@ -192,7 +206,38 @@ export function LiveVideoPlayer({
         </div>
       ) : null}
 
-      {/* 전체화면 전용 채팅/후원 오버레이(미니 사이드바). 전체화면일 때만 컨테이너 안에 렌더한다. */}
+      {/* 전체화면 우상단 스택: LIVE 뱃지 + 채팅 토글 + 후원. 컨트롤과 함께 hover로 나타나고,
+          채팅이 열리면 패널 폭만큼 좌측으로 비켜난다. */}
+      {hlsSrc && isFullscreen ? (
+        <div
+          className={cn(
+            "absolute top-0 z-10 flex flex-col items-center gap-2 p-4 transition-[opacity,right] duration-200",
+            controlsVisible ? "opacity-100" : "pointer-events-none opacity-0",
+            isFullscreenChatOpen ? LIVE_FULLSCREEN_CHAT_INSET : "right-0",
+          )}
+        >
+          <LiveBadge />
+          {renderFullscreenChat ? (
+            <Button
+              ref={fsChatToggleRef}
+              type="button"
+              size="icon"
+              variant="ghost"
+              aria-label={isFsChatOpen ? LIVE_LABEL.chatCollapse : LIVE_LABEL.chatExpand}
+              className={cn(
+                LIVE_PLAYER_ICON_BUTTON_CLASS,
+                "rounded-full bg-black/45 backdrop-blur-sm",
+              )}
+              onClick={() => setIsFsChatOpen((prev) => !prev)}
+            >
+              <MessageSquare className="size-5" />
+            </Button>
+          ) : null}
+          {renderFullscreenDonation ? renderFullscreenDonation({ container: containerEl }) : null}
+        </div>
+      ) : null}
+
+      {/* 전체화면 전용 채팅 패널. 전체화면일 때만 컨테이너 안에 렌더한다(토글은 우상단 스택). */}
       {hlsSrc && isFullscreen && renderFullscreenChat
         ? renderFullscreenChat({
             container: containerEl,

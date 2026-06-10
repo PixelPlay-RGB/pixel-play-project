@@ -8,6 +8,10 @@ import { ChevronRight, Tv } from "lucide-react";
 
 import CreatorFollowingButton from "@/components/following/creator-following-button";
 import CreatorUnfollowDialog from "@/components/creator/creator-unfollow-dialog";
+import {
+  CREATOR_AVATAR_TRIGGER_AVATAR_CLASS,
+  CREATOR_AVATAR_TRIGGER_CLASS,
+} from "@/constants/creator/creator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { buttonVariants } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -85,16 +89,14 @@ export default function CreatorAvatarPopover({
           type="button"
           aria-label={`${creatorNickname} 프로필 요약 열기`}
           className={cn(
-            "group/avatar-trigger focus-visible:ring-ring relative z-20 shrink-0 cursor-pointer rounded-full outline-none focus-visible:ring-3",
+            CREATOR_AVATAR_TRIGGER_CLASS,
+            "relative z-20 cursor-pointer",
             triggerClassName,
           )}
         >
           <Avatar
             className={cn(
-              "transition-[box-shadow,opacity]",
-              "group-hover/avatar-trigger:ring-live/70 group-focus-visible/avatar-trigger:ring-live/70 group-hover/avatar-trigger:ring-2 group-focus-visible/avatar-trigger:ring-2",
-              // 라이브 링이 잘 안 보이는 사이드바에서도 hover 피드백을 주기 위해 투명도도 함께 변화.
-              "group-hover/avatar-trigger:opacity-60 group-focus-visible/avatar-trigger:opacity-60",
+              CREATOR_AVATAR_TRIGGER_AVATAR_CLASS,
               showLiveRing && "ring-live/80 ring-2",
               avatarClassName,
             )}
