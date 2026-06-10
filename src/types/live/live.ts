@@ -85,6 +85,7 @@ export interface LiveChatMessage {
   type: LiveChatMessageType;
   author?: string;
   content: string;
+  createdAt?: string;
   donationAmount?: number;
   // 작성자가 방송 진행자(크리에이터) 본인인지 여부. 채팅에서 호스트 메시지를 강조하는 데 쓴다.
   isHost?: boolean;
@@ -114,13 +115,32 @@ export interface LivePollOption {
 }
 
 export interface LivePoll {
+  createdAt: string;
   id: string;
   title: string;
   options: LivePollOption[];
   status: LivePollStatus;
   endsAt: string | null;
+  endedAt: string | null;
   totalCount: number;
   userVotedOptionId: string | null;
+}
+
+export type LiveInteractionNoticeType = "draw" | "roulette";
+export type LiveInteractionNoticeStatus = "active" | "ended";
+
+export interface LiveInteractionNotice {
+  content: string;
+  createdAt: string;
+  drawNoticeId?: string;
+  hasJoined?: boolean;
+  id: string;
+  participantCount?: number;
+  participantNames?: string[];
+  resultLabel?: string;
+  status: LiveInteractionNoticeStatus;
+  type: LiveInteractionNoticeType;
+  winnerNames?: string[];
 }
 
 export interface LiveCreator {
@@ -166,6 +186,7 @@ export interface LiveWatchBroadcast {
 export interface LiveWatchSettings {
   chatScope: "authenticated" | "follower" | "manager";
   followerWaitSeconds: number;
+  chatPaused: boolean;
   slowModeEnabled: boolean;
   slowModeSeconds: number;
   linkBlocked: boolean;
@@ -185,6 +206,7 @@ export interface LiveWatchViewerRelation {
 
 // RPC가 계산해 주는 채팅 불가 사유 — 차단/블랙리스트가 아닌 채팅 가능 여부 판단용
 export type LiveChatUnavailableReason =
+  | "chat_paused"
   | "login_required"
   | "live_offline"
   | "manager_only"

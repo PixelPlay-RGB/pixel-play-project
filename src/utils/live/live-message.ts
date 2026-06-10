@@ -8,6 +8,7 @@ import type { Json } from "@/types/database.types";
 
 export interface LiveMessageJoinedRow {
   id: string;
+  created_at: string;
   sender_id: string | null;
   message_type: "chat" | "moderation_notice" | "donation";
   content: string;
@@ -23,10 +24,14 @@ export function mapLiveMessageRowToMessage(
   row: LiveMessageJoinedRow,
   creatorId?: string,
   viewerId?: string,
-): LiveChatMessage {
+): LiveChatMessage | null {
   const isHost = !!creatorId && row.sender_id !== null && row.sender_id === creatorId;
   const isOwnMessage = !!viewerId && row.sender_id !== null && row.sender_id === viewerId;
   const metadata = readJsonObject(row.metadata);
+
+  if (readString(metadata.source) === "live_draw_participation") {
+    return null;
+  }
 
   if (row.message_type === "donation") {
     const metadataAmount = readNumber(metadata.amount);
@@ -37,6 +42,7 @@ export function mapLiveMessageRowToMessage(
       type: "donation",
       author: row.sender?.nickname ?? metadataAuthor ?? LIVE_LABEL.anonymousAuthor,
       content: row.content,
+      createdAt: row.created_at,
       donationAmount: row.donation?.amount ?? metadataAmount ?? undefined,
     };
   }
@@ -46,6 +52,7 @@ export function mapLiveMessageRowToMessage(
       id: row.id,
       type: "system",
       content: row.content,
+      createdAt: row.created_at,
     };
   }
 
@@ -55,6 +62,7 @@ export function mapLiveMessageRowToMessage(
     author:
       row.sender?.nickname ?? readString(metadata.senderNickname) ?? LIVE_LABEL.anonymousAuthor,
     content: row.content,
+    createdAt: row.created_at,
     isHost,
     // 본인 메시지는 본인 화면에서 안 가린다. refetch 재매핑 시에도 일관 유지된다.
     isCleanbotFlagged: !isOwnMessage && isCleanbotFlagged(row.content),
@@ -83,6 +91,7 @@ export function mapLiveMessageRealtimePayload(
   return mapLiveMessageRowToMessage(
     {
       id,
+      created_at: typeof record.created_at === "string" ? record.created_at : "",
       sender_id: typeof record.sender_id === "string" ? record.sender_id : null,
       message_type: messageType,
       content: typeof record.content === "string" ? record.content : "",

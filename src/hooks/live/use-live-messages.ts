@@ -13,7 +13,8 @@ import {
 import { appendLiveMessage } from "@/utils/live/live-chat";
 import type { LiveChatMessage } from "@/types/live/live";
 const LIVE_MESSAGE_SELECT =
-  "id, sender_id, message_type, content, metadata, sender:sender_id(nickname, photo_url), donation:donation_id(amount)" as const;
+  "id, created_at, sender_id, message_type, content, metadata, sender:sender_id(nickname, photo_url), donation:donation_id(amount)" as const;
+const EMPTY_LIVE_MESSAGES: LiveChatMessage[] = [];
 
 export function useLiveMessages(
   broadcastId: string | null | undefined,
@@ -40,9 +41,11 @@ export function useLiveMessages(
 
       if (error) throw error;
 
-      return (data ?? [])
-        .reverse()
-        .map((row) => mapLiveMessageRowToMessage(row, creatorId, viewerId));
+      return (data ?? []).reverse().flatMap((row) => {
+        const message = mapLiveMessageRowToMessage(row, creatorId, viewerId);
+
+        return message ? [message] : [];
+      });
     },
   });
 
@@ -107,7 +110,7 @@ export function useLiveMessages(
   }, [broadcastId, creatorId, viewerId, supabase, queryClient]);
 
   return {
-    messages: query.data ?? [],
+    messages: query.data ?? EMPTY_LIVE_MESSAGES,
     isLoading: query.isLoading,
     error: query.error,
     refetch: query.refetch,

@@ -15,6 +15,7 @@ import { LIVE_LABEL } from "@/constants/live/live";
 import type {
   LiveChatMessage,
   LiveDonation,
+  LiveInteractionNotice,
   LivePoll,
   LiveViewerChatState,
 } from "@/types/live/live";
@@ -24,8 +25,11 @@ interface Props {
   messages: LiveChatMessage[];
   donations: LiveDonation[];
   polls: LivePoll[];
+  interactionNotices: LiveInteractionNotice[];
   isPollsLoading?: boolean;
   isPollsError?: boolean;
+  isInteractionNoticesLoading?: boolean;
+  isInteractionNoticesError?: boolean;
   chatState: LiveViewerChatState;
   isLoggedIn: boolean;
   walletBalance: number;
@@ -36,6 +40,7 @@ interface Props {
   onLoginPrompt: () => void;
   onSendMessage: (content: string) => Promise<boolean>;
   onVote?: (pollId: string, optionId: string) => Promise<boolean>;
+  onJoinDraw?: (drawNoticeId: string) => Promise<boolean>;
   onDonate?: (params: {
     amount: number;
     message: string;
@@ -56,8 +61,11 @@ export function LiveChatPanel({
   messages,
   donations,
   polls,
+  interactionNotices,
   isPollsLoading,
   isPollsError,
+  isInteractionNoticesLoading,
+  isInteractionNoticesError,
   chatState,
   isLoggedIn,
   walletBalance,
@@ -68,6 +76,7 @@ export function LiveChatPanel({
   onLoginPrompt,
   onSendMessage,
   onVote,
+  onJoinDraw,
   onDonate,
   chatRuleText,
   onAcceptChatRule,
@@ -158,8 +167,11 @@ export function LiveChatPanel({
           <LiveChatParticipationNotice chatUnavailableReason={chatState.chatUnavailableReason} />
           <LiveChatInputBar
             polls={polls}
+            interactionNotices={interactionNotices}
             isPollsLoading={isPollsLoading}
             isPollsError={isPollsError}
+            isInteractionNoticesLoading={isInteractionNoticesLoading}
+            isInteractionNoticesError={isInteractionNoticesError}
             chatState={chatState}
             isLoggedIn={isLoggedIn}
             walletBalance={walletBalance}
@@ -170,6 +182,7 @@ export function LiveChatPanel({
             onLoginPrompt={onLoginPrompt}
             onSendMessage={onSendMessage}
             onVote={onVote}
+            onJoinDraw={onJoinDraw}
             onDonate={onDonate}
             chatRuleText={chatRuleText}
             onAcceptChatRule={onAcceptChatRule}

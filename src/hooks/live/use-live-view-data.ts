@@ -84,6 +84,32 @@ export function useLiveViewData(creatorId: string) {
     };
   }, [broadcastId, creatorId, user?.id, supabase, queryClient]);
 
+  useEffect(() => {
+    if (!isValidCreatorId) return;
+
+    const channel = supabase
+      .channel(`live-settings-${creatorId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "creator_studio_setting",
+          filter: `creator_id=eq.${creatorId}`,
+        },
+        () => {
+          void queryClient.invalidateQueries({
+            queryKey: QUERY_KEYS.live.watch(creatorId, user?.id),
+          });
+        },
+      )
+      .subscribe();
+
+    return () => {
+      void channel.unsubscribe();
+    };
+  }, [creatorId, isValidCreatorId, user?.id, supabase, queryClient]);
+
   return {
     data: query.data,
     isLoading: query.isLoading,

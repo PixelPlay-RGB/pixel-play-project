@@ -1,25 +1,33 @@
 "use client";
 // 방송 운영 화면의 채팅, 후원, 알림 빠른 설정을 오른쪽 패널로 렌더링합니다.
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SettingNumberSelectControl } from "@/components/common/setting-number-select-control";
+import { CHANNEL_CHAT_SLOW_MODE_OPTIONS } from "@/constants/channel/chat";
 import { cn } from "@/lib/utils";
-import { HandCoins, Link2, MessageCircle, Mic2, Timer, Volume2 } from "lucide-react";
+import { HandCoins, Link2, MessageCircle, Mic2, Save, Timer, Volume2 } from "lucide-react";
 import type { ComponentType } from "react";
 
 interface Props {
+  canSaveSettings: boolean;
   isAlertSoundEnabled: boolean;
   isChatDonationMessageEnabled: boolean;
   isDonationAmountVisible: boolean;
   isDonationEnabled: boolean;
   isLinkBlocked: boolean;
+  isSettingsActionPending: boolean;
   isSlowModeEnabled: boolean;
   isTtsEnabled: boolean;
+  slowModeSeconds: number;
   onAlertSoundEnabledChange: (isAlertSoundEnabled: boolean) => void;
   onChatDonationMessageEnabledChange: (isChatDonationMessageEnabled: boolean) => void;
   onDonationAmountVisibleChange: (isDonationAmountVisible: boolean) => void;
   onDonationEnabledChange: (isDonationEnabled: boolean) => void;
   onLinkBlockedChange: (isLinkBlocked: boolean) => void;
+  onSaveSettings: () => void;
   onSlowModeEnabledChange: (isSlowModeEnabled: boolean) => void;
+  onSlowModeSecondsChange: (slowModeSeconds: number) => void;
   onTtsEnabledChange: (isTtsEnabled: boolean) => void;
 }
 
@@ -79,34 +87,110 @@ function QuickSettingRow({ checked, icon: Icon, label, onChange }: QuickSettingR
   );
 }
 
+function QuickSettingSlowModeRow({
+  checked,
+  seconds,
+  onChange,
+  onSecondsChange,
+}: {
+  checked: boolean;
+  seconds: number;
+  onChange: (checked: boolean) => void;
+  onSecondsChange: (seconds: number) => void;
+}) {
+  return (
+    <div className="text-muted-foreground flex min-h-12 flex-col gap-2 rounded-xl px-1 py-2 text-sm font-bold sm:flex-row sm:items-center sm:justify-between">
+      <span className="flex min-w-0 items-center gap-2.5">
+        <span
+          className={cn(
+            "bg-muted/60 text-muted-foreground flex size-8 shrink-0 items-center justify-center rounded-full transition-colors",
+            checked && "text-brand",
+          )}
+        >
+          <Timer className="size-4" />
+        </span>
+        <span>저속모드</span>
+      </span>
+      <div className="flex items-center justify-end gap-2">
+        <SettingNumberSelectControl
+          ariaLabel="저속모드 채팅 간격"
+          value={seconds}
+          options={CHANNEL_CHAT_SLOW_MODE_OPTIONS}
+          disabled={!checked}
+          compact
+          onChange={onSecondsChange}
+        />
+        <button
+          type="button"
+          className="shrink-0 rounded-full"
+          aria-label="저속모드 사용"
+          aria-pressed={checked}
+          onClick={() => onChange(!checked)}
+        >
+          <span
+            className={cn(
+              "flex h-5 w-9 shrink-0 items-center rounded-full p-0.5 transition-colors",
+              checked ? "bg-brand" : "bg-muted-foreground/30",
+            )}
+          >
+            <span
+              className={cn(
+                "size-4 rounded-full bg-white shadow-sm transition-transform",
+                checked && "translate-x-4",
+              )}
+            />
+          </span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function ChannelLiveQuickSettingsPanel({
+  canSaveSettings,
   isAlertSoundEnabled,
   isChatDonationMessageEnabled,
   isDonationAmountVisible,
   isDonationEnabled,
   isLinkBlocked,
+  isSettingsActionPending,
   isSlowModeEnabled,
   isTtsEnabled,
+  slowModeSeconds,
   onAlertSoundEnabledChange,
   onChatDonationMessageEnabledChange,
   onDonationAmountVisibleChange,
   onDonationEnabledChange,
   onLinkBlockedChange,
+  onSaveSettings,
   onSlowModeEnabledChange,
+  onSlowModeSecondsChange,
   onTtsEnabledChange,
 }: Props) {
   return (
     <Card className="flex min-h-144 flex-col gap-5 py-6 shadow-sm xl:min-h-full">
       <CardHeader className="gap-2 px-5 sm:px-6">
         <CardTitle>빠른 설정</CardTitle>
+        <CardAction>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={isSettingsActionPending || !canSaveSettings}
+            onClick={onSaveSettings}
+          >
+            <Save className="size-4" />
+            저장
+          </Button>
+        </CardAction>
       </CardHeader>
       <CardContent className="flex flex-1 flex-col justify-between gap-4 px-5 sm:px-6">
         <QuickSettingSectionTitle title="채팅" />
-        <QuickSettingRow
+        <QuickSettingSlowModeRow
           checked={isSlowModeEnabled}
-          icon={Timer}
-          label="저속모드"
           onChange={onSlowModeEnabledChange}
+          seconds={slowModeSeconds}
+          onSecondsChange={onSlowModeSecondsChange}
         />
         <QuickSettingRow
           checked={isLinkBlocked}
