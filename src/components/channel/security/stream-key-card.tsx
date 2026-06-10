@@ -2,6 +2,7 @@
 import { SecurityActionGroup } from "@/components/channel/security/security-action-group";
 import { SecurityFieldRow } from "@/components/channel/security/security-field-row";
 import { StreamKeyReissueDialog } from "@/components/channel/security/stream-key-reissue-dialog";
+import { TutorialDialog } from "@/components/common/tutorial-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,6 +12,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  OBS_CONNECT_TUTORIAL_STEPS,
+  OBS_CONNECT_TUTORIAL_TITLE,
+} from "@/constants/channel/obs-tutorial";
 import type { ChannelSecuritySnapshot, ChannelSecurityTokenKind } from "@/types/channel/security";
 import { maskSensitiveValue } from "@/utils/channel/channel-security-format";
 import { Copy, KeyRound } from "lucide-react";
@@ -35,9 +40,14 @@ export function StreamKeyCard({
   return (
     <Card className="border-live/15 gap-5 shadow-sm">
       <CardHeader className="gap-2 px-5 sm:px-6">
-        <CardTitle className="flex items-center gap-2">
-          <KeyRound className="text-live size-4" />
+        <CardTitle className="flex items-center gap-2 leading-none">
+          <KeyRound className="text-live size-4 translate-y-px" />
           방송 연결 정보
+          <TutorialDialog
+            title={OBS_CONNECT_TUTORIAL_TITLE}
+            steps={OBS_CONNECT_TUTORIAL_STEPS}
+            triggerLabel="OBS 연결 가이드 보기"
+          />
         </CardTitle>
         <CardDescription className="max-w-xl leading-6 text-pretty">
           OBS 방송 설정에 붙여 넣는 서버 주소와 스트림 키예요.

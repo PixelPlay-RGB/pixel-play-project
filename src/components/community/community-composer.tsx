@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { ImagePlus, X } from "lucide-react";
 
-import ChatEmojiPicker from "@/components/chat-room/chat-emoji-picker";
+import ChatEmojiPicker from "@/components/common/chat-emoji-picker";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";

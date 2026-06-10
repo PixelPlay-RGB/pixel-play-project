@@ -46,6 +46,7 @@ export default function LiveSearchResults({ query }: Props) {
           title="라이브 방송"
           description="제목, 크리에이터, 태그에서 찾은 라이브 결과예요."
           results={searchResults.broadcast.results}
+          totalCount={searchResults.broadcast.totalCount}
           hasMore={searchResults.broadcast.hasMore}
           isFetchingMore={searchResults.broadcast.isFetchingMore}
           onLoadMore={() => searchResults.broadcast.fetchMore()}
@@ -57,6 +58,7 @@ export default function LiveSearchResults({ query }: Props) {
           title="크리에이터"
           description="닉네임에서 찾은 크리에이터 결과예요."
           results={searchResults.creator.results}
+          totalCount={searchResults.creator.totalCount}
           hasMore={searchResults.creator.hasMore}
           isFetchingMore={searchResults.creator.isFetchingMore}
           onLoadMore={() => searchResults.creator.fetchMore()}

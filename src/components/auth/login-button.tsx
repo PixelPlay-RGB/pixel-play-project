@@ -15,7 +15,7 @@ export default function LoginButton() {
 
   const handleAuth = () => {
     const query = searchParams.toString();
-    const next = pathname === "/" ? "/live" : `${pathname}${query ? `?${query}` : ""}`;
+    const next = pathname === "/" ? "/" : `${pathname}${query ? `?${query}` : ""}`;
     router.push(createPathWithNext("/auth/login", next));
   };
 

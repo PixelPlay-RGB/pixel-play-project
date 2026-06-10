@@ -1,6 +1,7 @@
 // 채널 보안 설정 화면에서 사용하는 타입을 정의합니다.
 import type { LucideIcon } from "lucide-react";
 
+import type { TutorialStep } from "@/components/common/tutorial-dialog";
 import type { GenericTables } from "@/types/common/supabase.types";
 
 export type ChannelSecurityTokenKind = "stream_key" | "chat_overlay" | "donation_alert";
@@ -48,4 +49,8 @@ export interface ChannelSecurityUrlCardMeta {
   accent: "brand" | "live";
   popup: ChannelSecurityUrlPopupSize;
   tutorialItems: string[];
+  tutorial?: {
+    title: string;
+    steps: TutorialStep[];
+  };
 }

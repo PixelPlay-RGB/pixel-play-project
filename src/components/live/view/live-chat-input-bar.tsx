@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import ChatEmojiPicker from "@/components/chat-room/chat-emoji-picker";
+import ChatEmojiPicker from "@/components/common/chat-emoji-picker";
 import { Input } from "@/components/ui/input";
 import {
   Popover,

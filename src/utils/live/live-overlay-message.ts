@@ -33,7 +33,12 @@ export function mapLiveMessageToChatOverlayItem(
       author,
       content: message.content,
       createdAt: message.created_at,
-      role: message.sender_id === options.creatorId ? "creator" : undefined,
+      role:
+        message.sender_id === options.creatorId
+          ? "creator"
+          : metadata.isDonor === true
+            ? "donor"
+            : undefined,
       tone: message.sender_id === options.creatorId ? "brand" : undefined,
     };
 

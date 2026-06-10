@@ -81,9 +81,9 @@ export default function FollowingChannelSection() {
                 value={filter}
                 onValueChange={(value) => handleFilterChange(value as FollowingChannelFilter)}
               >
-                <TabsList>
+                <TabsList className="grid w-56 grid-cols-2">
                   {FOLLOWING_FILTER_TABS.map((tab) => (
-                    <TabsTrigger key={tab.value} value={tab.value}>
+                    <TabsTrigger key={tab.value} value={tab.value} className="w-full">
                       {tab.label}
                     </TabsTrigger>
                   ))}

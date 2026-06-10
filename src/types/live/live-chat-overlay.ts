@@ -9,7 +9,7 @@ export interface LiveChatOverlayMessage {
   createdAt: LiveMessageRow["created_at"];
   amount?: number | null;
   tone?: "brand" | "live" | "muted" | "default";
-  role?: "creator";
+  role?: "creator" | "donor";
 }
 
 export interface LiveChatOverlayItem {

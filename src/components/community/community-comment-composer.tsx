@@ -4,7 +4,7 @@
 import { SendHorizontal } from "lucide-react";
 import { useState } from "react";
 
-import ChatEmojiPicker from "@/components/chat-room/chat-emoji-picker";
+import ChatEmojiPicker from "@/components/common/chat-emoji-picker";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";

@@ -8,41 +8,52 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 
-export const CHANNEL_MENU_ITEMS: ChannelMenuItem[] = [
+export interface ChannelMenuGroup {
+  label: string;
+  items: ChannelMenuItem[];
+}
+
+// 성격별 섹션: 방송(운영·채팅) / 수익(후원) / 관리(통계·보안).
+export const CHANNEL_MENU_GROUPS: ChannelMenuGroup[] = [
   {
-    id: "live",
-    label: "방송 운영",
-    href: "/channel/live",
-    icon: SlidersHorizontal,
-  },
-  {
-    id: "donation",
-    label: "후원",
-    icon: HandCoins,
-    children: [
-      { id: "donation-settings", label: "설정", href: "/channel/donation" },
-      { id: "settlement", label: "정산", href: "/channel/settlement" },
+    label: "방송",
+    items: [
+      { id: "live", label: "방송 운영", href: "/channel/live", icon: SlidersHorizontal },
+      { id: "chat", label: "채팅 설정", href: "/channel/chat", icon: MessageSquareText },
     ],
   },
   {
-    id: "chat",
-    label: "채팅 설정",
-    href: "/channel/chat",
-    icon: MessageSquareText,
+    label: "수익",
+    items: [
+      {
+        id: "donation",
+        label: "후원",
+        icon: HandCoins,
+        children: [
+          { id: "donation-settings", label: "설정", href: "/channel/donation" },
+          { id: "settlement", label: "정산", href: "/channel/settlement" },
+        ],
+      },
+    ],
   },
   {
-    id: "security",
-    label: "보안 설정",
-    href: "/channel/security",
-    icon: ShieldCheck,
-  },
-  {
-    id: "analytics",
-    label: "통계 분석",
-    icon: BarChart3,
-    children: [
-      { id: "analytics-live", label: "실시간 통계", href: "/channel/analytics/live" },
-      { id: "analytics-report", label: "지난 방송 분석", href: "/channel/analytics/report" },
+    label: "관리",
+    items: [
+      {
+        id: "analytics",
+        label: "통계 분석",
+        icon: BarChart3,
+        children: [
+          { id: "analytics-live", label: "실시간 통계", href: "/channel/analytics/live" },
+          { id: "analytics-report", label: "지난 방송 분석", href: "/channel/analytics/report" },
+        ],
+      },
+      { id: "security", label: "방송 연결", href: "/channel/security", icon: ShieldCheck },
     ],
   },
 ];
+
+// 평면 배열(호환용).
+export const CHANNEL_MENU_ITEMS: ChannelMenuItem[] = CHANNEL_MENU_GROUPS.flatMap(
+  (group) => group.items,
+);

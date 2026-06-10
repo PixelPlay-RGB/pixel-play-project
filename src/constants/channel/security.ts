@@ -1,6 +1,12 @@
 // 채널 보안 설정의 OBS URL 카드 안내 상수를 정의합니다.
 import { BellRing, MessageSquareText } from "lucide-react";
 
+import {
+  OBS_CHAT_OVERLAY_TUTORIAL_STEPS,
+  OBS_CHAT_OVERLAY_TUTORIAL_TITLE,
+  OBS_DONATION_OVERLAY_TUTORIAL_STEPS,
+  OBS_DONATION_OVERLAY_TUTORIAL_TITLE,
+} from "@/constants/channel/obs-tutorial";
 import type {
   ChannelSecurityTokenKind,
   ChannelSecurityUrlCardMeta,
@@ -35,6 +41,10 @@ export const CHANNEL_SECURITY_URL_CARD_META: ChannelSecurityUrlCardMeta[] = [
       "크기는 520 x 600으로 맞추면 안정적으로 보여요.",
       "채팅이 멈춘 것처럼 보이면 브라우저 소스를 새로고침해주세요.",
     ],
+    tutorial: {
+      title: OBS_CHAT_OVERLAY_TUTORIAL_TITLE,
+      steps: OBS_CHAT_OVERLAY_TUTORIAL_STEPS,
+    },
   },
   {
     tokenKind: "donation_alert",
@@ -52,5 +62,9 @@ export const CHANNEL_SECURITY_URL_CARD_META: ChannelSecurityUrlCardMeta[] = [
       "크기는 640 x 360으로 두면 16:9 화면에 잘 맞아요.",
       "알림은 기본으로 5초 동안 보여요.",
     ],
+    tutorial: {
+      title: OBS_DONATION_OVERLAY_TUTORIAL_TITLE,
+      steps: OBS_DONATION_OVERLAY_TUTORIAL_STEPS,
+    },
   },
 ];
