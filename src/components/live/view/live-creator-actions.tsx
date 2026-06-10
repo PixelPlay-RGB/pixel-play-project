@@ -68,7 +68,8 @@ export function LiveCreatorActions({ creatorNickname, isFollowing, isPending, on
           variant="outline"
           aria-label={LIVE_LABEL.share}
           onClick={handleShare}
-          className="h-8 gap-1.5 text-xs font-semibold"
+          // 옆 팔로우 버튼(rounded-full)과 라운드 톤을 맞춘다.
+          className="h-8 gap-1.5 rounded-full text-xs font-semibold"
         >
           <Share2 className="size-4" />
         </Button>

@@ -118,6 +118,7 @@ export function LiveChatBody({
             messages={messages}
             cleanbotEnabled={cleanbotEnabled}
             fillHeight={fillMessages}
+            topInset
           />
         </ScrollArea>
       </div>

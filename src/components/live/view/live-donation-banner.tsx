@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { ChevronDown, Trophy } from "lucide-react";
+import { ChevronDown, Crown, Medal, Trophy } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { formatDonationAmount } from "@/utils/live/live-chat";
@@ -15,10 +15,11 @@ interface Props {
   donations: LiveDonation[];
 }
 
+// 금·은·동 — 숫자 대신 아이콘으로 순위를 표현하고 세 자리 모두 색감을 준다.
 const RANK_META = [
-  { color: "text-yellow-500", bg: "border-yellow-400/30 bg-yellow-400/5" },
-  { color: "text-slate-400", bg: "border-border bg-background/80" },
-  { color: "text-amber-600", bg: "border-border bg-background/80" },
+  { icon: Crown, color: "text-yellow-500", bg: "border-yellow-400/30 bg-yellow-400/10" },
+  { icon: Medal, color: "text-slate-400", bg: "border-slate-400/30 bg-slate-400/10" },
+  { icon: Medal, color: "text-amber-600", bg: "border-amber-600/30 bg-amber-600/10" },
 ] as const;
 
 export function LiveDonationBanner({ donations }: Props) {
@@ -74,11 +75,7 @@ export function LiveDonationBanner({ donations }: Props) {
                       RANK_META[0].bg,
                     )}
                   >
-                    <span
-                      className={cn("shrink-0 text-xs leading-none font-bold", RANK_META[0].color)}
-                    >
-                      1
-                    </span>
+                    <Crown className={cn("size-4 shrink-0 fill-current", RANK_META[0].color)} />
                     <span className="text-foreground min-w-0 flex-1 truncate text-xs font-medium">
                       {top3[0]?.author ?? "-"}
                     </span>
@@ -96,9 +93,7 @@ export function LiveDonationBanner({ donations }: Props) {
                           RANK_META[idx].bg,
                         )}
                       >
-                        <span className={cn("shrink-0 text-xs font-bold", RANK_META[idx].color)}>
-                          {idx + 1}
-                        </span>
+                        <Medal className={cn("size-3.5 shrink-0", RANK_META[idx].color)} />
                         <span className="text-foreground min-w-0 flex-1 truncate text-xs">
                           {top3[idx]?.author ?? "-"}
                         </span>

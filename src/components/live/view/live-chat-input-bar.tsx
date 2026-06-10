@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { SendHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ChatEmojiPicker from "@/components/common/chat-emoji-picker";
 import { Input } from "@/components/ui/input";
@@ -235,16 +236,27 @@ export function LiveChatInputBar({
           }}
           aria-label={placeholder}
           className={cn(
-            "read-only:bg-muted/70 h-11 w-full pr-10 text-sm read-only:cursor-pointer",
+            "read-only:bg-muted/70 h-11 w-full pr-17 text-sm read-only:cursor-pointer",
             // 기본 ring(무채색) 대신 브랜드 민트 포커스로 시청 화면의 입력임을 또렷하게 한다.
             "focus-visible:border-brand focus-visible:ring-brand/30",
           )}
         />
-        <div className="absolute inset-y-0 right-1 flex items-center">
+        <div className="absolute inset-y-0 right-1 flex items-center gap-0.5">
           <ChatEmojiPicker
             onEmojiSelect={(emoji) => setDraftValue(draftValue + emoji)}
             disabled={!isEditable}
           />
+          <Button
+            type="button"
+            size="icon-sm"
+            variant="ghost"
+            aria-label={LIVE_LABEL.chatSend}
+            className="text-brand hover:text-brand size-7"
+            disabled={!isEditable || !draftValue.trim() || isSending}
+            onClick={() => void handleSend()}
+          >
+            <SendHorizontal className="size-4" />
+          </Button>
         </div>
       </div>
 

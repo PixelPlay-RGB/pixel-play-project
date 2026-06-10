@@ -56,7 +56,8 @@ export function LiveChatMenu({
 
   function openChatPopout() {
     const width = LIVE_CHAT_POPOUT_WINDOW.width;
-    const height = LIVE_CHAT_POPOUT_WINDOW.height;
+    // 팝업 높이는 화면 가용 높이의 80%로 — 고정 픽셀은 큰 모니터에서 너무 짧게 보인다.
+    const height = Math.round(window.screen.availHeight * 0.8);
     const left = Math.max(0, window.screen.availWidth - width);
 
     const win = window.open(

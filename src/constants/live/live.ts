@@ -38,13 +38,14 @@ export const LIVE_LABEL = {
   cleanbotHidden: "클린봇이 부적절한 표현을 가렸습니다.",
   // 첫 진입 시 채팅 목록 상단에 항상 보여주는 필터링 안내.
   chatFilterNotice:
-    "쾌적한 시청 환경을 위해 일부 메시지는 필터링 됩니다. 클린 라이브 채팅 문화 만들기에 동참해 주세요.",
+    "쾌적한 시청 환경을 위해 일부 메시지는 필터링 됩니다.\n클린 라이브 채팅 문화 만들기에 동참해 주세요.",
   donationRankingTitle: "이번 주 후원 랭킹",
   donationRankingCollapse: "후원 랭킹 접기",
   donationRankingExpand: "후원 랭킹 펼치기",
   emptyWeeklyDonation: "이번 주 첫 번째 팬이 되어보세요!",
   chatLoginPlaceholder: "로그인 후 채팅할 수 있습니다.",
-  chatPlaceholder: "채팅 입력...",
+  chatPlaceholder: "채팅을 입력해보세요!",
+  chatSend: "채팅 전송",
   chatEndedPlaceholder: "방송이 종료되어 채팅할 수 없습니다.",
   loginRequired: "로그인이 필요합니다.",
   loginDescription: "이 기능을 사용하려면 로그인이 필요합니다.",
@@ -55,6 +56,8 @@ export const LIVE_LABEL = {
   donorBadge: "후원자",
   broadcastOffline: "방송이 종료되었거나 준비 중입니다.",
   broadcastOfflineTitle: "지금은 방송 중이 아니에요",
+  offlineInfoTitle: "다음 방송에서 만나요! 👋",
+  offlineInfoDescription: "크리에이터가 방송을 시작하면 이곳에서 바로 시청할 수 있어요.",
   // 방송은 시작됐지만 아직 송출(OBS) 영상이 도착하지 않은 동안 비디오 영역에 띄우는 안내.
   streamWaitingTitle: "송출 대기 중",
   streamWaitingDescription: "스트리머가 방송을 준비하고 있어요. 잠시만 기다려 주세요.",
@@ -81,7 +84,8 @@ export const LIVE_PLAYER_ICON_BUTTON_CLASS = "text-white/80 hover:bg-white/10 ho
 
 // 전체화면 채팅 패널 폭(w-80)과, 패널을 피해 줄어드는 영상·상단/하단 오버레이의 우측 인셋(right-80)은
 // 같은 값(20rem)이어야 한다. 한쪽만 바꾸면 영상이 패널 밑으로 깔리거나 빈틈이 생기므로 여기 한 곳에서 관리한다.
-export const LIVE_FULLSCREEN_CHAT_PANEL_WIDTH = "w-80";
+// 일반 시청 화면의 채팅 패널 폭(md:w-88)과 동일하게 유지한다.
+export const LIVE_FULLSCREEN_CHAT_PANEL_WIDTH = "w-88";
 export const LIVE_FULLSCREEN_CHAT_INSET = "right-80";
 
 export const LIVE_DONATION_MIN_AMOUNT = 1000;

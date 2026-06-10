@@ -3,6 +3,7 @@
 // 전체화면 후원 버튼은 openRequested로 외부에서 열기를 요청하고, 닫힐 때 사유(donated/dismissed)를 돌려받는다.
 
 import { useEffect, useRef, useState, type RefObject } from "react";
+import { HandCoins } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -76,7 +77,9 @@ export function LiveDonationPopover({
   const [isSubmitting, setIsSubmitting] = useState(false);
   // 외부 요청으로 열렸는지 — 닫힐 때 onOpenRequestSettled를 호출할지 결정한다.
   const isExternallyOpenedRef = useRef(false);
-  const prevRequestedRef = useRef(openRequested);
+  // 초기값은 반드시 false — 전체화면 후원 버튼이 채팅 패널을 열며 이 컴포넌트가
+  // openRequested=true 상태로 "첫 마운트"되므로, 초기값을 openRequested로 잡으면 전이를 놓친다.
+  const prevRequestedRef = useRef(false);
 
   const amount = Number(amountInput) || 0;
 
@@ -154,23 +157,32 @@ export function LiveDonationPopover({
           />
         }
       >
+        <HandCoins className="size-4" />
         {LIVE_LABEL.donate}
       </PopoverTrigger>
       <PopoverContent
         anchor={anchorRef ? () => anchorRef.current : undefined}
         container={portalContainer}
-        align="start"
+        align="center"
         side="top"
-        sideOffset={0}
+        sideOffset={8}
         // 기본 collisionPadding(5px)이 popover를 패널 밖으로 밀어내므로 0으로 고정해 패널 안에 둔다.
         collisionPadding={0}
-        className="max-h-[calc(100vh-1rem)] w-(--anchor-width) overflow-y-auto"
+        // 채팅 아이템 좌우 패딩(px-3)만큼 패널보다 좁혀 답답하지 않게 띄운다.
+        className="max-h-[calc(100vh-1rem)] w-[calc(var(--anchor-width)-1.5rem)] overflow-y-auto"
       >
-        <PopoverHeader>
-          <PopoverTitle>{LIVE_DONATION_LABEL.title}</PopoverTitle>
-          <PopoverDescription>
-            {LIVE_DONATION_LABEL.description.replace("{amount}", minAmountLabel)}
-          </PopoverDescription>
+        {/* 브랜드 무드 — 마크·후원 카드와 같은 brand→live 그라디언트 라인으로 후원 영역임을 드러낸다. */}
+        <div className="from-brand to-live h-1 shrink-0 rounded-full bg-linear-to-r" />
+        <PopoverHeader className="flex-row items-center gap-2.5">
+          <span className="from-brand to-live inline-flex size-9 shrink-0 items-center justify-center rounded-lg bg-linear-to-br text-white shadow-sm">
+            <HandCoins className="size-5" />
+          </span>
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <PopoverTitle>{LIVE_DONATION_LABEL.title}</PopoverTitle>
+            <PopoverDescription>
+              {LIVE_DONATION_LABEL.description.replace("{amount}", minAmountLabel)}
+            </PopoverDescription>
+          </div>
         </PopoverHeader>
 
         <div className="flex flex-col gap-4">
@@ -230,7 +242,8 @@ export function LiveDonationPopover({
               onChange={(e) =>
                 setMessage(e.target.value.slice(0, LIVE_DONATION_MESSAGE_MAX_LENGTH))
               }
-              className="resize-none text-sm"
+              // field-sizing-content(자동 확장)가 popover 높이를 키우지 않게 최대 높이를 고정한다.
+              className="max-h-20 resize-none text-sm"
               rows={2}
             />
           </div>

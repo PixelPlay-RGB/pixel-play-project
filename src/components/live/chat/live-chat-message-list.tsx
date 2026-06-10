@@ -14,6 +14,8 @@ interface Props {
   fillHeight?: boolean;
   // 클린봇 토글 상태. ON이면 비속어로 걸린 메시지를 가린다. 기본 ON.
   cleanbotEnabled?: boolean;
+  // 후원 랭킹 배너(absolute 오버레이)가 덮는 높이만큼 목록 상단을 비워, 맨 위 스크롤 시 채팅이 가려지지 않게 한다.
+  topInset?: boolean;
 }
 
 function getScrollContainer(el: HTMLElement): HTMLElement | null {
@@ -30,6 +32,7 @@ export function LiveChatMessageList({
   messages,
   fillHeight = false,
   cleanbotEnabled = true,
+  topInset = false,
 }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const isInitialMount = useRef(true);
@@ -93,10 +96,10 @@ export function LiveChatMessageList({
 
   return (
     <div className={cn(fillHeight && "flex min-h-full flex-col justify-end")}>
-      <ul className="flex flex-col gap-3 px-3 py-2">
+      <ul className={cn("flex flex-col gap-3 px-3 py-2", topInset && "pt-26")}>
         {/* 진입할 때마다 항상 보여주는 필터링 안내(클라이언트 전용, 저장하지 않음). */}
         <li>
-          <p className="border-border bg-muted/70 text-muted-foreground rounded-lg border px-3 py-2 text-sm leading-relaxed font-semibold wrap-break-word">
+          <p className="border-border bg-muted/70 text-muted-foreground rounded-lg border px-3 py-2 text-center text-sm leading-relaxed font-semibold whitespace-pre-line">
             {LIVE_LABEL.chatFilterNotice}
           </p>
         </li>

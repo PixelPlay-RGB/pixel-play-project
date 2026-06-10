@@ -2,7 +2,7 @@
 // 투표 참여와 라이브 상호작용 결과를 채팅 패널 액션 팝오버로 제공합니다.
 
 import { useId, useState, type RefObject } from "react";
-import { Check, Crown, FerrisWheel, Trophy } from "lucide-react";
+import { Check, Crown, FerrisWheel, Sparkles, Trophy } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -860,17 +860,19 @@ export function LiveVotePopover({
           <Button size="sm" variant="outline" className={VOTE_TRIGGER_CLASS} disabled={disabled} />
         }
       >
+        <Sparkles className="size-4" />
         {triggerLabel}
       </PopoverTrigger>
       <PopoverContent
         anchor={anchorRef ? () => anchorRef.current : undefined}
         container={portalContainer}
-        align="start"
+        align="center"
         side="top"
-        sideOffset={0}
+        sideOffset={8}
         // 기본 collisionPadding(5px)이 popover를 패널 밖으로 밀어내므로 0으로 고정해 패널 안에 둔다.
         collisionPadding={0}
-        className="max-h-[calc(100vh-1rem)] w-(--anchor-width) overflow-y-auto"
+        // 채팅 아이템 좌우 패딩(px-3)만큼 패널보다 좁혀 답답하지 않게 띄운다.
+        className="max-h-[calc(100vh-1rem)] w-[calc(var(--anchor-width)-1.5rem)] overflow-y-auto"
       >
         {showHeader ? (
           <PopoverHeader>

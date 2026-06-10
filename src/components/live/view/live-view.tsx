@@ -2,6 +2,7 @@
 // 라이브 시청 메인 화면 — 비디오, 방송 정보, 채팅 패널을 조합합니다.
 
 import { useEffect, useRef, useState } from "react";
+import { motion, useReducedMotion } from "motion/react";
 import { Timer, Users } from "lucide-react";
 import { LiveVideoPlayer } from "@/components/live/view/live-video-player";
 import { LiveFullscreenChatOverlay } from "@/components/live/view/live-fullscreen-chat-overlay";
@@ -81,6 +82,9 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
   const setWideMode = useLiveTheaterStore((state) => state.setWideMode);
   // 방송 종료 시엔 컨트롤 바(채팅 다시 열기 버튼)가 없어 접기를 적용하지 않고 항상 펼친다.
   const isChatCollapsed = isDesktopChatCollapsed && !isMobile && !!broadcast;
+  // 영화관 모드에서 비디오 아래 정보 영역(제목·스트리머 행)을 접는다(데스크탑 전용).
+  const isInfoCollapsed = !!broadcast && isTheater && !isMobile;
+  const prefersReducedMotion = useReducedMotion();
   // 시청 중 종료되면 마지막 라이브 스냅샷으로 정보 행(제목·참여자)을 유지하고, 시간은 종료 시점에 고정한다.
   // 종료 시간은 ended_at 기반 endedElapsedSeconds를 우선 쓰고, 도착 전 한 프레임은 스냅샷 경과로 메워 깜빡임을 막는다.
   const displayBroadcast = broadcast ?? lastBroadcast;
@@ -215,39 +219,60 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
               마지막 라이브 스냅샷(displayBroadcast)으로 그대로 유지한다(시간은 종료 시점에 고정).
               처음부터 종료된 방송 재진입은 스냅샷이 없어 행을 생략한다.
             */}
-            {displayBroadcast ? (
-              <div
-                className={cn(
-                  "flex items-start justify-between gap-3 px-4 pt-4",
-                  broadcast && isTheater && "md:hidden",
-                )}
-              >
-                <LiveBroadcastInfo broadcast={displayBroadcast} />
-                <div className="text-muted-foreground flex shrink-0 flex-col items-end gap-1 pt-0.5 text-xs">
-                  <span className="flex items-center gap-1">
-                    <Timer className="size-3.5" />
-                    {elapsedText}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Users className="size-3.5" />
-                    {formatCount(displayBroadcast.viewerCount)}
-                    {LIVE_LABEL.viewers}
-                  </span>
+            {/*
+              영화관 모드 전환 시 정보 영역을 height 애니메이션으로 접어, 비디오가 좌하단으로
+              자연스럽게 늘어나는 연출을 만든다(사이드바 collapse와 같은 preset). 모바일은
+              영화관 모드 자체가 없으므로 motion height를 적용하지 않는다.
+            */}
+            <motion.div
+              className={cn("overflow-hidden", isInfoCollapsed && "pointer-events-none")}
+              aria-hidden={isInfoCollapsed || undefined}
+              inert={isInfoCollapsed || undefined}
+              initial={false}
+              animate={isInfoCollapsed ? { height: 0, opacity: 0 } : { height: "auto", opacity: 1 }}
+              transition={
+                prefersReducedMotion ? { duration: 0 } : { duration: 0.2, ease: "easeOut" }
+              }
+            >
+              {displayBroadcast ? (
+                <div className="flex items-start justify-between gap-3 px-4 pt-4">
+                  <LiveBroadcastInfo broadcast={displayBroadcast} />
+                  <div className="text-muted-foreground flex shrink-0 flex-col items-end gap-1 pt-0.5 text-xs">
+                    <span className="flex items-center gap-1">
+                      <Timer className="size-3.5" />
+                      {elapsedText}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Users className="size-3.5" />
+                      {formatCount(displayBroadcast.viewerCount)}
+                      {LIVE_LABEL.viewers}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ) : null}
+              ) : (
+                // 방송 중이 아니면 제목·시간이 비어 비디오 영역만 길어지므로, 같은 자리에 안내 문구를 채워 높이를 유지한다.
+                <div className="flex min-w-0 flex-col gap-1.5 px-4 pt-4">
+                  <h1 className="text-foreground truncate text-base leading-snug font-semibold sm:text-lg">
+                    {LIVE_LABEL.offlineInfoTitle}
+                  </h1>
+                  <p className="text-muted-foreground text-sm">
+                    {LIVE_LABEL.offlineInfoDescription}
+                  </p>
+                </div>
+              )}
 
-            {/* 스트리머 정보 행(아바타·이름·팔로워 + 팔로우)은 라이브·종료 모두 동일하게 보여준다. */}
-            {creator ? (
-              <LiveStreamerRow
-                creator={creator}
-                isLive={!!broadcast}
-                isFollowing={isFollowing}
-                isPending={isFollowPending}
-                onFollow={handleFollow}
-                className={cn("px-4 py-4", broadcast && isTheater && "md:hidden")}
-              />
-            ) : null}
+              {/* 스트리머 정보 행(아바타·이름·팔로워 + 팔로우)은 라이브·종료 모두 동일하게 보여준다. */}
+              {creator ? (
+                <LiveStreamerRow
+                  creator={creator}
+                  isLive={!!broadcast}
+                  isFollowing={isFollowing}
+                  isPending={isFollowPending}
+                  onFollow={handleFollow}
+                  className="px-4 py-4"
+                />
+              ) : null}
+            </motion.div>
           </div>
 
           <aside
