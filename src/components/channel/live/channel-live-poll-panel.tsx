@@ -212,6 +212,7 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId }: Props) 
   const [isDrawTimerEnabled, setIsDrawTimerEnabled] = useState(false);
   const [drawTimerSeconds, setDrawTimerSeconds] = useState(0);
   const [isDrawing, setIsDrawing] = useState(false);
+  const [isDrawRecruitmentPending, setIsDrawRecruitmentPending] = useState(false);
   const [isDrawParticipantLoading, setIsDrawParticipantLoading] = useState(false);
   const [drawRollingName, setDrawRollingName] = useState<string | null>(null);
   const [drawReelNames, setDrawReelNames] = useState<string[]>([]);
@@ -277,6 +278,13 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId }: Props) 
   );
   const canStartRoulette = validRouletteItems.length >= 2;
   const selectedToolLabel = INTERACTION_TOOLS.find((tool) => tool.value === selectedTool)?.label;
+  const isBackButtonDisabled =
+    isPollActionPending ||
+    isDrawRecruitmentPending ||
+    (selectedTool === "draw" && isDrawParticipantLoading);
+  const isDrawRecruiting = Boolean(drawSession && !drawSession.endedAt);
+  const canPickDrawWinner =
+    Boolean(drawSession?.endedAt) && drawParticipants.length > 0 && !isDrawing;
   const rouletteSegmentStyle = useMemo(() => {
     if (rouletteSegments.length === 0) {
       return { background: "var(--muted)" };
@@ -395,7 +403,7 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId }: Props) 
   };
 
   const handleEndPoll = async () => {
-    if (!activePoll || isPollActionPending) return;
+    if (!activePoll || isPollActionPending) return false;
 
     setIsPollActionPending(true);
 
@@ -404,13 +412,15 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId }: Props) 
 
       if (!result.success) {
         toastAppError(result.code ?? APP_MESSAGE_CODE.error.common.unknown);
-        return;
+        return false;
       }
 
       invalidatePolls();
+      return true;
     } catch (error) {
       console.error("방송 투표 종료 액션 실패", error);
       toastAppError(APP_MESSAGE_CODE.error.common.unknown);
+      return false;
     } finally {
       setIsPollActionPending(false);
     }
@@ -423,10 +433,73 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId }: Props) 
     drawTimerTimeoutRef.current = null;
   }, []);
 
+  const clearDrawSpinTimers = useCallback(() => {
+    if (drawSpinStartTimeoutRef.current) {
+      clearTimeout(drawSpinStartTimeoutRef.current);
+      drawSpinStartTimeoutRef.current = null;
+    }
+
+    if (drawTimeoutRef.current) {
+      clearTimeout(drawTimeoutRef.current);
+      drawTimeoutRef.current = null;
+    }
+  }, []);
+
+  const resetDrawState = useCallback(() => {
+    clearDrawTimer();
+    clearDrawSpinTimers();
+    setDrawSession(null);
+    setDrawRollingName(null);
+    setDrawReelNames([]);
+    setDrawReelTargetIndex(0);
+    setIsDrawing(false);
+    setIsDrawRecruitmentPending(false);
+    setIsDrawParticipantLoading(false);
+  }, [clearDrawSpinTimers, clearDrawTimer]);
+
+  const publishInteractionNotice = useCallback(
+    async ({
+      content,
+      interactionType,
+      metadata,
+    }: {
+      content: string;
+      interactionType: "draw" | "roulette";
+      metadata: Record<string, unknown>;
+    }) => {
+      if (!broadcastId) return null;
+
+      try {
+        const result = await sendChannelLiveInteractionNoticeAction({
+          broadcastId,
+          content,
+          interactionType,
+          metadata,
+        });
+
+        if (!result.success || !result.data) {
+          toastAppError(result.code ?? APP_MESSAGE_CODE.error.common.unknown);
+          return null;
+        }
+
+        return result.data.messageId;
+      } catch (error) {
+        console.error("라이브 상호작용 결과 공지 액션 실패", error);
+        toastAppError(APP_MESSAGE_CODE.error.common.unknown);
+        return null;
+      }
+    },
+    [broadcastId],
+  );
+
   const handleStartDraw = async () => {
+    if (isDrawRecruitmentPending) return;
+
     const startedAt = new Date().toISOString();
 
     clearDrawTimer();
+    clearDrawSpinTimers();
+    setIsDrawRecruitmentPending(true);
     setDrawSession({
       endedAt: null,
       noticeId: null,
@@ -437,28 +510,31 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId }: Props) 
     setDrawRollingName(null);
     setDrawReelNames([]);
     setDrawReelTargetIndex(0);
-    const noticeId = await publishInteractionNotice({
-      content: "추첨 모집이 시작되었습니다.",
-      interactionType: "draw",
-      metadata: {
-        resultLabel: "추첨 모집 중",
-        status: "active",
-      },
-    });
+    try {
+      const noticeId = await publishInteractionNotice({
+        content: "추첨 모집이 시작되었습니다.",
+        interactionType: "draw",
+        metadata: {
+          resultLabel: "추첨 모집 중",
+          status: "active",
+        },
+      });
 
-    if (!noticeId) return;
+      if (!noticeId) {
+        setDrawSession(null);
+        return;
+      }
 
-    setDrawSession((currentSession) =>
-      currentSession?.startedAt === startedAt ? { ...currentSession, noticeId } : currentSession,
-    );
+      setDrawSession((currentSession) =>
+        currentSession?.startedAt === startedAt ? { ...currentSession, noticeId } : currentSession,
+      );
+    } finally {
+      setIsDrawRecruitmentPending(false);
+    }
   };
 
   const handleSelectTool = (tool: InteractionTool) => {
     setSelectedTool(tool);
-
-    if (tool === "draw" && !drawSession) {
-      void handleStartDraw();
-    }
   };
 
   const loadDrawParticipants = useCallback(
@@ -517,6 +593,20 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId }: Props) 
         return null;
       }
 
+      const noticeId = await publishInteractionNotice({
+        content: "추첨 모집이 종료되었습니다.",
+        interactionType: "draw",
+        metadata: {
+          participantCount: participants.length,
+          resultLabel: "추첨 모집 종료",
+          status: "ended",
+        },
+      });
+
+      if (!noticeId) {
+        return null;
+      }
+
       const nextSession = { ...targetSession, endedAt, participants };
 
       setDrawSession(nextSession);
@@ -524,8 +614,19 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId }: Props) 
 
       return nextSession;
     },
-    [clearDrawTimer, loadDrawParticipants],
+    [clearDrawTimer, loadDrawParticipants, publishInteractionNotice],
   );
+
+  const handleToggleDrawRecruitment = async () => {
+    if (isDrawing || isDrawParticipantLoading || isDrawRecruitmentPending) return;
+
+    if (!drawSession || drawSession.endedAt) {
+      await handleStartDraw();
+      return;
+    }
+
+    await closeDrawRecruitment(drawSession);
+  };
 
   useEffect(() => {
     clearDrawTimer();
@@ -597,38 +698,6 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId }: Props) 
       clearInterval(refreshInterval);
     };
   }, [activeDrawNoticeId, activeDrawStartedAt, loadDrawParticipants]);
-
-  const publishInteractionNotice = async ({
-    content,
-    interactionType,
-    metadata,
-  }: {
-    content: string;
-    interactionType: "draw" | "roulette";
-    metadata: Record<string, unknown>;
-  }) => {
-    if (!broadcastId) return null;
-
-    try {
-      const result = await sendChannelLiveInteractionNoticeAction({
-        broadcastId,
-        content,
-        interactionType,
-        metadata,
-      });
-
-      if (!result.success || !result.data) {
-        toastAppError(result.code ?? APP_MESSAGE_CODE.error.common.unknown);
-        return null;
-      }
-
-      return result.data.messageId;
-    } catch (error) {
-      console.error("라이브 상호작용 결과 공지 액션 실패", error);
-      toastAppError(APP_MESSAGE_CODE.error.common.unknown);
-      return null;
-    }
-  };
 
   const handlePickDrawWinner = async () => {
     if (!drawSession) return;
@@ -810,6 +879,79 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId }: Props) 
     });
   };
 
+  const resetPollDraft = () => {
+    setTitle("");
+    setOptions(DEFAULT_POLL_OPTIONS);
+    setIsPollFormOpen(false);
+    setIsPollTimerEnabled(false);
+    setPollTimerSeconds(0);
+  };
+
+  const resetRouletteState = () => {
+    setIsRouletteStarted(false);
+    setRouletteResult(null);
+    setPendingRouletteResult(null);
+    setIsRouletteSpinning(false);
+    setRouletteRotationKeyframes([rouletteRotation]);
+  };
+
+  const handleBackToToolSelect = async () => {
+    if (selectedTool === "poll") {
+      if (activePoll) {
+        const didEndPoll = await handleEndPoll();
+
+        if (!didEndPoll) return;
+      }
+
+      resetPollDraft();
+      setSelectedTool(null);
+      return;
+    }
+
+    if (selectedTool === "draw") {
+      if (isDrawRecruitmentPending) return;
+
+      if (drawSession && !drawSession.endedAt && drawSession.noticeId) {
+        const noticeId = await publishInteractionNotice({
+          content: "추첨이 종료되었습니다.",
+          interactionType: "draw",
+          metadata: {
+            resultLabel: "추첨 종료",
+            status: "ended",
+          },
+        });
+
+        if (!noticeId) return;
+      }
+
+      resetDrawState();
+      setSelectedTool(null);
+      return;
+    }
+
+    if (selectedTool === "roulette") {
+      if (isRouletteSpinning || pendingRouletteResult) {
+        const noticeId = await publishInteractionNotice({
+          content: "룰렛이 종료되었습니다.",
+          interactionType: "roulette",
+          metadata: {
+            items: validRouletteItems.map((item) => item.label),
+            resultLabel: "룰렛 종료",
+            status: "ended",
+          },
+        });
+
+        if (!noticeId) return;
+      }
+
+      resetRouletteState();
+      setSelectedTool(null);
+      return;
+    }
+
+    setSelectedTool(null);
+  };
+
   return (
     <section className="border-border bg-card flex h-160 min-h-0 min-w-0 flex-col gap-4 rounded-xl border p-4 shadow-sm">
       {selectedTool === null ? (
@@ -839,7 +981,8 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId }: Props) 
               size="sm"
               variant="ghost"
               className="rounded-xl font-bold"
-              onClick={() => setSelectedTool(null)}
+              disabled={isBackButtonDisabled}
+              onClick={() => void handleBackToToolSelect()}
             >
               <ArrowLeft className="size-4" />
               뒤로가기
@@ -1019,15 +1162,20 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId }: Props) 
                   type="button"
                   variant="outline"
                   className="border-brand text-brand hover:bg-brand/10 hover:text-brand h-16 rounded-lg px-8 text-base font-black"
-                  disabled={!broadcastId || isDrawParticipantLoading || isDrawing}
-                  onClick={() => void handleStartDraw()}
+                  disabled={
+                    !broadcastId ||
+                    isDrawParticipantLoading ||
+                    isDrawing ||
+                    isDrawRecruitmentPending
+                  }
+                  onClick={() => void handleToggleDrawRecruitment()}
                 >
-                  참여자 다시 모집하기
+                  {isDrawRecruitmentPending ? "처리 중" : isDrawRecruiting ? "종료" : "모집하기"}
                 </Button>
                 <Button
                   type="button"
                   className="bg-brand hover:bg-brand/90 h-16 rounded-lg px-8 text-base font-black text-white"
-                  disabled={isDrawing || isDrawParticipantLoading}
+                  disabled={!canPickDrawWinner || isDrawParticipantLoading}
                   onClick={handlePickDrawWinner}
                 >
                   {isDrawParticipantLoading ? "조회 중" : isDrawing ? "추첨 중" : "추첨하기"}
@@ -1152,7 +1300,11 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId }: Props) 
                         <p className="text-muted-foreground text-sm font-semibold">
                           {drawRollingName
                             ? `최근 당첨자 ${drawRollingName}`
-                            : "시청자가 추첨 참여 버튼을 누르면 후보에 들어갑니다."}
+                            : drawSession?.endedAt
+                              ? "모집된 후보가 없습니다."
+                              : drawSession
+                                ? "시청자가 추첨 참여 버튼을 누르면 후보에 들어갑니다."
+                                : "모집하기를 누르면 시청자가 추첨 참여 버튼으로 후보에 들어갑니다."}
                         </p>
                       </div>
                     )}

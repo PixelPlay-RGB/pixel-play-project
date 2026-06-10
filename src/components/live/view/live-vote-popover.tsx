@@ -220,12 +220,18 @@ function ActiveVoteCard({
   }
 
   return (
-    <div className="border-brand/40 flex flex-col gap-3 rounded-lg border p-3">
-      <StatusPill tone="brand">{LIVE_VOTE_LABEL.active}</StatusPill>
-      <p id={titleId} className="text-foreground text-sm font-bold">
-        {activePoll.title}
-      </p>
-      <div role="radiogroup" aria-labelledby={titleId} className="flex flex-col gap-2">
+    <div className="flex flex-col overflow-hidden">
+      <div className="border-border flex flex-col gap-2 border-t border-dashed pt-3 pb-3">
+        <StatusPill tone="brand">{LIVE_VOTE_LABEL.active}</StatusPill>
+        <p id={titleId} className="text-foreground text-sm font-bold">
+          {activePoll.title}
+        </p>
+      </div>
+      <div
+        role="radiogroup"
+        aria-labelledby={titleId}
+        className="border-border flex flex-col gap-2 border-t border-dashed py-3"
+      >
         {activePoll.options.map((option, index) => {
           const isSelected = selectedOption === option.id;
           const percent = getVotePercent(option.count, total);
@@ -255,7 +261,7 @@ function ActiveVoteCard({
           );
         })}
       </div>
-      <div className="flex items-center justify-between gap-3">
+      <div className="border-border flex items-center justify-between gap-3 border-t border-dashed pt-3">
         <span className="text-muted-foreground text-xs font-semibold tabular-nums">
           {formatCount(total)}
           {LIVE_VOTE_LABEL.liveParticipantsSuffix}
@@ -277,10 +283,12 @@ function ParticipatedCard({ poll }: { poll: LivePoll }) {
   const selectedOption = getSelectedOption(poll);
 
   return (
-    <div className="border-brand/40 flex flex-col gap-3 rounded-lg border p-3">
-      <StatusPill tone="brand">{LIVE_VOTE_LABEL.participatedStatus}</StatusPill>
-      <p className="text-foreground text-sm font-bold">{poll.title}</p>
-      <div className="flex flex-col gap-2">
+    <div className="flex flex-col overflow-hidden">
+      <div className="border-border flex flex-col gap-2 border-t border-dashed pt-3 pb-3">
+        <StatusPill tone="brand">{LIVE_VOTE_LABEL.participatedStatus}</StatusPill>
+        <p className="text-foreground text-sm font-bold">{poll.title}</p>
+      </div>
+      <div className="border-border flex flex-col gap-2 border-t border-dashed py-3">
         {poll.options.map((option, index) => {
           const isSelected = option.id === poll.userVotedOptionId;
 
@@ -303,12 +311,14 @@ function ParticipatedCard({ poll }: { poll: LivePoll }) {
           );
         })}
       </div>
-      <p className="text-muted-foreground text-xs font-semibold">
-        {selectedOption ? LIVE_VOTE_LABEL.waitForResult : LIVE_VOTE_LABEL.waitForResultFallback}
-      </p>
-      <Button type="button" disabled className="bg-live/80 h-9 w-full text-xs font-bold">
-        {LIVE_VOTE_LABEL.participated}
-      </Button>
+      <div className="border-border flex flex-col gap-3 border-t border-dashed pt-3">
+        <p className="text-muted-foreground text-xs font-semibold">
+          {selectedOption ? LIVE_VOTE_LABEL.waitForResult : LIVE_VOTE_LABEL.waitForResultFallback}
+        </p>
+        <Button type="button" disabled className="bg-live/80 h-9 w-full text-xs font-bold">
+          {LIVE_VOTE_LABEL.participated}
+        </Button>
+      </div>
     </div>
   );
 }
@@ -318,16 +328,18 @@ function VoteResults({ poll, onClose }: { onClose: () => void; poll: LivePoll })
   const maxCount = getMaxCount(poll.options);
 
   return (
-    <div className="border-border flex flex-col gap-3 rounded-lg border p-3">
-      <StatusPill tone="muted">{LIVE_VOTE_LABEL.ended}</StatusPill>
-      <p className="text-foreground text-sm font-bold">{poll.title}</p>
-      <div className="flex flex-col gap-2">
+    <div className="flex flex-col overflow-hidden">
+      <div className="border-border flex flex-col gap-2 border-t border-dashed pt-3 pb-3">
+        <StatusPill tone="muted">{LIVE_VOTE_LABEL.ended}</StatusPill>
+        <p className="text-foreground text-sm font-bold">{poll.title}</p>
+      </div>
+      <div className="border-border flex flex-col border-t border-dashed py-2">
         {poll.options.map((option) => {
           const percent = getVotePercent(option.count, total);
           const isWinner = option.count > 0 && option.count === maxCount;
 
           return (
-            <div key={option.id} className="border-border rounded-lg border px-3 py-2">
+            <div key={option.id} className="border-border border-t px-1 py-3 first:border-t-0">
               <div className="mb-2 flex items-center gap-2 text-sm font-bold">
                 {isWinner ? <Crown aria-hidden className="text-live size-4 shrink-0" /> : null}
                 <span className="min-w-0 flex-1 truncate">{option.label}</span>
@@ -346,16 +358,18 @@ function VoteResults({ poll, onClose }: { onClose: () => void; poll: LivePoll })
           );
         })}
       </div>
-      <div className="border-border flex items-center justify-between rounded-lg border px-3 py-2 text-xs font-bold">
+      <div className="border-border flex items-center justify-between border-t border-dashed pt-3 text-xs font-bold">
         <span>{LIVE_VOTE_LABEL.totalPrefix}</span>
         <span>
           {formatCount(total)}
           {LIVE_VOTE_LABEL.participantsUnit}
         </span>
       </div>
-      <Button type="button" variant="outline" className="h-9 w-full" onClick={onClose}>
-        {LIVE_LABEL.close}
-      </Button>
+      <div className="border-border mt-3 border-t border-dashed pt-3">
+        <Button type="button" variant="outline" className="h-9 w-full" onClick={onClose}>
+          {LIVE_LABEL.close}
+        </Button>
+      </div>
     </div>
   );
 }
@@ -531,20 +545,26 @@ function VoteBody({
 
   if (!isLoggedIn) {
     return (
-      <div className="border-border flex flex-col gap-3 rounded-lg border p-3">
-        <StatusPill tone="brand">{LIVE_VOTE_LABEL.active}</StatusPill>
-        <p className="text-foreground text-sm font-bold">{pollInteraction.poll.title}</p>
-        <p className="text-muted-foreground text-sm">{LIVE_LABEL.loginDescription}</p>
-        <Button
-          type="button"
-          onClick={() => {
-            onClose();
-            onLoginPrompt();
-          }}
-          className="bg-brand hover:bg-brand/90 text-brand-foreground h-9 w-full"
-        >
-          {LIVE_LABEL.loginButton}
-        </Button>
+      <div className="flex flex-col overflow-hidden">
+        <div className="border-border flex flex-col gap-2 border-t border-dashed pt-3 pb-3">
+          <StatusPill tone="brand">{LIVE_VOTE_LABEL.active}</StatusPill>
+          <p className="text-foreground text-sm font-bold">{pollInteraction.poll.title}</p>
+        </div>
+        <p className="border-border text-muted-foreground border-t border-dashed py-3 text-sm">
+          {LIVE_LABEL.loginDescription}
+        </p>
+        <div className="border-border border-t border-dashed pt-3">
+          <Button
+            type="button"
+            onClick={() => {
+              onClose();
+              onLoginPrompt();
+            }}
+            className="bg-brand hover:bg-brand/90 text-brand-foreground h-9 w-full"
+          >
+            {LIVE_LABEL.loginButton}
+          </Button>
+        </div>
       </div>
     );
   }
