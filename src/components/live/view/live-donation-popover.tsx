@@ -186,12 +186,12 @@ export function LiveDonationPopover({
         </PopoverHeader>
 
         <div className="flex flex-col gap-4">
-          <label className="flex cursor-pointer items-center gap-2 text-sm">
+          <label className="flex w-fit cursor-pointer items-center gap-2 text-sm leading-none">
             <input
               type="checkbox"
               checked={isAnonymous}
               onChange={(e) => setIsAnonymous(e.target.checked)}
-              className="accent-live size-4"
+              className="accent-live size-4 shrink-0"
             />
             {LIVE_DONATION_LABEL.anonymous}
           </label>
@@ -234,7 +234,13 @@ export function LiveDonationPopover({
           </div>
 
           <div className="flex flex-col gap-2">
-            <span className="text-sm font-medium">{LIVE_DONATION_LABEL.messageLabel}</span>
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-sm font-medium">{LIVE_DONATION_LABEL.messageLabel}</span>
+              {/* 커뮤니티 작성 폼과 같은 현재/최대 글자 수 표시(후원 메시지는 채팅 2000자와 달리 300자 제한). */}
+              <span className="text-muted-foreground text-xs tabular-nums">
+                {message.length} / {LIVE_DONATION_MESSAGE_MAX_LENGTH}
+              </span>
+            </div>
             <Textarea
               placeholder={LIVE_DONATION_LABEL.messagePlaceholder}
               value={message}

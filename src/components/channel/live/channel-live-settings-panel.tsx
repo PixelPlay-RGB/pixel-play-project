@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { CircleStop, ImageIcon, Play, Save, Tag, Upload, X } from "lucide-react";
+import { CircleStop, Play, Save, Tag, Upload, X } from "lucide-react";
 import { type ChangeEvent, type DragEvent, type ReactNode, useRef, useState } from "react";
 
 interface Props {
@@ -111,47 +111,69 @@ export default function ChannelLiveSettingsPanel({
         />
       </div>
 
+      {/* 채팅 설정의 금칙어 필드와 동일한 입력 컴포넌트 스타일(통합 박스 + 내부 칩 목록). */}
       <div className="grid gap-2">
-        <div className="flex items-center justify-between gap-3">
-          <Label htmlFor="channel-live-tag">방송 태그</Label>
-          <span className="text-muted-foreground text-xs">{tagInput.length} / 12</span>
-        </div>
-        <div className="flex gap-2">
-          <Input
-            id="channel-live-tag"
-            value={tagInput}
-            maxLength={12}
-            onChange={(event) => onTagInputChange(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") {
-                event.preventDefault();
-                onAddTag();
-              }
-            }}
-            placeholder="태그를 입력해주세요"
-          />
-          <Button
-            type="button"
-            className="bg-brand hover:bg-brand/90 text-brand-foreground h-10 shrink-0 px-4"
-            onClick={onAddTag}
-          >
-            <Tag className="size-4" />
-            추가
-          </Button>
-        </div>
-        <div className="border-border flex min-h-12 flex-wrap items-center gap-2 rounded-lg border p-2">
-          {tags.map((tag) => (
-            <button
-              key={tag}
+        <Label htmlFor="channel-live-tag">방송 태그</Label>
+        <div
+          className={cn(
+            "border-border bg-muted/40 overflow-hidden rounded-xl border",
+            "focus-within:border-brand/50 focus-within:ring-brand/20 transition-colors focus-within:ring-3",
+          )}
+        >
+          <div className="flex items-center gap-4 py-1.5 pr-1.5 pl-3.5">
+            <Input
+              id="channel-live-tag"
+              value={tagInput}
+              maxLength={12}
+              onChange={(event) => onTagInputChange(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.nativeEvent.isComposing) return;
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  onAddTag();
+                }
+              }}
+              placeholder="태그를 입력해주세요"
+              className={cn(
+                "h-8 min-w-0 flex-1 border-0 px-0 py-0 shadow-none focus-visible:ring-0",
+                "bg-transparent disabled:bg-transparent dark:bg-transparent dark:disabled:bg-transparent",
+              )}
+            />
+            <span className="text-muted-foreground shrink-0 text-xs font-semibold whitespace-nowrap">
+              {tagInput.length} / 12
+            </span>
+            <Button
               type="button"
-              // 라이브 키워드 chip(LiveTagLink)과 동일한 brand 톤으로 맞춘다.
-              className="bg-brand/15 text-brand border-brand/20 inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-bold"
-              onClick={() => onRemoveTag(tag)}
+              className="bg-brand hover:bg-brand/85 text-brand-foreground shrink-0 font-bold"
+              onClick={onAddTag}
             >
-              #{tag}
-              <X className="size-3" />
-            </button>
-          ))}
+              <Tag className="size-4" />
+              태그 추가
+            </Button>
+          </div>
+
+          <div className="border-border/60 border-t p-3">
+            {tags.length > 0 ? (
+              <div className="flex flex-wrap content-start gap-2">
+                {tags.map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    // 라이브 키워드 chip(LiveTagLink)과 동일한 brand 톤으로 맞춘다.
+                    className="bg-brand/15 text-brand border-brand/20 hover:bg-brand hover:text-brand-foreground inline-flex h-7 items-center gap-1 rounded-full border px-3 text-xs font-bold transition-colors"
+                    onClick={() => onRemoveTag(tag)}
+                  >
+                    #{tag}
+                    <X className="size-3" />
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground py-1.5 text-center text-xs">
+                아직 등록한 태그가 없어요.
+              </p>
+            )}
+          </div>
         </div>
       </div>
 
@@ -159,12 +181,7 @@ export default function ChannelLiveSettingsPanel({
         {secondaryPanel}
 
         <section className="flex min-w-0 flex-col gap-3">
-          <div className="flex flex-col gap-1">
-            <div className="flex items-center gap-2">
-              <ImageIcon className="text-brand size-4" />
-              <h3 className="text-foreground text-sm font-bold">미리보기 이미지</h3>
-            </div>
-          </div>
+          <h3 className="text-foreground text-sm font-bold">미리보기 이미지</h3>
           {/* 카드 래퍼 없이 사각 이미지 영역 + 하단 액션만 둔다. */}
           <div className="flex flex-1 flex-col">
             <input

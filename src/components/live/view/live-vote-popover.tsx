@@ -789,6 +789,8 @@ export function LiveVotePopover({
   }
 
   const currentInteraction = selectCurrentInteraction(polls, interactionNotices);
+  // 진행 중·종료 기록이 모두 없으면 열어도 보여줄 것이 없으므로 트리거를 비활성화한다.
+  const hasInteraction = currentInteraction.type !== "empty";
   const triggerLabel = getTriggerLabel(currentInteraction);
   const headerTitle = getHeaderTitle(currentInteraction);
   const headerDescription = getHeaderDescription(currentInteraction);
@@ -829,7 +831,8 @@ export function LiveVotePopover({
           size="sm"
           variant="outline"
           className={VOTE_TRIGGER_CLASS}
-          disabled={disabled}
+          disabled={disabled || !hasInteraction}
+          title={!hasInteraction ? LIVE_VOTE_LABEL.emptyInteraction : undefined}
           onClick={handleOpen}
         >
           {triggerLabel}
@@ -857,7 +860,13 @@ export function LiveVotePopover({
     <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger
         render={
-          <Button size="sm" variant="outline" className={VOTE_TRIGGER_CLASS} disabled={disabled} />
+          <Button
+            size="sm"
+            variant="outline"
+            className={VOTE_TRIGGER_CLASS}
+            disabled={disabled || !hasInteraction}
+            title={!hasInteraction ? LIVE_VOTE_LABEL.emptyInteraction : undefined}
+          />
         }
       >
         <Sparkles className="size-4" />

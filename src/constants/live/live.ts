@@ -168,6 +168,7 @@ export const LIVE_VOTE_LABEL = {
   rouletteActiveDescription: "방송자가 룰렛을 돌리고 있습니다.",
   rouletteCheck: "룰렛 확인",
   rouletteResult: "룰렛 결과",
+  emptyInteraction: "진행 중인 참여 이벤트가 없습니다",
 } as const;
 
 export const LIVE_CHAT_MENU_LABEL = {

@@ -45,7 +45,8 @@ export function LiveDonationBanner({ donations }: Props) {
           aria-label={
             isOpen ? LIVE_LABEL.donationRankingCollapse : LIVE_LABEL.donationRankingExpand
           }
-          className="size-6 p-0"
+          // 사이드바 섹션 토글과 같은 plain 아이콘 톤(배경 없는 chevron)으로 맞춘다.
+          className="text-muted-foreground hover:text-foreground size-6 p-0 hover:bg-transparent dark:hover:bg-transparent"
           onClick={() => setIsOpen((value) => !value)}
         >
           <ChevronDown

@@ -137,6 +137,9 @@ export function useHlsPlayer({
     };
 
     const markPlaying = () => {
+      // 실제 디코딩된 프레임이 있을 때만 대기 화면을 내린다 — 송출 없음 재시도 루프에서
+      // playing/timeupdate 이벤트만 발화되는 경우(데이터 없음) 오버레이가 깜빡이는 것을 막는다.
+      if (video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) return;
       clearStallTimer();
       setPlaybackState("playing");
     };

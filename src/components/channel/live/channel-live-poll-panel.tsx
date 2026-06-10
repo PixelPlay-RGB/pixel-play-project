@@ -61,7 +61,13 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId }: Props) 
       className={cn("flex min-h-0 min-w-0 flex-col gap-4", selectedTool !== null && "h-150")}
     >
       {selectedTool === null ? (
-        <div className="grid gap-2.5 sm:grid-cols-3">
+        // 뒤로가기로 돌아올 때도 도구 화면과 동일한 등장 모션을 줘 화면이 뚝 끊기지 않게 한다.
+        <motion.div
+          initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
+          className="grid gap-2.5 sm:grid-cols-3"
+        >
           {INTERACTION_TOOLS.map(({ icon: Icon, label, value }) => (
             <button
               key={value}
@@ -78,7 +84,7 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId }: Props) 
               {label}
             </button>
           ))}
-        </div>
+        </motion.div>
       ) : (
         <motion.div
           ref={toolViewRef}

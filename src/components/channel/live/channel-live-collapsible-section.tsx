@@ -42,6 +42,8 @@ export function ChannelLiveCollapsibleSection({
           variant="ghost"
           aria-expanded={isOpen}
           aria-label={isOpen ? `${title} 접기` : `${title} 펼치기`}
+          // 사이드바 섹션 토글과 같은 plain 아이콘 톤(배경 없는 chevron)으로 맞춘다.
+          className="text-muted-foreground hover:text-foreground hover:bg-transparent dark:hover:bg-transparent"
           onClick={() => setIsOpen((value) => !value)}
         >
           <ChevronDown
