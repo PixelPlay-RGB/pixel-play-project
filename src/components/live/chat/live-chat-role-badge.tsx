@@ -1,13 +1,14 @@
 "use client";
 // 채팅 닉네임 앞 역할 마크(방송 진행자·후원자) — 시청 채팅과 OBS 오버레이가 같은 형태를 공유합니다.
 
-import { Crown, Heart } from "lucide-react";
+import { Crown, Heart, ShieldCheck, Star, type LucideIcon } from "lucide-react";
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { LIVE_LABEL } from "@/constants/live/live";
 import { cn } from "@/lib/utils";
 
-export type LiveChatRole = "creator" | "donor";
+// manager·subscriber는 추후 기능(매니저 지정·구독) 대비 — sender_role enum과 함께 미리 매핑해 둔다.
+export type LiveChatRole = "creator" | "manager" | "donor" | "subscriber";
 
 interface Props {
   role: LiveChatRole;
@@ -20,11 +21,20 @@ interface Props {
 
 const ROLE_LABEL: Record<LiveChatRole, string> = {
   creator: LIVE_LABEL.hostBadge,
+  manager: LIVE_LABEL.managerBadge,
   donor: LIVE_LABEL.donorBadge,
+  subscriber: LIVE_LABEL.subscriberBadge,
+};
+
+const ROLE_ICON: Record<LiveChatRole, LucideIcon> = {
+  creator: Crown,
+  manager: ShieldCheck,
+  donor: Heart,
+  subscriber: Star,
 };
 
 export function LiveChatRoleBadge({ role, size = "sm", withTooltip = false, className }: Props) {
-  const Icon = role === "creator" ? Crown : Heart;
+  const Icon = ROLE_ICON[role];
   const label = ROLE_LABEL[role];
 
   const badge = (
@@ -38,7 +48,10 @@ export function LiveChatRoleBadge({ role, size = "sm", withTooltip = false, clas
       role={withTooltip ? undefined : "img"}
     >
       <Icon
-        className={cn(size === "sm" ? "size-3.5" : "size-4.5", role === "donor" && "fill-current")}
+        className={cn(
+          size === "sm" ? "size-3.5" : "size-4.5",
+          (role === "donor" || role === "subscriber") && "fill-current",
+        )}
         aria-hidden
       />
     </span>

@@ -5,8 +5,20 @@
 import { LIVE_LABEL } from "@/constants/live/live";
 import { isCleanbotFlagged } from "@/utils/live/live-chat";
 import { readJsonObject, readNumber, readString } from "@/utils/common/json";
-import type { LiveChatMessage } from "@/types/live/live";
+import type { LiveChatMessage, LiveSenderRole } from "@/types/live/live";
 import type { Json } from "@/types/database.types";
+
+const LIVE_SENDER_ROLES: readonly LiveSenderRole[] = [
+  "creator",
+  "manager",
+  "donor",
+  "subscriber",
+  "viewer",
+];
+
+function parseSenderRole(value: unknown): LiveSenderRole {
+  return LIVE_SENDER_ROLES.includes(value as LiveSenderRole) ? (value as LiveSenderRole) : "viewer";
+}
 
 export interface LiveMessageRow {
   id: string;
@@ -14,6 +26,7 @@ export interface LiveMessageRow {
   sender_id: string | null;
   message_type: "chat" | "moderation_notice" | "donation";
   content: string;
+  sender_role: LiveSenderRole;
   metadata: Json;
 }
 
@@ -25,7 +38,9 @@ export function mapLiveMessageRowToMessage(
   creatorId?: string,
   viewerId?: string,
 ): LiveChatMessage | null {
-  const isHost = !!creatorId && row.sender_id !== null && row.sender_id === creatorId;
+  const isHost =
+    row.sender_role === "creator" ||
+    (!!creatorId && row.sender_id !== null && row.sender_id === creatorId);
   const isOwnMessage = !!viewerId && row.sender_id !== null && row.sender_id === viewerId;
   const metadata = readJsonObject(row.metadata);
 
@@ -65,6 +80,7 @@ export function mapLiveMessageRowToMessage(
     author: readString(metadata.senderNickname) ?? LIVE_LABEL.anonymousAuthor,
     content: row.content,
     createdAt: row.created_at,
+    senderRole: isHost ? "creator" : row.sender_role,
     isHost,
     // 본인 메시지는 본인 화면에서 안 가린다. refetch 재매핑 시에도 일관 유지된다.
     isCleanbotFlagged: !isOwnMessage && isCleanbotFlagged(row.content),
@@ -97,6 +113,7 @@ export function mapLiveMessageRealtimePayload(
       sender_id: typeof record.sender_id === "string" ? record.sender_id : null,
       message_type: messageType,
       content: typeof record.content === "string" ? record.content : "",
+      sender_role: parseSenderRole(record.sender_role),
       metadata: (record.metadata ?? null) as Json,
     },
     creatorId,

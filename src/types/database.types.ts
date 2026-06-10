@@ -583,6 +583,7 @@ export type Database = {
           message_type: Database["public"]["Enums"]["live_message_type"]
           metadata: Json
           sender_id: string | null
+          sender_role: Database["public"]["Enums"]["live_sender_role"]
         }
         Insert: {
           broadcast_id: string
@@ -593,6 +594,7 @@ export type Database = {
           message_type?: Database["public"]["Enums"]["live_message_type"]
           metadata?: Json
           sender_id?: string | null
+          sender_role?: Database["public"]["Enums"]["live_sender_role"]
         }
         Update: {
           broadcast_id?: string
@@ -603,6 +605,7 @@ export type Database = {
           message_type?: Database["public"]["Enums"]["live_message_type"]
           metadata?: Json
           sender_id?: string | null
+          sender_role?: Database["public"]["Enums"]["live_sender_role"]
         }
         Relationships: [
           {
@@ -1506,6 +1509,12 @@ export type Database = {
       gender: "male" | "female" | "none"
       live_chat_scope: "authenticated" | "follower" | "manager"
       live_message_type: "chat" | "moderation_notice" | "donation"
+      live_sender_role:
+        | "creator"
+        | "manager"
+        | "donor"
+        | "subscriber"
+        | "viewer"
       message_type: "text" | "system"
       oauth_provider: "google" | "github" | "email"
       wallet_transaction_status: "pending" | "succeeded" | "failed" | "canceled"
@@ -1640,6 +1649,7 @@ export const Constants = {
       gender: ["male", "female", "none"],
       live_chat_scope: ["authenticated", "follower", "manager"],
       live_message_type: ["chat", "moderation_notice", "donation"],
+      live_sender_role: ["creator", "manager", "donor", "subscriber", "viewer"],
       message_type: ["text", "system"],
       oauth_provider: ["google", "github", "email"],
       wallet_transaction_status: ["pending", "succeeded", "failed", "canceled"],

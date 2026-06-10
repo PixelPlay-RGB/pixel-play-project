@@ -54,6 +54,8 @@ export const LIVE_LABEL = {
   anonymousAuthor: "익명",
   hostBadge: "방송 진행자",
   donorBadge: "후원자",
+  managerBadge: "매니저",
+  subscriberBadge: "구독자",
   broadcastOffline: "방송이 종료되었거나 준비 중입니다.",
   broadcastOfflineTitle: "지금은 방송 중이 아니에요",
   offlineInfoTitle: "다음 방송에서 만나요! 👋",

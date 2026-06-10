@@ -81,6 +81,10 @@ export interface LiveOverlayRouteParams {
 
 export type LiveChatMessageType = "text" | "donation" | "system";
 
+// live_message.sender_role enum과 동일 — 전송 시점에 DB가 스냅샷한 발신자 역할.
+// manager·subscriber는 추후 기능(매니저 지정·구독) 대비로 미리 둔 값이다.
+export type LiveSenderRole = "creator" | "manager" | "donor" | "subscriber" | "viewer";
+
 export interface LiveChatMessage {
   id: string;
   type: LiveChatMessageType;
@@ -88,9 +92,11 @@ export interface LiveChatMessage {
   content: string;
   createdAt?: string;
   donationAmount?: number;
-  // 작성자 user UUID(있을 때). 후원자 뱃지처럼 발신자 신원 기반 표식에 쓴다.
+  // 작성자 user UUID(있을 때). 발신자 신원 기반 표식에 쓴다.
   // 익명 후원·시스템 메시지에는 없다(익명 후원은 sender_id가 null로 저장됨).
   senderId?: string;
+  // 전송 시점 발신자 역할 스냅샷(text 메시지). 역할 마크 표시에 쓴다.
+  senderRole?: LiveSenderRole;
   // 작성자가 방송 진행자(크리에이터) 본인인지 여부. 채팅에서 호스트 메시지를 강조하는 데 쓴다.
   isHost?: boolean;
   // 클린봇 자동 비속어 사전에 걸린 text 메시지. 클린봇 토글 ON이면 가리고 펼쳐볼 수 있다.
