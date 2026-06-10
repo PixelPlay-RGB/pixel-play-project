@@ -114,7 +114,7 @@ export function LiveDonationDialog({
             <Button
               // 라이브 상호작용(브랜드 민트 네온)과 같은 형태의 live 코랄 네온으로 톤을 맞춘다.
               className={cn(
-                "h-11 flex-1 text-sm",
+                "h-9 flex-1 text-sm",
                 "border-live/30 bg-live/10 text-live",
                 "hover:border-live/50 hover:bg-live/18 dark:border-live/30 dark:bg-live/15 dark:text-live",
               )}

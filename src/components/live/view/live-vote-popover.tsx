@@ -28,7 +28,7 @@ import type { LiveInteractionNotice, LivePoll, LivePollOption } from "@/types/li
 // 후원(코랄 채움) 옆에 나란히 놓이는 투표 트리거는 브랜드 민트 아웃라인으로 역할을 구분한다.
 // (팝오버 내부 투표·추첨 UI가 브랜드 톤이라 트리거와도 일관된다.)
 const VOTE_TRIGGER_CLASS = cn(
-  "h-11 flex-1 text-sm",
+  "h-9 flex-1 text-sm",
   "border-brand/30 bg-brand/10 text-brand",
   "hover:border-brand/50 hover:bg-brand/18 dark:border-brand/30 dark:bg-brand/15 dark:text-brand",
 );

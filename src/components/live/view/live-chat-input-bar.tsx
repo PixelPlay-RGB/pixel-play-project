@@ -193,8 +193,12 @@ export function LiveChatInputBar({
   return (
     <div
       ref={inputBarRef}
-      // 입력 섹션 총 높이(24+44+12+44+24+보더1=149px)를 좌측 비디오 하단 정보 영역(~149px)과 맞춘다.
-      className={cn("border-border flex flex-col gap-3 border-t px-3 py-6", className)}
+      // 입력 섹션 높이를 좌측 비디오 하단 정보 영역(실측 149px)에 고정해 separator 라인을 맞춘다.
+      // 버튼(h-9)은 입력칸(h-11)보다 낮게 두고, 둘 사이 간격은 justify-between이 자동으로 벌린다.
+      className={cn(
+        "border-border flex h-[149px] flex-col justify-between border-t px-3 py-6",
+        className,
+      )}
     >
       {/* 이모지 버튼을 입력 필드 안(오른쪽 trailing)에 넣어, 입력 필드 좌측이 아래 버튼행과 정렬되게 한다. */}
       <div className="relative">
