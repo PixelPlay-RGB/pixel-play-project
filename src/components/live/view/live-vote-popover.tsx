@@ -246,17 +246,20 @@ function ActiveVoteCard({
               disabled={isVoting}
               onClick={() => setSelectedOption(option.id)}
               className={cn(
-                "relative h-9 w-full justify-start overflow-hidden px-3 text-sm font-bold",
-                isSelected ? "border-brand bg-brand/5 text-brand" : "hover:border-brand/40",
+                "relative h-9 w-full justify-start overflow-hidden px-3 text-sm font-bold transition-all",
+                isSelected
+                  ? "border-brand bg-brand/10 text-brand shadow-[inset_0_0_0_1px_var(--brand)]"
+                  : "hover:border-brand/40",
               )}
             >
               <VoteOptionBar percent={percent} emphasized={isSelected} />
-              <span className="relative flex min-w-0 items-center gap-2">
+              <span className="relative flex min-w-0 flex-1 items-center gap-2">
                 <span className="bg-brand/10 text-brand flex size-5 shrink-0 items-center justify-center rounded-full text-xs">
                   {index + 1}
                 </span>
                 <span className="truncate">{option.label}</span>
               </span>
+              {isSelected ? <Check className="relative size-4 shrink-0" /> : null}
             </Button>
           );
         })}
@@ -270,7 +273,7 @@ function ActiveVoteCard({
           type="button"
           disabled={!canSubmit}
           onClick={() => void handleVote()}
-          className="bg-live hover:bg-live/90 text-live-foreground h-9 px-4 text-xs font-bold"
+          className="bg-brand hover:bg-brand/90 text-brand-foreground h-9 px-4 text-xs font-bold"
         >
           {isVoting ? LIVE_VOTE_LABEL.submitting : LIVE_VOTE_LABEL.confirmVote}
         </Button>
@@ -297,7 +300,8 @@ function ParticipatedCard({ poll }: { poll: LivePoll }) {
               key={option.id}
               className={cn(
                 "border-border flex h-9 items-center gap-2 rounded-lg border px-3 text-sm font-bold",
-                isSelected && "border-brand bg-brand/5 text-brand",
+                isSelected &&
+                  "border-brand bg-brand/10 text-brand shadow-[inset_0_0_0_1px_var(--brand)]",
               )}
             >
               <span className="bg-brand/10 text-brand flex size-5 shrink-0 items-center justify-center rounded-full text-xs">
@@ -315,7 +319,11 @@ function ParticipatedCard({ poll }: { poll: LivePoll }) {
         <p className="text-muted-foreground text-xs font-semibold">
           {selectedOption ? LIVE_VOTE_LABEL.waitForResult : LIVE_VOTE_LABEL.waitForResultFallback}
         </p>
-        <Button type="button" disabled className="bg-live/80 h-9 w-full text-xs font-bold">
+        <Button
+          type="button"
+          disabled
+          className="bg-brand/80 text-brand-foreground h-9 w-full text-xs font-bold"
+        >
           {LIVE_VOTE_LABEL.participated}
         </Button>
       </div>
@@ -330,29 +338,34 @@ function VoteResults({ poll, onClose }: { onClose: () => void; poll: LivePoll })
   return (
     <div className="flex flex-col overflow-hidden">
       <div className="border-border flex flex-col gap-2 border-t border-dashed pt-3 pb-3">
-        <StatusPill tone="muted">{LIVE_VOTE_LABEL.ended}</StatusPill>
+        <StatusPill tone="brand">{LIVE_VOTE_LABEL.ended}</StatusPill>
         <p className="text-foreground text-sm font-bold">{poll.title}</p>
       </div>
-      <div className="border-border flex flex-col border-t border-dashed py-2">
+      <div className="border-border flex flex-col gap-2 border-t border-dashed py-3">
         {poll.options.map((option) => {
           const percent = getVotePercent(option.count, total);
           const isWinner = option.count > 0 && option.count === maxCount;
 
           return (
-            <div key={option.id} className="border-border border-t px-1 py-3 first:border-t-0">
-              <div className="mb-2 flex items-center gap-2 text-sm font-bold">
-                {isWinner ? <Crown aria-hidden className="text-live size-4 shrink-0" /> : null}
-                <span className="min-w-0 flex-1 truncate">{option.label}</span>
-                <span className="shrink-0 text-xs tabular-nums">
+            <div key={option.id} className="grid grid-cols-[5rem_minmax(0,1fr)] items-center gap-2">
+              <div
+                className={cn(
+                  "flex min-w-0 items-center gap-1 text-sm font-black",
+                  isWinner ? "text-brand" : "text-foreground",
+                )}
+              >
+                {isWinner ? <Crown aria-hidden className="size-4 shrink-0" /> : null}
+                <span className="truncate">{option.label}</span>
+              </div>
+              <div className="bg-muted relative h-10 overflow-hidden rounded-xl">
+                <div
+                  className="bg-brand absolute inset-y-0 left-0 rounded-xl transition-all"
+                  style={{ width: `${percent}%` }}
+                />
+                <span className="text-foreground relative z-10 flex h-full items-center justify-end px-3 text-xs font-black tabular-nums">
                   {formatCount(option.count)}
                   {LIVE_VOTE_LABEL.votesUnit} · {percent}%
                 </span>
-              </div>
-              <div className="bg-muted h-2 overflow-hidden rounded-full">
-                <div
-                  className={cn("h-full rounded-full", isWinner ? "bg-live" : "bg-brand")}
-                  style={{ width: `${percent}%` }}
-                />
               </div>
             </div>
           );
