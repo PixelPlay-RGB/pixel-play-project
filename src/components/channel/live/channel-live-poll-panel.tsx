@@ -19,6 +19,7 @@ import type { LivePoll } from "@/types/live/live";
 import { toastAppError } from "@/utils/common/toast-message";
 import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Check, FerrisWheel, Gift, Plus, RotateCw, Vote, X } from "lucide-react";
+import { motion } from "motion/react";
 import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
 interface Props {
@@ -40,10 +41,27 @@ interface PollResult {
   percent: number;
 }
 
+interface RouletteItem {
+  label: string;
+  weight: number;
+}
+
+interface RouletteSegment {
+  centerDegree: number;
+  endPercent: number;
+  index: number;
+  item: RouletteItem;
+  startPercent: number;
+}
+
 type InteractionTool = "poll" | "draw" | "roulette";
 
 const DEFAULT_POLL_OPTIONS = ["", ""];
-const DEFAULT_ROULETTE_ITEMS = ["당첨", "다시 뽑기", "꽝"];
+const DEFAULT_ROULETTE_ITEMS: RouletteItem[] = [
+  { label: "당첨", weight: 1 },
+  { label: "다시 뽑기", weight: 1 },
+  { label: "꽝", weight: 1 },
+];
 const ROULETTE_SEGMENT_COLORS = [
   "var(--brand)",
   "var(--live)",
@@ -57,6 +75,9 @@ const POLL_TIMER_MAX_SECONDS = 3600;
 const DRAW_REEL_ROW_HEIGHT_PX = 40;
 const DRAW_REEL_REPEAT_COUNT = 9;
 const DRAW_REEL_DURATION_MS = 2200;
+const ROULETTE_SPIN_DURATION_SECONDS = 2.8;
+const ROULETTE_SPIN_TURNS = 6;
+const ROULETTE_POINTER_DEGREE = 45;
 
 const INTERACTION_TOOLS = [
   { icon: Vote, label: "투표", value: "poll" },
@@ -128,29 +149,90 @@ function pickRandomItem<T>(items: T[]) {
   return items[Math.floor(Math.random() * items.length)];
 }
 
-function getRouletteItemLabelStyle(index: number, itemCount: number) {
-  if (itemCount === 0) {
-    return {};
-  }
-
-  const segmentDegree = 360 / itemCount;
-  const labelDegree = index * segmentDegree + segmentDegree / 2;
-
+function getRouletteItemLabelStyle(centerDegree: number) {
   return {
-    transform: `translate(-50%, -50%) rotate(${labelDegree}deg) translateY(-58px)`,
+    transform: `translate(-50%, -50%) rotate(${centerDegree}deg) translateY(-82px) rotate(${-centerDegree}deg)`,
   };
 }
 
-function getRouletteWinnerIndex(rotation: number, itemCount: number) {
-  if (itemCount === 0) {
+function normalizeRouletteDegree(degree: number) {
+  return ((degree % 360) + 360) % 360;
+}
+
+function getRouletteWeightPercent(weight: number, totalWeight: number) {
+  if (totalWeight <= 0) {
+    return "0%";
+  }
+
+  const percent = (weight / totalWeight) * 100;
+
+  return `${percent.toFixed(percent % 1 === 0 ? 0 : 2)}%`;
+}
+
+function getValidRouletteItems(items: RouletteItem[]) {
+  return items
+    .map((item) => ({
+      label: item.label.trim(),
+      weight: Math.max(Math.floor(item.weight), 0),
+    }))
+    .filter((item) => item.label.length > 0 && item.weight > 0);
+}
+
+function getRouletteSegments(items: RouletteItem[]) {
+  const totalWeight = items.reduce((total, item) => total + item.weight, 0);
+  let currentPercent = 0;
+
+  if (totalWeight <= 0) {
+    return [];
+  }
+
+  return items.map<RouletteSegment>((item, index) => {
+    const startPercent = currentPercent;
+    const itemPercent = (item.weight / totalWeight) * 100;
+    const endPercent = startPercent + itemPercent;
+    const centerDegree = ((startPercent + itemPercent / 2) / 100) * 360;
+
+    currentPercent = endPercent;
+
+    return {
+      centerDegree,
+      endPercent,
+      index,
+      item,
+      startPercent,
+    };
+  });
+}
+
+function pickWeightedRouletteSegment(segments: RouletteSegment[]) {
+  if (segments.length === 0) {
     return null;
   }
 
-  const normalizedRotation = ((rotation % 360) + 360) % 360;
-  const pointedDegree = (360 - normalizedRotation) % 360;
-  const segmentDegree = 360 / itemCount;
+  const totalWeight = segments.reduce((total, segment) => total + segment.item.weight, 0);
+  let threshold = Math.random() * totalWeight;
 
-  return Math.floor(pointedDegree / segmentDegree);
+  for (const segment of segments) {
+    threshold -= segment.item.weight;
+
+    if (threshold <= 0) {
+      return segment;
+    }
+  }
+
+  return segments.at(-1) ?? null;
+}
+
+function getRouletteTargetRotation(currentRotation: number, targetDegree: number) {
+  const targetRotation = normalizeRouletteDegree(ROULETTE_POINTER_DEGREE - targetDegree);
+  const minRotation = currentRotation + ROULETTE_SPIN_TURNS * 360;
+  let nextRotation = Math.floor(minRotation / 360) * 360 + targetRotation;
+
+  while (nextRotation < minRotation) {
+    nextRotation += 360;
+  }
+
+  return nextRotation;
 }
 
 export default function ChannelLivePollPanel({ broadcastId, creatorId, messages }: Props) {
@@ -169,14 +251,15 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
   const [drawRollingName, setDrawRollingName] = useState<string | null>(null);
   const [drawReelNames, setDrawReelNames] = useState<string[]>([]);
   const [drawReelTargetIndex, setDrawReelTargetIndex] = useState(0);
-  const [rouletteInput, setRouletteInput] = useState("");
   const [rouletteItems, setRouletteItems] = useState(DEFAULT_ROULETTE_ITEMS);
+  const [isRouletteStarted, setIsRouletteStarted] = useState(false);
   const [rouletteResult, setRouletteResult] = useState<string | null>(null);
   const [rouletteRotation, setRouletteRotation] = useState(0);
+  const [rouletteRotationKeyframes, setRouletteRotationKeyframes] = useState<number[]>([0]);
+  const [pendingRouletteResult, setPendingRouletteResult] = useState<string | null>(null);
   const [isRouletteSpinning, setIsRouletteSpinning] = useState(false);
   const drawSpinStartTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const drawTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const rouletteTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const trimmedOptions = options.map((option) => option.trim()).filter(Boolean);
   const activePoll = polls.find((poll) => poll.status === "active") ?? null;
@@ -216,23 +299,30 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
     drawSession?.winnerUserIds.map(
       (winnerUserId) => drawParticipantNameById.get(winnerUserId) ?? "시청자",
     ) ?? [];
+  const rouletteTotalWeight = rouletteItems.reduce(
+    (total, item) => total + Math.max(Math.floor(item.weight), 0),
+    0,
+  );
+  const validRouletteItems = useMemo(() => getValidRouletteItems(rouletteItems), [rouletteItems]);
+  const rouletteSegments = useMemo(
+    () => getRouletteSegments(validRouletteItems),
+    [validRouletteItems],
+  );
+  const canStartRoulette = validRouletteItems.length >= 2;
   const selectedToolLabel = INTERACTION_TOOLS.find((tool) => tool.value === selectedTool)?.label;
   const rouletteSegmentStyle = useMemo(() => {
-    if (rouletteItems.length === 0) {
+    if (rouletteSegments.length === 0) {
       return { background: "var(--muted)" };
     }
 
-    const segmentSize = 100 / rouletteItems.length;
-    const stops = rouletteItems.map((_, index) => {
+    const stops = rouletteSegments.map((segment, index) => {
       const color = ROULETTE_SEGMENT_COLORS[index % ROULETTE_SEGMENT_COLORS.length];
-      const start = index * segmentSize;
-      const end = (index + 1) * segmentSize;
 
-      return `${color} ${start}% ${end}%`;
+      return `${color} ${segment.startPercent}% ${segment.endPercent}%`;
     });
 
     return { background: `conic-gradient(${stops.join(", ")})` };
-  }, [rouletteItems]);
+  }, [rouletteSegments]);
 
   useEffect(() => {
     return () => {
@@ -242,10 +332,6 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
 
       if (drawTimeoutRef.current) {
         clearTimeout(drawTimeoutRef.current);
-      }
-
-      if (rouletteTimeoutRef.current) {
-        clearTimeout(rouletteTimeoutRef.current);
       }
     };
   }, []);
@@ -515,12 +601,32 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
   const handleAddRouletteItem = () => {
     if (isRouletteSpinning) return;
 
-    const nextItem = rouletteInput.trim();
+    setRouletteItems((currentItems) => [...currentItems, { label: "", weight: 1 }]);
+    setRouletteResult(null);
+  };
 
-    if (!nextItem) return;
+  const handleRouletteItemLabelChange = (index: number, value: string) => {
+    if (isRouletteSpinning) return;
 
-    setRouletteItems((currentItems) => [...currentItems, nextItem]);
-    setRouletteInput("");
+    setRouletteItems((currentItems) =>
+      currentItems.map((item, currentIndex) =>
+        currentIndex === index ? { ...item, label: value } : item,
+      ),
+    );
+    setRouletteResult(null);
+  };
+
+  const handleRouletteItemWeightChange = (index: number, value: string) => {
+    if (isRouletteSpinning) return;
+
+    const parsedValue = Number(value);
+    const nextWeight = Number.isFinite(parsedValue) ? Math.max(Math.floor(parsedValue), 0) : 0;
+
+    setRouletteItems((currentItems) =>
+      currentItems.map((item, currentIndex) =>
+        currentIndex === index ? { ...item, weight: nextWeight } : item,
+      ),
+    );
     setRouletteResult(null);
   };
 
@@ -533,47 +639,67 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
     setRouletteResult(null);
   };
 
-  const handleSpinRoulette = () => {
-    if (rouletteItems.length === 0 || isRouletteSpinning) return;
+  const handleStartRoulette = () => {
+    if (!canStartRoulette || isRouletteSpinning) return;
 
-    const spinningItems = [...rouletteItems];
-    const nextRotation = rouletteRotation + 1440 + Math.random() * 360;
-
-    setIsRouletteSpinning(true);
+    setIsRouletteStarted(true);
     setRouletteResult(null);
+  };
+
+  const handleResetRouletteItems = () => {
+    if (isRouletteSpinning) return;
+
+    setIsRouletteStarted(false);
+    setRouletteResult(null);
+    setPendingRouletteResult(null);
+  };
+
+  const handleSpinRoulette = () => {
+    if (rouletteSegments.length === 0 || isRouletteSpinning) return;
+
+    const winnerSegment = pickWeightedRouletteSegment(rouletteSegments);
+
+    if (!winnerSegment) return;
+
+    const nextRotation = getRouletteTargetRotation(rouletteRotation, winnerSegment.centerDegree);
+    const recoilRotation = rouletteRotation - 18;
+    const fastRotation = Math.max(rouletteRotation + 720, nextRotation - 720);
+
+    setPendingRouletteResult(winnerSegment.item.label);
+    setRouletteRotationKeyframes([rouletteRotation, recoilRotation, fastRotation, nextRotation]);
     setRouletteRotation(nextRotation);
+    setRouletteResult(null);
+    setIsRouletteSpinning(true);
     void publishInteractionNotice({
       content: "룰렛을 돌리는 중입니다.",
       interactionType: "roulette",
       metadata: {
+        items: validRouletteItems.map((item) => item.label),
         resultLabel: "룰렛 진행 중",
         status: "active",
+        weights: validRouletteItems.map((item) => item.weight),
       },
     });
+  };
 
-    if (rouletteTimeoutRef.current) {
-      clearTimeout(rouletteTimeoutRef.current);
-    }
+  const handleRouletteAnimationComplete = () => {
+    if (!isRouletteSpinning || !pendingRouletteResult) return;
 
-    rouletteTimeoutRef.current = setTimeout(() => {
-      const winnerIndex = getRouletteWinnerIndex(nextRotation, spinningItems.length);
+    const nextResult = pendingRouletteResult;
 
-      if (winnerIndex !== null) {
-        const nextResult = spinningItems[winnerIndex];
-
-        setRouletteResult(nextResult);
-        void publishInteractionNotice({
-          content: `룰렛 결과 ${nextResult}`,
-          interactionType: "roulette",
-          metadata: {
-            resultLabel: nextResult,
-            status: "ended",
-          },
-        });
-      }
-
-      setIsRouletteSpinning(false);
-    }, 1700);
+    setRouletteResult(nextResult);
+    setPendingRouletteResult(null);
+    setIsRouletteSpinning(false);
+    void publishInteractionNotice({
+      content: `룰렛 결과 ${nextResult}`,
+      interactionType: "roulette",
+      metadata: {
+        items: validRouletteItems.map((item) => item.label),
+        resultLabel: nextResult,
+        status: "ended",
+        weights: validRouletteItems.map((item) => item.weight),
+      },
+    });
   };
 
   return (
@@ -889,112 +1015,139 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
 
           {selectedTool === "roulette" && (
             <div className="flex flex-1 flex-col gap-3">
-              <div className="bg-background border-border flex flex-col items-center justify-center gap-3 rounded-xl border px-3 py-5 text-center">
-                <div className="relative flex size-56 items-center justify-center">
-                  <div className="absolute top-5 left-1/2 z-20 h-5 w-5 -translate-x-1/2 drop-shadow-md">
-                    <div
-                      className="bg-foreground absolute inset-0"
-                      style={{
-                        clipPath: "polygon(50% 100%, 0 0, 100% 0)",
-                      }}
-                    />
-                    <div
-                      className="bg-live absolute inset-0.5"
-                      style={{
-                        clipPath: "polygon(50% 100%, 0 0, 100% 0)",
-                      }}
-                    />
-                  </div>
-                  <div
-                    className="border-background relative size-48 overflow-hidden rounded-full border-8 shadow-lg transition-transform duration-1000 ease-out"
-                    style={{
-                      ...rouletteSegmentStyle,
-                      transform: `rotate(${rouletteRotation}deg)`,
-                      transitionDuration: isRouletteSpinning ? "1700ms" : "1000ms",
-                    }}
-                  >
+              {!isRouletteStarted ? (
+                <>
+                  <div className="grid max-h-80 gap-3 overflow-y-auto pr-1">
                     {rouletteItems.map((item, index) => (
-                      <span
-                        key={`${item}-${index}-wheel`}
-                        className="absolute top-1/2 left-1/2 w-16 truncate text-center text-xs font-black text-white drop-shadow"
-                        style={getRouletteItemLabelStyle(index, rouletteItems.length)}
+                      <div
+                        key={index}
+                        className="grid grid-cols-[4.25rem_minmax(0,1fr)_6rem_4.5rem_2.5rem] items-center gap-2"
                       >
-                        {item}
-                      </span>
+                        <span className="text-foreground text-sm font-black">항목 {index + 1}</span>
+                        <Input
+                          value={item.label}
+                          maxLength={24}
+                          placeholder="투표 이름"
+                          className="border-border bg-muted/30 h-10 rounded-xl px-4 text-sm"
+                          onChange={(event) =>
+                            handleRouletteItemLabelChange(index, event.target.value)
+                          }
+                        />
+                        <Input
+                          type="number"
+                          min={0}
+                          value={item.weight}
+                          className="border-border bg-muted/30 h-10 rounded-xl text-center text-sm font-bold"
+                          onChange={(event) =>
+                            handleRouletteItemWeightChange(index, event.target.value)
+                          }
+                        />
+                        <span className="text-foreground text-right text-xs font-black tabular-nums">
+                          {getRouletteWeightPercent(
+                            Math.max(Math.floor(item.weight), 0),
+                            rouletteTotalWeight,
+                          )}
+                        </span>
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="ghost"
+                          className="text-muted-foreground hover:text-foreground rounded-xl"
+                          onClick={() => handleRemoveRouletteItem(index)}
+                        >
+                          <X className="size-5" />
+                          <span className="sr-only">룰렛 항목 삭제</span>
+                        </Button>
+                      </div>
                     ))}
                   </div>
-                  <div className="bg-background border-border absolute flex size-20 flex-col items-center justify-center rounded-full border shadow-sm">
-                    <FerrisWheel className="text-brand size-6" />
-                    <span className="text-muted-foreground text-xs font-bold">ROULETTE</span>
-                  </div>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <strong className="text-lg">
-                    {isRouletteSpinning ? "돌리는 중" : (rouletteResult ?? "룰렛 대기")}
-                  </strong>
-                  <span className="text-muted-foreground text-xs font-semibold">
-                    항목을 추가하고 룰렛을 돌립니다.
-                  </span>
-                </div>
-              </div>
 
-              <div className="flex gap-2">
-                <Input
-                  value={rouletteInput}
-                  disabled={isRouletteSpinning}
-                  maxLength={24}
-                  placeholder="룰렛 항목"
-                  className="border-border bg-background h-10 rounded-xl px-4 text-sm"
-                  onChange={(event) => setRouletteInput(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key !== "Enter") return;
-
-                    event.preventDefault();
-                    handleAddRouletteItem();
-                  }}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="h-10 rounded-xl font-bold"
-                  disabled={isRouletteSpinning}
-                  onClick={handleAddRouletteItem}
-                >
-                  추가
-                </Button>
-              </div>
-
-              <div className="grid gap-2">
-                {rouletteItems.map((item, index) => (
-                  <div
-                    key={`${item}-${index}`}
-                    className="border-border bg-background flex items-center justify-between gap-2 rounded-xl border px-3 py-2"
-                  >
-                    <span className="text-sm font-semibold">{item}</span>
+                  <div className="grid grid-cols-[4.25rem_minmax(0,1fr)_6rem_4.5rem_2.5rem] items-center gap-2">
+                    <span aria-hidden />
                     <Button
                       type="button"
-                      size="icon"
-                      variant="ghost"
-                      className="size-8 rounded-xl"
-                      disabled={isRouletteSpinning}
-                      onClick={() => handleRemoveRouletteItem(index)}
+                      variant="outline"
+                      className="border-brand text-brand hover:bg-brand/10 hover:text-brand col-span-3 h-10 rounded-xl font-bold"
+                      onClick={handleAddRouletteItem}
                     >
-                      <X className="size-4" />
-                      <span className="sr-only">룰렛 항목 삭제</span>
+                      <Plus className="size-3.5" />
+                      항목 추가
+                    </Button>
+                    <span aria-hidden />
+                  </div>
+
+                  <div className="flex justify-center pt-5">
+                    <Button
+                      type="button"
+                      className="bg-brand hover:bg-brand/90 h-14 rounded-lg px-10 text-base font-black text-white"
+                      disabled={!canStartRoulette}
+                      onClick={handleStartRoulette}
+                    >
+                      룰렛 시작
                     </Button>
                   </div>
-                ))}
-              </div>
+                </>
+              ) : (
+                <div className="flex flex-1 flex-col items-center justify-center gap-6">
+                  <div className="relative flex size-72 items-center justify-center">
+                    <div className="bg-destructive absolute top-6 right-10 z-20 h-14 w-9 rotate-45 rounded-full shadow-lg" />
+                    <motion.div
+                      className="border-background relative size-64 overflow-hidden rounded-full border-8 shadow-lg"
+                      style={rouletteSegmentStyle}
+                      animate={{ rotate: rouletteRotationKeyframes }}
+                      transition={
+                        isRouletteSpinning
+                          ? {
+                              duration: ROULETTE_SPIN_DURATION_SECONDS,
+                              ease: ["easeOut", "linear", "easeOut"],
+                              times: [0, 0.08, 0.45, 1],
+                            }
+                          : { duration: 0 }
+                      }
+                      onAnimationComplete={handleRouletteAnimationComplete}
+                    >
+                      {rouletteSegments.map((segment) => (
+                        <span
+                          key={`${segment.item.label}-${segment.index}-wheel`}
+                          className="absolute top-1/2 left-1/2 w-20 truncate text-center text-xs font-black text-white drop-shadow"
+                          style={getRouletteItemLabelStyle(segment.centerDegree)}
+                        >
+                          {segment.item.label}
+                        </span>
+                      ))}
+                    </motion.div>
+                    <div className="bg-background border-border absolute flex size-20 flex-col items-center justify-center rounded-full border shadow-sm">
+                      <FerrisWheel className="text-brand size-6" />
+                      <span className="text-muted-foreground text-xs font-bold">ROULETTE</span>
+                    </div>
+                  </div>
 
-              <Button
-                type="button"
-                className="bg-brand hover:bg-brand/90 h-10 rounded-xl font-bold text-white"
-                disabled={rouletteItems.length === 0 || isRouletteSpinning}
-                onClick={handleSpinRoulette}
-              >
-                <RotateCw className="size-4" />
-                {isRouletteSpinning ? "돌리는 중" : "룰렛 돌리기"}
-              </Button>
+                  <strong className="text-foreground text-lg font-black">
+                    {isRouletteSpinning ? "돌리는 중" : (rouletteResult ?? "룰렛 대기")}
+                  </strong>
+
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="border-brand text-brand hover:bg-brand/10 hover:text-brand h-12 rounded-lg px-8 text-base font-black"
+                      disabled={isRouletteSpinning}
+                      onClick={handleResetRouletteItems}
+                    >
+                      항목 다시 설정하기
+                    </Button>
+                    <Button
+                      type="button"
+                      className="bg-brand hover:bg-brand/90 h-12 rounded-lg px-8 text-base font-black text-white"
+                      disabled={!canStartRoulette || isRouletteSpinning}
+                      onClick={handleSpinRoulette}
+                    >
+                      <RotateCw className="size-4" />
+                      돌려!
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </>
