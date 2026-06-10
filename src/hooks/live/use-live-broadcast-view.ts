@@ -11,7 +11,11 @@ import { useLiveDonationRanking } from "@/hooks/live/use-live-donation-ranking";
 import { useUserWalletBalance } from "@/hooks/donations/use-user-wallet-balance";
 import { useAuthStore } from "@/stores/auth";
 import { useQueryClient } from "@tanstack/react-query";
-import { voteLivePollAction, sendLiveDonationAction } from "@/actions/live/live";
+import {
+  joinLiveDrawAction,
+  voteLivePollAction,
+  sendLiveDonationAction,
+} from "@/actions/live/live";
 import { QUERY_KEYS } from "@/constants/common/query-keys";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { toastAppError, toastAppInfo } from "@/utils/common/toast-message";
@@ -49,7 +53,7 @@ export function useLiveBroadcastView(creatorId: string) {
   const messages = messagesQuery.messages;
 
   const pollsQuery = useLivePolls(broadcast?.id, user?.id);
-  const interactionNoticesQuery = useLiveInteractionNotices(broadcast?.id);
+  const interactionNoticesQuery = useLiveInteractionNotices(broadcast?.id, user?.id);
   const donationRankingQuery = useLiveDonationRanking(creatorId);
   const donationEnabled = watchData?.settings.donationEnabled ?? false;
   const donationMinAmount = watchData?.settings.donationMinAmount ?? LIVE_DONATION_MIN_AMOUNT;
@@ -95,6 +99,32 @@ export function useLiveBroadcastView(creatorId: string) {
     } catch (error) {
       console.error("라이브 투표 처리 실패", error);
       toastAppError(APP_MESSAGE_CODE.error.live.voteFailed);
+      return false;
+    }
+  }
+
+  async function joinDraw(drawNoticeId: string): Promise<boolean> {
+    if (!broadcast?.id) return false;
+
+    try {
+      const success = await joinLiveDrawAction({
+        broadcastId: broadcast.id,
+        drawNoticeId,
+      });
+
+      if (!success) {
+        toastAppError(APP_MESSAGE_CODE.error.common.unknown);
+        return false;
+      }
+
+      void queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.live.interactionNotices(broadcast.id, user?.id),
+      });
+
+      return true;
+    } catch (error) {
+      console.error("라이브 추첨 참여 처리 실패", error);
+      toastAppError(APP_MESSAGE_CODE.error.common.unknown);
       return false;
     }
   }
@@ -190,6 +220,7 @@ export function useLiveBroadcastView(creatorId: string) {
     donationEnabled,
     donationMinAmount,
     votePoll,
+    joinDraw,
     sendDonation,
     isFollowing,
     onFollowToggled,

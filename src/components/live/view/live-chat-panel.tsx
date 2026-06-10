@@ -40,6 +40,7 @@ interface Props {
   onLoginPrompt: () => void;
   onSendMessage: (content: string) => Promise<boolean>;
   onVote?: (pollId: string, optionId: string) => Promise<boolean>;
+  onJoinDraw?: (drawNoticeId: string) => Promise<boolean>;
   onDonate?: (params: {
     amount: number;
     message: string;
@@ -75,6 +76,7 @@ export function LiveChatPanel({
   onLoginPrompt,
   onSendMessage,
   onVote,
+  onJoinDraw,
   onDonate,
   chatRuleText,
   onAcceptChatRule,
@@ -180,6 +182,7 @@ export function LiveChatPanel({
             onLoginPrompt={onLoginPrompt}
             onSendMessage={onSendMessage}
             onVote={onVote}
+            onJoinDraw={onJoinDraw}
             onDonate={onDonate}
             chatRuleText={chatRuleText}
             onAcceptChatRule={onAcceptChatRule}

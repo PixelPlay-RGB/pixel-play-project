@@ -24,10 +24,14 @@ export function mapLiveMessageRowToMessage(
   row: LiveMessageJoinedRow,
   creatorId?: string,
   viewerId?: string,
-): LiveChatMessage {
+): LiveChatMessage | null {
   const isHost = !!creatorId && row.sender_id !== null && row.sender_id === creatorId;
   const isOwnMessage = !!viewerId && row.sender_id !== null && row.sender_id === viewerId;
   const metadata = readJsonObject(row.metadata);
+
+  if (readString(metadata.source) === "live_draw_participation") {
+    return null;
+  }
 
   if (row.message_type === "donation") {
     const metadataAmount = readNumber(metadata.amount);

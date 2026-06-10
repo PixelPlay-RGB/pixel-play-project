@@ -47,6 +47,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     donationEnabled,
     donationMinAmount,
     votePoll,
+    joinDraw,
     sendDonation,
     isFollowing,
     onFollowToggled,
@@ -204,6 +205,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
               onLoginPrompt={openLoginPrompt}
               onSendMessage={sendMessage}
               onVote={votePoll}
+              onJoinDraw={joinDraw}
               onDonate={sendDonation}
               chatRuleText={chatRuleText}
               onAcceptChatRule={acceptChatRule}

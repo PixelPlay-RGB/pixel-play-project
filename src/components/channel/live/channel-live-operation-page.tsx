@@ -6,7 +6,6 @@ import {
   saveChannelLiveThumbnailAction,
   startLiveBroadcastAction,
   updateChannelLiveChatPausedAction,
-  type ChannelLiveChatMessage,
   type ChannelLiveStudioSnapshot,
   updateChannelLiveSettingsAction,
   uploadChannelLiveThumbnailAction,
@@ -196,7 +195,6 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
       ttsEnabled: isTtsEnabled,
       ttsRate,
     }));
-  const [liveChatMessages, setLiveChatMessages] = useState<ChannelLiveChatMessage[]>([]);
   const [streamStatus, setStreamStatus] = useState<ChannelLiveStreamStatusResponse | null>(null);
   const [isBroadcastActionPending, startBroadcastTransition] = useTransition();
   const [isSettingsActionPending, startSettingsTransition] = useTransition();
@@ -601,11 +599,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
             <ChannelLiveStatusMetricsCard broadcast={statusMetricsBroadcast} />
           </div>
           <div className="shrink-0">
-            <ChannelLivePollPanel
-              broadcastId={broadcastId}
-              creatorId={creatorId}
-              messages={liveChatMessages}
-            />
+            <ChannelLivePollPanel broadcastId={broadcastId} creatorId={creatorId} />
           </div>
         </div>
 
@@ -616,7 +610,6 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
             creatorId={creatorId}
             chatRuleText={chatRuleText}
             liveState={liveState}
-            onMessagesChange={setLiveChatMessages}
             isChatPausePending={isChatPausePending}
             onToggleChatPaused={handleToggleChatPaused}
           />

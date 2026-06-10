@@ -41,9 +41,11 @@ export function useLiveMessages(
 
       if (error) throw error;
 
-      return (data ?? [])
-        .reverse()
-        .map((row) => mapLiveMessageRowToMessage(row, creatorId, viewerId));
+      return (data ?? []).reverse().flatMap((row) => {
+        const message = mapLiveMessageRowToMessage(row, creatorId, viewerId);
+
+        return message ? [message] : [];
+      });
     },
   });
 

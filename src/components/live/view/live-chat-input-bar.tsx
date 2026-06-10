@@ -34,6 +34,7 @@ interface Props {
   onLoginPrompt: () => void;
   onSendMessage: (content: string) => Promise<boolean>;
   onVote?: (pollId: string, optionId: string) => Promise<boolean>;
+  onJoinDraw?: (drawNoticeId: string) => Promise<boolean>;
   onDonate?: (params: {
     amount: number;
     message: string;
@@ -100,6 +101,7 @@ export function LiveChatInputBar({
   onLoginPrompt,
   onSendMessage,
   onVote,
+  onJoinDraw,
   onDonate,
   chatRuleText,
   showActions = true,
@@ -283,6 +285,7 @@ export function LiveChatInputBar({
             isLoggedIn={isLoggedIn}
             onLoginPrompt={onLoginPrompt}
             onVote={onVote}
+            onJoinDraw={onJoinDraw}
             presentation={votePresentation}
           />
         </div>

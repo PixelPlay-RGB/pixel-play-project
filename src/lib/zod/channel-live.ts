@@ -47,6 +47,7 @@ export const updateChannelLiveSettingsSchema = z.object({
 export const getChannelLiveDrawParticipantsSchema = z
   .object({
     broadcastId: z.string().uuid(),
+    drawNoticeId: z.string().uuid().nullable().optional(),
     endedAt: z.string().datetime(),
     startedAt: z.string().datetime(),
   })

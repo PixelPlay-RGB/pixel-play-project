@@ -20,7 +20,12 @@ interface LiveInteractionNoticeRow {
   metadata: Json;
 }
 
+interface LiveDrawParticipationRow {
+  metadata: Json;
+}
+
 const LIVE_INTERACTION_NOTICE_LIMIT = 20;
+const LIVE_DRAW_PARTICIPATION_SOURCE = "live_draw_participation";
 
 function readNoticeType(value: Json | undefined): LiveInteractionNoticeType | null {
   const type = readString(value);
@@ -71,12 +76,15 @@ function mapNoticeRow(row: LiveInteractionNoticeRow): LiveInteractionNotice | nu
   };
 }
 
-export function useLiveInteractionNotices(broadcastId: string | null | undefined) {
+export function useLiveInteractionNotices(
+  broadcastId: string | null | undefined,
+  viewerId?: string | null,
+) {
   const supabase = useMemo(() => createClient(), []);
   const queryClient = useQueryClient();
 
   const query = useQuery<LiveInteractionNotice[]>({
-    queryKey: QUERY_KEYS.live.interactionNotices(broadcastId ?? undefined),
+    queryKey: QUERY_KEYS.live.interactionNotices(broadcastId ?? undefined, viewerId),
     enabled: !!broadcastId,
     staleTime: Infinity,
     queryFn: async () => {
@@ -94,10 +102,40 @@ export function useLiveInteractionNotices(broadcastId: string | null | undefined
 
       if (error) throw error;
 
-      return (data ?? []).flatMap((row) => {
+      const notices = (data ?? []).flatMap((row) => {
         const notice = mapNoticeRow(row);
         return notice ? [notice] : [];
       });
+
+      if (!viewerId) {
+        return notices;
+      }
+
+      const { data: participationRows, error: participationError } = await supabase
+        .from("live_message")
+        .select("metadata")
+        .eq("broadcast_id", broadcastId)
+        .eq("sender_id", viewerId)
+        .eq("message_type", "moderation_notice")
+        .contains("metadata", { source: LIVE_DRAW_PARTICIPATION_SOURCE })
+        .returns<LiveDrawParticipationRow[]>();
+
+      if (participationError) throw participationError;
+
+      const joinedDrawNoticeIds = new Set(
+        (participationRows ?? []).flatMap((row) => {
+          const metadata = readJsonObject(row.metadata);
+          const drawNoticeId = readString(metadata.drawNoticeId);
+
+          return drawNoticeId ? [drawNoticeId] : [];
+        }),
+      );
+
+      return notices.map((notice) =>
+        notice.type === "draw"
+          ? { ...notice, hasJoined: joinedDrawNoticeIds.has(notice.id) }
+          : notice,
+      );
     },
   });
 
@@ -123,10 +161,15 @@ export function useLiveInteractionNotices(broadcastId: string | null | undefined
           if (row?.message_type !== "moderation_notice") return;
 
           const metadata = readJsonObject((row.metadata ?? null) as Json);
-          if (readString(metadata.source) !== "live_interaction") return;
+          const source = readString(metadata.source);
+          const isInteractionNotice = source === "live_interaction";
+          const isOwnDrawParticipation =
+            source === LIVE_DRAW_PARTICIPATION_SOURCE && row.sender_id === viewerId;
+
+          if (!isInteractionNotice && !isOwnDrawParticipation) return;
 
           void queryClient.invalidateQueries({
-            queryKey: QUERY_KEYS.live.interactionNotices(broadcastId),
+            queryKey: QUERY_KEYS.live.interactionNotices(broadcastId, viewerId),
           });
         },
       )
@@ -135,7 +178,7 @@ export function useLiveInteractionNotices(broadcastId: string | null | undefined
     return () => {
       void channel.unsubscribe();
     };
-  }, [broadcastId, supabase, queryClient]);
+  }, [broadcastId, viewerId, supabase, queryClient]);
 
   return {
     error: query.error,

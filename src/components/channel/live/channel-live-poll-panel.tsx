@@ -6,7 +6,6 @@ import {
   endChannelLivePollAction,
   getChannelLiveDrawParticipantsAction,
   sendChannelLiveInteractionNoticeAction,
-  type ChannelLiveChatMessage,
   type ChannelLiveDrawParticipant,
 } from "@/actions/channel/live";
 import { Button } from "@/components/ui/button";
@@ -26,11 +25,11 @@ import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState } fro
 interface Props {
   broadcastId: string | null;
   creatorId?: string;
-  messages: ChannelLiveChatMessage[];
 }
 
 interface DrawState {
   endedAt: string | null;
+  noticeId: string | null;
   participants: ChannelLiveDrawParticipant[];
   startedAt: string;
   winnerUserIds: string[];
@@ -86,24 +85,6 @@ const INTERACTION_TOOLS = [
   { icon: FerrisWheel, label: "룰렛", value: "roulette" },
 ] as const;
 
-function getMessageTime(message: ChannelLiveChatMessage) {
-  const messageTime = new Date(message.createdAt).getTime();
-
-  return Number.isFinite(messageTime) ? messageTime : 0;
-}
-
-function isMessageInPeriod(
-  message: ChannelLiveChatMessage,
-  startedAt: string,
-  endedAt: string | null,
-) {
-  const messageTime = getMessageTime(message);
-  const startedTime = new Date(startedAt).getTime();
-  const endedTime = endedAt ? new Date(endedAt).getTime() : Number.POSITIVE_INFINITY;
-
-  return messageTime >= startedTime && messageTime <= endedTime;
-}
-
 function getPollResults(poll: LivePoll | null) {
   if (!poll) {
     return [];
@@ -114,28 +95,6 @@ function getPollResults(poll: LivePoll | null) {
     option: option.label,
     percent: poll.totalCount > 0 ? Math.round((option.count / poll.totalCount) * 100) : 0,
   }));
-}
-
-function getDrawParticipants(messages: ChannelLiveChatMessage[], drawSession: DrawState | null) {
-  if (!drawSession) {
-    return [];
-  }
-
-  const participants = new Set<string>();
-
-  messages.forEach((message) => {
-    if (!isMessageInPeriod(message, drawSession.startedAt, drawSession.endedAt)) {
-      return;
-    }
-
-    const authorName = message.authorName.trim();
-
-    if (authorName) {
-      participants.add(authorName);
-    }
-  });
-
-  return Array.from(participants);
 }
 
 function toDrawParticipantNames(participants: ChannelLiveDrawParticipant[]) {
@@ -237,7 +196,7 @@ function getRouletteTargetDegree(segment: RouletteSegment) {
   return segment.centerDegree + offsetDirection * offsetAmount;
 }
 
-export default function ChannelLivePollPanel({ broadcastId, creatorId, messages }: Props) {
+export default function ChannelLivePollPanel({ broadcastId, creatorId }: Props) {
   const queryClient = useQueryClient();
   const { polls, isLoading: isPollLoading } = useLivePolls(broadcastId, creatorId);
   const [selectedTool, setSelectedTool] = useState<InteractionTool | null>(null);
@@ -288,12 +247,7 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
     (!isPollTimerEnabled || normalizedPollTimerSeconds > 0);
   const pollResults = useMemo(() => getPollResults(visiblePoll), [visiblePoll]);
   const totalVotes = pollResults.reduce((total, result) => total + result.count, 0);
-  const previewDrawParticipants = useMemo(
-    () => getDrawParticipants(messages, drawSession),
-    [drawSession, messages],
-  );
-  const isDrawParticipantConfirmed = Boolean(drawSession?.endedAt);
-  const filteredConfirmedDrawParticipants = useMemo(
+  const filteredDrawParticipants = useMemo(
     () =>
       drawSession
         ? filterChannelLiveDrawParticipants(drawSession.participants, drawSession.winnerUserIds, {
@@ -303,12 +257,9 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
         : [],
     [drawSession, isDrawExcludePreviousWinners, isDrawFollowerOnly],
   );
-  const confirmedDrawParticipants = isDrawParticipantConfirmed
-    ? toDrawParticipantNames(filteredConfirmedDrawParticipants)
-    : [];
-  const drawParticipants = isDrawParticipantConfirmed
-    ? confirmedDrawParticipants
-    : previewDrawParticipants;
+  const drawParticipants = toDrawParticipantNames(filteredDrawParticipants);
+  const activeDrawNoticeId = drawSession && !drawSession.endedAt ? drawSession.noticeId : null;
+  const activeDrawStartedAt = drawSession && !drawSession.endedAt ? drawSession.startedAt : null;
   const drawParticipantNameById = new Map(
     (drawSession?.participants ?? []).map((participant) => [
       participant.userId,
@@ -472,18 +423,21 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
     drawTimerTimeoutRef.current = null;
   }, []);
 
-  const handleStartDraw = () => {
+  const handleStartDraw = async () => {
+    const startedAt = new Date().toISOString();
+
     clearDrawTimer();
     setDrawSession({
       endedAt: null,
+      noticeId: null,
       participants: [],
-      startedAt: new Date().toISOString(),
+      startedAt,
       winnerUserIds: [],
     });
     setDrawRollingName(null);
     setDrawReelNames([]);
     setDrawReelTargetIndex(0);
-    void publishInteractionNotice({
+    const noticeId = await publishInteractionNotice({
       content: "추첨 모집이 시작되었습니다.",
       interactionType: "draw",
       metadata: {
@@ -491,28 +445,42 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
         status: "active",
       },
     });
+
+    if (!noticeId) return;
+
+    setDrawSession((currentSession) =>
+      currentSession?.startedAt === startedAt ? { ...currentSession, noticeId } : currentSession,
+    );
   };
 
   const handleSelectTool = (tool: InteractionTool) => {
     setSelectedTool(tool);
 
     if (tool === "draw" && !drawSession) {
-      handleStartDraw();
+      void handleStartDraw();
     }
   };
 
   const loadDrawParticipants = useCallback(
-    async (targetSession: DrawState, endedAt: string) => {
+    async (targetSession: DrawState, endedAt: string, options?: { showLoading?: boolean }) => {
       if (!broadcastId) {
         toastAppError(APP_MESSAGE_CODE.error.common.unknown);
         return null;
       }
 
-      setIsDrawParticipantLoading(true);
+      if (!targetSession.noticeId) {
+        toastAppError(APP_MESSAGE_CODE.error.common.unknown);
+        return null;
+      }
+
+      if (options?.showLoading !== false) {
+        setIsDrawParticipantLoading(true);
+      }
 
       try {
         const result = await getChannelLiveDrawParticipantsAction({
           broadcastId,
+          drawNoticeId: targetSession.noticeId,
           endedAt,
           startedAt: targetSession.startedAt,
         });
@@ -528,7 +496,9 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
         toastAppError(APP_MESSAGE_CODE.error.common.unknown);
         return null;
       } finally {
-        setIsDrawParticipantLoading(false);
+        if (options?.showLoading !== false) {
+          setIsDrawParticipantLoading(false);
+        }
       }
     },
     [broadcastId],
@@ -561,26 +531,72 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
     clearDrawTimer();
 
     if (
-      !drawSession ||
-      drawSession.endedAt ||
+      !activeDrawNoticeId ||
+      !activeDrawStartedAt ||
       !isDrawTimerEnabled ||
       normalizedDrawTimerSeconds <= 0
     ) {
       return;
     }
 
+    const targetSession: DrawState = {
+      endedAt: null,
+      noticeId: activeDrawNoticeId,
+      participants: [],
+      startedAt: activeDrawStartedAt,
+      winnerUserIds: [],
+    };
+
     drawTimerTimeoutRef.current = setTimeout(() => {
-      void closeDrawRecruitment(drawSession);
+      void closeDrawRecruitment(targetSession);
     }, normalizedDrawTimerSeconds * 1000);
 
     return clearDrawTimer;
   }, [
+    activeDrawNoticeId,
+    activeDrawStartedAt,
     clearDrawTimer,
     closeDrawRecruitment,
-    drawSession,
     isDrawTimerEnabled,
     normalizedDrawTimerSeconds,
   ]);
+
+  useEffect(() => {
+    if (!activeDrawNoticeId || !activeDrawStartedAt) return;
+
+    let isCancelled = false;
+    const targetSession: DrawState = {
+      endedAt: null,
+      noticeId: activeDrawNoticeId,
+      participants: [],
+      startedAt: activeDrawStartedAt,
+      winnerUserIds: [],
+    };
+
+    const refreshParticipants = async () => {
+      const participants = await loadDrawParticipants(targetSession, new Date().toISOString(), {
+        showLoading: false,
+      });
+
+      if (!participants || isCancelled) return;
+
+      setDrawSession((currentSession) =>
+        currentSession?.noticeId === activeDrawNoticeId && !currentSession.endedAt
+          ? { ...currentSession, participants }
+          : currentSession,
+      );
+    };
+
+    void refreshParticipants();
+    const refreshInterval = setInterval(() => {
+      void refreshParticipants();
+    }, 3000);
+
+    return () => {
+      isCancelled = true;
+      clearInterval(refreshInterval);
+    };
+  }, [activeDrawNoticeId, activeDrawStartedAt, loadDrawParticipants]);
 
   const publishInteractionNotice = async ({
     content,
@@ -591,7 +607,7 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
     interactionType: "draw" | "roulette";
     metadata: Record<string, unknown>;
   }) => {
-    if (!broadcastId) return;
+    if (!broadcastId) return null;
 
     try {
       const result = await sendChannelLiveInteractionNoticeAction({
@@ -601,12 +617,16 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
         metadata,
       });
 
-      if (!result.success) {
+      if (!result.success || !result.data) {
         toastAppError(result.code ?? APP_MESSAGE_CODE.error.common.unknown);
+        return null;
       }
+
+      return result.data.messageId;
     } catch (error) {
       console.error("라이브 상호작용 결과 공지 액션 실패", error);
       toastAppError(APP_MESSAGE_CODE.error.common.unknown);
+      return null;
     }
   };
 
@@ -793,7 +813,7 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
   return (
     <section className="border-border bg-card flex h-160 min-h-0 min-w-0 flex-col gap-4 rounded-xl border p-4 shadow-sm">
       {selectedTool === null ? (
-        <div className="grid content-start gap-3 sm:grid-cols-3">
+        <div className="grid min-h-0 flex-1 content-center gap-3 sm:grid-cols-3">
           {INTERACTION_TOOLS.map(({ icon: Icon, label, value }) => (
             <button
               key={value}
@@ -1000,7 +1020,7 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
                   variant="outline"
                   className="border-brand text-brand hover:bg-brand/10 hover:text-brand h-16 rounded-lg px-8 text-base font-black"
                   disabled={!broadcastId || isDrawParticipantLoading || isDrawing}
-                  onClick={handleStartDraw}
+                  onClick={() => void handleStartDraw()}
                 >
                   참여자 다시 모집하기
                 </Button>
@@ -1132,7 +1152,7 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
                         <p className="text-muted-foreground text-sm font-semibold">
                           {drawRollingName
                             ? `최근 당첨자 ${drawRollingName}`
-                            : "모집 시작 후 채팅을 친 사람이 추첨 후보에 들어갑니다."}
+                            : "시청자가 추첨 참여 버튼을 누르면 후보에 들어갑니다."}
                         </p>
                       </div>
                     )}
@@ -1210,10 +1230,16 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
               ) : (
                 <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-6">
                   <div className="relative flex size-72 items-center justify-center">
-                    <div
-                      className="bg-destructive absolute top-7 right-9 z-20 h-14 w-10 rotate-45 shadow-lg"
-                      style={{ clipPath: "polygon(50% 0, 100% 100%, 0 100%)" }}
-                    />
+                    <div className="absolute top-8 right-10 z-20 rotate-[225deg] drop-shadow-lg">
+                      <div
+                        className="bg-border h-10 w-5"
+                        style={{ clipPath: "polygon(50% 0, 100% 100%, 0 100%)" }}
+                      />
+                      <div
+                        className="bg-destructive absolute top-0.5 left-0.5 h-9 w-4"
+                        style={{ clipPath: "polygon(50% 0, 100% 100%, 0 100%)" }}
+                      />
+                    </div>
                     <motion.div
                       className="border-background relative size-64 overflow-hidden rounded-full border-8 shadow-lg"
                       style={rouletteSegmentStyle}

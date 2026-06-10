@@ -33,6 +33,7 @@ interface Props {
   isLoading?: boolean;
   isLoggedIn: boolean;
   onLoginPrompt: () => void;
+  onJoinDraw?: (drawNoticeId: string) => Promise<boolean>;
   onVote: (pollId: string, optionId: string) => Promise<boolean>;
   polls: LivePoll[];
   presentation?: "popover" | "dialog";
@@ -360,13 +361,21 @@ function VoteResults({ poll, onClose }: { onClose: () => void; poll: LivePoll })
 }
 
 function InteractionNoticeCard({
+  isLoggedIn,
   notice,
   onClose,
+  onJoinDraw,
+  onLoginPrompt,
 }: {
+  isLoggedIn: boolean;
   notice: LiveInteractionNotice;
   onClose: () => void;
+  onJoinDraw?: (drawNoticeId: string) => Promise<boolean>;
+  onLoginPrompt: () => void;
 }) {
   const isActive = notice.status === "active";
+  const [joinedDrawNoticeId, setJoinedDrawNoticeId] = useState<string | null>(null);
+  const [isJoiningDraw, setIsJoiningDraw] = useState(false);
   const Icon = notice.type === "draw" ? Trophy : FerrisWheel;
   const title =
     notice.type === "draw"
@@ -381,6 +390,31 @@ function InteractionNoticeCard({
       ? LIVE_VOTE_LABEL.drawActiveDescription
       : LIVE_VOTE_LABEL.rouletteActiveDescription;
   const detail = notice.winnerNames?.join(", ") ?? notice.resultLabel ?? notice.content;
+  const canJoinDraw = isActive && notice.type === "draw";
+  const hasJoined = Boolean(notice.hasJoined) || joinedDrawNoticeId === notice.id;
+
+  async function handleJoinDraw() {
+    if (!canJoinDraw) {
+      onClose();
+      return;
+    }
+
+    if (!isLoggedIn) {
+      onClose();
+      onLoginPrompt();
+      return;
+    }
+
+    if (!onJoinDraw || hasJoined || isJoiningDraw) return;
+
+    setIsJoiningDraw(true);
+    const success = await onJoinDraw(notice.id);
+    setIsJoiningDraw(false);
+
+    if (success) {
+      setJoinedDrawNoticeId(notice.id);
+    }
+  }
 
   return (
     <div className="flex flex-col overflow-hidden">
@@ -413,14 +447,25 @@ function InteractionNoticeCard({
         <Button
           type="button"
           variant={isActive ? "default" : "outline"}
-          disabled={isActive}
+          disabled={
+            (isActive && !canJoinDraw) ||
+            (canJoinDraw && isLoggedIn && (hasJoined || isJoiningDraw || !onJoinDraw))
+          }
           className={cn(
             isActive && "bg-live/80 text-live-foreground",
             "h-9 w-full text-xs font-bold",
           )}
-          onClick={onClose}
+          onClick={() => void handleJoinDraw()}
         >
-          {isActive ? LIVE_VOTE_LABEL.active : LIVE_LABEL.close}
+          {canJoinDraw
+            ? isJoiningDraw
+              ? LIVE_VOTE_LABEL.submitting
+              : hasJoined
+                ? LIVE_VOTE_LABEL.participated
+                : LIVE_VOTE_LABEL.submit
+            : isActive
+              ? LIVE_VOTE_LABEL.active
+              : LIVE_LABEL.close}
         </Button>
       </div>
     </div>
@@ -435,6 +480,7 @@ function VoteBody({
   isLoading,
   isLoggedIn,
   onClose,
+  onJoinDraw,
   onLoginPrompt,
   onVote,
 }: {
@@ -445,6 +491,7 @@ function VoteBody({
   isLoading?: boolean;
   isLoggedIn: boolean;
   onClose: () => void;
+  onJoinDraw?: (drawNoticeId: string) => Promise<boolean>;
   onLoginPrompt: () => void;
   onVote: (pollId: string, optionId: string) => Promise<boolean>;
 }) {
@@ -461,7 +508,15 @@ function VoteBody({
   }
 
   if (currentInteraction.type === "draw" || currentInteraction.type === "roulette") {
-    return <InteractionNoticeCard notice={currentInteraction.notice} onClose={onClose} />;
+    return (
+      <InteractionNoticeCard
+        isLoggedIn={isLoggedIn}
+        notice={currentInteraction.notice}
+        onClose={onClose}
+        onJoinDraw={onJoinDraw}
+        onLoginPrompt={onLoginPrompt}
+      />
+    );
   }
 
   if (currentInteraction.type !== "poll") {
@@ -576,6 +631,7 @@ export function LiveVotePopover({
   isInteractionNoticesLoading,
   isLoading,
   isLoggedIn,
+  onJoinDraw,
   onLoginPrompt,
   onVote,
   polls,
@@ -608,6 +664,7 @@ export function LiveVotePopover({
       isInteractionNoticesLoading={isInteractionNoticesLoading}
       isInteractionNoticesError={isInteractionNoticesError}
       isLoggedIn={isLoggedIn}
+      onJoinDraw={onJoinDraw}
       onLoginPrompt={onLoginPrompt}
       onVote={onVote}
       onClose={() => setOpen(false)}
