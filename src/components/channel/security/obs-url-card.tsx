@@ -3,6 +3,7 @@ import { SecurityActionGroup } from "@/components/channel/security/security-acti
 import { SecurityFieldRow } from "@/components/channel/security/security-field-row";
 import { SecurityTutorialList } from "@/components/channel/security/security-tutorial-list";
 import { UrlTokenReissueDialog } from "@/components/channel/security/url-token-reissue-dialog";
+import { TutorialDialog } from "@/components/common/tutorial-dialog";
 import {
   Card,
   CardAction,
@@ -47,9 +48,21 @@ export function ObsUrlCard({
   return (
     <Card className="gap-5 shadow-sm">
       <CardHeader className="gap-2 px-5 sm:px-6">
-        <CardTitle className="flex items-center gap-2">
-          <Icon className={cn("size-4", meta.accent === "live" ? "text-live" : "text-brand")} />
+        <CardTitle className="flex items-center gap-2 leading-none">
+          <Icon
+            className={cn(
+              "size-4 translate-y-px",
+              meta.accent === "live" ? "text-live" : "text-brand",
+            )}
+          />
           {meta.title}
+          {meta.tutorial && (
+            <TutorialDialog
+              title={meta.tutorial.title}
+              steps={meta.tutorial.steps}
+              triggerLabel={`${meta.title} 연결 가이드 보기`}
+            />
+          )}
         </CardTitle>
         <CardDescription className="max-w-xl leading-6 text-pretty">
           {meta.description}

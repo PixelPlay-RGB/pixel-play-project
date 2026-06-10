@@ -20,7 +20,11 @@ export function HintNote({ children, icon: Icon = Info, className }: Props) {
         className,
       )}
     >
-      {Icon && <Icon className="text-brand mt-0.5 size-4 shrink-0" aria-hidden />}
+      {Icon && (
+        <span className="flex h-[1lh] shrink-0 items-center" aria-hidden>
+          <Icon className="text-brand size-4" />
+        </span>
+      )}
       <p className="min-w-0 text-pretty">{children}</p>
     </div>
   );
