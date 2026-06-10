@@ -1120,7 +1120,10 @@ export type Database = {
         }
         Returns: Json
       }
-      get_channel_live_hero: { Args: { p_creator_id: string }; Returns: Json }
+      get_channel_live_hero: {
+        Args: { p_creator_id: string; p_viewer_id?: string }
+        Returns: Json
+      }
       get_channel_profile: {
         Args: { p_creator_id: string; p_viewer_id?: string }
         Returns: Json

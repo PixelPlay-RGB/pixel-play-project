@@ -16,11 +16,12 @@ export interface LiveHeroItem {
   thumbnailUrl: string | null;
   currentViewerCount: number;
   startedAt: string;
+  // 현재 시청자(로그인 유저)의 팔로우 여부. Hero 아바타 팝오버에 쓴다.
+  isFollowing: boolean;
 }
 
 export interface LiveListItem extends LiveHeroItem {
   recentChatCount: number;
-  isFollowing: boolean;
 }
 
 export interface LiveListSnapshot {
