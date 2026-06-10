@@ -2,7 +2,7 @@
 
 실시간 라이브 스트리밍 웹 애플리케이션입니다.
 
-Next.js 16 App Router, React 19, Supabase Auth/Postgres/Realtime, TanStack Query, Zustand를 중심으로 라이브 목록(인덱스)·시청·검색, 라이브 투표·후원 랭킹·라이브 채팅, OBS 오버레이, 크리에이터 채널 관리(채팅·보안·후원·정산·라이브), 공개 채널 홈·커뮤니티(게시판)·배너, 팔로잉, 인앱 알림(수신함), 포인트 충전과 후원, 프로필 설정 기능을 제공합니다.
+Next.js 16 App Router, React 19, Supabase Auth/Postgres/Realtime, TanStack Query, Zustand를 중심으로 라이브 목록(인덱스)·시청·검색, 라이브 투표·후원 랭킹·라이브 채팅, OBS 오버레이와 연결 가이드, 크리에이터 채널 관리(라이브·채팅·방송 연결·후원·정산·통계 분석), 공개 채널 홈·커뮤니티(게시판)·배너, 팔로잉, 인앱 알림(수신함), Toss 포인트 충전과 후원, 프로필 설정 기능을 제공합니다.
 
 > 인덱스(`/`)가 라이브 목록인 **라이브 스트리밍 전용** 서비스입니다. 독립 채팅방(`/chat`) 기능은 제거되었고, 방송 중 라이브 채팅과 채널 채팅 설정은 유지됩니다. (#105)
 
@@ -19,7 +19,7 @@ Next.js 16 App Router, React 19, Supabase Auth/Postgres/Realtime, TanStack Query
 | Auth              | Supabase Auth, Email OTP, Google OAuth, GitHub OAuth    |
 | Database          | Supabase Postgres                                       |
 | Realtime          | Supabase Realtime Postgres Changes, Presence, Broadcast |
-| Payments          | Toss Payments (포인트 충전, 연동 예정)                  |
+| Payments          | Toss Payments (포인트 충전)                             |
 | Server State      | TanStack Query v5                                       |
 | Client State      | Zustand v5                                              |
 | Form / Validation | react-hook-form v7, Zod v4                              |
@@ -61,6 +61,8 @@ cp .env.example .env.local
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`    | Supabase publishable key                                                                                                   |
 | `NEXT_PUBLIC_SITE_URL`                    | OBS 오버레이 주소 생성에 사용할 공개 서비스 URL                                                                            |
 | `NEXT_PUBLIC_ENABLE_REACT_QUERY_DEVTOOLS` | 개발 중 React Query Devtools 표시 여부 (`true`일 때 표시)                                                                  |
+| `NEXT_PUBLIC_TOSS_PAYMENTS_CLIENT_KEY`    | Toss Payments 클라이언트 키 (포인트 충전 결제창)                                                                           |
+| `TOSS_PAYMENTS_SECRET_KEY`                | Toss Payments 시크릿 키 (서버 전용, 결제 승인)                                                                             |
 | `SUPABASE_SERVICE_ROLE_KEY`               | 회원 탈퇴 등 관리자 작업에 사용하는 service role key                                                                       |
 | `LIVE_OVERLAY_TOKEN_SECRET`               | 스트림 키와 OBS 오버레이 key 생성에 사용하는 서버 secret                                                                   |
 | `NEXT_PUBLIC_MEDIAMTX_RTMP_SERVER_URL`    | OBS 송출용 RTMP 서버 주소 (미설정 시 개발 기본 `rtmp://127.0.0.1:1935`)                                                    |
@@ -122,13 +124,15 @@ npm run dev
 | `/live/[creatorId]`                                           | 공개       | 라이브 시청 화면                                           |
 | `/live/[creatorId]/chat[/overlayKey]`                         | 공개(읽기) | OBS 채팅 오버레이                                          |
 | `/live/[creatorId]/alerts/donation[/overlayKey]`              | 공개(읽기) | OBS 후원 알림 오버레이                                     |
-| `/channel/{live,chat,security,donation,settlement,analytics}` | 보호       | 크리에이터 채널 관리(스튜디오)                             |
+| `/channel/{live,chat,security,donation,settlement}`           | 보호       | 크리에이터 채널 관리(스튜디오)                             |
+| `/channel/analytics/{live,report}`                            | 보호       | 채널 통계 분석(실시간 통계·지난 방송 분석)                 |
 | `/channel/[creatorId]`                                        | 공개       | 공개 채널 홈. 라이브 Hero, 배너, 커뮤니티 미리보기         |
 | `/channel/[creatorId]/community[/[postId]\|/write]`           | 혼합       | 채널 커뮤니티(게시판) 목록·상세·작성                       |
 | `/channel/[creatorId]/setting`                                | 보호       | 채널 공개 프로필·소개·배너 관리(본인만)                    |
 | `/user` → `/user/profile`                                     | 보호       | 프로필 설정                                                |
 | `/user/following`                                             | 보호       | 팔로잉한 채널 목록                                         |
 | `/user/donations`                                             | 보호       | 후원 내역과 포인트 충전                                    |
+| `/user/donations/toss/{success,fail}`                         | 보호       | Toss 결제창 리다이렉트 콜백(승인·실패 처리)                |
 
 - 보호 라우트는 비로그인 접근 시 `/auth/login?next=<현재경로>`로 이동하고, 로그인 성공 후 원래 경로로 돌아갑니다.
 - `/`, `/channel/*`, `/user/*`는 사이드바 셸 레이아웃을 사용하며 공용 Footer 대신 사이드바 하단 크레딧을 표시합니다.
@@ -173,16 +177,18 @@ npm run dev
 - 크리에이터는 OBS 브라우저 소스에 붙일 채팅 오버레이(`/live/[creatorId]/chat/[overlayKey]`)와 후원 알림 오버레이(`/live/[creatorId]/alerts/donation/[overlayKey]`)를 사용합니다.
 - 오버레이 key는 서버에서 `LIVE_OVERLAY_TOKEN_SECRET` 기반 HMAC으로 생성하며, 키 버전을 올려 재발급할 수 있습니다.
 - 오버레이 초기 데이터는 `service_role` 전용 RPC(`get_live_chat_overlay_snapshot`, `get_live_donation_alert_overlay_snapshot`)를 Server Component에서 조회하고, 이후 채팅·후원은 Supabase Realtime으로 반영합니다.
-- 채팅 오버레이는 컨테이너 높이에 맞춰 메시지를 보정하고 최대 표시 개수를 제한하며, 후원 알림은 `--live` 코랄 톤으로 강조합니다.
+- 채팅 오버레이는 컨테이너 높이에 맞춰 메시지를 보정하고 최대 표시 개수를 제한하며, 해당 방송 후원자의 메시지에는 후원자 배지를 표시합니다. 후원 알림은 `--live` 코랄 톤으로 강조합니다.
 
 ### 크리에이터 채널 관리 (스튜디오)
 
 - `/channel/live`, `/channel/chat`, `/channel/security`, `/channel/donation`, `/channel/settlement`, `/channel/analytics`를 사이드바 셸로 제공합니다. 스튜디오 경로는 route group `(studio)`로 격리해 공개 채널 페이지와 레이아웃을 분리합니다.
 - 스튜디오 데이터는 `service_role` 전용 `get_creator_studio_snapshot` RPC를 Server Component에서 조회하고, 설정 저장은 `upsert_creator_studio_setting`으로 처리합니다.
 - 채팅 설정(`/channel/chat`)에서는 참여 범위, 팔로워 대기 시간, 슬로우 모드, 링크 차단, 금칙어, 채팅 규칙을 관리합니다.
-- 보안 설정(`/channel/security`)에서는 스트림 키와 OBS 오버레이 URL을 발급·재발급합니다. 재발급은 `rotate_live_security_token_version`으로 키 버전을 올려 처리합니다.
+- 방송 연결(`/channel/security`)에서는 스트림 키와 OBS 오버레이 URL을 발급·재발급합니다. 재발급은 `rotate_live_security_token_version`으로 키 버전을 올려 처리합니다.
+- 방송 연결 정보·채팅창 주소·후원 알림 주소 카드의 물음표 버튼은 OBS 캡처 이미지 기반 단계별 연결 가이드(`TutorialDialog`)를 띄우며, 이미지를 누르면 전체 화면으로 확대해 볼 수 있습니다.
 - 후원 설정·대시보드(`/channel/donation`)는 `get_creator_donation_dashboard`로 후원 통계를 조회하고, 최소 후원 금액, OBS 후원 알림(표시 시간·알림음·볼륨), 브라우저 TTS 음성·속도·볼륨, 채팅창 후원 메시지 노출을 설정합니다.
 - 정산(`/channel/settlement`)은 `get_creator_settlement_donations`로 연도·상태·정렬별 정산 상세를, `get_creator_settlement_yearly_summary`로 연도별 총 정산액을 조회합니다.
+- 통계 분석(`/channel/analytics`)은 실시간 통계(`/live`)와 지난 방송 분석(`/report`)으로 구성하며, 팔로우/언팔로우 이벤트 로그(`creator_follow_event`, Realtime)와 방송별 채팅 참여자(`get_creator_broadcast_chat_participants`)를 활용합니다.
 - 설정 화면은 공통 컴포넌트(`SettingsPage`, `SettingsCard`, `SideTipCard`, `HintNote`)와 스크롤 시 나타나는 공통 저장 바(`StickySaveBar`)로 구조를 통일했습니다.
 
 ### 공개 채널 홈
@@ -213,10 +219,10 @@ npm run dev
 
 ### 포인트 충전과 후원
 
-- 사용자는 포인트 지갑(`wallet_account`)으로 라이브에서 후원하며, 포인트 충전(Toss Payments)은 후속 구현 예정입니다.
-- 충전용 Toss 연동 라우트(`/api/payments/toss/{prepare,confirm,webhook}`)는 현재 스캐폴드(501 Not Implemented) 상태이며, 승인 시 잔액 반영은 `confirm_wallet_charge` RPC(구현됨)로 처리할 예정입니다.
+- 사용자는 포인트 지갑(`wallet_account`)으로 라이브에서 후원하며, 포인트 충전은 Toss Payments로 처리합니다.
+- 충전 흐름은 `/api/payments/toss/prepare`가 금액(최소·최대·단위)을 검증해 주문을 준비하고, Toss 결제창 완료 후 `/user/donations/toss/success`에서 `/api/payments/toss/confirm`이 결제를 승인하면 `confirm_wallet_charge` RPC가 잔액을 멱등 반영합니다(idempotency key + `FOR UPDATE` 잠금).
 - 후원 전송은 `send_live_donation` RPC가 지갑 차감과 후원 기록, 라이브 후원 메시지 생성을 단일 트랜잭션으로 멱등 처리합니다.
-- `/user/donations`에서 후원 내역과 충전 진입을 함께 보여주며, `get_user_donation_snapshot`으로 데이터를 조회합니다.
+- `/user/donations`에서 지갑 잔액·충전·후원 통계와 연/월별 후원·충전 내역을 함께 보여주며, `get_user_donation_snapshot_v2`로 데이터를 조회합니다.
 
 ### 알림 (수신함)
 
@@ -305,13 +311,13 @@ src/
 | 라이브        | `get_live_hero`, `get_live_list`, `get_live_popular_keywords`, `search_live_results`, `get_live_watch`, `get_live_watch_count`, `start_live_broadcast`, `end_live_broadcast`, `send_live_message`, `send_live_message_v2`, `get_live_donation_ranking`, `accept_live_chat_rule`                                                                |
 | 오버레이      | `get_live_chat_overlay_snapshot`, `get_live_donation_alert_overlay_snapshot`                                                                                                                                                                                                                                                                                           |
 | 투표          | `create_live_poll`, `end_live_poll`, `vote_live_poll`                                                                                                                                                                                                                                                                                                                  |
-| 채널/스튜디오 | `get_creator_studio_snapshot`, `upsert_creator_studio_setting`, `rotate_live_security_token_version`, `get_creator_donation_dashboard`                                                                                                                                                                                                                                 |
+| 채널/스튜디오 | `get_creator_studio_snapshot`, `upsert_creator_studio_setting`, `rotate_live_security_token_version`, `get_creator_donation_dashboard`, `get_creator_broadcast_chat_participants`                                                                                                                                                                                       |
 | 정산          | `get_creator_settlement_donations`, `get_creator_settlement_yearly_summary`                                                                                                                                                                                                                                                                                            |
 | 채널(공개)    | `get_channel_profile`, `update_channel_profile`, `get_channel_live_hero`, `get_channel_banners`, `insert_channel_banner`, `delete_channel_banner`, `reorder_channel_banners`                                                                                                                                                                                           |
 | 커뮤니티      | `get_channel_community_posts`, `get_community_post`, `get_community_adjacent_posts`, `get_community_comments`, `get_community_comment_replies`, `create_community_post`, `update_community_post`, `delete_community_post`, `create_community_comment`, `update_community_comment`, `delete_community_comment`, `set_community_post_like`, `set_community_comment_like` |
 | 팔로잉        | `follow_creator`, `unfollow_creator`, `get_following_channel_list`, `get_following_channel_page`                                                                                                                                                                                                                                                                       |
 | 알림          | `mark_notifications_seen`, `delete_notification`, `delete_all_notifications`, `emit_follower_notification`                                                                                                                                                                                                                                                              |
-| 후원/지갑     | `send_live_donation`, `confirm_wallet_charge`, `get_user_donation_snapshot`                                                                                                                                                                                                                                                                                            |
+| 후원/지갑     | `send_live_donation`, `confirm_wallet_charge`, `get_user_donation_snapshot`, `get_user_donation_snapshot_v2`                                                                                                                                                                                                                                                           |
 
 쓰기 RPC는 클라이언트에서 직접 호출하지 않고 Server Action이 인증 사용자 id를 확인한 뒤 `service_role` 경계로 호출합니다. 읽기 RPC는 실행 권한에 따라 브라우저 client(TanStack Query) 또는 Server Component(SSR)에서 호출합니다. read 전략 기준은 `.agents/supabase-convention/SKILLS.md` 4장을 따릅니다.
 
