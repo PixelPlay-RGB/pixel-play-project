@@ -7,11 +7,13 @@ import { LiveChatParticipationNotice } from "@/components/live/chat/live-chat-pa
 import { LiveChatMessageList } from "@/components/live/chat/live-chat-message-list";
 import { LiveChatInputBar } from "@/components/live/view/live-chat-input-bar";
 import { LiveChatMenu } from "@/components/live/view/live-chat-menu";
+import { LiveDonationBanner } from "@/components/live/view/live-donation-banner";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { LIVE_DONATION_MIN_AMOUNT, LIVE_LABEL } from "@/constants/live/live";
 import { useLiveChatSession } from "@/hooks/live/use-live-chat-session";
+import { useLiveDonationRanking } from "@/hooks/live/use-live-donation-ranking";
 import { useLiveMessages } from "@/hooks/live/use-live-messages";
 import type { LiveChatMessage, LiveViewerChatState } from "@/types/live/live";
 import { ExternalLink, Pause, Play } from "lucide-react";
@@ -78,6 +80,7 @@ export default function ChannelLiveChatPanel({
   const popoutCheckIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const chatState = useMemo(() => getStudioChatState(broadcastId), [broadcastId]);
   const { messages } = useLiveMessages(broadcastId, creatorId, creatorId);
+  const { donations } = useLiveDonationRanking(creatorId ?? "");
   const { isLoggedIn, sendMessage } = useLiveChatSession({
     broadcastId,
     creatorId: creatorId ?? "",
@@ -155,6 +158,9 @@ export default function ChannelLiveChatPanel({
       ) : (
         <>
           <div className="flex min-h-0 flex-1 flex-col">
+            <div className="shrink-0 px-2 pt-2">
+              <LiveDonationBanner donations={donations} />
+            </div>
             <ScrollArea className="min-h-0 flex-1">
               <LiveChatMessageList messages={messages} cleanbotEnabled={cleanbot} />
             </ScrollArea>
