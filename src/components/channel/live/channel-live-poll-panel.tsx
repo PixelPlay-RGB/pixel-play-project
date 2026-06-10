@@ -597,6 +597,7 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId }: Props) 
         content: "추첨 모집이 종료되었습니다.",
         interactionType: "draw",
         metadata: {
+          drawNoticeId: targetSession.noticeId,
           participantCount: participants.length,
           resultLabel: "추첨 모집 종료",
           status: "ended",
@@ -741,6 +742,13 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId }: Props) 
     const finalReelNames = [...repeatedReelNames, ...nextParticipantNames];
     const nextTargetIndex =
       repeatedReelNames.length + (winnerIndex >= 0 ? winnerIndex : nextParticipants.length - 1);
+    const nextWinnerUserIds = [...nextSession.winnerUserIds, winner.userId];
+    const winnerNameById = new Map(
+      nextSession.participants.map((participant) => [participant.userId, participant.nickname]),
+    );
+    const nextWinnerNames = nextWinnerUserIds.map(
+      (winnerUserId) => winnerNameById.get(winnerUserId) ?? "시청자",
+    );
 
     setIsDrawing(true);
     setDrawRollingName(null);
@@ -772,7 +780,7 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId }: Props) 
         currentSession
           ? {
               ...currentSession,
-              winnerUserIds: [...currentSession.winnerUserIds, winner.userId],
+              winnerUserIds: nextWinnerUserIds,
             }
           : currentSession,
       );
@@ -781,10 +789,11 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId }: Props) 
         content: `추첨 결과 ${winner.nickname}`,
         interactionType: "draw",
         metadata: {
+          drawNoticeId: nextSession.noticeId,
           participantCount: nextParticipants.length,
           resultLabel: winner.nickname,
           status: "ended",
-          winnerNames: [winner.nickname],
+          winnerNames: nextWinnerNames,
         },
       });
     }, DRAW_REEL_DURATION_MS);
@@ -916,6 +925,7 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId }: Props) 
           content: "추첨이 종료되었습니다.",
           interactionType: "draw",
           metadata: {
+            drawNoticeId: drawSession.noticeId,
             resultLabel: "추첨 종료",
             status: "ended",
           },

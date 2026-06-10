@@ -395,34 +395,50 @@ function DrawNoticeBoard({
   notice: LiveInteractionNotice;
 }) {
   const winnerNames = notice.winnerNames ?? [];
-  const participantCount = notice.participantCount ?? 0;
+  const participantNames = notice.participantNames ?? [];
+  const participantCount = participantNames.length || notice.participantCount || 0;
 
   return (
     <div className="border-border border-t border-dashed py-3">
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div className="border-border bg-background/60 flex min-h-28 flex-col rounded-lg border p-3">
+      <div className="flex flex-col gap-3">
+        <div className="border-border bg-background/60 flex min-h-32 flex-col rounded-lg border p-3">
           <div className="border-border flex items-center justify-between gap-2 border-b pb-2">
-            <span className="text-brand text-xs font-black">
-              {LIVE_VOTE_LABEL.drawCandidatesTitle}
-            </span>
-            <span className="text-foreground text-xs font-black">
+            <div className="flex min-w-0 items-center gap-2">
+              <span className="text-brand text-xs font-black">
+                {LIVE_VOTE_LABEL.drawCandidatesTitle}
+              </span>
+              {hasJoined ? (
+                <span className="bg-brand/10 text-brand rounded-full px-2 py-0.5 text-[11px] font-black">
+                  {LIVE_VOTE_LABEL.drawCandidateJoined}
+                </span>
+              ) : null}
+            </div>
+            <span className="text-foreground shrink-0 text-xs font-black">
               총 {formatCount(participantCount)}명
             </span>
           </div>
-          <div className="flex flex-1 items-center justify-center text-center">
-            <p
-              className={cn(
-                "text-xs font-bold",
-                hasJoined ? "text-brand" : "text-muted-foreground",
-              )}
-            >
-              {hasJoined
-                ? LIVE_VOTE_LABEL.drawCandidateJoined
-                : LIVE_VOTE_LABEL.drawCandidateWaiting}
-            </p>
+          <div className="min-h-0 flex-1 overflow-y-auto pt-3">
+            {participantNames.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {participantNames.map((participantName, index) => (
+                  <span
+                    key={`${participantName}-${index}`}
+                    className="bg-brand/10 text-brand rounded-lg px-2 py-1 text-xs font-black"
+                  >
+                    {participantName}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <div className="flex h-full min-h-18 items-center justify-center text-center">
+                <p className="text-muted-foreground text-xs font-bold">
+                  {LIVE_VOTE_LABEL.drawCandidateWaiting}
+                </p>
+              </div>
+            )}
           </div>
         </div>
-        <div className="border-border bg-background/60 flex min-h-28 flex-col rounded-lg border p-3">
+        <div className="border-border bg-background/60 flex min-h-32 flex-col rounded-lg border p-3">
           <div className="border-border flex items-center justify-between gap-2 border-b pb-2">
             <span className="text-live text-xs font-black">{LIVE_VOTE_LABEL.drawWinnerTitle}</span>
             <span className="text-foreground text-xs font-black">

@@ -132,9 +132,11 @@ export type LiveInteractionNoticeStatus = "active" | "ended";
 export interface LiveInteractionNotice {
   content: string;
   createdAt: string;
+  drawNoticeId?: string;
   hasJoined?: boolean;
   id: string;
   participantCount?: number;
+  participantNames?: string[];
   resultLabel?: string;
   status: LiveInteractionNoticeStatus;
   type: LiveInteractionNoticeType;
