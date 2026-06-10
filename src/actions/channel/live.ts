@@ -11,14 +11,12 @@ import {
   endChannelLivePollSchema,
   getChannelLiveDrawParticipantsSchema,
   sendChannelLiveInteractionNoticeSchema,
-  updateChannelLiveChatPausedSchema,
   type CreateChannelLivePollInput,
   type EndChannelLivePollInput,
   type GetChannelLiveDrawParticipantsInput,
   type SendChannelLiveInteractionNoticeInput,
   startLiveBroadcastSchema,
   type StartLiveBroadcastInput,
-  type UpdateChannelLiveChatPausedInput,
   updateChannelLiveSettingsSchema,
   type UpdateChannelLiveSettingsInput,
 } from "@/lib/zod/channel-live";
@@ -103,7 +101,6 @@ export interface ChannelLiveStudioSettings {
   alertSoundKey: string;
   alertVolume: number;
   chatDonationMessageEnabled: boolean;
-  chatPaused: boolean;
   chatRuleText: string;
   chatRuleVersion: number;
   chatScope: "authenticated" | "follower" | "manager";
@@ -285,7 +282,6 @@ function createDefaultSettings(): ChannelLiveStudioSettings {
     alertSoundKey: "classic",
     alertVolume: 32,
     chatDonationMessageEnabled: false,
-    chatPaused: false,
     chatOverlayVersion: 1,
     chatRuleText: "",
     chatRuleVersion: 1,
@@ -318,7 +314,6 @@ function createSettingsFromRecord(settings: unknown): ChannelLiveStudioSettings 
     alertSoundKey: readString(settings.alertSoundKey) || "classic",
     alertVolume: readNumberWithFallback(settings.alertVolume, 32),
     chatDonationMessageEnabled: readBoolean(settings.chatDonationMessageEnabled, false),
-    chatPaused: readBoolean(settings.chatPaused, false),
     chatOverlayVersion: readNumberWithFallback(settings.chatOverlayVersion, 1),
     chatRuleText: readString(settings.chatRuleText),
     chatRuleVersion: readNumberWithFallback(settings.chatRuleVersion, 1),
@@ -630,42 +625,6 @@ export async function updateChannelLiveSettingsAction(
 
   if (error || !data) {
     console.error("방송 설정 저장 RPC 실패", error);
-    return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
-  }
-
-  revalidatePath("/channel/live");
-
-  return {
-    success: true,
-    data: toChannelLiveStudioSnapshot(data, actor.userId),
-  };
-}
-
-export async function updateChannelLiveChatPausedAction(
-  input: UpdateChannelLiveChatPausedInput,
-): Promise<AppActionResult<ChannelLiveStudioSnapshot>> {
-  const parsed = updateChannelLiveChatPausedSchema.safeParse(input);
-
-  if (!parsed.success) {
-    return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
-  }
-
-  const actor = await getAuthenticatedActorId({
-    logLabel: "라이브 채팅 일시정지 저장 중 인증 사용자 조회 실패",
-  });
-
-  if (!actor.success) {
-    return { success: false, code: actor.result.code };
-  }
-
-  const supabase = createAdminClient();
-  const { data, error } = await supabase.rpc("set_live_chat_paused", {
-    p_actor_user_id: actor.userId,
-    p_chat_paused: parsed.data.chatPaused,
-  });
-
-  if (error || !data) {
-    console.error("라이브 채팅 일시정지 RPC 실패", error);
     return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
   }
 

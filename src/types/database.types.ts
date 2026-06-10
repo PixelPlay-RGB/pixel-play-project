@@ -350,7 +350,6 @@ export type Database = {
           channel_bio: string
           chat_donation_message_enabled: boolean
           chat_overlay_version: number
-          chat_paused: boolean
           chat_rule_text: string
           chat_rule_version: number
           chat_scope: Database["public"]["Enums"]["live_chat_scope"]
@@ -383,7 +382,6 @@ export type Database = {
           channel_bio?: string
           chat_donation_message_enabled?: boolean
           chat_overlay_version?: number
-          chat_paused?: boolean
           chat_rule_text?: string
           chat_rule_version?: number
           chat_scope?: Database["public"]["Enums"]["live_chat_scope"]
@@ -416,7 +414,6 @@ export type Database = {
           channel_bio?: string
           chat_donation_message_enabled?: boolean
           chat_overlay_version?: number
-          chat_paused?: boolean
           chat_rule_text?: string
           chat_rule_version?: number
           chat_scope?: Database["public"]["Enums"]["live_chat_scope"]
@@ -1300,6 +1297,7 @@ export type Database = {
         Args: { p_broadcast_id: string; p_viewer_key: string }
         Returns: number
       }
+      live_viewer_presence_window: { Args: never; Returns: string }
       mark_notifications_seen: {
         Args: { p_actor_user_id: string }
         Returns: undefined
@@ -1416,10 +1414,6 @@ export type Database = {
       }
       set_community_post_like: {
         Args: { p_actor_user_id: string; p_liked: boolean; p_post_id: string }
-        Returns: Json
-      }
-      set_live_chat_paused: {
-        Args: { p_actor_user_id: string; p_chat_paused: boolean }
         Returns: Json
       }
       start_live_broadcast: {

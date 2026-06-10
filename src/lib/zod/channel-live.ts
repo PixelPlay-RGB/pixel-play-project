@@ -64,10 +64,6 @@ export const endChannelLivePollSchema = z.object({
   pollId: z.string().uuid(),
 });
 
-export const updateChannelLiveChatPausedSchema = z.object({
-  chatPaused: z.boolean(),
-});
-
 export const sendChannelLiveInteractionNoticeSchema = z.object({
   broadcastId: z.string().uuid(),
   content: z.string().trim().min(1).max(300),
@@ -109,4 +105,3 @@ export type SendChannelLiveInteractionNoticeInput = z.infer<
 >;
 export type StartLiveBroadcastInput = z.infer<typeof startLiveBroadcastSchema>;
 export type UpdateChannelLiveSettingsInput = z.infer<typeof updateChannelLiveSettingsSchema>;
-export type UpdateChannelLiveChatPausedInput = z.infer<typeof updateChannelLiveChatPausedSchema>;

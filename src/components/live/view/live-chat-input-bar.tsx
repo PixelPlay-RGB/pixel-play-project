@@ -67,8 +67,6 @@ function getChatPlaceholder({
   if (chatState.canChat) return LIVE_LABEL.chatPlaceholder;
 
   switch (chatState.chatUnavailableReason) {
-    case "chat_paused":
-      return LIVE_LABEL.chatPausedPlaceholder;
     // 규칙 미동의는 일반 채팅 placeholder를 유지하고, 클릭하면 동의 popover로 안내한다.
     case "chat_rule_acceptance_required":
       return LIVE_LABEL.chatPlaceholder;

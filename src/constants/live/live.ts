@@ -42,7 +42,6 @@ export const LIVE_LABEL = {
   chatLoginPlaceholder: "로그인 후 채팅할 수 있습니다.",
   chatPlaceholder: "채팅 입력...",
   chatEndedPlaceholder: "방송이 종료되어 채팅할 수 없습니다.",
-  chatPausedPlaceholder: "지금은 시청자 채팅이 일시정지되었습니다.",
   loginRequired: "로그인이 필요합니다.",
   loginDescription: "이 기능을 사용하려면 로그인이 필요합니다.",
   loginButton: "로그인",
