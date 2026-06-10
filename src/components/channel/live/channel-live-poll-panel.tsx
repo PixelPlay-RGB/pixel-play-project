@@ -43,7 +43,6 @@ interface PollResult {
 
 interface RouletteItem {
   label: string;
-  weight: number;
 }
 
 interface RouletteSegment {
@@ -58,9 +57,9 @@ type InteractionTool = "poll" | "draw" | "roulette";
 
 const DEFAULT_POLL_OPTIONS = ["", ""];
 const DEFAULT_ROULETTE_ITEMS: RouletteItem[] = [
-  { label: "당첨", weight: 1 },
-  { label: "다시 뽑기", weight: 1 },
-  { label: "꽝", weight: 1 },
+  { label: "당첨" },
+  { label: "다시 뽑기" },
+  { label: "꽝" },
 ];
 const ROULETTE_SEGMENT_COLORS = [
   "var(--brand)",
@@ -75,8 +74,8 @@ const POLL_TIMER_MAX_SECONDS = 3600;
 const DRAW_REEL_ROW_HEIGHT_PX = 40;
 const DRAW_REEL_REPEAT_COUNT = 9;
 const DRAW_REEL_DURATION_MS = 2200;
-const ROULETTE_SPIN_DURATION_SECONDS = 2.8;
-const ROULETTE_SPIN_TURNS = 6;
+const ROULETTE_SPIN_DURATION_SECONDS = 4.2;
+const ROULETTE_SPIN_TURNS = 8;
 const ROULETTE_POINTER_DEGREE = 45;
 
 const INTERACTION_TOOLS = [
@@ -159,12 +158,12 @@ function normalizeRouletteDegree(degree: number) {
   return ((degree % 360) + 360) % 360;
 }
 
-function getRouletteWeightPercent(weight: number, totalWeight: number) {
-  if (totalWeight <= 0) {
+function getRouletteItemPercent(itemCount: number) {
+  if (itemCount <= 0) {
     return "0%";
   }
 
-  const percent = (weight / totalWeight) * 100;
+  const percent = 100 / itemCount;
 
   return `${percent.toFixed(percent % 1 === 0 ? 0 : 2)}%`;
 }
@@ -173,22 +172,20 @@ function getValidRouletteItems(items: RouletteItem[]) {
   return items
     .map((item) => ({
       label: item.label.trim(),
-      weight: Math.max(Math.floor(item.weight), 0),
     }))
-    .filter((item) => item.label.length > 0 && item.weight > 0);
+    .filter((item) => item.label.length > 0);
 }
 
 function getRouletteSegments(items: RouletteItem[]) {
-  const totalWeight = items.reduce((total, item) => total + item.weight, 0);
+  const itemPercent = 100 / items.length;
   let currentPercent = 0;
 
-  if (totalWeight <= 0) {
+  if (items.length === 0) {
     return [];
   }
 
   return items.map<RouletteSegment>((item, index) => {
     const startPercent = currentPercent;
-    const itemPercent = (item.weight / totalWeight) * 100;
     const endPercent = startPercent + itemPercent;
     const centerDegree = ((startPercent + itemPercent / 2) / 100) * 360;
 
@@ -204,23 +201,12 @@ function getRouletteSegments(items: RouletteItem[]) {
   });
 }
 
-function pickWeightedRouletteSegment(segments: RouletteSegment[]) {
+function pickRouletteSegment(segments: RouletteSegment[]) {
   if (segments.length === 0) {
     return null;
   }
 
-  const totalWeight = segments.reduce((total, segment) => total + segment.item.weight, 0);
-  let threshold = Math.random() * totalWeight;
-
-  for (const segment of segments) {
-    threshold -= segment.item.weight;
-
-    if (threshold <= 0) {
-      return segment;
-    }
-  }
-
-  return segments.at(-1) ?? null;
+  return segments[Math.floor(Math.random() * segments.length)] ?? null;
 }
 
 function getRouletteTargetRotation(currentRotation: number, targetDegree: number) {
@@ -299,10 +285,6 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
     drawSession?.winnerUserIds.map(
       (winnerUserId) => drawParticipantNameById.get(winnerUserId) ?? "시청자",
     ) ?? [];
-  const rouletteTotalWeight = rouletteItems.reduce(
-    (total, item) => total + Math.max(Math.floor(item.weight), 0),
-    0,
-  );
   const validRouletteItems = useMemo(() => getValidRouletteItems(rouletteItems), [rouletteItems]);
   const rouletteSegments = useMemo(
     () => getRouletteSegments(validRouletteItems),
@@ -601,7 +583,7 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
   const handleAddRouletteItem = () => {
     if (isRouletteSpinning) return;
 
-    setRouletteItems((currentItems) => [...currentItems, { label: "", weight: 1 }]);
+    setRouletteItems((currentItems) => [...currentItems, { label: "" }]);
     setRouletteResult(null);
   };
 
@@ -611,20 +593,6 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
     setRouletteItems((currentItems) =>
       currentItems.map((item, currentIndex) =>
         currentIndex === index ? { ...item, label: value } : item,
-      ),
-    );
-    setRouletteResult(null);
-  };
-
-  const handleRouletteItemWeightChange = (index: number, value: string) => {
-    if (isRouletteSpinning) return;
-
-    const parsedValue = Number(value);
-    const nextWeight = Number.isFinite(parsedValue) ? Math.max(Math.floor(parsedValue), 0) : 0;
-
-    setRouletteItems((currentItems) =>
-      currentItems.map((item, currentIndex) =>
-        currentIndex === index ? { ...item, weight: nextWeight } : item,
       ),
     );
     setRouletteResult(null);
@@ -657,7 +625,7 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
   const handleSpinRoulette = () => {
     if (rouletteSegments.length === 0 || isRouletteSpinning) return;
 
-    const winnerSegment = pickWeightedRouletteSegment(rouletteSegments);
+    const winnerSegment = pickRouletteSegment(rouletteSegments);
 
     if (!winnerSegment) return;
 
@@ -677,7 +645,6 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
         items: validRouletteItems.map((item) => item.label),
         resultLabel: "룰렛 진행 중",
         status: "active",
-        weights: validRouletteItems.map((item) => item.weight),
       },
     });
   };
@@ -697,7 +664,6 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
         items: validRouletteItems.map((item) => item.label),
         resultLabel: nextResult,
         status: "ended",
-        weights: validRouletteItems.map((item) => item.weight),
       },
     });
   };
@@ -1054,7 +1020,7 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
                     {rouletteItems.map((item, index) => (
                       <div
                         key={index}
-                        className="grid grid-cols-[4.25rem_minmax(0,1fr)_6rem_4.5rem_2.5rem] items-center gap-2"
+                        className="grid grid-cols-[4.25rem_minmax(0,1fr)_4.5rem_2.5rem] items-center gap-2"
                       >
                         <span className="text-foreground text-sm font-black">항목 {index + 1}</span>
                         <Input
@@ -1066,20 +1032,10 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
                             handleRouletteItemLabelChange(index, event.target.value)
                           }
                         />
-                        <Input
-                          type="number"
-                          min={0}
-                          value={item.weight}
-                          className="border-border bg-muted/30 h-10 rounded-xl text-center text-sm font-bold"
-                          onChange={(event) =>
-                            handleRouletteItemWeightChange(index, event.target.value)
-                          }
-                        />
                         <span className="text-foreground text-right text-xs font-black tabular-nums">
-                          {getRouletteWeightPercent(
-                            Math.max(Math.floor(item.weight), 0),
-                            rouletteTotalWeight,
-                          )}
+                          {item.label.trim()
+                            ? getRouletteItemPercent(validRouletteItems.length)
+                            : "0%"}
                         </span>
                         <Button
                           type="button"
@@ -1095,12 +1051,12 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
                     ))}
                   </div>
 
-                  <div className="grid grid-cols-[4.25rem_minmax(0,1fr)_6rem_4.5rem_2.5rem] items-center gap-2">
+                  <div className="grid grid-cols-[4.25rem_minmax(0,1fr)_4.5rem_2.5rem] items-center gap-2">
                     <span aria-hidden />
                     <Button
                       type="button"
                       variant="outline"
-                      className="border-brand text-brand hover:bg-brand/10 hover:text-brand col-span-3 h-10 rounded-xl font-bold"
+                      className="border-brand text-brand hover:bg-brand/10 hover:text-brand col-span-2 h-10 rounded-xl font-bold"
                       onClick={handleAddRouletteItem}
                     >
                       <Plus className="size-3.5" />
@@ -1133,7 +1089,7 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
                           ? {
                               duration: ROULETTE_SPIN_DURATION_SECONDS,
                               ease: ["easeOut", "linear", "easeOut"],
-                              times: [0, 0.08, 0.45, 1],
+                              times: [0, 0.14, 0.58, 1],
                             }
                           : { duration: 0 }
                       }
