@@ -1,5 +1,5 @@
 // Toss Payments 결제 성공 리다이렉트에서 서버 승인 처리를 수행합니다.
-import { confirmTossWalletCharge } from "@/lib/payments/toss-wallet-charge";
+import { confirmTossWalletCharge } from "@/utils/payments/toss-wallet-charge";
 import { redirect } from "next/navigation";
 
 import { getTossSuccessRedirectPaymentStatus } from "./toss-success-redirect-status";

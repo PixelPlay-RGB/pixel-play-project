@@ -1,5 +1,5 @@
 // Toss Payments 승인 결과를 검증하고 후원 지갑 잔액에 반영하는 API 라우트입니다.
-import { confirmTossWalletCharge } from "@/lib/payments/toss-wallet-charge";
+import { confirmTossWalletCharge } from "@/utils/payments/toss-wallet-charge";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
