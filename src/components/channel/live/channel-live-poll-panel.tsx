@@ -669,7 +669,7 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
   };
 
   return (
-    <section className="border-border bg-card flex min-h-96 min-w-0 flex-col gap-4 rounded-xl border p-4 shadow-sm">
+    <section className="border-border bg-card flex h-160 min-h-0 min-w-0 flex-col gap-4 rounded-xl border p-4 shadow-sm">
       {selectedTool === null ? (
         <div className="grid flex-1 gap-3 sm:grid-cols-3">
           {INTERACTION_TOOLS.map(({ icon: Icon, label, value }) => (
@@ -690,7 +690,7 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
           ))}
         </div>
       ) : (
-        <>
+        <div className="flex min-h-0 flex-1 flex-col gap-4">
           <div className="flex items-center justify-between gap-3">
             <Button
               type="button"
@@ -706,13 +706,13 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
           </div>
 
           {selectedTool === "poll" && (
-            <div className="flex flex-1 flex-col gap-3">
+            <div className="flex min-h-0 flex-1 flex-col gap-3">
               {isPollLoading ? (
                 <div className="border-border text-muted-foreground flex min-h-32 items-center justify-center rounded-xl border text-sm font-semibold">
                   투표를 불러오는 중입니다.
                 </div>
               ) : visiblePoll ? (
-                <div className="flex flex-col gap-3">
+                <div className="flex min-h-0 flex-1 flex-col gap-3">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <strong className="text-sm leading-5">{visiblePoll.title}</strong>
@@ -745,7 +745,7 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
                       </Button>
                     )}
                   </div>
-                  <div className="grid gap-2">
+                  <div className="grid gap-2 overflow-y-auto pr-1">
                     {pollResults.map((result, index) => (
                       <div
                         key={`${result.option}-${index}`}
@@ -794,7 +794,7 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
                   </div>
 
                   <div className="flex min-h-0 flex-col gap-3">
-                    <div className="grid max-h-56 gap-3 overflow-y-auto pr-1">
+                    <div className="grid h-64 gap-3 overflow-y-auto pr-1">
                       {options.map((option, index) => (
                         <div
                           key={index}
@@ -907,7 +907,7 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
                   </div>
                 </div>
               ) : (
-                <div className="flex flex-1 flex-col gap-5">
+                <div className="flex min-h-0 flex-1 flex-col gap-5">
                   <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:justify-center">
                     <Button
                       type="button"
@@ -939,7 +939,7 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
                     </span>
                   </div>
 
-                  <div className="border-border bg-background/60 flex min-h-96 flex-1 flex-col rounded-lg border">
+                  <div className="border-border bg-background/60 flex min-h-0 flex-1 flex-col rounded-lg border">
                     {isDrawing && drawReelNames.length > 0 ? (
                       <div className="relative m-auto h-10 w-full max-w-md overflow-hidden px-4">
                         <div className="from-background pointer-events-none absolute inset-x-4 top-0 z-10 h-3 bg-linear-to-b to-transparent" />
@@ -1013,10 +1013,10 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
           )}
 
           {selectedTool === "roulette" && (
-            <div className="flex flex-1 flex-col gap-3">
+            <div className="flex min-h-0 flex-1 flex-col gap-3">
               {!isRouletteStarted ? (
                 <>
-                  <div className="grid max-h-80 gap-3 overflow-y-auto pr-1">
+                  <div className="grid h-80 gap-3 overflow-y-auto pr-1">
                     {rouletteItems.map((item, index) => (
                       <div
                         key={index}
@@ -1077,7 +1077,7 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
                   </div>
                 </>
               ) : (
-                <div className="flex flex-1 flex-col items-center justify-center gap-6">
+                <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-6">
                   <div className="relative flex size-72 items-center justify-center">
                     <div className="bg-destructive absolute top-6 right-10 z-20 h-14 w-9 rotate-45 rounded-full shadow-lg" />
                     <motion.div
@@ -1139,7 +1139,7 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
               )}
             </div>
           )}
-        </>
+        </div>
       )}
     </section>
   );
