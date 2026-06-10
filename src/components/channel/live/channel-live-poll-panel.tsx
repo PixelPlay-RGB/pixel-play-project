@@ -696,15 +696,22 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
                   onSubmit={handleCreatePoll}
                   className="border-border flex flex-1 flex-col gap-4 border-t pt-4"
                 >
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-muted-foreground text-xs font-semibold">투표 제목</label>
+                  <div className="grid grid-cols-[4.25rem_minmax(0,1fr)_2.5rem] items-center gap-2">
+                    <label
+                      htmlFor="channel-live-poll-title"
+                      className="text-foreground text-sm font-black"
+                    >
+                      제목
+                    </label>
                     <Input
+                      id="channel-live-poll-title"
                       value={title}
                       maxLength={50}
                       placeholder="투표 제목을 입력해주세요."
                       className="border-border bg-muted/30 h-10 rounded-xl px-4 text-sm"
                       onChange={(event) => setTitle(event.target.value)}
                     />
+                    <span aria-hidden />
                   </div>
 
                   <div className="flex min-h-0 flex-col gap-3">
@@ -738,16 +745,20 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
                         </div>
                       ))}
                     </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="border-brand text-brand hover:bg-brand/10 hover:text-brand h-10 rounded-xl font-bold"
-                      disabled={options.length >= MAX_POLL_OPTION_COUNT}
-                      onClick={handleAddOption}
-                    >
-                      <Plus className="size-3.5" />
-                      항목 추가
-                    </Button>
+                    <div className="grid grid-cols-[4.25rem_minmax(0,1fr)_2.5rem] items-center gap-2">
+                      <span aria-hidden />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="border-brand text-brand hover:bg-brand/10 hover:text-brand h-10 rounded-xl font-bold"
+                        disabled={options.length >= MAX_POLL_OPTION_COUNT}
+                        onClick={handleAddOption}
+                      >
+                        <Plus className="size-3.5" />
+                        항목 추가
+                      </Button>
+                      <span aria-hidden />
+                    </div>
                   </div>
 
                   <div className="mt-auto flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-end">
