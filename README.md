@@ -112,24 +112,24 @@ npm run dev
 
 ## 라우터 구조
 
-| 라우트                                                        | 접근       | 설명                                                       |
-| ------------------------------------------------------------- | ---------- | ---------------------------------------------------------- |
-| `/`                                                           | 공개       | 랜딩 페이지. 라이브 둘러보기, 채팅 시작하기, 로그인 CTA    |
-| `/live`                                                       | 공개       | 라이브 목록. 필터·정렬·사이드바(팔로잉·트렌딩·인기 키워드) |
-| `/live/search?query=`                                         | 공개       | 라이브 검색 결과                                           |
-| `/live/[creatorId]`                                           | 공개       | 라이브 시청 화면                                           |
-| `/live/[creatorId]/chat[/overlayKey]`                         | 공개(읽기) | OBS 채팅 오버레이                                          |
-| `/live/[creatorId]/alerts/donation[/overlayKey]`              | 공개(읽기) | OBS 후원 알림 오버레이                                     |
-| `/chat`                                                       | 보호       | 채팅방 목록                                                |
-| `/chat/room/[roomId]`                                         | 혼합       | 채팅방 상세(비로그인은 공유 preview, 로그인은 상세)        |
-| `/chat/search?query=`                                         | 보호       | 채팅방 검색 결과                                           |
-| `/channel/{live,chat,security,donation,settlement,analytics}` | 보호       | 크리에이터 채널 관리(스튜디오)                             |
-| `/channel/[creatorId]`                                        | 공개       | 공개 채널 홈. 라이브 Hero, 배너, 커뮤니티 미리보기         |
-| `/channel/[creatorId]/community[/[postId]\|/write]`           | 혼합       | 채널 커뮤니티(게시판) 목록·상세·작성                       |
-| `/channel/[creatorId]/setting`                                | 보호       | 채널 공개 프로필·소개·배너 관리(본인만)                    |
-| `/user` → `/user/profile`                                     | 보호       | 프로필 설정                                                |
-| `/user/following`                                             | 보호       | 팔로잉한 채널 목록                                         |
-| `/user/donations`                                             | 보호       | 후원 내역과 포인트 충전                                    |
+| 라우트                                                        | 접근       | 설명                                                      |
+| ------------------------------------------------------------- | ---------- | --------------------------------------------------------- |
+| `/`                                                           | 공개       | 라이브 목록(홈). 필터·정렬·사이드바(팔로잉·트렌딩·키워드) |
+| `/live`                                                       | 공개       | 구 목록 경로. `/`로 redirect                              |
+| `/live/search?query=`                                         | 공개       | 라이브 검색 결과                                          |
+| `/live/[creatorId]`                                           | 공개       | 라이브 시청 화면                                          |
+| `/live/[creatorId]/chat[/overlayKey]`                         | 공개(읽기) | OBS 채팅 오버레이                                         |
+| `/live/[creatorId]/alerts/donation[/overlayKey]`              | 공개(읽기) | OBS 후원 알림 오버레이                                    |
+| `/chat`                                                       | 보호       | 채팅방 목록                                               |
+| `/chat/room/[roomId]`                                         | 혼합       | 채팅방 상세(비로그인은 공유 preview, 로그인은 상세)       |
+| `/chat/search?query=`                                         | 보호       | 채팅방 검색 결과                                          |
+| `/channel/{live,chat,security,donation,settlement,analytics}` | 보호       | 크리에이터 채널 관리(스튜디오)                            |
+| `/channel/[creatorId]`                                        | 공개       | 공개 채널 홈. 라이브 Hero, 배너, 커뮤니티 미리보기        |
+| `/channel/[creatorId]/community[/[postId]\|/write]`           | 혼합       | 채널 커뮤니티(게시판) 목록·상세·작성                      |
+| `/channel/[creatorId]/setting`                                | 보호       | 채널 공개 프로필·소개·배너 관리(본인만)                   |
+| `/user` → `/user/profile`                                     | 보호       | 프로필 설정                                               |
+| `/user/following`                                             | 보호       | 팔로잉한 채널 목록                                        |
+| `/user/donations`                                             | 보호       | 후원 내역과 포인트 충전                                   |
 
 - 보호 라우트는 비로그인 접근 시 `/auth/login?next=<현재경로>`로 이동하고, 로그인 성공 후 원래 경로로 돌아갑니다.
 - `/live`, `/channel/*`, `/user/*`는 사이드바 셸 레이아웃을 사용하며 공용 Footer 대신 사이드바 하단 크레딧을 표시합니다.
@@ -168,6 +168,7 @@ npm run dev
 - 검색은 태그를 정확 일치로 매칭해 GIN 인덱스를 활용하고, 제목·닉네임 검색은 별도 경로로 분리합니다.
 - 시청 화면에서 진행 중인 투표에 참여할 수 있고(`vote_live_poll`, 같은 항목을 다시 누르면 무효표, 다른 항목은 선택 변경), 이번 주 후원 랭킹(`get_live_donation_ranking`)을 후원자 단위 합산으로 표시합니다. 익명 후원은 `donor_id` 해시 기반 동물 의사 닉네임("익명의 너구리")으로 표기해 신원을 노출하지 않습니다.
 - 라이브 채팅 전송은 `send_live_message_v2`로 처리하며, 금칙어 매칭 시 메시지를 어디에도 저장하지 않고(Realtime 전파 0) 작성자 본인에게만 차단 안내를 돌려줍니다.
+- 시청 채팅은 방장(Crown)·후원자(Heart) 역할 마크(brand→live 그라디언트, 시청 채팅과 OBS 오버레이가 공용 컴포넌트 공유)와 닉네임별 해시 컬러를 표시하고, 클린봇(비속어 필터) 토글·첫 진입 필터링 안내·이번 주 후원 랭킹 접기(아코디언) UI를 제공합니다.
 
 ### OBS 오버레이
 
@@ -221,15 +222,18 @@ npm run dev
 
 ### 라우터와 공개 화면
 
-- `/`는 공개 랜딩 페이지이며 `get_landing_snapshot`으로 하이라이트 데이터를 조회합니다.
-- `/`와 `/chat/room/[roomId]`, `/live`, `/live/*`는 비로그인 상태에서도 공개 화면을 렌더링합니다.
+- `/`는 라이브 목록(홈)이며, 구 경로 `/live` 진입은 `/`로 redirect합니다.
+- `/`와 `/chat/room/[roomId]`, `/live/*`, `/channel/[creatorId]/*`는 비로그인 상태에서도 공개 화면을 렌더링합니다.
 
 ### SEO와 공유 미리보기
 
 - production domain은 `https://pixel-play.studio`를 metadata base URL로 사용합니다.
-- 메인 페이지와 채팅방 상세 페이지는 Open Graph와 Twitter large image metadata를 제공합니다.
-- 공유 썸네일은 `public/og-home.webp`, `public/og-chat-room.webp` 정적 에셋을 사용합니다.
+- `app/robots.ts`가 크롤링 규칙을 제공하며 개인·운영 경로(`/auth`, `/user`, 스튜디오, 채팅 팝업·OBS 오버레이)는 disallow하고, `app/sitemap.ts`가 핵심 공개 경로 사이트맵을 제공합니다. 인증 프록시(`src/proxy.ts`) matcher에서 두 파일을 제외해 크롤러가 로그인으로 리다이렉트되지 않게 합니다.
+- 라이브 시청(`/live/[creatorId]`)과 공개 채널은 크리에이터 닉네임 기반 title·description을 제공합니다. 비동기 `generateMetadata`는 기본적으로 body로 스트리밍되므로, 시청·채널 메타데이터는 layout에서 같은 데이터를 await하는 blocking 패턴으로 head에 고정합니다(`next.config.ts`의 `htmlLimitedBots`에 Lighthouse 포함).
+- 인증·유저 설정·스튜디오 레이아웃은 `robots: { index: false }`로 색인에서 제외합니다.
+- 메인 페이지와 채팅방 상세 페이지는 Open Graph와 Twitter large image metadata를 제공합니다. 공유 썸네일은 `public/og-home.webp`, `public/og-chat-room.webp` 정적 에셋을 사용합니다.
 - 비로그인 채팅방 preview는 `get_public_chat_room_metadata` RPC로 title과 description만 조회합니다. 메시지, 멤버, unread, presence는 공개하지 않습니다.
+- Lighthouse(데스크톱, 주요 4개 페이지) 접근성 100 · SEO 100 · 베스트 프랙티스 96~100 · CLS 0.01 수준을 유지합니다.
 
 ### 채팅방 목록
 
