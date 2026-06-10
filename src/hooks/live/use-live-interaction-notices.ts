@@ -6,6 +6,10 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { QUERY_KEYS } from "@/constants/common/query-keys";
 import { readJsonObject, readNumber, readString } from "@/utils/common/json";
+import {
+  mergeDrawParticipationIntoNotices,
+  type LiveDrawParticipationRow,
+} from "@/utils/live/live-draw-participation";
 import type { Json } from "@/types/database.types";
 import type {
   LiveInteractionNotice,
@@ -18,13 +22,6 @@ interface LiveInteractionNoticeRow {
   created_at: string;
   id: string;
   metadata: Json;
-}
-
-interface LiveDrawParticipationRow {
-  created_at: string;
-  metadata: Json;
-  sender: { nickname: string | null } | null;
-  sender_id: string | null;
 }
 
 const LIVE_INTERACTION_NOTICE_LIMIT = 20;
@@ -143,55 +140,7 @@ export function useLiveInteractionNotices(
         offset += LIVE_DRAW_PARTICIPATION_PAGE_SIZE;
       }
 
-      const joinedDrawNoticeIds = new Set(
-        participationRows.flatMap((row) => {
-          const metadata = readJsonObject(row.metadata);
-          const drawNoticeId = readString(metadata.drawNoticeId);
-
-          return viewerId && row.sender_id === viewerId && drawNoticeId ? [drawNoticeId] : [];
-        }),
-      );
-      const participantNamesByDrawNoticeId = new Map<string, string[]>();
-      const participantUserIdsByDrawNoticeId = new Map<string, Set<string>>();
-
-      participationRows.forEach((row) => {
-        if (!row.sender_id) return;
-
-        const metadata = readJsonObject(row.metadata);
-        const drawNoticeId = readString(metadata.drawNoticeId);
-
-        if (!drawNoticeId) return;
-
-        const participantUserIds =
-          participantUserIdsByDrawNoticeId.get(drawNoticeId) ?? new Set<string>();
-
-        if (participantUserIds.has(row.sender_id)) {
-          return;
-        }
-
-        participantUserIds.add(row.sender_id);
-        participantUserIdsByDrawNoticeId.set(drawNoticeId, participantUserIds);
-
-        const participantNames = participantNamesByDrawNoticeId.get(drawNoticeId) ?? [];
-        participantNames.push(
-          row.sender?.nickname ?? readString(metadata.senderNickname) ?? "시청자",
-        );
-        participantNamesByDrawNoticeId.set(drawNoticeId, participantNames);
-      });
-
-      return notices.map((notice) =>
-        notice.type === "draw"
-          ? {
-              ...notice,
-              hasJoined: joinedDrawNoticeIds.has(notice.drawNoticeId ?? notice.id),
-              participantCount:
-                participantNamesByDrawNoticeId.get(notice.drawNoticeId ?? notice.id)?.length ??
-                notice.participantCount,
-              participantNames:
-                participantNamesByDrawNoticeId.get(notice.drawNoticeId ?? notice.id) ?? [],
-            }
-          : notice,
-      );
+      return mergeDrawParticipationIntoNotices(notices, participationRows, viewerId);
     },
   });
 
