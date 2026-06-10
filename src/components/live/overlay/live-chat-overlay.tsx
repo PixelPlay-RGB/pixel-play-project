@@ -73,9 +73,7 @@ function DonationMessageItem({ message }: { message: LiveChatOverlayMessage }) {
       <HandCoins className="text-live mr-1.5 inline size-[1em] align-[-0.12em]" aria-hidden />
       <span className="text-live mr-1.5 font-medium">{message.author}</span>
       {typeof message.amount === "number" && (
-        <span className="text-live mr-1.5 font-medium">
-          {formatNumber(message.amount)}P
-        </span>
+        <span className="text-live mr-1.5 font-medium">{formatNumber(message.amount)}P</span>
       )}
       <span className="mr-1.5 text-white/70">후원</span>
       {message.content && <span className="text-white">{message.content}</span>}

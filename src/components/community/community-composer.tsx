@@ -201,8 +201,7 @@ export default function CommunityComposer({
               content.length > COMMUNITY_POST_CONTENT_MAX && "text-destructive",
             )}
           >
-            {formatNumber(content.length)} /{" "}
-            {formatNumber(COMMUNITY_POST_CONTENT_MAX)}
+            {formatNumber(content.length)} / {formatNumber(COMMUNITY_POST_CONTENT_MAX)}
           </span>
 
           <Button

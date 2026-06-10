@@ -26,7 +26,8 @@ export default function AuthListener() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
-      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth.all });    });
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth.all });
+    });
 
     // 서버에서 세션 실제 유효성 검증 (스테일 JWT 방어)
     void supabase.auth.getUser().then(async ({ data, error }) => {
@@ -41,7 +42,8 @@ export default function AuthListener() {
       } else {
         setUser(data.user ?? null);
       }
-      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth.all });    });
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth.all });
+    });
 
     return () => {
       subscription.unsubscribe();

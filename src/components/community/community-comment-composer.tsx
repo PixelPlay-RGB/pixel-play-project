@@ -116,8 +116,7 @@ export default function CommunityCommentComposer({
               overLimit && "text-destructive",
             )}
           >
-            {formatNumber(content.length)} /{" "}
-            {formatNumber(COMMUNITY_COMMENT_CONTENT_MAX)}
+            {formatNumber(content.length)} / {formatNumber(COMMUNITY_COMMENT_CONTENT_MAX)}
           </span>
           <Button
             type="submit"

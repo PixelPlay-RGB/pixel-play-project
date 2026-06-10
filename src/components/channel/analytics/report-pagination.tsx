@@ -34,7 +34,7 @@ export function ReportPagination({ currentPage, totalPages }: Props) {
               isActive
               aria-disabled
               tabIndex={-1}
-              className="bg-brand shadow-brand/20 pointer-events-none rounded-xl font-bold text-white shadow-sm dark:bg-brand! dark:text-white!"
+              className="bg-brand shadow-brand/20 dark:bg-brand! pointer-events-none rounded-xl font-bold text-white shadow-sm dark:text-white!"
             >
               1
             </PaginationLink>

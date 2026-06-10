@@ -17,7 +17,9 @@ function extractWalletBalance(data: unknown): number {
   return typeof balance === "number" ? balance : 0;
 }
 
-export async function getUserWalletBalanceAction(): Promise<AppActionResult<{ balanceAmount: number }>> {
+export async function getUserWalletBalanceAction(): Promise<
+  AppActionResult<{ balanceAmount: number }>
+> {
   const actor = await getAuthenticatedActorId({
     logLabel: "지갑 잔액 조회 중 인증 사용자 조회 실패",
   });

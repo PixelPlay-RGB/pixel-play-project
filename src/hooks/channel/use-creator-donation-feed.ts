@@ -5,10 +5,7 @@ import { useEffect, useState } from "react";
 
 import { ANALYTICS_DONATION_LOG_LIMIT } from "@/constants/channel/analytics";
 import { createClient } from "@/lib/supabase/client";
-import type {
-  AnalyticsConnectionState,
-  AnalyticsLogEvent,
-} from "@/types/channel/analytics";
+import type { AnalyticsConnectionState, AnalyticsLogEvent } from "@/types/channel/analytics";
 import { normalizeDonationRow } from "@/utils/channel/channel-analytics-normalize";
 import { startReconnectingChannel } from "@/utils/channel/realtime-reconnect";
 

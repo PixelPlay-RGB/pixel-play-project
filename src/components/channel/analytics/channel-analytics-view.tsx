@@ -93,7 +93,10 @@ export function ChannelAnalyticsView({ snapshot }: Props) {
 
   const avgDonation =
     stats.donationCount > 0 ? Math.round(stats.donationAmountTotal / stats.donationCount) : 0;
-  const participationRate = deriveChatParticipationRate(participants.uniqueCount, stats.currentViewers);
+  const participationRate = deriveChatParticipationRate(
+    participants.uniqueCount,
+    stats.currentViewers,
+  );
 
   return (
     <SettingsPage
