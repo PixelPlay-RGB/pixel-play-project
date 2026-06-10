@@ -78,6 +78,7 @@ const DRAW_REEL_DURATION_MS = 2200;
 const ROULETTE_SPIN_DURATION_SECONDS = 4.2;
 const ROULETTE_SPIN_TURNS = 8;
 const ROULETTE_POINTER_DEGREE = 45;
+const ROULETTE_RECOIL_DEGREE = 46;
 
 const INTERACTION_TOOLS = [
   { icon: Vote, label: "투표", value: "poll" },
@@ -220,6 +221,20 @@ function getRouletteTargetRotation(currentRotation: number, targetDegree: number
   }
 
   return nextRotation;
+}
+
+function getRouletteTargetDegree(segment: RouletteSegment) {
+  const segmentDegree = ((segment.endPercent - segment.startPercent) / 100) * 360;
+  const safeOffsetLimit = Math.max(segmentDegree * 0.34, 0);
+
+  if (safeOffsetLimit <= 0) {
+    return segment.centerDegree;
+  }
+
+  const offsetDirection = Math.random() < 0.5 ? -1 : 1;
+  const offsetAmount = safeOffsetLimit * (0.28 + Math.random() * 0.52);
+
+  return segment.centerDegree + offsetDirection * offsetAmount;
 }
 
 export default function ChannelLivePollPanel({ broadcastId, creatorId, messages }: Props) {
@@ -735,9 +750,10 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
 
     if (!winnerSegment) return;
 
-    const nextRotation = getRouletteTargetRotation(rouletteRotation, winnerSegment.centerDegree);
-    const recoilRotation = rouletteRotation - 18;
-    const fastRotation = Math.max(rouletteRotation + 720, nextRotation - 720);
+    const targetDegree = getRouletteTargetDegree(winnerSegment);
+    const nextRotation = getRouletteTargetRotation(rouletteRotation, targetDegree);
+    const recoilRotation = rouletteRotation - ROULETTE_RECOIL_DEGREE;
+    const fastRotation = Math.max(rouletteRotation + 900, nextRotation - 780);
 
     setPendingRouletteResult(winnerSegment.item.label);
     setRouletteRotationKeyframes([rouletteRotation, recoilRotation, fastRotation, nextRotation]);
@@ -777,13 +793,13 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
   return (
     <section className="border-border bg-card flex h-160 min-h-0 min-w-0 flex-col gap-4 rounded-xl border p-4 shadow-sm">
       {selectedTool === null ? (
-        <div className="grid flex-1 gap-3 sm:grid-cols-3">
+        <div className="grid content-start gap-3 sm:grid-cols-3">
           {INTERACTION_TOOLS.map(({ icon: Icon, label, value }) => (
             <button
               key={value}
               type="button"
               className={cn(
-                "border-border bg-background text-foreground flex min-h-28 flex-col items-center justify-center gap-3 rounded-xl border px-4 py-5 text-sm font-bold shadow-sm transition-colors",
+                "border-border bg-background text-foreground flex h-44 min-h-0 flex-col items-center justify-center gap-3 rounded-xl border px-4 py-5 text-sm font-bold shadow-sm transition-colors",
                 "hover:border-brand/40 hover:bg-brand/5 hover:text-brand",
               )}
               onClick={() => handleSelectTool(value)}
@@ -879,7 +895,7 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
               ) : (
                 <form
                   onSubmit={handleCreatePoll}
-                  className="border-border flex flex-1 flex-col gap-4 border-t pt-4"
+                  className="border-border flex min-h-0 flex-1 flex-col gap-4 border-t pt-4"
                 >
                   <div className="grid grid-cols-[4.25rem_minmax(0,1fr)_2.5rem] items-center gap-2">
                     <label
@@ -899,8 +915,8 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
                     <span aria-hidden />
                   </div>
 
-                  <div className="flex min-h-0 flex-col">
-                    <div className="flex max-h-64 flex-col gap-2 overflow-y-auto pr-1">
+                  <div className="flex min-h-0 flex-1 flex-col">
+                    <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1">
                       {options.map((option, index) => (
                         <div
                           key={index}
@@ -932,7 +948,7 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
                     </div>
                   </div>
 
-                  <div className="mt-auto grid gap-3 pt-2 sm:grid-cols-[minmax(0,1fr)_auto_auto_auto] sm:items-center">
+                  <div className="grid gap-3 pt-2 sm:grid-cols-[minmax(0,1fr)_auto_auto_auto] sm:items-center">
                     <Button
                       type="button"
                       variant="outline"
@@ -1136,7 +1152,7 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
             <div className="flex min-h-0 flex-1 flex-col gap-3">
               {!isRouletteStarted ? (
                 <>
-                  <div className="flex max-h-80 flex-col gap-2 overflow-y-auto pr-1">
+                  <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1">
                     {rouletteItems.map((item, index) => (
                       <div
                         key={index}
@@ -1194,7 +1210,10 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
               ) : (
                 <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-6">
                   <div className="relative flex size-72 items-center justify-center">
-                    <div className="bg-destructive absolute top-6 right-10 z-20 h-14 w-9 rotate-45 rounded-full shadow-lg" />
+                    <div
+                      className="bg-destructive absolute top-7 right-9 z-20 h-14 w-10 rotate-45 shadow-lg"
+                      style={{ clipPath: "polygon(50% 0, 100% 100%, 0 100%)" }}
+                    />
                     <motion.div
                       className="border-background relative size-64 overflow-hidden rounded-full border-8 shadow-lg"
                       style={rouletteSegmentStyle}
