@@ -2,7 +2,6 @@
 // 방송 운영 화면에서 실제 라이브 시청 채팅과 같은 외형의 채팅 패널을 렌더링합니다.
 
 import type { ChannelLiveChatMessage } from "@/actions/channel/live";
-import type { ChannelLiveState } from "@/components/channel/live/channel-live-operation-page";
 import { LiveChatParticipationNotice } from "@/components/live/chat/live-chat-participation-notice";
 import { LiveChatMessageList } from "@/components/live/chat/live-chat-message-list";
 import { LiveChatInputBar } from "@/components/live/view/live-chat-input-bar";
@@ -21,7 +20,6 @@ interface Props {
   broadcastId?: string | null;
   creatorId?: string;
   chatRuleText?: string;
-  liveState: ChannelLiveState;
   onMessagesChange?: (messages: ChannelLiveChatMessage[]) => void;
 }
 
@@ -65,7 +63,6 @@ export default function ChannelLiveChatPanel({
   broadcastId,
   creatorId,
   chatRuleText,
-  liveState,
   onMessagesChange,
 }: Props) {
   const [cleanbot, setCleanbot] = useState(true);

@@ -192,7 +192,6 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
             broadcastId={broadcastId}
             creatorId={creatorId}
             chatRuleText={chatRuleText}
-            liveState={liveState}
           />
         </div>
 
