@@ -251,7 +251,10 @@ export function WalletChargeCard({ customerKey, variant = "card" }: Props) {
                 type="button"
                 variant={isSelected ? "default" : "outline"}
                 aria-pressed={isSelected}
-                className={cn("h-10", isSelected && "bg-brand hover:bg-brand/90")}
+                className={cn(
+                  "h-10",
+                  isSelected && "bg-brand hover:bg-brand/90 text-brand-foreground",
+                )}
                 onClick={() => setAmount(String(presetAmount))}
               >
                 {formatPoint(presetAmount)}

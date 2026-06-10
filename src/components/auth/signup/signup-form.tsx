@@ -138,7 +138,7 @@ export default function SignupForm({ next }: Props) {
                 variant="outline"
                 onClick={handleSendOtp}
                 disabled={isBusy || emailVerified || !!errors.email || !dirtyFields.email}
-                className="border-brand/40 text-brand hover:bg-brand cursor-pointer hover:text-white"
+                className="border-brand/40 text-brand hover:bg-brand hover:text-brand-foreground cursor-pointer"
               >
                 {isSendingOtp ? (
                   <Spinner />
@@ -175,7 +175,7 @@ export default function SignupForm({ next }: Props) {
                   variant="outline"
                   onClick={handleVerifyOtp}
                   disabled={isBusy || otpCode.length < 6}
-                  className="border-brand/40 text-brand hover:bg-brand hover:cursor-pointer hover:text-white"
+                  className="border-brand/40 text-brand hover:bg-brand hover:text-brand-foreground hover:cursor-pointer"
                 >
                   {isVerifyingOtp ? <Spinner /> : "확인"}
                 </InputGroupButton>
@@ -261,7 +261,7 @@ export default function SignupForm({ next }: Props) {
                 variant="outline"
                 onClick={handleCheckNickname}
                 disabled={isBusy || !!errors.nickname || !dirtyFields.nickname}
-                className="border-brand/40 text-brand hover:bg-brand cursor-pointer hover:text-white"
+                className="border-brand/40 text-brand hover:bg-brand hover:text-brand-foreground cursor-pointer"
               >
                 {isCheckingNickname ? (
                   <Spinner />
@@ -348,7 +348,7 @@ export default function SignupForm({ next }: Props) {
         type="submit"
         disabled={!canSubmit}
         className={cn(
-          "bg-brand hover:bg-brand/85 w-full cursor-pointer py-5 font-bold tracking-widest text-white uppercase",
+          "bg-brand hover:bg-brand/85 text-brand-foreground w-full cursor-pointer py-5 font-bold tracking-widest uppercase",
           "transition-all active:scale-95 disabled:opacity-40",
         )}
       >

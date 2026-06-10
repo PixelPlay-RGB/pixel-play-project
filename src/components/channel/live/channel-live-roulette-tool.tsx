@@ -84,7 +84,7 @@ export function ChannelLiveRouletteToolView({ tool }: Props) {
             </Button>
             <Button
               type="button"
-              className="bg-brand hover:bg-brand/90 h-14 rounded-lg px-10 text-base font-black text-white"
+              className="bg-brand hover:bg-brand/90 text-brand-foreground h-14 rounded-lg px-10 text-base font-black"
               disabled={!canStartRoulette}
               onClick={handleStartRoulette}
             >
@@ -152,7 +152,7 @@ export function ChannelLiveRouletteToolView({ tool }: Props) {
             </Button>
             <Button
               type="button"
-              className="bg-brand hover:bg-brand/90 h-12 rounded-lg px-8 text-base font-black text-white"
+              className="bg-brand hover:bg-brand/90 text-brand-foreground h-12 rounded-lg px-8 text-base font-black"
               disabled={!canStartRoulette || isRouletteSpinning}
               onClick={handleSpinRoulette}
             >

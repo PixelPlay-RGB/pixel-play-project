@@ -56,7 +56,7 @@ export default function PasswordVerifyForm({ onVerified }: Props) {
       <Button
         type="submit"
         disabled={isSubmitting}
-        className="bg-brand shadow-brand/20 hover:bg-brand/90 h-11 w-full rounded-xl font-bold text-white shadow-sm"
+        className="bg-brand shadow-brand/20 hover:bg-brand/90 text-brand-foreground h-11 w-full rounded-xl font-bold shadow-sm"
       >
         {isSubmitting ? <Spinner /> : "확인"}
       </Button>

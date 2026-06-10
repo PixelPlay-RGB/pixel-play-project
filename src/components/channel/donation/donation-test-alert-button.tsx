@@ -81,7 +81,7 @@ export default function DonationTestAlertButton({
       title={title}
       className={cn(
         "h-10 rounded-xl px-5 font-bold",
-        "bg-brand hover:bg-brand/90 shadow-brand/20 text-white shadow-sm",
+        "bg-brand hover:bg-brand/90 shadow-brand/20 text-brand-foreground shadow-sm",
         className,
       )}
     >

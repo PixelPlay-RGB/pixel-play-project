@@ -71,7 +71,7 @@ export function StickySaveBar({
                 onClick={onSave}
                 disabled={isSaving || !canSave}
                 className={cn(
-                  "bg-brand hover:bg-brand/90 rounded-xl px-5 font-bold text-white",
+                  "bg-brand hover:bg-brand/90 text-brand-foreground rounded-xl px-5 font-bold",
                   "shadow-brand/20 shadow-sm transition-all active:scale-95",
                 )}
               >

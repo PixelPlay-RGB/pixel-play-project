@@ -25,11 +25,12 @@ import { cn } from "@/lib/utils";
 import { formatCount } from "@/utils/live/live-chat";
 import type { LiveInteractionNotice, LivePoll, LivePollOption } from "@/types/live/live";
 
-// 후원(코랄 채움) 옆에 나란히 놓이는 투표 트리거는 라이브 코랄 아웃라인으로 페어를 맞춘다.
+// 후원(코랄 채움) 옆에 나란히 놓이는 투표 트리거는 브랜드 민트 아웃라인으로 역할을 구분한다.
+// (팝오버 내부 투표·추첨 UI가 브랜드 톤이라 트리거와도 일관된다.)
 const VOTE_TRIGGER_CLASS = cn(
   "h-8 flex-1 text-xs",
-  "border-live/30 bg-live/10 text-live",
-  "hover:border-live/50 hover:bg-live/18 dark:border-live/30 dark:bg-live/15 dark:text-live",
+  "border-brand/30 bg-brand/10 text-brand",
+  "hover:border-brand/50 hover:bg-brand/18 dark:border-brand/30 dark:bg-brand/15 dark:text-brand",
 );
 
 interface Props {

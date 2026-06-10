@@ -119,15 +119,15 @@
 
 .dark {
   --brand: #46c6a9;
-  --brand-foreground: #000000;
+  --brand-foreground: #ffffff;
   --live: #ff6057;
-  --live-foreground: #000000;
+  --live-foreground: #ffffff;
   --success: #34d399;
   --success-foreground: #000000;
   --warning: #fbbf24;
   --warning-foreground: #000000;
   --error: #f87171;
-  --error-foreground: #000000;
+  --error-foreground: #ffffff;
   --info: #60a5fa;
   --info-foreground: #000000;
 
@@ -319,19 +319,19 @@
   }
 
   .route-accent-hover:hover {
-    border-color: rgb(70 198 169 / 34%) !important;
-    background-color: rgb(70 198 169 / 10%) !important;
-    color: #159a80 !important;
+    border-color: color-mix(in srgb, var(--brand) 34%, transparent) !important;
+    background-color: color-mix(in srgb, var(--brand) 10%, transparent) !important;
+    color: color-mix(in srgb, var(--brand) 72%, black) !important;
   }
 
   .dark .route-accent-hover:hover {
-    border-color: rgb(70 198 169 / 34%) !important;
-    background-color: rgb(70 198 169 / 18%) !important;
+    border-color: color-mix(in srgb, var(--brand) 34%, transparent) !important;
+    background-color: color-mix(in srgb, var(--brand) 18%, transparent) !important;
     color: var(--brand) !important;
   }
 
   .route-accent-text-hover:hover {
-    color: #159a80;
+    color: color-mix(in srgb, var(--brand) 72%, black);
   }
 
   .route-accent-outline-button {
@@ -341,7 +341,7 @@
 
   .route-accent-outline-button:hover {
     background-color: var(--route-accent);
-    color: #ffffff;
+    color: var(--brand-foreground);
   }
 
   .route-accent-surface {

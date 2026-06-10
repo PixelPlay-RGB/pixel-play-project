@@ -59,7 +59,7 @@ export function ChannelLiveDrawToolView({ broadcastId, tool }: Props) {
         </Button>
         <Button
           type="button"
-          className="bg-brand hover:bg-brand/90 h-16 rounded-lg px-8 text-base font-black text-white"
+          className="bg-brand hover:bg-brand/90 text-brand-foreground h-16 rounded-lg px-8 text-base font-black"
           disabled={!canPickDrawWinner || isDrawParticipantLoading}
           onClick={handlePickDrawWinner}
         >
@@ -75,7 +75,7 @@ export function ChannelLiveDrawToolView({ broadcastId, tool }: Props) {
           className={cn(
             "h-10 rounded-xl px-3 text-sm font-black",
             isDrawFollowerOnly
-              ? "bg-brand hover:bg-brand/90 text-white hover:text-white"
+              ? "bg-brand hover:bg-brand/90 text-brand-foreground hover:text-brand-foreground"
               : "text-muted-foreground hover:text-foreground",
           )}
           disabled={isDrawing || isDrawParticipantLoading}
@@ -91,7 +91,7 @@ export function ChannelLiveDrawToolView({ broadcastId, tool }: Props) {
           className={cn(
             "h-10 rounded-xl px-3 text-sm font-black",
             isDrawExcludePreviousWinners
-              ? "bg-brand hover:bg-brand/90 text-white hover:text-white"
+              ? "bg-brand hover:bg-brand/90 text-brand-foreground hover:text-brand-foreground"
               : "text-muted-foreground hover:text-foreground",
           )}
           disabled={isDrawing || isDrawParticipantLoading}
@@ -107,7 +107,7 @@ export function ChannelLiveDrawToolView({ broadcastId, tool }: Props) {
           className={cn(
             "h-10 rounded-xl px-3 text-sm font-black",
             isDrawTimerEnabled
-              ? "bg-brand hover:bg-brand/90 text-white hover:text-white"
+              ? "bg-brand hover:bg-brand/90 text-brand-foreground hover:text-brand-foreground"
               : "text-muted-foreground hover:text-foreground",
           )}
           disabled={isDrawing || isDrawParticipantLoading}

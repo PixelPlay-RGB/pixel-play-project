@@ -73,7 +73,7 @@ export function LiveChatPopout({ creatorId }: Props) {
   return (
     <div className="live-overlay-root live-popout-root bg-background flex h-dvh min-h-0 w-full flex-col overflow-hidden">
       <div className="border-border flex h-11 shrink-0 items-center gap-2 border-b px-3">
-        <span className="bg-live flex items-center gap-1 rounded-full px-1.5 py-0.5 text-xs font-bold text-white">
+        <span className="bg-live text-live-foreground flex items-center gap-1 rounded-full px-1.5 py-0.5 text-xs font-bold">
           <Radio className="size-2.5" />
           {LIVE_LABEL.live}
         </span>

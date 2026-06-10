@@ -133,7 +133,7 @@ export default function ChannelLiveSettingsPanel({
             />
             <Button
               type="button"
-              className="bg-brand hover:bg-brand/90 h-10 shrink-0 px-4 text-white"
+              className="bg-brand hover:bg-brand/90 text-brand-foreground h-10 shrink-0 px-4"
               onClick={onAddTag}
             >
               <Tag className="size-4" />
@@ -284,7 +284,7 @@ export default function ChannelLiveSettingsPanel({
           ) : (
             <Button
               type="button"
-              className="bg-brand hover:bg-brand/90 shadow-brand/20 h-11 rounded-xl px-7 font-bold text-white shadow-sm transition-all active:scale-95"
+              className="bg-live hover:bg-live/90 shadow-live/20 text-live-foreground h-11 rounded-xl px-7 font-bold shadow-sm transition-all active:scale-95"
               onClick={onStartBroadcast}
               disabled={isBroadcastActionPending}
             >

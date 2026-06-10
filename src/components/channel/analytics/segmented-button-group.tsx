@@ -76,7 +76,7 @@ export function SegmentedButtonGroup<T extends string>({
             className={cn(
               "text-xs font-bold transition-colors",
               isActive
-                ? "border-brand bg-brand shadow-brand/25 hover:bg-brand/90 dark:border-brand! dark:bg-brand! dark:hover:bg-brand/90! text-white shadow-sm hover:text-white dark:text-white!"
+                ? "border-brand bg-brand shadow-brand/25 hover:bg-brand/90 dark:border-brand! dark:bg-brand! dark:hover:bg-brand/90! text-brand-foreground hover:text-brand-foreground dark:text-brand-foreground! shadow-sm"
                 : "hover:border-brand/40 hover:bg-brand/5",
             )}
           >

@@ -124,7 +124,7 @@ export function ChannelSettingContent({ profile, banners }: Props) {
             disabled={!canSubmit}
             className={cn(
               "h-11 shrink-0 rounded-xl px-7 font-bold",
-              "bg-brand hover:bg-brand/90 text-white",
+              "bg-brand hover:bg-brand/90 text-brand-foreground",
               "shadow-brand/20 shadow-sm transition-all active:scale-95",
             )}
           >

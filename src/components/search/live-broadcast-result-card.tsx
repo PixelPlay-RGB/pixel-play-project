@@ -67,7 +67,7 @@ export default function LiveBroadcastResultCard({ result }: Props) {
         className={cn(
           "group/thumbnail relative flex min-h-34 items-center justify-center overflow-hidden sm:min-h-32",
           "sm:w-44 sm:shrink-0",
-          "bg-slate-950 text-white",
+          "bg-black text-white",
           "focus-visible:ring-ring outline-none focus-visible:ring-3",
         )}
         aria-label={`${result.title ?? result.creator_nickname} 라이브 보기`}
@@ -113,7 +113,7 @@ export default function LiveBroadcastResultCard({ result }: Props) {
         <span
           className={cn(
             "bg-live absolute top-2 left-2 inline-flex items-center gap-1.5",
-            "rounded-md px-2 py-0.5 text-xs font-black text-white shadow-sm",
+            "text-live-foreground rounded-md px-2 py-0.5 text-xs font-black shadow-sm",
           )}
         >
           <span className={cn("h-1.5 w-1.5 animate-pulse", "rounded-full bg-white")} />

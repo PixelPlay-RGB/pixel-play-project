@@ -183,7 +183,7 @@ export function ChannelLiveVoteToolView({ isPollLoading, tool }: Props) {
             <Button
               type="submit"
               disabled={!canCreatePoll || isPollActionPending}
-              className="bg-brand hover:bg-brand/90 h-11 rounded-xl px-7 font-bold text-white shadow-sm transition-all active:scale-95"
+              className="bg-brand hover:bg-brand/90 text-brand-foreground h-11 rounded-xl px-7 font-bold shadow-sm transition-all active:scale-95"
             >
               {isPollActionPending ? "시작 중" : "투표 시작"}
             </Button>

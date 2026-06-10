@@ -101,7 +101,7 @@ function MessagePrefix({ role }: { role?: LiveChatOverlayMessage["role"] }) {
       <span
         className={cn(
           "mt-0.5 inline-flex size-8 shrink-0 items-center justify-center rounded-md",
-          "bg-live/80 ring-live/40 text-white shadow-md ring-1",
+          "bg-live/80 ring-live/40 text-live-foreground shadow-md ring-1",
         )}
         aria-label="후원자"
         title="후원자"
