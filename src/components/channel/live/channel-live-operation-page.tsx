@@ -24,7 +24,7 @@ import { cn } from "@/lib/utils";
 import type { ChannelLiveStreamStatusResponse } from "@/types/channel/channel-live-stream";
 import { getAppMessage } from "@/utils/common/app-message";
 import { toastAppError, toastAppSuccess } from "@/utils/common/toast-message";
-import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 
 export type ChannelLiveVisibility = "public" | "private" | "unlisted";
 export type ChannelLiveChatScope = "authenticated" | "follower" | "manager";
@@ -42,6 +42,7 @@ interface Props {
 
 const DEFAULT_TITLE = "";
 const DEFAULT_TAGS: string[] = [];
+const BROADCAST_OFFLINE_AUTO_END_TIMEOUT_MS = 30 * 1000;
 
 interface ChannelLiveSavedSettingsSnapshot {
   alertSoundEnabled: boolean;
@@ -197,6 +198,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
   const [isBroadcastActionPending, startBroadcastTransition] = useTransition();
   const [isSettingsActionPending, startSettingsTransition] = useTransition();
   const [isChatPausePending, startChatPauseTransition] = useTransition();
+  const offlineAutoEndTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const liveState: ChannelLiveState = {
     isBroadcasting,
@@ -251,6 +253,8 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
     ttsRate,
   ]);
   const isStreamOnline = streamStatus?.state === "online";
+  const shouldAutoEndOfflineBroadcast =
+    isBroadcasting && Boolean(broadcastId) && Boolean(streamStatus) && !isStreamOnline;
   const shouldCaptureAutoThumbnail = !thumbnailFile && !thumbnailPreviewUrl.trim();
   const statusMetricsBroadcast = broadcastId
     ? {
@@ -282,6 +286,13 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
     },
     [thumbnailFile, thumbnailPreviewUrl],
   );
+
+  const clearOfflineAutoEndTimer = useCallback(() => {
+    if (!offlineAutoEndTimerRef.current) return;
+
+    clearTimeout(offlineAutoEndTimerRef.current);
+    offlineAutoEndTimerRef.current = null;
+  }, []);
 
   useEffect(() => {
     if (!thumbnailPreviewUrl.startsWith("blob:")) return;
@@ -356,7 +367,8 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
     });
   };
 
-  const handleEndBroadcast = () => {
+  const handleEndBroadcast = useCallback(() => {
+    clearOfflineAutoEndTimer();
     setBroadcastActionError(null);
     startBroadcastTransition(async () => {
       if (broadcastId) {
@@ -375,7 +387,30 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
       setIsBroadcasting(false);
       setHasEnded(true);
     });
-  };
+  }, [broadcastId, clearOfflineAutoEndTimer, startBroadcastTransition]);
+
+  useEffect(() => {
+    if (!shouldAutoEndOfflineBroadcast) {
+      clearOfflineAutoEndTimer();
+      return;
+    }
+
+    if (isBroadcastActionPending || offlineAutoEndTimerRef.current) {
+      return;
+    }
+
+    offlineAutoEndTimerRef.current = setTimeout(() => {
+      offlineAutoEndTimerRef.current = null;
+      handleEndBroadcast();
+    }, BROADCAST_OFFLINE_AUTO_END_TIMEOUT_MS);
+
+    return clearOfflineAutoEndTimer;
+  }, [
+    clearOfflineAutoEndTimer,
+    handleEndBroadcast,
+    isBroadcastActionPending,
+    shouldAutoEndOfflineBroadcast,
+  ]);
 
   const handleAddTag = () => {
     const nextTag = tagInput.trim();
@@ -547,7 +582,6 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
               secondaryPanel={
                 <ChannelLiveStreamStatusPanel
                   activeBroadcastStartedAt={broadcastStartedAt}
-                  liveState={liveState}
                   onStatusChange={handleStreamStatusChange}
                   shouldCaptureAutoThumbnail={shouldCaptureAutoThumbnail}
                   streamPath={streamPath}
