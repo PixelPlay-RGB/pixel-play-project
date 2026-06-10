@@ -783,19 +783,19 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
                     {pollResults.map((result, index) => (
                       <div
                         key={`${result.option}-${index}`}
-                        className="border-border bg-background overflow-hidden rounded-xl border"
+                        className="grid grid-cols-[5.5rem_minmax(0,1fr)] items-center gap-3"
                       >
-                        <div className="flex items-center justify-between gap-2 px-3 pt-2">
-                          <span className="text-sm font-semibold">{result.option}</span>
-                          <span className="text-muted-foreground text-xs font-bold">
-                            {result.count}표 · {result.percent}%
-                          </span>
-                        </div>
-                        <div className="bg-muted mx-3 mt-2 mb-3 h-2 overflow-hidden rounded-full">
+                        <span className="text-foreground truncate text-sm font-black">
+                          {result.option}
+                        </span>
+                        <div className="bg-muted relative h-11 overflow-hidden rounded-xl">
                           <div
-                            className="bg-brand h-full rounded-full transition-all"
+                            className="bg-brand absolute inset-y-0 left-0 rounded-xl transition-all"
                             style={{ width: `${result.percent}%` }}
                           />
+                          <span className="text-foreground relative z-10 flex h-full items-center justify-end px-3 text-xs font-black tabular-nums">
+                            {result.count}표 · {result.percent}%
+                          </span>
                         </div>
                       </div>
                     ))}
