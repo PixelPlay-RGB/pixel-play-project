@@ -3,6 +3,7 @@
 
 import type { ChannelLiveStudioSnapshot } from "@/actions/channel/live";
 import ChannelLiveChatPanel from "@/components/channel/live/channel-live-chat-panel";
+import { ChannelLiveCollapsibleSection } from "@/components/channel/live/channel-live-collapsible-section";
 import ChannelLivePollPanel from "@/components/channel/live/channel-live-poll-panel";
 import ChannelLivePreviewPanel from "@/components/channel/live/channel-live-preview-panel";
 import ChannelLiveQuickSettingsPanel from "@/components/channel/live/channel-live-quick-settings-panel";
@@ -105,10 +106,11 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
     : null;
 
   return (
-    <div className="flex flex-col gap-4 xl:h-full xl:min-h-0 xl:overflow-hidden">
-      <div className="grid gap-4 xl:h-full xl:min-h-0 xl:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)_minmax(16rem,0.85fr)] xl:overflow-hidden">
-        <div className="flex min-w-0 flex-col gap-4 xl:h-full xl:max-h-full xl:min-h-0 xl:overflow-y-auto xl:pr-2 xl:pb-2">
-          <div className="border-border bg-card flex shrink-0 flex-col gap-3 rounded-xl border p-3 sm:flex-row sm:items-center sm:justify-between">
+    // 시청 화면과 같은 풀블리드 레이아웃 — 칼럼·섹션은 여백 대신 border로 구분한다.
+    <div className="flex flex-col xl:h-full xl:min-h-0 xl:overflow-hidden">
+      <div className="grid xl:h-full xl:min-h-0 xl:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)_minmax(16rem,0.85fr)] xl:overflow-hidden">
+        <div className="flex min-w-0 flex-col xl:h-full xl:max-h-full xl:min-h-0 xl:overflow-y-auto">
+          <div className="border-border flex shrink-0 flex-col gap-3 border-b px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-wrap items-center gap-2">
               <span
                 className={cn(
@@ -138,7 +140,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
               </span>
             </div>
           </div>
-          <div className="shrink-0">
+          <div className="border-border shrink-0 border-b">
             <ChannelLivePreviewPanel
               isStreamOnline={isStreamOnline}
               liveState={liveState}
@@ -146,7 +148,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
               title={title}
             />
           </div>
-          <div className="shrink-0">
+          <ChannelLiveCollapsibleSection title="방송 정보">
             <ChannelLiveSettingsPanel
               broadcastActionError={broadcastActionError}
               canSaveSettings={isSettingsDirty}
@@ -177,16 +179,16 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
               onStartBroadcast={handleStartBroadcast}
               onEndBroadcast={handleEndBroadcast}
             />
-          </div>
-          <div className="shrink-0">
+          </ChannelLiveCollapsibleSection>
+          <ChannelLiveCollapsibleSection title="방송 상태">
             <ChannelLiveStatusMetricsCard broadcast={statusMetricsBroadcast} />
-          </div>
-          <div className="shrink-0">
+          </ChannelLiveCollapsibleSection>
+          <ChannelLiveCollapsibleSection title="라이브 상호작용">
             <ChannelLivePollPanel broadcastId={broadcastId} creatorId={creatorId} />
-          </div>
+          </ChannelLiveCollapsibleSection>
         </div>
 
-        <div className="min-w-0 xl:h-full xl:min-h-0">
+        <div className="border-border min-w-0 xl:h-full xl:min-h-0 xl:border-x">
           <ChannelLiveChatPanel
             key={broadcastId ?? "channel-live-chat-idle"}
             broadcastId={broadcastId}
@@ -195,7 +197,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
           />
         </div>
 
-        <div className="min-w-0 xl:h-full xl:min-h-0 xl:overflow-y-auto xl:pr-2 xl:pb-2">
+        <div className="min-w-0 xl:h-full xl:min-h-0 xl:overflow-y-auto">
           <ChannelLiveQuickSettingsPanel
             canSaveSettings={isSettingsDirty}
             isAlertSoundEnabled={operation.isAlertSoundEnabled}

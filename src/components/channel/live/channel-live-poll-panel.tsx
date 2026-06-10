@@ -47,21 +47,25 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId }: Props) 
   };
 
   return (
-    <section className="border-border bg-card flex h-160 min-h-0 min-w-0 flex-col gap-4 rounded-xl border p-4 shadow-sm">
+    // 풀블리드 섹션(ChannelLiveCollapsibleSection) 안 — 도구 미선택 시엔 내용 높이만 차지하고,
+    // 도구 진행 화면에서만 고정 높이를 잡아 단계 전환 시 레이아웃 점프를 막는다.
+    <section
+      className={cn("flex min-h-0 min-w-0 flex-col gap-4", selectedTool !== null && "h-150")}
+    >
       {selectedTool === null ? (
-        <div className="grid min-h-0 flex-1 content-center gap-3 sm:grid-cols-3">
+        <div className="grid gap-2.5 sm:grid-cols-3">
           {INTERACTION_TOOLS.map(({ icon: Icon, label, value }) => (
             <button
               key={value}
               type="button"
               className={cn(
-                "border-border bg-background text-foreground flex h-44 min-h-0 flex-col items-center justify-center gap-3 rounded-xl border px-4 py-5 text-sm font-bold shadow-sm transition-colors",
+                "border-border bg-background text-foreground flex items-center justify-center gap-2.5 rounded-lg border px-4 py-3.5 text-sm font-bold transition-colors",
                 "hover:border-brand/40 hover:bg-brand/5 hover:text-brand",
               )}
               onClick={() => setSelectedTool(value)}
             >
-              <span className="bg-brand/10 text-brand flex size-16 items-center justify-center rounded-full">
-                <Icon className="size-8" />
+              <span className="bg-brand/10 text-brand flex size-9 shrink-0 items-center justify-center rounded-full">
+                <Icon className="size-4.5" />
               </span>
               {label}
             </button>

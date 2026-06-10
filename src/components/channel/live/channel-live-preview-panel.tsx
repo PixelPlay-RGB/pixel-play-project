@@ -22,7 +22,7 @@ export default function ChannelLivePreviewPanel({
   const canShowPreview = liveState.isBroadcasting || isStreamOnline;
 
   return (
-    <Card className="border-brand/10 from-brand/10 via-background to-live/10 aspect-video min-h-56 gap-0 overflow-hidden bg-linear-to-br py-0">
+    <Card className="from-brand/10 via-background to-live/10 aspect-video min-h-56 gap-0 overflow-hidden rounded-none border-0 bg-linear-to-br py-0 shadow-none">
       {canShowPreview ? (
         <ChannelLivePreviewPlayer src={hlsUrl} title={title || "방송 미리보기"} />
       ) : (

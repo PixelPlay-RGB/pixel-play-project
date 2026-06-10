@@ -109,7 +109,8 @@ export default function ChannelLiveChatPanel({
   }, [isPopoutOpen]);
 
   return (
-    <div className="border-border bg-card flex h-full min-h-96 flex-col overflow-hidden rounded-xl border md:min-h-0">
+    // 시청 화면 채팅 패널과 같은 풀블리드 — 칼럼 구분은 부모(border-x)가 담당한다.
+    <div className="bg-card flex h-full min-h-96 flex-col overflow-hidden md:min-h-0">
       <div className="border-border flex items-center justify-between border-b px-4 py-3">
         <span className="text-foreground text-sm font-semibold">{LIVE_LABEL.chat}</span>
         {creatorId ? (
@@ -133,14 +134,21 @@ export default function ChannelLiveChatPanel({
         </div>
       ) : (
         <>
-          <div className="flex min-h-0 flex-1 flex-col">
-            <div className="shrink-0 px-2 pt-2">
+          {/* 시청 화면(LiveChatBody)과 동일하게 배너를 absolute 오버레이로 띄워 접고 펼쳐도 목록이 밀리지 않는다. */}
+          <div className="relative flex min-h-0 flex-1 flex-col">
+            <div className="absolute inset-x-0 top-0 z-10">
               <LiveDonationBanner donations={donations} />
             </div>
-            <ScrollArea ref={chatScrollRef} className="min-h-0 flex-1">
+            <ScrollArea
+              ref={chatScrollRef}
+              className="min-h-0 flex-1"
+              hideScrollbar
+              viewportClassName="overscroll-contain"
+            >
               <LiveChatMessageList
                 messages={messages}
                 cleanbotEnabled={cleanbot}
+                topInset
                 scrollRef={chatScrollRef}
               />
             </ScrollArea>

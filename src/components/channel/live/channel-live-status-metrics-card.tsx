@@ -45,9 +45,9 @@ function buildMetricItems({
 
 function ChannelLiveStatusMetricsFrame({ items }: { items: MetricItem[] }) {
   return (
-    <section className="border-border bg-card flex min-w-0 flex-col rounded-xl border p-4 shadow-sm">
-      <h2 className="text-foreground text-sm font-black">방송 상태</h2>
-      <dl className="divide-border mt-4 flex flex-col divide-y divide-dashed">
+    // 풀블리드 섹션(ChannelLiveCollapsibleSection) 안에 들어가므로 카드 래퍼·제목 없이 내용만 둔다.
+    <section className="flex min-w-0 flex-col">
+      <dl className="divide-border flex flex-col divide-y divide-dashed">
         {items.map((item) => (
           <div
             key={item.label}

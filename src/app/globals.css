@@ -444,3 +444,27 @@ input:-webkit-autofill:focus {
   -webkit-box-shadow: 0 0 0px 1000px oklch(0.232 0 0) inset;
   -webkit-text-fill-color: var(--foreground);
 }
+
+/* 전역 스크롤바 — 브랜드 무드(가는 폭, 트랙 없는 둥근 thumb, hover 시 brand 민트). */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--border) 90%, transparent) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: color-mix(in srgb, var(--border) 90%, transparent);
+  border-radius: 9999px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: color-mix(in srgb, var(--brand) 70%, transparent);
+}

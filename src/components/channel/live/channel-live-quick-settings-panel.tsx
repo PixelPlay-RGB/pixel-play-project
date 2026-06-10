@@ -168,8 +168,9 @@ export default function ChannelLiveQuickSettingsPanel({
   onTtsEnabledChange,
 }: Props) {
   return (
-    <Card className="flex min-h-144 flex-col gap-5 py-6 shadow-sm xl:min-h-full">
-      <CardHeader className="gap-2 px-5 sm:px-6">
+    // 풀블리드 우측 칼럼 — 카드 대신 면으로 채우고 헤더는 다른 칼럼 헤더와 같은 보더로 구분한다.
+    <Card className="flex min-h-144 flex-col gap-5 rounded-none border-0 py-0 pb-6 shadow-none xl:min-h-full">
+      <CardHeader className="border-border gap-2 border-b px-4 [.border-b]:pt-3 [.border-b]:pb-3">
         <CardTitle>빠른 설정</CardTitle>
         <CardAction>
           <Button
@@ -184,7 +185,7 @@ export default function ChannelLiveQuickSettingsPanel({
           </Button>
         </CardAction>
       </CardHeader>
-      <CardContent className="flex flex-1 flex-col justify-between gap-4 px-5 sm:px-6">
+      <CardContent className="flex flex-1 flex-col justify-between gap-4 px-4">
         <QuickSettingSectionTitle title="채팅" />
         <QuickSettingSlowModeRow
           checked={isSlowModeEnabled}
