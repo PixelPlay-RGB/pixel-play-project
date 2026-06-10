@@ -6,10 +6,11 @@ export const LIVE_LABEL = {
   chatRuleDefaultText:
     "서로를 존중하며 대화해주세요. 반복 도배, 비방, 홍보성 메시지는 제한될 수 있습니다.",
   chatRuleAccept: "규칙 확인하고 채팅하기",
+  chatRuleAccepted: "채팅 규칙에 동의했습니다",
+  chatRulePending: "아직 채팅 규칙에 동의하지 않았습니다",
   live: "LIVE",
   chat: "라이브 채팅",
   follow: "팔로우",
-  following: "팔로잉",
   unfollowConfirmTitle: "팔로우를 취소하시겠습니까?",
   unfollowConfirmDescription: "팔로우를 취소하면 팔로워 전용 채팅에 참여할 수 없게 됩니다.",
   confirm: "확인",
@@ -40,13 +41,23 @@ export const LIVE_LABEL = {
   emptyWeeklyDonation: "이번 주 첫 번째 팬이 되어보세요!",
   chatLoginPlaceholder: "로그인 후 채팅할 수 있습니다.",
   chatPlaceholder: "채팅 입력...",
+  chatEndedPlaceholder: "방송이 종료되어 채팅할 수 없습니다.",
   chatPausedPlaceholder: "지금은 시청자 채팅이 일시정지되었습니다.",
   loginRequired: "로그인이 필요합니다.",
   loginDescription: "이 기능을 사용하려면 로그인이 필요합니다.",
   loginButton: "로그인",
   cancel: "취소",
   anonymousAuthor: "익명",
+  hostBadge: "방송 진행자",
+  donorBadge: "후원자",
   broadcastOffline: "방송이 종료되었거나 준비 중입니다.",
+  broadcastOfflineTitle: "지금은 방송 중이 아니에요",
+  // 방송은 시작됐지만 아직 송출(OBS) 영상이 도착하지 않은 동안 비디오 영역에 띄우는 안내.
+  streamWaitingTitle: "송출 대기 중",
+  streamWaitingDescription: "스트리머가 방송을 준비하고 있어요. 잠시만 기다려 주세요.",
+  viewChannel: "채널 보기",
+  browseLive: "다른 라이브 보기",
+  chatUnavailable: "지금은 채팅을 이용할 수 없습니다",
   chatPopoutActive: "채팅창이 팝업으로 열려 있습니다.",
   chatFollowerPlaceholder: "팔로우 후 채팅할 수 있습니다.",
   chatWaitPlaceholder: "잠시 후 채팅할 수 있습니다.",
@@ -64,6 +75,11 @@ export const LIVE_LABEL = {
 
 // 어두운 플레이어 배경 위 아이콘 버튼 공통 스타일(컨트롤 바·음량·화질 공유).
 export const LIVE_PLAYER_ICON_BUTTON_CLASS = "text-white/80 hover:bg-white/10 hover:text-white";
+
+// 전체화면 채팅 패널 폭(w-80)과, 패널을 피해 줄어드는 영상·상단/하단 오버레이의 우측 인셋(right-80)은
+// 같은 값(20rem)이어야 한다. 한쪽만 바꾸면 영상이 패널 밑으로 깔리거나 빈틈이 생기므로 여기 한 곳에서 관리한다.
+export const LIVE_FULLSCREEN_CHAT_PANEL_WIDTH = "w-80";
+export const LIVE_FULLSCREEN_CHAT_INSET = "right-80";
 
 export const LIVE_DONATION_MIN_AMOUNT = 1000;
 export const LIVE_DONATION_AMOUNTS = [1000, 3000, 5000, 10000, 50000] as const;

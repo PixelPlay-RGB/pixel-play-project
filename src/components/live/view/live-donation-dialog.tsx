@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactElement } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -37,6 +37,12 @@ interface Props {
     isAnonymous: boolean;
     idempotencyKey: string;
   }) => Promise<boolean>;
+  // 방송 종료 등으로 후원 자체를 막을 때 트리거를 비활성화한다.
+  disabled?: boolean;
+  // 후원 모달을 전체화면 등 특정 요소 안에 띄울 때 포털 컨테이너를 지정한다(미지정=body).
+  portalContainer?: HTMLElement | null;
+  // 트리거를 커스텀(예: 전체화면 미니 사이드바의 아이콘 버튼)으로 교체한다. 미지정 시 기본 후원 버튼.
+  trigger?: ReactElement;
 }
 
 export function LiveDonationDialog({
@@ -48,6 +54,9 @@ export function LiveDonationDialog({
   donationEnabled,
   donationMinAmount,
   onDonate,
+  disabled = false,
+  portalContainer,
+  trigger,
 }: Props) {
   const minimumAmount = donationMinAmount > 0 ? donationMinAmount : LIVE_DONATION_MIN_AMOUNT;
   const [open, setOpen] = useState(false);
@@ -75,6 +84,12 @@ export function LiveDonationDialog({
       resetForm();
       return;
     }
+    // 방송 종료 등으로 막힌 경우 열지 않는다(커스텀 trigger는 버튼 disabled가 없어 여기서 함께 막아야 한다).
+    // 이미 연 채 종료되면 닫지 않고(작성 중 메시지 보존) 제출 버튼만 disabled로 막는다 —
+    // 투표 popover(무상태라 즉시 닫음)와 의도적으로 다른 정책. 종료 안내는 전역 토스트가 담당.
+    if (disabled) {
+      return;
+    }
     if (!donationEnabled) {
       return;
     }
@@ -91,19 +106,26 @@ export function LiveDonationDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger
-        render={
-          <Button
-            className="bg-live hover:bg-live/90 text-live-foreground flex-1 text-xs"
-            size="sm"
-            disabled={!donationEnabled}
-            title={!donationEnabled ? LIVE_DONATION_LABEL.disabled : undefined}
-          />
-        }
+      {trigger ? (
+        <DialogTrigger render={trigger} />
+      ) : (
+        <DialogTrigger
+          render={
+            <Button
+              className="bg-live hover:bg-live/90 text-live-foreground h-8 flex-1 text-xs"
+              size="sm"
+              disabled={!donationEnabled || disabled}
+              title={!donationEnabled ? LIVE_DONATION_LABEL.disabled : undefined}
+            />
+          }
+        >
+          {LIVE_LABEL.donate}
+        </DialogTrigger>
+      )}
+      <DialogContent
+        container={portalContainer}
+        className="max-h-[calc(100vh-1rem)] overflow-y-auto sm:max-w-sm"
       >
-        {LIVE_LABEL.donate}
-      </DialogTrigger>
-      <DialogContent className="max-h-[calc(100vh-1rem)] overflow-y-auto sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>{LIVE_DONATION_LABEL.title}</DialogTitle>
           <DialogDescription>
@@ -194,13 +216,14 @@ export function LiveDonationDialog({
           </div>
         </div>
 
-        <DialogFooter className="gap-2 sm:gap-0">
+        <DialogFooter>
           <Button variant="outline" disabled={isSubmitting} onClick={() => handleOpenChange(false)}>
             {LIVE_DONATION_LABEL.cancel}
           </Button>
           <Button
             type="button"
             disabled={
+              disabled ||
               !donationEnabled ||
               isBelowMin ||
               remaining < 0 ||

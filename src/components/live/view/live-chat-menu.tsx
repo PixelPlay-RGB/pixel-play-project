@@ -1,16 +1,16 @@
 "use client";
 // 채팅 패널 메뉴 — 클린봇 토글, 채팅 규칙 보기, 채팅창 팝업 항목을 제공합니다.
 
-import { useState } from "react";
-import { ExternalLink, MoreHorizontal, ScrollText, ShieldCheck } from "lucide-react";
+import { useRef, useState, type RefObject } from "react";
+import { Check, ExternalLink, Info, MoreHorizontal, ScrollText, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Popover,
+  PopoverContent,
+  PopoverDescription,
+  PopoverHeader,
+  PopoverTitle,
+} from "@/components/ui/popover";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,22 +23,36 @@ import { LIVE_CHAT_MENU_LABEL, LIVE_CHAT_POPOUT_WINDOW, LIVE_LABEL } from "@/con
 import { cn } from "@/lib/utils";
 import { toastAppError } from "@/utils/common/toast-message";
 
+// 동의/미동의 상태 칩 공통 모양(색 토큰만 호출부에서 주입).
+const RULE_STATUS_CHIP_CLASS =
+  "flex h-9 w-full items-center justify-center gap-1.5 rounded-md px-4 text-sm font-medium";
+
 interface Props {
   creatorId: string;
   chatRuleText?: string;
+  // 메뉴 규칙 보기에 동의 상태를 표시한다. 실제 동의는 입력바 게이트가 담당한다.
+  // required — optional+기본값이면 새 콜사이트가 배선을 빠뜨려도 조용히 '미동의'로 퇴화한다.
+  isRuleAccepted: boolean;
+  isRulePending: boolean;
   cleanbot: boolean;
   onCleanbot: () => void;
   onPopoutOpen: (win: Window) => void;
+  // 규칙 popover를 채팅 패널 폭에 맞추기 위한 anchor(패널 헤더). 입력바 popover와 동일 방식.
+  anchorRef?: RefObject<HTMLElement | null>;
 }
 
 export function LiveChatMenu({
   creatorId,
   chatRuleText,
+  isRuleAccepted,
+  isRulePending,
   cleanbot,
   onCleanbot,
   onPopoutOpen,
+  anchorRef,
 }: Props) {
   const [isRulesOpen, setIsRulesOpen] = useState(false);
+  const menuTriggerRef = useRef<HTMLButtonElement>(null);
 
   function openChatPopout() {
     const width = LIVE_CHAT_POPOUT_WINDOW.width;
@@ -65,6 +79,7 @@ export function LiveChatMenu({
         <DropdownMenuTrigger
           render={
             <Button
+              ref={menuTriggerRef}
               size="sm"
               variant="outline"
               aria-label={LIVE_LABEL.chatMenu}
@@ -95,17 +110,42 @@ export function LiveChatMenu({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <Dialog open={isRulesOpen} onOpenChange={setIsRulesOpen}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>{LIVE_LABEL.chatRuleTitle}</DialogTitle>
-            <DialogDescription>{LIVE_LABEL.chatRuleDescription}</DialogDescription>
-          </DialogHeader>
+      <Popover open={isRulesOpen} onOpenChange={setIsRulesOpen}>
+        <PopoverContent
+          anchor={() => anchorRef?.current ?? menuTriggerRef.current}
+          align="start"
+          side="bottom"
+          sideOffset={0}
+          className="max-h-[calc(100vh-1rem)] w-(--anchor-width) overflow-y-auto"
+        >
+          <PopoverHeader>
+            <PopoverTitle>{LIVE_LABEL.chatRuleTitle}</PopoverTitle>
+            <PopoverDescription>{LIVE_LABEL.chatRuleDescription}</PopoverDescription>
+          </PopoverHeader>
           <p className="text-foreground text-sm leading-relaxed whitespace-pre-wrap">
             {chatRuleText || LIVE_LABEL.chatRuleDefaultText}
           </p>
-        </DialogContent>
-      </Dialog>
+          {/* 동의 여부는 액션이 아니라 상태 표시다. disabled <Button>은 AT에 "비활성 버튼"으로 읽혀
+              부적절하므로, 버튼 모양만 빌린 role=status 비대화형 요소로 둔다(동의는 입력칸 게이트에서만). */}
+          {isRuleAccepted ? (
+            <div
+              role="status"
+              className={cn(RULE_STATUS_CHIP_CLASS, "bg-brand text-brand-foreground")}
+            >
+              <Check className="size-3.5" />
+              {LIVE_LABEL.chatRuleAccepted}
+            </div>
+          ) : isRulePending ? (
+            <div
+              role="status"
+              className={cn(RULE_STATUS_CHIP_CLASS, "bg-secondary text-secondary-foreground")}
+            >
+              <Info className="size-3.5" />
+              {LIVE_LABEL.chatRulePending}
+            </div>
+          ) : null}
+        </PopoverContent>
+      </Popover>
     </>
   );
 }

@@ -1,7 +1,8 @@
 "use client";
 // 라이브 채팅 메시지 목록을 렌더링하고 하단 근접 시 자동 스크롤을 처리합니다.
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { memo, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Crown, HandCoins, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LIVE_LABEL } from "@/constants/live/live";
 import { cn } from "@/lib/utils";
@@ -75,12 +76,31 @@ export function LiveChatMessageList({
     }
   }, [messages]);
 
+  // 후원자 집합: 후원 메시지(익명은 sender_id가 null이라 senderId 없음)의 발신자 UUID를 누적한다.
+  // messages는 LIVE_MESSAGE_LIMIT으로 잘려 과거 후원 메시지가 목록 밖으로 밀려날 수 있으므로,
+  // 한 번 본 후원자는 이 집합에 남겨 채팅이 길어져도 뱃지가 사라지지 않게 한다(세션 단위 누적,
+  // 크리에이터 전환 시 LiveView remount로 초기화). 새 후원자가 나타날 때만 렌더-중 가드된 setState로
+  // 갱신해(setLastBroadcast와 동일 패턴) 무한 루프를 피한다.
+  // (방송 전 구간/초기 100건 이전 후원자까지 보장하려면 RPC의 per-message is_donor가 필요 — 후속 이슈)
+  const [donorIds, setDonorIds] = useState<Set<string>>(() => new Set());
+  let nextDonorIds: Set<string> | null = null;
+  for (const msg of messages) {
+    if (msg.type === "donation" && msg.senderId && !donorIds.has(msg.senderId)) {
+      (nextDonorIds ??= new Set(donorIds)).add(msg.senderId);
+    }
+  }
+  if (nextDonorIds) setDonorIds(nextDonorIds);
+
   return (
     <div className={cn(fillHeight && "flex min-h-full flex-col justify-end")}>
       <ul className="flex flex-col gap-1 px-3 py-2">
         {messages.map((msg) => (
           <li key={msg.id}>
-            <MessageItem message={msg} cleanbotEnabled={cleanbotEnabled} />
+            <MessageItem
+              message={msg}
+              cleanbotEnabled={cleanbotEnabled}
+              isDonor={!msg.isHost && !!msg.senderId && donorIds.has(msg.senderId)}
+            />
           </li>
         ))}
       </ul>
@@ -92,9 +112,17 @@ export function LiveChatMessageList({
 interface MessageItemProps {
   message: LiveChatMessage;
   cleanbotEnabled: boolean;
+  // 발신자가 이 방송에서 후원한 사람인지(방장 제외). 이름 앞 후원자 뱃지 표시에 쓴다.
+  isDonor: boolean;
 }
 
-function MessageItem({ message, cleanbotEnabled }: MessageItemProps) {
+// 메시지가 바뀌지 않은 기존 항목은 새 메시지 도착마다 재렌더되지 않게 memo로 감싼다.
+// props가 모두 원시값/안정 ref(message 객체는 캐시에서 ref 유지)라 얕은 비교로 충분하다.
+const MessageItem = memo(function MessageItem({
+  message,
+  cleanbotEnabled,
+  isDonor,
+}: MessageItemProps) {
   if (message.type === "system") {
     return (
       <p className="text-muted-foreground my-1 text-center text-xs wrap-break-word">
@@ -106,7 +134,8 @@ function MessageItem({ message, cleanbotEnabled }: MessageItemProps) {
   if (message.type === "donation") {
     return (
       <div className="border-live/20 bg-live/10 rounded-lg border px-3 py-2 text-sm">
-        <div className="mb-1 flex items-center gap-2">
+        <div className="mb-1 flex items-center gap-1.5">
+          <HandCoins className="text-live size-3.5 shrink-0" aria-hidden />
           <span className="text-live font-semibold">
             {message.donationAmount !== undefined
               ? `${formatDonationAmount(message.donationAmount)}P`
@@ -124,25 +153,29 @@ function MessageItem({ message, cleanbotEnabled }: MessageItemProps) {
   }
 
   if (message.isCleanbotFlagged) {
-    return <CleanbotMessage message={message} cleanbotEnabled={cleanbotEnabled} />;
+    return (
+      <CleanbotMessage message={message} cleanbotEnabled={cleanbotEnabled} isDonor={isDonor} />
+    );
   }
 
-  return <TextMessage message={message} />;
-}
+  return <TextMessage message={message} isDonor={isDonor} />;
+});
 
 // 클린봇에 걸린 메시지. 토글 ON이면 본문을 가리고 "보기"로 펼친다.
 // 플래그된 메시지면 토글과 무관하게 마운트되므로, 펼친 상태는 토글 재조작에도 유지된다.
 function CleanbotMessage({
   message,
   cleanbotEnabled,
+  isDonor,
 }: {
   message: LiveChatMessage;
   cleanbotEnabled: boolean;
+  isDonor: boolean;
 }) {
   const [revealed, setRevealed] = useState(false);
 
   if (!cleanbotEnabled || revealed) {
-    return <TextMessage message={message} />;
+    return <TextMessage message={message} isDonor={isDonor} />;
   }
 
   return (
@@ -162,10 +195,20 @@ function CleanbotMessage({
   );
 }
 
-function TextMessage({ message }: { message: LiveChatMessage }) {
+function TextMessage({ message, isDonor }: { message: LiveChatMessage; isDonor: boolean }) {
   return (
     <p className="py-0.5 text-sm leading-snug wrap-break-word">
-      <span className={cn("mr-1.5 font-medium", message.isHost ? "text-live" : "text-brand")}>
+      <span
+        className={cn(
+          "mr-1.5 inline-flex items-center gap-0.5 align-middle font-medium",
+          message.isHost ? "text-live" : "text-brand",
+        )}
+      >
+        {message.isHost ? (
+          <Crown aria-label={LIVE_LABEL.hostBadge} className="size-3.5" />
+        ) : isDonor ? (
+          <Heart aria-label={LIVE_LABEL.donorBadge} className="text-live size-3.5" />
+        ) : null}
         {message.author}
       </span>
       <span className="text-foreground">{message.content}</span>

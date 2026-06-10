@@ -2,8 +2,9 @@
 // 크리에이터 팔로우/언팔로우와 공유 버튼을 담당하는 액션 영역입니다.
 
 import { useState } from "react";
-import { Check, Share2, UserPlus } from "lucide-react";
+import { Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import CreatorFollowingButton from "@/components/following/creator-following-button";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,15 +18,15 @@ import {
 import { LIVE_LABEL } from "@/constants/live/live";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { toastAppSuccess, toastAppError } from "@/utils/common/toast-message";
-import { cn } from "@/lib/utils";
 
 interface Props {
+  creatorNickname: string;
   isFollowing: boolean;
   isPending: boolean;
   onFollow: () => void;
 }
 
-export function LiveCreatorActions({ isFollowing, isPending, onFollow }: Props) {
+export function LiveCreatorActions({ creatorNickname, isFollowing, isPending, onFollow }: Props) {
   const [isUnfollowDialogOpen, setIsUnfollowDialogOpen] = useState(false);
 
   function handleFollowClick() {
@@ -51,35 +52,23 @@ export function LiveCreatorActions({ isFollowing, isPending, onFollow }: Props) 
     }
   }
 
-  function getFollowLabel() {
-    if (!isFollowing) return LIVE_LABEL.follow;
-    return LIVE_LABEL.following;
-  }
-
   return (
     <>
       <div className="flex shrink-0 items-center gap-2">
-        <Button
-          size="sm"
-          disabled={isPending}
+        <CreatorFollowingButton
+          creatorNickname={creatorNickname}
+          isFollowing={isFollowing}
+          isOwnChannel={false}
+          isPending={isPending}
           onClick={handleFollowClick}
-          className={cn(
-            "min-w-20 gap-1.5 rounded-full text-xs font-semibold transition-colors",
-            isFollowing
-              ? "bg-muted text-foreground hover:bg-muted/80"
-              : "bg-brand text-brand-foreground hover:bg-brand/90",
-          )}
-        >
-          {isFollowing ? <Check className="size-3.5" /> : <UserPlus className="size-3.5" />}
-          {getFollowLabel()}
-        </Button>
+        />
 
         <Button
           size="sm"
           variant="outline"
           aria-label={LIVE_LABEL.share}
           onClick={handleShare}
-          className="gap-1.5 text-xs font-semibold"
+          className="h-8 gap-1.5 text-xs font-semibold"
         >
           <Share2 className="size-4" />
         </Button>

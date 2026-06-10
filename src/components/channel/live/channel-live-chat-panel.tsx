@@ -117,6 +117,9 @@ export default function ChannelLiveChatPanel({
           <LiveChatMenu
             creatorId={creatorId}
             chatRuleText={chatRuleText}
+            // 운영(스튜디오) 화면은 크리에이터 본인이라 규칙 동의 상태 칩을 표시하지 않는다.
+            isRuleAccepted={false}
+            isRulePending={false}
             cleanbot={cleanbot}
             onCleanbot={() => setCleanbot((prev) => !prev)}
             onPopoutOpen={handlePopoutOpen}

@@ -4,13 +4,12 @@
 // 진입/주기/복귀 시 하트비트, 이탈 시 즉시 제거합니다.
 
 import { useEffect } from "react";
-import {
-  leaveLiveViewerPresenceAction,
-  syncLiveViewerPresenceAction,
-} from "@/actions/live/live";
+import { leaveLiveViewerPresenceAction, syncLiveViewerPresenceAction } from "@/actions/live/live";
 
 const HEARTBEAT_INTERVAL_MS = 10_000;
 const ANON_VIEWER_KEY_STORAGE = "live-anon-viewer-key";
+// pagehide 시 sendBeacon으로 leave를 보내는 동일 출처 엔드포인트.
+const LEAVE_BEACON_URL = "/api/live/viewer-leave";
 
 // sessionStorage가 막힌 환경(프라이빗 모드 등)을 위한 비영속 폴백 키.
 let inMemoryAnonKey: string | null = null;
@@ -57,9 +56,22 @@ export function useLiveViewerPresence(broadcastId: string | null | undefined) {
     };
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
+    // hard unload(탭 닫기·새로고침·외부 이동)에선 cleanup의 서버 액션이 중단될 수 있어,
+    // pagehide에서 sendBeacon으로 즉시 leave를 보장한다(SPA 내부 이동은 cleanup이 처리).
+    const handlePageHide = (event: PageTransitionEvent) => {
+      // bfcache로 얼면(persisted) 곧 복원될 수 있어 leave하지 않는다(복원 시 하트비트 재개,
+      // 끝내 안 돌아오면 cron sweep이 정리). 실제 unload에서만 즉시 leave를 보낸다.
+      if (event.persisted) return;
+      if (typeof navigator === "undefined" || typeof navigator.sendBeacon !== "function") return;
+      const payload = JSON.stringify({ broadcastId, anonViewerKey });
+      navigator.sendBeacon(LEAVE_BEACON_URL, new Blob([payload], { type: "application/json" }));
+    };
+    window.addEventListener("pagehide", handlePageHide);
+
     return () => {
       window.clearInterval(intervalId);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("pagehide", handlePageHide);
       void leaveLiveViewerPresenceAction(broadcastId, anonViewerKey);
     };
   }, [broadcastId]);

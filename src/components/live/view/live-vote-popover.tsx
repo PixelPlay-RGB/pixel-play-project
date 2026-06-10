@@ -1,7 +1,7 @@
 "use client";
 // 투표 참여와 라이브 상호작용 결과를 채팅 패널 액션 팝오버로 제공합니다.
 
-import { useId, useState } from "react";
+import { useId, useState, type RefObject } from "react";
 import { Check, Crown, FerrisWheel, Trophy } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,13 @@ import { cn } from "@/lib/utils";
 import { formatCount } from "@/utils/live/live-chat";
 import type { LiveInteractionNotice, LivePoll, LivePollOption } from "@/types/live/live";
 
+// 후원(코랄 채움) 옆에 나란히 놓이는 투표 트리거는 라이브 코랄 아웃라인으로 페어를 맞춘다.
+const VOTE_TRIGGER_CLASS = cn(
+  "h-8 flex-1 text-xs",
+  "border-live/30 bg-live/10 text-live",
+  "hover:border-live/50 hover:bg-live/18 dark:border-live/30 dark:bg-live/15 dark:text-live",
+);
+
 interface Props {
   interactionNotices?: LiveInteractionNotice[];
   isError?: boolean;
@@ -37,6 +44,12 @@ interface Props {
   onVote: (pollId: string, optionId: string) => Promise<boolean>;
   polls: LivePoll[];
   presentation?: "popover" | "dialog";
+  // 팝오버를 채팅 입력칸 위로 띄워 입력칸을 가리지 않게 한다(규칙·팔로우 popover와 동일 anchor).
+  anchorRef?: RefObject<HTMLElement | null>;
+  // 방송 종료 등으로 투표 참여를 막을 때 트리거를 비활성화한다.
+  disabled?: boolean;
+  // 전체화면 오버레이 등에서 popover/dialog 포털 컨테이너를 전체화면 요소로 지정한다(미지정=body).
+  portalContainer?: HTMLElement | null;
 }
 
 type CurrentInteraction =
@@ -762,8 +775,18 @@ export function LiveVotePopover({
   onVote,
   polls,
   presentation = "popover",
+  anchorRef,
+  disabled = false,
+  portalContainer,
 }: Props) {
   const [open, setOpen] = useState(false);
+
+  // 열어둔 채 방송이 종료되면(disabled 전환) 즉시 닫는다.
+  // effect 내 setState는 lint 에러(set-state-in-effect)라 렌더 중 가드된 setState 패턴을 쓴다.
+  if (disabled && open) {
+    setOpen(false);
+  }
+
   const currentInteraction = selectCurrentInteraction(polls, interactionNotices);
   const triggerLabel = getTriggerLabel(currentInteraction);
   const headerTitle = getHeaderTitle(currentInteraction);
@@ -801,11 +824,21 @@ export function LiveVotePopover({
   if (presentation === "dialog") {
     return (
       <>
-        <Button size="sm" variant="outline" className="flex-1 text-xs" onClick={handleOpen}>
+        <Button
+          size="sm"
+          variant="outline"
+          className={VOTE_TRIGGER_CLASS}
+          disabled={disabled}
+          onClick={handleOpen}
+        >
           {triggerLabel}
         </Button>
         <Dialog open={open} onOpenChange={handleOpenChange}>
-          <DialogContent className="max-h-[calc(100vh-1rem)] gap-4 overflow-y-auto" showCloseButton>
+          <DialogContent
+            container={portalContainer}
+            className="max-h-[calc(100vh-1rem)] gap-4 overflow-y-auto"
+            showCloseButton
+          >
             {showHeader ? (
               <DialogHeader>
                 <DialogTitle>{headerTitle}</DialogTitle>
@@ -821,13 +854,20 @@ export function LiveVotePopover({
 
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
-      <PopoverTrigger render={<Button size="sm" variant="outline" className="flex-1 text-xs" />}>
+      <PopoverTrigger
+        render={
+          <Button size="sm" variant="outline" className={VOTE_TRIGGER_CLASS} disabled={disabled} />
+        }
+      >
         {triggerLabel}
       </PopoverTrigger>
       <PopoverContent
-        align="end"
+        anchor={anchorRef ? () => anchorRef.current : undefined}
+        container={portalContainer}
+        align="start"
         side="top"
-        className="max-h-[calc(100vh-1rem)] w-[calc((var(--anchor-width)*2)+0.5rem)] max-w-[calc(100vw-1rem)] gap-4 overflow-y-auto"
+        sideOffset={0}
+        className="max-h-[calc(100vh-1rem)] w-(--anchor-width) overflow-y-auto"
       >
         {showHeader ? (
           <PopoverHeader>

@@ -10,6 +10,7 @@ import {
   Play,
   Radio,
   RectangleHorizontal,
+  Users,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ import { LivePlayerVolumeControl } from "@/components/live/view/live-player-volu
 import { LIVE_LABEL, LIVE_PLAYER_ICON_BUTTON_CLASS } from "@/constants/live/live";
 import type { HlsQualityLevel } from "@/hooks/live/use-hls-player";
 import { cn } from "@/lib/utils";
+import { formatCount } from "@/utils/live/live-chat";
 
 interface Props {
   isPlaying: boolean;
@@ -28,6 +30,9 @@ interface Props {
   onToggleMute: () => void;
   onVolumeChange: (value: number) => void;
   elapsedText: string;
+  viewerCount: number;
+  // 몰입 모드(극장·전체화면)에선 시간·시청자 수를 상단 오버레이로 옮기므로 하단에선 LIVE 표시만 남긴다.
+  isImmersive: boolean;
   isFullscreen: boolean;
   onToggleFullscreen: () => void;
   isTheater: boolean;
@@ -48,6 +53,8 @@ export function LivePlayerControlBar({
   onToggleMute,
   onVolumeChange,
   elapsedText,
+  viewerCount,
+  isImmersive,
   isFullscreen,
   onToggleFullscreen,
   isTheater,
@@ -79,10 +86,28 @@ export function LivePlayerControlBar({
         onVolumeChange={onVolumeChange}
       />
 
-      <span className="ml-1 flex items-center gap-1 font-mono text-xs font-bold text-white">
-        <Radio className="size-3" />
-        {LIVE_LABEL.live} · {elapsedText}
-      </span>
+      {/* 전체화면에선 LIVE 뱃지가 우상단 스택으로 이동하므로 하단에선 통째로 생략한다. */}
+      {!isFullscreen ? (
+        <span className="ml-1 flex items-center gap-1.5 font-mono text-xs font-bold text-white">
+          <span className="text-live flex items-center gap-1">
+            <Radio className="size-3 motion-safe:animate-pulse" />
+            {LIVE_LABEL.live}
+          </span>
+          {/* 몰입 모드에선 시간·시청자 수가 상단 오버레이로 이동하므로 하단에선 생략한다. */}
+          {!isImmersive ? (
+            <>
+              <span>· {elapsedText}</span>
+              <span className="flex items-center gap-1">
+                ·
+                <span className="text-brand flex items-center gap-1">
+                  <Users className="size-3" />
+                  {formatCount(viewerCount)}
+                </span>
+              </span>
+            </>
+          ) : null}
+        </span>
+      ) : null}
 
       <div className="ml-auto flex items-center gap-1">
         <LivePlayerQualityMenu

@@ -118,8 +118,8 @@ export const APP_MESSAGE = {
     },
     live: {
       urlCopied: {
-        title: "URL 복사 완료",
-        description: "URL 복사가 완료되었습니다.",
+        title: "링크 복사 완료",
+        description: "방송 링크 복사가 완료되었습니다.",
       },
       voteUnchanged: {
         title: "이미 선택한 항목",
@@ -545,6 +545,12 @@ export const APP_MESSAGE = {
       featureNotReady: {
         title: "기능 준비 중",
         description: "조금만 기다려주세요. 곧 제공될 예정이에요.",
+      },
+    },
+    live: {
+      broadcastEnded: {
+        title: "방송 종료",
+        description: "방송이 종료되었습니다.",
       },
     },
   },
