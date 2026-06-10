@@ -374,6 +374,74 @@ function VoteResults({ poll, onClose }: { onClose: () => void; poll: LivePoll })
   );
 }
 
+function DrawNoticeBoard({
+  hasJoined,
+  notice,
+}: {
+  hasJoined: boolean;
+  notice: LiveInteractionNotice;
+}) {
+  const winnerNames = notice.winnerNames ?? [];
+  const participantCount = notice.participantCount ?? 0;
+
+  return (
+    <div className="border-border border-t border-dashed py-3">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="border-border bg-background/60 flex min-h-28 flex-col rounded-lg border p-3">
+          <div className="border-border flex items-center justify-between gap-2 border-b pb-2">
+            <span className="text-brand text-xs font-black">
+              {LIVE_VOTE_LABEL.drawCandidatesTitle}
+            </span>
+            <span className="text-foreground text-xs font-black">
+              총 {formatCount(participantCount)}명
+            </span>
+          </div>
+          <div className="flex flex-1 items-center justify-center text-center">
+            <p
+              className={cn(
+                "text-xs font-bold",
+                hasJoined ? "text-brand" : "text-muted-foreground",
+              )}
+            >
+              {hasJoined
+                ? LIVE_VOTE_LABEL.drawCandidateJoined
+                : LIVE_VOTE_LABEL.drawCandidateWaiting}
+            </p>
+          </div>
+        </div>
+        <div className="border-border bg-background/60 flex min-h-28 flex-col rounded-lg border p-3">
+          <div className="border-border flex items-center justify-between gap-2 border-b pb-2">
+            <span className="text-live text-xs font-black">{LIVE_VOTE_LABEL.drawWinnerTitle}</span>
+            <span className="text-foreground text-xs font-black">
+              {formatCount(winnerNames.length)}명
+            </span>
+          </div>
+          <div className="min-h-0 flex-1 overflow-y-auto pt-2">
+            {winnerNames.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {winnerNames.map((winnerName, index) => (
+                  <span
+                    key={`${winnerName}-${index}`}
+                    className="bg-live/10 text-live rounded-lg px-2 py-1 text-xs font-black"
+                  >
+                    {index + 1}. {winnerName}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <div className="flex h-full min-h-16 items-center justify-center text-center">
+                <p className="text-muted-foreground text-xs font-bold">
+                  {LIVE_VOTE_LABEL.drawNoWinner}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function InteractionNoticeCard({
   isLoggedIn,
   notice,
@@ -390,19 +458,18 @@ function InteractionNoticeCard({
   const isActive = notice.status === "active";
   const [joinedDrawNoticeId, setJoinedDrawNoticeId] = useState<string | null>(null);
   const [isJoiningDraw, setIsJoiningDraw] = useState(false);
+  const isDraw = notice.type === "draw";
   const Icon = notice.type === "draw" ? Trophy : FerrisWheel;
-  const title =
-    notice.type === "draw"
-      ? isActive
-        ? LIVE_VOTE_LABEL.drawActiveTitle
-        : LIVE_VOTE_LABEL.drawResult
-      : isActive
-        ? LIVE_VOTE_LABEL.rouletteActiveTitle
-        : LIVE_VOTE_LABEL.rouletteResult;
-  const description =
-    notice.type === "draw"
-      ? LIVE_VOTE_LABEL.drawActiveDescription
-      : LIVE_VOTE_LABEL.rouletteActiveDescription;
+  const title = isDraw
+    ? isActive
+      ? LIVE_VOTE_LABEL.drawActiveTitle
+      : LIVE_VOTE_LABEL.drawResult
+    : isActive
+      ? LIVE_VOTE_LABEL.rouletteActiveTitle
+      : LIVE_VOTE_LABEL.rouletteResult;
+  const description = isDraw
+    ? LIVE_VOTE_LABEL.drawActiveDescription
+    : LIVE_VOTE_LABEL.rouletteActiveDescription;
   const detail = notice.winnerNames?.join(", ") ?? notice.resultLabel ?? notice.content;
   const canJoinDraw = isActive && notice.type === "draw";
   const hasJoined = Boolean(notice.hasJoined) || joinedDrawNoticeId === notice.id;
@@ -432,31 +499,37 @@ function InteractionNoticeCard({
 
   return (
     <div className="flex flex-col overflow-hidden">
-      <div className="border-border flex flex-col gap-3 border-t border-dashed pt-3 pb-3">
-        <StatusPill tone={isActive ? "brand" : "muted"}>
-          {isActive ? LIVE_VOTE_LABEL.active : LIVE_VOTE_LABEL.ended}
-        </StatusPill>
-        <div className="flex items-center gap-2">
-          <span className="bg-brand/10 text-brand flex size-9 shrink-0 items-center justify-center rounded-full">
-            <Icon className="size-5" />
-          </span>
-          <div className="min-w-0">
-            <p className="text-foreground text-sm font-bold">{title}</p>
-            {isActive ? (
-              <p className="text-muted-foreground text-xs leading-relaxed">{description}</p>
+      {!isDraw ? (
+        <>
+          <div className="border-border flex flex-col gap-3 border-t border-dashed pt-3 pb-3">
+            <StatusPill tone={isActive ? "brand" : "muted"}>
+              {isActive ? LIVE_VOTE_LABEL.active : LIVE_VOTE_LABEL.ended}
+            </StatusPill>
+            <div className="flex items-center gap-2">
+              <span className="bg-brand/10 text-brand flex size-9 shrink-0 items-center justify-center rounded-full">
+                <Icon className="size-5" />
+              </span>
+              <div className="min-w-0">
+                <p className="text-foreground text-sm font-bold">{title}</p>
+                {isActive ? (
+                  <p className="text-muted-foreground text-xs leading-relaxed">{description}</p>
+                ) : null}
+              </div>
+            </div>
+          </div>
+          <div className="border-border border-t border-dashed py-3">
+            <p className="text-foreground text-sm font-bold wrap-break-word">{detail}</p>
+            {notice.participantCount !== undefined ? (
+              <p className="text-muted-foreground mt-1 text-xs">
+                {formatCount(notice.participantCount)}
+                {LIVE_VOTE_LABEL.participantsUnit}
+              </p>
             ) : null}
           </div>
-        </div>
-      </div>
-      <div className="border-border border-t border-dashed py-3">
-        <p className="text-foreground text-sm font-bold wrap-break-word">{detail}</p>
-        {notice.participantCount !== undefined ? (
-          <p className="text-muted-foreground mt-1 text-xs">
-            {formatCount(notice.participantCount)}
-            {LIVE_VOTE_LABEL.participantsUnit}
-          </p>
-        ) : null}
-      </div>
+        </>
+      ) : (
+        <DrawNoticeBoard hasJoined={hasJoined} notice={notice} />
+      )}
       <div className="border-border border-t border-dashed pt-3">
         <Button
           type="button"
@@ -644,6 +717,10 @@ function shouldPromptLoginOnOpen(currentInteraction: CurrentInteraction) {
   return currentInteraction.type === "poll" && currentInteraction.mode === "active";
 }
 
+function shouldShowInteractionHeader(currentInteraction: CurrentInteraction) {
+  return !(currentInteraction.type === "draw" && currentInteraction.mode === "active");
+}
+
 export function LiveVotePopover({
   interactionNotices = [],
   isError,
@@ -662,6 +739,7 @@ export function LiveVotePopover({
   const triggerLabel = getTriggerLabel(currentInteraction);
   const headerTitle = getHeaderTitle(currentInteraction);
   const headerDescription = getHeaderDescription(currentInteraction);
+  const showHeader = shouldShowInteractionHeader(currentInteraction);
 
   function handleOpenChange(next: boolean) {
     if (next && !isLoggedIn && shouldPromptLoginOnOpen(currentInteraction)) {
@@ -699,10 +777,12 @@ export function LiveVotePopover({
         </Button>
         <Dialog open={open} onOpenChange={handleOpenChange}>
           <DialogContent className="max-h-[calc(100vh-1rem)] gap-4 overflow-y-auto" showCloseButton>
-            <DialogHeader>
-              <DialogTitle>{headerTitle}</DialogTitle>
-              <DialogDescription>{headerDescription}</DialogDescription>
-            </DialogHeader>
+            {showHeader ? (
+              <DialogHeader>
+                <DialogTitle>{headerTitle}</DialogTitle>
+                <DialogDescription>{headerDescription}</DialogDescription>
+              </DialogHeader>
+            ) : null}
             {body}
           </DialogContent>
         </Dialog>
@@ -720,10 +800,12 @@ export function LiveVotePopover({
         side="top"
         className="max-h-[calc(100vh-1rem)] w-[calc((var(--anchor-width)*2)+0.5rem)] max-w-[calc(100vw-1rem)] gap-4 overflow-y-auto"
       >
-        <PopoverHeader>
-          <PopoverTitle>{headerTitle}</PopoverTitle>
-          <PopoverDescription>{headerDescription}</PopoverDescription>
-        </PopoverHeader>
+        {showHeader ? (
+          <PopoverHeader>
+            <PopoverTitle>{headerTitle}</PopoverTitle>
+            <PopoverDescription>{headerDescription}</PopoverDescription>
+          </PopoverHeader>
+        ) : null}
         {body}
       </PopoverContent>
     </Popover>
