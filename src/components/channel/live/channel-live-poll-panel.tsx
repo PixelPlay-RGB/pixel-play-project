@@ -16,11 +16,12 @@ import { QUERY_KEYS } from "@/constants/common/query-keys";
 import { useLivePolls } from "@/hooks/live/use-live-polls";
 import { cn } from "@/lib/utils";
 import type { LivePoll } from "@/types/live/live";
+import { filterChannelLiveDrawParticipants } from "@/utils/channel/channel-live-draw";
 import { toastAppError } from "@/utils/common/toast-message";
 import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Check, FerrisWheel, Gift, Plus, RotateCw, Vote, X } from "lucide-react";
 import { motion } from "motion/react";
-import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 interface Props {
   broadcastId: string | null;
@@ -69,8 +70,8 @@ const ROULETTE_SEGMENT_COLORS = [
   "var(--success)",
   "var(--muted-foreground)",
 ];
-const MAX_POLL_OPTION_COUNT = 5;
 const POLL_TIMER_MAX_SECONDS = 3600;
+const DRAW_TIMER_MAX_SECONDS = 3600;
 const DRAW_REEL_ROW_HEIGHT_PX = 40;
 const DRAW_REEL_REPEAT_COUNT = 9;
 const DRAW_REEL_DURATION_MS = 2200;
@@ -232,6 +233,10 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
   const [isPollTimerEnabled, setIsPollTimerEnabled] = useState(false);
   const [pollTimerSeconds, setPollTimerSeconds] = useState(0);
   const [drawSession, setDrawSession] = useState<DrawState | null>(null);
+  const [isDrawFollowerOnly, setIsDrawFollowerOnly] = useState(false);
+  const [isDrawExcludePreviousWinners, setIsDrawExcludePreviousWinners] = useState(true);
+  const [isDrawTimerEnabled, setIsDrawTimerEnabled] = useState(false);
+  const [drawTimerSeconds, setDrawTimerSeconds] = useState(0);
   const [isDrawing, setIsDrawing] = useState(false);
   const [isDrawParticipantLoading, setIsDrawParticipantLoading] = useState(false);
   const [drawRollingName, setDrawRollingName] = useState<string | null>(null);
@@ -246,6 +251,7 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
   const [isRouletteSpinning, setIsRouletteSpinning] = useState(false);
   const drawSpinStartTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const drawTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const drawTimerTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const trimmedOptions = options.map((option) => option.trim()).filter(Boolean);
   const activePoll = polls.find((poll) => poll.status === "active") ?? null;
@@ -254,6 +260,10 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
   const normalizedPollTimerSeconds = Math.min(
     Math.max(Math.floor(pollTimerSeconds), 0),
     POLL_TIMER_MAX_SECONDS,
+  );
+  const normalizedDrawTimerSeconds = Math.min(
+    Math.max(Math.floor(drawTimerSeconds), 0),
+    DRAW_TIMER_MAX_SECONDS,
   );
   const canCreatePoll =
     !!broadcastId &&
@@ -268,10 +278,19 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
     [drawSession, messages],
   );
   const isDrawParticipantConfirmed = Boolean(drawSession?.endedAt);
-  const confirmedDrawParticipants =
-    isDrawParticipantConfirmed && drawSession
-      ? toDrawParticipantNames(drawSession.participants)
-      : [];
+  const filteredConfirmedDrawParticipants = useMemo(
+    () =>
+      drawSession
+        ? filterChannelLiveDrawParticipants(drawSession.participants, drawSession.winnerUserIds, {
+            excludePreviousWinners: isDrawExcludePreviousWinners,
+            followerOnly: isDrawFollowerOnly,
+          })
+        : [],
+    [drawSession, isDrawExcludePreviousWinners, isDrawFollowerOnly],
+  );
+  const confirmedDrawParticipants = isDrawParticipantConfirmed
+    ? toDrawParticipantNames(filteredConfirmedDrawParticipants)
+    : [];
   const drawParticipants = isDrawParticipantConfirmed
     ? confirmedDrawParticipants
     : previewDrawParticipants;
@@ -315,6 +334,10 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
       if (drawTimeoutRef.current) {
         clearTimeout(drawTimeoutRef.current);
       }
+
+      if (drawTimerTimeoutRef.current) {
+        clearTimeout(drawTimerTimeoutRef.current);
+      }
     };
   }, []);
 
@@ -327,8 +350,6 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
   };
 
   const handleAddOption = () => {
-    if (options.length >= MAX_POLL_OPTION_COUNT) return;
-
     setOptions((currentOptions) => [...currentOptions, ""]);
   };
 
@@ -349,6 +370,17 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
     }
 
     setPollTimerSeconds(Math.min(Math.max(Math.floor(nextValue), 0), POLL_TIMER_MAX_SECONDS));
+  };
+
+  const handleDrawTimerSecondsChange = (value: string) => {
+    const nextValue = Number(value);
+
+    if (!Number.isFinite(nextValue)) {
+      setDrawTimerSeconds(0);
+      return;
+    }
+
+    setDrawTimerSeconds(Math.min(Math.max(Math.floor(nextValue), 0), DRAW_TIMER_MAX_SECONDS));
   };
 
   const invalidatePolls = () => {
@@ -418,7 +450,15 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
     }
   };
 
+  const clearDrawTimer = useCallback(() => {
+    if (!drawTimerTimeoutRef.current) return;
+
+    clearTimeout(drawTimerTimeoutRef.current);
+    drawTimerTimeoutRef.current = null;
+  }, []);
+
   const handleStartDraw = () => {
+    clearDrawTimer();
     setDrawSession({
       endedAt: null,
       participants: [],
@@ -438,35 +478,94 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
     });
   };
 
-  const loadDrawParticipants = async (targetSession: DrawState, endedAt: string) => {
-    if (!broadcastId) {
-      toastAppError(APP_MESSAGE_CODE.error.common.unknown);
-      return null;
+  const handleSelectTool = (tool: InteractionTool) => {
+    setSelectedTool(tool);
+
+    if (tool === "draw" && !drawSession) {
+      handleStartDraw();
     }
+  };
 
-    setIsDrawParticipantLoading(true);
-
-    try {
-      const result = await getChannelLiveDrawParticipantsAction({
-        broadcastId,
-        endedAt,
-        startedAt: targetSession.startedAt,
-      });
-
-      if (!result.success || !result.data) {
-        toastAppError(result.code ?? APP_MESSAGE_CODE.error.common.unknown);
+  const loadDrawParticipants = useCallback(
+    async (targetSession: DrawState, endedAt: string) => {
+      if (!broadcastId) {
+        toastAppError(APP_MESSAGE_CODE.error.common.unknown);
         return null;
       }
 
-      return result.data.participants;
-    } catch (error) {
-      console.error("방송 추첨 참여자 조회 액션 실패", error);
-      toastAppError(APP_MESSAGE_CODE.error.common.unknown);
-      return null;
-    } finally {
-      setIsDrawParticipantLoading(false);
+      setIsDrawParticipantLoading(true);
+
+      try {
+        const result = await getChannelLiveDrawParticipantsAction({
+          broadcastId,
+          endedAt,
+          startedAt: targetSession.startedAt,
+        });
+
+        if (!result.success || !result.data) {
+          toastAppError(result.code ?? APP_MESSAGE_CODE.error.common.unknown);
+          return null;
+        }
+
+        return result.data.participants;
+      } catch (error) {
+        console.error("방송 추첨 참여자 조회 액션 실패", error);
+        toastAppError(APP_MESSAGE_CODE.error.common.unknown);
+        return null;
+      } finally {
+        setIsDrawParticipantLoading(false);
+      }
+    },
+    [broadcastId],
+  );
+
+  const closeDrawRecruitment = useCallback(
+    async (targetSession: DrawState) => {
+      if (targetSession.endedAt) {
+        return targetSession;
+      }
+
+      const endedAt = new Date().toISOString();
+      const participants = await loadDrawParticipants(targetSession, endedAt);
+
+      if (!participants) {
+        return null;
+      }
+
+      const nextSession = { ...targetSession, endedAt, participants };
+
+      setDrawSession(nextSession);
+      clearDrawTimer();
+
+      return nextSession;
+    },
+    [clearDrawTimer, loadDrawParticipants],
+  );
+
+  useEffect(() => {
+    clearDrawTimer();
+
+    if (
+      !drawSession ||
+      drawSession.endedAt ||
+      !isDrawTimerEnabled ||
+      normalizedDrawTimerSeconds <= 0
+    ) {
+      return;
     }
-  };
+
+    drawTimerTimeoutRef.current = setTimeout(() => {
+      void closeDrawRecruitment(drawSession);
+    }, normalizedDrawTimerSeconds * 1000);
+
+    return clearDrawTimer;
+  }, [
+    clearDrawTimer,
+    closeDrawRecruitment,
+    drawSession,
+    isDrawTimerEnabled,
+    normalizedDrawTimerSeconds,
+  ]);
 
   const publishInteractionNotice = async ({
     content,
@@ -501,24 +600,31 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
 
     let nextSession = drawSession;
 
-    if (!nextSession.endedAt || nextSession.participants.length === 0) {
-      const endedAt = nextSession.endedAt ?? new Date().toISOString();
-      const participants = await loadDrawParticipants(nextSession, endedAt);
+    if (!nextSession.endedAt) {
+      const closedSession = await closeDrawRecruitment(nextSession);
 
-      if (!participants) return;
+      if (!closedSession) return;
 
-      nextSession = { ...nextSession, endedAt, participants };
-      setDrawSession(nextSession);
+      nextSession = closedSession;
     }
 
-    const availableParticipants = nextSession.participants.filter(
-      (participant) => !nextSession.winnerUserIds.includes(participant.userId),
+    const nextParticipants = filterChannelLiveDrawParticipants(
+      nextSession.participants,
+      nextSession.winnerUserIds,
+      {
+        excludePreviousWinners: isDrawExcludePreviousWinners,
+        followerOnly: isDrawFollowerOnly,
+      },
     );
-    const nextParticipants =
-      availableParticipants.length > 0 ? availableParticipants : nextSession.participants;
     const winner = pickRandomItem(nextParticipants);
 
-    if (!winner || isDrawing) return;
+    if (!winner || isDrawing) {
+      if (!winner) {
+        toastAppError(APP_MESSAGE_CODE.error.common.unknown);
+      }
+
+      return;
+    }
 
     const nextParticipantNames = toDrawParticipantNames(nextParticipants);
     const winnerIndex = nextParticipants.findIndex(
@@ -571,7 +677,7 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
         content: `추첨 결과 ${winner.nickname}`,
         interactionType: "draw",
         metadata: {
-          participantCount: nextSession.participants.length,
+          participantCount: nextParticipants.length,
           resultLabel: winner.nickname,
           status: "ended",
           winnerNames: [winner.nickname],
@@ -680,7 +786,7 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
                 "border-border bg-background text-foreground flex min-h-28 flex-col items-center justify-center gap-3 rounded-xl border px-4 py-5 text-sm font-bold shadow-sm transition-colors",
                 "hover:border-brand/40 hover:bg-brand/5 hover:text-brand",
               )}
-              onClick={() => setSelectedTool(value)}
+              onClick={() => handleSelectTool(value)}
             >
               <span className="bg-brand/10 text-brand flex size-16 items-center justify-center rounded-full">
                 <Icon className="size-8" />
@@ -793,8 +899,8 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
                     <span aria-hidden />
                   </div>
 
-                  <div className="flex min-h-0 flex-col gap-3">
-                    <div className="grid h-64 gap-3 overflow-y-auto pr-1">
+                  <div className="flex min-h-0 flex-col">
+                    <div className="flex max-h-64 flex-col gap-2 overflow-y-auto pr-1">
                       {options.map((option, index) => (
                         <div
                           key={index}
@@ -824,23 +930,18 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
                         </div>
                       ))}
                     </div>
-                    <div className="grid grid-cols-[4.25rem_minmax(0,1fr)_2.5rem] items-center gap-2">
-                      <span aria-hidden />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="border-brand text-brand hover:bg-brand/10 hover:text-brand h-10 rounded-xl font-bold"
-                        disabled={options.length >= MAX_POLL_OPTION_COUNT}
-                        onClick={handleAddOption}
-                      >
-                        <Plus className="size-3.5" />
-                        항목 추가
-                      </Button>
-                      <span aria-hidden />
-                    </div>
                   </div>
 
-                  <div className="mt-auto flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-end">
+                  <div className="mt-auto grid gap-3 pt-2 sm:grid-cols-[minmax(0,1fr)_auto_auto_auto] sm:items-center">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="border-brand text-brand hover:bg-brand/10 hover:text-brand h-11 w-full rounded-xl font-bold"
+                      onClick={handleAddOption}
+                    >
+                      <Plus className="size-3.5" />
+                      항목 추가
+                    </Button>
                     <label className="text-foreground flex items-center gap-2 text-sm font-bold">
                       <input
                         type="checkbox"
@@ -876,147 +977,166 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
           )}
 
           {selectedTool === "draw" && (
-            <>
-              {!drawSession ? (
-                <div className="flex flex-1 flex-col items-center justify-center gap-9 py-8">
-                  <Button
-                    type="button"
-                    className="bg-brand hover:bg-brand/90 h-16 rounded-lg px-12 text-base font-black text-white"
-                    disabled={!broadcastId || isDrawParticipantLoading || isDrawing}
-                    onClick={handleStartDraw}
-                  >
-                    참여자 모집 시작
-                  </Button>
+            <div className="flex min-h-0 flex-1 flex-col gap-5">
+              <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:justify-center">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="border-brand text-brand hover:bg-brand/10 hover:text-brand h-16 rounded-lg px-8 text-base font-black"
+                  disabled={!broadcastId || isDrawParticipantLoading || isDrawing}
+                  onClick={handleStartDraw}
+                >
+                  참여자 다시 모집하기
+                </Button>
+                <Button
+                  type="button"
+                  className="bg-brand hover:bg-brand/90 h-16 rounded-lg px-8 text-base font-black text-white"
+                  disabled={isDrawing || isDrawParticipantLoading}
+                  onClick={handlePickDrawWinner}
+                >
+                  {isDrawParticipantLoading ? "조회 중" : isDrawing ? "추첨 중" : "추첨하기"}
+                </Button>
+              </div>
 
-                  <div className="flex flex-col items-center gap-5">
-                    <div className="flex flex-col items-center gap-4 sm:flex-row sm:gap-10">
-                      <span className="text-muted-foreground/60 flex items-center gap-2 text-sm font-black">
-                        <Check className="size-4" />
-                        구독자만 추첨하기
-                      </span>
-                      <span className="text-muted-foreground/60 flex items-center gap-2 text-sm font-black">
-                        <Check className="size-4" />
-                        이미 뽑힌 참여자 제외하기
-                      </span>
-                    </div>
-
-                    <span className="text-muted-foreground/60 flex items-center gap-2 text-sm font-black">
-                      <Check className="size-4" />
-                      타이머 사용하기
-                    </span>
-                  </div>
+              <div className="flex flex-col items-stretch justify-center gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+                <Button
+                  type="button"
+                  variant="outline"
+                  aria-pressed={isDrawFollowerOnly}
+                  className={cn(
+                    "h-10 rounded-xl px-3 text-sm font-black",
+                    isDrawFollowerOnly
+                      ? "bg-brand hover:bg-brand/90 text-white hover:text-white"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                  disabled={isDrawing || isDrawParticipantLoading}
+                  onClick={() => setIsDrawFollowerOnly((current) => !current)}
+                >
+                  {isDrawFollowerOnly ? <Check className="size-4" /> : null}
+                  구독자만 추첨하기
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  aria-pressed={isDrawExcludePreviousWinners}
+                  className={cn(
+                    "h-10 rounded-xl px-3 text-sm font-black",
+                    isDrawExcludePreviousWinners
+                      ? "bg-brand hover:bg-brand/90 text-white hover:text-white"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                  disabled={isDrawing || isDrawParticipantLoading}
+                  onClick={() => setIsDrawExcludePreviousWinners((current) => !current)}
+                >
+                  {isDrawExcludePreviousWinners ? <Check className="size-4" /> : null}
+                  이미 뽑힌 참여자 제외하기
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  aria-pressed={isDrawTimerEnabled}
+                  className={cn(
+                    "h-10 rounded-xl px-3 text-sm font-black",
+                    isDrawTimerEnabled
+                      ? "bg-brand hover:bg-brand/90 text-white hover:text-white"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                  disabled={isDrawing || isDrawParticipantLoading}
+                  onClick={() => setIsDrawTimerEnabled((current) => !current)}
+                >
+                  {isDrawTimerEnabled ? <Check className="size-4" /> : null}
+                  타이머 사용하기
+                </Button>
+                <div className="flex items-center justify-center gap-2">
+                  <Input
+                    type="number"
+                    min={0}
+                    max={DRAW_TIMER_MAX_SECONDS}
+                    value={drawTimerSeconds}
+                    disabled={!isDrawTimerEnabled || isDrawing || isDrawParticipantLoading}
+                    className="border-border bg-muted/30 h-10 w-25 rounded-xl text-center text-sm font-bold"
+                    onChange={(event) => handleDrawTimerSecondsChange(event.target.value)}
+                  />
+                  <span className="text-foreground text-sm font-bold">초</span>
                 </div>
-              ) : (
-                <div className="flex min-h-0 flex-1 flex-col gap-5">
-                  <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:justify-center">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="border-brand text-brand hover:bg-brand/10 hover:text-brand h-16 rounded-lg px-8 text-base font-black"
-                      disabled={!broadcastId || isDrawParticipantLoading || isDrawing}
-                      onClick={handleStartDraw}
-                    >
-                      참여자 다시 모집하기
-                    </Button>
-                    <Button
-                      type="button"
-                      className="bg-brand hover:bg-brand/90 h-16 rounded-lg px-8 text-base font-black text-white"
-                      disabled={isDrawing || isDrawParticipantLoading}
-                      onClick={handlePickDrawWinner}
-                    >
-                      {isDrawParticipantLoading ? "조회 중" : isDrawing ? "추첨 중" : "추첨하기"}
-                    </Button>
-                  </div>
+              </div>
 
-                  <div className="flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-10">
-                    <span className="text-muted-foreground/60 flex items-center gap-2 text-sm font-black">
-                      <Check className="size-4" />
-                      구독자만 추첨하기
-                    </span>
-                    <span className="text-foreground flex items-center gap-2 text-sm font-black">
-                      <Check className="size-4" />
-                      이미 뽑힌 참여자 제외하기
-                    </span>
-                  </div>
-
-                  <div className="border-border bg-background/60 flex min-h-0 flex-1 flex-col rounded-lg border">
-                    {isDrawing && drawReelNames.length > 0 ? (
-                      <div className="relative m-auto h-10 w-full max-w-md overflow-hidden px-4">
-                        <div className="from-background pointer-events-none absolute inset-x-4 top-0 z-10 h-3 bg-linear-to-b to-transparent" />
-                        <div className="from-background pointer-events-none absolute inset-x-4 bottom-0 z-10 h-3 bg-linear-to-t to-transparent" />
-                        <div
-                          className="flex flex-col transition-transform ease-out"
-                          style={{
-                            transform: `translateY(-${drawReelTargetIndex * DRAW_REEL_ROW_HEIGHT_PX}px)`,
-                            transitionDuration: `${DRAW_REEL_DURATION_MS - 150}ms`,
-                            transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)",
-                          }}
+              <div className="border-border bg-background/60 flex min-h-0 flex-1 flex-col rounded-lg border">
+                {isDrawing && drawReelNames.length > 0 ? (
+                  <div className="relative m-auto h-10 w-full max-w-md overflow-hidden px-4">
+                    <div className="from-background pointer-events-none absolute inset-x-4 top-0 z-10 h-3 bg-linear-to-b to-transparent" />
+                    <div className="from-background pointer-events-none absolute inset-x-4 bottom-0 z-10 h-3 bg-linear-to-t to-transparent" />
+                    <div
+                      className="flex flex-col transition-transform ease-out"
+                      style={{
+                        transform: `translateY(-${drawReelTargetIndex * DRAW_REEL_ROW_HEIGHT_PX}px)`,
+                        transitionDuration: `${DRAW_REEL_DURATION_MS - 150}ms`,
+                        transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)",
+                      }}
+                    >
+                      {drawReelNames.map((name, index) => (
+                        <span
+                          key={`${name}-${index}`}
+                          className="text-live flex h-10 items-center justify-center text-lg font-black"
                         >
-                          {drawReelNames.map((name, index) => (
-                            <span
-                              key={`${name}-${index}`}
-                              className="text-live flex h-10 items-center justify-center text-lg font-black"
-                            >
-                              {name}
-                            </span>
-                          ))}
-                        </div>
+                          {name}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="min-h-0 flex-1 overflow-y-auto p-4">
+                    {drawWinnerNames.length ? (
+                      <div className="border-border mb-4 flex flex-wrap items-center gap-2 border-b pb-4">
+                        <span className="text-brand text-sm font-black">당첨자</span>
+                        {drawWinnerNames.map((winnerName, index) => (
+                          <span
+                            key={`${winnerName}-${index}`}
+                            className="bg-brand/10 text-brand rounded-lg px-3 py-2 text-sm font-black"
+                          >
+                            {index + 1}. {winnerName}
+                          </span>
+                        ))}
+                      </div>
+                    ) : null}
+
+                    {drawParticipants.length > 0 ? (
+                      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                        {drawParticipants.map((participant) => (
+                          <span
+                            key={participant}
+                            className="bg-muted/50 text-foreground rounded-lg px-3 py-2 text-sm font-bold"
+                          >
+                            {participant}
+                          </span>
+                        ))}
                       </div>
                     ) : (
-                      <div className="min-h-0 flex-1 overflow-y-auto p-4">
-                        {drawWinnerNames.length ? (
-                          <div className="border-border mb-4 flex flex-wrap items-center gap-2 border-b pb-4">
-                            <span className="text-brand text-sm font-black">당첨자</span>
-                            {drawWinnerNames.map((winnerName, index) => (
-                              <span
-                                key={`${winnerName}-${index}`}
-                                className="bg-brand/10 text-brand rounded-lg px-3 py-2 text-sm font-black"
-                              >
-                                {index + 1}. {winnerName}
-                              </span>
-                            ))}
-                          </div>
-                        ) : null}
-
-                        {drawParticipants.length > 0 ? (
-                          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                            {drawParticipants.map((participant) => (
-                              <span
-                                key={participant}
-                                className="bg-muted/50 text-foreground rounded-lg px-3 py-2 text-sm font-bold"
-                              >
-                                {participant}
-                              </span>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="flex h-full min-h-72 items-center justify-center text-center">
-                            <p className="text-muted-foreground text-sm font-semibold">
-                              {drawRollingName
-                                ? `최근 당첨자 ${drawRollingName}`
-                                : "모집 시작 후 채팅을 친 사람이 추첨 후보에 들어갑니다."}
-                            </p>
-                          </div>
-                        )}
+                      <div className="flex h-full min-h-72 items-center justify-center text-center">
+                        <p className="text-muted-foreground text-sm font-semibold">
+                          {drawRollingName
+                            ? `최근 당첨자 ${drawRollingName}`
+                            : "모집 시작 후 채팅을 친 사람이 추첨 후보에 들어갑니다."}
+                        </p>
                       </div>
                     )}
                   </div>
+                )}
+              </div>
 
-                  <div className="flex justify-end">
-                    <span className="text-foreground text-sm font-black">
-                      총 {drawParticipants.length}명
-                    </span>
-                  </div>
-                </div>
-              )}
-            </>
+              <div className="flex justify-end">
+                <span className="text-foreground text-sm font-black">
+                  총 {drawParticipants.length}명
+                </span>
+              </div>
+            </div>
           )}
 
           {selectedTool === "roulette" && (
             <div className="flex min-h-0 flex-1 flex-col gap-3">
               {!isRouletteStarted ? (
                 <>
-                  <div className="grid h-80 gap-3 overflow-y-auto pr-1">
+                  <div className="flex max-h-80 flex-col gap-2 overflow-y-auto pr-1">
                     {rouletteItems.map((item, index) => (
                       <div
                         key={index}
@@ -1051,21 +1171,16 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId, messages 
                     ))}
                   </div>
 
-                  <div className="grid grid-cols-[4.25rem_minmax(0,1fr)_4.5rem_2.5rem] items-center gap-2">
-                    <span aria-hidden />
+                  <div className="mt-auto grid gap-3 pt-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
                     <Button
                       type="button"
                       variant="outline"
-                      className="border-brand text-brand hover:bg-brand/10 hover:text-brand col-span-2 h-10 rounded-xl font-bold"
+                      className="border-brand text-brand hover:bg-brand/10 hover:text-brand h-14 w-full rounded-lg text-base font-black"
                       onClick={handleAddRouletteItem}
                     >
-                      <Plus className="size-3.5" />
+                      <Plus className="size-4" />
                       항목 추가
                     </Button>
-                    <span aria-hidden />
-                  </div>
-
-                  <div className="flex justify-center pt-5">
                     <Button
                       type="button"
                       className="bg-brand hover:bg-brand/90 h-14 rounded-lg px-10 text-base font-black text-white"

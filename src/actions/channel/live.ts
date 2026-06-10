@@ -85,6 +85,7 @@ export interface ChannelLiveChatMessage {
 
 export interface ChannelLiveDrawParticipant {
   firstMessageAt: string;
+  isFollower: boolean;
   nickname: string;
   userId: string;
 }
@@ -384,16 +385,18 @@ function toChannelLiveStudioSnapshot(value: Json, creatorId: string): ChannelLiv
 
 async function getChannelLiveDrawParticipantsByPeriod({
   broadcastId,
+  creatorId,
   endedAt,
   startedAt,
   supabase,
 }: {
   broadcastId: string;
+  creatorId: string;
   endedAt: string;
   startedAt: string;
   supabase: ReturnType<typeof createAdminClient>;
 }) {
-  const participantsByUserId = new Map<string, ChannelLiveDrawParticipant>();
+  const participantBaseByUserId = new Map<string, Omit<ChannelLiveDrawParticipant, "isFollower">>();
   let offset = 0;
 
   while (true) {
@@ -414,13 +417,13 @@ async function getChannelLiveDrawParticipantsByPeriod({
     }
 
     (data ?? []).forEach((message) => {
-      if (!message.sender_id || participantsByUserId.has(message.sender_id)) {
+      if (!message.sender_id || participantBaseByUserId.has(message.sender_id)) {
         return;
       }
 
       const metadata = readJsonObject(message.metadata);
 
-      participantsByUserId.set(message.sender_id, {
+      participantBaseByUserId.set(message.sender_id, {
         firstMessageAt: message.created_at,
         nickname: readMetadataString(metadata.senderNickname) ?? "시청자",
         userId: message.sender_id,
@@ -434,7 +437,33 @@ async function getChannelLiveDrawParticipantsByPeriod({
     offset += CHANNEL_LIVE_DRAW_PARTICIPANT_PAGE_SIZE;
   }
 
-  return Array.from(participantsByUserId.values());
+  const participantUserIds = Array.from(participantBaseByUserId.keys());
+  const followerUserIdSet = new Set<string>();
+
+  if (participantUserIds.length > 0) {
+    const { data: relations, error: relationError } = await supabase
+      .from("viewer_creator_relation")
+      .select("viewer_id")
+      .eq("creator_id", creatorId)
+      .in("viewer_id", participantUserIds)
+      .not("followed_at", "is", null);
+
+    if (relationError) {
+      console.error("방송 추첨 팔로우 관계 조회 실패", relationError);
+      return null;
+    }
+
+    (relations ?? []).forEach((relation) => {
+      followerUserIdSet.add(relation.viewer_id);
+    });
+  }
+
+  return Array.from(participantBaseByUserId.values()).map<ChannelLiveDrawParticipant>(
+    (participant) => ({
+      ...participant,
+      isFollower: followerUserIdSet.has(participant.userId),
+    }),
+  );
 }
 
 export async function getChannelLiveStudioSnapshotAction(): Promise<
@@ -833,6 +862,7 @@ export async function getChannelLiveDrawParticipantsAction(
 
   const participants = await getChannelLiveDrawParticipantsByPeriod({
     broadcastId: parsed.data.broadcastId,
+    creatorId: actor.userId,
     endedAt: parsed.data.endedAt,
     startedAt: parsed.data.startedAt,
     supabase,
