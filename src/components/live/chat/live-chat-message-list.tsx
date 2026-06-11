@@ -96,7 +96,7 @@ export function LiveChatMessageList({
             style={{ transform: `translateY(${item.start}px)` }}
           >
             {item.index === 0 ? (
-              <p className="border-border bg-muted/70 text-muted-foreground rounded-lg border px-3 py-2 text-center text-sm leading-relaxed font-semibold whitespace-pre-line">
+              <p className="border-border bg-muted/70 text-muted-foreground rounded-lg border px-3 py-2 text-center text-xs leading-relaxed font-semibold whitespace-pre-line">
                 {LIVE_LABEL.chatFilterNotice}
               </p>
             ) : (

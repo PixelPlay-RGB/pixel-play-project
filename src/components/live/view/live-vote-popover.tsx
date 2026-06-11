@@ -877,11 +877,11 @@ export function LiveVotePopover({
         container={portalContainer}
         align="center"
         side="top"
-        sideOffset={8}
+        sideOffset={0}
         // 기본 collisionPadding(5px)이 popover를 패널 밖으로 밀어내므로 0으로 고정해 패널 안에 둔다.
         collisionPadding={0}
-        // 채팅 아이템 좌우 패딩(px-3)만큼 패널보다 좁혀 답답하지 않게 띄운다.
-        className="max-h-[calc(100vh-1rem)] w-[calc(var(--anchor-width)-1.5rem)] overflow-y-auto"
+        // 입력바(anchor) 풀폭 + 하단 직각으로 입력 섹션과 한 덩어리처럼 이어 붙인다(후원 popover와 동일).
+        className="max-h-[calc(100vh-1rem)] w-(--anchor-width) overflow-y-auto rounded-b-none"
       >
         {showHeader ? (
           <PopoverHeader>

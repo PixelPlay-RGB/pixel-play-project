@@ -170,10 +170,13 @@ export default function ChannelLiveQuickSettingsPanel({
   return (
     // 풀블리드 우측 칼럼 — 카드 대신 면으로 채우고 헤더는 다른 칼럼 헤더와 같은 보더로 구분한다.
     <Card className="flex min-h-144 flex-col gap-5 rounded-none border-0 py-0 pb-6 shadow-none xl:min-h-full">
-      {/* 채팅 패널 헤더와 같은 높이(57px, 보더 포함)로 고정해 separator 라인을 맞춘다. */}
-      <CardHeader className="border-border h-[57px] items-center gap-2 border-b px-4 py-0">
+      {/* 채팅 패널 헤더와 같은 높이(57px, 보더 포함)로 고정해 separator 라인을 맞춘다.
+          기본 grid는 CardAction(row-span-2)이 빈 행+row gap을 만들어 수직 중앙이 어긋나므로 flex로 단순화한다. */}
+      {/* 기본 [.border-b]:pb-4가 py-0보다 우선해 아래 패딩이 남으므로 같은 변형으로 0을 덮는다. */}
+      <CardHeader className="border-border flex h-[57px] items-center justify-between gap-2 border-b px-4 py-0 [.border-b]:pb-0">
         <CardTitle>빠른 설정</CardTitle>
-        <CardAction>
+        {/* CardAction 기본 self-start가 flex에서도 위로 붙이므로 중앙으로 덮는다. */}
+        <CardAction className="self-center">
           <Button
             type="button"
             size="sm"

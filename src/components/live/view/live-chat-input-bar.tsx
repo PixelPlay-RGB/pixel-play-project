@@ -273,7 +273,7 @@ export function LiveChatInputBar({
           side="top"
           sideOffset={0}
           collisionPadding={0}
-          className="w-(--anchor-width)"
+          className="w-(--anchor-width) rounded-b-none"
         >
           <PopoverHeader>
             <PopoverTitle>{LIVE_LABEL.participationFollowerTitle}</PopoverTitle>
@@ -302,7 +302,7 @@ export function LiveChatInputBar({
           side="top"
           sideOffset={0}
           collisionPadding={0}
-          className="max-h-[calc(100vh-1rem)] w-(--anchor-width) overflow-y-auto"
+          className="max-h-[calc(100vh-1rem)] w-(--anchor-width) overflow-y-auto rounded-b-none"
         >
           <PopoverHeader>
             <PopoverTitle>{LIVE_LABEL.chatRuleTitle}</PopoverTitle>
