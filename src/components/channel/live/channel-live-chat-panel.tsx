@@ -48,6 +48,8 @@ function toChannelLiveChatMessages(messages: LiveChatMessage[]): ChannelLiveChat
 export default function ChannelLiveChatPanel({ creatorId, chatRuleText, onMessagesChange }: Props) {
   const [cleanbot, setCleanbot] = useState(true);
   const [isPopoutOpen, setIsPopoutOpen] = useState(false);
+  // 메뉴의 "채팅 규칙" 클릭마다 증가 — 입력바 위 규칙 popover를 여는 요청 id.
+  const [ruleOpenRequestId, setRuleOpenRequestId] = useState(0);
   const popoutWindowRef = useRef<Window | null>(null);
   const popoutCheckIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const chatState = STUDIO_CHAT_STATE;
@@ -95,13 +97,10 @@ export default function ChannelLiveChatPanel({ creatorId, chatRuleText, onMessag
         {creatorId ? (
           <LiveChatMenu
             creatorId={creatorId}
-            chatRuleText={chatRuleText}
-            // 운영(스튜디오) 화면은 크리에이터 본인이라 규칙 동의 상태 칩을 표시하지 않는다.
-            isRuleAccepted={false}
-            isRulePending={false}
             cleanbot={cleanbot}
             onCleanbot={() => setCleanbot((prev) => !prev)}
             onPopoutOpen={handlePopoutOpen}
+            onShowRules={() => setRuleOpenRequestId((id) => id + 1)}
           />
         ) : null}
       </div>
@@ -132,6 +131,7 @@ export default function ChannelLiveChatPanel({ creatorId, chatRuleText, onMessag
           isLoadingOlderMessages={isLoadingOlder}
           hasMoreChatHistory={hasMoreHistory}
           entryNoticeAnchorId={entryNoticeAnchorId}
+          ruleOpenRequestId={ruleOpenRequestId}
         />
       )}
     </div>

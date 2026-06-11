@@ -62,13 +62,14 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     isFollowing,
     onFollowToggled,
     chatRuleText,
-    isChatRuleAccepted,
     isLoggedIn,
     isAuthLoading,
     chatState,
     sendMessage,
     acceptChatRule,
     refreshChatState,
+    followerWaitSeconds,
+    slowModeSeconds,
   } = useLiveBroadcastView(creatorId);
   const { handleFollow, isFollowPending } = useLiveFollowAction({
     creatorId,
@@ -209,6 +210,8 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
                       hasMoreChatHistory={hasMoreChatHistory}
                       entryNoticeAnchorId={entryNoticeAnchorId}
                       onRefreshChatState={refreshChatState}
+                      followerWaitSeconds={followerWaitSeconds}
+                      slowModeSeconds={slowModeSeconds}
                     />
                   )}
                 />
@@ -310,7 +313,6 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
               onJoinDraw={joinDraw}
               onDonate={sendDonation}
               chatRuleText={chatRuleText}
-              isRuleAccepted={isChatRuleAccepted}
               onAcceptChatRule={acceptChatRule}
               onFollow={handleFollow}
               isFollowing={isFollowing}
@@ -322,6 +324,8 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
               hasMoreChatHistory={hasMoreChatHistory}
               entryNoticeAnchorId={entryNoticeAnchorId}
               onRefreshChatState={refreshChatState}
+              followerWaitSeconds={followerWaitSeconds}
+              slowModeSeconds={slowModeSeconds}
             />
           </aside>
         </div>

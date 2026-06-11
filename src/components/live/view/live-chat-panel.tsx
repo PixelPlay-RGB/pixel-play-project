@@ -44,21 +44,20 @@ interface Props {
     idempotencyKey: string;
   }) => Promise<boolean>;
   chatRuleText?: string;
-  // 채팅 규칙 동의 여부(훅이 RPC 신호로 판정). 메뉴 동의 칩 표시용.
-  // required — optional+기본값이면 새 콜사이트가 배선을 빠뜨려도 조용히 '미동의'로 퇴화한다.
-  isRuleAccepted: boolean;
   onAcceptChatRule?: () => Promise<boolean>;
   onFollow?: () => void;
   isFollowing?: boolean;
   isFollowPending?: boolean;
   onCollapse?: () => void;
   collapseButtonRef?: Ref<HTMLButtonElement>;
-  // 과거 채팅 적재(무한 스크롤)·진입 안내 위치 — LiveChatBody로 그대로 전달한다.
+  // 과거 채팅 적재(무한 스크롤)·진입 안내 위치·게이트 설정값 — LiveChatBody로 그대로 전달한다.
   onLoadOlderMessages?: () => void;
   isLoadingOlderMessages?: boolean;
   hasMoreChatHistory?: boolean;
   entryNoticeAnchorId?: string | null;
   onRefreshChatState?: () => void;
+  followerWaitSeconds?: number;
+  slowModeSeconds?: number;
 }
 
 export function LiveChatPanel({
@@ -84,7 +83,6 @@ export function LiveChatPanel({
   onJoinDraw,
   onDonate,
   chatRuleText,
-  isRuleAccepted,
   onAcceptChatRule,
   onFollow,
   isFollowing,
@@ -96,16 +94,15 @@ export function LiveChatPanel({
   hasMoreChatHistory,
   entryNoticeAnchorId,
   onRefreshChatState,
+  followerWaitSeconds,
+  slowModeSeconds,
 }: Props) {
   const [cleanbot, setCleanbot] = useState(true);
   const [isPopoutOpen, setIsPopoutOpen] = useState(false);
-  // 동의 완료는 prop(RPC 전용 필드 기반)으로 받고, "동의 필요" 안내만 사유로 파생한다.
-  const isRulePending =
-    isLoggedIn && chatState.chatUnavailableReason === "chat_rule_acceptance_required";
+  // 메뉴의 "채팅 규칙" 클릭마다 증가 — 입력바 위 규칙 popover를 여는 요청 id.
+  const [ruleOpenRequestId, setRuleOpenRequestId] = useState(0);
   const popoutWindowRef = useRef<Window | null>(null);
   const popoutCheckIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  // 채팅 규칙 popover를 패널 폭에 맞추기 위한 anchor(헤더 전체 폭). 입력바 popover와 동일 방식.
-  const chatHeaderRef = useRef<HTMLDivElement>(null);
 
   function handlePopoutOpen(win: Window) {
     popoutWindowRef.current = win;
@@ -132,10 +129,7 @@ export function LiveChatPanel({
 
   return (
     <div className="border-border bg-card flex h-full min-h-96 flex-col overflow-hidden border-t md:min-h-0 md:border-t-0 md:border-l">
-      <div
-        ref={chatHeaderRef}
-        className="border-border flex items-center justify-between border-b px-4 py-3"
-      >
+      <div className="border-border flex items-center justify-between border-b px-4 py-3">
         <span className="text-foreground text-sm font-semibold">{LIVE_LABEL.chat}</span>
         <div className="flex items-center gap-1">
           {onCollapse ? (
@@ -160,13 +154,10 @@ export function LiveChatPanel({
           ) : null}
           <LiveChatMenu
             creatorId={creatorId}
-            chatRuleText={chatRuleText}
-            isRuleAccepted={isRuleAccepted}
-            isRulePending={isRulePending}
             cleanbot={cleanbot}
             onCleanbot={() => setCleanbot((prev) => !prev)}
             onPopoutOpen={handlePopoutOpen}
-            anchorRef={chatHeaderRef}
+            onShowRules={() => setRuleOpenRequestId((id) => id + 1)}
           />
         </div>
       </div>
@@ -209,6 +200,9 @@ export function LiveChatPanel({
           hasMoreChatHistory={hasMoreChatHistory}
           entryNoticeAnchorId={entryNoticeAnchorId}
           onRefreshChatState={onRefreshChatState}
+          followerWaitSeconds={followerWaitSeconds}
+          slowModeSeconds={slowModeSeconds}
+          ruleOpenRequestId={ruleOpenRequestId}
         />
       )}
     </div>

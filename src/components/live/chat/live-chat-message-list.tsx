@@ -125,16 +125,26 @@ export function LiveChatMessageList({
   }, [messages, scrollRef]);
 
   useLayoutEffect(() => {
+    // 1차 이동은 추정 행 높이 기준이라 바닥에 못 미칠 수 있다 — 행 실측(measureElement)이
+    // 반영된 다음 프레임에 scrollHeight 기준으로 한 번 더 바닥에 붙인다.
+    const scrollToBottom = () => {
+      virtualizer.scrollToIndex(rowCount - 1, { align: "end" });
+      requestAnimationFrame(() => {
+        const container = scrollRef.current;
+        if (container) container.scrollTop = container.scrollHeight;
+      });
+    };
+
     if (isInitialMount.current) {
       isInitialMount.current = false;
-      virtualizer.scrollToIndex(rowCount - 1, { align: "end" });
+      scrollToBottom();
       return;
     }
 
     if (wasNearBottomRef.current) {
-      virtualizer.scrollToIndex(rowCount - 1, { align: "end" });
+      scrollToBottom();
     }
-  }, [rowCount, virtualizer]);
+  }, [rowCount, virtualizer, scrollRef]);
 
   return (
     // 채팅은 항상 바닥에서 위로 쌓인다 — 메시지가 적을 땐 입력바 바로 위부터 시작한다.

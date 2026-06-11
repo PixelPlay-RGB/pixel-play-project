@@ -41,16 +41,6 @@ export function useLiveBroadcastView(creatorId: string) {
   const isFollowing = optimisticFollowing ?? watchData?.viewerRelation?.isFollowing ?? false;
 
   // 채팅 규칙 게이트 통과 여부(메뉴 동의 칩 표시용) — 두 신호의 합집합.
-  // ① canChat=true: RPC가 규칙 게이트를 통과시킨 상태(본인 채널·규칙 미설정 채널 포함 — 이들은
-  //    동의 절차가 없어 chatRuleAcceptedVersion이 null이므로 전용 필드만으론 누락된다).
-  // ② 전용 필드(chatRuleAcceptedVersion>=chatRuleVersion): canChat이 follower_required 등
-  //    다른 사유로 false여도 동의 이력이 있으면 동의 완료로 본다.
-  // 동의 직후엔 acceptChatRule→onChatRuleAccepted(refetch)로 watchData가 갱신돼 신선하다.
-  const isChatRuleAccepted =
-    watchData?.viewerChatState.canChat === true ||
-    (watchData?.viewerRelation?.chatRuleAcceptedVersion != null &&
-      watchData.viewerRelation.chatRuleAcceptedVersion >= watchData.settings.chatRuleVersion);
-
   function onFollowToggled() {
     const next = !isFollowing;
     setOptimisticFollowing(next);
@@ -265,7 +255,13 @@ export function useLiveBroadcastView(creatorId: string) {
     isFollowing,
     onFollowToggled,
     chatRuleText: watchData?.settings.chatRuleText,
-    isChatRuleAccepted,
+    // 팔로워 전용 대기 시간 안내용 설정값(초).
+    followerWaitSeconds: watchData?.settings.followerWaitSeconds ?? 0,
+    // 슬로우 모드 간격(초) — 서버 검증과 동일하게 크리에이터 본인에겐 걸지 않는다(0).
+    slowModeSeconds:
+      watchData?.settings.slowModeEnabled && user?.id !== creatorId
+        ? watchData.settings.slowModeSeconds
+        : 0,
     // 팔로우 대기 카운트다운 종료 등 게이트 해제 시점에 viewer chat state를 다시 받는다.
     refreshChatState: () => {
       void refetch();

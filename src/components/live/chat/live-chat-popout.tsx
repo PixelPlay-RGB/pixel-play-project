@@ -44,6 +44,8 @@ export function LiveChatPopout({ creatorId }: Props) {
     isFollowing,
     onFollowToggled,
     refreshChatState,
+    followerWaitSeconds,
+    slowModeSeconds,
   } = useLiveBroadcastView(creatorId);
 
   const { handleFollow, isFollowPending } = useLiveFollowAction({
@@ -114,6 +116,8 @@ export function LiveChatPopout({ creatorId }: Props) {
         hasMoreChatHistory={hasMoreChatHistory}
         entryNoticeAnchorId={entryNoticeAnchorId}
         onRefreshChatState={refreshChatState}
+        followerWaitSeconds={followerWaitSeconds}
+        slowModeSeconds={slowModeSeconds}
       />
     </div>
   );

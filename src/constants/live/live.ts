@@ -6,8 +6,6 @@ export const LIVE_LABEL = {
   chatRuleDefaultText:
     "서로를 존중하며 대화해주세요. 반복 도배, 비방, 홍보성 메시지는 제한될 수 있습니다.",
   chatRuleAccept: "규칙 확인하고 채팅하기",
-  chatRuleAccepted: "채팅 규칙에 동의했습니다",
-  chatRulePending: "아직 채팅 규칙에 동의하지 않았습니다",
   live: "LIVE",
   chat: "라이브 채팅",
   follow: "팔로우",
@@ -77,6 +75,11 @@ export const LIVE_LABEL = {
   chatManagerOnlyPlaceholder: "매니저만 채팅할 수 있습니다.",
   participationFollowerTitle: "팔로우 전용 채팅",
   participationFollowerDesc: "이 방송은 팔로우한 시청자만 채팅할 수 있습니다.",
+  // 팔로우 후 대기 시간이 설정된 채널에서 팔로우 popover에 덧붙이는 안내.
+  participationFollowerWaitDesc: (waitTime: string) =>
+    `팔로우 후 ${waitTime}이 지나면 참여할 수 있어요.`,
+  // 슬로우 모드 잠금 중 입력칸 placeholder — 남은 시간을 실시간으로 보여준다.
+  chatSlowModePlaceholder: (seconds: number) => `슬로우 모드 — ${seconds}초 후 입력할 수 있어요.`,
   participationWaitTitle: "팔로우 대기 중",
   participationWaitDesc: "팔로우 후 잠시 기다려야 채팅할 수 있습니다.",
   chatPopoutBlocked: "팝업 차단을 해제한 뒤 다시 열어주세요.",

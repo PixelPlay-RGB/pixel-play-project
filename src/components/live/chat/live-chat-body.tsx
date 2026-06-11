@@ -61,6 +61,10 @@ interface Props {
   entryNoticeAnchorId?: string | null;
   // 팔로우 대기 카운트다운 종료 등 게이트가 풀릴 시점에 viewer chat state를 다시 받는다.
   onRefreshChatState?: () => void;
+  // 팔로워 전용 대기 시간·슬로우 모드 간격(설정값, 초)과 규칙 popover 열기 요청 — 입력바로 전달한다.
+  followerWaitSeconds?: number;
+  slowModeSeconds?: number;
+  ruleOpenRequestId?: number;
   // 입력바 하단의 후원·투표 액션행 노출 여부(미지정=노출). 전체화면 포털이 필요하면 portalContainer를 함께 준다.
   showActions?: boolean;
   votePresentation?: "popover" | "dialog";
@@ -104,6 +108,9 @@ export function LiveChatBody({
   hasMoreChatHistory,
   entryNoticeAnchorId,
   onRefreshChatState,
+  followerWaitSeconds,
+  slowModeSeconds,
+  ruleOpenRequestId,
   showActions = true,
   votePresentation = "popover",
   portalContainer,
@@ -182,6 +189,9 @@ export function LiveChatBody({
         chatRuleText={chatRuleText}
         onAcceptChatRule={onAcceptChatRule}
         onRefreshChatState={onRefreshChatState}
+        followerWaitSeconds={followerWaitSeconds}
+        slowModeSeconds={slowModeSeconds}
+        ruleOpenRequestId={ruleOpenRequestId}
         onFollow={onFollow}
         isFollowing={isFollowing}
         isFollowPending={isFollowPending}
