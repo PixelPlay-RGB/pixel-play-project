@@ -30,3 +30,12 @@ export interface RouletteSegment {
   item: RouletteItem;
   startPercent: number;
 }
+
+export interface LiveRouletteNoticePayload {
+  createdAt: string;
+  id: string;
+  items: string[];
+  resultLabel: string;
+  rotation: number;
+  status: "active" | "ended";
+}

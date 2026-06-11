@@ -1,14 +1,14 @@
 "use client";
 // 방송 운영 룰렛 도구의 항목 편집과 회전 연출 상태를 관리합니다.
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import {
   DEFAULT_ROULETTE_ITEMS,
   ROULETTE_RECOIL_DEGREE,
   ROULETTE_SEGMENT_COLORS,
 } from "@/constants/channel/live-interaction";
-import type { PublishInteractionNotice } from "@/hooks/channel/use-channel-live-interaction-notice";
+import type { PublishRouletteNotice } from "@/hooks/channel/use-channel-live-roulette-notice";
 import {
   getRouletteSegments,
   getRouletteTargetDegree,
@@ -17,13 +17,14 @@ import {
   pickRouletteSegment,
 } from "@/utils/channel/live-interaction";
 
-export function useChannelLiveRouletteTool(publishInteractionNotice: PublishInteractionNotice) {
+export function useChannelLiveRouletteTool(publishRouletteNotice: PublishRouletteNotice) {
   const [rouletteItems, setRouletteItems] = useState(DEFAULT_ROULETTE_ITEMS);
   const [isRouletteStarted, setIsRouletteStarted] = useState(false);
   const [rouletteResult, setRouletteResult] = useState<string | null>(null);
   const [rouletteRotation, setRouletteRotation] = useState(0);
   const [rouletteRotationKeyframes, setRouletteRotationKeyframes] = useState<number[]>([0]);
   const [pendingRouletteResult, setPendingRouletteResult] = useState<string | null>(null);
+  const pendingRouletteNoticeIdRef = useRef<string | null>(null);
   const [isRouletteSpinning, setIsRouletteSpinning] = useState(false);
 
   const validRouletteItems = useMemo(() => getValidRouletteItems(rouletteItems), [rouletteItems]);
@@ -105,14 +106,16 @@ export function useChannelLiveRouletteTool(publishInteractionNotice: PublishInte
     setRouletteRotation(nextRotation);
     setRouletteResult(null);
     setIsRouletteSpinning(true);
-    void publishInteractionNotice({
-      content: "룰렛을 돌리는 중입니다.",
-      interactionType: "roulette",
-      metadata: {
-        items: validRouletteItems.map((item) => item.label),
-        resultLabel: "룰렛 진행 중",
-        status: "active",
-      },
+    const noticeId = crypto.randomUUID();
+
+    pendingRouletteNoticeIdRef.current = noticeId;
+    void publishRouletteNotice({
+      createdAt: new Date().toISOString(),
+      id: noticeId,
+      items: validRouletteItems.map((item) => item.label),
+      resultLabel: "룰렛 진행 중",
+      rotation: nextRotation,
+      status: "active",
     });
   };
 
@@ -124,14 +127,16 @@ export function useChannelLiveRouletteTool(publishInteractionNotice: PublishInte
     setRouletteResult(nextResult);
     setPendingRouletteResult(null);
     setIsRouletteSpinning(false);
-    void publishInteractionNotice({
-      content: `룰렛 결과 ${nextResult}`,
-      interactionType: "roulette",
-      metadata: {
-        items: validRouletteItems.map((item) => item.label),
-        resultLabel: nextResult,
-        status: "ended",
-      },
+    const noticeId = pendingRouletteNoticeIdRef.current ?? crypto.randomUUID();
+
+    pendingRouletteNoticeIdRef.current = null;
+    void publishRouletteNotice({
+      createdAt: new Date().toISOString(),
+      id: noticeId,
+      items: validRouletteItems.map((item) => item.label),
+      resultLabel: nextResult,
+      rotation: rouletteRotation,
+      status: "ended",
     });
   };
 
@@ -146,19 +151,19 @@ export function useChannelLiveRouletteTool(publishInteractionNotice: PublishInte
   // 뒤로가기: 회전 중이거나 결과 확정 전이면 종료 공지를 발행하고, 성공해야 도구를 떠난다.
   const exitTool = async () => {
     if (isRouletteSpinning || pendingRouletteResult) {
-      const noticeId = await publishInteractionNotice({
-        content: "룰렛이 종료되었습니다.",
-        interactionType: "roulette",
-        metadata: {
-          items: validRouletteItems.map((item) => item.label),
-          resultLabel: "룰렛 종료",
-          status: "ended",
-        },
+      const didPublish = await publishRouletteNotice({
+        createdAt: new Date().toISOString(),
+        id: pendingRouletteNoticeIdRef.current ?? crypto.randomUUID(),
+        items: validRouletteItems.map((item) => item.label),
+        resultLabel: "룰렛 종료",
+        rotation: rouletteRotation,
+        status: "ended",
       });
 
-      if (!noticeId) return false;
+      if (!didPublish) return false;
     }
 
+    pendingRouletteNoticeIdRef.current = null;
     resetRouletteState();
     return true;
   };

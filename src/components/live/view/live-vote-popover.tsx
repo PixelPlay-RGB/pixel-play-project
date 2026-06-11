@@ -1,14 +1,16 @@
 "use client";
 // 투표 참여와 라이브 상호작용 결과를 채팅 패널 액션 팝오버로 제공합니다.
 
-import { useId, useState, type RefObject } from "react";
+import { useId, useMemo, useState, type RefObject } from "react";
 import { Check, Crown, FerrisWheel, Sparkles, Trophy, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ROULETTE_SEGMENT_COLORS } from "@/constants/channel/live-interaction";
 import { LIVE_LABEL, LIVE_VOTE_LABEL } from "@/constants/live/live";
 import { cn } from "@/lib/utils";
+import { getRouletteItemLabelStyle, getRouletteSegments } from "@/utils/channel/live-interaction";
 import { formatCount } from "@/utils/live/live-chat";
 import type { LiveInteractionNotice, LivePoll, LivePollOption } from "@/types/live/live";
 
@@ -503,6 +505,70 @@ function DrawNoticeBoard({
   );
 }
 
+function RouletteNoticeBoard({ notice }: { notice: LiveInteractionNotice }) {
+  const rouletteItems = useMemo(
+    () => (notice.rouletteItems ?? []).map((label) => ({ label })),
+    [notice.rouletteItems],
+  );
+  const rouletteSegments = useMemo(() => getRouletteSegments(rouletteItems), [rouletteItems]);
+  const rouletteSegmentStyle = useMemo(() => {
+    if (rouletteSegments.length === 0) {
+      return { background: "var(--muted)" };
+    }
+
+    const stops = rouletteSegments.map((segment, index) => {
+      const color = ROULETTE_SEGMENT_COLORS[index % ROULETTE_SEGMENT_COLORS.length];
+
+      return `${color} ${segment.startPercent}% ${segment.endPercent}%`;
+    });
+
+    return { background: `conic-gradient(${stops.join(", ")})` };
+  }, [rouletteSegments]);
+  const rotation = notice.rouletteRotation ?? 0;
+  const isActive = notice.status === "active";
+
+  return (
+    <div className="border-border flex flex-col items-center gap-4 border-t border-dashed py-3">
+      <div className="relative flex size-56 items-center justify-center">
+        <div className="absolute top-5 right-8 z-20 rotate-[225deg] drop-shadow-lg">
+          <div
+            className="bg-border h-8 w-4"
+            style={{ clipPath: "polygon(50% 0, 100% 100%, 0 100%)" }}
+          />
+          <div
+            className="bg-destructive absolute top-0.5 left-0.5 h-7 w-3"
+            style={{ clipPath: "polygon(50% 0, 100% 100%, 0 100%)" }}
+          />
+        </div>
+        <div
+          className="border-background relative size-52 overflow-hidden rounded-full border-8 shadow-lg transition-transform duration-[5000ms] ease-out"
+          style={{
+            ...rouletteSegmentStyle,
+            transform: `rotate(${rotation}deg)`,
+          }}
+        >
+          {rouletteSegments.map((segment) => (
+            <span
+              key={`${segment.item.label}-${segment.index}-viewer-wheel`}
+              className="absolute top-1/2 left-1/2 w-16 truncate text-center text-[11px] font-black text-white drop-shadow"
+              style={getRouletteItemLabelStyle(segment.centerDegree)}
+            >
+              {segment.item.label}
+            </span>
+          ))}
+        </div>
+        <div className="bg-background border-border absolute flex size-16 flex-col items-center justify-center rounded-full border shadow-sm">
+          <FerrisWheel className="text-brand size-5" />
+          <span className="text-muted-foreground text-[10px] font-bold">ROULETTE</span>
+        </div>
+      </div>
+      <strong className="text-foreground text-center text-base font-black wrap-break-word">
+        {isActive ? LIVE_VOTE_LABEL.rouletteActiveTitle : notice.resultLabel}
+      </strong>
+    </div>
+  );
+}
+
 function InteractionNoticeCard({
   isLoggedIn,
   notice,
@@ -560,20 +626,26 @@ function InteractionNoticeCard({
       />
       {!isDraw ? (
         <>
-          <div className="border-border border-t border-dashed py-3">
-            <div className="flex items-center gap-2 pb-3">
-              <span className="bg-brand/10 text-brand flex size-9 shrink-0 items-center justify-center rounded-full">
-                <Icon className="size-5" />
-              </span>
-              <p className="text-foreground min-w-0 text-sm font-bold wrap-break-word">{detail}</p>
+          {notice.type === "roulette" && notice.rouletteItems ? (
+            <RouletteNoticeBoard notice={notice} />
+          ) : (
+            <div className="border-border border-t border-dashed py-3">
+              <div className="flex items-center gap-2 pb-3">
+                <span className="bg-brand/10 text-brand flex size-9 shrink-0 items-center justify-center rounded-full">
+                  <Icon className="size-5" />
+                </span>
+                <p className="text-foreground min-w-0 text-sm font-bold wrap-break-word">
+                  {detail}
+                </p>
+              </div>
+              {notice.participantCount !== undefined ? (
+                <p className="text-muted-foreground mt-1 text-xs">
+                  {formatCount(notice.participantCount)}
+                  {LIVE_VOTE_LABEL.participantsUnit}
+                </p>
+              ) : null}
             </div>
-            {notice.participantCount !== undefined ? (
-              <p className="text-muted-foreground mt-1 text-xs">
-                {formatCount(notice.participantCount)}
-                {LIVE_VOTE_LABEL.participantsUnit}
-              </p>
-            ) : null}
-          </div>
+          )}
         </>
       ) : (
         <DrawNoticeBoard hasJoined={hasJoined} notice={notice} />

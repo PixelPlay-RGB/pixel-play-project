@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { INTERACTION_TOOLS } from "@/constants/channel/live-interaction";
 import { useChannelLiveDrawTool } from "@/hooks/channel/use-channel-live-draw-tool";
 import { useChannelLiveInteractionNotice } from "@/hooks/channel/use-channel-live-interaction-notice";
+import { useChannelLiveRouletteNotice } from "@/hooks/channel/use-channel-live-roulette-notice";
 import { useChannelLiveRouletteTool } from "@/hooks/channel/use-channel-live-roulette-tool";
 import { useChannelLiveVoteTool } from "@/hooks/channel/use-channel-live-vote-tool";
 import { useLivePolls } from "@/hooks/live/use-live-polls";
@@ -66,9 +67,10 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId }: Props) 
 
   // 도구를 오가도 진행 상태가 유지되도록 세 도구의 상태를 패널 수명으로 관리한다.
   const { publishInteractionNotice } = useChannelLiveInteractionNotice(broadcastId);
+  const { publishRouletteNotice } = useChannelLiveRouletteNotice(broadcastId);
   const voteTool = useChannelLiveVoteTool(broadcastId, polls);
   const drawTool = useChannelLiveDrawTool(broadcastId, publishInteractionNotice);
-  const rouletteTool = useChannelLiveRouletteTool(publishInteractionNotice);
+  const rouletteTool = useChannelLiveRouletteTool(publishRouletteNotice);
 
   const selectedToolLabel = INTERACTION_TOOLS.find((tool) => tool.value === selectedTool)?.label;
   const isBackButtonDisabled =

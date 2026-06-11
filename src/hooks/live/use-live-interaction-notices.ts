@@ -1,16 +1,21 @@
 "use client";
 // 라이브 상호작용 결과 공지를 기존 live_message metadata에서 조회합니다.
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { QUERY_KEYS } from "@/constants/common/query-keys";
+import {
+  getLiveRouletteBroadcastTopic,
+  LIVE_ROULETTE_BROADCAST_EVENT,
+} from "@/constants/live/live-roulette-broadcast";
 import { readJsonObject, readNumber, readString } from "@/utils/common/json";
 import {
   mergeDrawParticipationIntoNotices,
   type LiveDrawParticipationRow,
 } from "@/utils/live/live-draw-participation";
 import type { Json } from "@/types/database.types";
+import type { LiveRouletteNoticePayload } from "@/types/channel/live-interaction";
 import type {
   LiveInteractionNotice,
   LiveInteractionNoticeStatus,
@@ -52,6 +57,36 @@ function readStringArray(value: Json | undefined): string[] | undefined {
   return items.length > 0 ? items : undefined;
 }
 
+function readRouletteBroadcastNotice(value: unknown): LiveInteractionNotice | null {
+  if (!value || typeof value !== "object") return null;
+
+  const payload = value as Partial<LiveRouletteNoticePayload>;
+  const id = typeof payload.id === "string" ? payload.id : "";
+  const createdAt = typeof payload.createdAt === "string" ? payload.createdAt : "";
+  const resultLabel = typeof payload.resultLabel === "string" ? payload.resultLabel : "";
+  const status =
+    payload.status === "active" ? "active" : payload.status === "ended" ? "ended" : null;
+  const rotation = typeof payload.rotation === "number" ? payload.rotation : 0;
+  const items = Array.isArray(payload.items)
+    ? payload.items.filter((item): item is string => typeof item === "string" && !!item.trim())
+    : [];
+
+  if (!id || !createdAt || !resultLabel || !status || items.length < 2) {
+    return null;
+  }
+
+  return {
+    content: resultLabel,
+    createdAt,
+    id,
+    resultLabel,
+    rouletteItems: items,
+    rouletteRotation: rotation,
+    status,
+    type: "roulette",
+  };
+}
+
 function mapNoticeRow(row: LiveInteractionNoticeRow): LiveInteractionNotice | null {
   const metadata = readJsonObject(row.metadata);
 
@@ -84,6 +119,8 @@ export function useLiveInteractionNotices(
 ) {
   const supabase = useMemo(() => createClient(), []);
   const queryClient = useQueryClient();
+  const [realtimeRouletteNotice, setRealtimeRouletteNotice] =
+    useState<LiveInteractionNotice | null>(null);
 
   const query = useQuery<LiveInteractionNotice[]>({
     queryKey: QUERY_KEYS.live.interactionNotices(broadcastId ?? undefined, viewerId),
@@ -184,9 +221,36 @@ export function useLiveInteractionNotices(
     };
   }, [broadcastId, viewerId, supabase, queryClient]);
 
+  useEffect(() => {
+    setRealtimeRouletteNotice(null);
+
+    if (!broadcastId) return;
+
+    const channel = supabase
+      .channel(getLiveRouletteBroadcastTopic(broadcastId))
+      .on("broadcast", { event: LIVE_ROULETTE_BROADCAST_EVENT }, (message) => {
+        const notice = readRouletteBroadcastNotice(message.payload);
+
+        if (!notice) return;
+
+        setRealtimeRouletteNotice(notice);
+      })
+      .subscribe();
+
+    return () => {
+      void channel.unsubscribe();
+    };
+  }, [broadcastId, supabase]);
+
+  const notices = useMemo(() => {
+    const queryNotices = query.data ?? [];
+
+    return realtimeRouletteNotice ? [...queryNotices, realtimeRouletteNotice] : queryNotices;
+  }, [query.data, realtimeRouletteNotice]);
+
   return {
     error: query.error,
     isLoading: query.isLoading,
-    notices: query.data ?? [],
+    notices,
   };
 }
