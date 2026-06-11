@@ -65,10 +65,14 @@ export function LiveChatMessageList({
     const container = scrollRef.current;
     if (!container) return;
 
-    const handleScroll = () => {
+    const updateNearBottom = () => {
       const distanceFromBottom =
         container.scrollHeight - container.scrollTop - container.clientHeight;
       wasNearBottomRef.current = distanceFromBottom < 60;
+    };
+
+    const handleScroll = () => {
+      updateNearBottom();
 
       // 상단 근접 시 과거 페이지 적재를 요청한다. 중복 호출은 훅 내부 가드(isLoadingOlder)가 막는다.
       if (
@@ -80,7 +84,9 @@ export function LiveChatMessageList({
       }
     };
 
-    handleScroll();
+    // 초기엔 바닥 상태만 동기화한다 — 적재는 사용자가 실제로 스크롤할 때만 일어나야
+    // 진입 직후(scrollTop이 아직 0인 시점)나 짧은 목록에서 연쇄 적재가 발사되지 않는다.
+    updateNearBottom();
     container.addEventListener("scroll", handleScroll, { passive: true });
 
     return () => {
