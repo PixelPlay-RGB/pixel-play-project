@@ -107,21 +107,9 @@ export function useSpeechSynthesis() {
       utterance.onerror = (event) => {
         clearUtterance();
 
-        // 사용자 상호작용 전 자동재생 정책 차단(주로 일반 브라우저 탭에서 오버레이를 연 경우).
-        // OBS 브라우저 소스는 자동재생이 허용되어 해당 없음 — 다음 클릭/키 입력에서 한 번 재시도한다.
-        if (event.error === "not-allowed") {
-          console.warn("TTS가 자동재생 정책으로 차단됨 — 다음 상호작용에서 재시도합니다.");
-          const retry = () => {
-            window.removeEventListener("pointerdown", retry);
-            window.removeEventListener("keydown", retry);
-            runSpeak();
-          };
-          window.addEventListener("pointerdown", retry, { once: true });
-          window.addEventListener("keydown", retry, { once: true });
-        } else {
-          console.warn("TTS 재생 실패", event.error);
-        }
-
+        // 자동 재시도는 하지 않는다 — 호출자(후원 알림은 클릭 시 효과음→TTS 체인 재실행)가
+        // 재생 순서를 소유하므로, 여기서 따로 재시도하면 체인과 겹쳐 동시 재생된다.
+        console.warn("TTS 재생 실패", event.error);
         options?.onError?.(event.error);
         options?.onEnd?.();
       };
