@@ -48,7 +48,12 @@ export const LIVE_LABEL = {
   chatSend: "채팅 전송",
   chatEndedPlaceholder: "방송이 종료되어 채팅할 수 없습니다.",
   loginRequired: "로그인이 필요합니다.",
-  loginDescription: "이 기능을 사용하려면 로그인이 필요합니다.",
+  loginDescription: "라이브 채팅에 참여하려면 로그인해 주세요.",
+  loginPromptSummaryTitle: "로그인 후 이용할 수 있어요",
+  loginPromptSummaryItems: [
+    "시청 중인 방송으로 돌아와 바로 채팅할 수 있습니다.",
+    "팔로우, 투표, 후원 같은 라이브 참여 기능도 함께 사용할 수 있습니다.",
+  ],
   loginButton: "로그인",
   cancel: "취소",
   anonymousAuthor: "익명",

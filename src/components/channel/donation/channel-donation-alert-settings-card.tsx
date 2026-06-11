@@ -80,7 +80,6 @@ export function ChannelDonationAlertSettingsCard({ control, isSaving }: Props) {
   const handlePreviewTts = () => {
     const { donorNickname, amount, message } = DONATION_TEST_ALERT_SAMPLE;
 
-    // 음성 선택은 준비 중이라 기본 음성으로 고정합니다(voiceURI 미지정).
     speak(
       buildDonationTtsText({
         donorNickname,
@@ -91,6 +90,7 @@ export function ChannelDonationAlertSettingsCard({ control, isSaving }: Props) {
       {
         rate: ttsRate ?? 1,
         volume: (ttsVolume ?? 0) / 100,
+        voiceURI: ttsVoiceUri || undefined,
       },
     );
   };
