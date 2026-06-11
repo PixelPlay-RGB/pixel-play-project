@@ -10,7 +10,7 @@ export function UserDonationLoadingState() {
       title="후원 지갑"
       description="후원 지갑 정보를 불러오는 중입니다."
     >
-      <section className="relative isolate min-h-44 overflow-hidden rounded-xl bg-[linear-gradient(to_bottom_right,var(--live)_0%,var(--live)_34%,var(--brand)_48%,var(--brand)_100%)] px-5 py-7 shadow-sm sm:min-h-48 sm:px-7 sm:py-9">
+      <section className="relative isolate min-h-44 overflow-hidden rounded-xl bg-[linear-gradient(100deg,var(--live)_0%,var(--live)_34%,var(--brand)_48%,var(--brand)_100%)] px-5 py-7 shadow-sm sm:min-h-48 sm:px-7 sm:py-9">
         <span className="bg-live/10 pointer-events-none absolute inset-0" aria-hidden />
         <span className="bg-live/20 pointer-events-none absolute inset-0" aria-hidden />
 
