@@ -12,25 +12,28 @@ interface Props {
   variant?: "panel" | "overlay";
 }
 
-export function LiveChatDonationMessageCard({
-  author,
-  amount,
-  content,
-  variant = "panel",
-}: Props) {
+export function LiveChatDonationMessageCard({ author, amount, content, variant = "panel" }: Props) {
   const donorColor = getLiveChatOverlayNicknameColor(author);
   const isOverlay = variant === "overlay";
 
   return (
+    // 시청 채팅 후원 카드와 동일한 레이아웃(풀폭 블록 + 닉네임/금액 pill 양끝 정렬).
+    // 오버레이는 송출 화면 위라 일반 채팅 박스와 같은 완전 불투명 바탕을 깔고
+    // 그 위에 같은 brand→live 그라데이션을 얹어 가독성과 디자인을 함께 유지한다.
     <div
       className={cn(
-        "from-brand/15 to-live/15 border-live/25 bg-linear-to-r shadow-sm",
+        "border-live/25 shadow-sm",
         isOverlay
-          ? "inline-flex max-w-130 flex-col rounded-xl border px-4 py-3 text-3xl leading-9 shadow-black/30 drop-shadow"
-          : "rounded-lg border px-3.5 py-2.5 text-sm",
+          ? "relative w-full max-w-130 overflow-hidden rounded-xl border bg-zinc-950 px-4 py-3 text-3xl leading-9 drop-shadow"
+          : "from-brand/15 to-live/15 rounded-lg border bg-linear-to-r px-3.5 py-2.5 text-sm",
       )}
     >
-      <div className={cn("flex items-start justify-between", isOverlay ? "gap-4" : "gap-2")}>
+      {isOverlay ? (
+        <div aria-hidden className="from-brand/15 to-live/15 absolute inset-0 bg-linear-to-r" />
+      ) : null}
+      <div
+        className={cn("relative flex items-start justify-between", isOverlay ? "gap-4" : "gap-2")}
+      >
         <span
           className={cn("min-w-0 font-bold wrap-break-word", isOverlay ? "text-3xl" : "text-sm")}
           style={{ color: donorColor }}
@@ -55,7 +58,7 @@ export function LiveChatDonationMessageCard({
       {content ? (
         <p
           className={cn(
-            "mt-1.5 wrap-break-word",
+            "relative mt-1.5 wrap-break-word",
             isOverlay ? "text-white drop-shadow-sm" : "text-foreground",
           )}
         >
