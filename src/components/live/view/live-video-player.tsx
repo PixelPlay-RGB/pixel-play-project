@@ -2,7 +2,7 @@
 // 라이브 비디오 플레이어 — MediaMTX HLS <video>에 컨테이너 전체화면/극장 모드와 하단 컨트롤 바를 조립합니다.
 
 import { useCallback, useEffect, useRef, useState, type ReactNode, type Ref } from "react";
-import { HandCoins, MessageSquare } from "lucide-react";
+import { HandCoins, MessageSquare, Play } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import LiveBadge from "@/components/live/live-badge";
@@ -194,6 +194,18 @@ export function LiveVideoPlayer({
           {/* 방송은 시작됐지만 송출 프레임이 아직 없으면(OBS 미송출/조인 지연) 비디오를 덮는다.
               <video>는 언마운트하지 않고(언마운트 시 hls 재attach로 영원히 진행 안 됨) 위만 덮는다. */}
           {playbackState !== "playing" ? <LivePlayerWaitingOverlay /> : null}
+          {/* 일시정지 상태를 중앙 큰 아이콘으로 보여준다(유튜브식) — 누르면 그 자리에서 재생 재개.
+              컨트롤 자동 숨김과 무관하게 떠 있어야 정지 상태가 한눈에 보인다. */}
+          {playbackState === "playing" && !isPlaying ? (
+            <button
+              type="button"
+              aria-label={LIVE_LABEL.playerPlay}
+              className="absolute inset-0 m-auto flex size-20 cursor-pointer items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm transition-transform hover:scale-105"
+              onClick={togglePlay}
+            >
+              <Play className="size-9 fill-current" />
+            </button>
+          ) : null}
         </div>
       ) : (
         <div className="absolute inset-0 flex items-center justify-center px-6 text-center">

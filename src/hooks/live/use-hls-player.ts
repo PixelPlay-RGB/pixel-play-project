@@ -178,7 +178,9 @@ export function useHlsPlayer({
       setPlaybackState("playing");
     };
     // 짧은 버퍼 히컵엔 대기화면을 띄우지 않고(라이브 지터), 지속 stall일 때만 대기로 되돌린다.
+    // 일시정지 중에는 버퍼가 차서 데이터 공급이 멈춘 것뿐(stalled 발화)이라 송출 끊김이 아니다.
     const scheduleWaiting = () => {
+      if (video.paused) return;
       if (stallTimer) return;
       stallTimer = setTimeout(() => setPlaybackState("waiting"), STALL_RESET_DELAY_MS);
     };
@@ -193,6 +195,8 @@ export function useHlsPlayer({
     video.addEventListener("timeupdate", markPlaying);
     video.addEventListener("waiting", scheduleWaiting);
     video.addEventListener("stalled", scheduleWaiting);
+    // 일시정지 직전 stall 타이머가 정지 후 발화해 대기 화면을 띄우는 것을 막는다.
+    video.addEventListener("pause", clearStallTimer);
     video.addEventListener("loadstart", markWaitingNow);
     video.addEventListener("emptied", markWaitingNow);
 
@@ -203,6 +207,7 @@ export function useHlsPlayer({
       video.removeEventListener("timeupdate", markPlaying);
       video.removeEventListener("waiting", scheduleWaiting);
       video.removeEventListener("stalled", scheduleWaiting);
+      video.removeEventListener("pause", clearStallTimer);
       video.removeEventListener("loadstart", markWaitingNow);
       video.removeEventListener("emptied", markWaitingNow);
     };

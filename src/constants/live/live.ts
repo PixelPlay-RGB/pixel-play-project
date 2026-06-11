@@ -90,7 +90,8 @@ export const LIVE_LABEL = {
 } as const;
 
 // 어두운 플레이어 배경 위 아이콘 버튼 공통 스타일(컨트롤 바·음량·화질 공유).
-export const LIVE_PLAYER_ICON_BUTTON_CLASS = "text-white/80 hover:bg-white/10 hover:text-white";
+// 영상 위에서도 또렷하도록 기본을 완전 흰색으로 둔다(흐림은 hover 배경으로만 구분).
+export const LIVE_PLAYER_ICON_BUTTON_CLASS = "text-white hover:bg-white/15 hover:text-white";
 
 // 전체화면 채팅 패널 폭(w-80)과, 패널을 피해 줄어드는 영상·상단/하단 오버레이의 우측 인셋(right-80)은
 // 같은 값(20rem)이어야 한다. 한쪽만 바꾸면 영상이 패널 밑으로 깔리거나 빈틈이 생기므로 여기 한 곳에서 관리한다.

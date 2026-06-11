@@ -44,7 +44,7 @@ export function LivePlayerQualityMenu({ levels, selectedLevel, onSelectLevel }: 
           />
         }
       >
-        <Settings className="size-5" />
+        <Settings className="size-6" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-32">
         <DropdownMenuGroup>

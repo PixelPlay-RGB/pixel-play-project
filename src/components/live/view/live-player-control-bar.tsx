@@ -86,7 +86,7 @@ export function LivePlayerControlBar({
             />
           }
         >
-          {isPlaying ? <Pause className="size-5" /> : <Play className="size-5" />}
+          {isPlaying ? <Pause className="size-6" /> : <Play className="size-6" />}
         </TooltipTrigger>
         <TooltipContent>
           {isPlaying ? LIVE_LABEL.playerPause : LIVE_LABEL.playerPlay} (k)
@@ -166,7 +166,7 @@ export function LivePlayerControlBar({
                 />
               }
             >
-              <RectangleHorizontal className="size-5" />
+              <RectangleHorizontal className="size-6" />
             </TooltipTrigger>
             <TooltipContent>
               {isTheater ? LIVE_LABEL.playerTheaterExit : LIVE_LABEL.playerTheater} (t)
@@ -189,7 +189,7 @@ export function LivePlayerControlBar({
                 />
               }
             >
-              <PanelRightOpen className="size-5" />
+              <PanelRightOpen className="size-6" />
             </TooltipTrigger>
             <TooltipContent>{LIVE_LABEL.chatExpand}</TooltipContent>
           </Tooltip>
@@ -210,7 +210,7 @@ export function LivePlayerControlBar({
               />
             }
           >
-            {isFullscreen ? <Minimize2 className="size-5" /> : <Maximize2 className="size-5" />}
+            {isFullscreen ? <Minimize2 className="size-6" /> : <Maximize2 className="size-6" />}
           </TooltipTrigger>
           <TooltipContent>
             {isFullscreen ? LIVE_LABEL.playerFullscreenExit : LIVE_LABEL.playerFullscreen} (f)
