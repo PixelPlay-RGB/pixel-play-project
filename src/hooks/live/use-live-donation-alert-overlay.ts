@@ -17,6 +17,7 @@ import {
   type DonationAlertTestPayload,
 } from "@/utils/live/donation-alert-test";
 import { mapLiveMessageToDonationAlert } from "@/utils/live/live-overlay-message";
+import { DONATION_TEST_ALERT_SAMPLE } from "@/constants/channel/donation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 interface UseLiveDonationAlertOverlayOptions {
@@ -32,10 +33,22 @@ export function useLiveDonationAlertOverlay(
   const isPreview = options?.isPreview ?? false;
   const voicesReady = voices.length > 0;
   const hasPlayedRef = useRef(false);
-  const [donation, setDonation] = useState<LiveDonationAlertOverlayData | null>(
-    initialSnapshot.donation,
-  );
-  const [isVisible, setIsVisible] = useState(Boolean(initialSnapshot.donation));
+  // 미리보기는 방송·후원 이력이 없어도 화면을 보여줘야 하므로 샘플 후원으로 시작한다.
+  // (createdAt은 hydration 불일치가 없도록 고정 문자열)
+  const initialDonation =
+    initialSnapshot.donation ??
+    (isPreview
+      ? {
+          id: "preview-sample-donation",
+          creatorName: initialSnapshot.creatorName,
+          donorName: DONATION_TEST_ALERT_SAMPLE.donorNickname,
+          amount: audio.amountVisible ? DONATION_TEST_ALERT_SAMPLE.amount : null,
+          message: DONATION_TEST_ALERT_SAMPLE.message,
+          createdAt: "2026-01-01T00:00:00.000Z",
+        }
+      : null);
+  const [donation, setDonation] = useState<LiveDonationAlertOverlayData | null>(initialDonation);
+  const [isVisible, setIsVisible] = useState(Boolean(initialDonation));
   // 로드/새로고침마다 직전 후원 알림을 재생합니다(OBS 소스 새로고침으로 반복 테스트 가능).
   // 같은 렌더에서 중복 재생되는 것만 막기 위한 용도라 null로 시작합니다.
   const lastPlayedIdRef = useRef<string | null>(null);
