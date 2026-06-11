@@ -102,13 +102,21 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
   // 로딩 중엔 판단을 보류해, 다른 라이브의 미니가 재생 중이면 새 화면 데이터가 올 때까지 유지한다.
   const startSession = useLiveWatchSessionStore((state) => state.startSession);
   const endSession = useLiveWatchSessionStore((state) => state.endSession);
+  // 현재 store에 들어있는 세션의 크리에이터 — 오류 시 '이 화면 것'인지 '묵은 다른 방송 것'인지 구분한다.
+  const sessionCreatorId = useLiveWatchSessionStore((state) => state.session?.creatorId);
   // broadcast 객체는 매 렌더 재생성되므로(map 함수) 원시값만 deps에 두어,
   // 실제 값이 바뀔 때만 세션을 갱신한다(채팅 수신 등 무관한 렌더마다 재발사 방지).
   const liveBroadcastId = broadcast?.id;
   useEffect(() => {
-    // 쿼리 오류(재시도 소진)는 '오프라인 확정'이 아니다 — 일시 장애로 활성 세션(미니 연속성)을
-    // 끊지 않도록 판단을 보류한다. 진짜 오프라인은 쿼리가 성공하고 broadcast가 없을 때만.
-    if (isAuthLoading || isLoading || isWatchError) return;
+    if (isAuthLoading || isLoading) return;
+    // 쿼리 오류(재시도 소진)는 '오프라인 확정'이 아니다 — 같은 크리에이터의 일시 장애면 판단을
+    // 보류해 활성 세션(미니 연속성)을 끊지 않는다. 단, store에 남은 세션이 '다른 크리에이터'면
+    // 정리한다: 이 방송 조회가 실패한 채 화면을 떠나면 LiveMiniPlayerHost가 그 이전 방송 PiP를
+    // 되살리기 때문(오프라인 확정 경로와 동일하게 정리). 진짜 오프라인은 쿼리 성공+broadcast 없음.
+    if (isWatchError) {
+      if (sessionCreatorId && sessionCreatorId !== creatorId) endSession();
+      return;
+    }
     if (!liveBroadcastId) {
       endSession();
       return;
@@ -121,6 +129,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     liveBroadcastId,
     creatorId,
     hlsSrc,
+    sessionCreatorId,
     startSession,
     endSession,
   ]);
