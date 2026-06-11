@@ -82,6 +82,7 @@ export function ChannelDonationPreviewSide({ control, creatorId, isSaving }: Pro
           ttsEnabled={Boolean(ttsEnabled)}
           ttsRate={ttsRate ?? 1}
           ttsVolume={ttsVolume ?? 0}
+          ttsVoiceUri={ttsVoiceUri ?? ""}
           amountVisible={Boolean(amountVisible)}
           disabled={isSaving}
           className="w-full"

@@ -93,7 +93,6 @@ export function useLiveDonationAlertOverlay(
           return;
         }
 
-        // 음성 선택은 준비 중이라 기본 음성으로 고정합니다(voiceURI 미지정).
         speak(
           buildDonationTtsText({
             donorNickname: target.donorName,
@@ -104,6 +103,10 @@ export function useLiveDonationAlertOverlay(
           {
             rate: audioSettings.ttsRate,
             volume: audioSettings.ttsVolume / 100,
+            voiceURI: audioSettings.ttsVoiceUri || undefined,
+            onError: (error) => {
+              console.warn("후원 오버레이 TTS 재생 실패", error);
+            },
           },
         );
       };

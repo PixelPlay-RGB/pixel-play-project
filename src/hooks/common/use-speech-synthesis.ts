@@ -9,16 +9,45 @@ interface SpeakOptions {
   lang?: string;
   voiceURI?: string;
   onEnd?: () => void;
+  onError?: (error: SpeechSynthesisErrorEvent["error"]) => void;
 }
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
 }
 
+function findSpeechVoice(
+  voices: SpeechSynthesisVoice[],
+  lang: string,
+  voiceURI?: string,
+): SpeechSynthesisVoice | null {
+  if (voiceURI) {
+    const matched = voices.find((item) => item.voiceURI === voiceURI);
+
+    if (matched) {
+      return matched;
+    }
+  }
+
+  const normalizedLang = lang.toLowerCase();
+  const languagePrefix = normalizedLang.split("-")[0];
+
+  return (
+    voices.find((item) => item.localService && item.lang.toLowerCase() === normalizedLang) ??
+    voices.find(
+      (item) => item.localService && item.lang.toLowerCase().startsWith(languagePrefix),
+    ) ??
+    voices.find((item) => item.lang.toLowerCase() === normalizedLang) ??
+    voices.find((item) => item.lang.toLowerCase().startsWith(languagePrefix)) ??
+    null
+  );
+}
+
 export function useSpeechSynthesis() {
   const [isSupported, setIsSupported] = useState(false);
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const synthRef = useRef<SpeechSynthesis | null>(null);
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) {
@@ -40,6 +69,7 @@ export function useSpeechSynthesis() {
     return () => {
       synth.removeEventListener("voiceschanged", loadVoices);
       synth.cancel();
+      utteranceRef.current = null;
     };
   }, []);
 
@@ -54,23 +84,37 @@ export function useSpeechSynthesis() {
     const runSpeak = () => {
       synth.cancel();
 
+      const lang = options?.lang ?? "ko-KR";
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = options?.lang ?? "ko-KR";
+      utterance.lang = lang;
       utterance.volume = clamp(options?.volume ?? 1, 0, 1);
       utterance.rate = clamp(options?.rate ?? 1, 0.5, 2);
 
-      if (options?.voiceURI) {
-        const matched = synth.getVoices().find((item) => item.voiceURI === options.voiceURI);
-        if (matched) {
-          utterance.voice = matched;
+      const matched = findSpeechVoice(synth.getVoices(), lang, options?.voiceURI);
+      if (matched) {
+        utterance.voice = matched;
+      }
+
+      const clearUtterance = () => {
+        if (utteranceRef.current === utterance) {
+          utteranceRef.current = null;
         }
-      }
+      };
 
-      if (options?.onEnd) {
-        utterance.onend = options.onEnd;
-        utterance.onerror = options.onEnd;
-      }
+      utterance.onend = () => {
+        clearUtterance();
+        options?.onEnd?.();
+      };
 
+      utterance.onerror = (event) => {
+        console.warn("TTS 재생 실패", event.error);
+        clearUtterance();
+        options?.onError?.(event.error);
+        options?.onEnd?.();
+      };
+
+      utteranceRef.current = utterance;
+      synth.resume();
       synth.speak(utterance);
     };
 
