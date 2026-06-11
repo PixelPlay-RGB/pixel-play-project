@@ -90,6 +90,10 @@ export const LIVE_LABEL = {
 // 쿠키 이름 상수를 모듈 로컬에 두지 않고 여기서 관리한다(OAUTH_NEXT_COOKIE 선례).
 export const ANON_VIEWER_COOKIE = "pp_anon_viewer";
 
+// 시청자 하트비트 sync/leave 라우트 경로 — 훅(클라)과 라우트 파일 계약이 갈리지 않게 한 곳에서 관리한다.
+export const LIVE_VIEWER_SYNC_API_PATH = "/api/live/viewer-sync";
+export const LIVE_VIEWER_LEAVE_API_PATH = "/api/live/viewer-leave";
+
 // 어두운 플레이어 배경 위 아이콘 버튼 공통 스타일(컨트롤 바·음량·화질 공유).
 export const LIVE_PLAYER_ICON_BUTTON_CLASS = "text-white/80 hover:bg-white/10 hover:text-white";
 

@@ -5,12 +5,13 @@
 
 import { useEffect } from "react";
 import { leaveLiveViewerPresenceAction } from "@/actions/live/live";
+import { LIVE_VIEWER_LEAVE_API_PATH, LIVE_VIEWER_SYNC_API_PATH } from "@/constants/live/live";
 
 const HEARTBEAT_INTERVAL_MS = 10_000;
 // 하트비트 sync 엔드포인트 — 익명 식별 쿠키(pp_anon_viewer)를 서버가 발급·검증한다.
-const SYNC_URL = "/api/live/viewer-sync";
+const SYNC_URL = LIVE_VIEWER_SYNC_API_PATH;
 // pagehide 시 sendBeacon으로 leave를 보내는 동일 출처 엔드포인트.
-const LEAVE_BEACON_URL = "/api/live/viewer-leave";
+const LEAVE_BEACON_URL = LIVE_VIEWER_LEAVE_API_PATH;
 
 export function useLiveViewerPresence(broadcastId: string | null | undefined) {
   useEffect(() => {
