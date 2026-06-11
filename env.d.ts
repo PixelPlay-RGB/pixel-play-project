@@ -13,6 +13,7 @@ namespace NodeJS {
     LIVE_OVERLAY_TOKEN_SECRET: string;
     TOSS_PAYMENTS_SECRET_KEY?: string;
     MEDIAMTX_API_BASE_URL?: string;
+    GOOGLE_CLOUD_TTS_API_KEY?: string;
     VERCEL_URL?: string;
   }
 }

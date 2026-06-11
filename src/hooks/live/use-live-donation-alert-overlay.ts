@@ -1,7 +1,6 @@
 "use client";
 // OBS 후원 알림 오버레이의 실시간 후원 표시 상태를 관리합니다.
 
-import { useSpeechSynthesis } from "@/hooks/common/use-speech-synthesis";
 import { createClient } from "@/lib/supabase/client";
 import type { LiveMessageRow } from "@/types/live/live";
 import type {
@@ -11,6 +10,7 @@ import type {
 } from "@/types/live/live-donation-alert-overlay";
 import { playDonationSound } from "@/utils/channel/donation-sound";
 import { buildDonationTtsText } from "@/utils/channel/donation-tts";
+import { playDonationTts } from "@/utils/channel/donation-tts-player";
 import {
   DONATION_ALERT_TEST_EVENT,
   donationAlertTestChannel,
@@ -28,11 +28,8 @@ export function useLiveDonationAlertOverlay(
   initialSnapshot: LiveDonationAlertOverlaySnapshot,
   options?: UseLiveDonationAlertOverlayOptions,
 ) {
-  const { speak, voices } = useSpeechSynthesis();
   const audio = initialSnapshot.audio;
   const isPreview = options?.isPreview ?? false;
-  const voicesReady = voices.length > 0;
-  const hasPlayedRef = useRef(false);
   // 미리보기는 방송·후원 이력이 없어도 화면을 보여줘야 하므로 샘플 후원으로 시작한다.
   // (createdAt은 hydration 불일치가 없도록 고정 문자열)
   const initialDonation =
@@ -106,7 +103,7 @@ export function useLiveDonationAlertOverlay(
           return;
         }
 
-        speak(
+        playDonationTts(
           buildDonationTtsText({
             donorNickname: target.donorName,
             amount: target.amount,
@@ -114,9 +111,9 @@ export function useLiveDonationAlertOverlay(
             amountVisible: audioSettings.amountVisible,
           }),
           {
+            voiceName: audioSettings.ttsVoiceUri || undefined,
             rate: audioSettings.ttsRate,
             volume: audioSettings.ttsVolume / 100,
-            voiceURI: audioSettings.ttsVoiceUri || undefined,
             onError: (error) => {
               console.warn("후원 오버레이 TTS 재생 실패", error);
             },
@@ -130,7 +127,7 @@ export function useLiveDonationAlertOverlay(
         playTts();
       }
     },
-    [audio, speak],
+    [audio],
   );
 
   // 테스트 후원(ephemeral): 설정 페이지에서 보낸 broadcast를 받아 1회 알림을 재생합니다.
@@ -168,26 +165,15 @@ export function useLiveDonationAlertOverlay(
   }, [initialSnapshot.creatorId, initialSnapshot.creatorName, playAlert]);
 
   // 후원이 표시되면(로드/새로고침 시 초기 후원 포함) 알림 오디오를 재생합니다.
+  // 서버 합성 TTS는 Web Speech처럼 음성 목록 로드를 기다릴 필요가 없어 즉시 재생합니다.
   useEffect(() => {
     if (!donation || !isVisible || lastPlayedIdRef.current === donation.id) {
       return;
     }
 
-    const play = () => {
-      lastPlayedIdRef.current = donation.id;
-      hasPlayedRef.current = true;
-      playAlert(donation);
-    };
-
-    // 첫 재생(로드/새로고침 직후)은 TTS 음성 목록이 아직 로드되지 않아 기본 음성으로 빠질 수 있어,
-    // 음성이 준비될 때까지(또는 폴백 시간까지) 기다렸다 재생합니다. 이후 실시간 후원은 즉시 재생합니다.
-    if (!hasPlayedRef.current && !voicesReady) {
-      const fallbackTimer = window.setTimeout(play, 1200);
-      return () => window.clearTimeout(fallbackTimer);
-    }
-
-    play();
-  }, [donation, isVisible, playAlert, voicesReady]);
+    lastPlayedIdRef.current = donation.id;
+    playAlert(donation);
+  }, [donation, isVisible, playAlert]);
 
   // 미리보기에서는 브라우저 자동재생이 막혀도 화면을 클릭하면 알림 오디오를 다시 재생합니다.
   useEffect(() => {
