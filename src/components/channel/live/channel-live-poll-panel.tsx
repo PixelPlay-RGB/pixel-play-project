@@ -2,7 +2,6 @@
 // 방송 운영 화면에서 채팅 기반 투표, DB 기준 추첨, 룰렛 도구를 선택·조립합니다.
 
 import { ArrowLeft } from "lucide-react";
-import { motion, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 
 import { ChannelLiveDrawToolView } from "@/components/channel/live/channel-live-draw-tool";
@@ -26,7 +25,6 @@ interface Props {
 export default function ChannelLivePollPanel({ broadcastId, creatorId }: Props) {
   const { polls, isLoading: isPollLoading } = useLivePolls(broadcastId, creatorId);
   const [selectedTool, setSelectedTool] = useState<InteractionTool | null>(null);
-  const prefersReducedMotion = useReducedMotion();
   // 도구 화면이 펼쳐지면(높이 확장) 좌측 칼럼 스크롤을 따라 내려 바로 보이게 한다.
   const toolViewRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -62,11 +60,11 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId }: Props) 
     >
       {selectedTool === null ? (
         // 뒤로가기로 돌아올 때도 도구 화면과 동일한 등장 모션을 줘 화면이 뚝 끊기지 않게 한다.
-        <motion.div
-          initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.2, ease: "easeOut" }}
-          className="grid gap-2.5 sm:grid-cols-3"
+        // 부모 아코디언의 AnimatePresence(initial=false)가 하위 motion의 마운트 애니메이션을
+        // 통째로 무시시키므로, presence 영향이 없는 CSS 애니메이션(key 리마운트마다 재생)을 쓴다.
+        <div
+          key="tool-select"
+          className="animate-in fade-in slide-in-from-bottom-3 grid gap-2.5 duration-200 ease-out motion-reduce:animate-none sm:grid-cols-3"
         >
           {INTERACTION_TOOLS.map(({ icon: Icon, label, value }) => (
             <button
@@ -84,14 +82,12 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId }: Props) 
               {label}
             </button>
           ))}
-        </motion.div>
+        </div>
       ) : (
-        <motion.div
+        <div
+          key="tool-view"
           ref={toolViewRef}
-          initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.2, ease: "easeOut" }}
-          className="flex min-h-0 flex-1 flex-col gap-4"
+          className="animate-in fade-in slide-in-from-bottom-3 flex min-h-0 flex-1 flex-col gap-4 duration-200 ease-out motion-reduce:animate-none"
         >
           <div className="flex items-center justify-between gap-3">
             <Button
@@ -117,7 +113,7 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId }: Props) 
           )}
 
           {selectedTool === "roulette" && <ChannelLiveRouletteToolView tool={rouletteTool} />}
-        </motion.div>
+        </div>
       )}
     </section>
   );
