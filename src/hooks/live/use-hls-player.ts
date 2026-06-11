@@ -77,6 +77,26 @@ export function useHlsPlayer({
     return seekable.length > 0 ? seekable.end(seekable.length - 1) : null;
   }, []);
 
+  // 타임라인(시킹 가능) 범위 — hls.js는 플레이리스트(서버 보관 세그먼트 전체, ≈60초) 기준.
+  // video.seekable은 MSE에서 클라이언트가 받아둔 버퍼만 반영해 입장 직후 범위가 몇 초로
+  // 좁아서, 시크바가 비어 있다가 시청할수록 차오르는 왜곡이 생긴다(네이티브 HLS만 폴백).
+  const getLiveTimelineRange = useCallback(
+    (video: HTMLVideoElement): { start: number; end: number } | null => {
+      const hls = hlsRef.current;
+      const details = hls?.levels?.[Math.max(hls.currentLevel, 0)]?.details;
+
+      if (details?.live && details.fragments.length > 0) {
+        return { start: details.fragments[0].start, end: details.edge };
+      }
+
+      const seekable = video.seekable;
+      return seekable.length > 0
+        ? { start: seekable.start(0), end: seekable.end(seekable.length - 1) }
+        : null;
+    },
+    [],
+  );
+
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !enabled) return;
@@ -224,20 +244,12 @@ export function useHlsPlayer({
       const isBehind = edge !== null && edge - video.currentTime > LIVE_EDGE_BEHIND_THRESHOLD_S;
       setIsAtLiveEdge(!video.paused && !isBehind);
 
-      const seekable = video.seekable;
-      setTimeline(
-        seekable.length > 0
-          ? {
-              start: seekable.start(0),
-              end: seekable.end(seekable.length - 1),
-              current: video.currentTime,
-            }
-          : null,
-      );
+      const range = getLiveTimelineRange(video);
+      setTimeline(range ? { ...range, current: video.currentTime } : null);
     }, LIVE_EDGE_POLL_MS);
 
     return () => clearInterval(intervalId);
-  }, [videoRef, enabled, getLiveEdgePosition]);
+  }, [videoRef, enabled, getLiveEdgePosition, getLiveTimelineRange]);
 
   // 실시간 지점으로 점프하고 재생을 재개한다(폴링을 기다리지 않고 상태도 즉시 반영).
   const seekToLiveEdge = useCallback(() => {
@@ -252,24 +264,22 @@ export function useHlsPlayer({
     setIsAtLiveEdge(true);
   }, [videoRef, getLiveEdgePosition]);
 
-  // 타임라인 시킹 — 라이브 버퍼 범위로 클램프해 위치만 옮긴다(재생/일시정지 상태는 유지).
+  // 타임라인 시킹 — 라이브 보관 범위로 클램프해 위치만 옮긴다(재생/일시정지 상태는 유지).
+  // 버퍼 밖 과거 위치는 hls.js가 해당 세그먼트를 다시 받아 재생한다.
   // 시크바가 폴링(1초)을 기다리지 않도록 현재 위치를 즉시 반영한다.
   const seekTo = useCallback(
     (time: number) => {
       const video = videoRef.current;
       if (!video) return;
 
-      const seekable = video.seekable;
-      if (seekable.length === 0) return;
+      const range = getLiveTimelineRange(video);
+      if (!range) return;
 
-      const clamped = Math.min(
-        Math.max(time, seekable.start(0)),
-        seekable.end(seekable.length - 1),
-      );
+      const clamped = Math.min(Math.max(time, range.start), range.end);
       video.currentTime = clamped;
       setTimeline((prev) => (prev ? { ...prev, current: clamped } : prev));
     },
-    [videoRef],
+    [videoRef, getLiveTimelineRange],
   );
 
   // -1 = 자동. 사용자가 고른 레벨은 즉시 반영하고 hls 인스턴스에도 적용한다.
