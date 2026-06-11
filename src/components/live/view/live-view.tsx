@@ -269,13 +269,15 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
 
               {/* 스트리머 정보 행(아바타·이름·팔로워 + 팔로우)은 라이브·종료 모두 동일하게 보여준다. */}
               {creator ? (
+                // py-3: 정보 영역을 141px로 낮춰(우측 입력바와 동일) FHD에서 비디오가 16:9에 딱 맞게
+                // 들어가도록 한다(149px일 땐 높이가 7px 모자라 좌우에 검은 필러박스가 생겼다).
                 <LiveStreamerRow
                   creator={creator}
                   isLive={!!broadcast}
                   isFollowing={isFollowing}
                   isPending={isFollowPending}
                   onFollow={handleFollow}
-                  className="px-4 py-4"
+                  className="px-4 py-3"
                 />
               ) : null}
             </motion.div>

@@ -261,10 +261,11 @@ export function LiveChatInputBar({
   return (
     <div
       ref={inputBarRef}
-      // 입력 섹션 높이를 좌측 비디오 하단 정보 영역(실측 149px)에 맞춰 separator 라인을 정렬한다.
-      // min-h라 내부 요소가 커져도(폰트·버튼 변경 등) 잘리지 않고 아래로 자연 확장된다.
+      // 입력 섹션 높이를 좌측 비디오 하단 정보 영역(실측 141px)에 맞춰 separator 라인을 정렬한다.
+      // 141px은 FHD에서 비디오가 16:9에 딱 맞는 값(149px일 땐 좌우 필러박스 발생) — live-view의
+      // 스트리머 행 py-3과 세트로 움직인다. min-h라 내부가 커져도 잘리지 않고 아래로 확장된다.
       className={cn(
-        "border-border flex min-h-[149px] flex-col justify-between gap-3 border-t px-3 py-6",
+        "border-border flex min-h-[141px] flex-col justify-between gap-3 border-t px-3 py-5",
         className,
       )}
     >
