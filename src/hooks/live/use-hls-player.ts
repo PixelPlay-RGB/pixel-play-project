@@ -81,8 +81,12 @@ export function useHlsPlayer({
     const video = videoRef.current;
     if (!video || !enabled) return;
 
-    // 네이티브 HLS(Safari/iOS): 레벨 목록 API가 없어 화질 선택은 자동만 제공한다.
-    if (video.canPlayType("application/vnd.apple.mpegurl")) {
+    // hls.js를 우선 사용한다 — 일부 크롬이 canPlayType("application/vnd.apple.mpegurl")에
+    // "maybe"를 답해 네이티브 분기를 타고도 실제 라이브 재생이 진행되지 않는 사례가 있다.
+    // 네이티브 HLS는 hls.js를 못 쓰는 브라우저(iOS Safari, 레벨 API 없음)의 fallback으로만 둔다.
+    if (!Hls.isSupported()) {
+      if (!video.canPlayType("application/vnd.apple.mpegurl")) return;
+
       let retryTimeout: ReturnType<typeof setTimeout> | null = null;
 
       const retryLoad = () => {
@@ -101,8 +105,6 @@ export function useHlsPlayer({
         video.load();
       };
     }
-
-    if (!Hls.isSupported()) return;
 
     let retryTimeout: ReturnType<typeof setTimeout> | null = null;
     // liveMaxLatencyDuration·maxLiveSyncPlaybackRate는 두지 않는다 — 두면 hls.js가 뒤처진 위치를
