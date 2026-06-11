@@ -5,9 +5,9 @@
 
 import { memo, useEffect, useLayoutEffect, useRef, type RefObject } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { LiveChatDonationMessageCard } from "@/components/live/chat/live-chat-donation-message-card";
 import { LiveChatRoleBadge, type LiveChatRole } from "@/components/live/chat/live-chat-role-badge";
 import { LIVE_LABEL } from "@/constants/live/live";
-import { formatDonationAmount } from "@/utils/live/live-chat";
 import { getLiveChatOverlayNicknameColor } from "@/utils/live/live-chat-overlay-style";
 import type { LiveChatMessage } from "@/types/live/live";
 
@@ -123,31 +123,12 @@ const MessageItem = memo(function MessageItem({ message, cleanbotEnabled }: Mess
   }
 
   if (message.type === "donation") {
-    // 후원 카드: 마크와 같은 brand→live 그라데이션 배경, 닉네임·금액 pill은 채팅과 동일한 해시 컬러.
-    const donorColor = getLiveChatOverlayNicknameColor(message.author ?? "");
-
     return (
-      <div className="from-brand/15 to-live/15 border-live/25 rounded-lg border bg-linear-to-r px-3.5 py-2.5 text-sm shadow-sm">
-        <div className="flex items-start justify-between gap-2">
-          <span className="min-w-0 text-sm font-bold wrap-break-word" style={{ color: donorColor }}>
-            {message.author}
-          </span>
-          {message.donationAmount !== undefined ? (
-            <span
-              className="shrink-0 rounded-full px-2.5 py-0.5 text-sm font-bold tabular-nums"
-              style={{
-                color: donorColor,
-                backgroundColor: `color-mix(in srgb, ${donorColor} 15%, transparent)`,
-              }}
-            >
-              {formatDonationAmount(message.donationAmount)}P
-            </span>
-          ) : null}
-        </div>
-        {message.content ? (
-          <p className="text-foreground mt-1.5 wrap-break-word">{message.content}</p>
-        ) : null}
-      </div>
+      <LiveChatDonationMessageCard
+        author={message.author ?? ""}
+        amount={message.donationAmount}
+        content={message.content}
+      />
     );
   }
 

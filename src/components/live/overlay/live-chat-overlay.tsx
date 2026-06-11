@@ -1,7 +1,6 @@
 "use client";
 // OBS 브라우저 소스에 붙이는 라이브 채팅 출력 화면을 렌더링합니다.
-import { HandCoins } from "lucide-react";
-
+import { LiveChatDonationMessageCard } from "@/components/live/chat/live-chat-donation-message-card";
 import { LiveChatRoleBadge } from "@/components/live/chat/live-chat-role-badge";
 import { useLiveChatOverlay } from "@/hooks/live/use-live-chat-overlay";
 import { cn } from "@/lib/utils";
@@ -9,7 +8,6 @@ import type {
   LiveChatOverlayMessage,
   LiveChatOverlaySnapshot,
 } from "@/types/live/live-chat-overlay";
-import { formatNumber } from "@/utils/common/format";
 import { getLiveChatOverlayNicknameColor } from "@/utils/live/live-chat-overlay-style";
 
 export function LiveChatOverlay({ initialSnapshot }: { initialSnapshot: LiveChatOverlaySnapshot }) {
@@ -47,9 +45,9 @@ function ChatMessageItem({ message }: { message: LiveChatOverlayMessage }) {
   const nicknameColor = getLiveChatOverlayNicknameColor(message.author, message.role);
 
   return (
-    <div className="inline-flex max-w-130 items-start gap-1.5 rounded-xl bg-black/50 px-3.5 py-2">
+    <div className="inline-flex max-w-130 items-start gap-1.5 rounded-xl bg-black/72 px-3.5 py-2 drop-shadow">
       <MessagePrefix role={message.role} />
-      <p className="min-w-0 text-3xl leading-9 font-normal wrap-break-word">
+      <p className="min-w-0 text-3xl leading-9 font-semibold wrap-break-word drop-shadow-sm">
         <span
           className={cn("mr-1.5 font-medium", message.tone === "muted" && "text-white/55")}
           style={message.tone === "muted" ? undefined : { color: nicknameColor }}
@@ -64,21 +62,12 @@ function ChatMessageItem({ message }: { message: LiveChatOverlayMessage }) {
 
 function DonationMessageItem({ message }: { message: LiveChatOverlayMessage }) {
   return (
-    <p
-      className={cn(
-        "inline-block max-w-130 rounded-xl px-3.5 py-2 wrap-break-word",
-        "bg-live/15 ring-live/35 ring-1",
-        "text-3xl leading-9 font-normal",
-      )}
-    >
-      <HandCoins className="text-live mr-1.5 inline size-[1em] align-[-0.12em]" aria-hidden />
-      <span className="text-live mr-1.5 font-medium">{message.author}</span>
-      {typeof message.amount === "number" && (
-        <span className="text-live mr-1.5 font-medium">{formatNumber(message.amount)}P</span>
-      )}
-      <span className="mr-1.5 text-white/70">후원</span>
-      {message.content && <span className="text-white">{message.content}</span>}
-    </p>
+    <LiveChatDonationMessageCard
+      author={message.author}
+      amount={message.amount}
+      content={message.content}
+      variant="overlay"
+    />
   );
 }
 
