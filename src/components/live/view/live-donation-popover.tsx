@@ -248,8 +248,9 @@ export function LiveDonationPopover({
               onChange={(e) =>
                 setMessage(e.target.value.slice(0, LIVE_DONATION_MESSAGE_MAX_LENGTH))
               }
-              // field-sizing-content(자동 확장)가 popover 높이를 키우지 않게 최대 높이를 고정한다.
-              className="max-h-20 resize-none text-sm"
+              // field-sizing-content(자동 확장)가 popover를 무한정 키우지 않게 최대 높이만 제한한다.
+              // 긴 메시지(최대 300자)도 max-h 안에서 스크롤로 전부 확인할 수 있다.
+              className="max-h-40 resize-none overflow-y-auto text-sm"
               rows={2}
             />
           </div>

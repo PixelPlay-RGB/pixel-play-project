@@ -261,10 +261,10 @@ export function LiveChatInputBar({
   return (
     <div
       ref={inputBarRef}
-      // 입력 섹션 높이를 좌측 비디오 하단 정보 영역(실측 149px)에 고정해 separator 라인을 맞춘다.
-      // 버튼(h-9)은 입력칸(h-11)보다 낮게 두고, 둘 사이 간격은 justify-between이 자동으로 벌린다.
+      // 입력 섹션 높이를 좌측 비디오 하단 정보 영역(실측 149px)에 맞춰 separator 라인을 정렬한다.
+      // min-h라 내부 요소가 커져도(폰트·버튼 변경 등) 잘리지 않고 아래로 자연 확장된다.
       className={cn(
-        "border-border flex h-[149px] flex-col justify-between border-t px-3 py-6",
+        "border-border flex min-h-[149px] flex-col justify-between gap-3 border-t px-3 py-6",
         className,
       )}
     >

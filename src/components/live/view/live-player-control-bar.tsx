@@ -125,11 +125,12 @@ export function LivePlayerControlBar({
             {isAtLiveEdge ? LIVE_LABEL.playerAtLiveEdge : LIVE_LABEL.playerGoToLiveEdge}
           </TooltipContent>
         </Tooltip>
-        {/* 몰입 모드(극장·전체화면)에선 시간·시청자 수가 상단 오버레이로 이동하므로 하단에선 생략한다. */}
+        {/* 몰입 모드(극장·전체화면)에선 시간·시청자 수가 상단 오버레이로 이동하므로 하단에선 생략하고,
+            모바일에선 비디오 아래 정보 행에 같은 값이 있어 좁은 컨트롤 바를 넘치지 않게 숨긴다. */}
         {!isImmersive ? (
           <>
-            <span>· {elapsedText}</span>
-            <span className="flex items-center gap-1">
+            <span className="hidden sm:inline">· {elapsedText}</span>
+            <span className="hidden items-center gap-1 sm:flex">
               ·
               <span className="text-brand flex items-center gap-1">
                 <Users className="size-3" />
