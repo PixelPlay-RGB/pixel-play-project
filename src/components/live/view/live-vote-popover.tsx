@@ -415,11 +415,6 @@ function VoteResults({ poll, onClose }: { onClose: () => void; poll: LivePoll })
           {LIVE_VOTE_LABEL.participantsUnit}
         </span>
       </div>
-      <div className="border-border mt-3 border-t border-dashed pt-3">
-        <Button type="button" variant="outline" className="h-9 w-full" onClick={onClose}>
-          {LIVE_LABEL.close}
-        </Button>
-      </div>
     </div>
   );
 }
