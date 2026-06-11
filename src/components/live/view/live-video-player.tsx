@@ -107,16 +107,19 @@ export function LiveVideoPlayer({
     handleFocus,
     handleBlur,
   } = useLivePlayerControls(isImmersive);
-  // 유튜브식 플레이어 단축키 — k(재생/일시정지)·m(음소거)·f(전체화면)·t(영화관).
+  // 유튜브식 플레이어 단축키 — k/스페이스(재생/일시정지)·m(음소거)·f(전체화면)·t(영화관).
   // 입력 요소에 포커스가 있거나 조합키가 눌린 경우는 건드리지 않는다.
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.metaKey || event.ctrlKey || event.altKey) return;
       const target = event.target as HTMLElement | null;
       if (target?.closest("input, textarea, select, [contenteditable=true]")) return;
+      // 버튼에 포커스가 있을 때 스페이스는 그 버튼의 클릭(기본 동작)이 우선이다.
+      if (event.key === " " && target?.closest("button, [role='button']")) return;
 
       switch (event.key.toLowerCase()) {
         case "k":
+        case " ":
           event.preventDefault();
           togglePlay();
           break;
@@ -184,12 +187,16 @@ export function LiveVideoPlayer({
             isFullscreenChatOpen ? LIVE_FULLSCREEN_CHAT_INSET : "right-0",
           )}
         >
+          {/* 유튜브식 영상 영역 조작 — 클릭은 재생/일시정지, 더블클릭은 전체화면.
+              더블클릭의 클릭 2번이 재생 상태를 두 번 토글해 원래대로 돌아오므로 타이머 구분이 필요 없다. */}
           <video
             ref={videoRef}
             autoPlay
             muted
             playsInline
             className="size-full bg-black object-contain"
+            onClick={togglePlay}
+            onDoubleClick={() => void toggleFullscreen()}
           />
           {/* 방송은 시작됐지만 송출 프레임이 아직 없으면(OBS 미송출/조인 지연) 비디오를 덮는다.
               <video>는 언마운트하지 않고(언마운트 시 hls 재attach로 영원히 진행 안 됨) 위만 덮는다. */}
