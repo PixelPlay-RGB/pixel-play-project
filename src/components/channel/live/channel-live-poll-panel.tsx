@@ -25,8 +25,9 @@ interface Props {
 export default function ChannelLivePollPanel({ broadcastId, creatorId }: Props) {
   const { polls, isLoading: isPollLoading } = useLivePolls(broadcastId, creatorId);
   const [selectedTool, setSelectedTool] = useState<InteractionTool | null>(null);
-  // 도구 화면이 펼쳐지면 좌측 칼럼 스크롤을 맨 아래로 내린다(시청자 참여 섹션이 최하단).
-  // 높이는 300ms transition으로 늘어나므로, 전환이 끝난 뒤 최종 scrollHeight 기준으로 내린다.
+  // 도구 화면이 펼쳐지면 좌측 칼럼 스크롤을 바닥에 앵커한다(시청자 참여 섹션이 최하단).
+  // 높이가 300ms transition으로 점점 늘어나므로, 전환 동안 매 프레임 바닥에 붙여
+  // 펼쳐지는 만큼 스크롤이 함께 따라 내려가게 한다(닫힘은 브라우저가 자동 클램프해 줘 불필요).
   const toolViewRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!selectedTool) return;
@@ -47,12 +48,20 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId }: Props) 
       return document.scrollingElement;
     };
 
-    const timeoutId = setTimeout(() => {
-      const scroller = findScrollParent(toolViewRef.current);
-      scroller?.scrollTo({ top: scroller.scrollHeight, behavior: "smooth" });
-    }, 320);
+    const scroller = findScrollParent(toolViewRef.current);
+    if (!scroller) return;
 
-    return () => clearTimeout(timeoutId);
+    // height transition(300ms) + 여유 동안 바닥 고정.
+    const ANCHOR_DURATION_MS = 360;
+    const startedAt = performance.now();
+    let rafId = requestAnimationFrame(function tick(now) {
+      scroller.scrollTop = scroller.scrollHeight;
+      if (now - startedAt < ANCHOR_DURATION_MS) {
+        rafId = requestAnimationFrame(tick);
+      }
+    });
+
+    return () => cancelAnimationFrame(rafId);
   }, [selectedTool]);
 
   // 도구를 오가도 진행 상태가 유지되도록 세 도구의 상태를 패널 수명으로 관리한다.

@@ -44,10 +44,7 @@ function getBroadcastStatusClassName(liveState: ChannelLiveState, isStreamOnline
     return "bg-warning/10 text-warning";
   }
 
-  if (liveState.hasEnded) {
-    return "bg-muted text-muted-foreground";
-  }
-
+  // 방송 종료·송출 대기 모두 muted 톤.
   return "bg-muted text-muted-foreground";
 }
 

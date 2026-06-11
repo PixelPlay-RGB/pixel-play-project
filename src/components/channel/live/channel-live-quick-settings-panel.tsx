@@ -48,7 +48,51 @@ function QuickSettingSectionTitle({ title }: { title: string }) {
   );
 }
 
-function QuickSettingRow({ checked, icon: Icon, label, onChange }: QuickSettingRowProps) {
+// 행 좌측의 아이콘 + 라벨(켜짐이면 아이콘만 brand 톤) — 일반 행과 저속모드 행이 공유한다.
+function QuickSettingIconLabel({
+  checked,
+  icon: Icon,
+  label,
+}: {
+  checked: boolean;
+  icon: ComponentType<{ className?: string }>;
+  label: string;
+}) {
+  return (
+    <span className="flex min-w-0 items-center gap-2.5">
+      <span
+        className={cn(
+          "bg-muted/60 text-muted-foreground flex size-8 shrink-0 items-center justify-center rounded-full transition-colors",
+          checked && "text-brand",
+        )}
+      >
+        <Icon className="size-4" />
+      </span>
+      <span>{label}</span>
+    </span>
+  );
+}
+
+// 토글 스위치 비주얼 — 클릭 처리는 감싸는 버튼이 담당한다.
+function QuickSettingSwitch({ checked }: { checked: boolean }) {
+  return (
+    <span
+      className={cn(
+        "flex h-5 w-9 shrink-0 items-center rounded-full p-0.5 transition-colors",
+        checked ? "bg-brand" : "bg-muted-foreground/30",
+      )}
+    >
+      <span
+        className={cn(
+          "size-4 rounded-full bg-white shadow-sm transition-transform",
+          checked && "translate-x-4",
+        )}
+      />
+    </span>
+  );
+}
+
+function QuickSettingRow({ checked, icon, label, onChange }: QuickSettingRowProps) {
   return (
     <button
       type="button"
@@ -59,30 +103,8 @@ function QuickSettingRow({ checked, icon: Icon, label, onChange }: QuickSettingR
       aria-pressed={checked}
       onClick={() => onChange(!checked)}
     >
-      <span className="flex min-w-0 items-center gap-2.5">
-        <span
-          className={cn(
-            "bg-muted/60 text-muted-foreground flex size-8 shrink-0 items-center justify-center rounded-full transition-colors",
-            checked && "text-brand",
-          )}
-        >
-          <Icon className="size-4" />
-        </span>
-        <span>{label}</span>
-      </span>
-      <span
-        className={cn(
-          "flex h-5 w-9 shrink-0 items-center rounded-full p-0.5 transition-colors",
-          checked ? "bg-brand" : "bg-muted-foreground/30",
-        )}
-      >
-        <span
-          className={cn(
-            "size-4 rounded-full bg-white shadow-sm transition-transform",
-            checked && "translate-x-4",
-          )}
-        />
-      </span>
+      <QuickSettingIconLabel checked={checked} icon={icon} label={label} />
+      <QuickSettingSwitch checked={checked} />
     </button>
   );
 }
@@ -100,17 +122,7 @@ function QuickSettingSlowModeRow({
 }) {
   return (
     <div className="text-muted-foreground flex min-h-12 flex-col gap-2 rounded-xl px-1 py-2 text-sm font-bold sm:flex-row sm:items-center sm:justify-between">
-      <span className="flex min-w-0 items-center gap-2.5">
-        <span
-          className={cn(
-            "bg-muted/60 text-muted-foreground flex size-8 shrink-0 items-center justify-center rounded-full transition-colors",
-            checked && "text-brand",
-          )}
-        >
-          <Timer className="size-4" />
-        </span>
-        <span>저속모드</span>
-      </span>
+      <QuickSettingIconLabel checked={checked} icon={Timer} label="저속모드" />
       <div className="flex items-center justify-end gap-2">
         <SettingNumberSelectControl
           ariaLabel="저속모드 채팅 간격"
@@ -127,19 +139,7 @@ function QuickSettingSlowModeRow({
           aria-pressed={checked}
           onClick={() => onChange(!checked)}
         >
-          <span
-            className={cn(
-              "flex h-5 w-9 shrink-0 items-center rounded-full p-0.5 transition-colors",
-              checked ? "bg-brand" : "bg-muted-foreground/30",
-            )}
-          >
-            <span
-              className={cn(
-                "size-4 rounded-full bg-white shadow-sm transition-transform",
-                checked && "translate-x-4",
-              )}
-            />
-          </span>
+          <QuickSettingSwitch checked={checked} />
         </button>
       </div>
     </div>
