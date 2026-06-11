@@ -19,23 +19,14 @@ interface Props {
   onMessagesChange?: (messages: ChannelLiveChatMessage[]) => void;
 }
 
-function getStudioChatState(broadcastId: string | null | undefined): LiveViewerChatState {
-  if (!broadcastId) {
-    return {
-      canChat: false,
-      chatUnavailableReason: "live_offline",
-      remainingFollowWaitSeconds: 0,
-      remainingSlowModeSeconds: 0,
-    };
-  }
-
-  return {
-    canChat: true,
-    chatUnavailableReason: null,
-    remainingFollowWaitSeconds: 0,
-    remainingSlowModeSeconds: 0,
-  };
-}
+// 운영(스튜디오) 화면은 크리에이터 본인 — 시청 화면과 동일하게 입력을 막지 않는다.
+// 방송 시작 전에도 입력칸은 열려 있고, broadcast가 없을 때의 전송만 조용히 무시된다.
+const STUDIO_CHAT_STATE: LiveViewerChatState = {
+  canChat: true,
+  chatUnavailableReason: null,
+  remainingFollowWaitSeconds: 0,
+  remainingSlowModeSeconds: 0,
+};
 
 function toChannelLiveChatMessages(messages: LiveChatMessage[]): ChannelLiveChatMessage[] {
   return messages.flatMap((message) => {
@@ -65,7 +56,7 @@ export default function ChannelLiveChatPanel({
   const [isPopoutOpen, setIsPopoutOpen] = useState(false);
   const popoutWindowRef = useRef<Window | null>(null);
   const popoutCheckIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const chatState = useMemo(() => getStudioChatState(broadcastId), [broadcastId]);
+  const chatState = STUDIO_CHAT_STATE;
   const { messages } = useLiveMessages(broadcastId, creatorId, creatorId);
   const { donations } = useLiveDonationRanking(creatorId ?? "");
   const { isLoggedIn, sendMessage } = useLiveChatSession({

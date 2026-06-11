@@ -88,9 +88,11 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId }: Props) 
     // 풀블리드 섹션(ChannelLiveCollapsibleSection) 안 — 도구 미선택 시엔 내용 높이만 차지하고,
     // 도구 진행 화면에서만 고정 높이를 잡아 단계 전환 시 레이아웃 점프를 막는다.
     // interpolate-size로 auto↔h-150 높이를 보간해, 뒤로가기 시 화면이 뚝 끊기지 않게 한다(미지원 브라우저는 즉시 전환).
+    // overflow-hidden: 높이 보간 중 내부 콘텐츠가 section 밖으로 넘치면 scrollHeight가
+    // 첫 프레임부터 최종값이 되어 바닥 앵커가 한 번에 점프한다(추첨처럼 콘텐츠가 큰 도구).
     <section
       className={cn(
-        "flex min-h-0 min-w-0 flex-col gap-4",
+        "flex min-h-0 min-w-0 flex-col gap-4 overflow-hidden",
         "transition-[height] duration-300 ease-out [interpolate-size:allow-keywords]",
         selectedTool !== null && "h-150",
       )}
