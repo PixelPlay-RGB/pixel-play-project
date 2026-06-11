@@ -156,7 +156,13 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
         {/* 치지직형 Box 레이아웃: 섹션 사이 여백·라운드 없이 보더로만 구분하고, 텍스트 행에만 자체 패딩을 준다. */}
         <div className={cn("h-full", "w-full", "md:flex md:flex-row")}>
           <div className={cn("flex min-w-0 flex-1 flex-col", "md:overflow-hidden")}>
-            <div className={cn("md:flex md:min-h-0 md:flex-1 md:items-center md:justify-center")}>
+            {/* size 컨테이너 — 플레이어가 이 영역의 높이(100cqh) 기준으로 16:9 최대 폭을 계산한다. */}
+            <div
+              className={cn(
+                "md:flex md:min-h-0 md:flex-1 md:items-center md:justify-center",
+                "md:[container-type:size]",
+              )}
+            >
               {broadcast ? (
                 <LiveVideoPlayer
                   broadcast={broadcast}
