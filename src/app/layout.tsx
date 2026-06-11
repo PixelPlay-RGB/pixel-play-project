@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/sonner";
 import Providers from "@/components/common/providers";
 import RouteOverlayChromeController from "@/components/common/route-overlay-chrome-controller";
 import LiveDataRouteRefresher from "@/components/live/live-data-route-refresher";
+import { LiveMiniPlayerHost } from "@/components/live/mini-player/live-mini-player-host";
 import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
 import { Geist_Mono, Noto_Sans_KR } from "next/font/google";
@@ -70,6 +71,7 @@ export default function RootLayout({
           <RouteAccentProvider>
             <RouteOverlayChromeController />
             <LiveDataRouteRefresher />
+            <LiveMiniPlayerHost />
             <Toaster />
             <Header />
             <AuthToastHandler />

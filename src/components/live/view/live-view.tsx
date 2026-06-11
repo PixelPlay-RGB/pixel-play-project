@@ -15,11 +15,11 @@ import { useIsMobile } from "@/hooks/common/use-mobile";
 import { useLiveBroadcastView } from "@/hooks/live/use-live-broadcast-view";
 import { useLiveFollowAction } from "@/hooks/live/use-live-follow-action";
 import { useLiveElapsed } from "@/hooks/live/use-live-elapsed";
-import { useLiveViewerPresence } from "@/hooks/live/use-live-viewer-presence";
 import { useMoveToLogin } from "@/hooks/live/use-move-to-login";
 import { cn } from "@/lib/utils";
 import { formatCount } from "@/utils/live/live-chat";
 import { useLiveTheaterStore } from "@/stores/live-theater";
+import { useLiveWatchSessionStore } from "@/stores/live-watch-session";
 import { LIVE_LABEL } from "@/constants/live/live";
 
 interface Props {
@@ -95,8 +95,23 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     !!broadcast,
   );
 
-  // 방송을 보는 동안 하트비트를 보내 현재 시청자 수를 집계한다(로그인·익명 모두).
-  useLiveViewerPresence(broadcast?.id);
+  // 시청 세션을 루트 미니플레이어 호스트와 공유한다 — 시청자 presence(하트비트)도 호스트가
+  // 세션 기준으로 단독 호출해, 페이지를 떠나도(미니 전환) 퇴장 처리되지 않는다.
+  // 라이브면 최신 스냅샷으로 시작/갱신하고, 종료·오프라인이 확정되면 세션도 끝낸다.
+  // 로딩 중엔 판단을 보류해, 다른 라이브의 미니가 재생 중이면 새 화면 데이터가 올 때까지 유지한다.
+  const startSession = useLiveWatchSessionStore((state) => state.startSession);
+  const endSession = useLiveWatchSessionStore((state) => state.endSession);
+  // broadcast 객체는 매 렌더 재생성되므로(map 함수) 원시값만 deps에 두어,
+  // 실제 값이 바뀔 때만 세션을 갱신한다(채팅 수신 등 무관한 렌더마다 재발사 방지).
+  const liveBroadcastId = broadcast?.id;
+  useEffect(() => {
+    if (isAuthLoading || isLoading) return;
+    if (!liveBroadcastId) {
+      endSession();
+      return;
+    }
+    startSession({ creatorId, broadcastId: liveBroadcastId, hlsSrc });
+  }, [isAuthLoading, isLoading, liveBroadcastId, creatorId, hlsSrc, startSession, endSession]);
 
   // 시청 화면을 떠나면 와이드 모드를 해제해, 목록 등 다른 라이브 화면에서 사이드바가 다시 보이게 한다.
   useEffect(() => () => setWideMode(false), [setWideMode]);

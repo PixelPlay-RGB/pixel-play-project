@@ -79,7 +79,13 @@ export const LIVE_LABEL = {
   selfAuthorFallback: "나",
   // 금칙어가 포함돼 메시지가 전송되지 않았을 때 작성자 본인에게만 보이는 안내.
   bannedWordNotice: "금칙어가 포함되어 메시지가 전송되지 않았습니다.",
+  miniPlayerReturn: "시청 화면으로 돌아가기",
+  miniPlayerClose: "미니플레이어 닫기",
 } as const;
+
+// OBS 출력·채팅 팝아웃 등 별도 창 전용 라우트 — 앱 공통 크롬과 미니플레이어를 모두 숨긴다.
+// (RouteOverlayChromeController·LiveMiniPlayerHost 공유)
+export const LIVE_OVERLAY_ROUTE_PATTERN = /^\/live\/[^/]+\/(?:chat|alerts\/donation)(?:\/[^/]+)?$/;
 
 // 어두운 플레이어 배경 위 아이콘 버튼 공통 스타일(컨트롤 바·음량·화질 공유).
 export const LIVE_PLAYER_ICON_BUTTON_CLASS = "text-white/80 hover:bg-white/10 hover:text-white";
