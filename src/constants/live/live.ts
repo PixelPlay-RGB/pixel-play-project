@@ -11,8 +11,6 @@ export const LIVE_LABEL = {
   live: "LIVE",
   chat: "라이브 채팅",
   follow: "팔로우",
-  unfollowConfirmTitle: "팔로우를 취소하시겠습니까?",
-  unfollowConfirmDescription: "팔로우를 취소하면 팔로워 전용 채팅에 참여할 수 없게 됩니다.",
   confirm: "확인",
   close: "닫기",
   share: "공유",

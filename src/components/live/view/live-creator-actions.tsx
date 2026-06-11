@@ -5,16 +5,7 @@ import { useState } from "react";
 import { Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import CreatorFollowingButton from "@/components/following/creator-following-button";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import CreatorUnfollowDialog from "@/components/creator/creator-unfollow-dialog";
 import { LIVE_LABEL } from "@/constants/live/live";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { toastAppSuccess, toastAppError } from "@/utils/common/toast-message";
@@ -75,20 +66,14 @@ export function LiveCreatorActions({ creatorNickname, isFollowing, isPending, on
         </Button>
       </div>
 
-      <AlertDialog open={isUnfollowDialogOpen} onOpenChange={setIsUnfollowDialogOpen}>
-        <AlertDialogContent size="sm" showCloseButton={false}>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{LIVE_LABEL.unfollowConfirmTitle}</AlertDialogTitle>
-            <AlertDialogDescription>{LIVE_LABEL.unfollowConfirmDescription}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{LIVE_LABEL.cancel}</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={handleConfirmUnfollow}>
-              {LIVE_LABEL.confirm}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* 다른 surface(팔로잉 목록·아바타 팝오버)와 같은 공용 언팔 확인 다이얼로그를 재사용한다. */}
+      <CreatorUnfollowDialog
+        open={isUnfollowDialogOpen}
+        onOpenChange={setIsUnfollowDialogOpen}
+        creatorNickname={creatorNickname}
+        isPending={isPending}
+        onConfirm={handleConfirmUnfollow}
+      />
     </>
   );
 }
