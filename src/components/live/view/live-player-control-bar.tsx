@@ -86,7 +86,12 @@ export function LivePlayerControlBar({
             />
           }
         >
-          {isPlaying ? <Pause className="size-6" /> : <Play className="size-6" />}
+          {/* 핵심 조작(재생/일시정지)은 유튜브처럼 채운 형태로 — 라인 아이콘보다 영상 위에서 또렷하다. */}
+          {isPlaying ? (
+            <Pause className="size-6 fill-current" />
+          ) : (
+            <Play className="size-6 fill-current" />
+          )}
         </TooltipTrigger>
         <TooltipContent>
           {isPlaying ? LIVE_LABEL.playerPause : LIVE_LABEL.playerPlay} (k)
