@@ -1,6 +1,6 @@
 "use client";
 // OBS 브라우저 소스에 붙이는 라이브 채팅 출력 화면을 렌더링합니다.
-import { LiveChatDonationMessageCard } from "@/components/live/chat/live-chat-donation-message-card";
+import { LiveChatOverlayDonationCard } from "@/components/live/overlay/live-chat-overlay-donation-card";
 import { LiveChatRoleBadge } from "@/components/live/chat/live-chat-role-badge";
 import { LIVE_CHAT_OVERLAY_PREVIEW_ITEMS } from "@/constants/live/live-overlay";
 import { useLiveChatOverlay } from "@/hooks/live/use-live-chat-overlay";
@@ -83,11 +83,10 @@ function ChatMessageItem({ message }: { message: LiveChatOverlayMessage }) {
 
 function DonationMessageItem({ message }: { message: LiveChatOverlayMessage }) {
   return (
-    <LiveChatDonationMessageCard
+    <LiveChatOverlayDonationCard
       author={message.author}
       amount={message.amount}
       content={message.content}
-      variant="overlay"
     />
   );
 }

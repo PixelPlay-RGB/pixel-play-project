@@ -57,7 +57,7 @@ export const LIVE_LABEL = {
   loginButton: "로그인",
   cancel: "취소",
   anonymousAuthor: "익명",
-  hostBadge: "방송 진행자",
+  hostBadge: "크리에이터",
   donorBadge: "후원자",
   managerBadge: "매니저",
   subscriberBadge: "구독자",
