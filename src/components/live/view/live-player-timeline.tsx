@@ -3,9 +3,9 @@
 // 드래그/클릭으로 이동한다. 오른쪽 끝 = 실시간 지점(유튜브 라이브식). 일시정지하면 현재
 // 위치가 끝에서 점점 뒤로 밀리는 것이 보이고, 실시간 복귀는 컨트롤 바의 LIVE 버튼이 담당한다.
 
+import { Slider as SliderPrimitive } from "@base-ui/react/slider";
 import { useState } from "react";
 
-import { Slider } from "@/components/ui/slider";
 import { LIVE_LABEL } from "@/constants/live/live";
 import type { LiveTimelineSnapshot } from "@/hooks/live/use-hls-player";
 
@@ -29,9 +29,10 @@ export function LivePlayerTimeline({ timeline, isAtLiveEdge, onSeek }: Props) {
       ? timeline.end
       : Math.min(Math.max(timeline.current, timeline.start), timeline.end));
 
+  // 공용 Slider 대신 직접 조립 — 유튜브식으로 손잡이는 평소 숨기고 hover/드래그 중에만
+  // 보여주며, hover 시 트랙이 살짝 두꺼워져 시킹 가능함을 암시한다.
   return (
-    <Slider
-      aria-label={LIVE_LABEL.playerTimeline}
+    <SliderPrimitive.Root
       min={timeline.start}
       max={timeline.end}
       step={0.5}
@@ -41,7 +42,17 @@ export function LivePlayerTimeline({ timeline, isAtLiveEdge, onSeek }: Props) {
         setDragValue(null);
         onSeek(value);
       }}
-      className="mb-1"
-    />
+      className="group/timeline relative mb-1 flex w-full touch-none items-center select-none"
+    >
+      <SliderPrimitive.Control className="flex w-full items-center py-1.5">
+        <SliderPrimitive.Track className="relative h-1 w-full grow overflow-hidden rounded-full bg-white/25 transition-[height] duration-150 group-hover/timeline:h-1.5">
+          <SliderPrimitive.Indicator className="bg-live absolute h-full rounded-full" />
+          <SliderPrimitive.Thumb
+            aria-label={LIVE_LABEL.playerTimeline}
+            className="size-3 rounded-full bg-white opacity-0 shadow-xs transition-opacity duration-150 outline-none group-hover/timeline:opacity-100 focus-visible:opacity-100"
+          />
+        </SliderPrimitive.Track>
+      </SliderPrimitive.Control>
+    </SliderPrimitive.Root>
   );
 }

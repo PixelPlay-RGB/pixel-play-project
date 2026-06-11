@@ -8,7 +8,6 @@ import {
   PanelRightOpen,
   Pause,
   Play,
-  Radio,
   RectangleHorizontal,
   Users,
 } from "lucide-react";
@@ -106,8 +105,8 @@ export function LivePlayerControlBar({
       />
 
       {/* 컨트롤 아이콘(size-6)과 시각적 무게를 맞추기 위해 text-sm·size-4로 통일한다. */}
-      <span className="ml-1 flex items-center gap-1.5 font-mono text-sm font-bold text-white">
-        {/* LIVE는 실시간 여부 표시 겸 복귀 버튼 — 실시간이면 코랄+점멸, 일시정지·지연이면 회색(유튜브식). */}
+      <span className="ml-2 flex items-center gap-2 font-mono text-sm font-bold text-white">
+        {/* LIVE는 실시간 여부 표시 겸 복귀 버튼 — 실시간이면 코랄 점+점멸, 일시정지·지연이면 회색(치지직식). */}
         <Tooltip>
           <TooltipTrigger
             render={
@@ -117,14 +116,19 @@ export function LivePlayerControlBar({
                   isAtLiveEdge ? LIVE_LABEL.playerAtLiveEdge : LIVE_LABEL.playerGoToLiveEdge
                 }
                 className={cn(
-                  "flex cursor-pointer items-center gap-1 transition-colors",
+                  "flex cursor-pointer items-center gap-1.5 transition-colors",
                   isAtLiveEdge ? "text-live" : "text-white/50 hover:text-white/80",
                 )}
                 onClick={onSeekToLive}
               />
             }
           >
-            <Radio className={cn("size-4", isAtLiveEdge && "motion-safe:animate-pulse")} />
+            <span
+              className={cn(
+                "size-2 rounded-full bg-current",
+                isAtLiveEdge && "motion-safe:animate-pulse",
+              )}
+            />
             {LIVE_LABEL.live}
           </TooltipTrigger>
           <TooltipContent>
@@ -135,13 +139,12 @@ export function LivePlayerControlBar({
             모바일에선 비디오 아래 정보 행에 같은 값이 있어 좁은 컨트롤 바를 넘치지 않게 숨긴다. */}
         {!isImmersive ? (
           <>
-            <span className="hidden sm:inline">· {elapsedText}</span>
-            <span className="hidden items-center gap-1 sm:flex">
-              ·
-              <span className="text-brand flex items-center gap-1">
-                <Users className="size-4" />
-                {formatCount(viewerCount)}
-              </span>
+            <span className="hidden text-white/40 sm:inline">·</span>
+            <span className="hidden text-white/90 sm:inline">{elapsedText}</span>
+            <span className="hidden text-white/40 sm:inline">·</span>
+            <span className="text-brand hidden items-center gap-1 sm:flex">
+              <Users className="size-4" />
+              {formatCount(viewerCount)}
             </span>
           </>
         ) : null}
