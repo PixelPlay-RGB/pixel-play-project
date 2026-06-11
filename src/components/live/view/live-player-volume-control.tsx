@@ -1,18 +1,43 @@
 "use client";
 // 라이브 플레이어 음량 컨트롤 — 음소거 토글과 hover 시 펼쳐지는 음량 슬라이더입니다.
 
-import { Volume1, Volume2, VolumeX } from "lucide-react";
+import { VolumeX } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { LIVE_LABEL, LIVE_PLAYER_ICON_BUTTON_CLASS } from "@/constants/live/live";
+import { cn } from "@/lib/utils";
 
 interface Props {
   muted: boolean;
   volume: number;
   onToggleMute: () => void;
   onVolumeChange: (value: number) => void;
+}
+
+// lucide Volume2와 같은 모양을 유지하되, 바깥(두 번째) 물결을 음량 50% 초과에서만 또렷하게 —
+// 이하에서는 지우는 대신 투명하게 남겨 현재 음량 크기를 표현한다(path는 lucide volume-2 원본).
+function VolumeLevelIcon({ isSecondWaveActive }: { isSecondWaveActive: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="size-5"
+      aria-hidden
+    >
+      <path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z" />
+      <path d="M16 9a5 5 0 0 1 0 6" />
+      <path
+        d="M19.364 18.364a9 9 0 0 0 0-12.728"
+        className={cn("transition-opacity", isSecondWaveActive ? "opacity-100" : "opacity-25")}
+      />
+    </svg>
+  );
 }
 
 export function LivePlayerVolumeControl({ muted, volume, onToggleMute, onVolumeChange }: Props) {
@@ -31,13 +56,10 @@ export function LivePlayerVolumeControl({ muted, volume, onToggleMute, onVolumeC
             />
           }
         >
-          {/* 음량 50% 이하는 1칸(Volume1), 초과는 2칸(Volume2)으로 현재 크기를 아이콘에 반영한다. */}
           {muted ? (
             <VolumeX className="size-5" />
-          ) : volume <= 0.5 ? (
-            <Volume1 className="size-5" />
           ) : (
-            <Volume2 className="size-5" />
+            <VolumeLevelIcon isSecondWaveActive={volume > 0.5} />
           )}
         </TooltipTrigger>
         <TooltipContent>
