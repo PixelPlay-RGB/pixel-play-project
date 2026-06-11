@@ -103,20 +103,29 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId }: Props) 
           key="tool-select"
           className="animate-in fade-in slide-in-from-bottom-3 grid gap-2.5 duration-200 ease-out motion-reduce:animate-none sm:grid-cols-3"
         >
-          {INTERACTION_TOOLS.map(({ icon: Icon, label, value }) => (
+          {INTERACTION_TOOLS.map(({ icon: Icon, label, value, description }) => (
+            // 브랜드 무드의 세로형 카드 — 민트 네온 hover에 아이콘 뱃지가 brand로 채워지며 살짝 떠오른다.
             <button
               key={value}
               type="button"
               className={cn(
-                "border-border bg-background text-foreground flex items-center justify-center gap-2.5 rounded-lg border px-4 py-5 text-sm font-bold transition-colors",
-                "hover:border-brand/40 hover:bg-brand/5 hover:text-brand",
+                "group border-border bg-background flex flex-col items-center gap-3 rounded-xl border px-4 py-7 text-center transition-all",
+                "hover:border-brand/40 hover:bg-brand/5 hover:-translate-y-0.5 hover:shadow-md",
               )}
               onClick={() => setSelectedTool(value)}
             >
-              <span className="bg-brand/10 text-brand flex size-9 shrink-0 items-center justify-center rounded-full">
-                <Icon className="size-4.5" />
+              <span
+                className={cn(
+                  "bg-brand/10 text-brand flex size-12 shrink-0 items-center justify-center rounded-xl transition-colors",
+                  "group-hover:bg-brand group-hover:text-brand-foreground",
+                )}
+              >
+                <Icon className="size-6" />
               </span>
-              {label}
+              <span className="flex flex-col gap-1">
+                <span className="text-foreground text-sm font-bold">{label}</span>
+                <span className="text-muted-foreground text-xs">{description}</span>
+              </span>
             </button>
           ))}
         </div>

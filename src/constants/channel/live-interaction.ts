@@ -31,7 +31,12 @@ export const ROULETTE_POINTER_DEGREE = 45;
 export const ROULETTE_RECOIL_DEGREE = 46;
 
 export const INTERACTION_TOOLS = [
-  { icon: Vote, label: "투표", value: "poll" },
-  { icon: Gift, label: "추첨", value: "draw" },
-  { icon: FerrisWheel, label: "룰렛", value: "roulette" },
+  { icon: Vote, label: "투표", value: "poll", description: "채팅으로 시청자 의견을 모아요" },
+  { icon: Gift, label: "추첨", value: "draw", description: "참여자 중 당첨자를 뽑아요" },
+  {
+    icon: FerrisWheel,
+    label: "룰렛",
+    value: "roulette",
+    description: "돌림판을 돌려 결과를 정해요",
+  },
 ] as const;
