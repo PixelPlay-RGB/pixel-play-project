@@ -249,8 +249,11 @@ export function LiveVideoPlayer({
             isFullscreenChatOpen ? LIVE_FULLSCREEN_CHAT_INSET : "right-0",
           )}
         >
-          {/* 컨트롤 바 위 타임라인 시크바 — 일시정지·과거 이동 후 LIVE 버튼으로 실시간 복귀한다. */}
-          <LivePlayerTimeline timeline={timeline} onSeek={seekTo} />
+          {/* 컨트롤 바 위 타임라인 시크바 — 일시정지·과거 이동 후 LIVE 버튼으로 실시간 복귀한다.
+              송출 대기 중에는 빈 바만 남아 혼란을 주므로 실제 재생 중에만 보여준다. */}
+          {playbackState === "playing" ? (
+            <LivePlayerTimeline timeline={timeline} isAtLiveEdge={isAtLiveEdge} onSeek={seekTo} />
+          ) : null}
           <LivePlayerControlBar
             isPlaying={isPlaying}
             onTogglePlay={togglePlay}

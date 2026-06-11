@@ -105,7 +105,8 @@ export function LivePlayerControlBar({
         onVolumeChange={onVolumeChange}
       />
 
-      <span className="ml-1 flex items-center gap-1.5 font-mono text-xs font-bold text-white">
+      {/* 컨트롤 아이콘(size-6)과 시각적 무게를 맞추기 위해 text-sm·size-4로 통일한다. */}
+      <span className="ml-1 flex items-center gap-1.5 font-mono text-sm font-bold text-white">
         {/* LIVE는 실시간 여부 표시 겸 복귀 버튼 — 실시간이면 코랄+점멸, 일시정지·지연이면 회색(유튜브식). */}
         <Tooltip>
           <TooltipTrigger
@@ -123,7 +124,7 @@ export function LivePlayerControlBar({
               />
             }
           >
-            <Radio className={cn("size-3", isAtLiveEdge && "motion-safe:animate-pulse")} />
+            <Radio className={cn("size-4", isAtLiveEdge && "motion-safe:animate-pulse")} />
             {LIVE_LABEL.live}
           </TooltipTrigger>
           <TooltipContent>
@@ -138,7 +139,7 @@ export function LivePlayerControlBar({
             <span className="hidden items-center gap-1 sm:flex">
               ·
               <span className="text-brand flex items-center gap-1">
-                <Users className="size-3" />
+                <Users className="size-4" />
                 {formatCount(viewerCount)}
               </span>
             </span>

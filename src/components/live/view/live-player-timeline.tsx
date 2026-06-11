@@ -11,17 +11,23 @@ import type { LiveTimelineSnapshot } from "@/hooks/live/use-hls-player";
 
 interface Props {
   timeline: LiveTimelineSnapshot | null;
+  // 실시간 시청 중이면 바를 끝까지 채워 그린다 — 라이브는 항상 실시간보다 2~4초 뒤를
+  // 재생하므로 실제 위치로 그리면 끝까지 차지 않는 갭이 보인다(치지직·유튜브도 스냅 방식).
+  isAtLiveEdge: boolean;
   onSeek: (time: number) => void;
 }
 
-export function LivePlayerTimeline({ timeline, onSeek }: Props) {
+export function LivePlayerTimeline({ timeline, isAtLiveEdge, onSeek }: Props) {
   // 드래그 중에는 폴링 갱신(1초)이 손잡이를 되돌리지 않게 드래그 값을 우선 표시한다.
   const [dragValue, setDragValue] = useState<number | null>(null);
 
   if (!timeline || timeline.end - timeline.start <= 0) return null;
 
   const currentValue =
-    dragValue ?? Math.min(Math.max(timeline.current, timeline.start), timeline.end);
+    dragValue ??
+    (isAtLiveEdge
+      ? timeline.end
+      : Math.min(Math.max(timeline.current, timeline.start), timeline.end));
 
   return (
     <Slider
