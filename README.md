@@ -384,7 +384,18 @@ src/
 | `community_comment_like_count_trigger`                    | 댓글 좋아요 INSERT·DELETE 시 댓글 좋아요 수를 갱신                                                  |
 | `community_comment_validate_parent_trigger`               | 대댓글 부모를 검증해 1단계 대댓글로 평탄화                                                          |
 | `trg_log_creator_follow_event`                            | `viewer_creator_relation.followed_at` 전이를 follow/unfollow 이벤트로 `creator_follow_event`에 적재 |
+| `broadcast_live_broadcast_ended`                          | `live_broadcast.ended_at` 세팅 시 시청 화면에 `broadcast_ended` Realtime 이벤트 전송                |
 | `set_*_modified_at`                                       | 각 테이블의 `modified_at` 타임스탬프 자동 갱신                                                      |
+
+### Edge Functions · Scheduled Jobs
+
+| 이름                         | 트리거                      | 설명                                                                     |
+| ---------------------------- | --------------------------- | ------------------------------------------------------------------------ |
+| `delete-user-storage`        | Database Webhook(유저 삭제) | `user-media/{user.id}/` 하위 파일을 재귀 정리                            |
+| `sync-live-broadcast-status` | pg_cron(1분)                | MediaMTX 송출이 끊긴 활성 방송을 자동 종료(운영 페이지 폴링은 보조 수단) |
+| `sweep_live_viewer_counts`   | pg_cron(30초)               | 라이브 시청자 수 정리(DB 함수 직접 호출)                                 |
+
+`sync-live-broadcast-status`는 Vault의 `service_role_key`(cron 인증)와 Edge Function secrets의 `LIVE_OVERLAY_TOKEN_SECRET`(스트림 키 HMAC)이 등록되어야 동작하며, 미등록 시 401/503으로 안전 실패합니다.
 
 ### 스키마 변경 절차
 
