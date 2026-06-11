@@ -23,6 +23,13 @@ export interface HlsQualityLevel {
   height: number | null; // 세로 해상도(px), 없으면 null
 }
 
+// 라이브 버퍼(슬라이딩 윈도우, 서버 세그먼트 보관량 ≈60초) 안의 시킹 가능 범위와 현재 위치.
+export interface LiveTimelineSnapshot {
+  start: number;
+  end: number;
+  current: number;
+}
+
 interface UseHlsPlayerOptions {
   videoRef: RefObject<HTMLVideoElement | null>;
   src: string;
@@ -40,6 +47,10 @@ interface UseHlsPlayerResult {
   isAtLiveEdge: boolean;
   // 실시간 지점으로 점프하고 재생을 재개한다.
   seekToLiveEdge: () => void;
+  // 타임라인 시크바용 — 시킹 가능 범위가 아직 없으면 null.
+  timeline: LiveTimelineSnapshot | null;
+  // 라이브 버퍼 범위 안으로 클램프해 재생 위치를 옮긴다(재생/일시정지 상태는 유지).
+  seekTo: (time: number) => void;
 }
 
 export function useHlsPlayer({
@@ -53,6 +64,7 @@ export function useHlsPlayer({
   // SSR=첫 클라 렌더 일치를 위해 결정적으로 'waiting'으로 시작한다(하이드레이션 불일치 방지).
   const [playbackState, setPlaybackState] = useState<LivePlaybackState>("waiting");
   const [isAtLiveEdge, setIsAtLiveEdge] = useState(true);
+  const [timeline, setTimeline] = useState<LiveTimelineSnapshot | null>(null);
 
   // 실시간 지점(라이브 엣지) 위치 — hls.js는 권장 동기 위치, 네이티브 HLS(Safari)는 seekable 끝.
   const getLiveEdgePosition = useCallback((video: HTMLVideoElement): number | null => {
@@ -93,14 +105,15 @@ export function useHlsPlayer({
     if (!Hls.isSupported()) return;
 
     let retryTimeout: ReturnType<typeof setTimeout> | null = null;
+    // liveMaxLatencyDuration·maxLiveSyncPlaybackRate는 두지 않는다 — 두면 hls.js가 뒤처진 위치를
+    // 강제 점프/배속으로 실시간까지 끌고 가서 타임라인 시킹(과거 구간 시청)이 불가능해진다.
+    // 실시간 복귀는 사용자가 LIVE 버튼(seekToLiveEdge)으로 직접 한다(유튜브 라이브식).
     const hls = new Hls({
       backBufferLength: 5,
-      liveMaxLatencyDuration: 3,
       liveSyncDuration: 1,
       liveSyncMode: "edge",
       lowLatencyMode: true,
       maxBufferLength: 5,
-      maxLiveSyncPlaybackRate: 1.2,
     });
     hlsRef.current = hls;
 
@@ -193,8 +206,8 @@ export function useHlsPlayer({
     };
   }, [videoRef, enabled]);
 
-  // 라이브 엣지 추적 — 일시정지하거나 실시간에서 임계값 이상 뒤처지면 "지연"으로 표시한다.
-  // 같은 값이면 setState가 리렌더를 만들지 않으므로 1초 폴링 비용은 무시할 수준이다.
+  // 라이브 엣지·타임라인 추적 — 일시정지하거나 실시간에서 임계값 이상 뒤처지면 "지연"으로 표시하고,
+  // 시크바용 시킹 가능 범위(슬라이딩 윈도우)와 현재 위치를 함께 갱신한다.
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !enabled) return;
@@ -203,6 +216,17 @@ export function useHlsPlayer({
       const edge = getLiveEdgePosition(video);
       const isBehind = edge !== null && edge - video.currentTime > LIVE_EDGE_BEHIND_THRESHOLD_S;
       setIsAtLiveEdge(!video.paused && !isBehind);
+
+      const seekable = video.seekable;
+      setTimeline(
+        seekable.length > 0
+          ? {
+              start: seekable.start(0),
+              end: seekable.end(seekable.length - 1),
+              current: video.currentTime,
+            }
+          : null,
+      );
     }, LIVE_EDGE_POLL_MS);
 
     return () => clearInterval(intervalId);
@@ -221,6 +245,26 @@ export function useHlsPlayer({
     setIsAtLiveEdge(true);
   }, [videoRef, getLiveEdgePosition]);
 
+  // 타임라인 시킹 — 라이브 버퍼 범위로 클램프해 위치만 옮긴다(재생/일시정지 상태는 유지).
+  // 시크바가 폴링(1초)을 기다리지 않도록 현재 위치를 즉시 반영한다.
+  const seekTo = useCallback(
+    (time: number) => {
+      const video = videoRef.current;
+      if (!video) return;
+
+      const seekable = video.seekable;
+      if (seekable.length === 0) return;
+
+      const clamped = Math.min(
+        Math.max(time, seekable.start(0)),
+        seekable.end(seekable.length - 1),
+      );
+      video.currentTime = clamped;
+      setTimeline((prev) => (prev ? { ...prev, current: clamped } : prev));
+    },
+    [videoRef],
+  );
+
   // -1 = 자동. 사용자가 고른 레벨은 즉시 반영하고 hls 인스턴스에도 적용한다.
   const setLevel = useCallback((index: number) => {
     const hls = hlsRef.current;
@@ -229,5 +273,14 @@ export function useHlsPlayer({
     setSelectedLevel(index);
   }, []);
 
-  return { levels, selectedLevel, setLevel, playbackState, isAtLiveEdge, seekToLiveEdge };
+  return {
+    levels,
+    selectedLevel,
+    setLevel,
+    playbackState,
+    isAtLiveEdge,
+    seekToLiveEdge,
+    timeline,
+    seekTo,
+  };
 }

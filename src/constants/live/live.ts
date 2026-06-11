@@ -30,6 +30,7 @@ export const LIVE_LABEL = {
   playerQualityAuto: "자동",
   playerAtLiveEdge: "실시간 방송 중",
   playerGoToLiveEdge: "실시간으로 이동",
+  playerTimeline: "재생 위치",
   viewers: "명 시청 중",
   followers: "팔로워",
   broadcasts: "방송",

@@ -1,7 +1,7 @@
 "use client";
 // 라이브 플레이어 음량 컨트롤 — 음소거 토글과 hover 시 펼쳐지는 음량 슬라이더입니다.
 
-import { Volume2, VolumeX } from "lucide-react";
+import { Volume1, Volume2, VolumeX } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -31,7 +31,14 @@ export function LivePlayerVolumeControl({ muted, volume, onToggleMute, onVolumeC
             />
           }
         >
-          {muted ? <VolumeX className="size-5" /> : <Volume2 className="size-5" />}
+          {/* 음량 50% 이하는 1칸(Volume1), 초과는 2칸(Volume2)으로 현재 크기를 아이콘에 반영한다. */}
+          {muted ? (
+            <VolumeX className="size-5" />
+          ) : volume <= 0.5 ? (
+            <Volume1 className="size-5" />
+          ) : (
+            <Volume2 className="size-5" />
+          )}
         </TooltipTrigger>
         <TooltipContent>
           {muted ? LIVE_LABEL.playerUnmute : LIVE_LABEL.playerMute} (m)

@@ -7,6 +7,7 @@ import { HandCoins, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import LiveBadge from "@/components/live/live-badge";
 import { LivePlayerControlBar } from "@/components/live/view/live-player-control-bar";
+import { LivePlayerTimeline } from "@/components/live/view/live-player-timeline";
 import { LivePlayerTopOverlay } from "@/components/live/view/live-player-top-overlay";
 import { LivePlayerWaitingOverlay } from "@/components/live/view/live-player-waiting-overlay";
 import {
@@ -140,12 +141,20 @@ export function LiveVideoPlayer({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [togglePlay, toggleMute, toggleFullscreen, onToggleTheater, isFullscreen]);
 
-  const { levels, selectedLevel, setLevel, playbackState, isAtLiveEdge, seekToLiveEdge } =
-    useHlsPlayer({
-      videoRef,
-      src: hlsSrc ?? "",
-      enabled: !!hlsSrc,
-    });
+  const {
+    levels,
+    selectedLevel,
+    setLevel,
+    playbackState,
+    isAtLiveEdge,
+    seekToLiveEdge,
+    timeline,
+    seekTo,
+  } = useHlsPlayer({
+    videoRef,
+    src: hlsSrc ?? "",
+    enabled: !!hlsSrc,
+  });
 
   const isFullscreenChatOpen = isFullscreen && isFsChatOpen;
 
@@ -221,6 +230,8 @@ export function LiveVideoPlayer({
             isFullscreenChatOpen ? LIVE_FULLSCREEN_CHAT_INSET : "right-0",
           )}
         >
+          {/* 컨트롤 바 위 타임라인 시크바 — 일시정지·과거 이동 후 LIVE 버튼으로 실시간 복귀한다. */}
+          <LivePlayerTimeline timeline={timeline} onSeek={seekTo} />
           <LivePlayerControlBar
             isPlaying={isPlaying}
             onTogglePlay={togglePlay}
