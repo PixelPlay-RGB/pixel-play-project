@@ -10,7 +10,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Spinner } from "@/components/ui/spinner";
 import { LiveChatInputBar } from "@/components/live/view/live-chat-input-bar";
 import { LiveChatMessageList } from "@/components/live/chat/live-chat-message-list";
-import { LiveChatParticipationNotice } from "@/components/live/chat/live-chat-participation-notice";
 import { LiveDonationBanner } from "@/components/live/view/live-donation-banner";
 import { LIVE_LABEL } from "@/constants/live/live";
 import type {
@@ -62,9 +61,6 @@ interface Props {
   entryNoticeAnchorId?: string | null;
   // 팔로우 대기 카운트다운 종료 등 게이트가 풀릴 시점에 viewer chat state를 다시 받는다.
   onRefreshChatState?: () => void;
-  // 참여 안내의 보조 액션(예: 팝아웃에서 "시청 화면 열기").
-  noticeActionLabel?: string;
-  onNoticeAction?: () => void;
   // 입력바 하단의 후원·투표 액션행 노출 여부(미지정=노출). 전체화면 포털이 필요하면 portalContainer를 함께 준다.
   showActions?: boolean;
   votePresentation?: "popover" | "dialog";
@@ -108,8 +104,6 @@ export function LiveChatBody({
   hasMoreChatHistory,
   entryNoticeAnchorId,
   onRefreshChatState,
-  noticeActionLabel,
-  onNoticeAction,
   showActions = true,
   votePresentation = "popover",
   portalContainer,
@@ -160,13 +154,6 @@ export function LiveChatBody({
           />
         </ScrollArea>
       </div>
-      <LiveChatParticipationNotice
-        chatUnavailableReason={chatState.chatUnavailableReason}
-        remainingWaitSeconds={chatState.remainingFollowWaitSeconds}
-        onWaitElapsed={onRefreshChatState}
-        actionLabel={noticeActionLabel}
-        onAction={onNoticeAction}
-      />
       <LiveChatInputBar
         className={inputClassName}
         polls={polls}
@@ -194,6 +181,7 @@ export function LiveChatBody({
         onDonationOpenSettled={onDonationOpenSettled}
         chatRuleText={chatRuleText}
         onAcceptChatRule={onAcceptChatRule}
+        onRefreshChatState={onRefreshChatState}
         onFollow={onFollow}
         isFollowing={isFollowing}
         isFollowPending={isFollowPending}

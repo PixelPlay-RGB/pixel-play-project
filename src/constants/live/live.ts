@@ -79,7 +79,6 @@ export const LIVE_LABEL = {
   participationFollowerDesc: "이 방송은 팔로우한 시청자만 채팅할 수 있습니다.",
   participationWaitTitle: "팔로우 대기 중",
   participationWaitDesc: "팔로우 후 잠시 기다려야 채팅할 수 있습니다.",
-  openLiveWatch: "시청 화면에서 확인",
   chatPopoutBlocked: "팝업 차단을 해제한 뒤 다시 열어주세요.",
   selfAuthorFallback: "나",
   // 금칙어가 포함돼 메시지가 전송되지 않았을 때 작성자 본인에게만 보이는 안내.

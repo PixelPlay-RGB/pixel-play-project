@@ -2,7 +2,6 @@
 // 별도 탭으로 열리는 채팅 전용 팝아웃 화면입니다.
 
 import { Radio } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { LiveChatBody } from "@/components/live/chat/live-chat-body";
 import { LIVE_LABEL } from "@/constants/live/live";
 import { useLiveBroadcastView } from "@/hooks/live/use-live-broadcast-view";
@@ -14,7 +13,6 @@ interface Props {
 }
 
 export function LiveChatPopout({ creatorId }: Props) {
-  const router = useRouter();
   const moveToLogin = useMoveToLogin();
 
   const {
@@ -55,10 +53,6 @@ export function LiveChatPopout({ creatorId }: Props) {
     onFollowToggled,
     onUnauthenticated: moveToLogin,
   });
-
-  function moveToLiveWatch() {
-    router.push(`/live/${creatorId}`);
-  }
 
   if (isAuthLoading || isLoading) {
     return (
@@ -114,8 +108,6 @@ export function LiveChatPopout({ creatorId }: Props) {
         onFollow={handleFollow}
         isFollowing={isFollowing}
         isFollowPending={isFollowPending}
-        noticeActionLabel={LIVE_LABEL.openLiveWatch}
-        onNoticeAction={moveToLiveWatch}
         inputClassName="shrink-0"
         onLoadOlderMessages={loadOlderMessages}
         isLoadingOlderMessages={isLoadingOlderMessages}
