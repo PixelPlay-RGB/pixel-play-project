@@ -1,11 +1,13 @@
 "use client";
 // 라이브 미니플레이어 — 시청 페이지 밖에서 우하단에 떠서 시청(영상·시청자 집계)을 이어갑니다.
-// 본문 클릭·우상단 복귀 버튼=시청 화면 복귀(세션 유지), X=시청 종료(presence 퇴장), 종료 신호=자동 닫기+토스트.
+// 본문 더블클릭·우상단 복귀 버튼=시청 화면 복귀(세션 유지), X=시청 종료(presence 퇴장), 종료 신호=자동 닫기+토스트.
 
 import Link from "next/link";
-import { useRef } from "react";
+import { useRouter } from "next/navigation";
+import { useRef, type PointerEvent as ReactPointerEvent } from "react";
 import { Pause, Play, SquareArrowOutUpRight, X } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { motion } from "motion/react";
 
 import { LivePlayerLiveIndicator } from "@/components/live/view/live-player-live-indicator";
 import { LivePlayerVolumeControl } from "@/components/live/view/live-player-volume-control";
@@ -36,8 +38,12 @@ const CONTROL_INTERACTIVITY_CLASS =
   "pointer-events-none group-focus-within:pointer-events-auto group-hover:pointer-events-auto pointer-coarse:pointer-events-auto";
 
 export function LiveMiniPlayer({ session, onClose }: Props) {
+  const router = useRouter();
   const queryClient = useQueryClient();
   const rootRef = useRef<HTMLDivElement>(null);
+  // 드래그(motion/react, sticky-save-bar와 동일 패턴) 이동을 뷰포트 안으로 가두는 제약 컨테이너.
+  const dragConstraintsRef = useRef<HTMLDivElement>(null);
+  const watchHref = `/live/${session.creatorId}`;
   // 메인 플레이어와 동일한 재생·음량 정책 재사용(음소거 자동재생 시작, 음량 0=음소거 파생).
   // 컨트롤 자동 숨김 상태는 안 쓰고 CSS hover(group)로 처리한다.
   const { videoRef, isPlaying, togglePlay, muted, volume, toggleMute, setVolume } =
@@ -55,6 +61,12 @@ export function LiveMiniPlayer({ session, onClose }: Props) {
   function handleClose() {
     recoverFocusBeforeClose();
     onClose();
+  }
+
+  // 컨트롤(버튼·음량 슬라이더)에서 시작한 포인터는 패널 드래그를 시작시키지 않는다 — 이벤트가
+  // motion 드래그 리스너가 달린 루트로 버블되기 전에 차단한다(버튼 클릭·슬라이더 조작 자체는 유지).
+  function stopDragFromControls(event: ReactPointerEvent) {
+    event.stopPropagation();
   }
 
   // 메인 플레이어와 동일한 attach 정책 재사용. hlsSrc 미비(null)면 세션은 유지하고 대기 오버레이만 띄운다.
@@ -80,102 +92,120 @@ export function LiveMiniPlayer({ session, onClose }: Props) {
   });
 
   return (
-    <div
-      ref={rootRef}
-      role="complementary"
-      aria-label={LIVE_LABEL.miniPlayer}
-      className={cn(
-        // bottom-24: 우하단 모서리에 뜨는 토스트(sonner)·하단 중앙의 설정 저장 바(StickySaveBar,
-        // bottom-6+높이 약 58px)의 출현 영역 위로 올려, 모든 폭에서 겹치지 않게 한다.
-        "group fixed right-4 bottom-24 z-50 w-80 overflow-hidden bg-black shadow-lg",
-        "md:w-96",
-      )}
-    >
-      {/* video+대기 오버레이는 메인(live-video-player)과 동일 마크업이지만, 그쪽은 전체화면 채팅
-          인셋 래퍼와 결합돼 있어 의도적으로 추출하지 않는다(attach 정책은 useHlsPlayer로 공유). */}
-      <div className="relative aspect-video">
-        <video
-          ref={videoRef}
-          autoPlay
-          muted
-          playsInline
-          className="size-full bg-black object-contain"
-        />
-        {playbackState !== "playing" ? <LivePlayerWaitingOverlay /> : null}
+    // 드래그 제약 컨테이너 = 뷰포트 전체(pointer-events-none). motion이 이 박스 안으로 미니를 가둔다.
+    <div ref={dragConstraintsRef} className="pointer-events-none fixed inset-0 z-50">
+      <motion.div
+        ref={rootRef}
+        role="complementary"
+        aria-label={LIVE_LABEL.miniPlayer}
+        drag
+        dragConstraints={dragConstraintsRef}
+        dragMomentum={false}
+        dragElastic={0}
+        whileDrag={{ cursor: "grabbing" }}
+        className={cn(
+          // bottom-24: 우하단 모서리에 뜨는 토스트(sonner)·하단 중앙의 설정 저장 바(StickySaveBar,
+          // bottom-6+높이 약 58px)의 출현 영역 위로 올려, 모든 폭에서 겹치지 않게 한다.
+          "group pointer-events-auto absolute right-4 bottom-24 w-80 overflow-hidden bg-black shadow-lg",
+          "md:w-96",
+          "cursor-grab active:cursor-grabbing",
+        )}
+      >
+        {/* video+대기 오버레이는 메인(live-video-player)과 동일 마크업이지만, 그쪽은 전체화면 채팅
+            인셋 래퍼와 결합돼 있어 의도적으로 추출하지 않는다(attach 정책은 useHlsPlayer로 공유). */}
+        <div className="relative aspect-video">
+          <video
+            ref={videoRef}
+            autoPlay
+            muted
+            playsInline
+            className="size-full bg-black object-contain"
+          />
+          {playbackState !== "playing" ? <LivePlayerWaitingOverlay /> : null}
 
-        {/* 본문 클릭 = 시청 화면 복귀(세션 유지 — presence 무중단). 접근성 이름·탭 스톱은 우상단 복귀 버튼이 담당한다. */}
-        <Link
-          href={`/live/${session.creatorId}`}
-          aria-hidden
-          tabIndex={-1}
-          className="absolute inset-0"
-        />
+          {/* 본문 = 드래그 표면 + 더블클릭 시 시청 화면 복귀(세션 유지 — presence 무중단). 단일 클릭은
+            드래그 의도와 충돌하므로 내비하지 않는다. 커서(grab)는 루트에서 상속. 접근성 이름·탭 스톱·
+            단일클릭 복귀는 우상단 복귀 버튼이 담당한다. */}
+          <div
+            aria-hidden
+            onDoubleClick={() => router.push(watchHref)}
+            className="absolute inset-0"
+          />
 
-        {/* hover/포커스 시 상단 그라데이션: 우상단 복귀(시청 화면으로) + 닫기(X = 의도된 퇴장, 시청자 수 -1) */}
-        <div
-          className={cn(
-            "pointer-events-none absolute inset-x-0 top-0",
-            "flex justify-end gap-0.5 p-1.5 pb-8",
-            "bg-linear-to-b from-black/60 to-transparent",
-            OVERLAY_VISIBILITY_CLASS,
-          )}
-        >
-          {/* 클릭 수신은 이 컨트롤 그룹 div 한 곳에서만 토글한다 — 버튼마다 부착하면 새 컨트롤 추가 시 누락된다. */}
-          <div className={cn("flex gap-0.5", CONTROL_INTERACTIVITY_CLASS)}>
-            <Button
-              size="icon"
-              variant="ghost"
-              nativeButton={false}
-              render={<Link href={`/live/${session.creatorId}`} />}
-              aria-label={LIVE_LABEL.miniPlayerReturn}
-              className={LIVE_PLAYER_ICON_BUTTON_CLASS}
+          {/* hover/포커스 시 상단 그라데이션: 우상단 복귀(시청 화면으로) + 닫기(X = 의도된 퇴장, 시청자 수 -1) */}
+          <div
+            className={cn(
+              "pointer-events-none absolute inset-x-0 top-0",
+              "flex justify-end gap-0.5 p-1.5 pb-8",
+              "bg-linear-to-b from-black/60 to-transparent",
+              OVERLAY_VISIBILITY_CLASS,
+            )}
+          >
+            {/* 클릭 수신은 이 컨트롤 그룹 div 한 곳에서만 토글한다 — 버튼마다 부착하면 새 컨트롤 추가 시 누락된다.
+              onPointerDown stopPropagation: 이 그룹에서 시작한 포인터는 패널 드래그를 시작시키지 않는다. */}
+            <div
+              onPointerDown={stopDragFromControls}
+              className={cn("flex gap-0.5", CONTROL_INTERACTIVITY_CLASS)}
             >
-              <SquareArrowOutUpRight className="size-5" />
-            </Button>
-            <Button
-              type="button"
-              size="icon"
-              variant="ghost"
-              aria-label={LIVE_LABEL.miniPlayerClose}
-              className={LIVE_PLAYER_ICON_BUTTON_CLASS}
-              onClick={handleClose}
+              <Button
+                size="icon"
+                variant="ghost"
+                nativeButton={false}
+                render={<Link href={watchHref} />}
+                aria-label={LIVE_LABEL.miniPlayerReturn}
+                className={LIVE_PLAYER_ICON_BUTTON_CLASS}
+              >
+                <SquareArrowOutUpRight className="size-5" />
+              </Button>
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                aria-label={LIVE_LABEL.miniPlayerClose}
+                className={LIVE_PLAYER_ICON_BUTTON_CLASS}
+                onClick={handleClose}
+              >
+                <X className="size-5" />
+              </Button>
+            </div>
+          </div>
+
+          {/* hover/포커스 시 하단 그라데이션: 좌하단 재생·음량 컨트롤 + 점멸 LIVE(메인 컨트롤 바와 공유) */}
+          <div
+            className={cn(
+              "pointer-events-none absolute inset-x-0 bottom-0",
+              "flex items-center gap-1 p-1.5 pt-8",
+              "bg-linear-to-t from-black/70 to-transparent",
+              OVERLAY_VISIBILITY_CLASS,
+            )}
+          >
+            {/* 클릭 수신은 이 컨트롤 그룹 div 한 곳에서만 토글한다 — 버튼마다 부착하면 새 컨트롤 추가 시 누락된다.
+              onPointerDown stopPropagation: 재생/음량 슬라이더 조작이 패널 드래그로 오인되지 않게 한다. */}
+            <div
+              onPointerDown={stopDragFromControls}
+              className={cn("flex items-center gap-1", CONTROL_INTERACTIVITY_CLASS)}
             >
-              <X className="size-5" />
-            </Button>
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                aria-label={isPlaying ? LIVE_LABEL.playerPause : LIVE_LABEL.playerPlay}
+                className={LIVE_PLAYER_ICON_BUTTON_CLASS}
+                onClick={togglePlay}
+              >
+                {isPlaying ? <Pause className="size-5" /> : <Play className="size-5" />}
+              </Button>
+              <LivePlayerVolumeControl
+                muted={muted}
+                volume={volume}
+                onToggleMute={toggleMute}
+                onVolumeChange={setVolume}
+              />
+            </div>
+            <LivePlayerLiveIndicator className="ml-1" />
           </div>
         </div>
-
-        {/* hover/포커스 시 하단 그라데이션: 좌하단 재생·음량 컨트롤 + 점멸 LIVE(메인 컨트롤 바와 공유) */}
-        <div
-          className={cn(
-            "pointer-events-none absolute inset-x-0 bottom-0",
-            "flex items-center gap-1 p-1.5 pt-8",
-            "bg-linear-to-t from-black/70 to-transparent",
-            OVERLAY_VISIBILITY_CLASS,
-          )}
-        >
-          {/* 클릭 수신은 이 컨트롤 그룹 div 한 곳에서만 토글한다 — 버튼마다 부착하면 새 컨트롤 추가 시 누락된다. */}
-          <div className={cn("flex items-center gap-1", CONTROL_INTERACTIVITY_CLASS)}>
-            <Button
-              type="button"
-              size="icon"
-              variant="ghost"
-              aria-label={isPlaying ? LIVE_LABEL.playerPause : LIVE_LABEL.playerPlay}
-              className={LIVE_PLAYER_ICON_BUTTON_CLASS}
-              onClick={togglePlay}
-            >
-              {isPlaying ? <Pause className="size-5" /> : <Play className="size-5" />}
-            </Button>
-            <LivePlayerVolumeControl
-              muted={muted}
-              volume={volume}
-              onToggleMute={toggleMute}
-              onVolumeChange={setVolume}
-            />
-          </div>
-          <LivePlayerLiveIndicator className="ml-1" />
-        </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
