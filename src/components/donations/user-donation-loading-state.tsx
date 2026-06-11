@@ -10,9 +10,15 @@ export function UserDonationLoadingState() {
       title="후원 지갑"
       description="후원 지갑 정보를 불러오는 중입니다."
     >
-      <section className="from-live/20 via-live/20 to-brand relative isolate min-h-44 overflow-hidden rounded-xl bg-gradient-to-br px-5 py-7 shadow-sm sm:min-h-48 sm:px-7 sm:py-9">
-        <span className="bg-live/10 pointer-events-none absolute inset-0" aria-hidden />
-        <span className="bg-live/20 pointer-events-none absolute inset-0" aria-hidden />
+      <section className="relative isolate min-h-44 overflow-hidden rounded-xl bg-[linear-gradient(to_bottom_right,var(--live)_0%,var(--brand)_20%,var(--brand)_100%)] px-5 py-7 shadow-sm sm:min-h-48 sm:px-7 sm:py-9">
+        <span
+          className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,color-mix(in_srgb,var(--live)_20%,transparent)_0%,transparent_20%)]"
+          aria-hidden
+        />
+        <span
+          className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,color-mix(in_srgb,var(--live)_10%,transparent)_0%,transparent_20%)]"
+          aria-hidden
+        />
 
         <div className="relative z-10 flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0 flex-1">
