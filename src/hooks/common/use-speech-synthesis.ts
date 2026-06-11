@@ -81,9 +81,7 @@ export function useSpeechSynthesis() {
       return;
     }
 
-    const runSpeak = () => {
-      synth.cancel();
-
+    const startUtterance = () => {
       const lang = options?.lang ?? "ko-KR";
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = lang;
@@ -107,8 +105,23 @@ export function useSpeechSynthesis() {
       };
 
       utterance.onerror = (event) => {
-        console.warn("TTS 재생 실패", event.error);
         clearUtterance();
+
+        // 사용자 상호작용 전 자동재생 정책 차단(주로 일반 브라우저 탭에서 오버레이를 연 경우).
+        // OBS 브라우저 소스는 자동재생이 허용되어 해당 없음 — 다음 클릭/키 입력에서 한 번 재시도한다.
+        if (event.error === "not-allowed") {
+          console.warn("TTS가 자동재생 정책으로 차단됨 — 다음 상호작용에서 재시도합니다.");
+          const retry = () => {
+            window.removeEventListener("pointerdown", retry);
+            window.removeEventListener("keydown", retry);
+            runSpeak();
+          };
+          window.addEventListener("pointerdown", retry, { once: true });
+          window.addEventListener("keydown", retry, { once: true });
+        } else {
+          console.warn("TTS 재생 실패", event.error);
+        }
+
         options?.onError?.(event.error);
         options?.onEnd?.();
       };
@@ -116,6 +129,21 @@ export function useSpeechSynthesis() {
       utteranceRef.current = utterance;
       synth.resume();
       synth.speak(utterance);
+      // macOS Chrome/Safari는 synthesis가 paused 상태로 남아 speak가 시작되지 않는 사례가 있어,
+      // speak를 큐에 넣은 뒤에도 한 번 더 깨운다(이미 재생 중이면 no-op).
+      synth.resume();
+    };
+
+    const runSpeak = () => {
+      // macOS에서 cancel() 직후의 speak()가 통째로 무시되는 버그가 있어,
+      // 재생 중일 때만 끊고 큐가 비워질 시간을 잠깐 둔 뒤 시작한다.
+      if (synth.speaking || synth.pending) {
+        synth.cancel();
+        window.setTimeout(startUtterance, 60);
+        return;
+      }
+
+      startUtterance();
     };
 
     // 특정 음성을 요청했는데 음성 목록이 아직 로드되지 않았다면(페이지 로드 직후 등),
