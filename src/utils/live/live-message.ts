@@ -26,6 +26,7 @@ export interface LiveMessageRow {
   sender_id: string | null;
   message_type: "chat" | "moderation_notice" | "donation";
   content: string;
+  is_chat_visible?: boolean;
   sender_role: LiveSenderRole;
   metadata: Json;
 }
@@ -44,7 +45,9 @@ export function mapLiveMessageRowToMessage(
   const isOwnMessage = !!viewerId && row.sender_id !== null && row.sender_id === viewerId;
   const metadata = readJsonObject(row.metadata);
 
-  if (readString(metadata.source) === "live_draw_participation") {
+  const metadataSource = readString(metadata.source);
+
+  if (row.is_chat_visible === false || metadataSource === "live_draw_participation") {
     return null;
   }
 
@@ -113,6 +116,8 @@ export function mapLiveMessageRealtimePayload(
       sender_id: typeof record.sender_id === "string" ? record.sender_id : null,
       message_type: messageType,
       content: typeof record.content === "string" ? record.content : "",
+      is_chat_visible:
+        typeof record.is_chat_visible === "boolean" ? record.is_chat_visible : undefined,
       sender_role: parseSenderRole(record.sender_role),
       metadata: (record.metadata ?? null) as Json,
     },

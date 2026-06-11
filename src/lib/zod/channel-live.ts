@@ -71,6 +71,19 @@ export const sendChannelLiveInteractionNoticeSchema = z.object({
   metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
+export const sendChannelLiveRouletteNoticeSchema = z.object({
+  broadcastId: z.string().uuid(),
+  payload: z.object({
+    createdAt: z.string().datetime(),
+    durationSeconds: z.number().positive().max(30).optional(),
+    id: z.string().uuid(),
+    items: z.array(z.string().trim().min(1).max(24)).min(2).max(24),
+    resultLabel: z.string().trim().min(1).max(24),
+    rotationKeyframes: z.array(z.number().finite()).min(1).max(8),
+    status: z.enum(["active", "ended"]),
+  }),
+});
+
 const mediaMtxTrackCodecPropsSchema = z
   .object({
     height: z.number().nullable().optional(),
@@ -102,6 +115,9 @@ export type EndChannelLivePollInput = z.infer<typeof endChannelLivePollSchema>;
 export type MediaMtxPathResponse = z.infer<typeof mediaMtxPathResponseSchema>;
 export type SendChannelLiveInteractionNoticeInput = z.infer<
   typeof sendChannelLiveInteractionNoticeSchema
+>;
+export type SendChannelLiveRouletteNoticeInput = z.infer<
+  typeof sendChannelLiveRouletteNoticeSchema
 >;
 export type StartLiveBroadcastInput = z.infer<typeof startLiveBroadcastSchema>;
 export type UpdateChannelLiveSettingsInput = z.infer<typeof updateChannelLiveSettingsSchema>;

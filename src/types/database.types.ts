@@ -580,6 +580,7 @@ export type Database = {
           created_at: string
           donation_id: string | null
           id: string
+          is_chat_visible: boolean
           message_type: Database["public"]["Enums"]["live_message_type"]
           metadata: Json
           sender_id: string | null
@@ -591,6 +592,7 @@ export type Database = {
           created_at?: string
           donation_id?: string | null
           id?: string
+          is_chat_visible?: boolean
           message_type?: Database["public"]["Enums"]["live_message_type"]
           metadata?: Json
           sender_id?: string | null
@@ -602,6 +604,7 @@ export type Database = {
           created_at?: string
           donation_id?: string | null
           id?: string
+          is_chat_visible?: boolean
           message_type?: Database["public"]["Enums"]["live_message_type"]
           metadata?: Json
           sender_id?: string | null

@@ -1,27 +1,20 @@
 "use client";
 // 투표 참여와 라이브 상호작용 결과를 채팅 패널 액션 팝오버로 제공합니다.
 
-import { useId, useState, type RefObject } from "react";
-import { Check, Crown, FerrisWheel, Sparkles, Trophy } from "lucide-react";
+import { useEffect, useId, useMemo, useRef, useState, type RefObject } from "react";
+import { Check, Crown, FerrisWheel, Sparkles, Trophy, X } from "lucide-react";
+import { motion } from "motion/react";
 
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Popover,
-  PopoverContent,
-  PopoverDescription,
-  PopoverHeader,
-  PopoverTitle,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+  ROULETTE_SEGMENT_COLORS,
+  ROULETTE_SPIN_DURATION_SECONDS,
+} from "@/constants/channel/live-interaction";
 import { LIVE_LABEL, LIVE_VOTE_LABEL } from "@/constants/live/live";
 import { cn } from "@/lib/utils";
+import { getRouletteItemLabelStyle, getRouletteSegments } from "@/utils/channel/live-interaction";
 import { formatCount } from "@/utils/live/live-chat";
 import type { LiveInteractionNotice, LivePoll, LivePollOption } from "@/types/live/live";
 
@@ -161,15 +154,11 @@ function getMaxCount(options: LivePollOption[]): number {
   return options.reduce((max, option) => Math.max(max, option.count), 0);
 }
 
-function getSelectedOption(poll: LivePoll): LivePollOption | null {
-  return poll.options.find((option) => option.id === poll.userVotedOptionId) ?? null;
-}
-
 function StatusPill({ children, tone }: { children: string; tone: "brand" | "live" | "muted" }) {
   return (
     <span
       className={cn(
-        "inline-flex rounded-full px-2 py-0.5 text-[11px] font-bold",
+        "inline-flex shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold",
         tone === "brand" && "bg-brand/10 text-brand",
         tone === "live" && "bg-live/10 text-live",
         tone === "muted" && "bg-muted text-muted-foreground",
@@ -177,6 +166,50 @@ function StatusPill({ children, tone }: { children: string; tone: "brand" | "liv
     >
       {children}
     </span>
+  );
+}
+
+function InteractionHeader({
+  onClose,
+  status,
+  title,
+  titleId,
+  tone,
+}: {
+  onClose: () => void;
+  status: string;
+  title: string;
+  titleId?: string;
+  tone: "brand" | "live" | "muted";
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 pb-3">
+      <p id={titleId} className="text-foreground min-w-0 flex-1 text-sm font-bold">
+        {title}
+      </p>
+      <div className="flex shrink-0 items-center gap-2">
+        <StatusPill tone={tone}>{status}</StatusPill>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="text-muted-foreground hover:text-foreground size-7"
+          onClick={onClose}
+        >
+          <X className="size-4" />
+          <span className="sr-only">{LIVE_LABEL.close}</span>
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function getVoteOptionClass(isSelected: boolean) {
+  return cn(
+    "border-border relative flex h-9 w-full items-center justify-start overflow-hidden rounded-md border px-3 text-sm font-bold transition-all",
+    isSelected
+      ? "border-brand bg-brand/10 text-brand shadow-[inset_0_0_0_1px_var(--brand)]"
+      : "hover:border-brand/40",
   );
 }
 
@@ -227,20 +260,19 @@ function ActiveVoteCard({
     if (!selectedOption || isVoting) return;
 
     setIsVoting(true);
-    const success = await onVote(activePoll.id, selectedOption);
+    await onVote(activePoll.id, selectedOption);
     setIsVoting(false);
-
-    if (success) onClose();
   }
 
   return (
     <div className="flex flex-col overflow-hidden">
-      <div className="border-border flex flex-col gap-2 border-t border-dashed pt-3 pb-3">
-        <StatusPill tone="brand">{LIVE_VOTE_LABEL.active}</StatusPill>
-        <p id={titleId} className="text-foreground text-sm font-bold">
-          {activePoll.title}
-        </p>
-      </div>
+      <InteractionHeader
+        title="투표"
+        titleId={titleId}
+        status={LIVE_VOTE_LABEL.active}
+        tone="brand"
+        onClose={onClose}
+      />
       <div
         role="radiogroup"
         aria-labelledby={titleId}
@@ -259,12 +291,7 @@ function ActiveVoteCard({
               aria-checked={isSelected}
               disabled={isVoting}
               onClick={() => setSelectedOption(option.id)}
-              className={cn(
-                "relative h-9 w-full justify-start overflow-hidden px-3 text-sm font-bold transition-all",
-                isSelected
-                  ? "border-brand bg-brand/10 text-brand shadow-[inset_0_0_0_1px_var(--brand)]"
-                  : "hover:border-brand/40",
-              )}
+              className={getVoteOptionClass(isSelected)}
             >
               <VoteOptionBar percent={percent} emphasized={isSelected} />
               <span className="relative flex min-w-0 flex-1 items-center gap-2">
@@ -296,47 +323,47 @@ function ActiveVoteCard({
   );
 }
 
-function ParticipatedCard({ poll }: { poll: LivePoll }) {
-  const selectedOption = getSelectedOption(poll);
+function ParticipatedCard({ onClose, poll }: { onClose: () => void; poll: LivePoll }) {
+  const total = poll.totalCount;
 
   return (
     <div className="flex flex-col overflow-hidden">
-      <div className="border-border flex flex-col gap-2 border-t border-dashed pt-3 pb-3">
-        <StatusPill tone="brand">{LIVE_VOTE_LABEL.participatedStatus}</StatusPill>
-        <p className="text-foreground text-sm font-bold">{poll.title}</p>
-      </div>
+      <InteractionHeader
+        title="투표"
+        status={LIVE_VOTE_LABEL.active}
+        tone="brand"
+        onClose={onClose}
+      />
       <div className="border-border flex flex-col gap-2 border-t border-dashed py-3">
         {poll.options.map((option, index) => {
           const isSelected = option.id === poll.userVotedOptionId;
+          const percent = getVotePercent(option.count, total);
 
           return (
-            <div
-              key={option.id}
-              className={cn(
-                "border-border flex h-9 items-center gap-2 rounded-lg border px-3 text-sm font-bold",
-                isSelected &&
-                  "border-brand bg-brand/10 text-brand shadow-[inset_0_0_0_1px_var(--brand)]",
-              )}
-            >
-              <span className="bg-brand/10 text-brand flex size-5 shrink-0 items-center justify-center rounded-full text-xs">
-                {index + 1}
-              </span>
-              <span className="min-w-0 flex-1 truncate">
-                {isSelected ? `${option.label}${LIVE_VOTE_LABEL.selectedSuffix}` : option.label}
+            <div key={option.id} className={getVoteOptionClass(isSelected)}>
+              <VoteOptionBar percent={percent} emphasized={isSelected} />
+              <span className="relative flex min-w-0 flex-1 items-center gap-2">
+                <span className="bg-brand/10 text-brand flex size-5 shrink-0 items-center justify-center rounded-full text-xs">
+                  {index + 1}
+                </span>
+                <span className="min-w-0 flex-1 truncate">
+                  {isSelected ? `${option.label}${LIVE_VOTE_LABEL.selectedSuffix}` : option.label}
+                </span>
               </span>
               {isSelected ? <Check className="size-4 shrink-0" /> : null}
             </div>
           );
         })}
       </div>
-      <div className="border-border flex flex-col gap-3 border-t border-dashed pt-3">
-        <p className="text-muted-foreground text-xs font-semibold">
-          {selectedOption ? LIVE_VOTE_LABEL.waitForResult : LIVE_VOTE_LABEL.waitForResultFallback}
-        </p>
+      <div className="border-border flex items-center justify-between gap-3 border-t border-dashed pt-3">
+        <span className="text-muted-foreground text-xs font-semibold tabular-nums">
+          {formatCount(total)}
+          {LIVE_VOTE_LABEL.liveParticipantsSuffix}
+        </span>
         <Button
           type="button"
           disabled
-          className="bg-brand/80 text-brand-foreground h-9 w-full text-xs font-bold"
+          className="bg-brand/80 text-brand-foreground h-9 px-4 text-xs font-bold"
         >
           {LIVE_VOTE_LABEL.participated}
         </Button>
@@ -351,10 +378,12 @@ function VoteResults({ poll, onClose }: { onClose: () => void; poll: LivePoll })
 
   return (
     <div className="flex flex-col overflow-hidden">
-      <div className="border-border flex flex-col gap-2 border-t border-dashed pt-3 pb-3">
-        <StatusPill tone="brand">{LIVE_VOTE_LABEL.ended}</StatusPill>
-        <p className="text-foreground text-sm font-bold">{poll.title}</p>
-      </div>
+      <InteractionHeader
+        title="투표"
+        status={LIVE_VOTE_LABEL.ended}
+        tone="muted"
+        onClose={onClose}
+      />
       <div className="border-border flex flex-col gap-2 border-t border-dashed py-3">
         {poll.options.map((option) => {
           const percent = getVotePercent(option.count, total);
@@ -391,11 +420,6 @@ function VoteResults({ poll, onClose }: { onClose: () => void; poll: LivePoll })
           {formatCount(total)}
           {LIVE_VOTE_LABEL.participantsUnit}
         </span>
-      </div>
-      <div className="border-border mt-3 border-t border-dashed pt-3">
-        <Button type="button" variant="outline" className="h-9 w-full" onClick={onClose}>
-          {LIVE_LABEL.close}
-        </Button>
       </div>
     </div>
   );
@@ -485,6 +509,80 @@ function DrawNoticeBoard({
   );
 }
 
+function RouletteNoticeBoard({ notice }: { notice: LiveInteractionNotice }) {
+  const rouletteItems = useMemo(
+    () => (notice.rouletteItems ?? []).map((label) => ({ label })),
+    [notice.rouletteItems],
+  );
+  const rouletteSegments = useMemo(() => getRouletteSegments(rouletteItems), [rouletteItems]);
+  const rouletteSegmentStyle = useMemo(() => {
+    if (rouletteSegments.length === 0) {
+      return { background: "var(--muted)" };
+    }
+
+    const stops = rouletteSegments.map((segment, index) => {
+      const color = ROULETTE_SEGMENT_COLORS[index % ROULETTE_SEGMENT_COLORS.length];
+
+      return `${color} ${segment.startPercent}% ${segment.endPercent}%`;
+    });
+
+    return { background: `conic-gradient(${stops.join(", ")})` };
+  }, [rouletteSegments]);
+  const rotationKeyframes = notice.rouletteRotationKeyframes?.length
+    ? notice.rouletteRotationKeyframes
+    : [0];
+  const isActive = notice.status === "active";
+  const rouletteEase = ["easeOut" as const, "linear" as const, "easeOut" as const];
+  const rouletteTransition =
+    isActive && rotationKeyframes.length > 1
+      ? {
+          duration: notice.rouletteDurationSeconds ?? ROULETTE_SPIN_DURATION_SECONDS,
+          ease: rouletteEase,
+          times: [0, 0.14, 0.58, 1],
+        }
+      : { duration: 0 };
+
+  return (
+    <div className="border-border flex flex-col items-center gap-4 border-t border-dashed py-3">
+      <div className="relative flex size-56 items-center justify-center">
+        <div className="absolute top-5 right-8 z-20 rotate-[225deg] drop-shadow-lg">
+          <div
+            className="bg-border h-8 w-4"
+            style={{ clipPath: "polygon(50% 0, 100% 100%, 0 100%)" }}
+          />
+          <div
+            className="bg-destructive absolute top-0.5 left-0.5 h-7 w-3"
+            style={{ clipPath: "polygon(50% 0, 100% 100%, 0 100%)" }}
+          />
+        </div>
+        <motion.div
+          className="border-background relative size-52 overflow-hidden rounded-full border-8 shadow-lg"
+          style={rouletteSegmentStyle}
+          animate={{ rotate: rotationKeyframes }}
+          transition={rouletteTransition}
+        >
+          {rouletteSegments.map((segment) => (
+            <span
+              key={`${segment.item.label}-${segment.index}-viewer-wheel`}
+              className="absolute top-1/2 left-1/2 w-16 truncate text-center text-[11px] font-black text-white drop-shadow"
+              style={getRouletteItemLabelStyle(segment.centerDegree)}
+            >
+              {segment.item.label}
+            </span>
+          ))}
+        </motion.div>
+        <div className="bg-background border-border absolute flex size-16 flex-col items-center justify-center rounded-full border shadow-sm">
+          <FerrisWheel className="text-brand size-5" />
+          <span className="text-muted-foreground text-[10px] font-bold">ROULETTE</span>
+        </div>
+      </div>
+      <strong className="text-foreground text-center text-base font-black wrap-break-word">
+        {isActive ? LIVE_VOTE_LABEL.rouletteActiveTitle : notice.resultLabel}
+      </strong>
+    </div>
+  );
+}
+
 function InteractionNoticeCard({
   isLoggedIn,
   notice,
@@ -503,16 +601,8 @@ function InteractionNoticeCard({
   const [isJoiningDraw, setIsJoiningDraw] = useState(false);
   const isDraw = notice.type === "draw";
   const Icon = notice.type === "draw" ? Trophy : FerrisWheel;
-  const title = isDraw
-    ? isActive
-      ? LIVE_VOTE_LABEL.drawActiveTitle
-      : LIVE_VOTE_LABEL.drawResult
-    : isActive
-      ? LIVE_VOTE_LABEL.rouletteActiveTitle
-      : LIVE_VOTE_LABEL.rouletteResult;
-  const description = isDraw
-    ? LIVE_VOTE_LABEL.drawActiveDescription
-    : LIVE_VOTE_LABEL.rouletteActiveDescription;
+  const title = isDraw ? "추첨" : "룰렛";
+  const status = isActive ? LIVE_VOTE_LABEL.active : LIVE_VOTE_LABEL.ended;
   const detail = notice.winnerNames?.join(", ") ?? notice.resultLabel ?? notice.content;
   const canJoinDraw = isActive && notice.type === "draw";
   const hasJoined = Boolean(notice.hasJoined) || joinedDrawNoticeId === notice.id;
@@ -542,62 +632,65 @@ function InteractionNoticeCard({
 
   return (
     <div className="flex flex-col overflow-hidden">
+      <InteractionHeader
+        title={title}
+        status={status}
+        tone={isActive ? "brand" : "muted"}
+        onClose={onClose}
+      />
       {!isDraw ? (
         <>
-          <div className="border-border flex flex-col gap-3 border-t border-dashed pt-3 pb-3">
-            <StatusPill tone={isActive ? "brand" : "muted"}>
-              {isActive ? LIVE_VOTE_LABEL.active : LIVE_VOTE_LABEL.ended}
-            </StatusPill>
-            <div className="flex items-center gap-2">
-              <span className="bg-brand/10 text-brand flex size-9 shrink-0 items-center justify-center rounded-full">
-                <Icon className="size-5" />
-              </span>
-              <div className="min-w-0">
-                <p className="text-foreground text-sm font-bold">{title}</p>
-                {isActive ? (
-                  <p className="text-muted-foreground text-xs leading-relaxed">{description}</p>
-                ) : null}
+          {notice.type === "roulette" && notice.rouletteItems ? (
+            <RouletteNoticeBoard notice={notice} />
+          ) : (
+            <div className="border-border border-t border-dashed py-3">
+              <div className="flex items-center gap-2 pb-3">
+                <span className="bg-brand/10 text-brand flex size-9 shrink-0 items-center justify-center rounded-full">
+                  <Icon className="size-5" />
+                </span>
+                <p className="text-foreground min-w-0 text-sm font-bold wrap-break-word">
+                  {detail}
+                </p>
               </div>
+              {notice.participantCount !== undefined ? (
+                <p className="text-muted-foreground mt-1 text-xs">
+                  {formatCount(notice.participantCount)}
+                  {LIVE_VOTE_LABEL.participantsUnit}
+                </p>
+              ) : null}
             </div>
-          </div>
-          <div className="border-border border-t border-dashed py-3">
-            <p className="text-foreground text-sm font-bold wrap-break-word">{detail}</p>
-            {notice.participantCount !== undefined ? (
-              <p className="text-muted-foreground mt-1 text-xs">
-                {formatCount(notice.participantCount)}
-                {LIVE_VOTE_LABEL.participantsUnit}
-              </p>
-            ) : null}
-          </div>
+          )}
         </>
       ) : (
         <DrawNoticeBoard hasJoined={hasJoined} notice={notice} />
       )}
-      <div className="border-border border-t border-dashed pt-3">
-        <Button
-          type="button"
-          variant={isActive ? "default" : "outline"}
-          disabled={
-            (isActive && !canJoinDraw) ||
-            (canJoinDraw && isLoggedIn && (hasJoined || isJoiningDraw || !onJoinDraw))
-          }
-          className={cn(
-            isActive && "bg-live/80 text-live-foreground",
-            "h-9 w-full text-xs font-bold",
-          )}
-          onClick={() => void handleJoinDraw()}
-        >
-          {canJoinDraw
-            ? isJoiningDraw
-              ? LIVE_VOTE_LABEL.submitting
-              : hasJoined
-                ? LIVE_VOTE_LABEL.participated
-                : LIVE_VOTE_LABEL.submit
-            : isActive
-              ? LIVE_VOTE_LABEL.active
-              : LIVE_LABEL.close}
-        </Button>
-      </div>
+      {isDraw ? (
+        <div className="border-border border-t border-dashed pt-3">
+          <Button
+            type="button"
+            variant={isActive ? "default" : "outline"}
+            disabled={
+              (isActive && !canJoinDraw) ||
+              (canJoinDraw && isLoggedIn && (hasJoined || isJoiningDraw || !onJoinDraw))
+            }
+            className={cn(
+              isActive && "bg-live/80 text-live-foreground",
+              "h-9 w-full text-xs font-bold",
+            )}
+            onClick={() => void handleJoinDraw()}
+          >
+            {canJoinDraw
+              ? isJoiningDraw
+                ? LIVE_VOTE_LABEL.submitting
+                : hasJoined
+                  ? LIVE_VOTE_LABEL.participated
+                  : LIVE_VOTE_LABEL.submit
+              : isActive
+                ? LIVE_VOTE_LABEL.active
+                : LIVE_LABEL.close}
+          </Button>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -662,10 +755,12 @@ function VoteBody({
   if (!isLoggedIn) {
     return (
       <div className="flex flex-col overflow-hidden">
-        <div className="border-border flex flex-col gap-2 border-t border-dashed pt-3 pb-3">
-          <StatusPill tone="brand">{LIVE_VOTE_LABEL.active}</StatusPill>
-          <p className="text-foreground text-sm font-bold">{pollInteraction.poll.title}</p>
-        </div>
+        <InteractionHeader
+          title="투표"
+          status={LIVE_VOTE_LABEL.active}
+          tone="brand"
+          onClose={onClose}
+        />
         <p className="border-border text-muted-foreground border-t border-dashed py-3 text-sm">
           {LIVE_LABEL.loginDescription}
         </p>
@@ -686,7 +781,7 @@ function VoteBody({
   }
 
   return pollInteraction.poll.userVotedOptionId ? (
-    <ParticipatedCard poll={pollInteraction.poll} />
+    <ParticipatedCard poll={pollInteraction.poll} onClose={onClose} />
   ) : (
     <ActiveVoteCard activePoll={pollInteraction.poll} onVote={onVote} onClose={onClose} />
   );
@@ -712,56 +807,8 @@ function getTriggerLabel(currentInteraction: CurrentInteraction) {
   return LIVE_VOTE_LABEL.interactionTitle;
 }
 
-function getHeaderTitle(currentInteraction: CurrentInteraction) {
-  if (currentInteraction.type === "poll") {
-    return currentInteraction.mode === "active"
-      ? LIVE_VOTE_LABEL.title
-      : LIVE_VOTE_LABEL.resultTitle;
-  }
-
-  if (currentInteraction.type === "draw") {
-    return currentInteraction.mode === "active"
-      ? LIVE_VOTE_LABEL.drawActiveTitle
-      : LIVE_VOTE_LABEL.drawResult;
-  }
-
-  if (currentInteraction.type === "roulette") {
-    return currentInteraction.mode === "active"
-      ? LIVE_VOTE_LABEL.rouletteActiveTitle
-      : LIVE_VOTE_LABEL.rouletteResult;
-  }
-
-  return LIVE_VOTE_LABEL.interactionTitle;
-}
-
-function getHeaderDescription(currentInteraction: CurrentInteraction) {
-  if (currentInteraction.type === "poll") {
-    return currentInteraction.mode === "active"
-      ? LIVE_VOTE_LABEL.description
-      : LIVE_VOTE_LABEL.resultDescription;
-  }
-
-  if (currentInteraction.type === "draw") {
-    return currentInteraction.mode === "active"
-      ? LIVE_VOTE_LABEL.drawActiveDescription
-      : LIVE_VOTE_LABEL.interactionResultDescription;
-  }
-
-  if (currentInteraction.type === "roulette") {
-    return currentInteraction.mode === "active"
-      ? LIVE_VOTE_LABEL.rouletteActiveDescription
-      : LIVE_VOTE_LABEL.interactionResultDescription;
-  }
-
-  return LIVE_VOTE_LABEL.interactionDescription;
-}
-
 function shouldPromptLoginOnOpen(currentInteraction: CurrentInteraction) {
   return currentInteraction.type === "poll" && currentInteraction.mode === "active";
-}
-
-function shouldShowInteractionHeader(currentInteraction: CurrentInteraction) {
-  return !(currentInteraction.type === "draw" && currentInteraction.mode === "active");
 }
 
 export function LiveVotePopover({
@@ -781,6 +828,7 @@ export function LiveVotePopover({
   portalContainer,
 }: Props) {
   const [open, setOpen] = useState(false);
+  const autoOpenedRouletteNoticeIdRef = useRef<string | null>(null);
 
   // 열어둔 채 방송이 종료되면(disabled 전환) 즉시 닫는다.
   // effect 내 setState는 lint 에러(set-state-in-effect)라 렌더 중 가드된 setState 패턴을 쓴다.
@@ -792,9 +840,19 @@ export function LiveVotePopover({
   // 진행 중·종료 기록이 모두 없으면 열어도 보여줄 것이 없으므로 트리거를 비활성화한다.
   const hasInteraction = currentInteraction.type !== "empty";
   const triggerLabel = getTriggerLabel(currentInteraction);
-  const headerTitle = getHeaderTitle(currentInteraction);
-  const headerDescription = getHeaderDescription(currentInteraction);
-  const showHeader = shouldShowInteractionHeader(currentInteraction);
+
+  useEffect(() => {
+    if (
+      currentInteraction.type !== "roulette" ||
+      currentInteraction.mode !== "active" ||
+      autoOpenedRouletteNoticeIdRef.current === currentInteraction.notice.id
+    ) {
+      return;
+    }
+
+    autoOpenedRouletteNoticeIdRef.current = currentInteraction.notice.id;
+    setOpen(true);
+  }, [currentInteraction]);
 
   function handleOpenChange(next: boolean) {
     if (next && !isLoggedIn && shouldPromptLoginOnOpen(currentInteraction)) {
@@ -841,14 +899,8 @@ export function LiveVotePopover({
           <DialogContent
             container={portalContainer}
             className="max-h-[calc(100vh-1rem)] gap-4 overflow-y-auto"
-            showCloseButton
+            showCloseButton={false}
           >
-            {showHeader ? (
-              <DialogHeader>
-                <DialogTitle>{headerTitle}</DialogTitle>
-                <DialogDescription>{headerDescription}</DialogDescription>
-              </DialogHeader>
-            ) : null}
             {body}
           </DialogContent>
         </Dialog>
@@ -883,12 +935,6 @@ export function LiveVotePopover({
         // 입력바(anchor) 풀폭 + 하단 직각으로 입력 섹션과 한 덩어리처럼 이어 붙인다(후원 popover와 동일).
         className="max-h-[calc(100vh-1rem)] w-(--anchor-width) overflow-y-auto rounded-b-none"
       >
-        {showHeader ? (
-          <PopoverHeader>
-            <PopoverTitle>{headerTitle}</PopoverTitle>
-            <PopoverDescription>{headerDescription}</PopoverDescription>
-          </PopoverHeader>
-        ) : null}
         {body}
       </PopoverContent>
     </Popover>

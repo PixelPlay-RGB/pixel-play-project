@@ -11,10 +11,12 @@ import {
   endChannelLivePollSchema,
   getChannelLiveDrawParticipantsSchema,
   sendChannelLiveInteractionNoticeSchema,
+  sendChannelLiveRouletteNoticeSchema,
   type CreateChannelLivePollInput,
   type EndChannelLivePollInput,
   type GetChannelLiveDrawParticipantsInput,
   type SendChannelLiveInteractionNoticeInput,
+  type SendChannelLiveRouletteNoticeInput,
   startLiveBroadcastSchema,
   type StartLiveBroadcastInput,
   updateChannelLiveSettingsSchema,
@@ -27,6 +29,7 @@ import {
   LIVE_THUMBNAIL_DIRECTORY,
 } from "@/utils/channel/channel-live-thumbnail";
 import { buildLiveStreamKey } from "@/utils/live/live-security";
+import { liveRouletteSseStore } from "@/utils/live/live-roulette-sse";
 import { revalidatePath } from "next/cache";
 
 interface EndLiveBroadcastInput {
@@ -880,6 +883,42 @@ export async function sendChannelLiveInteractionNoticeAction(
     success: true,
     data: { messageId },
   };
+}
+
+export async function sendChannelLiveRouletteNoticeAction(
+  input: SendChannelLiveRouletteNoticeInput,
+): Promise<AppActionResult> {
+  const parsed = sendChannelLiveRouletteNoticeSchema.safeParse(input);
+
+  if (!parsed.success) {
+    return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
+  }
+
+  const actor = await getAuthenticatedActorId({
+    logLabel: "방송 룰렛 SSE 공지 전송 중 인증 사용자 조회 실패",
+  });
+
+  if (!actor.success) {
+    return { success: false, code: actor.result.code };
+  }
+
+  const supabase = createAdminClient();
+  const { data: broadcast, error } = await supabase
+    .from("live_broadcast")
+    .select("id")
+    .eq("id", parsed.data.broadcastId)
+    .eq("creator_id", actor.userId)
+    .is("ended_at", null)
+    .maybeSingle();
+
+  if (error || !broadcast) {
+    console.error("방송 룰렛 SSE 공지 대상 방송 조회 실패", error);
+    return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
+  }
+
+  liveRouletteSseStore.publish(parsed.data.broadcastId, parsed.data.payload);
+
+  return { success: true };
 }
 
 export async function getChannelLiveDrawParticipantsAction(

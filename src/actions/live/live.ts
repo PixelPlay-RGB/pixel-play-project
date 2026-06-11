@@ -208,6 +208,7 @@ export async function joinLiveDrawAction({
   const { error: insertError } = await supabase.from("live_message").insert({
     broadcast_id: broadcastId,
     content: "draw participation",
+    is_chat_visible: false,
     message_type: "moderation_notice",
     metadata,
     sender_id: actor.userId,
