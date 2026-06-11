@@ -383,6 +383,8 @@ export function useChannelLiveOperation(initialSnapshot?: ChannelLiveStudioSnaps
     broadcastId,
     broadcastStartedAt,
     chatRuleText,
+    chatScope,
+    setChatScope,
     handleAddTag,
     handleEndBroadcast,
     handleRemoveTag,

@@ -194,8 +194,8 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
         <div className="min-w-0 xl:h-full xl:min-h-0 xl:overflow-y-auto">
           <ChannelLiveQuickSettingsPanel
             canSaveSettings={isSettingsDirty}
+            chatScope={operation.chatScope}
             isAlertSoundEnabled={operation.isAlertSoundEnabled}
-            isChatDonationMessageEnabled={operation.isChatDonationMessageEnabled}
             isDonationAmountVisible={operation.isDonationAmountVisible}
             isDonationEnabled={operation.isDonationEnabled}
             isLinkBlocked={operation.isLinkBlocked}
@@ -204,7 +204,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
             isTtsEnabled={operation.isTtsEnabled}
             slowModeSeconds={operation.slowModeSeconds}
             onAlertSoundEnabledChange={operation.setIsAlertSoundEnabled}
-            onChatDonationMessageEnabledChange={operation.setIsChatDonationMessageEnabled}
+            onChatScopeChange={operation.setChatScope}
             onDonationAmountVisibleChange={operation.setIsDonationAmountVisible}
             onDonationEnabledChange={operation.setIsDonationEnabled}
             onLinkBlockedChange={operation.setIsLinkBlocked}

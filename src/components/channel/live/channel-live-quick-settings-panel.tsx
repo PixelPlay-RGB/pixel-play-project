@@ -1,18 +1,34 @@
 "use client";
 // 방송 운영 화면의 채팅, 후원, 알림 빠른 설정을 오른쪽 패널로 렌더링합니다.
+// 행 모양은 설정 페이지(SettingFieldRow)와 같은 결을 따르되, 좁은 사이드 칼럼이라
+// 라벨 고정폭 없이 라벨·설명(좌) + 컨트롤(우) 한 줄로 배치한다.
 
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SettingNumberSelectControl } from "@/components/common/setting-number-select-control";
-import { CHANNEL_CHAT_SLOW_MODE_OPTIONS } from "@/constants/channel/chat";
+import { SettingToggleControl } from "@/components/common/setting-toggle-control";
+import {
+  Select,
+  SelectContent,
+  SelectIcon,
+  SelectItem,
+  SelectList,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  CHANNEL_CHAT_SCOPE_OPTIONS,
+  CHANNEL_CHAT_SLOW_MODE_OPTIONS,
+} from "@/constants/channel/chat";
 import { cn } from "@/lib/utils";
-import { HandCoins, Link2, MessageCircle, Mic2, Save, Timer, Volume2 } from "lucide-react";
-import type { ComponentType } from "react";
+import type { LiveChatScope } from "@/types/channel/chat";
+import { Save } from "lucide-react";
+import type { ReactNode } from "react";
 
 interface Props {
   canSaveSettings: boolean;
+  chatScope: LiveChatScope;
   isAlertSoundEnabled: boolean;
-  isChatDonationMessageEnabled: boolean;
   isDonationAmountVisible: boolean;
   isDonationEnabled: boolean;
   isLinkBlocked: boolean;
@@ -21,7 +37,7 @@ interface Props {
   isTtsEnabled: boolean;
   slowModeSeconds: number;
   onAlertSoundEnabledChange: (isAlertSoundEnabled: boolean) => void;
-  onChatDonationMessageEnabledChange: (isChatDonationMessageEnabled: boolean) => void;
+  onChatScopeChange: (chatScope: LiveChatScope) => void;
   onDonationAmountVisibleChange: (isDonationAmountVisible: boolean) => void;
   onDonationEnabledChange: (isDonationEnabled: boolean) => void;
   onLinkBlockedChange: (isLinkBlocked: boolean) => void;
@@ -29,13 +45,6 @@ interface Props {
   onSlowModeEnabledChange: (isSlowModeEnabled: boolean) => void;
   onSlowModeSecondsChange: (slowModeSeconds: number) => void;
   onTtsEnabledChange: (isTtsEnabled: boolean) => void;
-}
-
-interface QuickSettingRowProps {
-  checked: boolean;
-  icon: ComponentType<{ className?: string }>;
-  label: string;
-  onChange: (checked: boolean) => void;
 }
 
 function QuickSettingSectionTitle({ title }: { title: string }) {
@@ -48,108 +57,38 @@ function QuickSettingSectionTitle({ title }: { title: string }) {
   );
 }
 
-// 행 좌측의 아이콘 + 라벨(켜짐이면 아이콘만 brand 톤) — 일반 행과 저속모드 행이 공유한다.
-function QuickSettingIconLabel({
-  checked,
-  icon: Icon,
+// 설정 페이지 SettingFieldRow와 같은 질감의 행(라벨 sm font-bold + 설명 xs muted + border 구분).
+function QuickSettingFieldRow({
   label,
+  description,
+  isDimmed,
+  children,
 }: {
-  checked: boolean;
-  icon: ComponentType<{ className?: string }>;
   label: string;
+  description: string;
+  isDimmed?: boolean;
+  children: ReactNode;
 }) {
   return (
-    <span className="flex min-w-0 items-center gap-2.5">
-      <span
-        className={cn(
-          "bg-muted/60 text-muted-foreground flex size-8 shrink-0 items-center justify-center rounded-full transition-colors",
-          checked && "text-brand",
-        )}
-      >
-        <Icon className="size-4" />
-      </span>
-      <span>{label}</span>
-    </span>
-  );
-}
-
-// 토글 스위치 비주얼 — 클릭 처리는 감싸는 버튼이 담당한다.
-function QuickSettingSwitch({ checked }: { checked: boolean }) {
-  return (
-    <span
+    <div
       className={cn(
-        "flex h-5 w-9 shrink-0 items-center rounded-full p-0.5 transition-colors",
-        checked ? "bg-brand" : "bg-muted-foreground/30",
+        "border-border/70 flex items-center justify-between gap-3 border-t pt-4 first:border-t-0 first:pt-0",
+        isDimmed && "opacity-60",
       )}
     >
-      <span
-        className={cn(
-          "size-4 rounded-full bg-white shadow-sm transition-transform",
-          checked && "translate-x-4",
-        )}
-      />
-    </span>
-  );
-}
-
-function QuickSettingRow({ checked, icon, label, onChange }: QuickSettingRowProps) {
-  return (
-    <button
-      type="button"
-      className={cn(
-        "text-muted-foreground flex min-h-12 items-center justify-between gap-3 rounded-xl px-1 py-2 text-left text-sm font-bold transition-colors",
-        "hover:text-foreground",
-      )}
-      aria-pressed={checked}
-      onClick={() => onChange(!checked)}
-    >
-      <QuickSettingIconLabel checked={checked} icon={icon} label={label} />
-      <QuickSettingSwitch checked={checked} />
-    </button>
-  );
-}
-
-function QuickSettingSlowModeRow({
-  checked,
-  seconds,
-  onChange,
-  onSecondsChange,
-}: {
-  checked: boolean;
-  seconds: number;
-  onChange: (checked: boolean) => void;
-  onSecondsChange: (seconds: number) => void;
-}) {
-  return (
-    <div className="text-muted-foreground flex min-h-12 flex-col gap-2 rounded-xl px-1 py-2 text-sm font-bold sm:flex-row sm:items-center sm:justify-between">
-      <QuickSettingIconLabel checked={checked} icon={Timer} label="저속모드" />
-      <div className="flex items-center justify-end gap-2">
-        <SettingNumberSelectControl
-          ariaLabel="저속모드 채팅 간격"
-          value={seconds}
-          options={CHANNEL_CHAT_SLOW_MODE_OPTIONS}
-          disabled={!checked}
-          compact
-          onChange={onSecondsChange}
-        />
-        <button
-          type="button"
-          className="shrink-0 rounded-full"
-          aria-label="저속모드 사용"
-          aria-pressed={checked}
-          onClick={() => onChange(!checked)}
-        >
-          <QuickSettingSwitch checked={checked} />
-        </button>
+      <div className="flex min-w-0 flex-col gap-0.5">
+        <span className="text-foreground text-sm font-bold">{label}</span>
+        <span className="text-muted-foreground text-xs leading-5 text-pretty">{description}</span>
       </div>
+      <div className="shrink-0">{children}</div>
     </div>
   );
 }
 
 export default function ChannelLiveQuickSettingsPanel({
   canSaveSettings,
+  chatScope,
   isAlertSoundEnabled,
-  isChatDonationMessageEnabled,
   isDonationAmountVisible,
   isDonationEnabled,
   isLinkBlocked,
@@ -158,7 +97,7 @@ export default function ChannelLiveQuickSettingsPanel({
   isTtsEnabled,
   slowModeSeconds,
   onAlertSoundEnabledChange,
-  onChatDonationMessageEnabledChange,
+  onChatScopeChange,
   onDonationAmountVisibleChange,
   onDonationEnabledChange,
   onLinkBlockedChange,
@@ -169,7 +108,7 @@ export default function ChannelLiveQuickSettingsPanel({
 }: Props) {
   return (
     // 풀블리드 우측 칼럼 — 카드 대신 면으로 채우고 헤더는 다른 칼럼 헤더와 같은 보더로 구분한다.
-    <Card className="flex min-h-144 flex-col gap-5 rounded-none border-0 py-0 pb-6 shadow-none xl:min-h-full">
+    <Card className="flex flex-col gap-5 rounded-none border-0 py-0 pb-6 shadow-none xl:min-h-full">
       {/* 채팅 패널 헤더와 같은 높이(57px, 보더 포함)로 고정해 separator 라인을 맞춘다.
           기본 grid는 CardAction(row-span-2)이 빈 행+row gap을 만들어 수직 중앙이 어긋나므로 flex로 단순화한다. */}
       {/* 기본 [.border-b]:pb-4가 py-0보다 우선해 아래 패딩이 남으므로 같은 변형으로 0을 덮는다. */}
@@ -189,54 +128,104 @@ export default function ChannelLiveQuickSettingsPanel({
           </Button>
         </CardAction>
       </CardHeader>
-      <CardContent className="flex flex-1 flex-col justify-between gap-4 px-4">
+      <CardContent className="flex flex-col gap-4 px-4">
         <QuickSettingSectionTitle title="채팅" />
-        <QuickSettingSlowModeRow
-          checked={isSlowModeEnabled}
-          onChange={onSlowModeEnabledChange}
-          seconds={slowModeSeconds}
-          onSecondsChange={onSlowModeSecondsChange}
-        />
-        <QuickSettingRow
-          checked={isLinkBlocked}
-          icon={Link2}
-          label="링크 차단"
-          onChange={onLinkBlockedChange}
-        />
+        <QuickSettingFieldRow label="채팅 범위" description="채팅에 참여할 수 있는 시청자 범위">
+          <Select
+            value={chatScope}
+            items={CHANNEL_CHAT_SCOPE_OPTIONS}
+            disabled={isSettingsActionPending}
+            onValueChange={(value) => onChatScopeChange(value as LiveChatScope)}
+          >
+            <SelectTrigger aria-label="채팅 범위" className="w-36">
+              <SelectValue />
+              <SelectIcon />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectList>
+                {CHANNEL_CHAT_SCOPE_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value} label={option.label}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectList>
+            </SelectContent>
+          </Select>
+        </QuickSettingFieldRow>
+        <QuickSettingFieldRow label="저속 모드" description="시청자별 채팅 전송 간격 제한">
+          <div className="flex items-center gap-2">
+            <SettingNumberSelectControl
+              ariaLabel="저속 모드 채팅 간격"
+              value={slowModeSeconds}
+              options={CHANNEL_CHAT_SLOW_MODE_OPTIONS}
+              disabled={isSettingsActionPending || !isSlowModeEnabled}
+              compact
+              onChange={onSlowModeSecondsChange}
+            />
+            <SettingToggleControl
+              checked={isSlowModeEnabled}
+              checkedLabel="ON"
+              uncheckedLabel="OFF"
+              ariaLabel="저속 모드 사용"
+              disabled={isSettingsActionPending}
+              onChange={onSlowModeEnabledChange}
+            />
+          </div>
+        </QuickSettingFieldRow>
+        <QuickSettingFieldRow label="링크 차단" description="URL이 포함된 채팅을 막아요">
+          <SettingToggleControl
+            checked={isLinkBlocked}
+            checkedLabel="ON"
+            uncheckedLabel="OFF"
+            ariaLabel="링크 차단"
+            disabled={isSettingsActionPending}
+            onChange={onLinkBlockedChange}
+          />
+        </QuickSettingFieldRow>
 
         <QuickSettingSectionTitle title="후원" />
-        <QuickSettingRow
-          checked={isDonationEnabled}
-          icon={HandCoins}
-          label="후원 받기"
-          onChange={onDonationEnabledChange}
-        />
-        <QuickSettingRow
-          checked={isDonationAmountVisible}
-          icon={HandCoins}
-          label="후원 금액 공개"
-          onChange={onDonationAmountVisibleChange}
-        />
-        <QuickSettingRow
-          checked={isChatDonationMessageEnabled}
-          icon={MessageCircle}
-          label="후원 채팅 표시"
-          onChange={onChatDonationMessageEnabledChange}
-        />
+        <QuickSettingFieldRow label="후원 받기" description="시청자의 포인트 후원을 받아요">
+          <SettingToggleControl
+            checked={isDonationEnabled}
+            checkedLabel="ON"
+            uncheckedLabel="OFF"
+            ariaLabel="후원 받기"
+            disabled={isSettingsActionPending}
+            onChange={onDonationEnabledChange}
+          />
+        </QuickSettingFieldRow>
+        <QuickSettingFieldRow label="후원 금액 공개" description="알림·채팅에 금액을 표시해요">
+          <SettingToggleControl
+            checked={isDonationAmountVisible}
+            checkedLabel="ON"
+            uncheckedLabel="OFF"
+            ariaLabel="후원 금액 공개"
+            disabled={isSettingsActionPending}
+            onChange={onDonationAmountVisibleChange}
+          />
+        </QuickSettingFieldRow>
 
         <QuickSettingSectionTitle title="알림" />
-        <QuickSettingRow
-          checked={isAlertSoundEnabled}
-          icon={Volume2}
-          label="알림 사운드"
-          onChange={onAlertSoundEnabledChange}
-        />
-        <QuickSettingRow
-          checked={isTtsEnabled}
-          icon={Mic2}
-          label="TTS 사용"
-          onChange={onTtsEnabledChange}
-        />
+        <QuickSettingFieldRow label="알림 사운드" description="후원 알림 효과음을 재생해요">
+          <SettingToggleControl
+            checked={isAlertSoundEnabled}
+            checkedLabel="ON"
+            uncheckedLabel="OFF"
+            ariaLabel="알림 사운드"
+            disabled={isSettingsActionPending}
+            onChange={onAlertSoundEnabledChange}
+          />
+        </QuickSettingFieldRow>
+        <QuickSettingFieldRow label="TTS" description="후원 메시지를 음성으로 읽어줘요">
+          <SettingToggleControl
+            checked={isTtsEnabled}
+            checkedLabel="ON"
+            uncheckedLabel="OFF"
+            ariaLabel="TTS 사용"
+            disabled={isSettingsActionPending}
+            onChange={onTtsEnabledChange}
+          />
+        </QuickSettingFieldRow>
       </CardContent>
     </Card>
   );

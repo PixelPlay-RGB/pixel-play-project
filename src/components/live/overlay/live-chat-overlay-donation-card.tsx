@@ -25,7 +25,7 @@ export function LiveChatOverlayDonationCard({ author, amount, content }: Props) 
         >
           {author}
         </span>
-        {typeof amount === "number" ? (
+        {typeof amount === "number" && (
           <span
             className="ml-auto shrink-0 rounded-full px-3 py-0.5 text-2xl leading-8 font-bold tabular-nums"
             style={{
@@ -35,13 +35,13 @@ export function LiveChatOverlayDonationCard({ author, amount, content }: Props) 
           >
             {formatDonationAmount(amount)}P
           </span>
-        ) : null}
+        )}
       </div>
-      {content ? (
-        <p className="relative mt-1.5 text-3xl leading-9 wrap-break-word text-white drop-shadow-sm">
+      {content && (
+        <p className="relative mt-5 text-3xl leading-9 wrap-break-word text-white drop-shadow-sm">
           {content}
         </p>
-      ) : null}
+      )}
     </div>
   );
 }

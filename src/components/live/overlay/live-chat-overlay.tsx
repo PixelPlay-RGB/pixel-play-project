@@ -36,7 +36,7 @@ export function LiveChatOverlay({
         <div
           ref={chatStackRef}
           className={cn(
-            "flex h-full min-h-0 flex-col items-start justify-end gap-2 overflow-hidden",
+            "flex h-full min-h-min flex-col items-start justify-end gap-2 overflow-hidden",
             "live-chat-overlay-stack",
           )}
         >
