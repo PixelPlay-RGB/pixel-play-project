@@ -25,11 +25,34 @@ interface Props {
 export default function ChannelLivePollPanel({ broadcastId, creatorId }: Props) {
   const { polls, isLoading: isPollLoading } = useLivePolls(broadcastId, creatorId);
   const [selectedTool, setSelectedTool] = useState<InteractionTool | null>(null);
-  // 도구 화면이 펼쳐지면(높이 확장) 좌측 칼럼 스크롤을 따라 내려 바로 보이게 한다.
+  // 도구 화면이 펼쳐지면 좌측 칼럼 스크롤을 맨 아래로 내린다(시청자 참여 섹션이 최하단).
+  // 높이는 300ms transition으로 늘어나므로, 전환이 끝난 뒤 최종 scrollHeight 기준으로 내린다.
   const toolViewRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!selectedTool) return;
-    toolViewRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+
+    const findScrollParent = (node: HTMLElement | null): Element | null => {
+      let current = node?.parentElement ?? null;
+      while (current) {
+        const { overflowY } = getComputedStyle(current);
+        if (
+          (overflowY === "auto" || overflowY === "scroll") &&
+          current.scrollHeight > current.clientHeight
+        ) {
+          return current;
+        }
+        current = current.parentElement;
+      }
+      // xl 미만에선 칼럼이 아니라 문서 전체가 스크롤 컨테이너다.
+      return document.scrollingElement;
+    };
+
+    const timeoutId = setTimeout(() => {
+      const scroller = findScrollParent(toolViewRef.current);
+      scroller?.scrollTo({ top: scroller.scrollHeight, behavior: "smooth" });
+    }, 320);
+
+    return () => clearTimeout(timeoutId);
   }, [selectedTool]);
 
   // 도구를 오가도 진행 상태가 유지되도록 세 도구의 상태를 패널 수명으로 관리한다.

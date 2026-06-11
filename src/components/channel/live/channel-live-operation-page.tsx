@@ -108,7 +108,8 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
   return (
     // 시청 화면과 같은 풀블리드 레이아웃 — 칼럼·섹션은 여백 대신 border로 구분한다.
     <div className="flex flex-col xl:h-full xl:min-h-0 xl:overflow-hidden">
-      <div className="grid xl:h-full xl:min-h-0 xl:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)_minmax(16rem,0.85fr)] xl:overflow-hidden">
+      {/* 채팅 칼럼은 시청 화면 채팅 패널(w-88=22rem)과 같은 고정 폭 — 남는 폭은 좌측 콘텐츠가 가져간다. */}
+      <div className="grid xl:h-full xl:min-h-0 xl:grid-cols-[minmax(0,2fr)_22rem_minmax(16rem,0.85fr)] xl:overflow-hidden">
         <div className="flex min-w-0 flex-col xl:h-full xl:max-h-full xl:min-h-0 xl:overflow-y-auto">
           <div className="border-border flex shrink-0 flex-col gap-3 border-b px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-wrap items-center gap-2">

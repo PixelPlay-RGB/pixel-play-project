@@ -9,6 +9,7 @@ import { LiveChatMenu } from "@/components/live/view/live-chat-menu";
 import { LiveDonationBanner } from "@/components/live/view/live-donation-banner";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { LIVE_DONATION_MIN_AMOUNT, LIVE_LABEL } from "@/constants/live/live";
+import { useMeasuredHeight } from "@/hooks/common/use-measured-height";
 import { useLiveChatSession } from "@/hooks/live/use-live-chat-session";
 import { useLiveDonationRanking } from "@/hooks/live/use-live-donation-ranking";
 import { useLiveMessages } from "@/hooks/live/use-live-messages";
@@ -71,6 +72,8 @@ export default function ChannelLiveChatPanel({
   const popoutCheckIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   // 가상화 메시지 목록의 스크롤 컨테이너(ScrollArea viewport) ref.
   const chatScrollRef = useRef<HTMLDivElement>(null);
+  // 배너 실측 높이 — 접고 펼칠 때마다 목록 상단 inset 패딩이 따라가도록 측정해 넘긴다.
+  const [bannerRef, bannerHeight] = useMeasuredHeight<HTMLDivElement>();
   const chatState = useMemo(() => getStudioChatState(broadcastId), [broadcastId]);
   const { messages } = useLiveMessages(broadcastId, creatorId, creatorId);
   const { donations } = useLiveDonationRanking(creatorId ?? "");
@@ -136,7 +139,7 @@ export default function ChannelLiveChatPanel({
         <>
           {/* 시청 화면(LiveChatBody)과 동일하게 배너를 absolute 오버레이로 띄워 접고 펼쳐도 목록이 밀리지 않는다. */}
           <div className="relative flex min-h-0 flex-1 flex-col">
-            <div className="absolute inset-x-0 top-0 z-10">
+            <div ref={bannerRef} className="absolute inset-x-0 top-0 z-10">
               <LiveDonationBanner donations={donations} />
             </div>
             <ScrollArea
@@ -148,7 +151,7 @@ export default function ChannelLiveChatPanel({
               <LiveChatMessageList
                 messages={messages}
                 cleanbotEnabled={cleanbot}
-                topInset
+                topInsetPx={bannerHeight}
                 scrollRef={chatScrollRef}
               />
             </ScrollArea>

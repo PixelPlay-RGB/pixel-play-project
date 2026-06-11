@@ -16,16 +16,14 @@ import type { LiveChatMessage } from "@/types/live/live";
 const ESTIMATED_ROW_HEIGHT = 32;
 // 행 간 간격(px) — 기존 목록의 gap-3과 동일.
 const ROW_GAP = 12;
-// 후원 랭킹 배너(absolute 오버레이)가 덮는 높이만큼 목록 상단을 비우는 패딩(px) — pt-26과 동일.
-const TOP_INSET_PADDING = 104;
 
 interface Props {
   messages: LiveChatMessage[];
   fillHeight?: boolean;
   // 클린봇 토글 상태. ON이면 비속어로 걸린 메시지를 가린다. 기본 ON.
   cleanbotEnabled?: boolean;
-  // 후원 랭킹 배너가 덮는 높이만큼 목록 상단을 비워, 맨 위 스크롤 시 채팅이 가려지지 않게 한다.
-  topInset?: boolean;
+  // 후원 랭킹 배너(absolute 오버레이)가 덮는 실측 높이(px). 접고 펼칠 때마다 호출부가 갱신해 넘긴다.
+  topInsetPx?: number;
   // 가상화 스크롤 컨테이너(ScrollArea viewport)의 ref. 호출부가 ScrollArea에 단 ref를 그대로 넘긴다.
   scrollRef: RefObject<HTMLDivElement | null>;
 }
@@ -34,7 +32,7 @@ export function LiveChatMessageList({
   messages,
   fillHeight = false,
   cleanbotEnabled = true,
-  topInset = false,
+  topInsetPx = 0,
   scrollRef,
 }: Props) {
   const isInitialMount = useRef(true);
@@ -49,7 +47,8 @@ export function LiveChatMessageList({
     estimateSize: () => ESTIMATED_ROW_HEIGHT,
     overscan: 12,
     gap: ROW_GAP,
-    paddingStart: topInset ? TOP_INSET_PADDING : 8,
+    // 배너 실측 높이 + 행 간격만큼 비워, 맨 위 스크롤 시 첫 메시지가 배너에 가려지지 않게 한다.
+    paddingStart: topInsetPx > 0 ? topInsetPx + ROW_GAP : 8,
     paddingEnd: 8,
     getItemKey: (index) => (index === 0 ? "__filter-notice__" : messages[index - 1].id),
   });

@@ -5,6 +5,7 @@
 
 import { useRef } from "react";
 
+import { useMeasuredHeight } from "@/hooks/common/use-measured-height";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { LiveChatInputBar } from "@/components/live/view/live-chat-input-bar";
 import { LiveChatMessageList } from "@/components/live/chat/live-chat-message-list";
@@ -109,12 +110,14 @@ export function LiveChatBody({
 }: Props) {
   // 가상화 목록의 스크롤 컨테이너(ScrollArea viewport) ref — 목록 컴포넌트와 공유한다.
   const chatScrollRef = useRef<HTMLDivElement>(null);
+  // 배너 실측 높이 — 접고 펼칠 때마다 목록 상단 inset 패딩이 따라가도록 측정해 넘긴다.
+  const [bannerRef, bannerHeight] = useMeasuredHeight<HTMLDivElement>();
 
   return (
     <>
       <div className="relative flex min-h-0 flex-1 flex-col">
         {/* 배너는 메시지 영역 위에 absolute로 띄워, 접고 펼쳐도 채팅 목록이 밀리지 않는다. */}
-        <div className="absolute inset-x-0 top-0 z-10">
+        <div ref={bannerRef} className="absolute inset-x-0 top-0 z-10">
           <LiveDonationBanner donations={donations} />
         </div>
         {/* 채팅 목록: 스크롤바는 숨기고(몰입), overscroll-contain으로 바깥 스크롤 전파를 막는다. */}
@@ -128,7 +131,7 @@ export function LiveChatBody({
             messages={messages}
             cleanbotEnabled={cleanbotEnabled}
             fillHeight={fillMessages}
-            topInset
+            topInsetPx={bannerHeight}
             scrollRef={chatScrollRef}
           />
         </ScrollArea>
