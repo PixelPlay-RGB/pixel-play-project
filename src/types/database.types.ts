@@ -1265,11 +1265,13 @@ export type Database = {
         Returns: Json
       }
       get_live_popular_keywords: { Args: { p_limit?: number }; Returns: Json }
+      get_live_sync_cron_secret: { Args: never; Returns: string }
       get_live_watch: {
         Args: { p_creator_id: string; p_viewer_id?: string }
         Returns: Json
       }
       get_live_watch_count: { Args: { p_creator_id: string }; Returns: Json }
+      get_mediamtx_api_password: { Args: never; Returns: string }
       get_public_chat_room_metadata: {
         Args: { p_room_id: string }
         Returns: {

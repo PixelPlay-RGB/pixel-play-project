@@ -7,6 +7,8 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 // 종료 시 시청 화면 전달은 live_broadcast 트리거(broadcast_live_broadcast_ended)가 담당한다.
 
 const DEFAULT_MEDIAMTX_API_BASE_URL = "http://live.pixel-play.studio:9997";
+// EC2 mediamtx.yml의 authInternalUsers에 등록된 Control API 전용 계정과 동일해야 한다.
+const MEDIAMTX_API_USER = "pixelplay-api";
 // RTMP 서버 URL(rtmp://live.pixel-play.studio/live)의 path 세그먼트와 동일해야 한다.
 const STREAM_PATH_PREFIX = "live";
 const LIVE_STREAM_KEY_LENGTH = 40;
@@ -67,14 +69,14 @@ function getMediaMtxApiBaseUrl() {
 }
 
 // MediaMTX Control API에서 path 송출 여부를 확인한다. 404 = path 없음 = 송출 아님.
-async function isStreamOnline(streamPath: string) {
+async function isStreamOnline(streamPath: string, authHeader: string) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), MEDIAMTX_REQUEST_TIMEOUT_MS);
 
   try {
     const response = await fetch(
       `${getMediaMtxApiBaseUrl()}/v3/paths/get/${encodeURIComponent(streamPath)}`,
-      { signal: controller.signal },
+      { headers: { Authorization: authHeader }, signal: controller.signal },
     );
 
     if (response.status === 404) return false;
@@ -115,6 +117,15 @@ Deno.serve(async (req: Request) => {
   if (!liveStreamKeySecret) {
     return json({ error: "LIVE_OVERLAY_TOKEN_SECRET not configured" }, 503);
   }
+
+  // Control API Basic 인증 — 비밀번호는 Vault(RPC)에서 읽는다(mediamtx.yml과 동일 값).
+  const { data: mediaMtxApiPassword } = await supabase.rpc("get_mediamtx_api_password");
+
+  if (typeof mediaMtxApiPassword !== "string" || !mediaMtxApiPassword) {
+    return json({ error: "mediamtx api password not configured" }, 503);
+  }
+
+  const mediaMtxAuthHeader = `Basic ${btoa(`${MEDIAMTX_API_USER}:${mediaMtxApiPassword}`)}`;
 
   // 1) 시작 유예가 지난 활성 방송만 검사 대상으로 모은다(시드 방송 제외).
   const graceBoundary = new Date(Date.now() - BROADCAST_START_GRACE_MS).toISOString();
@@ -164,7 +175,9 @@ Deno.serve(async (req: Request) => {
       const streamPath = `${STREAM_PATH_PREFIX}/${streamKey}`;
 
       try {
-        return (await isStreamOnline(streamPath)) ? null : { broadcast, streamPath };
+        return (await isStreamOnline(streamPath, mediaMtxAuthHeader))
+          ? null
+          : { broadcast, streamPath };
       } catch (error) {
         console.error(
           "[sync-live-broadcast-status] first check failed:",
@@ -190,7 +203,7 @@ Deno.serve(async (req: Request) => {
   const recheckResults = await Promise.all(
     offlineCandidates.map(async ({ broadcast, streamPath }) => {
       try {
-        if (await isStreamOnline(streamPath)) return null;
+        if (await isStreamOnline(streamPath, mediaMtxAuthHeader)) return null;
 
         const { error } = await supabase.rpc("end_live_broadcast", {
           p_actor_user_id: broadcast.creator_id,
