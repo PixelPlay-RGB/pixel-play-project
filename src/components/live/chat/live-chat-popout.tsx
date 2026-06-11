@@ -105,7 +105,6 @@ export function LiveChatPopout({ creatorId }: Props) {
         onFollow={handleFollow}
         isFollowing={isFollowing}
         isFollowPending={isFollowPending}
-        fillMessages
         noticeActionLabel={LIVE_LABEL.openLiveWatch}
         onNoticeAction={moveToLiveWatch}
         inputClassName="shrink-0"

@@ -2,14 +2,9 @@
 // 방송 운영 화면에서 실제 라이브 시청 채팅과 같은 외형의 채팅 패널을 렌더링합니다.
 
 import type { ChannelLiveChatMessage } from "@/actions/channel/live";
-import { LiveChatParticipationNotice } from "@/components/live/chat/live-chat-participation-notice";
-import { LiveChatMessageList } from "@/components/live/chat/live-chat-message-list";
-import { LiveChatInputBar } from "@/components/live/view/live-chat-input-bar";
+import { LiveChatBody } from "@/components/live/chat/live-chat-body";
 import { LiveChatMenu } from "@/components/live/view/live-chat-menu";
-import { LiveDonationBanner } from "@/components/live/view/live-donation-banner";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { LIVE_DONATION_MIN_AMOUNT, LIVE_LABEL } from "@/constants/live/live";
-import { useMeasuredHeight } from "@/hooks/common/use-measured-height";
 import { useLiveChatSession } from "@/hooks/live/use-live-chat-session";
 import { useLiveDonationRanking } from "@/hooks/live/use-live-donation-ranking";
 import { useLiveMessages } from "@/hooks/live/use-live-messages";
@@ -70,10 +65,6 @@ export default function ChannelLiveChatPanel({
   const [isPopoutOpen, setIsPopoutOpen] = useState(false);
   const popoutWindowRef = useRef<Window | null>(null);
   const popoutCheckIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  // 가상화 메시지 목록의 스크롤 컨테이너(ScrollArea viewport) ref.
-  const chatScrollRef = useRef<HTMLDivElement>(null);
-  // 배너 실측 높이 — 접고 펼칠 때마다 목록 상단 inset 패딩이 따라가도록 측정해 넘긴다.
-  const [bannerRef, bannerHeight] = useMeasuredHeight<HTMLDivElement>();
   const chatState = useMemo(() => getStudioChatState(broadcastId), [broadcastId]);
   const { messages } = useLiveMessages(broadcastId, creatorId, creatorId);
   const { donations } = useLiveDonationRanking(creatorId ?? "");
@@ -136,41 +127,23 @@ export default function ChannelLiveChatPanel({
           <p className="text-muted-foreground text-sm">{LIVE_LABEL.chatPopoutActive}</p>
         </div>
       ) : (
-        <>
-          {/* 시청 화면(LiveChatBody)과 동일하게 배너를 absolute 오버레이로 띄워 접고 펼쳐도 목록이 밀리지 않는다. */}
-          <div className="relative flex min-h-0 flex-1 flex-col">
-            <div ref={bannerRef} className="absolute inset-x-0 top-0 z-10">
-              <LiveDonationBanner donations={donations} />
-            </div>
-            <ScrollArea
-              ref={chatScrollRef}
-              className="min-h-0 flex-1"
-              hideScrollbar
-              viewportClassName="overscroll-contain"
-            >
-              <LiveChatMessageList
-                messages={messages}
-                cleanbotEnabled={cleanbot}
-                topInsetPx={bannerHeight}
-                scrollRef={chatScrollRef}
-              />
-            </ScrollArea>
-          </div>
-          <LiveChatParticipationNotice chatUnavailableReason={chatState.chatUnavailableReason} />
-
-          <LiveChatInputBar
-            polls={[]}
-            chatState={chatState}
-            isLoggedIn={isLoggedIn}
-            walletBalance={0}
-            donationEnabled={false}
-            donationMinAmount={LIVE_DONATION_MIN_AMOUNT}
-            showActions={false}
-            chatRuleText={chatRuleText}
-            onLoginPrompt={() => {}}
-            onSendMessage={sendMessage}
-          />
-        </>
+        // 시청 화면과 같은 채팅 본문(배너 오버레이+동적 inset+바닥 정렬)을 그대로 재사용해
+        // 두 화면의 채팅 동작이 항상 함께 움직이게 한다. 운영 화면은 후원·투표 액션만 끈다.
+        <LiveChatBody
+          messages={messages}
+          donations={donations}
+          polls={[]}
+          chatState={chatState}
+          isLoggedIn={isLoggedIn}
+          walletBalance={0}
+          donationEnabled={false}
+          donationMinAmount={LIVE_DONATION_MIN_AMOUNT}
+          showActions={false}
+          chatRuleText={chatRuleText}
+          cleanbotEnabled={cleanbot}
+          onLoginPrompt={() => {}}
+          onSendMessage={sendMessage}
+        />
       )}
     </div>
   );

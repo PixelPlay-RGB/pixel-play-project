@@ -101,7 +101,7 @@ export default function ChannelLivePollPanel({ broadcastId, creatorId }: Props) 
         // 통째로 무시시키므로, presence 영향이 없는 CSS 애니메이션(key 리마운트마다 재생)을 쓴다.
         <div
           key="tool-select"
-          className="animate-in fade-in slide-in-from-bottom-3 grid gap-2.5 duration-200 ease-out motion-reduce:animate-none sm:grid-cols-3"
+          className="animate-in fade-in slide-in-from-bottom-3 grid gap-2.5 py-2 duration-200 ease-out motion-reduce:animate-none sm:grid-cols-3"
         >
           {INTERACTION_TOOLS.map(({ icon: Icon, label, value, description }) => (
             // 브랜드 무드의 세로형 카드 — 민트 네온 hover에 아이콘 뱃지가 brand로 채워지며 살짝 떠오른다.

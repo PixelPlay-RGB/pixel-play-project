@@ -54,8 +54,6 @@ interface Props {
   isEnded?: boolean;
   // 클린봇(비속어 필터) 적용 여부. 패널에서만 토글하며 미지정 시 비적용.
   cleanbotEnabled?: boolean;
-  // 메시지가 적어도 목록이 스크롤 영역을 채우게 한다(팝아웃 등 본문이 메인인 화면).
-  fillMessages?: boolean;
   // 참여 안내의 보조 액션(예: 팝아웃에서 "시청 화면 열기").
   noticeActionLabel?: string;
   onNoticeAction?: () => void;
@@ -98,7 +96,6 @@ export function LiveChatBody({
   isFollowPending,
   isEnded = false,
   cleanbotEnabled,
-  fillMessages,
   noticeActionLabel,
   onNoticeAction,
   showActions = true,
@@ -130,7 +127,6 @@ export function LiveChatBody({
           <LiveChatMessageList
             messages={messages}
             cleanbotEnabled={cleanbotEnabled}
-            fillHeight={fillMessages}
             topInsetPx={bannerHeight}
             scrollRef={chatScrollRef}
           />

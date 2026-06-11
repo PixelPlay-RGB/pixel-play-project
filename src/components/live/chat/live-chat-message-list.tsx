@@ -7,7 +7,6 @@ import { memo, useEffect, useLayoutEffect, useRef, type RefObject } from "react"
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { LiveChatRoleBadge, type LiveChatRole } from "@/components/live/chat/live-chat-role-badge";
 import { LIVE_LABEL } from "@/constants/live/live";
-import { cn } from "@/lib/utils";
 import { formatDonationAmount } from "@/utils/live/live-chat";
 import { getLiveChatOverlayNicknameColor } from "@/utils/live/live-chat-overlay-style";
 import type { LiveChatMessage } from "@/types/live/live";
@@ -19,7 +18,6 @@ const ROW_GAP = 12;
 
 interface Props {
   messages: LiveChatMessage[];
-  fillHeight?: boolean;
   // 클린봇 토글 상태. ON이면 비속어로 걸린 메시지를 가린다. 기본 ON.
   cleanbotEnabled?: boolean;
   // 후원 랭킹 배너(absolute 오버레이)가 덮는 실측 높이(px). 접고 펼칠 때마다 호출부가 갱신해 넘긴다.
@@ -30,7 +28,6 @@ interface Props {
 
 export function LiveChatMessageList({
   messages,
-  fillHeight = false,
   cleanbotEnabled = true,
   topInsetPx = 0,
   scrollRef,
@@ -84,7 +81,8 @@ export function LiveChatMessageList({
   }, [rowCount, virtualizer]);
 
   return (
-    <div className={cn(fillHeight && "flex min-h-full flex-col justify-end")}>
+    // 채팅은 항상 바닥에서 위로 쌓인다 — 메시지가 적을 땐 입력바 바로 위부터 시작한다.
+    <div className="flex min-h-full flex-col justify-end">
       <div className="relative w-full" style={{ height: virtualizer.getTotalSize() }}>
         {virtualizer.getVirtualItems().map((item) => (
           <div
