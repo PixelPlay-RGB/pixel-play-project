@@ -15,7 +15,7 @@ interface Props {
 
 export function LiveEndedScreen({ creator }: Props) {
   return (
-    <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-black md:aspect-auto md:h-full">
+    <div className="relative aspect-video w-full overflow-hidden bg-black">
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-6 text-center">
         <div className="flex size-12 items-center justify-center rounded-xl bg-white/10 text-white/70">
           <VideoOff className="size-6" />

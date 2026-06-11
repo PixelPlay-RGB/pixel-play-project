@@ -106,14 +106,14 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
   // 방송을 보는 동안 하트비트를 보내 현재 시청자 수를 집계한다(로그인·익명 모두).
   useLiveViewerPresence(broadcast?.id);
 
-  // 채팅 입력 섹션의 동기화 높이(px). 비디오가 16:9로 폭을 꽉 채우는 일반 모드에서만 계산하고,
+  // 채팅 입력 섹션의 동기화 높이(px). 송출/종료 프레임이 16:9로 폭을 꽉 채우는 일반 모드에서만 계산하고,
   // 화면이 낮아 자연 높이보다 작아지면 입력바가 자체 콘텐츠 높이로 버틴다(min-height라 안전).
   const [chatInputMinHeight, setChatInputMinHeight] = useState<number | null>(null);
-  const hasBroadcastForSync = !!broadcast;
+  const hasPlayerFrameForSync = !!creator;
   useEffect(() => {
     const column = playerColumnRef.current;
 
-    if (!column || isMobile || isTheater || !hasBroadcastForSync) {
+    if (!column || isMobile || isTheater || !hasPlayerFrameForSync) {
       setChatInputMinHeight(null);
       return;
     }
@@ -129,7 +129,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     observer.observe(column);
 
     return () => observer.disconnect();
-  }, [isMobile, isTheater, hasBroadcastForSync]);
+  }, [isMobile, isTheater, hasPlayerFrameForSync]);
 
   // 시청 화면을 떠나면 와이드 모드를 해제해, 목록 등 다른 라이브 화면에서 사이드바가 다시 보이게 한다.
   useEffect(() => () => setWideMode(false), [setWideMode]);

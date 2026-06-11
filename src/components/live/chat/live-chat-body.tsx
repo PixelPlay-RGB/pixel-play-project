@@ -5,7 +5,6 @@
 
 import { useRef } from "react";
 
-import { useMeasuredHeight } from "@/hooks/common/use-measured-height";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Spinner } from "@/components/ui/spinner";
 import { LiveChatInputBar } from "@/components/live/view/live-chat-input-bar";
@@ -19,6 +18,8 @@ import type {
   LivePoll,
   LiveViewerChatState,
 } from "@/types/live/live";
+
+const DONATION_BANNER_TOP_INSET_PX = 88;
 
 interface Props {
   messages: LiveChatMessage[];
@@ -123,21 +124,19 @@ export function LiveChatBody({
 }: Props) {
   // 가상화 목록의 스크롤 컨테이너(ScrollArea viewport) ref — 목록 컴포넌트와 공유한다.
   const chatScrollRef = useRef<HTMLDivElement>(null);
-  // 배너 실측 높이 — 접고 펼칠 때마다 목록 상단 inset 패딩이 따라가도록 측정해 넘긴다.
-  const [bannerRef, bannerHeight] = useMeasuredHeight<HTMLDivElement>();
 
   return (
     <>
       <div className="relative flex min-h-0 flex-1 flex-col">
-        {/* 배너는 메시지 영역 위에 absolute로 띄워, 접고 펼쳐도 채팅 목록이 밀리지 않는다. */}
-        <div ref={bannerRef} className="absolute inset-x-0 top-0 z-10">
+        {/* 배너는 메시지 영역 위에 absolute로 띄우고, 목록 inset은 고정값으로 둬 접힘 애니메이션이 채팅을 흔들지 않게 한다. */}
+        <div className="absolute inset-x-0 top-0 z-10">
           <LiveDonationBanner donations={donations} />
         </div>
         {/* 과거 적재 중 표시 — 목록 행이 아니라 떠 있는 pill이라 안내 행(맨 위 고정)을 가리지 않는다. */}
         {isLoadingOlderMessages ? (
           <div
             className="pointer-events-none absolute inset-x-0 z-10 flex justify-center"
-            style={{ top: bannerHeight + 8 }}
+            style={{ top: DONATION_BANNER_TOP_INSET_PX + 8 }}
           >
             <span className="bg-background/95 border-border text-muted-foreground flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium shadow-sm">
               <Spinner className="size-3.5" />
@@ -155,7 +154,7 @@ export function LiveChatBody({
           <LiveChatMessageList
             messages={messages}
             cleanbotEnabled={cleanbotEnabled}
-            topInsetPx={bannerHeight}
+            topInsetPx={DONATION_BANNER_TOP_INSET_PX}
             scrollRef={chatScrollRef}
             onLoadOlderMessages={onLoadOlderMessages}
             isLoadingOlderMessages={isLoadingOlderMessages}
