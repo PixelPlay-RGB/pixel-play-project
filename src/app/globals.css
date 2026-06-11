@@ -468,3 +468,12 @@ input:-webkit-autofill:focus {
 *::-webkit-scrollbar-thumb:hover {
   background-color: color-mix(in srgb, var(--brand) 70%, transparent);
 }
+
+/* 스크롤은 되지만 스크롤바는 그리지 않는 영역(시청 페이지 좌측 칼럼, 사이드바 등). */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

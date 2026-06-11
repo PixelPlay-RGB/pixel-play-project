@@ -158,12 +158,9 @@ export function LiveVideoPlayer({
       onBlur={handleBlur}
       className={cn(
         "relative w-full overflow-hidden bg-black",
-        // 일반 모드: 플레이어 박스 자체가 항상 16:9를 유지한다 — 가용 높이가 부족하면 폭도 함께
-        // 줄어들게 컨테이너 높이(100cqh) 기준으로 최대 폭을 캡한다(부모가 size 컨테이너).
-        // max-h만 캡하면 폭은 꽉 찬 채 높이만 잘려 박스가 납작해지고 영상 좌우에 검은 띠가 생긴다.
-        isTheater
-          ? "aspect-video md:aspect-auto md:h-full"
-          : cn("aspect-video md:max-h-full", !isFullscreen && "md:max-w-[calc(100cqh*16/9)]"),
+        // 일반 모드: 유튜브·치지직처럼 항상 폭 100% + 16:9 — 화면이 낮아 정보 행이 넘치면
+        // 좌측 칼럼이 세로 스크롤된다(LiveView). 높이를 캡하면 영상 좌우에 검은 띠가 생긴다.
+        isTheater ? "aspect-video md:aspect-auto md:h-full" : "aspect-video",
         // 몰입 모드(극장·전체화면)에서 컨트롤이 숨겨지면 커서도 함께 숨겨 몰입감을 준다.
         isImmersive && !controlsVisible && "cursor-none",
       )}

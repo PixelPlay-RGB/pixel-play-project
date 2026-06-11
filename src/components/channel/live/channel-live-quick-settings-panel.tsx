@@ -47,17 +47,14 @@ interface Props {
   onTtsEnabledChange: (isTtsEnabled: boolean) => void;
 }
 
+// 섹션 라벨 — 선 장식 없이 텍스트만 둬서 행 사이가 어수선해지지 않게 한다.
+// 섹션 사이는 위 여백으로만 구분한다(첫 섹션은 헤더 바로 아래라 여백 없음).
 function QuickSettingSectionTitle({ title }: { title: string }) {
-  return (
-    <div className="text-muted-foreground flex shrink-0 items-center gap-2 px-1 text-xs font-bold">
-      <span className="border-border w-3 shrink-0 border-t" />
-      <h3 className="shrink-0">{title}</h3>
-      <span className="border-border min-w-0 flex-1 border-t" />
-    </div>
-  );
+  return <h3 className="text-muted-foreground mt-3 px-1 text-xs font-bold first:mt-0">{title}</h3>;
 }
 
-// 설정 페이지 SettingFieldRow와 같은 질감의 행(라벨 sm font-bold + 설명 xs muted + border 구분).
+// 설정 페이지 SettingFieldRow와 같은 질감의 행(라벨 sm font-bold + 설명 xs muted).
+// 보더 구분선 없이 간격만으로 행을 나눠 사이드 패널을 가볍게 유지한다.
 function QuickSettingFieldRow({
   label,
   description,
@@ -70,12 +67,7 @@ function QuickSettingFieldRow({
   children: ReactNode;
 }) {
   return (
-    <div
-      className={cn(
-        "border-border/70 flex items-center justify-between gap-3 border-t pt-4 first:border-t-0 first:pt-0",
-        isDimmed && "opacity-60",
-      )}
-    >
+    <div className={cn("flex items-center justify-between gap-3 px-1", isDimmed && "opacity-60")}>
       <div className="flex min-w-0 flex-col gap-0.5">
         <span className="text-foreground text-sm font-bold">{label}</span>
         <span className="text-muted-foreground text-xs leading-5 text-pretty">{description}</span>

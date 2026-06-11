@@ -66,6 +66,9 @@ interface Props {
   slowModeSeconds?: number;
   // 채팅 메뉴의 "채팅 규칙"이 요청하면 입력바 위 규칙 popover를 연다(값이 바뀔 때마다 1회).
   ruleOpenRequestId?: number;
+  // 동기화 최소 높이(px) — 시청 화면에서 separator(상단 보더)를 비디오 하단 라인에 맞춘다.
+  // 화면이 낮아 이 값이 콘텐츠보다 작으면 자연 높이로 버틴다(min-height).
+  minHeightPx?: number | null;
   // 전체화면 오버레이 등에서 사용할 때 popover/dialog 포털 컨테이너를 전체화면 요소로 지정한다(미지정=body).
   portalContainer?: HTMLElement | null;
   // 전체화면 후원 버튼이 후원 popover 열기를 요청한다(LiveDonationPopover로 그대로 전달).
@@ -134,6 +137,7 @@ export function LiveChatInputBar({
   followerWaitSeconds = 0,
   slowModeSeconds = 0,
   ruleOpenRequestId,
+  minHeightPx,
   portalContainer,
   donationOpenRequested,
   onDonationOpenSettled,
@@ -261,15 +265,16 @@ export function LiveChatInputBar({
   return (
     <div
       ref={inputBarRef}
-      // 입력 섹션 높이를 좌측 비디오 하단 정보 영역(실측 141px)에 맞춰 separator 라인을 정렬한다.
-      // 141px은 FHD에서 비디오가 16:9에 딱 맞는 값(149px일 땐 좌우 필러박스 발생) — live-view의
-      // 스트리머 행 py-3과 세트로 움직인다. min-h라 내부가 커져도 잘리지 않고 아래로 확장된다.
+      // 입력칸(크게) + 후원·참여 버튼 행(슬림) 2줄 구조 — 패딩·버튼 높이를 줄여 섹션을 최대한
+      // 낮게 유지하고, minHeightPx(칼럼 높이 - 비디오 16:9 높이)가 콘텐츠보다 크면 늘어나
+      // separator(상단 보더)가 비디오 하단 라인과 일직선이 된다(남는 공간은 줄 사이로 분배).
+      style={minHeightPx ? { minHeight: minHeightPx } : undefined}
       className={cn(
-        "border-border flex min-h-[141px] flex-col justify-between gap-3 border-t px-3 py-5",
+        "border-border flex flex-col justify-between gap-2 border-t px-3 py-2",
         className,
       )}
     >
-      {/* 이모지 버튼을 입력 필드 안(오른쪽 trailing)에 넣어, 입력 필드 좌측이 아래 버튼행과 정렬되게 한다. */}
+      {/* 이모지·전송 버튼은 입력 필드 안(오른쪽 trailing)에 넣어 입력칸 좌측을 버튼행과 정렬한다. */}
       <div className="relative">
         <Input
           value={draftValue}

@@ -65,6 +65,8 @@ interface Props {
   followerWaitSeconds?: number;
   slowModeSeconds?: number;
   ruleOpenRequestId?: number;
+  // 입력 섹션 동기화 높이(px) — 시청 화면에서 separator를 비디오 하단 라인과 일직선으로 만든다.
+  inputMinHeightPx?: number | null;
   // 입력바 하단의 후원·투표 액션행 노출 여부(미지정=노출). 전체화면 포털이 필요하면 portalContainer를 함께 준다.
   showActions?: boolean;
   votePresentation?: "popover" | "dialog";
@@ -111,6 +113,7 @@ export function LiveChatBody({
   followerWaitSeconds,
   slowModeSeconds,
   ruleOpenRequestId,
+  inputMinHeightPx,
   showActions = true,
   votePresentation = "popover",
   portalContainer,
@@ -163,6 +166,7 @@ export function LiveChatBody({
       </div>
       <LiveChatInputBar
         className={inputClassName}
+        minHeightPx={inputMinHeightPx}
         polls={polls}
         interactionNotices={interactionNotices}
         isPollsLoading={isPollsLoading}
