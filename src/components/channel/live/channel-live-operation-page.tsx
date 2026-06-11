@@ -66,6 +66,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
     broadcastId,
     broadcastStartedAt,
     chatRuleText,
+    donationFeedBroadcastId,
     handleAddTag,
     handleEndBroadcast,
     handleRemoveTag,
@@ -193,7 +194,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
 
         <div className="min-w-0 xl:h-full xl:min-h-0 xl:overflow-y-auto">
           <ChannelLiveQuickSettingsPanel
-            broadcastId={broadcastId}
+            broadcastId={donationFeedBroadcastId}
             canSaveSettings={isSettingsDirty}
             chatScope={operation.chatScope}
             initialDonations={initialSnapshot?.recentDonations ?? []}

@@ -11,6 +11,15 @@ import { cn } from "@/lib/utils";
 import { formatNumber } from "@/utils/common/format";
 
 const DONATION_FEED_PAGE_SIZE = 5;
+const KST_MONTH_DAY_FORMATTER = new Intl.DateTimeFormat("en-US", {
+  timeZone: "Asia/Seoul",
+  month: "2-digit",
+  day: "2-digit",
+});
+
+function formatDonationMonthDay(at: string) {
+  return KST_MONTH_DAY_FORMATTER.format(new Date(at)).replaceAll("/", ".");
+}
 
 interface Props {
   broadcastId: string | null;
@@ -60,12 +69,15 @@ export function ChannelLiveDonationFeedPanel({ broadcastId, initialDonations }: 
               {pageDonations.map((donation) => (
                 <li
                   key={donation.id}
-                  className="flex min-h-8 items-center justify-between gap-3 px-1 text-xs"
+                  className="grid min-h-8 grid-cols-[2.6rem_minmax(0,1fr)_auto] items-center gap-2 px-1 text-xs"
                 >
+                  <span className="text-muted-foreground font-mono text-[0.7rem] font-semibold tabular-nums">
+                    {formatDonationMonthDay(donation.createdAt)}
+                  </span>
                   <span className="text-foreground min-w-0 truncate font-semibold">
                     {donation.donorNickname}
                   </span>
-                  <span className="text-live shrink-0 font-bold tabular-nums">
+                  <span className="text-live min-w-16 text-right font-bold tabular-nums">
                     {formatNumber(donation.amount)}P
                   </span>
                 </li>

@@ -74,6 +74,9 @@ export function useChannelLiveOperation(initialSnapshot?: ChannelLiveStudioSnaps
   const [isBroadcasting, setIsBroadcasting] = useState(Boolean(activeBroadcast));
   const [hasEnded, setHasEnded] = useState(false);
   const [broadcastId, setBroadcastId] = useState<string | null>(activeBroadcast?.id ?? null);
+  const [donationFeedBroadcastId, setDonationFeedBroadcastId] = useState<string | null>(
+    activeBroadcast?.id ?? null,
+  );
   const [broadcastStartedAt, setBroadcastStartedAt] = useState<string | null>(
     activeBroadcast?.startedAt ?? null,
   );
@@ -241,6 +244,7 @@ export function useChannelLiveOperation(initialSnapshot?: ChannelLiveStudioSnaps
       }
 
       setBroadcastId(result.data.broadcastId);
+      setDonationFeedBroadcastId(result.data.broadcastId);
       setBroadcastStartedAt(new Date().toISOString());
       setIsBroadcasting(true);
       setHasEnded(false);
@@ -384,6 +388,7 @@ export function useChannelLiveOperation(initialSnapshot?: ChannelLiveStudioSnaps
     broadcastStartedAt,
     chatRuleText,
     chatScope,
+    donationFeedBroadcastId,
     setChatScope,
     handleAddTag,
     handleEndBroadcast,
