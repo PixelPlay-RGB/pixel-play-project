@@ -86,7 +86,11 @@ export function useLiveMessages(
             QUERY_KEYS.live.messages(broadcastId),
             (prev) => {
               if (!prev) return [nextMessage];
-              if (prev.some((m) => m.id === nextMessage.id)) return prev;
+              // 본인 메시지는 낙관적 항목이 실제 id로 먼저 승격되어 있다 — 스킵하면 서버
+              // 스냅샷(sender_role 등)이 반영되지 않으므로 같은 id는 서버 버전으로 교체한다.
+              if (prev.some((m) => m.id === nextMessage.id)) {
+                return prev.map((m) => (m.id === nextMessage.id ? nextMessage : m));
+              }
               return appendLiveMessage(prev, nextMessage);
             },
           );
