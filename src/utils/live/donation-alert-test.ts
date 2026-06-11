@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/client";
 import type { LiveDonationAlertAudioSettings } from "@/types/live/live-donation-alert-overlay";
 
 export const DONATION_ALERT_TEST_EVENT = "test_donation";
+const TEST_DONATION_CHANNEL_TIMEOUT_MS = 5000;
+const TEST_DONATION_CHANNEL_CLEANUP_DELAY_MS = 1000;
 
 // 크리에이터별 전용 테스트 채널. 설정 페이지(전송)와 후원 알림 오버레이(수신)가 함께 구독합니다.
 export function donationAlertTestChannel(creatorId: string): string {
@@ -24,22 +26,53 @@ export async function sendTestDonationAlert(
   payload: DonationAlertTestPayload,
 ): Promise<void> {
   const supabase = createClient();
-  const channel = supabase.channel(donationAlertTestChannel(creatorId));
-
-  await new Promise<void>((resolve, reject) => {
-    channel.subscribe((status) => {
-      if (status === "SUBSCRIBED") {
-        resolve();
-      } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
-        reject(new Error(`테스트 후원 채널 구독 실패: ${status}`));
-      }
-    });
+  const channel = supabase.channel(donationAlertTestChannel(creatorId), {
+    config: {
+      broadcast: {
+        ack: true,
+      },
+    },
   });
+  let shouldDelayCleanup = false;
 
-  await channel.send({ type: "broadcast", event: DONATION_ALERT_TEST_EVENT, payload });
+  try {
+    const subscribePromise = new Promise<void>((resolve, reject) => {
+      channel.subscribe((status) => {
+        if (status === "SUBSCRIBED") {
+          resolve();
+        } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+          reject(new Error(`테스트 후원 채널 구독 실패: ${status}`));
+        }
+      });
+    });
 
-  // 전송 후 채널 정리(전송이 전달될 시간을 약간 둠).
-  window.setTimeout(() => {
-    void supabase.removeChannel(channel);
-  }, 1000);
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      window.setTimeout(() => {
+        reject(new Error("테스트 후원 채널 구독 시간이 초과되었습니다."));
+      }, TEST_DONATION_CHANNEL_TIMEOUT_MS);
+    });
+
+    await Promise.race([subscribePromise, timeoutPromise]);
+
+    const sendStatus = await channel.send({
+      type: "broadcast",
+      event: DONATION_ALERT_TEST_EVENT,
+      payload,
+    });
+
+    if (sendStatus !== "ok") {
+      throw new Error(`테스트 후원 전송 실패: ${sendStatus}`);
+    }
+
+    shouldDelayCleanup = true;
+  } finally {
+    if (shouldDelayCleanup) {
+      // 전송 후 채널 정리(전송이 전달될 시간을 약간 둠).
+      window.setTimeout(() => {
+        void supabase.removeChannel(channel);
+      }, TEST_DONATION_CHANNEL_CLEANUP_DELAY_MS);
+    } else {
+      void supabase.removeChannel(channel);
+    }
+  }
 }

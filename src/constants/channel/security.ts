@@ -60,7 +60,8 @@ export const CHANNEL_SECURITY_URL_CARD_META: ChannelSecurityUrlCardMeta[] = [
     tutorialItems: [
       "후원 알림은 채팅창과 별도의 브라우저 소스로 추가해주세요.",
       "크기는 640 x 360으로 두면 16:9 화면에 잘 맞아요.",
-      "알림은 기본으로 5초 동안 보여요.",
+      "후원 설정 페이지에서 테스트 후원을 보내 OBS 소스 연결을 확인할 수 있어요.",
+      "알림은 설정한 표시 시간만큼 보여요.",
     ],
     tutorial: {
       title: OBS_DONATION_OVERLAY_TUTORIAL_TITLE,

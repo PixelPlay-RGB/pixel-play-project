@@ -1,7 +1,7 @@
 "use client";
 // 방송 운영 화면의 방송 제어·설정 저장·스트림 상태를 관리합니다.
 
-import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useCallback, useMemo, useState, useTransition } from "react";
 
 import {
   endLiveBroadcastAction,
@@ -24,7 +24,6 @@ import { toastAppError, toastAppSuccess } from "@/utils/common/toast-message";
 
 const DEFAULT_TITLE = "";
 const DEFAULT_TAGS: string[] = [];
-const BROADCAST_OFFLINE_AUTO_END_TIMEOUT_MS = 30 * 1000;
 
 interface ChannelLiveSavedSettingsSnapshot {
   alertSoundEnabled: boolean;
@@ -147,7 +146,6 @@ export function useChannelLiveOperation(initialSnapshot?: ChannelLiveStudioSnaps
   const [streamStatus, setStreamStatus] = useState<ChannelLiveStreamStatusResponse | null>(null);
   const [isBroadcastActionPending, startBroadcastTransition] = useTransition();
   const [isSettingsActionPending, startSettingsTransition] = useTransition();
-  const offlineAutoEndTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const liveState: ChannelLiveState = {
     isBroadcasting,
@@ -201,19 +199,10 @@ export function useChannelLiveOperation(initialSnapshot?: ChannelLiveStudioSnaps
     ttsRate,
   ]);
   const isStreamOnline = streamStatus?.state === "online";
-  const shouldAutoEndOfflineBroadcast =
-    isBroadcasting && Boolean(broadcastId) && Boolean(streamStatus) && !isStreamOnline;
   const shouldCaptureAutoThumbnail = !thumbnailFile && !thumbnailPreviewUrl.trim();
 
   const handleStreamStatusChange = useCallback((nextStatus: ChannelLiveStreamStatusResponse) => {
     setStreamStatus(nextStatus);
-  }, []);
-
-  const clearOfflineAutoEndTimer = useCallback(() => {
-    if (!offlineAutoEndTimerRef.current) return;
-
-    clearTimeout(offlineAutoEndTimerRef.current);
-    offlineAutoEndTimerRef.current = null;
   }, []);
 
   const handleStartBroadcast = () => {
@@ -266,7 +255,6 @@ export function useChannelLiveOperation(initialSnapshot?: ChannelLiveStudioSnaps
   };
 
   const handleEndBroadcast = useCallback(() => {
-    clearOfflineAutoEndTimer();
     setBroadcastActionError(null);
     startBroadcastTransition(async () => {
       if (broadcastId) {
@@ -285,30 +273,7 @@ export function useChannelLiveOperation(initialSnapshot?: ChannelLiveStudioSnaps
       setIsBroadcasting(false);
       setHasEnded(true);
     });
-  }, [broadcastId, clearOfflineAutoEndTimer, startBroadcastTransition]);
-
-  useEffect(() => {
-    if (!shouldAutoEndOfflineBroadcast) {
-      clearOfflineAutoEndTimer();
-      return;
-    }
-
-    if (isBroadcastActionPending || offlineAutoEndTimerRef.current) {
-      return;
-    }
-
-    offlineAutoEndTimerRef.current = setTimeout(() => {
-      offlineAutoEndTimerRef.current = null;
-      handleEndBroadcast();
-    }, BROADCAST_OFFLINE_AUTO_END_TIMEOUT_MS);
-
-    return clearOfflineAutoEndTimer;
-  }, [
-    clearOfflineAutoEndTimer,
-    handleEndBroadcast,
-    isBroadcastActionPending,
-    shouldAutoEndOfflineBroadcast,
-  ]);
+  }, [broadcastId, startBroadcastTransition]);
 
   const handleAddTag = () => {
     const nextTag = tagInput.trim();
