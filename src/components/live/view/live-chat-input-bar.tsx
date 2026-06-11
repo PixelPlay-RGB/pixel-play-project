@@ -54,8 +54,6 @@ interface Props {
   onFollow?: () => void;
   isFollowing?: boolean;
   isFollowPending?: boolean;
-  // 방송 종료 시: 메시지 목록은 유지하되 입력칸을 비활성화하고 후원/투표 액션도 비활성화(disabled)한다.
-  isEnded?: boolean;
   // 전체화면 오버레이 등에서 사용할 때 popover/dialog 포털 컨테이너를 전체화면 요소로 지정한다(미지정=body).
   portalContainer?: HTMLElement | null;
   // 전체화면 후원 버튼이 후원 popover 열기를 요청한다(LiveDonationPopover로 그대로 전달).
@@ -120,7 +118,6 @@ export function LiveChatInputBar({
   onFollow,
   isFollowing,
   isFollowPending,
-  isEnded = false,
   portalContainer,
   donationOpenRequested,
   onDonationOpenSettled,
@@ -133,26 +130,22 @@ export function LiveChatInputBar({
   // 채팅 패널 테두리 안쪽 폭에 꽉 맞춘다(입력칸·버튼행보다 좌우 패딩만큼 더 넓게 테두리까지).
   const inputBarRef = useRef<HTMLDivElement>(null);
 
-  // 방송 종료 시엔 타이핑·게이트 popover·후원·투표를 모두 막는다(메시지 목록은 유지).
-  // 타이핑은 채팅 가능 상태에서만 허용한다.
-  const isEditable = !isEnded && isLoggedIn && chatState.canChat;
+  // 채팅은 채널 단위(#111) — 방송 여부와 무관하게 채팅 가능 상태에서만 타이핑을 허용한다.
+  const isEditable = isLoggedIn && chatState.canChat;
   const reason = chatState.chatUnavailableReason;
   // 미팔로우: 팔로우할 때까지 항상 떠 있는 안내 popover(팔로우 액션이 있을 때만).
   // 팔로우 직후 optimistic isFollowing으로 즉시 닫아, refetch 지연 중 재클릭→언팔로우를 막는다.
-  const isFollowGate =
-    !isEnded && isLoggedIn && reason === "follower_required" && !isFollowing && !!onFollow;
+  const isFollowGate = isLoggedIn && reason === "follower_required" && !isFollowing && !!onFollow;
   // 클릭은 받되 타이핑은 막고 안내를 띄우는 게이트: 비로그인(로그인 유도), 규칙 미동의(규칙 popover).
-  const isLoginGate = !isEnded && !isLoggedIn;
-  const isRuleGate = !isEnded && isLoggedIn && reason === "chat_rule_acceptance_required";
+  const isLoginGate = !isLoggedIn;
+  const isRuleGate = isLoggedIn && reason === "chat_rule_acceptance_required";
   const isClickGate = isLoginGate || isRuleGate;
-  // 그 외 사유(팔로우 필요·대기·슬로우모드·매니저 전용)·방송 종료는 입력칸 자체를 비활성화한다.
+  // 그 외 사유(팔로우 필요·대기·슬로우모드·매니저 전용)는 입력칸 자체를 비활성화한다.
   // 전송 중(isSending)에는 비활성화하지 않는다 — disabled 전환은 input을 blur시켜
   // "한 번 보내면 포커스가 풀린다"는 문제를 만든다. 중복 전송은 handleSend 내부 가드가 막는다.
-  const isInputDisabled = isEnded || (!isEditable && !isClickGate);
+  const isInputDisabled = !isEditable && !isClickGate;
 
-  const placeholder = isEnded
-    ? LIVE_LABEL.chatEndedPlaceholder
-    : getChatPlaceholder({ chatState, isLoggedIn });
+  const placeholder = getChatPlaceholder({ chatState, isLoggedIn });
   const draftValue = isEditable ? draft : "";
 
   function setDraftValue(nextValue: string) {
@@ -333,7 +326,6 @@ export function LiveChatInputBar({
             donationMinAmount={donationMinAmount}
             onLoginPrompt={onLoginPrompt}
             onDonate={onDonate}
-            disabled={isEnded}
             portalContainer={portalContainer}
             anchorRef={inputBarRef}
             openRequested={donationOpenRequested}
@@ -352,7 +344,6 @@ export function LiveChatInputBar({
             onJoinDraw={onJoinDraw}
             presentation={votePresentation}
             anchorRef={inputBarRef}
-            disabled={isEnded}
             portalContainer={portalContainer}
           />
         </div>

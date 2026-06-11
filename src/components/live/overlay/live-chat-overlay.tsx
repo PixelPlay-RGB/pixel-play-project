@@ -12,13 +12,15 @@ import type {
 import { getLiveChatOverlayNicknameColor } from "@/utils/live/live-chat-overlay-style";
 
 export function LiveChatOverlay({
+  creatorId,
   initialSnapshot,
   isPreview = false,
 }: {
+  creatorId: string;
   initialSnapshot: LiveChatOverlaySnapshot;
   isPreview?: boolean;
 }) {
-  const { chatStackRef, visibleItems } = useLiveChatOverlay(initialSnapshot);
+  const { chatStackRef, visibleItems } = useLiveChatOverlay(creatorId, initialSnapshot);
   // 미리보기는 방송·채팅 이력이 없어도 화면 구성을 보여줘야 하므로 샘플로 채운다(실데이터가 있으면 그대로).
   const items =
     isPreview && visibleItems.length === 0 ? LIVE_CHAT_OVERLAY_PREVIEW_ITEMS : visibleItems;

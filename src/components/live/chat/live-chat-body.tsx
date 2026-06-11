@@ -50,10 +50,12 @@ interface Props {
   onFollow?: () => void;
   isFollowing?: boolean;
   isFollowPending?: boolean;
-  // 방송 종료: 입력만 비활성화하고 메시지 목록·참여 안내는 그대로 둔다.
-  isEnded?: boolean;
   // 클린봇(비속어 필터) 적용 여부. 패널에서만 토글하며 미지정 시 비적용.
   cleanbotEnabled?: boolean;
+  // 과거 채팅 적재(무한 스크롤) — 목록 상단 도달 시 호출. 미지정 시 적재를 시도하지 않는다.
+  onLoadOlderMessages?: () => void;
+  isLoadingOlderMessages?: boolean;
+  hasMoreChatHistory?: boolean;
   // 참여 안내의 보조 액션(예: 팝아웃에서 "시청 화면 열기").
   noticeActionLabel?: string;
   onNoticeAction?: () => void;
@@ -94,8 +96,10 @@ export function LiveChatBody({
   onFollow,
   isFollowing,
   isFollowPending,
-  isEnded = false,
   cleanbotEnabled,
+  onLoadOlderMessages,
+  isLoadingOlderMessages,
+  hasMoreChatHistory,
   noticeActionLabel,
   onNoticeAction,
   showActions = true,
@@ -129,19 +133,19 @@ export function LiveChatBody({
             cleanbotEnabled={cleanbotEnabled}
             topInsetPx={bannerHeight}
             scrollRef={chatScrollRef}
+            onLoadOlderMessages={onLoadOlderMessages}
+            isLoadingOlderMessages={isLoadingOlderMessages}
+            hasMoreChatHistory={hasMoreChatHistory}
           />
         </ScrollArea>
       </div>
-      {!isEnded ? (
-        <LiveChatParticipationNotice
-          chatUnavailableReason={chatState.chatUnavailableReason}
-          actionLabel={noticeActionLabel}
-          onAction={onNoticeAction}
-        />
-      ) : null}
+      <LiveChatParticipationNotice
+        chatUnavailableReason={chatState.chatUnavailableReason}
+        actionLabel={noticeActionLabel}
+        onAction={onNoticeAction}
+      />
       <LiveChatInputBar
         className={inputClassName}
-        isEnded={isEnded}
         polls={polls}
         interactionNotices={interactionNotices}
         isPollsLoading={isPollsLoading}

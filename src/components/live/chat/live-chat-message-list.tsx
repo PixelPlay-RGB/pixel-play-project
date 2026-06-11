@@ -1,10 +1,10 @@
 "use client";
 // 라이브 채팅 메시지 목록 — TanStack Virtual로 보이는 구간만 렌더링하고 하단 근접 시 자동 스크롤한다.
-// 지금은 LIVE_MESSAGE_LIMIT(100) 캡이지만, 추후 이전 채팅 무한 스크롤(히스토리 적재)을 붙여도
-// DOM이 화면 분량으로 고정되도록 미리 가상화 구조를 깔아 둔다.
+// 위로 스크롤해 상단에 닿으면 과거 채팅을 한 페이지씩 적재한다(가상화 덕에 DOM은 화면 분량 유지).
 
 import { memo, useEffect, useLayoutEffect, useRef, type RefObject } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { Spinner } from "@/components/ui/spinner";
 import { LiveChatDonationMessageCard } from "@/components/live/chat/live-chat-donation-message-card";
 import { LiveChatRoleBadge, type LiveChatRole } from "@/components/live/chat/live-chat-role-badge";
 import { LIVE_LABEL } from "@/constants/live/live";
@@ -15,6 +15,8 @@ import type { LiveChatMessage } from "@/types/live/live";
 const ESTIMATED_ROW_HEIGHT = 32;
 // 행 간 간격(px) — 기존 목록의 gap-3과 동일.
 const ROW_GAP = 12;
+// 상단에서 이 거리(px) 안으로 스크롤하면 과거 페이지 적재를 요청한다.
+const LOAD_OLDER_THRESHOLD_PX = 80;
 
 interface Props {
   messages: LiveChatMessage[];
@@ -24,6 +26,10 @@ interface Props {
   topInsetPx?: number;
   // 가상화 스크롤 컨테이너(ScrollArea viewport)의 ref. 호출부가 ScrollArea에 단 ref를 그대로 넘긴다.
   scrollRef: RefObject<HTMLDivElement | null>;
+  // 과거 채팅 적재(무한 스크롤) — 상단 근접 시 호출. 미지정 시 적재를 시도하지 않는다.
+  onLoadOlderMessages?: () => void;
+  isLoadingOlderMessages?: boolean;
+  hasMoreChatHistory?: boolean;
 }
 
 export function LiveChatMessageList({
@@ -31,9 +37,14 @@ export function LiveChatMessageList({
   cleanbotEnabled = true,
   topInsetPx = 0,
   scrollRef,
+  onLoadOlderMessages,
+  isLoadingOlderMessages = false,
+  hasMoreChatHistory = false,
 }: Props) {
   const isInitialMount = useRef(true);
   const wasNearBottomRef = useRef(true);
+  // prepend(과거 적재) 감지용 — 직전 렌더의 메시지 목록을 기억해 첫 id 변화를 비교한다.
+  const prevMessagesRef = useRef<LiveChatMessage[]>(messages);
 
   // 행 0 = 첫 진입 필터링 안내(항상 표시), 행 i+1 = messages[i].
   const rowCount = messages.length + 1;
@@ -54,19 +65,46 @@ export function LiveChatMessageList({
     const container = scrollRef.current;
     if (!container) return;
 
-    const updateNearBottom = () => {
+    const handleScroll = () => {
       const distanceFromBottom =
         container.scrollHeight - container.scrollTop - container.clientHeight;
       wasNearBottomRef.current = distanceFromBottom < 60;
+
+      // 상단 근접 시 과거 페이지 적재를 요청한다. 중복 호출은 훅 내부 가드(isLoadingOlder)가 막는다.
+      if (
+        hasMoreChatHistory &&
+        !isLoadingOlderMessages &&
+        container.scrollTop < LOAD_OLDER_THRESHOLD_PX
+      ) {
+        onLoadOlderMessages?.();
+      }
     };
 
-    updateNearBottom();
-    container.addEventListener("scroll", updateNearBottom, { passive: true });
+    handleScroll();
+    container.addEventListener("scroll", handleScroll, { passive: true });
 
     return () => {
-      container.removeEventListener("scroll", updateNearBottom);
+      container.removeEventListener("scroll", handleScroll);
     };
-  }, [scrollRef]);
+  }, [scrollRef, hasMoreChatHistory, isLoadingOlderMessages, onLoadOlderMessages]);
+
+  // 과거 적재(prepend) 직후엔 추가된 행들의 추정 높이만큼 scrollTop을 내려, 보고 있던
+  // 메시지가 화면에서 점프하지 않게 한다(행 실측 보정에 의한 미세 오차는 수용).
+  useLayoutEffect(() => {
+    const prev = prevMessagesRef.current;
+    prevMessagesRef.current = messages;
+
+    const container = scrollRef.current;
+    if (!container || prev.length === 0 || messages.length <= prev.length) return;
+
+    const prevFirstId = prev[0]?.id;
+    if (!prevFirstId || messages[0]?.id === prevFirstId) return;
+
+    const prependedCount = messages.findIndex((message) => message.id === prevFirstId);
+    if (prependedCount <= 0) return;
+
+    container.scrollTop += prependedCount * (ESTIMATED_ROW_HEIGHT + ROW_GAP);
+  }, [messages, scrollRef]);
 
   useLayoutEffect(() => {
     if (isInitialMount.current) {
@@ -93,9 +131,18 @@ export function LiveChatMessageList({
             style={{ transform: `translateY(${item.start}px)` }}
           >
             {item.index === 0 ? (
-              <p className="border-border bg-muted/70 text-muted-foreground rounded-lg border px-3 py-2 text-center text-xs leading-relaxed font-semibold whitespace-pre-line">
-                {LIVE_LABEL.chatFilterNotice}
-              </p>
+              // 행 0: 과거가 더 남았으면 적재 상태 표시, 히스토리 끝(또는 미사용)이면 필터링 안내.
+              hasMoreChatHistory ? (
+                <div className="flex h-8 items-center justify-center">
+                  {isLoadingOlderMessages ? (
+                    <Spinner className="text-muted-foreground size-4" />
+                  ) : null}
+                </div>
+              ) : (
+                <p className="border-border bg-muted/70 text-muted-foreground rounded-lg border px-3 py-2 text-center text-xs leading-relaxed font-semibold whitespace-pre-line">
+                  {LIVE_LABEL.chatFilterNotice}
+                </p>
+              )
             ) : (
               <MessageItem message={messages[item.index - 1]} cleanbotEnabled={cleanbotEnabled} />
             )}

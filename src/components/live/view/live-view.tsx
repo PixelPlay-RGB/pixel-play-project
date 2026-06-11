@@ -39,8 +39,10 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     lastBroadcast,
     endedElapsedSeconds,
     creator,
-    hadLiveBroadcast,
     messages,
+    loadOlderMessages,
+    isLoadingOlderMessages,
+    hasMoreChatHistory,
     donations,
     polls,
     isPollsLoading,
@@ -143,12 +145,6 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     );
   }
 
-  // 방송 종료/오프라인: 시청 셸은 유지하고 송출 자리는 종료 화면, 채팅은 입력만 막는다.
-  const isEnded = !broadcast;
-  // 처음부터 종료된 방송(재진입·새로고침)일 때만 채팅 본문 전체를 오버레이로 덮는다.
-  // 시청 중 종료(hadLiveBroadcast)면 그동안 받은 메시지를 그대로 두고 입력만 비활성화한다.
-  const showChatEndedOverlay = isEnded && !hadLiveBroadcast;
-
   return (
     <>
       <div
@@ -206,6 +202,9 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
                       onFollow={handleFollow}
                       isFollowing={isFollowing}
                       isFollowPending={isFollowPending}
+                      onLoadOlderMessages={loadOlderMessages}
+                      isLoadingOlderMessages={isLoadingOlderMessages}
+                      hasMoreChatHistory={hasMoreChatHistory}
                     />
                   )}
                 />
@@ -314,8 +313,9 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
               isFollowPending={isFollowPending}
               onCollapse={broadcast ? collapseDesktopChat : undefined}
               collapseButtonRef={collapseChatButtonRef}
-              isEnded={isEnded}
-              showEndedOverlay={showChatEndedOverlay}
+              onLoadOlderMessages={loadOlderMessages}
+              isLoadingOlderMessages={isLoadingOlderMessages}
+              hasMoreChatHistory={hasMoreChatHistory}
             />
           </aside>
         </div>

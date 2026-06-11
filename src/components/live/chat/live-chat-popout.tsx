@@ -21,7 +21,11 @@ export function LiveChatPopout({ creatorId }: Props) {
     chatRuleText,
     isLoading,
     broadcast,
+    creator,
     messages,
+    loadOlderMessages,
+    isLoadingOlderMessages,
+    hasMoreChatHistory,
     donations,
     polls,
     isPollsLoading,
@@ -62,7 +66,8 @@ export function LiveChatPopout({ creatorId }: Props) {
     );
   }
 
-  if (!broadcast) {
+  // 채널 자체가 없을 때만 안내로 끝낸다 — 채팅은 채널 단위(#111)라 방송 외에도 열린다.
+  if (!broadcast && !creator) {
     return (
       <div className="live-overlay-root live-popout-root bg-background flex h-dvh min-h-0 w-full items-center justify-center overflow-hidden">
         <p className="text-muted-foreground text-sm">{LIVE_LABEL.broadcastOffline}</p>
@@ -73,12 +78,14 @@ export function LiveChatPopout({ creatorId }: Props) {
   return (
     <div className="live-overlay-root live-popout-root bg-background flex h-dvh min-h-0 w-full flex-col overflow-hidden">
       <div className="border-border flex h-11 shrink-0 items-center gap-2 border-b px-3">
-        <span className="bg-live text-live-foreground flex items-center gap-1 rounded-full px-1.5 py-0.5 text-xs font-bold">
-          <Radio className="size-2.5" />
-          {LIVE_LABEL.live}
-        </span>
+        {broadcast ? (
+          <span className="bg-live text-live-foreground flex items-center gap-1 rounded-full px-1.5 py-0.5 text-xs font-bold">
+            <Radio className="size-2.5" />
+            {LIVE_LABEL.live}
+          </span>
+        ) : null}
         <span className="text-foreground min-w-0 flex-1 truncate text-sm font-medium">
-          {broadcast.title}
+          {broadcast?.title ?? creator?.name}
         </span>
       </div>
 
@@ -108,6 +115,9 @@ export function LiveChatPopout({ creatorId }: Props) {
         noticeActionLabel={LIVE_LABEL.openLiveWatch}
         onNoticeAction={moveToLiveWatch}
         inputClassName="shrink-0"
+        onLoadOlderMessages={loadOlderMessages}
+        isLoadingOlderMessages={isLoadingOlderMessages}
+        hasMoreChatHistory={hasMoreChatHistory}
       />
     </div>
   );

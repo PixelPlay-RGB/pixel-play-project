@@ -50,21 +50,22 @@ export function useLiveDonationAlertOverlay(
   // 같은 렌더에서 중복 재생되는 것만 막기 위한 용도라 null로 시작합니다.
   const lastPlayedIdRef = useRef<string | null>(null);
 
+  // 후원은 채널 단위(#111) — 방송 중이 아니어도 채널 후원 알림을 실시간으로 받는다.
   useEffect(() => {
-    if (!initialSnapshot.broadcastId) {
+    if (!initialSnapshot.creatorId) {
       return;
     }
 
     const supabase = createClient();
     const channel = supabase
-      .channel(`live-donation-alert-overlay:${initialSnapshot.broadcastId}`)
+      .channel(`live-donation-alert-overlay:${initialSnapshot.creatorId}`)
       .on(
         "postgres_changes",
         {
           event: "INSERT",
           schema: "public",
           table: "live_message",
-          filter: `broadcast_id=eq.${initialSnapshot.broadcastId}`,
+          filter: `creator_id=eq.${initialSnapshot.creatorId}`,
         },
         (payload) => {
           const message = payload.new as LiveMessageRow;
@@ -89,7 +90,7 @@ export function useLiveDonationAlertOverlay(
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [initialSnapshot.broadcastId, initialSnapshot.creatorId, initialSnapshot.creatorName]);
+  }, [initialSnapshot.creatorId, initialSnapshot.creatorName]);
 
   // 알림음을 재생한 뒤(끝나면) TTS를 이어서 읽어줍니다.
   // audioSettings를 넘기면 그 설정으로 재생합니다(테스트 후원: 현재 설정값으로 재생).

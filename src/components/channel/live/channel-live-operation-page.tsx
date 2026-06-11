@@ -187,12 +187,8 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
         </div>
 
         <div className="border-border min-w-0 xl:h-full xl:min-h-0 xl:border-x">
-          <ChannelLiveChatPanel
-            key={broadcastId ?? "channel-live-chat-idle"}
-            broadcastId={broadcastId}
-            creatorId={creatorId}
-            chatRuleText={chatRuleText}
-          />
+          {/* 채팅은 채널 단위 타임라인(#111) — 방송 시작·종료에도 리마운트 없이 이어진다. */}
+          <ChannelLiveChatPanel creatorId={creatorId} chatRuleText={chatRuleText} />
         </div>
 
         <div className="min-w-0 xl:h-full xl:min-h-0 xl:overflow-y-auto">

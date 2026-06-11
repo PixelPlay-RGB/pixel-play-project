@@ -80,10 +80,8 @@ export function useLiveBroadcastView(creatorId: string) {
   ) {
     setLastBroadcast(broadcast);
   }
-  // 한 번이라도 라이브였는지(=시청 중 종료) vs 처음부터 종료된 방송 재진입 구분에 쓴다.
-  const hadLiveBroadcast = lastBroadcast !== null;
-
-  const messagesQuery = useLiveMessages(broadcast?.id ?? lastBroadcast?.id, creatorId, user?.id);
+  // 채팅은 채널 단위 타임라인(#111) — 방송 여부와 무관하게 creator 기준으로 조회·전송한다.
+  const messagesQuery = useLiveMessages(creatorId, user?.id);
   const messages = messagesQuery.messages;
 
   const pollsQuery = useLivePolls(broadcast?.id, user?.id);
@@ -169,12 +167,8 @@ export function useLiveBroadcastView(creatorId: string) {
     isAnonymous: boolean;
     idempotencyKey: string;
   }): Promise<boolean> {
-    // 최심층 가드 — UI disabled를 빠뜨린 표면이 생겨도 조용히 실패하지 않게 안내한다.
-    if (!broadcast?.id) {
-      toastAppInfo(APP_MESSAGE_CODE.info.live.broadcastEnded);
-      return false;
-    }
-    // 크리에이터는 본인 방송에 후원할 수 없다(서버도 거부하지만 즉시 명확히 안내한다).
+    // 후원도 채널 단위(#111) — 후원이 열려 있으면 방송 외 시간에도 가능하다.
+    // 크리에이터는 본인 채널에 후원할 수 없다(서버도 거부하지만 즉시 명확히 안내한다).
     if (user?.id && user.id === creatorId) {
       toastAppError(APP_MESSAGE_CODE.error.live.donationSelf);
       return false;
@@ -184,7 +178,7 @@ export function useLiveBroadcastView(creatorId: string) {
       return false;
     }
     try {
-      const result = await sendLiveDonationAction({ broadcastId: broadcast.id, ...params });
+      const result = await sendLiveDonationAction({ creatorId, ...params });
       if (result.success) {
         void queryClient.invalidateQueries({
           queryKey: QUERY_KEYS.donations.walletBalance(user?.id ?? undefined),
@@ -205,7 +199,6 @@ export function useLiveBroadcastView(creatorId: string) {
 
   const chatSession = useLiveChatSession({
     creatorId,
-    broadcastId: broadcast?.id,
     viewerChatState: watchData?.viewerChatState,
     onChatRuleAccepted: refetch,
   });
@@ -248,8 +241,11 @@ export function useLiveBroadcastView(creatorId: string) {
     lastBroadcast,
     endedElapsedSeconds,
     creator,
-    hadLiveBroadcast,
     messages,
+    // 과거 채팅 적재(무한 스크롤) — 초기 50건 이후 위로 스크롤 시 50건씩, 누적 300건에서 중단.
+    loadOlderMessages: messagesQuery.loadOlderMessages,
+    isLoadingOlderMessages: messagesQuery.isLoadingOlder,
+    hasMoreChatHistory: messagesQuery.hasMoreHistory,
     donations,
     polls: pollsQuery.polls,
     isPollsLoading: pollsQuery.isLoading,

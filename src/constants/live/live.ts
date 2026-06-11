@@ -46,7 +46,6 @@ export const LIVE_LABEL = {
   chatLoginPlaceholder: "로그인 후 채팅할 수 있습니다.",
   chatPlaceholder: "채팅을 입력해보세요!",
   chatSend: "채팅 전송",
-  chatEndedPlaceholder: "방송이 종료되어 채팅할 수 없습니다.",
   loginRequired: "로그인이 필요합니다.",
   loginDescription: "라이브 채팅에 참여하려면 로그인해 주세요.",
   loginPromptSummaryTitle: "로그인 후 이용할 수 있어요",
@@ -101,8 +100,11 @@ export const LIVE_DONATION_MIN_AMOUNT = 1000;
 export const LIVE_DONATION_AMOUNTS = [1000, 3000, 5000, 10000, 50000] as const;
 export const LIVE_CHAT_MESSAGE_MAX_LENGTH = 2000;
 export const LIVE_DONATION_MESSAGE_MAX_LENGTH = 300;
-// 채팅 메시지 목록에 유지하는 최대 건수(쿼리 limit + 낙관적/realtime 추가 시 slice 기준).
-export const LIVE_MESSAGE_LIMIT = 100;
+// 채팅 로딩 정책(#111 확정): 첫 진입 50건 → 위로 스크롤 시 50건씩 과거 적재 → 누적 300건 도달 시 중단.
+// HISTORY_CAP은 낙관적/realtime 추가 시 slice 기준으로도 쓴다(과거 적재분은 새 메시지에 밀려 정리).
+export const LIVE_MESSAGE_INITIAL_LIMIT = 50;
+export const LIVE_MESSAGE_PAGE_SIZE = 50;
+export const LIVE_MESSAGE_HISTORY_CAP = 300;
 
 export const LIVE_DONATION_LABEL = {
   title: "후원하기",
