@@ -2,24 +2,11 @@
 // 투표 참여와 라이브 상호작용 결과를 채팅 패널 액션 팝오버로 제공합니다.
 
 import { useId, useState, type RefObject } from "react";
-import { Check, Crown, FerrisWheel, Sparkles, Trophy } from "lucide-react";
+import { Check, Crown, FerrisWheel, Sparkles, Trophy, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Popover,
-  PopoverContent,
-  PopoverDescription,
-  PopoverHeader,
-  PopoverTitle,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { LIVE_LABEL, LIVE_VOTE_LABEL } from "@/constants/live/live";
 import { cn } from "@/lib/utils";
 import { formatCount } from "@/utils/live/live-chat";
@@ -169,7 +156,7 @@ function StatusPill({ children, tone }: { children: string; tone: "brand" | "liv
   return (
     <span
       className={cn(
-        "inline-flex rounded-full px-2 py-0.5 text-[11px] font-bold",
+        "inline-flex shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold",
         tone === "brand" && "bg-brand/10 text-brand",
         tone === "live" && "bg-live/10 text-live",
         tone === "muted" && "bg-muted text-muted-foreground",
@@ -177,6 +164,41 @@ function StatusPill({ children, tone }: { children: string; tone: "brand" | "liv
     >
       {children}
     </span>
+  );
+}
+
+function InteractionHeader({
+  onClose,
+  status,
+  title,
+  titleId,
+  tone,
+}: {
+  onClose: () => void;
+  status: string;
+  title: string;
+  titleId?: string;
+  tone: "brand" | "live" | "muted";
+}) {
+  return (
+    <div className="border-border flex items-center justify-between gap-3 border-t border-dashed pt-3 pb-3">
+      <p id={titleId} className="text-foreground min-w-0 flex-1 text-sm font-bold">
+        {title}
+      </p>
+      <div className="flex shrink-0 items-center gap-2">
+        <StatusPill tone={tone}>{status}</StatusPill>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="text-muted-foreground hover:text-foreground size-7"
+          onClick={onClose}
+        >
+          <X className="size-4" />
+          <span className="sr-only">{LIVE_LABEL.close}</span>
+        </Button>
+      </div>
+    </div>
   );
 }
 
@@ -235,12 +257,13 @@ function ActiveVoteCard({
 
   return (
     <div className="flex flex-col overflow-hidden">
-      <div className="border-border flex flex-col gap-2 border-t border-dashed pt-3 pb-3">
-        <StatusPill tone="brand">{LIVE_VOTE_LABEL.active}</StatusPill>
-        <p id={titleId} className="text-foreground text-sm font-bold">
-          {activePoll.title}
-        </p>
-      </div>
+      <InteractionHeader
+        title="투표"
+        titleId={titleId}
+        status={LIVE_VOTE_LABEL.active}
+        tone="brand"
+        onClose={onClose}
+      />
       <div
         role="radiogroup"
         aria-labelledby={titleId}
@@ -296,15 +319,17 @@ function ActiveVoteCard({
   );
 }
 
-function ParticipatedCard({ poll }: { poll: LivePoll }) {
+function ParticipatedCard({ onClose, poll }: { onClose: () => void; poll: LivePoll }) {
   const selectedOption = getSelectedOption(poll);
 
   return (
     <div className="flex flex-col overflow-hidden">
-      <div className="border-border flex flex-col gap-2 border-t border-dashed pt-3 pb-3">
-        <StatusPill tone="brand">{LIVE_VOTE_LABEL.participatedStatus}</StatusPill>
-        <p className="text-foreground text-sm font-bold">{poll.title}</p>
-      </div>
+      <InteractionHeader
+        title="투표"
+        status={LIVE_VOTE_LABEL.active}
+        tone="brand"
+        onClose={onClose}
+      />
       <div className="border-border flex flex-col gap-2 border-t border-dashed py-3">
         {poll.options.map((option, index) => {
           const isSelected = option.id === poll.userVotedOptionId;
@@ -351,10 +376,12 @@ function VoteResults({ poll, onClose }: { onClose: () => void; poll: LivePoll })
 
   return (
     <div className="flex flex-col overflow-hidden">
-      <div className="border-border flex flex-col gap-2 border-t border-dashed pt-3 pb-3">
-        <StatusPill tone="brand">{LIVE_VOTE_LABEL.ended}</StatusPill>
-        <p className="text-foreground text-sm font-bold">{poll.title}</p>
-      </div>
+      <InteractionHeader
+        title="투표"
+        status={LIVE_VOTE_LABEL.ended}
+        tone="muted"
+        onClose={onClose}
+      />
       <div className="border-border flex flex-col gap-2 border-t border-dashed py-3">
         {poll.options.map((option) => {
           const percent = getVotePercent(option.count, total);
@@ -503,16 +530,8 @@ function InteractionNoticeCard({
   const [isJoiningDraw, setIsJoiningDraw] = useState(false);
   const isDraw = notice.type === "draw";
   const Icon = notice.type === "draw" ? Trophy : FerrisWheel;
-  const title = isDraw
-    ? isActive
-      ? LIVE_VOTE_LABEL.drawActiveTitle
-      : LIVE_VOTE_LABEL.drawResult
-    : isActive
-      ? LIVE_VOTE_LABEL.rouletteActiveTitle
-      : LIVE_VOTE_LABEL.rouletteResult;
-  const description = isDraw
-    ? LIVE_VOTE_LABEL.drawActiveDescription
-    : LIVE_VOTE_LABEL.rouletteActiveDescription;
+  const title = isDraw ? "추첨" : "룰렛";
+  const status = isActive ? LIVE_VOTE_LABEL.active : LIVE_VOTE_LABEL.ended;
   const detail = notice.winnerNames?.join(", ") ?? notice.resultLabel ?? notice.content;
   const canJoinDraw = isActive && notice.type === "draw";
   const hasJoined = Boolean(notice.hasJoined) || joinedDrawNoticeId === notice.id;
@@ -542,26 +561,21 @@ function InteractionNoticeCard({
 
   return (
     <div className="flex flex-col overflow-hidden">
+      <InteractionHeader
+        title={title}
+        status={status}
+        tone={isActive ? "brand" : "muted"}
+        onClose={onClose}
+      />
       {!isDraw ? (
         <>
-          <div className="border-border flex flex-col gap-3 border-t border-dashed pt-3 pb-3">
-            <StatusPill tone={isActive ? "brand" : "muted"}>
-              {isActive ? LIVE_VOTE_LABEL.active : LIVE_VOTE_LABEL.ended}
-            </StatusPill>
-            <div className="flex items-center gap-2">
+          <div className="border-border border-t border-dashed py-3">
+            <div className="flex items-center gap-2 pb-3">
               <span className="bg-brand/10 text-brand flex size-9 shrink-0 items-center justify-center rounded-full">
                 <Icon className="size-5" />
               </span>
-              <div className="min-w-0">
-                <p className="text-foreground text-sm font-bold">{title}</p>
-                {isActive ? (
-                  <p className="text-muted-foreground text-xs leading-relaxed">{description}</p>
-                ) : null}
-              </div>
+              <p className="text-foreground min-w-0 text-sm font-bold wrap-break-word">{detail}</p>
             </div>
-          </div>
-          <div className="border-border border-t border-dashed py-3">
-            <p className="text-foreground text-sm font-bold wrap-break-word">{detail}</p>
             {notice.participantCount !== undefined ? (
               <p className="text-muted-foreground mt-1 text-xs">
                 {formatCount(notice.participantCount)}
@@ -662,10 +676,12 @@ function VoteBody({
   if (!isLoggedIn) {
     return (
       <div className="flex flex-col overflow-hidden">
-        <div className="border-border flex flex-col gap-2 border-t border-dashed pt-3 pb-3">
-          <StatusPill tone="brand">{LIVE_VOTE_LABEL.active}</StatusPill>
-          <p className="text-foreground text-sm font-bold">{pollInteraction.poll.title}</p>
-        </div>
+        <InteractionHeader
+          title="투표"
+          status={LIVE_VOTE_LABEL.active}
+          tone="brand"
+          onClose={onClose}
+        />
         <p className="border-border text-muted-foreground border-t border-dashed py-3 text-sm">
           {LIVE_LABEL.loginDescription}
         </p>
@@ -686,7 +702,7 @@ function VoteBody({
   }
 
   return pollInteraction.poll.userVotedOptionId ? (
-    <ParticipatedCard poll={pollInteraction.poll} />
+    <ParticipatedCard poll={pollInteraction.poll} onClose={onClose} />
   ) : (
     <ActiveVoteCard activePoll={pollInteraction.poll} onVote={onVote} onClose={onClose} />
   );
@@ -712,56 +728,8 @@ function getTriggerLabel(currentInteraction: CurrentInteraction) {
   return LIVE_VOTE_LABEL.interactionTitle;
 }
 
-function getHeaderTitle(currentInteraction: CurrentInteraction) {
-  if (currentInteraction.type === "poll") {
-    return currentInteraction.mode === "active"
-      ? LIVE_VOTE_LABEL.title
-      : LIVE_VOTE_LABEL.resultTitle;
-  }
-
-  if (currentInteraction.type === "draw") {
-    return currentInteraction.mode === "active"
-      ? LIVE_VOTE_LABEL.drawActiveTitle
-      : LIVE_VOTE_LABEL.drawResult;
-  }
-
-  if (currentInteraction.type === "roulette") {
-    return currentInteraction.mode === "active"
-      ? LIVE_VOTE_LABEL.rouletteActiveTitle
-      : LIVE_VOTE_LABEL.rouletteResult;
-  }
-
-  return LIVE_VOTE_LABEL.interactionTitle;
-}
-
-function getHeaderDescription(currentInteraction: CurrentInteraction) {
-  if (currentInteraction.type === "poll") {
-    return currentInteraction.mode === "active"
-      ? LIVE_VOTE_LABEL.description
-      : LIVE_VOTE_LABEL.resultDescription;
-  }
-
-  if (currentInteraction.type === "draw") {
-    return currentInteraction.mode === "active"
-      ? LIVE_VOTE_LABEL.drawActiveDescription
-      : LIVE_VOTE_LABEL.interactionResultDescription;
-  }
-
-  if (currentInteraction.type === "roulette") {
-    return currentInteraction.mode === "active"
-      ? LIVE_VOTE_LABEL.rouletteActiveDescription
-      : LIVE_VOTE_LABEL.interactionResultDescription;
-  }
-
-  return LIVE_VOTE_LABEL.interactionDescription;
-}
-
 function shouldPromptLoginOnOpen(currentInteraction: CurrentInteraction) {
   return currentInteraction.type === "poll" && currentInteraction.mode === "active";
-}
-
-function shouldShowInteractionHeader(currentInteraction: CurrentInteraction) {
-  return !(currentInteraction.type === "draw" && currentInteraction.mode === "active");
 }
 
 export function LiveVotePopover({
@@ -792,9 +760,6 @@ export function LiveVotePopover({
   // 진행 중·종료 기록이 모두 없으면 열어도 보여줄 것이 없으므로 트리거를 비활성화한다.
   const hasInteraction = currentInteraction.type !== "empty";
   const triggerLabel = getTriggerLabel(currentInteraction);
-  const headerTitle = getHeaderTitle(currentInteraction);
-  const headerDescription = getHeaderDescription(currentInteraction);
-  const showHeader = shouldShowInteractionHeader(currentInteraction);
 
   function handleOpenChange(next: boolean) {
     if (next && !isLoggedIn && shouldPromptLoginOnOpen(currentInteraction)) {
@@ -841,14 +806,8 @@ export function LiveVotePopover({
           <DialogContent
             container={portalContainer}
             className="max-h-[calc(100vh-1rem)] gap-4 overflow-y-auto"
-            showCloseButton
+            showCloseButton={false}
           >
-            {showHeader ? (
-              <DialogHeader>
-                <DialogTitle>{headerTitle}</DialogTitle>
-                <DialogDescription>{headerDescription}</DialogDescription>
-              </DialogHeader>
-            ) : null}
             {body}
           </DialogContent>
         </Dialog>
@@ -883,12 +842,6 @@ export function LiveVotePopover({
         // 입력바(anchor) 풀폭 + 하단 직각으로 입력 섹션과 한 덩어리처럼 이어 붙인다(후원 popover와 동일).
         className="max-h-[calc(100vh-1rem)] w-(--anchor-width) overflow-y-auto rounded-b-none"
       >
-        {showHeader ? (
-          <PopoverHeader>
-            <PopoverTitle>{headerTitle}</PopoverTitle>
-            <PopoverDescription>{headerDescription}</PopoverDescription>
-          </PopoverHeader>
-        ) : null}
         {body}
       </PopoverContent>
     </Popover>
