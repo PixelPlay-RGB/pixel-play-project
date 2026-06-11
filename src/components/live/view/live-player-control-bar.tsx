@@ -43,6 +43,9 @@ interface Props {
   qualityLevels: HlsQualityLevel[];
   selectedQualityLevel: number;
   onSelectQualityLevel: (index: number) => void;
+  // 실시간 지점 여부(일시정지·시킹으로 뒤처지면 false)와 실시간 복귀 액션.
+  isAtLiveEdge: boolean;
+  onSeekToLive: () => void;
 }
 
 export function LivePlayerControlBar({
@@ -65,6 +68,8 @@ export function LivePlayerControlBar({
   qualityLevels,
   selectedQualityLevel,
   onSelectQualityLevel,
+  isAtLiveEdge,
+  onSeekToLive,
 }: Props) {
   return (
     <div className="flex items-center gap-2">
@@ -95,28 +100,45 @@ export function LivePlayerControlBar({
         onVolumeChange={onVolumeChange}
       />
 
-      {/* 전체화면에선 LIVE 뱃지가 우상단 스택으로 이동하므로 하단에선 통째로 생략한다. */}
-      {!isFullscreen ? (
-        <span className="ml-1 flex items-center gap-1.5 font-mono text-xs font-bold text-white">
-          <span className="text-live flex items-center gap-1">
-            <Radio className="size-3 motion-safe:animate-pulse" />
+      <span className="ml-1 flex items-center gap-1.5 font-mono text-xs font-bold text-white">
+        {/* LIVE는 실시간 여부 표시 겸 복귀 버튼 — 실시간이면 코랄+점멸, 일시정지·지연이면 회색(유튜브식). */}
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <button
+                type="button"
+                aria-label={
+                  isAtLiveEdge ? LIVE_LABEL.playerAtLiveEdge : LIVE_LABEL.playerGoToLiveEdge
+                }
+                className={cn(
+                  "flex cursor-pointer items-center gap-1 transition-colors",
+                  isAtLiveEdge ? "text-live" : "text-white/50 hover:text-white/80",
+                )}
+                onClick={onSeekToLive}
+              />
+            }
+          >
+            <Radio className={cn("size-3", isAtLiveEdge && "motion-safe:animate-pulse")} />
             {LIVE_LABEL.live}
-          </span>
-          {/* 몰입 모드에선 시간·시청자 수가 상단 오버레이로 이동하므로 하단에선 생략한다. */}
-          {!isImmersive ? (
-            <>
-              <span>· {elapsedText}</span>
-              <span className="flex items-center gap-1">
-                ·
-                <span className="text-brand flex items-center gap-1">
-                  <Users className="size-3" />
-                  {formatCount(viewerCount)}
-                </span>
+          </TooltipTrigger>
+          <TooltipContent>
+            {isAtLiveEdge ? LIVE_LABEL.playerAtLiveEdge : LIVE_LABEL.playerGoToLiveEdge}
+          </TooltipContent>
+        </Tooltip>
+        {/* 몰입 모드(극장·전체화면)에선 시간·시청자 수가 상단 오버레이로 이동하므로 하단에선 생략한다. */}
+        {!isImmersive ? (
+          <>
+            <span>· {elapsedText}</span>
+            <span className="flex items-center gap-1">
+              ·
+              <span className="text-brand flex items-center gap-1">
+                <Users className="size-3" />
+                {formatCount(viewerCount)}
               </span>
-            </>
-          ) : null}
-        </span>
-      ) : null}
+            </span>
+          </>
+        ) : null}
+      </span>
 
       <div className="ml-auto flex items-center gap-1">
         <LivePlayerQualityMenu

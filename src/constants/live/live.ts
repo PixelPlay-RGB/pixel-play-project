@@ -30,6 +30,8 @@ export const LIVE_LABEL = {
   playerTheater: "극장 모드",
   playerTheaterExit: "기본 모드",
   playerQualityAuto: "자동",
+  playerAtLiveEdge: "실시간 방송 중",
+  playerGoToLiveEdge: "실시간으로 이동",
   viewers: "명 시청 중",
   followers: "팔로워",
   broadcasts: "방송",

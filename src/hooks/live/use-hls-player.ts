@@ -10,6 +10,9 @@ import { useCallback, useEffect, useRef, useState, type RefObject } from "react"
 const HLS_RETRY_DELAY_MS = 2000;
 // 짧은 버퍼 히컵(라이브 지터)엔 대기 화면을 띄우지 않고, 지속 stall일 때만 'waiting'으로 되돌린다.
 const STALL_RESET_DELAY_MS = 2500;
+// 라이브 엣지 판정 — 일시정지 중이거나 실시간 지점에서 이 거리(초) 이상 뒤처지면 "지연"으로 본다.
+const LIVE_EDGE_BEHIND_THRESHOLD_S = 4;
+const LIVE_EDGE_POLL_MS = 1000;
 
 // 'waiting' = 방송은 시작됐지만 아직 송출 프레임이 도착하지 않음(OBS 미송출/조인 지연/끊김).
 // 'playing' = 첫 프레임이 디코드돼 실제 영상이 보이기 시작함. 컨트롤의 isPlaying(일시정지 여부)과는 다른 신호.
@@ -33,6 +36,10 @@ interface UseHlsPlayerResult {
   setLevel: (index: number) => void;
   // 실제 송출 프레임 도착 여부. 'waiting'이면 송출 대기 오버레이를 띄운다.
   playbackState: LivePlaybackState;
+  // 지금 보는 화면이 실시간 지점인지(일시정지·시킹으로 뒤처지면 false). LIVE 버튼 상태 표시용.
+  isAtLiveEdge: boolean;
+  // 실시간 지점으로 점프하고 재생을 재개한다.
+  seekToLiveEdge: () => void;
 }
 
 export function useHlsPlayer({
@@ -45,6 +52,18 @@ export function useHlsPlayer({
   const [selectedLevel, setSelectedLevel] = useState(-1);
   // SSR=첫 클라 렌더 일치를 위해 결정적으로 'waiting'으로 시작한다(하이드레이션 불일치 방지).
   const [playbackState, setPlaybackState] = useState<LivePlaybackState>("waiting");
+  const [isAtLiveEdge, setIsAtLiveEdge] = useState(true);
+
+  // 실시간 지점(라이브 엣지) 위치 — hls.js는 권장 동기 위치, 네이티브 HLS(Safari)는 seekable 끝.
+  const getLiveEdgePosition = useCallback((video: HTMLVideoElement): number | null => {
+    const hlsPosition = hlsRef.current?.liveSyncPosition;
+    if (typeof hlsPosition === "number" && Number.isFinite(hlsPosition)) {
+      return hlsPosition;
+    }
+
+    const seekable = video.seekable;
+    return seekable.length > 0 ? seekable.end(seekable.length - 1) : null;
+  }, []);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -174,6 +193,34 @@ export function useHlsPlayer({
     };
   }, [videoRef, enabled]);
 
+  // 라이브 엣지 추적 — 일시정지하거나 실시간에서 임계값 이상 뒤처지면 "지연"으로 표시한다.
+  // 같은 값이면 setState가 리렌더를 만들지 않으므로 1초 폴링 비용은 무시할 수준이다.
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !enabled) return;
+
+    const intervalId = setInterval(() => {
+      const edge = getLiveEdgePosition(video);
+      const isBehind = edge !== null && edge - video.currentTime > LIVE_EDGE_BEHIND_THRESHOLD_S;
+      setIsAtLiveEdge(!video.paused && !isBehind);
+    }, LIVE_EDGE_POLL_MS);
+
+    return () => clearInterval(intervalId);
+  }, [videoRef, enabled, getLiveEdgePosition]);
+
+  // 실시간 지점으로 점프하고 재생을 재개한다(폴링을 기다리지 않고 상태도 즉시 반영).
+  const seekToLiveEdge = useCallback(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const edge = getLiveEdgePosition(video);
+    if (edge !== null) {
+      video.currentTime = edge;
+    }
+    void video.play().catch(() => {});
+    setIsAtLiveEdge(true);
+  }, [videoRef, getLiveEdgePosition]);
+
   // -1 = 자동. 사용자가 고른 레벨은 즉시 반영하고 hls 인스턴스에도 적용한다.
   const setLevel = useCallback((index: number) => {
     const hls = hlsRef.current;
@@ -182,5 +229,5 @@ export function useHlsPlayer({
     setSelectedLevel(index);
   }, []);
 
-  return { levels, selectedLevel, setLevel, playbackState };
+  return { levels, selectedLevel, setLevel, playbackState, isAtLiveEdge, seekToLiveEdge };
 }

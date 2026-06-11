@@ -140,11 +140,12 @@ export function LiveVideoPlayer({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [togglePlay, toggleMute, toggleFullscreen, onToggleTheater, isFullscreen]);
 
-  const { levels, selectedLevel, setLevel, playbackState } = useHlsPlayer({
-    videoRef,
-    src: hlsSrc ?? "",
-    enabled: !!hlsSrc,
-  });
+  const { levels, selectedLevel, setLevel, playbackState, isAtLiveEdge, seekToLiveEdge } =
+    useHlsPlayer({
+      videoRef,
+      src: hlsSrc ?? "",
+      enabled: !!hlsSrc,
+    });
 
   const isFullscreenChatOpen = isFullscreen && isFsChatOpen;
 
@@ -238,6 +239,8 @@ export function LiveVideoPlayer({
             qualityLevels={levels}
             selectedQualityLevel={selectedLevel}
             onSelectQualityLevel={setLevel}
+            isAtLiveEdge={isAtLiveEdge}
+            onSeekToLive={seekToLiveEdge}
           />
         </div>
       ) : null}
