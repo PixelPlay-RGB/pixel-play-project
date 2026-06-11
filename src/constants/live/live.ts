@@ -86,6 +86,10 @@ export const LIVE_LABEL = {
   bannedWordNotice: "금칙어가 포함되어 메시지가 전송되지 않았습니다.",
 } as const;
 
+// 익명 시청자 식별용 HttpOnly 쿠키 이름 — 서버가 발급·검증한다(#97 A 트랙).
+// 쿠키 이름 상수를 모듈 로컬에 두지 않고 여기서 관리한다(OAUTH_NEXT_COOKIE 선례).
+export const ANON_VIEWER_COOKIE = "pp_anon_viewer";
+
 // 어두운 플레이어 배경 위 아이콘 버튼 공통 스타일(컨트롤 바·음량·화질 공유).
 export const LIVE_PLAYER_ICON_BUTTON_CLASS = "text-white/80 hover:bg-white/10 hover:text-white";
 
