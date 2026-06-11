@@ -66,7 +66,8 @@ function ChatMessageItem({ message }: { message: LiveChatOverlayMessage }) {
 
   return (
     // OBS 송출 화면 위에서 글자가 묻히지 않도록 배경은 완전 불투명으로 깐다.
-    <div className="inline-flex max-w-130 items-start gap-1.5 rounded-xl bg-zinc-950 px-3.5 py-2 drop-shadow">
+    // shrink-0: 스택 공간이 부족해도 박스가 세로로 눌리지 않게 한다(후원 카드와 동일 보호).
+    <div className="inline-flex max-w-130 shrink-0 items-start gap-1.5 rounded-xl bg-zinc-950 px-3.5 py-2 drop-shadow">
       <MessagePrefix role={message.role} />
       <p className="min-w-0 text-3xl leading-9 font-semibold wrap-break-word drop-shadow-sm">
         <span

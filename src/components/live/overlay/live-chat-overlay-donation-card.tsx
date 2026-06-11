@@ -15,7 +15,9 @@ export function LiveChatOverlayDonationCard({ author, amount, content }: Props) 
 
   return (
     // 일반 채팅 박스와 같은 완전 불투명 바탕 위에 brand→live 그라데이션을 얹는다.
-    <div className="border-live/25 relative w-full max-w-130 overflow-hidden rounded-xl border bg-zinc-950 px-4 py-3 shadow-sm drop-shadow">
+    // overflow-hidden(그라데이션 클립)이 flex 아이템의 자동 최소 높이 보호를 없애 스택 공간이
+    // 부족하면 카드가 세로로 눌리므로, shrink-0으로 눌림을 금지한다(넘친 위 항목은 스택이 제거).
+    <div className="border-live/25 relative w-full max-w-130 shrink-0 overflow-hidden rounded-xl border bg-zinc-950 px-4 py-3 shadow-sm drop-shadow">
       <div aria-hidden className="from-brand/15 to-live/15 absolute inset-0 bg-linear-to-r" />
       {/* 좁은 소스 폭에서는 금액 pill이 닉네임을 짓누르지 않게 줄바꿈으로 내려간다. */}
       <div className="relative flex flex-wrap items-center gap-x-4 gap-y-1">
