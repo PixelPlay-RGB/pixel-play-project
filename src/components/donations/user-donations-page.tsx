@@ -47,13 +47,13 @@ export function UserDonationsPage({ snapshot, errorCode, paymentResultCode }: Pr
 
 function DonationBalanceHero({ snapshot }: { snapshot: UserDonationSnapshot }) {
   return (
-    <section className="from-live via-live/85 to-brand relative isolate min-h-44 overflow-hidden rounded-xl bg-gradient-to-br px-5 py-7 text-white shadow-sm sm:min-h-48 sm:px-7 sm:py-9">
+    <section className="from-live/20 via-live/20 to-brand relative isolate min-h-44 overflow-hidden rounded-xl bg-gradient-to-br px-5 py-7 text-white shadow-sm sm:min-h-48 sm:px-7 sm:py-9">
       <span
         className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.12)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.12)_1px,transparent_1px)] [mask-image:linear-gradient(90deg,transparent_0%,rgba(0,0,0,0.08)_18%,rgba(0,0,0,0.72)_58%,black_100%)] bg-[length:32px_32px]"
         aria-hidden
       />
       <span
-        className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,color-mix(in_srgb,var(--live)_94%,transparent)_0%,color-mix(in_srgb,var(--live)_80%,transparent)_20%,color-mix(in_srgb,var(--live)_42%,transparent)_42%,transparent_70%)]"
+        className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,color-mix(in_srgb,var(--live)_20%,transparent)_0%,color-mix(in_srgb,var(--live)_20%,transparent)_20%,color-mix(in_srgb,var(--live)_20%,transparent)_42%,transparent_70%)]"
         aria-hidden
       />
 
