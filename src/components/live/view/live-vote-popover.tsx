@@ -148,10 +148,6 @@ function getMaxCount(options: LivePollOption[]): number {
   return options.reduce((max, option) => Math.max(max, option.count), 0);
 }
 
-function getSelectedOption(poll: LivePoll): LivePollOption | null {
-  return poll.options.find((option) => option.id === poll.userVotedOptionId) ?? null;
-}
-
 function StatusPill({ children, tone }: { children: string; tone: "brand" | "live" | "muted" }) {
   return (
     <span
@@ -181,7 +177,7 @@ function InteractionHeader({
   tone: "brand" | "live" | "muted";
 }) {
   return (
-    <div className="border-border flex items-center justify-between gap-3 border-t border-dashed pt-3 pb-3">
+    <div className="flex items-center justify-between gap-3 pb-3">
       <p id={titleId} className="text-foreground min-w-0 flex-1 text-sm font-bold">
         {title}
       </p>
@@ -199,6 +195,15 @@ function InteractionHeader({
         </Button>
       </div>
     </div>
+  );
+}
+
+function getVoteOptionClass(isSelected: boolean) {
+  return cn(
+    "border-border relative flex h-9 w-full items-center justify-start overflow-hidden rounded-md border px-3 text-sm font-bold transition-all",
+    isSelected
+      ? "border-brand bg-brand/10 text-brand shadow-[inset_0_0_0_1px_var(--brand)]"
+      : "hover:border-brand/40",
   );
 }
 
@@ -249,10 +254,8 @@ function ActiveVoteCard({
     if (!selectedOption || isVoting) return;
 
     setIsVoting(true);
-    const success = await onVote(activePoll.id, selectedOption);
+    await onVote(activePoll.id, selectedOption);
     setIsVoting(false);
-
-    if (success) onClose();
   }
 
   return (
@@ -282,12 +285,7 @@ function ActiveVoteCard({
               aria-checked={isSelected}
               disabled={isVoting}
               onClick={() => setSelectedOption(option.id)}
-              className={cn(
-                "relative h-9 w-full justify-start overflow-hidden px-3 text-sm font-bold transition-all",
-                isSelected
-                  ? "border-brand bg-brand/10 text-brand shadow-[inset_0_0_0_1px_var(--brand)]"
-                  : "hover:border-brand/40",
-              )}
+              className={getVoteOptionClass(isSelected)}
             >
               <VoteOptionBar percent={percent} emphasized={isSelected} />
               <span className="relative flex min-w-0 flex-1 items-center gap-2">
@@ -320,7 +318,7 @@ function ActiveVoteCard({
 }
 
 function ParticipatedCard({ onClose, poll }: { onClose: () => void; poll: LivePoll }) {
-  const selectedOption = getSelectedOption(poll);
+  const total = poll.totalCount;
 
   return (
     <div className="flex flex-col overflow-hidden">
@@ -333,35 +331,33 @@ function ParticipatedCard({ onClose, poll }: { onClose: () => void; poll: LivePo
       <div className="border-border flex flex-col gap-2 border-t border-dashed py-3">
         {poll.options.map((option, index) => {
           const isSelected = option.id === poll.userVotedOptionId;
+          const percent = getVotePercent(option.count, total);
 
           return (
-            <div
-              key={option.id}
-              className={cn(
-                "border-border flex h-9 items-center gap-2 rounded-lg border px-3 text-sm font-bold",
-                isSelected &&
-                  "border-brand bg-brand/10 text-brand shadow-[inset_0_0_0_1px_var(--brand)]",
-              )}
-            >
-              <span className="bg-brand/10 text-brand flex size-5 shrink-0 items-center justify-center rounded-full text-xs">
-                {index + 1}
-              </span>
-              <span className="min-w-0 flex-1 truncate">
-                {isSelected ? `${option.label}${LIVE_VOTE_LABEL.selectedSuffix}` : option.label}
+            <div key={option.id} className={getVoteOptionClass(isSelected)}>
+              <VoteOptionBar percent={percent} emphasized={isSelected} />
+              <span className="relative flex min-w-0 flex-1 items-center gap-2">
+                <span className="bg-brand/10 text-brand flex size-5 shrink-0 items-center justify-center rounded-full text-xs">
+                  {index + 1}
+                </span>
+                <span className="min-w-0 flex-1 truncate">
+                  {isSelected ? `${option.label}${LIVE_VOTE_LABEL.selectedSuffix}` : option.label}
+                </span>
               </span>
               {isSelected ? <Check className="size-4 shrink-0" /> : null}
             </div>
           );
         })}
       </div>
-      <div className="border-border flex flex-col gap-3 border-t border-dashed pt-3">
-        <p className="text-muted-foreground text-xs font-semibold">
-          {selectedOption ? LIVE_VOTE_LABEL.waitForResult : LIVE_VOTE_LABEL.waitForResultFallback}
-        </p>
+      <div className="border-border flex items-center justify-between gap-3 border-t border-dashed pt-3">
+        <span className="text-muted-foreground text-xs font-semibold tabular-nums">
+          {formatCount(total)}
+          {LIVE_VOTE_LABEL.liveParticipantsSuffix}
+        </span>
         <Button
           type="button"
           disabled
-          className="bg-brand/80 text-brand-foreground h-9 w-full text-xs font-bold"
+          className="bg-brand/80 text-brand-foreground h-9 px-4 text-xs font-bold"
         >
           {LIVE_VOTE_LABEL.participated}
         </Button>
