@@ -77,8 +77,17 @@ export interface ChannelLiveActiveBroadcast {
 export interface ChannelLiveStudioSnapshot {
   activeBroadcast: ChannelLiveActiveBroadcast | null;
   creatorId: string;
+  recentDonations: ChannelLiveRecentDonation[];
   settings: ChannelLiveStudioSettings;
   streamPath: string;
+}
+
+export interface ChannelLiveRecentDonation {
+  amount: number;
+  broadcastId: string | null;
+  createdAt: string;
+  donorNickname: string;
+  id: string;
 }
 
 export interface ChannelLiveChatMessage {
@@ -163,6 +172,10 @@ function readStringArray(value: unknown) {
   return Array.isArray(value)
     ? value.filter((item): item is string => typeof item === "string")
     : [];
+}
+
+function readRecordArray(value: unknown) {
+  return Array.isArray(value) ? value.filter(isRecord) : [];
 }
 
 function readJsonObject(value: Json): Record<string, Json | undefined> {
@@ -342,6 +355,34 @@ function createChannelLiveStreamPath(creatorId: string, settings: ChannelLiveStu
   return getChannelLiveStreamPath(buildLiveStreamKey(creatorId, settings.streamKeyVersion));
 }
 
+function createRecentDonationFromRecord(
+  value: Record<string, unknown>,
+): ChannelLiveRecentDonation | null {
+  const id = readString(value.id);
+  const amount = readNumber(value.amount);
+  const createdAt = readString(value.createdAt);
+
+  if (!id || !createdAt || amount <= 0) {
+    return null;
+  }
+
+  return {
+    amount,
+    broadcastId: typeof value.broadcastId === "string" ? value.broadcastId : null,
+    createdAt,
+    donorNickname: readString(value.donorNickname) || "익명",
+    id,
+  };
+}
+
+function createRecentDonations(value: unknown) {
+  return readRecordArray(value).flatMap((item) => {
+    const donation = createRecentDonationFromRecord(item);
+
+    return donation ? [donation] : [];
+  });
+}
+
 function toChannelLiveStudioSnapshot(value: Json, creatorId: string): ChannelLiveStudioSnapshot {
   if (!isRecord(value)) {
     const settings = createDefaultSettings();
@@ -349,6 +390,7 @@ function toChannelLiveStudioSnapshot(value: Json, creatorId: string): ChannelLiv
     return {
       activeBroadcast: null,
       creatorId,
+      recentDonations: [],
       settings,
       streamPath: createChannelLiveStreamPath(creatorId, settings),
     };
@@ -356,11 +398,13 @@ function toChannelLiveStudioSnapshot(value: Json, creatorId: string): ChannelLiv
 
   const activeBroadcast = value.activeBroadcast;
   const settings = createSettingsFromRecord(value.settings);
+  const recentDonations = createRecentDonations(value.recentDonations);
 
   if (!isRecord(activeBroadcast)) {
     return {
       activeBroadcast: null,
       creatorId,
+      recentDonations,
       settings,
       streamPath: createChannelLiveStreamPath(creatorId, settings),
     };
@@ -381,6 +425,7 @@ function toChannelLiveStudioSnapshot(value: Json, creatorId: string): ChannelLiv
       title: readString(activeBroadcast.title),
     },
     creatorId,
+    recentDonations,
     settings,
     streamPath: createChannelLiveStreamPath(creatorId, settings),
   };

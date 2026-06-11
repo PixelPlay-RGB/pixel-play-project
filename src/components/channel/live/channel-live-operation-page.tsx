@@ -193,8 +193,10 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
 
         <div className="min-w-0 xl:h-full xl:min-h-0 xl:overflow-y-auto">
           <ChannelLiveQuickSettingsPanel
+            broadcastId={broadcastId}
             canSaveSettings={isSettingsDirty}
             chatScope={operation.chatScope}
+            initialDonations={initialSnapshot?.recentDonations ?? []}
             isAlertSoundEnabled={operation.isAlertSoundEnabled}
             isDonationAmountVisible={operation.isDonationAmountVisible}
             isDonationEnabled={operation.isDonationEnabled}
