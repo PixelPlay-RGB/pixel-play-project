@@ -44,8 +44,11 @@ export function LiveChatMessageList({
   hasMoreChatHistory = false,
   entryNoticeAnchorId,
 }: Props) {
-  const isInitialMount = useRef(true);
-  const wasNearBottomRef = useRef(true);
+  // 바닥 고정 모드 — 사용자가 위로 스크롤하면 풀리고, 바닥 근처로 돌아오면 다시 걸린다.
+  // 진입·새 메시지·행 실측으로 우리가 일으키는 프로그램 스크롤은 이 판정에서 제외해야 한다
+  // (실측으로 목록 높이가 점프하는 순간 "위로 스크롤했다"고 오판해 고정이 풀리는 문제 방지).
+  const isPinnedToBottomRef = useRef(true);
+  const isProgrammaticScrollRef = useRef(false);
   // prepend(과거 적재) 감지용 — 직전 렌더의 메시지 목록을 기억해 첫 id 변화를 비교한다.
   const prevMessagesRef = useRef<LiveChatMessage[]>(messages);
 
@@ -77,14 +80,16 @@ export function LiveChatMessageList({
     const container = scrollRef.current;
     if (!container) return;
 
-    const updateNearBottom = () => {
+    const handleScroll = () => {
+      // 우리가 일으킨 스크롤(바닥 고정·prepend 보정)은 사용자 의도 판정·적재 트리거에서 제외한다.
+      if (isProgrammaticScrollRef.current) {
+        isProgrammaticScrollRef.current = false;
+        return;
+      }
+
       const distanceFromBottom =
         container.scrollHeight - container.scrollTop - container.clientHeight;
-      wasNearBottomRef.current = distanceFromBottom < 60;
-    };
-
-    const handleScroll = () => {
-      updateNearBottom();
+      isPinnedToBottomRef.current = distanceFromBottom < 60;
 
       // 상단 근접 시 과거 페이지 적재를 요청한다. 중복 호출은 훅 내부 가드(isLoadingOlder)가 막는다.
       if (
@@ -96,9 +101,6 @@ export function LiveChatMessageList({
       }
     };
 
-    // 초기엔 바닥 상태만 동기화한다 — 적재는 사용자가 실제로 스크롤할 때만 일어나야
-    // 진입 직후(scrollTop이 아직 0인 시점)나 짧은 목록에서 연쇄 적재가 발사되지 않는다.
-    updateNearBottom();
     container.addEventListener("scroll", handleScroll, { passive: true });
 
     return () => {
@@ -121,25 +123,22 @@ export function LiveChatMessageList({
     const prependedCount = messages.findIndex((message) => message.id === prevFirstId);
     if (prependedCount <= 0) return;
 
+    isProgrammaticScrollRef.current = true;
     container.scrollTop += prependedCount * (ESTIMATED_ROW_HEIGHT + ROW_GAP);
   }, [messages, scrollRef]);
 
-  // 바닥 추적은 행 추가(rowCount)뿐 아니라 행 실측 보정으로 전체 높이(totalSize)가 바뀔 때도
-  // 다시 발화해야 한다 — 여러 줄 메시지는 추정 높이(32px)보다 커서, 추가 시점에만 바닥으로 보내면
-  // 실측 반영 직후 그 차이만큼 바닥에서 뜬다. scrollHeight 대입이라 어떤 행 높이에서도 정확하다.
+  // 바닥 고정 — 행 추가(rowCount)뿐 아니라 행 실측 보정으로 전체 높이(totalSize)가 바뀔 때마다
+  // 다시 바닥에 붙인다. 진입 직후 실측으로 높이가 몇 번을 점프해도 사용자가 스크롤하기 전까지는
+  // 고정이 유지되므로, 데이터가 다 로드된 최종 높이에서 정확히 최하단에 수렴한다.
   const totalSize = virtualizer.getTotalSize();
   useLayoutEffect(() => {
     const container = scrollRef.current;
-    if (!container) return;
+    if (!container || !isPinnedToBottomRef.current) return;
 
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      container.scrollTop = container.scrollHeight;
-      return;
-    }
-
-    if (wasNearBottomRef.current) {
-      container.scrollTop = container.scrollHeight;
+    const target = container.scrollHeight - container.clientHeight;
+    if (Math.abs(container.scrollTop - target) > 1) {
+      isProgrammaticScrollRef.current = true;
+      container.scrollTop = target;
     }
   }, [rowCount, totalSize, scrollRef]);
 
