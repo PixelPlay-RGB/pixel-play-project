@@ -664,31 +664,33 @@ function InteractionNoticeCard({
       ) : (
         <DrawNoticeBoard hasJoined={hasJoined} notice={notice} />
       )}
-      <div className="border-border border-t border-dashed pt-3">
-        <Button
-          type="button"
-          variant={isActive ? "default" : "outline"}
-          disabled={
-            (isActive && !canJoinDraw) ||
-            (canJoinDraw && isLoggedIn && (hasJoined || isJoiningDraw || !onJoinDraw))
-          }
-          className={cn(
-            isActive && "bg-live/80 text-live-foreground",
-            "h-9 w-full text-xs font-bold",
-          )}
-          onClick={() => void handleJoinDraw()}
-        >
-          {canJoinDraw
-            ? isJoiningDraw
-              ? LIVE_VOTE_LABEL.submitting
-              : hasJoined
-                ? LIVE_VOTE_LABEL.participated
-                : LIVE_VOTE_LABEL.submit
-            : isActive
-              ? LIVE_VOTE_LABEL.active
-              : LIVE_LABEL.close}
-        </Button>
-      </div>
+      {isDraw ? (
+        <div className="border-border border-t border-dashed pt-3">
+          <Button
+            type="button"
+            variant={isActive ? "default" : "outline"}
+            disabled={
+              (isActive && !canJoinDraw) ||
+              (canJoinDraw && isLoggedIn && (hasJoined || isJoiningDraw || !onJoinDraw))
+            }
+            className={cn(
+              isActive && "bg-live/80 text-live-foreground",
+              "h-9 w-full text-xs font-bold",
+            )}
+            onClick={() => void handleJoinDraw()}
+          >
+            {canJoinDraw
+              ? isJoiningDraw
+                ? LIVE_VOTE_LABEL.submitting
+                : hasJoined
+                  ? LIVE_VOTE_LABEL.participated
+                  : LIVE_VOTE_LABEL.submit
+              : isActive
+                ? LIVE_VOTE_LABEL.active
+                : LIVE_LABEL.close}
+          </Button>
+        </div>
+      ) : null}
     </div>
   );
 }
