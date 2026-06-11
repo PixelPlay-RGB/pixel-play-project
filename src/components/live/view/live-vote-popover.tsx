@@ -1,13 +1,17 @@
 "use client";
 // 투표 참여와 라이브 상호작용 결과를 채팅 패널 액션 팝오버로 제공합니다.
 
-import { useId, useMemo, useState, type RefObject } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type RefObject } from "react";
 import { Check, Crown, FerrisWheel, Sparkles, Trophy, X } from "lucide-react";
+import { motion } from "motion/react";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ROULETTE_SEGMENT_COLORS } from "@/constants/channel/live-interaction";
+import {
+  ROULETTE_SEGMENT_COLORS,
+  ROULETTE_SPIN_DURATION_SECONDS,
+} from "@/constants/channel/live-interaction";
 import { LIVE_LABEL, LIVE_VOTE_LABEL } from "@/constants/live/live";
 import { cn } from "@/lib/utils";
 import { getRouletteItemLabelStyle, getRouletteSegments } from "@/utils/channel/live-interaction";
@@ -524,8 +528,19 @@ function RouletteNoticeBoard({ notice }: { notice: LiveInteractionNotice }) {
 
     return { background: `conic-gradient(${stops.join(", ")})` };
   }, [rouletteSegments]);
-  const rotation = notice.rouletteRotation ?? 0;
+  const rotationKeyframes = notice.rouletteRotationKeyframes?.length
+    ? notice.rouletteRotationKeyframes
+    : [0];
   const isActive = notice.status === "active";
+  const rouletteEase = ["easeOut" as const, "linear" as const, "easeOut" as const];
+  const rouletteTransition =
+    isActive && rotationKeyframes.length > 1
+      ? {
+          duration: notice.rouletteDurationSeconds ?? ROULETTE_SPIN_DURATION_SECONDS,
+          ease: rouletteEase,
+          times: [0, 0.14, 0.58, 1],
+        }
+      : { duration: 0 };
 
   return (
     <div className="border-border flex flex-col items-center gap-4 border-t border-dashed py-3">
@@ -540,12 +555,11 @@ function RouletteNoticeBoard({ notice }: { notice: LiveInteractionNotice }) {
             style={{ clipPath: "polygon(50% 0, 100% 100%, 0 100%)" }}
           />
         </div>
-        <div
-          className="border-background relative size-52 overflow-hidden rounded-full border-8 shadow-lg transition-transform duration-[5000ms] ease-out"
-          style={{
-            ...rouletteSegmentStyle,
-            transform: `rotate(${rotation}deg)`,
-          }}
+        <motion.div
+          className="border-background relative size-52 overflow-hidden rounded-full border-8 shadow-lg"
+          style={rouletteSegmentStyle}
+          animate={{ rotate: rotationKeyframes }}
+          transition={rouletteTransition}
         >
           {rouletteSegments.map((segment) => (
             <span
@@ -556,7 +570,7 @@ function RouletteNoticeBoard({ notice }: { notice: LiveInteractionNotice }) {
               {segment.item.label}
             </span>
           ))}
-        </div>
+        </motion.div>
         <div className="bg-background border-border absolute flex size-16 flex-col items-center justify-center rounded-full border shadow-sm">
           <FerrisWheel className="text-brand size-5" />
           <span className="text-muted-foreground text-[10px] font-bold">ROULETTE</span>
@@ -812,6 +826,7 @@ export function LiveVotePopover({
   portalContainer,
 }: Props) {
   const [open, setOpen] = useState(false);
+  const autoOpenedRouletteNoticeIdRef = useRef<string | null>(null);
 
   // 열어둔 채 방송이 종료되면(disabled 전환) 즉시 닫는다.
   // effect 내 setState는 lint 에러(set-state-in-effect)라 렌더 중 가드된 setState 패턴을 쓴다.
@@ -823,6 +838,19 @@ export function LiveVotePopover({
   // 진행 중·종료 기록이 모두 없으면 열어도 보여줄 것이 없으므로 트리거를 비활성화한다.
   const hasInteraction = currentInteraction.type !== "empty";
   const triggerLabel = getTriggerLabel(currentInteraction);
+
+  useEffect(() => {
+    if (
+      currentInteraction.type !== "roulette" ||
+      currentInteraction.mode !== "active" ||
+      autoOpenedRouletteNoticeIdRef.current === currentInteraction.notice.id
+    ) {
+      return;
+    }
+
+    autoOpenedRouletteNoticeIdRef.current = currentInteraction.notice.id;
+    setOpen(true);
+  }, [currentInteraction]);
 
   function handleOpenChange(next: boolean) {
     if (next && !isLoggedIn && shouldPromptLoginOnOpen(currentInteraction)) {

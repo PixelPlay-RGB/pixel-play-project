@@ -6,6 +6,7 @@ import { useMemo, useRef, useState } from "react";
 import {
   DEFAULT_ROULETTE_ITEMS,
   ROULETTE_RECOIL_DEGREE,
+  ROULETTE_SPIN_DURATION_SECONDS,
   ROULETTE_SEGMENT_COLORS,
 } from "@/constants/channel/live-interaction";
 import type { PublishRouletteNotice } from "@/hooks/channel/use-channel-live-roulette-notice";
@@ -111,10 +112,11 @@ export function useChannelLiveRouletteTool(publishRouletteNotice: PublishRoulett
     pendingRouletteNoticeIdRef.current = noticeId;
     void publishRouletteNotice({
       createdAt: new Date().toISOString(),
+      durationSeconds: ROULETTE_SPIN_DURATION_SECONDS,
       id: noticeId,
       items: validRouletteItems.map((item) => item.label),
       resultLabel: "룰렛 진행 중",
-      rotation: nextRotation,
+      rotationKeyframes: [rouletteRotation, recoilRotation, fastRotation, nextRotation],
       status: "active",
     });
   };
@@ -135,7 +137,7 @@ export function useChannelLiveRouletteTool(publishRouletteNotice: PublishRoulett
       id: noticeId,
       items: validRouletteItems.map((item) => item.label),
       resultLabel: nextResult,
-      rotation: rouletteRotation,
+      rotationKeyframes: [rouletteRotation],
       status: "ended",
     });
   };
@@ -156,7 +158,7 @@ export function useChannelLiveRouletteTool(publishRouletteNotice: PublishRoulett
         id: pendingRouletteNoticeIdRef.current ?? crypto.randomUUID(),
         items: validRouletteItems.map((item) => item.label),
         resultLabel: "룰렛 종료",
-        rotation: rouletteRotation,
+        rotationKeyframes: [rouletteRotation],
         status: "ended",
       });
 

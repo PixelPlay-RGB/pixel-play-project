@@ -1,36 +1,24 @@
 "use client";
-// 방송인 룰렛 결과를 live_message에 저장하지 않고 Realtime broadcast로 전송합니다.
+// 방송인 룰렛 결과를 live_message에 저장하지 않고 Next.js SSE로 전송 요청합니다.
 
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 
-import {
-  getLiveRouletteBroadcastTopic,
-  LIVE_ROULETTE_BROADCAST_EVENT,
-} from "@/constants/live/live-roulette-broadcast";
-import { createClient } from "@/lib/supabase/client";
-import type { LiveRouletteNoticePayload } from "@/types/channel/live-interaction";
+import { sendChannelLiveRouletteNoticeAction } from "@/actions/channel/live";
+import type { LiveRouletteSsePayload } from "@/utils/live/live-roulette-sse";
 
 export function useChannelLiveRouletteNotice(broadcastId: string | null) {
-  const supabase = useMemo(() => createClient(), []);
-
   const publishRouletteNotice = useCallback(
-    async (payload: LiveRouletteNoticePayload) => {
+    async (payload: LiveRouletteSsePayload) => {
       if (!broadcastId) return false;
 
-      const channel = supabase.channel(getLiveRouletteBroadcastTopic(broadcastId), {
-        config: { broadcast: { ack: true } },
-      });
-      const result = await channel.send({
-        type: "broadcast",
-        event: LIVE_ROULETTE_BROADCAST_EVENT,
+      const result = await sendChannelLiveRouletteNoticeAction({
+        broadcastId,
         payload,
       });
 
-      void supabase.removeChannel(channel);
-
-      return result === "ok";
+      return result.success;
     },
-    [broadcastId, supabase],
+    [broadcastId],
   );
 
   return { publishRouletteNotice };

@@ -5,17 +5,16 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { QUERY_KEYS } from "@/constants/common/query-keys";
-import {
-  getLiveRouletteBroadcastTopic,
-  LIVE_ROULETTE_BROADCAST_EVENT,
-} from "@/constants/live/live-roulette-broadcast";
 import { readJsonObject, readNumber, readString } from "@/utils/common/json";
 import {
   mergeDrawParticipationIntoNotices,
   type LiveDrawParticipationRow,
 } from "@/utils/live/live-draw-participation";
 import type { Json } from "@/types/database.types";
-import type { LiveRouletteNoticePayload } from "@/types/channel/live-interaction";
+import {
+  LIVE_ROULETTE_SSE_EVENT,
+  type LiveRouletteSsePayload,
+} from "@/utils/live/live-roulette-sse";
 import type {
   LiveInteractionNotice,
   LiveInteractionNoticeStatus,
@@ -60,16 +59,22 @@ function readStringArray(value: Json | undefined): string[] | undefined {
 function readRouletteBroadcastNotice(value: unknown): LiveInteractionNotice | null {
   if (!value || typeof value !== "object") return null;
 
-  const payload = value as Partial<LiveRouletteNoticePayload>;
+  const payload = value as Partial<LiveRouletteSsePayload>;
   const id = typeof payload.id === "string" ? payload.id : "";
   const createdAt = typeof payload.createdAt === "string" ? payload.createdAt : "";
   const resultLabel = typeof payload.resultLabel === "string" ? payload.resultLabel : "";
   const status =
     payload.status === "active" ? "active" : payload.status === "ended" ? "ended" : null;
-  const rotation = typeof payload.rotation === "number" ? payload.rotation : 0;
   const items = Array.isArray(payload.items)
     ? payload.items.filter((item): item is string => typeof item === "string" && !!item.trim())
     : [];
+  const rotationKeyframes = Array.isArray(payload.rotationKeyframes)
+    ? payload.rotationKeyframes.filter((item): item is number => Number.isFinite(item))
+    : [];
+  const durationSeconds =
+    typeof payload.durationSeconds === "number" && Number.isFinite(payload.durationSeconds)
+      ? payload.durationSeconds
+      : undefined;
 
   if (!id || !createdAt || !resultLabel || !status || items.length < 2) {
     return null;
@@ -80,8 +85,9 @@ function readRouletteBroadcastNotice(value: unknown): LiveInteractionNotice | nu
     createdAt,
     id,
     resultLabel,
+    rouletteDurationSeconds: durationSeconds,
     rouletteItems: items,
-    rouletteRotation: rotation,
+    rouletteRotationKeyframes: rotationKeyframes,
     status,
     type: "roulette",
   };
@@ -119,8 +125,10 @@ export function useLiveInteractionNotices(
 ) {
   const supabase = useMemo(() => createClient(), []);
   const queryClient = useQueryClient();
-  const [realtimeRouletteNotice, setRealtimeRouletteNotice] =
-    useState<LiveInteractionNotice | null>(null);
+  const [realtimeRouletteNotice, setRealtimeRouletteNotice] = useState<{
+    broadcastId: string;
+    notice: LiveInteractionNotice;
+  } | null>(null);
 
   const query = useQuery<LiveInteractionNotice[]>({
     queryKey: QUERY_KEYS.live.interactionNotices(broadcastId ?? undefined, viewerId),
@@ -222,31 +230,44 @@ export function useLiveInteractionNotices(
   }, [broadcastId, viewerId, supabase, queryClient]);
 
   useEffect(() => {
-    setRealtimeRouletteNotice(null);
-
     if (!broadcastId) return;
 
-    const channel = supabase
-      .channel(getLiveRouletteBroadcastTopic(broadcastId))
-      .on("broadcast", { event: LIVE_ROULETTE_BROADCAST_EVENT }, (message) => {
-        const notice = readRouletteBroadcastNotice(message.payload);
+    const eventSource = new EventSource(
+      `/api/live/roulette/${encodeURIComponent(broadcastId)}/stream`,
+    );
+
+    eventSource.addEventListener(LIVE_ROULETTE_SSE_EVENT, (message) => {
+      const eventMessage = message as MessageEvent<string>;
+
+      try {
+        const notice = readRouletteBroadcastNotice(JSON.parse(eventMessage.data));
 
         if (!notice) return;
 
-        setRealtimeRouletteNotice(notice);
-      })
-      .subscribe();
+        setRealtimeRouletteNotice({ broadcastId, notice });
+      } catch (error) {
+        console.error("라이브 룰렛 SSE 메시지 파싱 실패", error);
+      }
+    });
 
     return () => {
-      void channel.unsubscribe();
+      eventSource.close();
     };
-  }, [broadcastId, supabase]);
+  }, [broadcastId]);
 
   const notices = useMemo(() => {
     const queryNotices = query.data ?? [];
+    const currentRealtimeRoulette = realtimeRouletteNotice;
+    let currentRealtimeRouletteNotice: LiveInteractionNotice | null = null;
 
-    return realtimeRouletteNotice ? [...queryNotices, realtimeRouletteNotice] : queryNotices;
-  }, [query.data, realtimeRouletteNotice]);
+    if (currentRealtimeRoulette && currentRealtimeRoulette.broadcastId === broadcastId) {
+      currentRealtimeRouletteNotice = currentRealtimeRoulette.notice;
+    }
+
+    return currentRealtimeRouletteNotice
+      ? [...queryNotices, currentRealtimeRouletteNotice]
+      : queryNotices;
+  }, [broadcastId, query.data, realtimeRouletteNotice]);
 
   return {
     error: query.error,
