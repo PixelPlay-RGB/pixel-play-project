@@ -1,7 +1,7 @@
 "use client";
 // 라이브 상호작용 결과 공지를 기존 live_message metadata에서 조회합니다.
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { QUERY_KEYS } from "@/constants/common/query-keys";
@@ -12,6 +12,7 @@ import {
 } from "@/utils/live/live-draw-participation";
 import type { Json } from "@/types/database.types";
 import {
+  getLiveRouletteResultDelayMs,
   LIVE_ROULETTE_SSE_EVENT,
   type LiveRouletteSsePayload,
 } from "@/utils/live/live-roulette-sse";
@@ -26,6 +27,12 @@ interface LiveInteractionNoticeRow {
   created_at: string;
   id: string;
   metadata: Json;
+}
+
+interface RealtimeRouletteNoticeState {
+  broadcastId: string;
+  notice: LiveInteractionNotice;
+  receivedAtMs: number;
 }
 
 const LIVE_INTERACTION_NOTICE_LIMIT = 20;
@@ -125,10 +132,10 @@ export function useLiveInteractionNotices(
 ) {
   const supabase = useMemo(() => createClient(), []);
   const queryClient = useQueryClient();
-  const [realtimeRouletteNotice, setRealtimeRouletteNotice] = useState<{
-    broadcastId: string;
-    notice: LiveInteractionNotice;
-  } | null>(null);
+  const [realtimeRouletteNotice, setRealtimeRouletteNotice] =
+    useState<RealtimeRouletteNoticeState | null>(null);
+  const realtimeRouletteNoticeRef = useRef<RealtimeRouletteNoticeState | null>(null);
+  const rouletteResultTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const query = useQuery<LiveInteractionNotice[]>({
     queryKey: QUERY_KEYS.live.interactionNotices(broadcastId ?? undefined, viewerId),
@@ -232,6 +239,18 @@ export function useLiveInteractionNotices(
   useEffect(() => {
     if (!broadcastId) return;
 
+    function clearPendingRouletteResult() {
+      if (!rouletteResultTimeoutRef.current) return;
+
+      clearTimeout(rouletteResultTimeoutRef.current);
+      rouletteResultTimeoutRef.current = null;
+    }
+
+    function commitRealtimeRouletteNotice(nextNotice: RealtimeRouletteNoticeState) {
+      realtimeRouletteNoticeRef.current = nextNotice;
+      setRealtimeRouletteNotice(nextNotice);
+    }
+
     const eventSource = new EventSource(
       `/api/live/roulette/${encodeURIComponent(broadcastId)}/stream`,
     );
@@ -244,13 +263,43 @@ export function useLiveInteractionNotices(
 
         if (!notice) return;
 
-        setRealtimeRouletteNotice({ broadcastId, notice });
+        const receivedAtMs = Date.now();
+        const currentRealtimeRouletteNotice =
+          realtimeRouletteNoticeRef.current?.broadcastId === broadcastId
+            ? realtimeRouletteNoticeRef.current
+            : null;
+        const delayMs = getLiveRouletteResultDelayMs({
+          activeNotice: currentRealtimeRouletteNotice
+            ? {
+                durationSeconds: currentRealtimeRouletteNotice.notice.rouletteDurationSeconds,
+                id: currentRealtimeRouletteNotice.notice.id,
+                status: currentRealtimeRouletteNotice.notice.status,
+              }
+            : null,
+          activeReceivedAtMs: currentRealtimeRouletteNotice?.receivedAtMs ?? null,
+          nextNotice: { id: notice.id, status: notice.status },
+          nowMs: receivedAtMs,
+        });
+        const nextRealtimeRouletteNotice = { broadcastId, notice, receivedAtMs };
+
+        clearPendingRouletteResult();
+
+        if (delayMs > 0) {
+          rouletteResultTimeoutRef.current = setTimeout(() => {
+            commitRealtimeRouletteNotice(nextRealtimeRouletteNotice);
+            rouletteResultTimeoutRef.current = null;
+          }, delayMs);
+          return;
+        }
+
+        commitRealtimeRouletteNotice(nextRealtimeRouletteNotice);
       } catch (error) {
         console.error("라이브 룰렛 SSE 메시지 파싱 실패", error);
       }
     });
 
     return () => {
+      clearPendingRouletteResult();
       eventSource.close();
     };
   }, [broadcastId]);

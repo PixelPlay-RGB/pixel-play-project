@@ -16,8 +16,46 @@ export interface LiveRouletteSsePayload {
 
 type LiveRouletteSseListener = (message: string) => void;
 
+interface LiveRouletteResultDelayNotice {
+  durationSeconds?: number;
+  id: string;
+  status: LiveRouletteSseStatus;
+}
+
+interface LiveRouletteResultDelayInput {
+  activeNotice: LiveRouletteResultDelayNotice | null;
+  activeReceivedAtMs: number | null;
+  nextNotice: Pick<LiveRouletteResultDelayNotice, "id" | "status">;
+  nowMs: number;
+}
+
 export function formatLiveRouletteSseMessage(payload: LiveRouletteSsePayload) {
   return `event: ${LIVE_ROULETTE_SSE_EVENT}\ndata: ${JSON.stringify(payload)}\n\n`;
+}
+
+export function getLiveRouletteResultDelayMs({
+  activeNotice,
+  activeReceivedAtMs,
+  nextNotice,
+  nowMs,
+}: LiveRouletteResultDelayInput) {
+  if (
+    !activeNotice ||
+    activeNotice.status !== "active" ||
+    nextNotice.status !== "ended" ||
+    activeNotice.id !== nextNotice.id ||
+    typeof activeReceivedAtMs !== "number" ||
+    !Number.isFinite(activeReceivedAtMs) ||
+    typeof activeNotice.durationSeconds !== "number" ||
+    !Number.isFinite(activeNotice.durationSeconds)
+  ) {
+    return 0;
+  }
+
+  const durationMs = activeNotice.durationSeconds * 1000;
+  const elapsedMs = nowMs - activeReceivedAtMs;
+
+  return Math.max(0, durationMs - elapsedMs);
 }
 
 export function createLiveRouletteSseStore() {

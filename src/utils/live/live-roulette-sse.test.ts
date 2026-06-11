@@ -5,6 +5,7 @@ import test from "node:test";
 import {
   createLiveRouletteSseStore,
   formatLiveRouletteSseMessage,
+  getLiveRouletteResultDelayMs,
   type LiveRouletteSsePayload,
 } from "./live-roulette-sse.ts";
 
@@ -49,5 +50,38 @@ test("formatLiveRouletteSseMessage serializes a roulette notice event", () => {
   assert.equal(
     formatLiveRouletteSseMessage(payload),
     `event: roulette_notice\ndata: ${JSON.stringify(payload)}\n\n`,
+  );
+});
+
+test("getLiveRouletteResultDelayMs delays ended notice until active animation duration finishes", () => {
+  assert.equal(
+    getLiveRouletteResultDelayMs({
+      activeNotice: { durationSeconds: 4.2, id: "roulette-1", status: "active" },
+      activeReceivedAtMs: 1000,
+      nextNotice: { id: "roulette-1", status: "ended" },
+      nowMs: 2200,
+    }),
+    3000,
+  );
+});
+
+test("getLiveRouletteResultDelayMs does not delay unrelated or already finished roulette notices", () => {
+  assert.equal(
+    getLiveRouletteResultDelayMs({
+      activeNotice: { durationSeconds: 4.2, id: "roulette-1", status: "active" },
+      activeReceivedAtMs: 1000,
+      nextNotice: { id: "roulette-2", status: "ended" },
+      nowMs: 2200,
+    }),
+    0,
+  );
+  assert.equal(
+    getLiveRouletteResultDelayMs({
+      activeNotice: { durationSeconds: 4.2, id: "roulette-1", status: "active" },
+      activeReceivedAtMs: 1000,
+      nextNotice: { id: "roulette-1", status: "ended" },
+      nowMs: 6000,
+    }),
+    0,
   );
 });
