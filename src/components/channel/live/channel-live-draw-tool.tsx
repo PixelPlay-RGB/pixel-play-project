@@ -181,7 +181,9 @@ export function ChannelLiveDrawToolView({ broadcastId, tool }: Props) {
                 ))}
               </div>
             ) : (
-              <div className="flex h-full min-h-72 items-center justify-center text-center">
+              // h-full을 두면 섹션 높이 보간(300ms) 동안 중앙 위치가 매 프레임 재계산되어
+              // 안내 문구가 떨리며 재정렬된다 — 고정 최소 높이 안에서만 중앙 정렬한다.
+              <div className="flex min-h-72 items-center justify-center text-center">
                 <p className="text-muted-foreground text-sm font-semibold">
                   {drawRollingName
                     ? `최근 당첨자 ${drawRollingName}`
