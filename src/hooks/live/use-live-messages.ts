@@ -8,12 +8,15 @@ import { LIVE_MESSAGE_LIMIT } from "@/constants/live/live";
 import {
   mapLiveMessageRealtimePayload,
   mapLiveMessageRowToMessage,
-  type LiveMessageJoinedRow,
+  type LiveMessageRow,
 } from "@/utils/live/live-message";
 import { appendLiveMessage } from "@/utils/live/live-chat";
 import type { LiveChatMessage } from "@/types/live/live";
+// 닉네임·후원 금액은 metadata에 스냅샷으로 들어 있어 join이 필요 없다(Realtime payload와 동일 경로).
+// user·donation join을 빼야 anon RLS("Anyone can read active live messages")만으로 비로그인도 조회된다.
 const LIVE_MESSAGE_SELECT =
-  "id, sender_id, message_type, content, metadata, sender:sender_id(nickname, photo_url), donation:donation_id(amount)" as const;
+  "id, created_at, sender_id, message_type, content, sender_role, metadata" as const;
+const EMPTY_LIVE_MESSAGES: LiveChatMessage[] = [];
 
 export function useLiveMessages(
   broadcastId: string | null | undefined,
@@ -36,13 +39,15 @@ export function useLiveMessages(
         .eq("broadcast_id", broadcastId)
         .order("created_at", { ascending: false })
         .limit(LIVE_MESSAGE_LIMIT)
-        .returns<LiveMessageJoinedRow[]>();
+        .returns<LiveMessageRow[]>();
 
       if (error) throw error;
 
-      return (data ?? [])
-        .reverse()
-        .map((row) => mapLiveMessageRowToMessage(row, creatorId, viewerId));
+      return (data ?? []).reverse().flatMap((row) => {
+        const message = mapLiveMessageRowToMessage(row, creatorId, viewerId);
+
+        return message ? [message] : [];
+      });
     },
   });
 
@@ -81,7 +86,11 @@ export function useLiveMessages(
             QUERY_KEYS.live.messages(broadcastId),
             (prev) => {
               if (!prev) return [nextMessage];
-              if (prev.some((m) => m.id === nextMessage.id)) return prev;
+              // 본인 메시지는 낙관적 항목이 실제 id로 먼저 승격되어 있다 — 스킵하면 서버
+              // 스냅샷(sender_role 등)이 반영되지 않으므로 같은 id는 서버 버전으로 교체한다.
+              if (prev.some((m) => m.id === nextMessage.id)) {
+                return prev.map((m) => (m.id === nextMessage.id ? nextMessage : m));
+              }
               return appendLiveMessage(prev, nextMessage);
             },
           );
@@ -107,7 +116,7 @@ export function useLiveMessages(
   }, [broadcastId, creatorId, viewerId, supabase, queryClient]);
 
   return {
-    messages: query.data ?? [],
+    messages: query.data ?? EMPTY_LIVE_MESSAGES,
     isLoading: query.isLoading,
     error: query.error,
     refetch: query.refetch,

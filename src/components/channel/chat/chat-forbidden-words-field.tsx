@@ -96,7 +96,7 @@ export function ChatForbiddenWordsField({ value, disabled, error, onChange }: Pr
             type="button"
             disabled={disabled}
             onClick={handleAdd}
-            className="bg-brand hover:bg-brand/85 shrink-0 font-bold text-white"
+            className="bg-brand hover:bg-brand/85 text-brand-foreground shrink-0 font-bold"
           >
             금칙어 추가
           </Button>
@@ -114,7 +114,7 @@ export function ChatForbiddenWordsField({ value, disabled, error, onChange }: Pr
                   onClick={() => handleRemove(item)}
                   className={cn(
                     "bg-error/10 text-error hover:bg-error inline-flex h-7 items-center gap-1 rounded-full px-3",
-                    "text-xs font-bold transition-colors hover:text-white",
+                    "hover:text-error-foreground text-xs font-bold transition-colors",
                     "disabled:pointer-events-none disabled:opacity-60",
                   )}
                 >

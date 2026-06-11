@@ -38,7 +38,7 @@ export function SettingSegmentedControl({ value, options, ariaLabel, disabled, o
               "rounded-full px-3 py-1.5 text-xs font-bold transition-colors",
               "disabled:pointer-events-none disabled:opacity-50",
               isActive
-                ? "bg-brand text-white shadow-sm"
+                ? "bg-brand text-brand-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground",
             )}
           >

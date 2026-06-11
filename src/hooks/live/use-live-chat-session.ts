@@ -50,14 +50,24 @@ export function useLiveChatSession({
 
     const messagesKey = QUERY_KEYS.live.messages(broadcastId);
     const clientId = `optimistic-${crypto.randomUUID()}`;
+    const isHost = !!user && user.id === creatorId;
+    // 역할 마크 즉시 표시: 방장은 확정이고, 그 외(후원자 등)는 캐시에 있는 내 직전 메시지의
+    // 서버 스냅샷을 재사용한다. 첫 메시지는 realtime echo가 서버 버전으로 교체하며 채워진다.
+    const lastOwnRole = queryClient
+      .getQueryData<LiveChatMessage[]>(messagesKey)
+      ?.findLast((message) => message.senderId === user?.id && message.senderRole)?.senderRole;
     // 본인이 보낸 메시지는 클린봇으로 가리지 않는다(isCleanbotFlagged 미부여).
     // 자기 메시지는 본인 화면에서 항상 보이는 게 자연스럽다.
     const optimisticMessage: LiveChatMessage = {
       id: clientId,
       type: "text",
+      // realtime echo와 동일하게 senderId를 채운다. 누락하면 id 승격(아래) 뒤에도 senderId가 빈
+      // 채로 남아, 본인이 후원자/방장일 때 자기 화면에서만 후원자 뱃지가 안 뜬다(타인 화면은 정상).
+      senderId: user?.id,
       author: profile?.nickname ?? LIVE_LABEL.selfAuthorFallback,
       content: trimmed,
-      isHost: !!user && user.id === creatorId,
+      isHost,
+      senderRole: isHost ? "creator" : lastOwnRole,
     };
 
     const removeOptimistic = () =>

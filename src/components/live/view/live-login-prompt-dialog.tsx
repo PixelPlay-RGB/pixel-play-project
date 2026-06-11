@@ -25,7 +25,7 @@ export function LiveLoginPromptDialog({ open, onOpenChange, onLogin }: Props) {
           <DialogTitle>{LIVE_LABEL.loginRequired}</DialogTitle>
           <DialogDescription>{LIVE_LABEL.loginDescription}</DialogDescription>
         </DialogHeader>
-        <DialogFooter className="gap-2 sm:gap-0">
+        <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             {LIVE_LABEL.cancel}
           </Button>

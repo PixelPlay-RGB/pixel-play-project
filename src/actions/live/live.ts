@@ -9,6 +9,7 @@ import {
   LIVE_DONATION_MESSAGE_MAX_LENGTH,
 } from "@/constants/live/live";
 import type { AppActionResult } from "@/types/common/action";
+import type { Json } from "@/types/database.types";
 import type { SendLiveMessageResult } from "@/types/live/live";
 import {
   isKnownDonationRpcError,
@@ -33,6 +34,13 @@ function normalizeSendLiveMessageResult(data: unknown): SendLiveMessageResult | 
   if (!moderated && !messageId) return null;
 
   return { messageId: messageId ?? null, moderated };
+}
+
+const LIVE_DRAW_PARTICIPATION_SOURCE = "live_draw_participation";
+
+interface JoinLiveDrawInput {
+  broadcastId: string;
+  drawNoticeId: string;
 }
 
 export async function sendLiveMessageAction(
@@ -116,6 +124,97 @@ export async function voteLivePollAction(pollId: string, optionId: string): Prom
 
   if (error) {
     console.error("라이브 투표 RPC 실패", error);
+    return false;
+  }
+
+  return true;
+}
+
+export async function joinLiveDrawAction({
+  broadcastId,
+  drawNoticeId,
+}: JoinLiveDrawInput): Promise<boolean> {
+  if (!broadcastId || !isUuid(broadcastId) || !drawNoticeId || !isUuid(drawNoticeId)) {
+    return false;
+  }
+
+  const actor = await getAuthenticatedActorId({
+    logLabel: "라이브 추첨 참여 중 인증 사용자 조회 실패",
+  });
+
+  if (!actor.success) return false;
+
+  const client = await createWriteClientForAction("라이브 추첨 참여 Admin Client 생성 실패");
+
+  if (!client.success) return false;
+
+  const supabase = client.supabase;
+  const { data: drawNoticeRows, error: noticeError } = await supabase
+    .from("live_message")
+    .select("id")
+    .eq("id", drawNoticeId)
+    .eq("broadcast_id", broadcastId)
+    .eq("message_type", "moderation_notice")
+    .contains("metadata", {
+      interactionType: "draw",
+      source: "live_interaction",
+      status: "active",
+    })
+    .limit(1);
+
+  if (noticeError || (drawNoticeRows ?? []).length === 0) {
+    console.error("라이브 추첨 참여 대상 알림 조회 실패", noticeError);
+    return false;
+  }
+
+  const { data: activeBroadcastRows, error: broadcastError } = await supabase
+    .from("live_broadcast")
+    .select("id")
+    .eq("id", broadcastId)
+    .is("ended_at", null)
+    .limit(1);
+
+  if (broadcastError || (activeBroadcastRows ?? []).length === 0) {
+    console.error("라이브 추첨 참여 대상 방송 조회 실패", broadcastError);
+    return false;
+  }
+
+  const { data: existingRows, error: existingError } = await supabase
+    .from("live_message")
+    .select("id")
+    .eq("broadcast_id", broadcastId)
+    .eq("sender_id", actor.userId)
+    .eq("message_type", "moderation_notice")
+    .contains("metadata", {
+      drawNoticeId,
+      source: LIVE_DRAW_PARTICIPATION_SOURCE,
+    })
+    .limit(1);
+
+  if (existingError) {
+    console.error("라이브 추첨 기존 참여 조회 실패", existingError);
+    return false;
+  }
+
+  if ((existingRows ?? []).length > 0) {
+    return true;
+  }
+
+  const metadata: Json = {
+    drawNoticeId,
+    source: LIVE_DRAW_PARTICIPATION_SOURCE,
+  };
+
+  const { error: insertError } = await supabase.from("live_message").insert({
+    broadcast_id: broadcastId,
+    content: "draw participation",
+    message_type: "moderation_notice",
+    metadata,
+    sender_id: actor.userId,
+  });
+
+  if (insertError) {
+    console.error("라이브 추첨 참여 저장 실패", insertError);
     return false;
   }
 

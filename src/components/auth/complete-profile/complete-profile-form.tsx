@@ -122,7 +122,7 @@ export default function CompleteProfileForm({ next }: Props) {
                 variant="outline"
                 onClick={handleCheckNickname}
                 disabled={isBusy || !!errors.nickname || !dirtyFields.nickname}
-                className="border-brand/40 text-brand hover:bg-brand cursor-pointer hover:text-white"
+                className="border-brand/40 text-brand hover:bg-brand hover:text-brand-foreground cursor-pointer"
               >
                 {isCheckingNickname ? (
                   <Spinner />
@@ -202,7 +202,7 @@ export default function CompleteProfileForm({ next }: Props) {
         disabled={isBusy || !isValid || !isNicknameAvailable}
         className={cn(
           "w-full cursor-pointer py-5 font-bold tracking-widest uppercase disabled:opacity-40",
-          "bg-brand hover:bg-brand/85 text-white",
+          "bg-brand hover:bg-brand/85 text-brand-foreground",
         )}
       >
         {completeProfileMutation.isPending || isSubmitting ? <Spinner /> : "완료"}

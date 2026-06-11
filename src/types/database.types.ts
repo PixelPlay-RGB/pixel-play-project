@@ -583,6 +583,7 @@ export type Database = {
           message_type: Database["public"]["Enums"]["live_message_type"]
           metadata: Json
           sender_id: string | null
+          sender_role: Database["public"]["Enums"]["live_sender_role"]
         }
         Insert: {
           broadcast_id: string
@@ -593,6 +594,7 @@ export type Database = {
           message_type?: Database["public"]["Enums"]["live_message_type"]
           metadata?: Json
           sender_id?: string | null
+          sender_role?: Database["public"]["Enums"]["live_sender_role"]
         }
         Update: {
           broadcast_id?: string
@@ -603,6 +605,7 @@ export type Database = {
           message_type?: Database["public"]["Enums"]["live_message_type"]
           metadata?: Json
           sender_id?: string | null
+          sender_role?: Database["public"]["Enums"]["live_sender_role"]
         }
         Relationships: [
           {
@@ -1120,7 +1123,10 @@ export type Database = {
         }
         Returns: Json
       }
-      get_channel_live_hero: { Args: { p_creator_id: string }; Returns: Json }
+      get_channel_live_hero: {
+        Args: { p_creator_id: string; p_viewer_id?: string }
+        Returns: Json
+      }
       get_channel_profile: {
         Args: { p_creator_id: string; p_viewer_id?: string }
         Returns: Json
@@ -1220,7 +1226,6 @@ export type Database = {
         Args: { p_filter?: string; p_limit?: number; p_offset?: number }
         Returns: Json
       }
-      get_landing_snapshot: { Args: never; Returns: Json }
       get_live_chat_overlay_snapshot: {
         Args: { p_creator_id: string; p_limit?: number }
         Returns: Json
@@ -1297,6 +1302,7 @@ export type Database = {
         Args: { p_broadcast_id: string; p_viewer_key: string }
         Returns: number
       }
+      live_viewer_presence_window: { Args: never; Returns: string }
       mark_notifications_seen: {
         Args: { p_actor_user_id: string }
         Returns: undefined
@@ -1376,6 +1382,16 @@ export type Database = {
           p_message?: string
         }
         Returns: Json
+      }
+      send_live_interaction_notice: {
+        Args: {
+          p_actor_user_id: string
+          p_broadcast_id: string
+          p_content: string
+          p_interaction_type: string
+          p_metadata?: Json
+        }
+        Returns: string
       }
       send_live_message: {
         Args: {
@@ -1493,6 +1509,12 @@ export type Database = {
       gender: "male" | "female" | "none"
       live_chat_scope: "authenticated" | "follower" | "manager"
       live_message_type: "chat" | "moderation_notice" | "donation"
+      live_sender_role:
+        | "creator"
+        | "manager"
+        | "donor"
+        | "subscriber"
+        | "viewer"
       message_type: "text" | "system"
       oauth_provider: "google" | "github" | "email"
       wallet_transaction_status: "pending" | "succeeded" | "failed" | "canceled"
@@ -1627,6 +1649,7 @@ export const Constants = {
       gender: ["male", "female", "none"],
       live_chat_scope: ["authenticated", "follower", "manager"],
       live_message_type: ["chat", "moderation_notice", "donation"],
+      live_sender_role: ["creator", "manager", "donor", "subscriber", "viewer"],
       message_type: ["text", "system"],
       oauth_provider: ["google", "github", "email"],
       wallet_transaction_status: ["pending", "succeeded", "failed", "canceled"],

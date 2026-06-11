@@ -2,11 +2,9 @@
 
 import { LIVE_STREAM_SERVER_URL } from "@/constants/live/live-overlay";
 
-const LOCAL_MEDIAMTX_RTMP_SERVER_URL = "rtmp://127.0.0.1:1935";
-const LOCAL_MEDIAMTX_HLS_BASE_URL = "http://127.0.0.1:8888";
-const LOCAL_MEDIAMTX_STREAM_PATH = "mystream";
-const DEFAULT_RTMP_PORT = "1935";
-const DEFAULT_HLS_PORT = "8888";
+const DEFAULT_MEDIAMTX_RTMP_SERVER_URL = LIVE_STREAM_SERVER_URL;
+const DEFAULT_MEDIAMTX_HLS_BASE_URL = "http://live.pixel-play.studio:8888";
+const DEFAULT_MEDIAMTX_STREAM_PATH = "mystream";
 
 function trimSlashes(value: string) {
   return value.replace(/^\/+|\/+$/g, "");
@@ -14,10 +12,6 @@ function trimSlashes(value: string) {
 
 function trimTrailingSlashes(value: string) {
   return value.replace(/\/+$/g, "");
-}
-
-function isLocalHostname(hostname: string) {
-  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
 }
 
 function getRtmpServerPath(value: string) {
@@ -28,34 +22,14 @@ function getRtmpServerPath(value: string) {
   }
 }
 
-function getHlsBaseUrlFromRtmpServerUrl(value: string) {
-  try {
-    const url = new URL(value);
-
-    if (isLocalHostname(url.hostname)) {
-      return `http://${url.hostname}:${DEFAULT_HLS_PORT}`;
-    }
-
-    const port = url.port && url.port !== DEFAULT_RTMP_PORT ? `:${url.port}` : "";
-
-    return `https://${url.hostname}${port}`;
-  } catch {
-    return null;
-  }
-}
-
-function getMediaConfigValue(value: string | undefined, key: string, localDefault: string) {
+function getMediaConfigValue(value: string | undefined, defaultValue: string) {
   const configuredValue = value?.trim();
 
   if (configuredValue) {
     return configuredValue;
   }
 
-  if (process.env.NODE_ENV !== "production") {
-    return localDefault;
-  }
-
-  throw new Error(`${key} 환경 변수가 필요합니다.`);
+  return defaultValue;
 }
 
 function getHlsBaseUrl() {
@@ -65,15 +39,14 @@ function getHlsBaseUrl() {
     return configuredValue;
   }
 
-  return getHlsBaseUrlFromRtmpServerUrl(LIVE_STREAM_SERVER_URL) ?? LOCAL_MEDIAMTX_HLS_BASE_URL;
+  return DEFAULT_MEDIAMTX_HLS_BASE_URL;
 }
 
 export const CHANNEL_LIVE_MEDIA_CONFIG = {
   get rtmpServerUrl() {
     return getMediaConfigValue(
       process.env.NEXT_PUBLIC_MEDIAMTX_RTMP_SERVER_URL,
-      "NEXT_PUBLIC_MEDIAMTX_RTMP_SERVER_URL",
-      LOCAL_MEDIAMTX_RTMP_SERVER_URL,
+      DEFAULT_MEDIAMTX_RTMP_SERVER_URL,
     );
   },
   get hlsBaseUrl() {
@@ -82,8 +55,7 @@ export const CHANNEL_LIVE_MEDIA_CONFIG = {
   get streamPath() {
     return getMediaConfigValue(
       process.env.NEXT_PUBLIC_MEDIAMTX_STREAM_PATH,
-      "NEXT_PUBLIC_MEDIAMTX_STREAM_PATH",
-      LOCAL_MEDIAMTX_STREAM_PATH,
+      DEFAULT_MEDIAMTX_STREAM_PATH,
     );
   },
 } as const;

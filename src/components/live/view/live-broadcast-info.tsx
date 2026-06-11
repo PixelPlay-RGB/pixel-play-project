@@ -1,5 +1,6 @@
 // 방송 제목, 태그를 표시합니다.
 
+import LiveTagLink from "@/components/live/live-tag-link";
 import type { LiveBroadcast } from "@/types/live/live";
 
 interface Props {
@@ -15,9 +16,7 @@ export function LiveBroadcastInfo({ broadcast }: Props) {
       {broadcast.tags.length > 0 && (
         <div className="flex flex-wrap items-center gap-2">
           {broadcast.tags.map((tag) => (
-            <span key={tag} className="text-muted-foreground text-xs">
-              #{tag}
-            </span>
+            <LiveTagLink key={tag} tag={tag} />
           ))}
         </div>
       )}

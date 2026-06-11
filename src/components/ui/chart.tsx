@@ -98,7 +98,7 @@ function ChartStyle({ id, config }: { id: string; config: ChartConfig }) {
 
                 return color ? `  --color-${key}: ${color};` : null;
               })
-              .filter(Boolean)
+              .filter((line) => line !== null)
               .join("\n");
 
             return `${prefix} [data-chart=${id}] {\n${variables}\n}`;

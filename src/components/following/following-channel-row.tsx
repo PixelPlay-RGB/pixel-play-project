@@ -47,7 +47,7 @@ export default function FollowingChannelRow({ item }: FollowingChannelRowProps) 
             aria-label={`${item.creatorNickname} 라이브 보러가기`}
             className={cn(
               buttonVariants({ size: "sm" }),
-              "bg-brand hover:bg-brand/85 shadow-brand/25 h-8 shrink-0 rounded-full px-3 text-xs font-black text-white shadow-sm hover:shadow-md",
+              "bg-brand hover:bg-brand/85 shadow-brand/25 text-brand-foreground h-8 shrink-0 rounded-full px-3 text-xs font-black shadow-sm hover:shadow-md",
             )}
           >
             <Eye className="size-3.5" />

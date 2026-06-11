@@ -107,7 +107,7 @@ export default function CommunityCommentItem({
         <div className="flex items-start justify-between gap-2">
           <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5">
             {isBest && (
-              <span className="bg-brand rounded px-1.5 py-0.5 text-[10px] leading-none font-black text-white">
+              <span className="bg-brand text-brand-foreground rounded px-1.5 py-0.5 text-[10px] leading-none font-black">
                 BEST
               </span>
             )}
@@ -164,7 +164,7 @@ export default function CommunityCommentItem({
                 type="button"
                 disabled={!isDraftSubmittable || updateComment.isPending}
                 onClick={handleSaveEdit}
-                className="bg-brand hover:bg-brand/85 h-8 rounded-lg px-3 text-xs font-bold text-white"
+                className="bg-brand hover:bg-brand/85 text-brand-foreground h-8 rounded-lg px-3 text-xs font-bold"
               >
                 {updateComment.isPending ? <Spinner className="size-3.5" /> : "수정"}
               </Button>

@@ -3,6 +3,7 @@
 
 import { useState } from "react";
 import { useLiveViewData } from "@/hooks/live/use-live-view-data";
+import { useLiveInteractionNotices } from "@/hooks/live/use-live-interaction-notices";
 import { useLiveMessages } from "@/hooks/live/use-live-messages";
 import { useLivePolls } from "@/hooks/live/use-live-polls";
 import { useLiveChatSession } from "@/hooks/live/use-live-chat-session";
@@ -10,23 +11,45 @@ import { useLiveDonationRanking } from "@/hooks/live/use-live-donation-ranking";
 import { useUserWalletBalance } from "@/hooks/donations/use-user-wallet-balance";
 import { useAuthStore } from "@/stores/auth";
 import { useQueryClient } from "@tanstack/react-query";
-import { voteLivePollAction, sendLiveDonationAction } from "@/actions/live/live";
+import {
+  joinLiveDrawAction,
+  voteLivePollAction,
+  sendLiveDonationAction,
+} from "@/actions/live/live";
 import { QUERY_KEYS } from "@/constants/common/query-keys";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { toastAppError, toastAppInfo } from "@/utils/common/toast-message";
 import { LIVE_DONATION_MIN_AMOUNT } from "@/constants/live/live";
 import { parseLiveVoteCommand } from "@/utils/live/live-vote-command";
-import { mapLiveWatchToBroadcast, type LivePoll } from "@/types/live/live";
+import {
+  mapLiveWatchCreator,
+  mapLiveWatchToBroadcast,
+  type LiveBroadcast,
+  type LivePoll,
+} from "@/types/live/live";
 
 export function useLiveBroadcastView(creatorId: string) {
   const user = useAuthStore((state) => state.user);
   const queryClient = useQueryClient();
-  const { data: watchData, isLoading, refetch } = useLiveViewData(creatorId);
+  const { data: watchData, isLoading, refetch, endedElapsedSeconds } = useLiveViewData(creatorId);
 
   const broadcast = mapLiveWatchToBroadcast(watchData);
+  // 방송이 종료/오프라인(broadcast=null)이어도 크리에이터 정보는 남아 종료 화면에서 쓴다.
+  const creator = watchData?.creator ? mapLiveWatchCreator(watchData.creator) : null;
 
   const [optimisticFollowing, setOptimisticFollowing] = useState<boolean | null>(null);
   const isFollowing = optimisticFollowing ?? watchData?.viewerRelation?.isFollowing ?? false;
+
+  // 채팅 규칙 게이트 통과 여부(메뉴 동의 칩 표시용) — 두 신호의 합집합.
+  // ① canChat=true: RPC가 규칙 게이트를 통과시킨 상태(본인 채널·규칙 미설정 채널 포함 — 이들은
+  //    동의 절차가 없어 chatRuleAcceptedVersion이 null이므로 전용 필드만으론 누락된다).
+  // ② 전용 필드(chatRuleAcceptedVersion>=chatRuleVersion): canChat이 follower_required 등
+  //    다른 사유로 false여도 동의 이력이 있으면 동의 완료로 본다.
+  // 동의 직후엔 acceptChatRule→onChatRuleAccepted(refetch)로 watchData가 갱신돼 신선하다.
+  const isChatRuleAccepted =
+    watchData?.viewerChatState.canChat === true ||
+    (watchData?.viewerRelation?.chatRuleAcceptedVersion != null &&
+      watchData.viewerRelation.chatRuleAcceptedVersion >= watchData.settings.chatRuleVersion);
 
   function onFollowToggled() {
     const next = !isFollowing;
@@ -44,10 +67,27 @@ export function useLiveBroadcastView(creatorId: string) {
       });
   }
 
-  const messagesQuery = useLiveMessages(broadcast?.id, creatorId, user?.id);
+  // 시청 중 방송이 종료되면 broadcast가 null이 된다(realtime/refetch). 이때도 마지막 방송 정보
+  // (제목·태그·참여자 수)와 채팅 메시지를 그대로 보여주기 위해 마지막 라이브 스냅샷을 유지한다.
+  // 라이브 동안 의미 있는 필드(참여자 수·제목)가 바뀔 때만 갱신해(렌더 중 가드된 setState)
+  // 무한 루프를 피한다. elapsedSeconds는 매 렌더 변하므로 비교에서 제외하고, 시간은 아래서 따로 고정.
+  const [lastBroadcast, setLastBroadcast] = useState<LiveBroadcast | null>(null);
+  if (
+    broadcast &&
+    (broadcast.id !== lastBroadcast?.id ||
+      broadcast.viewerCount !== lastBroadcast?.viewerCount ||
+      broadcast.title !== lastBroadcast?.title)
+  ) {
+    setLastBroadcast(broadcast);
+  }
+  // 한 번이라도 라이브였는지(=시청 중 종료) vs 처음부터 종료된 방송 재진입 구분에 쓴다.
+  const hadLiveBroadcast = lastBroadcast !== null;
+
+  const messagesQuery = useLiveMessages(broadcast?.id ?? lastBroadcast?.id, creatorId, user?.id);
   const messages = messagesQuery.messages;
 
   const pollsQuery = useLivePolls(broadcast?.id, user?.id);
+  const interactionNoticesQuery = useLiveInteractionNotices(broadcast?.id, user?.id);
   const donationRankingQuery = useLiveDonationRanking(creatorId);
   const donationEnabled = watchData?.settings.donationEnabled ?? false;
   const donationMinAmount = watchData?.settings.donationMinAmount ?? LIVE_DONATION_MIN_AMOUNT;
@@ -67,7 +107,8 @@ export function useLiveBroadcastView(creatorId: string) {
     const cachedPolls = broadcastId
       ? queryClient.getQueryData<LivePoll[]>(QUERY_KEYS.live.pollsForViewer(broadcastId, user?.id))
       : undefined;
-    const isUnvote = cachedPolls?.find((poll) => poll.id === pollId)?.userVotedOptionId === optionId;
+    const isUnvote =
+      cachedPolls?.find((poll) => poll.id === pollId)?.userVotedOptionId === optionId;
     try {
       const success = await voteLivePollAction(pollId, optionId);
       if (!success) {
@@ -96,13 +137,43 @@ export function useLiveBroadcastView(creatorId: string) {
     }
   }
 
+  async function joinDraw(drawNoticeId: string): Promise<boolean> {
+    if (!broadcast?.id) return false;
+
+    try {
+      const success = await joinLiveDrawAction({
+        broadcastId: broadcast.id,
+        drawNoticeId,
+      });
+
+      if (!success) {
+        toastAppError(APP_MESSAGE_CODE.error.common.unknown);
+        return false;
+      }
+
+      void queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.live.interactionNotices(broadcast.id, user?.id),
+      });
+
+      return true;
+    } catch (error) {
+      console.error("라이브 추첨 참여 처리 실패", error);
+      toastAppError(APP_MESSAGE_CODE.error.common.unknown);
+      return false;
+    }
+  }
+
   async function sendDonation(params: {
     amount: number;
     message: string;
     isAnonymous: boolean;
     idempotencyKey: string;
   }): Promise<boolean> {
-    if (!broadcast?.id) return false;
+    // 최심층 가드 — UI disabled를 빠뜨린 표면이 생겨도 조용히 실패하지 않게 안내한다.
+    if (!broadcast?.id) {
+      toastAppInfo(APP_MESSAGE_CODE.info.live.broadcastEnded);
+      return false;
+    }
     // 크리에이터는 본인 방송에 후원할 수 없다(서버도 거부하지만 즉시 명확히 안내한다).
     if (user?.id && user.id === creatorId) {
       toastAppError(APP_MESSAGE_CODE.error.live.donationSelf);
@@ -173,21 +244,31 @@ export function useLiveBroadcastView(creatorId: string) {
   return {
     isLoading,
     broadcast,
+    // 시청 중 종료 시 정보 행(제목·참여자)에 쓰는 마지막 라이브 스냅샷 + 멈춘 경과 시간.
+    lastBroadcast,
+    endedElapsedSeconds,
+    creator,
+    hadLiveBroadcast,
     messages,
     donations,
     polls: pollsQuery.polls,
     isPollsLoading: pollsQuery.isLoading,
     isPollsError: Boolean(pollsQuery.error),
+    interactionNotices: interactionNoticesQuery.notices,
+    isInteractionNoticesLoading: interactionNoticesQuery.isLoading,
+    isInteractionNoticesError: Boolean(interactionNoticesQuery.error),
     walletBalance,
     isWalletLoading,
     isWalletError,
     donationEnabled,
     donationMinAmount,
     votePoll,
+    joinDraw,
     sendDonation,
     isFollowing,
     onFollowToggled,
     chatRuleText: watchData?.settings.chatRuleText,
+    isChatRuleAccepted,
     ...chatSession,
     sendMessage,
   };

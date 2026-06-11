@@ -18,11 +18,7 @@ const PUBLIC_CHANNEL_PATTERN =
   /^\/channel\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\/|$)/i;
 
 function isPublicRoute(pathname: string) {
-  return (
-    pathname === "/" ||
-    pathname.startsWith("/live/") ||
-    PUBLIC_CHANNEL_PATTERN.test(pathname)
-  );
+  return pathname === "/" || pathname.startsWith("/live/") || PUBLIC_CHANNEL_PATTERN.test(pathname);
 }
 
 function isPublicAuthRoute(pathname: string) {

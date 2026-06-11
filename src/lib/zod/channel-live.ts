@@ -2,8 +2,6 @@
 
 import { z } from "zod";
 
-import { messageContentSchema } from "@/lib/zod/message";
-
 const FOLLOWER_WAIT_SECONDS = [
   0, 300, 600, 1800, 3600, 86400, 604800, 2592000, 5184000, 7776000, 10368000, 12960000, 15552000,
 ];
@@ -46,18 +44,32 @@ export const updateChannelLiveSettingsSchema = z.object({
   ttsRate: z.number().min(0.5).max(2),
 });
 
-export const sendChannelLiveChatMessageSchema = z.object({
-  broadcastId: z.string().uuid(),
-  content: messageContentSchema,
-});
-
 export const getChannelLiveDrawParticipantsSchema = z
   .object({
     broadcastId: z.string().uuid(),
+    drawNoticeId: z.string().uuid().nullable().optional(),
     endedAt: z.string().datetime(),
     startedAt: z.string().datetime(),
   })
   .refine((value) => new Date(value.startedAt).getTime() <= new Date(value.endedAt).getTime());
+
+export const createChannelLivePollSchema = z.object({
+  broadcastId: z.string().uuid(),
+  endsAt: z.string().datetime().nullable().optional(),
+  options: z.array(z.string().trim().min(1).max(24)).min(2),
+  title: z.string().trim().min(1).max(80),
+});
+
+export const endChannelLivePollSchema = z.object({
+  pollId: z.string().uuid(),
+});
+
+export const sendChannelLiveInteractionNoticeSchema = z.object({
+  broadcastId: z.string().uuid(),
+  content: z.string().trim().min(1).max(300),
+  interactionType: z.enum(["poll", "draw", "roulette"]),
+  metadata: z.record(z.string(), z.unknown()).optional(),
+});
 
 const mediaMtxTrackCodecPropsSchema = z
   .object({
@@ -85,7 +97,11 @@ export const mediaMtxPathResponseSchema = z
 export type GetChannelLiveDrawParticipantsInput = z.infer<
   typeof getChannelLiveDrawParticipantsSchema
 >;
+export type CreateChannelLivePollInput = z.infer<typeof createChannelLivePollSchema>;
+export type EndChannelLivePollInput = z.infer<typeof endChannelLivePollSchema>;
 export type MediaMtxPathResponse = z.infer<typeof mediaMtxPathResponseSchema>;
-export type SendChannelLiveChatMessageInput = z.infer<typeof sendChannelLiveChatMessageSchema>;
+export type SendChannelLiveInteractionNoticeInput = z.infer<
+  typeof sendChannelLiveInteractionNoticeSchema
+>;
 export type StartLiveBroadcastInput = z.infer<typeof startLiveBroadcastSchema>;
 export type UpdateChannelLiveSettingsInput = z.infer<typeof updateChannelLiveSettingsSchema>;

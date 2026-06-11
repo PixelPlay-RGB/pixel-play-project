@@ -5,21 +5,23 @@ import { useEffect, useState } from "react";
 
 import { formatElapsedTime } from "@/utils/live/live-chat";
 
-export function useLiveElapsed(initialSeconds: number): string {
-  const [seconds, setSeconds] = useState(initialSeconds);
+// isRunning=false면(방송 종료) 인터벌을 돌리지 않고 주어진 초를 멈춘 값으로 그대로 표시한다.
+export function useLiveElapsed(initialSeconds: number, isRunning = true): string {
+  const [tickSeconds, setTickSeconds] = useState(initialSeconds);
 
   useEffect(() => {
+    if (!isRunning) return;
     // 기준점은 effect 안에서 캡처해 렌더 순수성을 지킨다. initialSeconds가 refetch로 바뀌면
     // 의존성으로 effect가 재실행되며 기준점을 다시 잡으므로 누적 중복 없이 보정된다.
     const initial = initialSeconds;
     const startedAt = Date.now();
 
     const intervalId = setInterval(() => {
-      setSeconds(initial + Math.floor((Date.now() - startedAt) / 1000));
+      setTickSeconds(initial + Math.floor((Date.now() - startedAt) / 1000));
     }, 1000);
 
     return () => clearInterval(intervalId);
-  }, [initialSeconds]);
+  }, [initialSeconds, isRunning]);
 
-  return formatElapsedTime(seconds);
+  return formatElapsedTime(isRunning ? tickSeconds : initialSeconds);
 }

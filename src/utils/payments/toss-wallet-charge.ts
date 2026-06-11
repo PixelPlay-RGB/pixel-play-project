@@ -11,7 +11,7 @@ import {
 import {
   shouldMarkTossConfirmFailed,
   TOSS_CONFIRM_TIMEOUT_MS,
-} from "@/lib/payments/toss-confirm-failure-policy";
+} from "@/utils/payments/toss-confirm-failure-policy";
 import { createAdminClient } from "@/lib/supabase/admin-client";
 import { createClient } from "@/lib/supabase/server";
 import type { AppActionResult } from "@/types/common/action";

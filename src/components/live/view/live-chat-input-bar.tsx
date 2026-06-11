@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { SendHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ChatEmojiPicker from "@/components/common/chat-emoji-picker";
 import { Input } from "@/components/ui/input";
@@ -11,16 +12,22 @@ import {
   PopoverHeader,
   PopoverTitle,
 } from "@/components/ui/popover";
-import { LiveDonationDialog } from "@/components/live/view/live-donation-dialog";
+import {
+  LiveDonationPopover,
+  type LiveDonationCloseReason,
+} from "@/components/live/view/live-donation-popover";
 import { LiveVotePopover } from "@/components/live/view/live-vote-popover";
 import { LIVE_CHAT_MESSAGE_MAX_LENGTH, LIVE_LABEL } from "@/constants/live/live";
 import { cn } from "@/lib/utils";
-import type { LivePoll, LiveViewerChatState } from "@/types/live/live";
+import type { LiveInteractionNotice, LivePoll, LiveViewerChatState } from "@/types/live/live";
 
 interface Props {
   polls: LivePoll[];
+  interactionNotices?: LiveInteractionNotice[];
   isPollsLoading?: boolean;
   isPollsError?: boolean;
+  isInteractionNoticesLoading?: boolean;
+  isInteractionNoticesError?: boolean;
   chatState: LiveViewerChatState;
   isLoggedIn: boolean;
   walletBalance: number;
@@ -31,6 +38,7 @@ interface Props {
   onLoginPrompt: () => void;
   onSendMessage: (content: string) => Promise<boolean>;
   onVote?: (pollId: string, optionId: string) => Promise<boolean>;
+  onJoinDraw?: (drawNoticeId: string) => Promise<boolean>;
   onDonate?: (params: {
     amount: number;
     message: string;
@@ -46,6 +54,13 @@ interface Props {
   onFollow?: () => void;
   isFollowing?: boolean;
   isFollowPending?: boolean;
+  // 방송 종료 시: 메시지 목록은 유지하되 입력칸을 비활성화하고 후원/투표 액션도 비활성화(disabled)한다.
+  isEnded?: boolean;
+  // 전체화면 오버레이 등에서 사용할 때 popover/dialog 포털 컨테이너를 전체화면 요소로 지정한다(미지정=body).
+  portalContainer?: HTMLElement | null;
+  // 전체화면 후원 버튼이 후원 popover 열기를 요청한다(LiveDonationPopover로 그대로 전달).
+  donationOpenRequested?: boolean;
+  onDonationOpenSettled?: (reason: LiveDonationCloseReason) => void;
 }
 
 function getChatPlaceholder({
@@ -80,8 +95,11 @@ function clampChatDraft(value: string): string {
 
 export function LiveChatInputBar({
   polls,
+  interactionNotices = [],
   isPollsLoading,
   isPollsError,
+  isInteractionNoticesLoading,
+  isInteractionNoticesError,
   chatState,
   isLoggedIn,
   walletBalance,
@@ -92,6 +110,7 @@ export function LiveChatInputBar({
   onLoginPrompt,
   onSendMessage,
   onVote,
+  onJoinDraw,
   onDonate,
   chatRuleText,
   showActions = true,
@@ -101,27 +120,39 @@ export function LiveChatInputBar({
   onFollow,
   isFollowing,
   isFollowPending,
+  isEnded = false,
+  portalContainer,
+  donationOpenRequested,
+  onDonationOpenSettled,
 }: Props) {
   const [draft, setDraft] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [isRuleOpen, setIsRuleOpen] = useState(false);
   const [isAcceptingRule, setIsAcceptingRule] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  // 입력바 컨테이너(좌우 px-3 패딩 포함) 전체를 popover anchor로 삼아, 팝오버 폭(--anchor-width)을
+  // 채팅 패널 테두리 안쪽 폭에 꽉 맞춘다(입력칸·버튼행보다 좌우 패딩만큼 더 넓게 테두리까지).
+  const inputBarRef = useRef<HTMLDivElement>(null);
 
+  // 방송 종료 시엔 타이핑·게이트 popover·후원·투표를 모두 막는다(메시지 목록은 유지).
   // 타이핑은 채팅 가능 상태에서만 허용한다.
-  const isEditable = isLoggedIn && chatState.canChat;
+  const isEditable = !isEnded && isLoggedIn && chatState.canChat;
   const reason = chatState.chatUnavailableReason;
   // 미팔로우: 팔로우할 때까지 항상 떠 있는 안내 popover(팔로우 액션이 있을 때만).
   // 팔로우 직후 optimistic isFollowing으로 즉시 닫아, refetch 지연 중 재클릭→언팔로우를 막는다.
-  const isFollowGate = isLoggedIn && reason === "follower_required" && !isFollowing && !!onFollow;
+  const isFollowGate =
+    !isEnded && isLoggedIn && reason === "follower_required" && !isFollowing && !!onFollow;
   // 클릭은 받되 타이핑은 막고 안내를 띄우는 게이트: 비로그인(로그인 유도), 규칙 미동의(규칙 popover).
-  const isLoginGate = !isLoggedIn;
-  const isRuleGate = isLoggedIn && reason === "chat_rule_acceptance_required";
+  const isLoginGate = !isEnded && !isLoggedIn;
+  const isRuleGate = !isEnded && isLoggedIn && reason === "chat_rule_acceptance_required";
   const isClickGate = isLoginGate || isRuleGate;
-  // 그 외 사유(팔로우 필요·대기·슬로우모드·매니저 전용)는 입력칸 자체를 비활성화한다.
-  const isInputDisabled = isSending || (!isEditable && !isClickGate);
+  // 그 외 사유(팔로우 필요·대기·슬로우모드·매니저 전용)·방송 종료는 입력칸 자체를 비활성화한다.
+  // 전송 중(isSending)에는 비활성화하지 않는다 — disabled 전환은 input을 blur시켜
+  // "한 번 보내면 포커스가 풀린다"는 문제를 만든다. 중복 전송은 handleSend 내부 가드가 막는다.
+  const isInputDisabled = isEnded || (!isEditable && !isClickGate);
 
-  const placeholder = getChatPlaceholder({ chatState, isLoggedIn });
+  const placeholder = isEnded
+    ? LIVE_LABEL.chatEndedPlaceholder
+    : getChatPlaceholder({ chatState, isLoggedIn });
   const draftValue = isEditable ? draft : "";
 
   function setDraftValue(nextValue: string) {
@@ -148,7 +179,9 @@ export function LiveChatInputBar({
     setDraftValue("");
     try {
       const isSuccess = await onSendMessage(trimmed);
-      if (!isSuccess) setDraftValue(trimmed);
+      // 실패 시 원문을 복원하되, 전송 중에 사용자가 이미 새 메시지를 입력했다면 덮어쓰지 않는다
+      // (입력칸이 전송 중에도 활성이라 연속 입력이 가능해졌기 때문).
+      if (!isSuccess) setDraft((current) => (current ? current : clampChatDraft(trimmed)));
     } finally {
       setIsSending(false);
     }
@@ -167,14 +200,18 @@ export function LiveChatInputBar({
   }
 
   return (
-    <div className={cn("border-border flex flex-col gap-2 border-t px-3 py-3", className)}>
-      <div className="flex items-center gap-2">
-        <ChatEmojiPicker
-          onEmojiSelect={(emoji) => setDraftValue(draftValue + emoji)}
-          disabled={!isEditable}
-        />
+    <div
+      ref={inputBarRef}
+      // 입력 섹션 높이를 좌측 비디오 하단 정보 영역(실측 149px)에 고정해 separator 라인을 맞춘다.
+      // 버튼(h-9)은 입력칸(h-11)보다 낮게 두고, 둘 사이 간격은 justify-between이 자동으로 벌린다.
+      className={cn(
+        "border-border flex h-[149px] flex-col justify-between border-t px-3 py-6",
+        className,
+      )}
+    >
+      {/* 이모지 버튼을 입력 필드 안(오른쪽 trailing)에 넣어, 입력 필드 좌측이 아래 버튼행과 정렬되게 한다. */}
+      <div className="relative">
         <Input
-          ref={inputRef}
           value={draftValue}
           maxLength={LIVE_CHAT_MESSAGE_MAX_LENGTH}
           placeholder={placeholder}
@@ -198,8 +235,29 @@ export function LiveChatInputBar({
             }
           }}
           aria-label={placeholder}
-          className="read-only:bg-muted/70 h-8 flex-1 text-sm read-only:cursor-pointer"
+          className={cn(
+            "read-only:bg-muted/70 h-11 w-full pr-17 text-sm read-only:cursor-pointer",
+            // 기본 ring(무채색) 대신 브랜드 민트 포커스로 시청 화면의 입력임을 또렷하게 한다.
+            "focus-visible:border-brand focus-visible:ring-brand/30",
+          )}
         />
+        <div className="absolute inset-y-0 right-1 flex items-center gap-0.5">
+          <ChatEmojiPicker
+            onEmojiSelect={(emoji) => setDraftValue(draftValue + emoji)}
+            disabled={!isEditable}
+          />
+          <Button
+            type="button"
+            size="icon-sm"
+            variant="ghost"
+            aria-label={LIVE_LABEL.chatSend}
+            className="text-brand hover:text-brand size-7"
+            disabled={!isEditable || !draftValue.trim() || isSending}
+            onClick={() => void handleSend()}
+          >
+            <SendHorizontal className="size-4" />
+          </Button>
+        </div>
       </div>
 
       {/*
@@ -208,7 +266,15 @@ export function LiveChatInputBar({
         대신 modal={false}로 포커스 트랩 없이 띄워, 키보드·스크린리더 사용자가 갇히지 않게 한다.
       */}
       <Popover open={isFollowGate} onOpenChange={() => {}} modal={false}>
-        <PopoverContent anchor={() => inputRef.current} align="start" side="top" className="w-80">
+        <PopoverContent
+          anchor={() => inputBarRef.current}
+          container={portalContainer}
+          align="start"
+          side="top"
+          sideOffset={0}
+          collisionPadding={0}
+          className="w-(--anchor-width) rounded-b-none"
+        >
           <PopoverHeader>
             <PopoverTitle>{LIVE_LABEL.participationFollowerTitle}</PopoverTitle>
             <PopoverDescription>{LIVE_LABEL.participationFollowerDesc}</PopoverDescription>
@@ -230,10 +296,13 @@ export function LiveChatInputBar({
         onOpenChange={(next) => setIsRuleOpen(isRuleGate && next)}
       >
         <PopoverContent
-          anchor={() => inputRef.current}
+          anchor={() => inputBarRef.current}
+          container={portalContainer}
           align="start"
           side="top"
-          className="max-h-[calc(100vh-1rem)] w-80 overflow-y-auto"
+          sideOffset={0}
+          collisionPadding={0}
+          className="max-h-[calc(100vh-1rem)] w-(--anchor-width) overflow-y-auto rounded-b-none"
         >
           <PopoverHeader>
             <PopoverTitle>{LIVE_LABEL.chatRuleTitle}</PopoverTitle>
@@ -255,7 +324,7 @@ export function LiveChatInputBar({
 
       {showActions && onVote && onDonate ? (
         <div className="flex items-center gap-2">
-          <LiveDonationDialog
+          <LiveDonationPopover
             isLoggedIn={isLoggedIn}
             walletBalance={walletBalance}
             isWalletLoading={isWalletLoading}
@@ -264,15 +333,27 @@ export function LiveChatInputBar({
             donationMinAmount={donationMinAmount}
             onLoginPrompt={onLoginPrompt}
             onDonate={onDonate}
+            disabled={isEnded}
+            portalContainer={portalContainer}
+            anchorRef={inputBarRef}
+            openRequested={donationOpenRequested}
+            onOpenRequestSettled={onDonationOpenSettled}
           />
           <LiveVotePopover
             polls={polls}
+            interactionNotices={interactionNotices}
             isLoading={isPollsLoading}
             isError={isPollsError}
+            isInteractionNoticesLoading={isInteractionNoticesLoading}
+            isInteractionNoticesError={isInteractionNoticesError}
             isLoggedIn={isLoggedIn}
             onLoginPrompt={onLoginPrompt}
             onVote={onVote}
+            onJoinDraw={onJoinDraw}
             presentation={votePresentation}
+            anchorRef={inputBarRef}
+            disabled={isEnded}
+            portalContainer={portalContainer}
           />
         </div>
       ) : null}

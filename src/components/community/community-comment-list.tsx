@@ -66,9 +66,7 @@ export default function CommunityCommentList({
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5">
-          <h2 className="text-foreground text-sm font-black">
-            댓글 {formatNumber(commentCount)}
-          </h2>
+          <h2 className="text-foreground text-sm font-black">댓글 {formatNumber(commentCount)}</h2>
           <button
             type="button"
             onClick={handleRefresh}

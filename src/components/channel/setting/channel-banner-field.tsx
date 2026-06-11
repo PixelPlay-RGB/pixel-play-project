@@ -137,7 +137,7 @@ export function ChannelBannerField({ controller }: Props) {
                 type="button"
                 disabled={!canSubmit}
                 onClick={handleAdd}
-                className="bg-brand hover:bg-brand/85 h-auto shrink-0 self-stretch font-bold text-white"
+                className="bg-brand hover:bg-brand/85 text-brand-foreground h-auto shrink-0 self-stretch font-bold"
               >
                 {isAdding ? <Spinner className="size-4" /> : "등록"}
               </Button>

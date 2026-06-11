@@ -53,7 +53,7 @@ function DonationBalanceHero({ snapshot }: { snapshot: UserDonationSnapshot }) {
         aria-hidden
       />
       <span
-        className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(255,77,74,0.94)_0%,rgba(255,77,74,0.8)_20%,rgba(255,77,74,0.42)_42%,rgba(255,77,74,0)_70%)]"
+        className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,color-mix(in_srgb,var(--live)_94%,transparent)_0%,color-mix(in_srgb,var(--live)_80%,transparent)_20%,color-mix(in_srgb,var(--live)_42%,transparent)_42%,transparent_70%)]"
         aria-hidden
       />
 

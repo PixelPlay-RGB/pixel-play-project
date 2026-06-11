@@ -31,7 +31,7 @@ export default function FollowingEmptyState({
           href="/"
           className={cn(
             buttonVariants({ size: "lg" }),
-            "bg-brand hover:bg-brand/90 mt-1 rounded-xl px-6 font-bold text-white",
+            "bg-brand hover:bg-brand/90 text-brand-foreground mt-1 rounded-xl px-6 font-bold",
           )}
         >
           라이브 둘러보기

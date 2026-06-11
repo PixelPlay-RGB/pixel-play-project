@@ -23,7 +23,7 @@ interface Props {
 
 export function AnalyticsReportTable({ reports }: Props) {
   return (
-    <div className="bg-card overflow-hidden rounded-xl border">
+    <div className="ring-foreground/10 bg-card overflow-hidden rounded-xl shadow-sm ring-1">
       <Table className="table-fixed">
         <TableHeader>
           <TableRow className="hover:bg-transparent">
@@ -61,7 +61,7 @@ export function AnalyticsReportTable({ reports }: Props) {
                       />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-foreground font-medium break-words">{report.title}</p>
+                      <p className="text-foreground font-medium wrap-break-word">{report.title}</p>
                       <p className="text-muted-foreground flex items-center gap-1 text-xs">
                         <Calendar className="size-3.5 shrink-0" />
                         {formatKstDateTimeNumeric(report.startedAt)}{" "}

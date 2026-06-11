@@ -4,12 +4,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { Play, Radio } from "lucide-react";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import CreatorAvatarPopover from "@/components/creator/creator-avatar-popover";
 import LiveBadge from "@/components/live/live-badge";
 import LiveTagLink from "@/components/live/live-tag-link";
 import { cn } from "@/lib/utils";
 import type { LiveHeroItem } from "@/types/live/live";
-import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
 import {
   formatLiveDuration,
   formatViewerCount,
@@ -93,19 +92,16 @@ export default function LiveHero({ hero, eyebrow = "지금 가장 많이 보는 
 
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div className="flex min-w-0 items-center gap-2">
-            <Link
-              href={liveHref}
-              className="focus-visible:ring-ring pointer-events-auto shrink-0 rounded-full outline-none focus-visible:ring-3"
-              aria-label={`${hero.creatorNickname} 채널로 이동`}
-            >
-              <Avatar className="size-9 ring-2 ring-white/25" size="lg">
-                <AvatarImage
-                  src={getAvatarImageSrc(hero.creatorPhotoUrl)}
-                  alt={`${hero.creatorNickname} 프로필 이미지`}
-                />
-                <AvatarFallback>{getAvatarFallbackText(hero.creatorNickname)}</AvatarFallback>
-              </Avatar>
-            </Link>
+            <CreatorAvatarPopover
+              creatorId={hero.creatorId}
+              creatorNickname={hero.creatorNickname}
+              creatorPhotoUrl={hero.creatorPhotoUrl}
+              isFollowing={hero.isFollowing}
+              isLive
+              avatarClassName="size-9 ring-2 ring-white/25"
+              avatarSize="lg"
+              triggerClassName="pointer-events-auto shrink-0"
+            />
             <div className="min-w-0">
               <p className="truncate text-sm font-bold">{hero.creatorNickname}</p>
               <p className="text-xs font-semibold text-white/70">

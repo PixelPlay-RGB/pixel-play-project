@@ -89,6 +89,7 @@ function parseLiveHeroLike(value: unknown): LiveHeroItem {
     thumbnailUrl: readNullableString(value, "thumbnailUrl"),
     currentViewerCount: readNumber(value, "currentViewerCount"),
     startedAt: readString(value, "startedAt"),
+    isFollowing: readBoolean(value, "isFollowing"),
   };
 }
 
@@ -110,7 +111,6 @@ function parseLiveListItem(value: unknown): LiveListItem {
   return {
     ...baseItem,
     recentChatCount: readNumber(value, "recentChatCount"),
-    isFollowing: readBoolean(value, "isFollowing"),
   };
 }
 

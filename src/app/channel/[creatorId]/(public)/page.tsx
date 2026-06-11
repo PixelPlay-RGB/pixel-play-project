@@ -2,6 +2,7 @@
 import { notFound } from "next/navigation";
 
 import { ChannelHomeContent } from "@/components/channel/home/channel-home-content";
+import { resolveViewerId } from "@/utils/auth/viewer";
 import { getChannelBanners, getChannelLiveHero } from "@/utils/channel/channel-extras-server";
 import { getChannelProfile } from "@/utils/channel/channel-server";
 import { getChannelCommunityPosts } from "@/utils/community/community-server";
@@ -23,8 +24,9 @@ export default async function ChannelHomePage({
 
   const profile = profileResult.data;
 
+  const viewerId = await resolveViewerId();
   const [hero, banners, postsResult] = await Promise.all([
-    profile.isLive ? getChannelLiveHero(creatorId) : Promise.resolve(null),
+    profile.isLive ? getChannelLiveHero(creatorId, viewerId) : Promise.resolve(null),
     getChannelBanners(creatorId),
     getChannelCommunityPosts(creatorId, 1, HOME_COMMUNITY_PREVIEW_COUNT),
   ]);

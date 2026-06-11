@@ -3,6 +3,7 @@
 export type ChannelLiveStreamStatusState = "online" | "offline" | "unavailable";
 
 export interface ChannelLiveStreamStatusResponse {
+  autoThumbnailUrl?: string | null;
   checkedAt: string;
   errorMessage?: string;
   fps: number | null;

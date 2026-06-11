@@ -13,6 +13,7 @@ interface Props {
 export function AnalyticsRangeSelector({ value, onChange }: Props) {
   return (
     <SegmentedButtonGroup
+      ariaLabel={ANALYTICS_LABEL.rangeAriaLabel}
       options={ANALYTICS_RANGE_OPTIONS.map((option) => ({
         value: option.value,
         label: ANALYTICS_LABEL[option.labelKey],

@@ -1,43 +1,57 @@
 "use client";
-// 라이브 채팅 메시지 목록을 렌더링하고 하단 근접 시 자동 스크롤을 처리합니다.
+// 라이브 채팅 메시지 목록 — TanStack Virtual로 보이는 구간만 렌더링하고 하단 근접 시 자동 스크롤한다.
+// 지금은 LIVE_MESSAGE_LIMIT(100) 캡이지만, 추후 이전 채팅 무한 스크롤(히스토리 적재)을 붙여도
+// DOM이 화면 분량으로 고정되도록 미리 가상화 구조를 깔아 둔다.
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { memo, useEffect, useLayoutEffect, useRef, type RefObject } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { LiveChatRoleBadge, type LiveChatRole } from "@/components/live/chat/live-chat-role-badge";
 import { LIVE_LABEL } from "@/constants/live/live";
-import { cn } from "@/lib/utils";
 import { formatDonationAmount } from "@/utils/live/live-chat";
+import { getLiveChatOverlayNicknameColor } from "@/utils/live/live-chat-overlay-style";
 import type { LiveChatMessage } from "@/types/live/live";
+
+// 한 줄 텍스트 채팅 기준 추정 높이(px). 실제 높이는 measureElement가 행마다 보정한다.
+const ESTIMATED_ROW_HEIGHT = 32;
+// 행 간 간격(px) — 기존 목록의 gap-3과 동일.
+const ROW_GAP = 12;
 
 interface Props {
   messages: LiveChatMessage[];
-  fillHeight?: boolean;
   // 클린봇 토글 상태. ON이면 비속어로 걸린 메시지를 가린다. 기본 ON.
   cleanbotEnabled?: boolean;
-}
-
-function getScrollContainer(el: HTMLElement): HTMLElement | null {
-  let parent: HTMLElement | null = el.parentElement;
-  while (parent) {
-    const { overflowY } = window.getComputedStyle(parent);
-    if (overflowY === "auto" || overflowY === "scroll") return parent;
-    parent = parent.parentElement;
-  }
-  return null;
+  // 후원 랭킹 배너(absolute 오버레이)가 덮는 실측 높이(px). 접고 펼칠 때마다 호출부가 갱신해 넘긴다.
+  topInsetPx?: number;
+  // 가상화 스크롤 컨테이너(ScrollArea viewport)의 ref. 호출부가 ScrollArea에 단 ref를 그대로 넘긴다.
+  scrollRef: RefObject<HTMLDivElement | null>;
 }
 
 export function LiveChatMessageList({
   messages,
-  fillHeight = false,
   cleanbotEnabled = true,
+  topInsetPx = 0,
+  scrollRef,
 }: Props) {
-  const bottomRef = useRef<HTMLDivElement>(null);
   const isInitialMount = useRef(true);
   const wasNearBottomRef = useRef(true);
 
+  // 행 0 = 첫 진입 필터링 안내(항상 표시), 행 i+1 = messages[i].
+  const rowCount = messages.length + 1;
+
+  const virtualizer = useVirtualizer({
+    count: rowCount,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => ESTIMATED_ROW_HEIGHT,
+    overscan: 12,
+    gap: ROW_GAP,
+    // 배너 실측 높이 + 행 간격만큼 비워, 맨 위 스크롤 시 첫 메시지가 배너에 가려지지 않게 한다.
+    paddingStart: topInsetPx > 0 ? topInsetPx + ROW_GAP : 8,
+    paddingEnd: 8,
+    getItemKey: (index) => (index === 0 ? "__filter-notice__" : messages[index - 1].id),
+  });
+
   useEffect(() => {
-    const el = bottomRef.current;
-    if (!el) return;
-    const container = getScrollContainer(el);
+    const container = scrollRef.current;
     if (!container) return;
 
     const updateNearBottom = () => {
@@ -52,39 +66,42 @@ export function LiveChatMessageList({
     return () => {
       container.removeEventListener("scroll", updateNearBottom);
     };
-  }, []);
+  }, [scrollRef]);
 
   useLayoutEffect(() => {
-    const el = bottomRef.current;
-    if (!el) return;
-
     if (isInitialMount.current) {
       isInitialMount.current = false;
-      el.scrollIntoView({ block: "end" });
-      return;
-    }
-
-    const container = getScrollContainer(el);
-    if (!container) {
-      el.scrollIntoView({ block: "end" });
+      virtualizer.scrollToIndex(rowCount - 1, { align: "end" });
       return;
     }
 
     if (wasNearBottomRef.current) {
-      el.scrollIntoView({ block: "end" });
+      virtualizer.scrollToIndex(rowCount - 1, { align: "end" });
     }
-  }, [messages]);
+  }, [rowCount, virtualizer]);
 
   return (
-    <div className={cn(fillHeight && "flex min-h-full flex-col justify-end")}>
-      <ul className="flex flex-col gap-1 px-3 py-2">
-        {messages.map((msg) => (
-          <li key={msg.id}>
-            <MessageItem message={msg} cleanbotEnabled={cleanbotEnabled} />
-          </li>
+    // 채팅은 항상 바닥에서 위로 쌓인다 — 메시지가 적을 땐 입력바 바로 위부터 시작한다.
+    <div className="flex min-h-full flex-col justify-end">
+      <div className="relative w-full" style={{ height: virtualizer.getTotalSize() }}>
+        {virtualizer.getVirtualItems().map((item) => (
+          <div
+            key={item.key}
+            data-index={item.index}
+            ref={virtualizer.measureElement}
+            className="absolute inset-x-0 top-0 px-3"
+            style={{ transform: `translateY(${item.start}px)` }}
+          >
+            {item.index === 0 ? (
+              <p className="border-border bg-muted/70 text-muted-foreground rounded-lg border px-3 py-2 text-center text-xs leading-relaxed font-semibold whitespace-pre-line">
+                {LIVE_LABEL.chatFilterNotice}
+              </p>
+            ) : (
+              <MessageItem message={messages[item.index - 1]} cleanbotEnabled={cleanbotEnabled} />
+            )}
+          </div>
         ))}
-      </ul>
-      <div ref={bottomRef} />
+      </div>
     </div>
   );
 }
@@ -94,81 +111,75 @@ interface MessageItemProps {
   cleanbotEnabled: boolean;
 }
 
-function MessageItem({ message, cleanbotEnabled }: MessageItemProps) {
+// 메시지가 바뀌지 않은 기존 항목은 새 메시지 도착마다 재렌더되지 않게 memo로 감싼다.
+// props가 모두 원시값/안정 ref(message 객체는 캐시에서 ref 유지)라 얕은 비교로 충분하다.
+const MessageItem = memo(function MessageItem({ message, cleanbotEnabled }: MessageItemProps) {
   if (message.type === "system") {
     return (
-      <p className="text-muted-foreground my-1 text-center text-xs wrap-break-word">
+      <p className="text-muted-foreground my-1 text-center text-sm wrap-break-word">
         {message.content}
       </p>
     );
   }
 
   if (message.type === "donation") {
+    // 후원 카드: 마크와 같은 brand→live 그라데이션 배경, 닉네임·금액 pill은 채팅과 동일한 해시 컬러.
+    const donorColor = getLiveChatOverlayNicknameColor(message.author ?? "");
+
     return (
-      <div className="border-live/20 bg-live/10 rounded-lg border px-3 py-2 text-sm">
-        <div className="mb-1 flex items-center gap-2">
-          <span className="text-live font-semibold">
-            {message.donationAmount !== undefined
-              ? `${formatDonationAmount(message.donationAmount)}P`
-              : ""}
-          </span>
-          <span className="text-foreground min-w-0 text-xs font-medium wrap-break-word">
+      <div className="from-brand/15 to-live/15 border-live/25 rounded-lg border bg-linear-to-r px-3.5 py-2.5 text-sm shadow-sm">
+        <div className="flex items-start justify-between gap-2">
+          <span className="min-w-0 text-sm font-bold wrap-break-word" style={{ color: donorColor }}>
             {message.author}
           </span>
+          {message.donationAmount !== undefined ? (
+            <span
+              className="shrink-0 rounded-full px-2.5 py-0.5 text-sm font-bold tabular-nums"
+              style={{
+                color: donorColor,
+                backgroundColor: `color-mix(in srgb, ${donorColor} 15%, transparent)`,
+              }}
+            >
+              {formatDonationAmount(message.donationAmount)}P
+            </span>
+          ) : null}
         </div>
         {message.content ? (
-          <p className="text-foreground wrap-break-word">{message.content}</p>
+          <p className="text-foreground mt-1.5 wrap-break-word">{message.content}</p>
         ) : null}
       </div>
     );
   }
 
-  if (message.isCleanbotFlagged) {
-    return <CleanbotMessage message={message} cleanbotEnabled={cleanbotEnabled} />;
-  }
+  // 클린봇에 걸린 메시지: 토글 ON이면 닉네임·마크는 그대로 두고 본문만 안내 문구로 가린다.
+  const isMasked = !!message.isCleanbotFlagged && cleanbotEnabled;
 
-  return <TextMessage message={message} />;
-}
+  return <TextMessage message={message} isMasked={isMasked} />;
+});
 
-// 클린봇에 걸린 메시지. 토글 ON이면 본문을 가리고 "보기"로 펼친다.
-// 플래그된 메시지면 토글과 무관하게 마운트되므로, 펼친 상태는 토글 재조작에도 유지된다.
-function CleanbotMessage({
-  message,
-  cleanbotEnabled,
-}: {
-  message: LiveChatMessage;
-  cleanbotEnabled: boolean;
-}) {
-  const [revealed, setRevealed] = useState(false);
-
-  if (!cleanbotEnabled || revealed) {
-    return <TextMessage message={message} />;
-  }
-
-  return (
-    <p className="text-muted-foreground flex items-center gap-1 py-0.5 text-xs">
-      <span>{LIVE_LABEL.cleanbotHidden}</span>
-      <Button
-        type="button"
-        variant="link"
-        size="sm"
-        aria-label={`${LIVE_LABEL.cleanbotHidden} ${LIVE_LABEL.cleanbotReveal}`}
-        className="text-muted-foreground hover:text-foreground h-auto p-0 text-xs font-medium underline"
-        onClick={() => setRevealed(true)}
-      >
-        {LIVE_LABEL.cleanbotReveal}
-      </Button>
-    </p>
+function TextMessage({ message, isMasked }: { message: LiveChatMessage; isMasked: boolean }) {
+  // 역할 마크는 DB가 전송 시점에 스냅샷한 sender_role을 그대로 쓴다(viewer는 마크 없음).
+  const role: LiveChatRole | null =
+    message.senderRole && message.senderRole !== "viewer" ? message.senderRole : null;
+  // OBS 채팅 오버레이와 같은 규칙으로 닉네임별 랜덤(해시) 컬러를 적용한다.
+  const nicknameColor = getLiveChatOverlayNicknameColor(
+    message.author ?? "",
+    message.isHost ? "creator" : undefined,
   );
-}
 
-function TextMessage({ message }: { message: LiveChatMessage }) {
   return (
-    <p className="py-0.5 text-sm leading-snug wrap-break-word">
-      <span className={cn("mr-1.5 font-medium", message.isHost ? "text-live" : "text-brand")}>
+    // line-height(leading-5=20px)를 마크 높이(size-5)와 일치시켜 마크가 라인박스를 정확히 채우고,
+    // 닉네임·본문은 같은 인라인 텍스트라 베이스라인이 자동으로 맞는다(마크·닉네임·본문 모두 동일 정렬).
+    <p className="min-w-0 text-sm leading-5 wrap-break-word">
+      {role ? <LiveChatRoleBadge role={role} withTooltip className="mr-1.5 align-bottom" /> : null}
+      <span className="mr-1.5 font-medium" style={{ color: nicknameColor }}>
         {message.author}
       </span>
-      <span className="text-foreground">{message.content}</span>
+      {isMasked ? (
+        <span className="text-muted-foreground">{LIVE_LABEL.cleanbotHidden}</span>
+      ) : (
+        <span className="text-foreground">{message.content}</span>
+      )}
     </p>
   );
 }

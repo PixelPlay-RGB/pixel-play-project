@@ -1,10 +1,8 @@
 # PixelPlay
 
-실시간 라이브 스트리밍 웹 애플리케이션입니다.
+실시간 채팅과 라이브 스트리밍을 함께 제공하는 웹 애플리케이션입니다.
 
-Next.js 16 App Router, React 19, Supabase Auth/Postgres/Realtime, TanStack Query, Zustand를 중심으로 라이브 목록(인덱스)·시청·검색, 라이브 투표·후원 랭킹·라이브 채팅, OBS 오버레이, 크리에이터 채널 관리(채팅·보안·후원·정산·라이브), 공개 채널 홈·커뮤니티(게시판)·배너, 팔로잉, 인앱 알림(수신함), 포인트 충전과 후원, 프로필 설정 기능을 제공합니다.
-
-> 인덱스(`/`)가 라이브 목록인 **라이브 스트리밍 전용** 서비스입니다. 독립 채팅방(`/chat`) 기능은 제거되었고, 방송 중 라이브 채팅과 채널 채팅 설정은 유지됩니다. (#105)
+Next.js 16 App Router, React 19, Supabase Auth/Postgres/Realtime, TanStack Query, Zustand를 중심으로 공개 랜딩, 라이브 목록·시청·검색, 라이브 투표·후원 랭킹, OBS 오버레이, 채팅방 목록·상세·검색, 메시지, 참여자 관리, 크리에이터 채널 관리(채팅·보안·후원·정산·라이브), 공개 채널 홈·커뮤니티(게시판)·배너, 팔로잉, 포인트 충전과 후원, 프로필 설정 기능을 제공합니다.
 
 쓰기 작업은 Server Action에서 인증 사용자를 확인한 뒤 Supabase `service_role` 경계로 RPC를 호출하는 방식으로 통일되어 있습니다. 읽기는 RPC의 실행 권한에 따라, `authenticated`에 열린 RPC는 브라우저 client + TanStack Query로, `service_role` 전용 RPC(크리에이터 스튜디오·OBS 오버레이 등)는 Server Component(SSR)에서 조회합니다. 클라이언트 컴포넌트는 TanStack Query mutation hook으로 pending 상태와 후처리를 관리합니다.
 
@@ -55,18 +53,18 @@ npm install
 cp .env.example .env.local
 ```
 
-| 변수                                      | 설명                                                                                                                       |
-| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `NEXT_PUBLIC_SUPABASE_URL`                | Supabase 프로젝트 URL                                                                                                      |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`    | Supabase publishable key                                                                                                   |
-| `NEXT_PUBLIC_SITE_URL`                    | OBS 오버레이 주소 생성에 사용할 공개 서비스 URL                                                                            |
-| `NEXT_PUBLIC_ENABLE_REACT_QUERY_DEVTOOLS` | 개발 중 React Query Devtools 표시 여부 (`true`일 때 표시)                                                                  |
-| `SUPABASE_SERVICE_ROLE_KEY`               | 회원 탈퇴 등 관리자 작업에 사용하는 service role key                                                                       |
-| `LIVE_OVERLAY_TOKEN_SECRET`               | 스트림 키와 OBS 오버레이 key 생성에 사용하는 서버 secret                                                                   |
-| `NEXT_PUBLIC_MEDIAMTX_RTMP_SERVER_URL`    | OBS 송출용 RTMP 서버 주소 (미설정 시 개발 기본 `rtmp://127.0.0.1:1935`)                                                    |
-| `NEXT_PUBLIC_MEDIAMTX_HLS_BASE_URL`       | 라이브 미리보기 재생용 HLS 베이스 URL (미설정 시 RTMP URL에서 유도)                                                        |
-| `NEXT_PUBLIC_MEDIAMTX_STREAM_PATH`        | 미리보기·송출 상태 조회 기본 스트림 path (미설정 시 개발 기본 `mystream`)                                                  |
-| `MEDIAMTX_API_BASE_URL`                   | 송출 상태 조회용 MediaMTX Control API 베이스 URL (서버 전용, 미설정 시 개발 기본 `http://127.0.0.1:9997`, production 필수) |
+| 변수                                      | 설명                                                                                                              |
+| ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`                | Supabase 프로젝트 URL                                                                                             |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`    | Supabase publishable key                                                                                          |
+| `NEXT_PUBLIC_SITE_URL`                    | OBS 오버레이 주소 생성에 사용할 공개 서비스 URL                                                                   |
+| `NEXT_PUBLIC_ENABLE_REACT_QUERY_DEVTOOLS` | 개발 중 React Query Devtools 표시 여부 (`true`일 때 표시)                                                         |
+| `SUPABASE_SERVICE_ROLE_KEY`               | 회원 탈퇴 등 관리자 작업에 사용하는 service role key                                                              |
+| `LIVE_OVERLAY_TOKEN_SECRET`               | 스트림 키와 OBS 오버레이 key 생성에 사용하는 서버 secret                                                          |
+| `NEXT_PUBLIC_MEDIAMTX_RTMP_SERVER_URL`    | OBS 송출용 RTMP 서버 주소 (미설정 시 기본 `rtmp://live.pixel-play.studio/live`)                                   |
+| `NEXT_PUBLIC_MEDIAMTX_HLS_BASE_URL`       | 라이브 미리보기 재생용 HLS 베이스 URL (미설정 시 기본 `http://live.pixel-play.studio:8888`)                       |
+| `NEXT_PUBLIC_MEDIAMTX_STREAM_PATH`        | 미리보기·송출 상태 조회 기본 스트림 path (미설정 시 기본 `mystream`)                                              |
+| `MEDIAMTX_API_BASE_URL`                   | 송출 상태 조회용 MediaMTX Control API 베이스 URL (서버 전용, 미설정 시 기본 `http://live.pixel-play.studio:9997`) |
 
 환경 변수 키를 추가하거나 변경하면 루트의 `env.d.ts` 타입 선언도 함께 갱신합니다.
 
@@ -93,7 +91,7 @@ https://<supabase-project-id>.supabase.co/auth/v1/callback
 npm run dev
 ```
 
-브라우저에서 <http://localhost:3000>에 접속합니다. 비로그인 상태의 `/`(라이브 목록), `/live/[creatorId]`(시청), `/live/search`, `/channel/[creatorId]`(공개 채널)는 공개 화면을 표시하고, 보호 라우트는 `/auth/login?next=<현재경로>`로 이동합니다.
+브라우저에서 <http://localhost:3000>에 접속합니다. 비로그인 상태의 `/`, `/live`, `/live/*`, `/chat/room/[roomId]`는 공개 화면을 표시하고, 보호 라우트는 `/auth/login?next=<현재경로>`로 이동합니다.
 
 ---
 
@@ -114,26 +112,29 @@ npm run dev
 
 ## 라우터 구조
 
-| 라우트                                                        | 접근       | 설명                                                       |
-| ------------------------------------------------------------- | ---------- | ---------------------------------------------------------- |
-| `/`                                                           | 공개       | 라이브 목록(인덱스). 필터·정렬·사이드바(팔로잉·트렌딩·인기 키워드) |
-| `/live`                                                       | 리다이렉트 | 구 목록 경로 → `/`로 리다이렉트(`next.config` redirects)   |
-| `/live/search?query=`                                         | 공개       | 라이브 검색 결과                                           |
-| `/live/[creatorId]`                                           | 공개       | 라이브 시청 화면                                           |
-| `/live/[creatorId]/chat[/overlayKey]`                         | 공개(읽기) | OBS 채팅 오버레이                                          |
-| `/live/[creatorId]/alerts/donation[/overlayKey]`              | 공개(읽기) | OBS 후원 알림 오버레이                                     |
-| `/channel/{live,chat,security,donation,settlement,analytics}` | 보호       | 크리에이터 채널 관리(스튜디오)                             |
-| `/channel/[creatorId]`                                        | 공개       | 공개 채널 홈. 라이브 Hero, 배너, 커뮤니티 미리보기         |
-| `/channel/[creatorId]/community[/[postId]\|/write]`           | 혼합       | 채널 커뮤니티(게시판) 목록·상세·작성                       |
-| `/channel/[creatorId]/setting`                                | 보호       | 채널 공개 프로필·소개·배너 관리(본인만)                    |
-| `/user` → `/user/profile`                                     | 보호       | 프로필 설정                                                |
-| `/user/following`                                             | 보호       | 팔로잉한 채널 목록                                         |
-| `/user/donations`                                             | 보호       | 후원 내역과 포인트 충전                                    |
+| 라우트                                                        | 접근       | 설명                                                      |
+| ------------------------------------------------------------- | ---------- | --------------------------------------------------------- |
+| `/`                                                           | 공개       | 라이브 목록(홈). 필터·정렬·사이드바(팔로잉·트렌딩·키워드) |
+| `/live`                                                       | 공개       | 구 목록 경로. `/`로 redirect                              |
+| `/live/search?query=`                                         | 공개       | 라이브 검색 결과                                          |
+| `/live/[creatorId]`                                           | 공개       | 라이브 시청 화면                                          |
+| `/live/[creatorId]/chat[/overlayKey]`                         | 공개(읽기) | OBS 채팅 오버레이                                         |
+| `/live/[creatorId]/alerts/donation[/overlayKey]`              | 공개(읽기) | OBS 후원 알림 오버레이                                    |
+| `/chat`                                                       | 보호       | 채팅방 목록                                               |
+| `/chat/room/[roomId]`                                         | 혼합       | 채팅방 상세(비로그인은 공유 preview, 로그인은 상세)       |
+| `/chat/search?query=`                                         | 보호       | 채팅방 검색 결과                                          |
+| `/channel/{live,chat,security,donation,settlement,analytics}` | 보호       | 크리에이터 채널 관리(스튜디오)                            |
+| `/channel/[creatorId]`                                        | 공개       | 공개 채널 홈. 라이브 Hero, 배너, 커뮤니티 미리보기        |
+| `/channel/[creatorId]/community[/[postId]\|/write]`           | 혼합       | 채널 커뮤니티(게시판) 목록·상세·작성                      |
+| `/channel/[creatorId]/setting`                                | 보호       | 채널 공개 프로필·소개·배너 관리(본인만)                   |
+| `/user` → `/user/profile`                                     | 보호       | 프로필 설정                                               |
+| `/user/following`                                             | 보호       | 팔로잉한 채널 목록                                        |
+| `/user/donations`                                             | 보호       | 후원 내역과 포인트 충전                                   |
 
 - 보호 라우트는 비로그인 접근 시 `/auth/login?next=<현재경로>`로 이동하고, 로그인 성공 후 원래 경로로 돌아갑니다.
-- `/`, `/channel/*`, `/user/*`는 사이드바 셸 레이아웃을 사용하며 공용 Footer 대신 사이드바 하단 크레딧을 표시합니다.
+- `/live`, `/channel/*`, `/user/*`는 사이드바 셸 레이아웃을 사용하며 공용 Footer 대신 사이드바 하단 크레딧을 표시합니다.
 - OBS 오버레이 라우트(`/live/[creatorId]/chat`, `/alerts/donation`)는 Footer와 헤더를 숨긴 투명 배경 화면으로 렌더링합니다.
-- 헤더는 별도 내비게이션 탭 없이 3섹션(검색·방송하기 / 알림·테마 / 계정)으로 구성하며, 검색 입력은 라이브 검색(`/live/search`)으로 이동합니다.
+- 헤더 내비게이션은 라이브, 채팅 탭 순서로 제공하고, 검색 입력은 라이브 라우터에서는 라이브 검색으로, 채팅 관련 라우터에서는 채팅방 검색으로 이동합니다.
 
 ---
 
@@ -151,7 +152,7 @@ npm run dev
 - 로그인과 현재 비밀번호 확인은 기존 계정 호환을 위해 비밀번호 입력 여부만 검증하고, 실제 인증은 Supabase Auth에 위임합니다.
 - Google, GitHub OAuth 로그인과 추가 프로필 입력 흐름을 제공하고, 연동 계정 목록을 `linked_providers`로 관리합니다.
 - 로그인 상태는 Supabase 세션을 기준으로 검증하고 `AuthListener`가 Zustand store에 동기화합니다.
-- 로그인 완료 사용자가 `/auth/login`, `/auth/signup`에 직접 접근하면 `next` 경로로 이동하고, 유효한 `next`가 없으면 `/`(라이브 목록)로 이동합니다.
+- 로그인 완료 사용자가 `/auth/login`, `/auth/signup`에 직접 접근하면 `next` 경로로 이동하고, 유효한 `next`가 없으면 `/live`로 이동합니다.
 - 프로필이 없는 OAuth 로그인 유저는 `/auth/complete-profile`로 이동합니다.
 - 비밀번호 변경, 프로필 수정, 프로필 이미지 업로드와 삭제, 회원 탈퇴 API를 제공합니다.
 - 프로필 이미지가 없는 유저는 `public/default-avatar.webp` 기본 이미지를 표시합니다.
@@ -167,6 +168,7 @@ npm run dev
 - 검색은 태그를 정확 일치로 매칭해 GIN 인덱스를 활용하고, 제목·닉네임 검색은 별도 경로로 분리합니다.
 - 시청 화면에서 진행 중인 투표에 참여할 수 있고(`vote_live_poll`, 같은 항목을 다시 누르면 무효표, 다른 항목은 선택 변경), 이번 주 후원 랭킹(`get_live_donation_ranking`)을 후원자 단위 합산으로 표시합니다. 익명 후원은 `donor_id` 해시 기반 동물 의사 닉네임("익명의 너구리")으로 표기해 신원을 노출하지 않습니다.
 - 라이브 채팅 전송은 `send_live_message_v2`로 처리하며, 금칙어 매칭 시 메시지를 어디에도 저장하지 않고(Realtime 전파 0) 작성자 본인에게만 차단 안내를 돌려줍니다.
+- 시청 채팅은 방장(Crown)·후원자(Heart) 역할 마크(brand→live 그라디언트, 시청 채팅과 OBS 오버레이가 공용 컴포넌트 공유)와 닉네임별 해시 컬러를 표시하고, 클린봇(비속어 필터) 토글·첫 진입 필터링 안내·이번 주 후원 랭킹 접기(아코디언) UI를 제공합니다.
 
 ### OBS 오버레이
 
@@ -218,16 +220,51 @@ npm run dev
 - 후원 전송은 `send_live_donation` RPC가 지갑 차감과 후원 기록, 라이브 후원 메시지 생성을 단일 트랜잭션으로 멱등 처리합니다.
 - `/user/donations`에서 후원 내역과 충전 진입을 함께 보여주며, `get_user_donation_snapshot`으로 데이터를 조회합니다.
 
-### 알림 (수신함)
+### 라우터와 공개 화면
 
-- 헤더 종 아이콘에서 인앱 알림 수신함을 제공합니다. 팔로우한 크리에이터의 ① 라이브 시작 ② 커뮤니티 글 작성 시 팔로워에게 알림이 DB 트리거로 fan-out됩니다.
-- `notification` 테이블 INSERT를 Supabase Realtime으로 받아 종 아이콘의 안읽음 빨간 배지를 갱신하고, 드롭다운을 열면 방문 기준으로 읽음 처리합니다(`user.notifications_last_seen_at`, `mark_notifications_seen`).
-- 알림 목록은 오늘/최근 일주일/이전(자정 기준)으로 그룹화하며, 전체 삭제와 개별 삭제를 제공합니다.
+- `/`는 라이브 목록(홈)이며, 구 경로 `/live` 진입은 `/`로 redirect합니다.
+- `/`와 `/chat/room/[roomId]`, `/live/*`, `/channel/[creatorId]/*`는 비로그인 상태에서도 공개 화면을 렌더링합니다.
 
 ### SEO와 공유 미리보기
 
 - production domain은 `https://pixel-play.studio`를 metadata base URL로 사용합니다.
-- 인덱스(라이브 목록)는 Open Graph와 Twitter large image metadata를 제공하며, 공유 썸네일은 `public/og-home.webp` 정적 에셋을 사용합니다.
+- `app/robots.ts`가 크롤링 규칙을 제공하며 개인·운영 경로(`/auth`, `/user`, 스튜디오, 채팅 팝업·OBS 오버레이)는 disallow하고, `app/sitemap.ts`가 핵심 공개 경로 사이트맵을 제공합니다. 인증 프록시(`src/proxy.ts`) matcher에서 두 파일을 제외해 크롤러가 로그인으로 리다이렉트되지 않게 합니다.
+- 라이브 시청(`/live/[creatorId]`)과 공개 채널은 크리에이터 닉네임 기반 title·description을 제공합니다. 비동기 `generateMetadata`는 기본적으로 body로 스트리밍되므로, 시청·채널 메타데이터는 layout에서 같은 데이터를 await하는 blocking 패턴으로 head에 고정합니다(`next.config.ts`의 `htmlLimitedBots`에 Lighthouse 포함).
+- 인증·유저 설정·스튜디오 레이아웃은 `robots: { index: false }`로 색인에서 제외합니다.
+- 메인 페이지와 채팅방 상세 페이지는 Open Graph와 Twitter large image metadata를 제공합니다. 공유 썸네일은 `public/og-home.webp`, `public/og-chat-room.webp` 정적 에셋을 사용합니다.
+- 비로그인 채팅방 preview는 `get_public_chat_room_metadata` RPC로 title과 description만 조회합니다. 메시지, 멤버, unread, presence는 공개하지 않습니다.
+- Lighthouse(데스크톱, 주요 4개 페이지) 접근성 100 · SEO 100 · 베스트 프랙티스 96~100 · CLS 0.01 수준을 유지합니다.
+
+### 채팅방 목록
+
+- `JOINED`, `NOT_JOINED`, `OWNED` 탭으로 채팅방 목록을 분리하고, `get_chat_room_list` RPC로 탭별 개수, 정렬, 번호형 페이지네이션, 탭 내 검색, unread_count, total_count를 한 응답으로 처리합니다.
+- `JOINED`, `OWNED` 탭의 기본 정렬은 최신 메시지순이며 정렬 옵션은 최신 메시지순, 생성일 최신순, 참여자 많은순으로 제공합니다. `NOT_JOINED` 탭의 기본 정렬은 생성일 최신순이며 정원 마감 방을 제외합니다.
+- 탭 변경 시 정렬값은 탭별 기본값으로, 검색어는 빈 값으로 초기화하며, 검색 중에는 탭 badge가 `total_count`로 오버라이드됩니다.
+- 채팅방 목록은 `useQuery`와 `keepPreviousData` 기반 번호형 페이지네이션으로 조회하고, page size는 grid 열 수에 맞춰 모바일 8개, 2열 12개, 3열 12개, 4열 16개로 조정합니다.
+- 채팅방 생성 Dialog에서 제목, 설명, 정원을 입력해 방을 만들 수 있으며 `createChatRoomAction`이 `create_chat_room` RPC를 호출합니다.
+
+### 채팅방 상세
+
+- 비로그인 사용자가 공유 링크로 접근하면 title, description, 로그인 CTA만 있는 public preview를 표시하고, 로그인 후 같은 URL에서 상세 화면으로 전환됩니다.
+- 방 정보, 현재 유저 멤버십, 활성 참여자 목록은 `get_chat_room_detail` RPC로 함께 조회합니다.
+- 미참여 유저가 진입하면 `JoinChatRoomDialog`가 표시되고, 정원 마감 상태에서는 참여 불가 안내만 표시합니다. 참여 완료 후 Realtime으로 자동 상태 전환됩니다.
+- 방장은 참여자 Popover에서 강퇴와 방장 권한 위임을 실행할 수 있으며, 현재 정책상 방장은 채팅방 나가기가 제한됩니다.
+- 강퇴된 유저는 Realtime 이벤트로 감지되어 입력이 잠기고 안내 Dialog가 표시됩니다.
+- 참여, 나가기, 읽음 처리, 강퇴, 방장 위임은 Server Action과 RPC를 통해 처리합니다.
+
+### 메시지
+
+- 메시지 목록은 `useInfiniteQuery`로 최신 메시지부터 조회하고 상단 근접 시 이전 메시지를 추가로 가져옵니다.
+- 같은 작성자의 연속 text 메시지는 bubble grouping으로 avatar와 nickname 반복을 줄입니다.
+- 새 메시지는 Supabase Realtime `postgres_changes` INSERT 이벤트를 받아 React Query cache에 `created_at desc` 순서로 병합합니다.
+- 텍스트 메시지는 `sendMessageAction`이 `send_chat_message` RPC를 호출하는 방식으로 전송하고, optimistic 메시지를 먼저 삽입한 뒤 RPC가 반환한 message id로 교체합니다. 실패 시 재전송과 취소 액션을 표시합니다.
+- 메시지 입력 중인 멤버는 Motion 기반 3점 typing indicator로 표시하고, 일정 시간 입력이 없으면 접속 dot으로 돌아갑니다.
+- 날짜 구분 system 메시지는 PostgreSQL AFTER INSERT Trigger(`trigger_insert_date_divider_message`)가 매일 첫 메시지 INSERT 시 `📅 YYYY년 MM월 DD일 요일` 형식으로 자동 삽입하며, partial unique index와 `ON CONFLICT DO NOTHING`으로 중복을 방지합니다.
+
+### 채팅방 검색
+
+- `/chat/search?query=검색어`에서 제목 검색과 방장 닉네임 검색을 섹션으로 나누어 표시합니다.
+- 검색 결과는 `search_chat_rooms` RPC와 `useInfiniteQuery`로 페이지 단위 조회하고, 각 섹션은 더보기 버튼으로 다음 페이지를 불러옵니다.
 
 ---
 
@@ -235,17 +272,17 @@ npm run dev
 
 ```text
 src/
-├── actions/               # Server Actions (auth, channel, common, community, donations, following, live, notification, profile)
+├── actions/               # Server Actions (auth, channel, chat-room, common, community, donations, following, live, message, profile)
 ├── app/                   # Next.js App Router
-│   ├── page.tsx           # 인덱스(/) = 라이브 목록
 │   ├── api/               # Route Handler (auth/withdraw, payments/toss, channel/live/stream-status)
 │   ├── auth/              # 로그인, 회원가입, OAuth callback, 프로필 완성
 │   ├── channel/           # (studio) 스튜디오(live, chat, security, donation, settlement, analytics)
 │   │                      #   + [creatorId] 공개 채널(홈, community, setting)
-│   ├── live/              # 라이브 시청, 검색, OBS 오버레이 (목록 인덱스는 app/page.tsx)
+│   ├── chat/              # 채팅방 목록, 상세, 검색
+│   ├── live/              # 라이브 목록, 시청, 검색, OBS 오버레이
 │   └── user/              # 프로필, 팔로잉, 후원
-├── components/            # 도메인별 UI (auth, channel, common, community, creator,
-│                          #   donations, following, live, notification, search, setting, ui)
+├── components/            # 도메인별 UI (auth, channel, chat-room, chat-room-list, common,
+│                          #   community, creator, donations, following, live, preview, search, setting, ui)
 ├── constants/             # 도메인별 상수와 Query Key Factory
 ├── hooks/                 # 도메인별 custom hooks (조회/뮤테이션/UI 로직)
 ├── lib/
@@ -258,7 +295,7 @@ src/
 └── utils/                 # 도메인 보조 유틸과 서버 snapshot helper
 ```
 
-- 라우트 전용 서버 데이터 페칭 함수는 라우트 폴더의 `_data/` 프라이빗 폴더에 둡니다. (예: `app/channel/(studio)/chat/_data/`, `app/live/[creatorId]/_data/`)
+- 라우트 전용 서버 데이터 페칭 함수는 라우트 폴더의 `_data/` 프라이빗 폴더에 둡니다. (예: `app/channel/chat/_data/`, `app/live/[creatorId]/_data/`)
 - 자세한 폴더 규칙은 `.agents/code-convention/SRP_CONVENTION.md`를 참고합니다.
 
 ---
@@ -269,7 +306,10 @@ src/
 
 | 테이블                        | 설명                                                           |
 | ----------------------------- | -------------------------------------------------------------- |
-| `user`                        | 서비스 유저 프로필(`notifications_last_seen_at` 포함). Supabase Auth user id와 동일한 `id`를 사용 |
+| `user`                        | 서비스 유저 프로필. Supabase Auth user id와 동일한 `id`를 사용 |
+| `chat_room`                   | 채팅방 메타데이터, 정원, 현재 참여자 수                        |
+| `chat_room_member`            | 채팅방 참여 상태, 강퇴 여부, 마지막 입장·읽음 시각             |
+| `message`                     | 채팅 메시지와 시스템 메시지                                    |
 | `creator_studio_setting`      | 크리에이터 채널 설정(채팅·보안 key 버전·후원·알림 등)          |
 | `live_broadcast`              | 라이브 방송과 시청자·채팅·후원 통계                            |
 | `live_message`                | 라이브 채팅·후원·운영 알림 메시지                              |
@@ -284,7 +324,6 @@ src/
 | `community_comment_like`      | 댓글 좋아요                                                    |
 | `channel_banner`              | 채널 홈 배너(이미지·제목·링크·정렬 순서)                       |
 | `creator_follow_event`        | 크리에이터 통계용 팔로우/언팔로우 상호작용 이벤트 로그         |
-| `notification`                | 인앱 알림(팔로잉 라이브 시작·커뮤니티 글). 방문 기준 읽음      |
 
 ### Enum
 
@@ -292,6 +331,7 @@ src/
 | --------------------------- | -------------------------------------------- |
 | `gender`                    | `male`, `female`, `none`                     |
 | `oauth_provider`            | `google`, `github`, `email`                  |
+| `message_type`              | `text`, `system`                             |
 | `live_chat_scope`           | `authenticated`, `follower`, `manager`       |
 | `live_message_type`         | `chat`, `moderation_notice`, `donation`      |
 | `wallet_transaction_type`   | `charge`, `donation_spend`, `refund`         |
@@ -302,7 +342,9 @@ src/
 | 도메인        | 함수                                                                                                                                                                                                                                                                                                                                                                   |
 | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 인증/프로필   | `check_email_exists`                                                                                                                                                                                                                                                                                                                                                   |
-| 라이브        | `get_live_hero`, `get_live_list`, `get_live_popular_keywords`, `search_live_results`, `get_live_watch`, `get_live_watch_count`, `start_live_broadcast`, `end_live_broadcast`, `send_live_message`, `send_live_message_v2`, `get_live_donation_ranking`, `accept_live_chat_rule`                                                                |
+| 채팅방        | `create_chat_room`, `get_chat_room_list`, `get_chat_room_detail`, `get_public_chat_room_metadata`, `join_chat_room`, `leave_chat_room`, `mark_room_read`, `kick_chat_room_member`, `transfer_chat_room_owner`, `search_chat_rooms`                                                                                                                                     |
+| 메시지        | `send_chat_message`                                                                                                                                                                                                                                                                                                                                                    |
+| 라이브        | `get_landing_snapshot`, `get_live_hero`, `get_live_list`, `get_live_popular_keywords`, `search_live_results`, `get_live_watch`, `get_live_watch_count`, `start_live_broadcast`, `end_live_broadcast`, `send_live_message`, `send_live_message_v2`, `get_live_donation_ranking`, `accept_live_chat_rule`                                                                |
 | 오버레이      | `get_live_chat_overlay_snapshot`, `get_live_donation_alert_overlay_snapshot`                                                                                                                                                                                                                                                                                           |
 | 투표          | `create_live_poll`, `end_live_poll`, `vote_live_poll`                                                                                                                                                                                                                                                                                                                  |
 | 채널/스튜디오 | `get_creator_studio_snapshot`, `upsert_creator_studio_setting`, `rotate_live_security_token_version`, `get_creator_donation_dashboard`                                                                                                                                                                                                                                 |
@@ -310,7 +352,6 @@ src/
 | 채널(공개)    | `get_channel_profile`, `update_channel_profile`, `get_channel_live_hero`, `get_channel_banners`, `insert_channel_banner`, `delete_channel_banner`, `reorder_channel_banners`                                                                                                                                                                                           |
 | 커뮤니티      | `get_channel_community_posts`, `get_community_post`, `get_community_adjacent_posts`, `get_community_comments`, `get_community_comment_replies`, `create_community_post`, `update_community_post`, `delete_community_post`, `create_community_comment`, `update_community_comment`, `delete_community_comment`, `set_community_post_like`, `set_community_comment_like` |
 | 팔로잉        | `follow_creator`, `unfollow_creator`, `get_following_channel_list`, `get_following_channel_page`                                                                                                                                                                                                                                                                       |
-| 알림          | `mark_notifications_seen`, `delete_notification`, `delete_all_notifications`, `emit_follower_notification`                                                                                                                                                                                                                                                              |
 | 후원/지갑     | `send_live_donation`, `confirm_wallet_charge`, `get_user_donation_snapshot`                                                                                                                                                                                                                                                                                            |
 
 쓰기 RPC는 클라이언트에서 직접 호출하지 않고 Server Action이 인증 사용자 id를 확인한 뒤 `service_role` 경계로 호출합니다. 읽기 RPC는 실행 권한에 따라 브라우저 client(TanStack Query) 또는 Server Component(SSR)에서 호출합니다. read 전략 기준은 `.agents/supabase-convention/SKILLS.md` 4장을 따릅니다.
@@ -329,9 +370,12 @@ src/
 
 | 트리거                                                    | 설명                                                                                                |
 | --------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `trigger_insert_date_divider_message`                     | 매일 첫 메시지 INSERT 시 날짜 구분 system 메시지를 자동 삽입                                        |
+| `trigger_insert_chat_room_member_system_message`          | 채팅방 참여/나가기 시 system 메시지를 자동 삽입                                                     |
+| `trigger_update_member_count`                             | 멤버 변경 시 채팅방 현재 인원 수를 갱신                                                             |
+| `trigger_check_capacity_on_rejoin`                        | 재입장 시 정원 초과를 검증                                                                          |
+| `trigger_delete_empty_chat_room`                          | 멤버가 모두 나간 채팅방을 정리                                                                      |
 | `increment_live_broadcast_message_count_on_live_message`  | 라이브 메시지 INSERT 시 방송 채팅 수를 증가                                                         |
-| `notify_followers_on_live_start`                          | 라이브 시작(`live_broadcast` INSERT) 시 팔로워에게 알림을 fan-out                                   |
-| `notify_followers_on_community_post`                      | 커뮤니티 글 작성(`community_post` INSERT) 시 팔로워에게 알림을 fan-out                              |
 | `increment_live_broadcast_donation_stats_on_donation`     | 후원 발생 시 방송 후원 합계·횟수를 증가                                                             |
 | `sync_live_broadcast_peak_viewer_count_on_live_broadcast` | 현재 시청자 수 변경 시 최고 시청자 수를 동기화                                                      |
 | `community_comment_count_trigger`                         | 댓글·대댓글 INSERT·DELETE 시 게시글 댓글 수를 갱신                                                  |
@@ -350,7 +394,7 @@ npm run db:types
 ```
 
 - migration 파일명은 `YYYYMMDDHHMMSS_작업_내용.sql` 형식이며, 파일의 version 접두사는 원격 `schema_migrations` 이력과 일치해야 합니다.
-- 마이그레이션은 도메인별로 라이브·후원·정산(`20260527~`), 커뮤니티 게시판·채널 프로필/배너·통계 이벤트 로그(`20260602~20260605`), 인앱 알림(`20260608~`)으로 누적되어 있습니다. 초기 독립 채팅(`~20260519`) 마이그레이션은 기능 제거(#105) 이후에도 이력으로 남아 있습니다. 전체 목록과 최신 version은 `supabase/migrations/`를 기준으로 확인합니다.
+- 마이그레이션은 도메인별로 채팅(`~20260519`), 라이브·후원·정산(`20260527~`), 커뮤니티 게시판·채널 프로필/배너·통계 이벤트 로그(`20260602~20260605`)로 누적되어 있습니다. 전체 목록과 최신 version은 `supabase/migrations/`를 기준으로 확인합니다.
 - 적용·기록 규칙의 상세는 `.agents/supabase-convention/SKILLS.md`를 참고합니다.
 
 ---
@@ -358,7 +402,7 @@ npm run db:types
 ## 상태 관리와 캐싱
 
 - 인증 세션은 `useAuthStore`가 관리하고 `AuthListener`가 Supabase 세션 변화를 동기화합니다.
-- 라이브 목록 필터·정렬·표시 개수는 `useLiveStore`가 관리합니다.
+- 채팅방 목록 탭, 정렬값, 검색어는 `useChatRoomStore`가, 라이브 목록 필터·정렬·표시 개수는 `useLiveStore`가 관리합니다.
 - 서버 데이터는 TanStack Query로 관리하고, Server Action 호출의 pending·toast·router 이동·query invalidation은 `src/hooks/{domain}`의 도메인별 mutation hook에서 처리합니다.
 - 헤더 사용자 계정 메뉴와 설정 사이드바는 표시용 프로필 snapshot을 Server Component 경계에서 받아 사용하며, 프로필 수정과 OAuth unlink 후에는 `router.refresh()`로 갱신합니다.
 - Query Key는 `src/constants/common/query-keys.ts`의 `QUERY_KEYS`를 기준으로 생성합니다.
@@ -377,8 +421,11 @@ npm run db:types
 
 ## 실시간 처리
 
-현재 앱은 Supabase Realtime의 Postgres Changes를 사용합니다.
+현재 앱은 Supabase Realtime의 Postgres Changes, Presence, Broadcast를 사용합니다.
 
+- 채팅방의 `message` INSERT 이벤트로 새 메시지를, `chat_room_member` 변경 이벤트로 참여자 목록·방 정보·목록 count를 갱신합니다.
+- 강퇴 상태는 현재 유저의 `chat_room_member.is_banned` 변경을 감지해 UI에 반영합니다.
 - 라이브 OBS 오버레이는 `live_message` INSERT 이벤트로 채팅·후원 알림을 실시간 반영합니다.
-- 인앱 알림은 현재 유저 대상 `notification` INSERT 이벤트로 헤더 종 배지와 수신함을 폴링 없이 갱신합니다.
 - 크리에이터 통계 화면은 `creator_follow_event` INSERT 이벤트로 팔로우/언팔로우 상호작용 로그를 폴링 없이 즉시 반영합니다.
+- Presence는 채팅방 접속 상태 표시 전용으로 사용하며, 권한 판단이나 DB 저장에는 사용하지 않습니다.
+- Broadcast는 채팅방 typing indicator 표시 전용으로 사용하고 DB에는 저장하지 않습니다.
