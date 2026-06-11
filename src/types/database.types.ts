@@ -452,7 +452,7 @@ export type Database = {
       donation: {
         Row: {
           amount: number
-          broadcast_id: string
+          broadcast_id: string | null
           created_at: string
           creator_id: string
           donor_id: string
@@ -463,7 +463,7 @@ export type Database = {
         }
         Insert: {
           amount: number
-          broadcast_id: string
+          broadcast_id?: string | null
           created_at?: string
           creator_id: string
           donor_id: string
@@ -474,7 +474,7 @@ export type Database = {
         }
         Update: {
           amount?: number
-          broadcast_id?: string
+          broadcast_id?: string | null
           created_at?: string
           creator_id?: string
           donor_id?: string
@@ -575,33 +575,39 @@ export type Database = {
       }
       live_message: {
         Row: {
-          broadcast_id: string
+          broadcast_id: string | null
           content: string
           created_at: string
+          creator_id: string
           donation_id: string | null
           id: string
+          is_chat_visible: boolean
           message_type: Database["public"]["Enums"]["live_message_type"]
           metadata: Json
           sender_id: string | null
           sender_role: Database["public"]["Enums"]["live_sender_role"]
         }
         Insert: {
-          broadcast_id: string
+          broadcast_id?: string | null
           content: string
           created_at?: string
+          creator_id: string
           donation_id?: string | null
           id?: string
+          is_chat_visible?: boolean
           message_type?: Database["public"]["Enums"]["live_message_type"]
           metadata?: Json
           sender_id?: string | null
           sender_role?: Database["public"]["Enums"]["live_sender_role"]
         }
         Update: {
-          broadcast_id?: string
+          broadcast_id?: string | null
           content?: string
           created_at?: string
+          creator_id?: string
           donation_id?: string | null
           id?: string
+          is_chat_visible?: boolean
           message_type?: Database["public"]["Enums"]["live_message_type"]
           metadata?: Json
           sender_id?: string | null
@@ -613,6 +619,13 @@ export type Database = {
             columns: ["broadcast_id"]
             isOneToOne: false
             referencedRelation: "live_broadcast"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "live_message_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "user"
             referencedColumns: ["id"]
           },
           {
@@ -1383,6 +1396,17 @@ export type Database = {
         }
         Returns: Json
       }
+      send_live_donation_v2: {
+        Args: {
+          p_actor_user_id: string
+          p_amount: number
+          p_creator_id: string
+          p_idempotency_key?: string
+          p_is_anonymous?: boolean
+          p_message?: string
+        }
+        Returns: Json
+      }
       send_live_interaction_notice: {
         Args: {
           p_actor_user_id: string
@@ -1406,6 +1430,14 @@ export type Database = {
           p_actor_user_id: string
           p_broadcast_id: string
           p_content: string
+        }
+        Returns: Json
+      }
+      send_live_message_v3: {
+        Args: {
+          p_actor_user_id: string
+          p_content: string
+          p_creator_id: string
         }
         Returns: Json
       }
