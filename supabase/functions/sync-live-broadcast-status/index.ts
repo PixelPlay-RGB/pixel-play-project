@@ -12,6 +12,9 @@ const STREAM_PATH_PREFIX = "live";
 const LIVE_STREAM_KEY_LENGTH = 40;
 // 방송 시작 버튼 직후 OBS 송출 전 상태를 종료로 오판하지 않도록 두는 유예.
 const BROADCAST_START_GRACE_MS = 3 * 60 * 1000;
+// 이 시점 이전에 시작된 활성 방송은 시드(데모 목록) 데이터로 간주해 동기화에서 제외한다.
+// 지호님 결정(2026-06-12): 시드 방송은 /live 목록 유지를 위해 자동 종료하지 않는다.
+const SEED_BROADCAST_CUTOFF = "2026-06-01T00:00:00Z";
 // 네트워크 순단(OBS 재접속)을 종료로 오판하지 않도록 재확인 전 대기.
 const OFFLINE_RECHECK_DELAY_MS = 10 * 1000;
 const MEDIAMTX_REQUEST_TIMEOUT_MS = 5 * 1000;
@@ -89,9 +92,21 @@ async function isStreamOnline(streamPath: string) {
 
 Deno.serve(async (req: Request) => {
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const supabase = createClient(Deno.env.get("SUPABASE_URL")!, serviceRoleKey);
 
   // pg_cron이 Vault의 service_role_key를 Bearer로 전달한다 — 외부 임의 호출 차단.
-  if (req.headers.get("Authorization") !== `Bearer ${serviceRoleKey}`) {
+  // 함수에 주입되는 키와 Vault 등록 키의 형식이 다를 수 있어, env 비교가 실패하면
+  // 같은 Vault 값을 RPC(service_role 전용)로 읽어 한 번 더 비교한다.
+  const authHeader = req.headers.get("Authorization");
+  let isAuthorized = authHeader === `Bearer ${serviceRoleKey}`;
+
+  if (!isAuthorized && authHeader) {
+    const { data: cronSecret } = await supabase.rpc("get_live_sync_cron_secret");
+
+    isAuthorized = typeof cronSecret === "string" && authHeader === `Bearer ${cronSecret}`;
+  }
+
+  if (!isAuthorized) {
     return json({ error: "unauthorized" }, 401);
   }
 
@@ -101,14 +116,13 @@ Deno.serve(async (req: Request) => {
     return json({ error: "LIVE_OVERLAY_TOKEN_SECRET not configured" }, 503);
   }
 
-  const supabase = createClient(Deno.env.get("SUPABASE_URL")!, serviceRoleKey);
-
-  // 1) 시작 유예가 지난 활성 방송만 검사 대상으로 모은다.
+  // 1) 시작 유예가 지난 활성 방송만 검사 대상으로 모은다(시드 방송 제외).
   const graceBoundary = new Date(Date.now() - BROADCAST_START_GRACE_MS).toISOString();
   const { data: broadcasts, error: broadcastError } = await supabase
     .from("live_broadcast")
     .select("id, creator_id")
     .is("ended_at", null)
+    .gte("started_at", SEED_BROADCAST_CUTOFF)
     .lt("started_at", graceBoundary)
     .returns<ActiveBroadcastRow[]>();
 
@@ -138,66 +152,75 @@ Deno.serve(async (req: Request) => {
     (settings ?? []).map((setting) => [setting.creator_id, setting.stream_key_version]),
   );
 
-  // 3) 1차 확인 — 송출이 안 잡히는 방송을 종료 후보로 모은다.
+  // 3) 1차 확인 — 송출이 안 잡히는 방송을 종료 후보로 모은다(리소스 한도 대비 병렬 조회).
   //    Control API 장애(타임아웃 등)는 종료 판단을 보류하고 다음 주기에 재시도한다.
-  const offlineCandidates: { broadcast: ActiveBroadcastRow; streamPath: string }[] = [];
-
-  for (const broadcast of broadcasts) {
-    const streamKey = await buildLiveStreamKey(
-      liveStreamKeySecret,
-      broadcast.creator_id,
-      streamKeyVersionByCreatorId.get(broadcast.creator_id) ?? 1,
-    );
-    const streamPath = `${STREAM_PATH_PREFIX}/${streamKey}`;
-
-    try {
-      if (!(await isStreamOnline(streamPath))) {
-        offlineCandidates.push({ broadcast, streamPath });
-      }
-    } catch (error) {
-      console.error(
-        "[sync-live-broadcast-status] first check failed:",
-        broadcast.id,
-        (error as Error).message,
+  const firstChecks = await Promise.all(
+    broadcasts.map(async (broadcast) => {
+      const streamKey = await buildLiveStreamKey(
+        liveStreamKeySecret,
+        broadcast.creator_id,
+        streamKeyVersionByCreatorId.get(broadcast.creator_id) ?? 1,
       );
-    }
-  }
+      const streamPath = `${STREAM_PATH_PREFIX}/${streamKey}`;
+
+      try {
+        return (await isStreamOnline(streamPath)) ? null : { broadcast, streamPath };
+      } catch (error) {
+        console.error(
+          "[sync-live-broadcast-status] first check failed:",
+          broadcast.id,
+          (error as Error).message,
+        );
+        return null;
+      }
+    }),
+  );
+  const offlineCandidates = firstChecks.filter(
+    (candidate): candidate is { broadcast: ActiveBroadcastRow; streamPath: string } =>
+      candidate !== null,
+  );
 
   if (!offlineCandidates.length) {
     return json({ checked: broadcasts.length, ended: [] });
   }
 
-  // 4) 순단 보호 — 잠시 뒤 재확인해 여전히 송출이 없는 방송만 종료한다.
+  // 4) 순단 보호 — 잠시 뒤 재확인해 여전히 송출이 없는 방송만 종료한다(병렬 처리).
   await new Promise((resolve) => setTimeout(resolve, OFFLINE_RECHECK_DELAY_MS));
 
-  const ended: string[] = [];
+  const recheckResults = await Promise.all(
+    offlineCandidates.map(async ({ broadcast, streamPath }) => {
+      try {
+        if (await isStreamOnline(streamPath)) return null;
 
-  for (const { broadcast, streamPath } of offlineCandidates) {
-    try {
-      if (await isStreamOnline(streamPath)) continue;
+        const { error } = await supabase.rpc("end_live_broadcast", {
+          p_actor_user_id: broadcast.creator_id,
+          p_broadcast_id: broadcast.id,
+        });
 
-      const { error } = await supabase.rpc("end_live_broadcast", {
-        p_actor_user_id: broadcast.creator_id,
-        p_broadcast_id: broadcast.id,
-      });
-
-      if (error) {
-        if (error.code !== ACTIVE_LIVE_BROADCAST_NOT_FOUND_CODE) {
-          console.error("[sync-live-broadcast-status] end rpc error:", broadcast.id, error.message);
+        if (error) {
+          if (error.code !== ACTIVE_LIVE_BROADCAST_NOT_FOUND_CODE) {
+            console.error(
+              "[sync-live-broadcast-status] end rpc error:",
+              broadcast.id,
+              error.message,
+            );
+          }
+          return null;
         }
-        continue;
-      }
 
-      ended.push(broadcast.id);
-      console.log("[sync-live-broadcast-status] ended:", broadcast.id);
-    } catch (error) {
-      console.error(
-        "[sync-live-broadcast-status] recheck failed:",
-        broadcast.id,
-        (error as Error).message,
-      );
-    }
-  }
+        console.log("[sync-live-broadcast-status] ended:", broadcast.id);
+        return broadcast.id;
+      } catch (error) {
+        console.error(
+          "[sync-live-broadcast-status] recheck failed:",
+          broadcast.id,
+          (error as Error).message,
+        );
+        return null;
+      }
+    }),
+  );
+  const ended = recheckResults.filter((broadcastId): broadcastId is string => broadcastId !== null);
 
   return json({ checked: broadcasts.length, ended });
 });
