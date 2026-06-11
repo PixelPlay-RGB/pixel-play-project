@@ -1,7 +1,5 @@
 "use client";
 // 방송 운영 화면의 채팅, 후원, 알림 빠른 설정을 오른쪽 패널로 렌더링합니다.
-// 행 모양은 설정 페이지(SettingFieldRow)와 같은 결을 따르되, 좁은 사이드 칼럼이라
-// 라벨 고정폭 없이 라벨·설명(좌) + 컨트롤(우) 한 줄로 배치한다.
 
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 import {
   CHANNEL_CHAT_SCOPE_OPTIONS,
   CHANNEL_CHAT_SLOW_MODE_OPTIONS,
@@ -47,32 +46,33 @@ interface Props {
   onTtsEnabledChange: (isTtsEnabled: boolean) => void;
 }
 
-// 섹션 라벨 — 선 장식 없이 텍스트만 둬서 행 사이가 어수선해지지 않게 한다.
-// 섹션 사이는 위 여백으로만 구분한다(첫 섹션은 헤더 바로 아래라 여백 없음).
-function QuickSettingSectionTitle({ title }: { title: string }) {
-  return <h3 className="text-muted-foreground mt-3 px-1 text-xs font-bold first:mt-0">{title}</h3>;
+function QuickSettingSection({ children, title }: { children: ReactNode; title: string }) {
+  return (
+    <section className="flex flex-col gap-2">
+      <h3 className="text-foreground px-1 text-sm font-bold">{title}</h3>
+      <div className="flex flex-col gap-1.5">{children}</div>
+    </section>
+  );
 }
 
-// 설정 페이지 SettingFieldRow와 같은 질감의 행(라벨 sm font-bold + 설명 xs muted).
-// 보더 구분선 없이 간격만으로 행을 나눠 사이드 패널을 가볍게 유지한다.
-function QuickSettingFieldRow({
-  label,
-  description,
-  isDimmed,
+function QuickSettingRow({
   children,
+  isDimmed,
+  label,
 }: {
-  label: string;
-  description: string;
-  isDimmed?: boolean;
   children: ReactNode;
+  isDimmed?: boolean;
+  label: string;
 }) {
   return (
-    <div className={cn("flex items-center justify-between gap-3 px-1", isDimmed && "opacity-60")}>
-      <div className="flex min-w-0 flex-col gap-0.5">
-        <span className="text-foreground text-sm font-bold">{label}</span>
-        <span className="text-muted-foreground text-xs leading-5 text-pretty">{description}</span>
-      </div>
-      <div className="shrink-0">{children}</div>
+    <div
+      className={cn(
+        "flex min-h-9 items-center justify-between gap-2 px-1",
+        isDimmed && "opacity-60",
+      )}
+    >
+      <span className="text-foreground min-w-0 truncate text-xs font-semibold">{label}</span>
+      <div className="flex shrink-0 items-center justify-end gap-2">{children}</div>
     </div>
   );
 }
@@ -120,32 +120,31 @@ export default function ChannelLiveQuickSettingsPanel({
           </Button>
         </CardAction>
       </CardHeader>
-      <CardContent className="flex flex-col gap-4 px-4">
-        <QuickSettingSectionTitle title="채팅" />
-        <QuickSettingFieldRow label="채팅 범위" description="채팅에 참여할 수 있는 시청자 범위">
-          <Select
-            value={chatScope}
-            items={CHANNEL_CHAT_SCOPE_OPTIONS}
-            disabled={isSettingsActionPending}
-            onValueChange={(value) => onChatScopeChange(value as LiveChatScope)}
-          >
-            <SelectTrigger aria-label="채팅 범위" className="w-36">
-              <SelectValue />
-              <SelectIcon />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectList>
-                {CHANNEL_CHAT_SCOPE_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value} label={option.label}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectList>
-            </SelectContent>
-          </Select>
-        </QuickSettingFieldRow>
-        <QuickSettingFieldRow label="저속 모드" description="시청자별 채팅 전송 간격 제한">
-          <div className="flex items-center gap-2">
+      <CardContent className="flex flex-col gap-3 px-4">
+        <QuickSettingSection title="채팅">
+          <QuickSettingRow label="채팅 범위">
+            <Select
+              value={chatScope}
+              items={CHANNEL_CHAT_SCOPE_OPTIONS}
+              disabled={isSettingsActionPending}
+              onValueChange={(value) => onChatScopeChange(value as LiveChatScope)}
+            >
+              <SelectTrigger aria-label="채팅 범위" className="w-28">
+                <SelectValue />
+                <SelectIcon />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectList>
+                  {CHANNEL_CHAT_SCOPE_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value} label={option.label}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectList>
+              </SelectContent>
+            </Select>
+          </QuickSettingRow>
+          <QuickSettingRow label="저속 모드">
             <SettingNumberSelectControl
               ariaLabel="저속 모드 채팅 간격"
               value={slowModeSeconds}
@@ -162,62 +161,68 @@ export default function ChannelLiveQuickSettingsPanel({
               disabled={isSettingsActionPending}
               onChange={onSlowModeEnabledChange}
             />
-          </div>
-        </QuickSettingFieldRow>
-        <QuickSettingFieldRow label="링크 차단" description="URL이 포함된 채팅을 막아요">
-          <SettingToggleControl
-            checked={isLinkBlocked}
-            checkedLabel="ON"
-            uncheckedLabel="OFF"
-            ariaLabel="링크 차단"
-            disabled={isSettingsActionPending}
-            onChange={onLinkBlockedChange}
-          />
-        </QuickSettingFieldRow>
+          </QuickSettingRow>
+          <QuickSettingRow label="링크 차단">
+            <SettingToggleControl
+              checked={isLinkBlocked}
+              checkedLabel="ON"
+              uncheckedLabel="OFF"
+              ariaLabel="링크 차단"
+              disabled={isSettingsActionPending}
+              onChange={onLinkBlockedChange}
+            />
+          </QuickSettingRow>
+        </QuickSettingSection>
 
-        <QuickSettingSectionTitle title="후원" />
-        <QuickSettingFieldRow label="후원 받기" description="시청자의 포인트 후원을 받아요">
-          <SettingToggleControl
-            checked={isDonationEnabled}
-            checkedLabel="ON"
-            uncheckedLabel="OFF"
-            ariaLabel="후원 받기"
-            disabled={isSettingsActionPending}
-            onChange={onDonationEnabledChange}
-          />
-        </QuickSettingFieldRow>
-        <QuickSettingFieldRow label="후원 금액 공개" description="알림·채팅에 금액을 표시해요">
-          <SettingToggleControl
-            checked={isDonationAmountVisible}
-            checkedLabel="ON"
-            uncheckedLabel="OFF"
-            ariaLabel="후원 금액 공개"
-            disabled={isSettingsActionPending}
-            onChange={onDonationAmountVisibleChange}
-          />
-        </QuickSettingFieldRow>
+        <Separator />
 
-        <QuickSettingSectionTitle title="알림" />
-        <QuickSettingFieldRow label="알림 사운드" description="후원 알림 효과음을 재생해요">
-          <SettingToggleControl
-            checked={isAlertSoundEnabled}
-            checkedLabel="ON"
-            uncheckedLabel="OFF"
-            ariaLabel="알림 사운드"
-            disabled={isSettingsActionPending}
-            onChange={onAlertSoundEnabledChange}
-          />
-        </QuickSettingFieldRow>
-        <QuickSettingFieldRow label="TTS" description="후원 메시지를 음성으로 읽어줘요">
-          <SettingToggleControl
-            checked={isTtsEnabled}
-            checkedLabel="ON"
-            uncheckedLabel="OFF"
-            ariaLabel="TTS 사용"
-            disabled={isSettingsActionPending}
-            onChange={onTtsEnabledChange}
-          />
-        </QuickSettingFieldRow>
+        <QuickSettingSection title="후원">
+          <QuickSettingRow label="후원 받기">
+            <SettingToggleControl
+              checked={isDonationEnabled}
+              checkedLabel="ON"
+              uncheckedLabel="OFF"
+              ariaLabel="후원 받기"
+              disabled={isSettingsActionPending}
+              onChange={onDonationEnabledChange}
+            />
+          </QuickSettingRow>
+          <QuickSettingRow label="후원 금액 공개">
+            <SettingToggleControl
+              checked={isDonationAmountVisible}
+              checkedLabel="ON"
+              uncheckedLabel="OFF"
+              ariaLabel="후원 금액 공개"
+              disabled={isSettingsActionPending}
+              onChange={onDonationAmountVisibleChange}
+            />
+          </QuickSettingRow>
+        </QuickSettingSection>
+
+        <Separator />
+
+        <QuickSettingSection title="알림">
+          <QuickSettingRow label="알림 사운드">
+            <SettingToggleControl
+              checked={isAlertSoundEnabled}
+              checkedLabel="ON"
+              uncheckedLabel="OFF"
+              ariaLabel="알림 사운드"
+              disabled={isSettingsActionPending}
+              onChange={onAlertSoundEnabledChange}
+            />
+          </QuickSettingRow>
+          <QuickSettingRow label="TTS 사용">
+            <SettingToggleControl
+              checked={isTtsEnabled}
+              checkedLabel="ON"
+              uncheckedLabel="OFF"
+              ariaLabel="TTS 사용"
+              disabled={isSettingsActionPending}
+              onChange={onTtsEnabledChange}
+            />
+          </QuickSettingRow>
+        </QuickSettingSection>
       </CardContent>
     </Card>
   );
