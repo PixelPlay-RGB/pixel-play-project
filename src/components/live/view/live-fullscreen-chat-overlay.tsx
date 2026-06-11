@@ -56,10 +56,12 @@ interface Props {
   onFollow?: () => void;
   isFollowing?: boolean;
   isFollowPending?: boolean;
-  // 과거 채팅 적재(무한 스크롤) — LiveChatBody로 그대로 전달한다.
+  // 과거 채팅 적재(무한 스크롤)·진입 안내 위치 — LiveChatBody로 그대로 전달한다.
   onLoadOlderMessages?: () => void;
   isLoadingOlderMessages?: boolean;
   hasMoreChatHistory?: boolean;
+  entryNoticeAnchorId?: string | null;
+  onRefreshChatState?: () => void;
   // 플레이어 우상단 후원 버튼의 후원 popover 열기 요청(채팅 본문 입력바로 전달).
   donationOpenRequested?: boolean;
   onDonationOpenSettled?: (reason: "donated" | "dismissed") => void;
@@ -97,6 +99,8 @@ export function LiveFullscreenChatOverlay({
   onLoadOlderMessages,
   isLoadingOlderMessages,
   hasMoreChatHistory,
+  entryNoticeAnchorId,
+  onRefreshChatState,
   donationOpenRequested,
   onDonationOpenSettled,
 }: Props) {
@@ -168,6 +172,8 @@ export function LiveFullscreenChatOverlay({
         onLoadOlderMessages={onLoadOlderMessages}
         isLoadingOlderMessages={isLoadingOlderMessages}
         hasMoreChatHistory={hasMoreChatHistory}
+        entryNoticeAnchorId={entryNoticeAnchorId}
+        onRefreshChatState={onRefreshChatState}
         portalContainer={container}
         donationOpenRequested={donationOpenRequested}
         onDonationOpenSettled={onDonationOpenSettled}

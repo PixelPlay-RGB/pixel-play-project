@@ -246,6 +246,7 @@ export function useLiveBroadcastView(creatorId: string) {
     loadOlderMessages: messagesQuery.loadOlderMessages,
     isLoadingOlderMessages: messagesQuery.isLoadingOlder,
     hasMoreChatHistory: messagesQuery.hasMoreHistory,
+    entryNoticeAnchorId: messagesQuery.entryNoticeAnchorId,
     donations,
     polls: pollsQuery.polls,
     isPollsLoading: pollsQuery.isLoading,
@@ -265,6 +266,10 @@ export function useLiveBroadcastView(creatorId: string) {
     onFollowToggled,
     chatRuleText: watchData?.settings.chatRuleText,
     isChatRuleAccepted,
+    // 팔로우 대기 카운트다운 종료 등 게이트 해제 시점에 viewer chat state를 다시 받는다.
+    refreshChatState: () => {
+      void refetch();
+    },
     ...chatSession,
     sendMessage,
   };

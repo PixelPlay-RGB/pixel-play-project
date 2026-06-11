@@ -7,10 +7,12 @@ import { useRef } from "react";
 
 import { useMeasuredHeight } from "@/hooks/common/use-measured-height";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Spinner } from "@/components/ui/spinner";
 import { LiveChatInputBar } from "@/components/live/view/live-chat-input-bar";
 import { LiveChatMessageList } from "@/components/live/chat/live-chat-message-list";
 import { LiveChatParticipationNotice } from "@/components/live/chat/live-chat-participation-notice";
 import { LiveDonationBanner } from "@/components/live/view/live-donation-banner";
+import { LIVE_LABEL } from "@/constants/live/live";
 import type {
   LiveChatMessage,
   LiveDonation,
@@ -56,6 +58,10 @@ interface Props {
   onLoadOlderMessages?: () => void;
   isLoadingOlderMessages?: boolean;
   hasMoreChatHistory?: boolean;
+  // 진입 시점 필터링 안내 위치 기준(마지막 메시지 id) — 메시지 목록으로 그대로 전달한다.
+  entryNoticeAnchorId?: string | null;
+  // 팔로우 대기 카운트다운 종료 등 게이트가 풀릴 시점에 viewer chat state를 다시 받는다.
+  onRefreshChatState?: () => void;
   // 참여 안내의 보조 액션(예: 팝아웃에서 "시청 화면 열기").
   noticeActionLabel?: string;
   onNoticeAction?: () => void;
@@ -100,6 +106,8 @@ export function LiveChatBody({
   onLoadOlderMessages,
   isLoadingOlderMessages,
   hasMoreChatHistory,
+  entryNoticeAnchorId,
+  onRefreshChatState,
   noticeActionLabel,
   onNoticeAction,
   showActions = true,
@@ -121,6 +129,18 @@ export function LiveChatBody({
         <div ref={bannerRef} className="absolute inset-x-0 top-0 z-10">
           <LiveDonationBanner donations={donations} />
         </div>
+        {/* 과거 적재 중 표시 — 목록 행이 아니라 떠 있는 pill이라 안내 행(맨 위 고정)을 가리지 않는다. */}
+        {isLoadingOlderMessages ? (
+          <div
+            className="pointer-events-none absolute inset-x-0 z-10 flex justify-center"
+            style={{ top: bannerHeight + 8 }}
+          >
+            <span className="bg-background/95 border-border text-muted-foreground flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium shadow-sm">
+              <Spinner className="size-3.5" />
+              {LIVE_LABEL.chatLoadingOlder}
+            </span>
+          </div>
+        ) : null}
         {/* 채팅 목록: 스크롤바는 숨기고(몰입), overscroll-contain으로 바깥 스크롤 전파를 막는다. */}
         <ScrollArea
           ref={chatScrollRef}
@@ -136,11 +156,14 @@ export function LiveChatBody({
             onLoadOlderMessages={onLoadOlderMessages}
             isLoadingOlderMessages={isLoadingOlderMessages}
             hasMoreChatHistory={hasMoreChatHistory}
+            entryNoticeAnchorId={entryNoticeAnchorId}
           />
         </ScrollArea>
       </div>
       <LiveChatParticipationNotice
         chatUnavailableReason={chatState.chatUnavailableReason}
+        remainingWaitSeconds={chatState.remainingFollowWaitSeconds}
+        onWaitElapsed={onRefreshChatState}
         actionLabel={noticeActionLabel}
         onAction={onNoticeAction}
       />

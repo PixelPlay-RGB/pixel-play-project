@@ -43,6 +43,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     loadOlderMessages,
     isLoadingOlderMessages,
     hasMoreChatHistory,
+    entryNoticeAnchorId,
     donations,
     polls,
     isPollsLoading,
@@ -67,6 +68,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     chatState,
     sendMessage,
     acceptChatRule,
+    refreshChatState,
   } = useLiveBroadcastView(creatorId);
   const { handleFollow, isFollowPending } = useLiveFollowAction({
     creatorId,
@@ -205,6 +207,8 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
                       onLoadOlderMessages={loadOlderMessages}
                       isLoadingOlderMessages={isLoadingOlderMessages}
                       hasMoreChatHistory={hasMoreChatHistory}
+                      entryNoticeAnchorId={entryNoticeAnchorId}
+                      onRefreshChatState={refreshChatState}
                     />
                   )}
                 />
@@ -316,6 +320,8 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
               onLoadOlderMessages={loadOlderMessages}
               isLoadingOlderMessages={isLoadingOlderMessages}
               hasMoreChatHistory={hasMoreChatHistory}
+              entryNoticeAnchorId={entryNoticeAnchorId}
+              onRefreshChatState={refreshChatState}
             />
           </aside>
         </div>

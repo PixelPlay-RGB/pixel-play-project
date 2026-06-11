@@ -53,10 +53,12 @@ interface Props {
   isFollowPending?: boolean;
   onCollapse?: () => void;
   collapseButtonRef?: Ref<HTMLButtonElement>;
-  // 과거 채팅 적재(무한 스크롤) — LiveChatBody로 그대로 전달한다.
+  // 과거 채팅 적재(무한 스크롤)·진입 안내 위치 — LiveChatBody로 그대로 전달한다.
   onLoadOlderMessages?: () => void;
   isLoadingOlderMessages?: boolean;
   hasMoreChatHistory?: boolean;
+  entryNoticeAnchorId?: string | null;
+  onRefreshChatState?: () => void;
 }
 
 export function LiveChatPanel({
@@ -92,6 +94,8 @@ export function LiveChatPanel({
   onLoadOlderMessages,
   isLoadingOlderMessages,
   hasMoreChatHistory,
+  entryNoticeAnchorId,
+  onRefreshChatState,
 }: Props) {
   const [cleanbot, setCleanbot] = useState(true);
   const [isPopoutOpen, setIsPopoutOpen] = useState(false);
@@ -203,6 +207,8 @@ export function LiveChatPanel({
           onLoadOlderMessages={onLoadOlderMessages}
           isLoadingOlderMessages={isLoadingOlderMessages}
           hasMoreChatHistory={hasMoreChatHistory}
+          entryNoticeAnchorId={entryNoticeAnchorId}
+          onRefreshChatState={onRefreshChatState}
         />
       )}
     </div>

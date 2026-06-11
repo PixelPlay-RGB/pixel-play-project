@@ -32,6 +32,11 @@ export function useLiveMessages(creatorId: string | null | undefined, viewerId?:
   // 과거 적재(무한 스크롤) 상태. 누적이 HISTORY_CAP에 닿거나 더 줄 게 없으면 멈춘다(치지직식).
   const [isLoadingOlder, setIsLoadingOlder] = useState(false);
   const [hasMoreHistory, setHasMoreHistory] = useState(true);
+  // 진입 시점의 마지막 메시지 id — 필터링 안내를 이 메시지 바로 뒤(바닥)에 끼워 넣는 기준.
+  // undefined = 초기 로드 전, null = 진입 시점에 메시지가 없었음(안내가 첫 행).
+  const [entryNoticeAnchorId, setEntryNoticeAnchorId] = useState<string | null | undefined>(
+    undefined,
+  );
 
   const query = useQuery<LiveChatMessage[]>({
     queryKey: QUERY_KEYS.live.messages(creatorId ?? undefined),
@@ -58,6 +63,13 @@ export function useLiveMessages(creatorId: string | null | undefined, viewerId?:
       });
     },
   });
+
+  // 진입(첫 로드 완료) 시점의 마지막 메시지를 1회 고정한다 — 그 뒤 도착하는 메시지는
+  // 안내 아래(최신 쪽)에 쌓여, 안내가 "진입 시점 바닥"에서 자연스럽게 위로 밀려 올라간다.
+  // (렌더 중 가드된 setState — use-live-broadcast-view의 lastBroadcast와 같은 조정 패턴)
+  if (entryNoticeAnchorId === undefined && !query.isLoading && query.data) {
+    setEntryNoticeAnchorId(query.data.at(-1)?.id ?? null);
+  }
 
   // 위로 스크롤 시 과거 메시지를 (created_at, id) 커서로 한 페이지씩 앞에 붙인다.
   // 같은 created_at 동시 전송이 있어도 id 2차 정렬로 누락·중복 없이 이어진다.
@@ -194,5 +206,6 @@ export function useLiveMessages(creatorId: string | null | undefined, viewerId?:
     loadOlderMessages,
     isLoadingOlder,
     hasMoreHistory,
+    entryNoticeAnchorId,
   };
 }

@@ -4,7 +4,6 @@
 
 import { memo, useEffect, useLayoutEffect, useRef, type RefObject } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { Spinner } from "@/components/ui/spinner";
 import { LiveChatDonationMessageCard } from "@/components/live/chat/live-chat-donation-message-card";
 import { LiveChatRoleBadge, type LiveChatRole } from "@/components/live/chat/live-chat-role-badge";
 import { LIVE_LABEL } from "@/constants/live/live";
@@ -30,6 +29,9 @@ interface Props {
   onLoadOlderMessages?: () => void;
   isLoadingOlderMessages?: boolean;
   hasMoreChatHistory?: boolean;
+  // 진입 시점의 마지막 메시지 id — 필터링 안내를 이 메시지 바로 뒤(바닥)에 끼워 넣는다.
+  // null = 진입 시점에 메시지가 없었음(안내가 첫 행), undefined = 미지정(안내 맨 앞 폴백).
+  entryNoticeAnchorId?: string | null;
 }
 
 export function LiveChatMessageList({
@@ -40,14 +42,23 @@ export function LiveChatMessageList({
   onLoadOlderMessages,
   isLoadingOlderMessages = false,
   hasMoreChatHistory = false,
+  entryNoticeAnchorId,
 }: Props) {
   const isInitialMount = useRef(true);
   const wasNearBottomRef = useRef(true);
   // prepend(과거 적재) 감지용 — 직전 렌더의 메시지 목록을 기억해 첫 id 변화를 비교한다.
   const prevMessagesRef = useRef<LiveChatMessage[]>(messages);
 
-  // 행 0 = 첫 진입 필터링 안내(항상 표시), 행 i+1 = messages[i].
+  // 필터링 안내는 진입 시점의 마지막 메시지 바로 뒤(바닥)에 끼워 넣는다 — 진입하면 입력바 위에
+  // 보이고, 이후 도착하는 메시지에 일반 메시지처럼 위로 밀려 올라간다(치지직식).
+  // anchor가 없거나(빈 채팅 진입) 캡(300건)에 밀려 잘려나갔으면 가장 과거인 맨 앞에 둔다.
+  const anchorIndex = entryNoticeAnchorId
+    ? messages.findIndex((message) => message.id === entryNoticeAnchorId)
+    : -1;
+  const noticeRowIndex = anchorIndex >= 0 ? anchorIndex + 1 : 0;
   const rowCount = messages.length + 1;
+  const getMessageAtRow = (rowIndex: number) =>
+    messages[rowIndex < noticeRowIndex ? rowIndex : rowIndex - 1];
 
   const virtualizer = useVirtualizer({
     count: rowCount,
@@ -58,7 +69,8 @@ export function LiveChatMessageList({
     // 배너 실측 높이 + 행 간격만큼 비워, 맨 위 스크롤 시 첫 메시지가 배너에 가려지지 않게 한다.
     paddingStart: topInsetPx > 0 ? topInsetPx + ROW_GAP : 8,
     paddingEnd: 8,
-    getItemKey: (index) => (index === 0 ? "__filter-notice__" : messages[index - 1].id),
+    getItemKey: (index) =>
+      index === noticeRowIndex ? "__filter-notice__" : getMessageAtRow(index).id,
   });
 
   useEffect(() => {
@@ -136,21 +148,16 @@ export function LiveChatMessageList({
             className="absolute inset-x-0 top-0 px-3"
             style={{ transform: `translateY(${item.start}px)` }}
           >
-            {item.index === 0 ? (
-              // 행 0: 과거가 더 남았으면 적재 상태 표시, 히스토리 끝(또는 미사용)이면 필터링 안내.
-              hasMoreChatHistory ? (
-                <div className="flex h-8 items-center justify-center">
-                  {isLoadingOlderMessages ? (
-                    <Spinner className="text-muted-foreground size-4" />
-                  ) : null}
-                </div>
-              ) : (
-                <p className="border-border bg-muted/70 text-muted-foreground rounded-lg border px-3 py-2 text-center text-xs leading-relaxed font-semibold whitespace-pre-line">
-                  {LIVE_LABEL.chatFilterNotice}
-                </p>
-              )
+            {item.index === noticeRowIndex ? (
+              // 필터링 안내 행 — 적재 중 표시는 행이 아니라 LiveChatBody의 플로팅 인디케이터가 담당한다.
+              <p className="border-border bg-muted/70 text-muted-foreground rounded-lg border px-3 py-2 text-center text-xs leading-relaxed font-semibold whitespace-pre-line">
+                {LIVE_LABEL.chatFilterNotice}
+              </p>
             ) : (
-              <MessageItem message={messages[item.index - 1]} cleanbotEnabled={cleanbotEnabled} />
+              <MessageItem
+                message={getMessageAtRow(item.index)}
+                cleanbotEnabled={cleanbotEnabled}
+              />
             )}
           </div>
         ))}

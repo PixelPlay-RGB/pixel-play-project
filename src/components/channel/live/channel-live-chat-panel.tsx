@@ -51,10 +51,8 @@ export default function ChannelLiveChatPanel({ creatorId, chatRuleText, onMessag
   const popoutWindowRef = useRef<Window | null>(null);
   const popoutCheckIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const chatState = STUDIO_CHAT_STATE;
-  const { messages, loadOlderMessages, isLoadingOlder, hasMoreHistory } = useLiveMessages(
-    creatorId,
-    creatorId,
-  );
+  const { messages, loadOlderMessages, isLoadingOlder, hasMoreHistory, entryNoticeAnchorId } =
+    useLiveMessages(creatorId, creatorId);
   const { donations } = useLiveDonationRanking(creatorId ?? "");
   const { isLoggedIn, sendMessage } = useLiveChatSession({
     creatorId: creatorId ?? "",
@@ -133,6 +131,7 @@ export default function ChannelLiveChatPanel({ creatorId, chatRuleText, onMessag
           onLoadOlderMessages={loadOlderMessages}
           isLoadingOlderMessages={isLoadingOlder}
           hasMoreChatHistory={hasMoreHistory}
+          entryNoticeAnchorId={entryNoticeAnchorId}
         />
       )}
     </div>

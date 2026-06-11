@@ -26,6 +26,7 @@ export function LiveChatPopout({ creatorId }: Props) {
     loadOlderMessages,
     isLoadingOlderMessages,
     hasMoreChatHistory,
+    entryNoticeAnchorId,
     donations,
     polls,
     isPollsLoading,
@@ -44,6 +45,7 @@ export function LiveChatPopout({ creatorId }: Props) {
     sendDonation,
     isFollowing,
     onFollowToggled,
+    refreshChatState,
   } = useLiveBroadcastView(creatorId);
 
   const { handleFollow, isFollowPending } = useLiveFollowAction({
@@ -118,6 +120,8 @@ export function LiveChatPopout({ creatorId }: Props) {
         onLoadOlderMessages={loadOlderMessages}
         isLoadingOlderMessages={isLoadingOlderMessages}
         hasMoreChatHistory={hasMoreChatHistory}
+        entryNoticeAnchorId={entryNoticeAnchorId}
+        onRefreshChatState={refreshChatState}
       />
     </div>
   );
