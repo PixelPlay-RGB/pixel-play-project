@@ -1,7 +1,7 @@
 "use client";
 // 방송 운영 화면의 방송 제어·설정 저장·스트림 상태를 관리합니다.
 
-import { useCallback, useMemo, useState, useTransition } from "react";
+import { useCallback, useMemo, useRef, useState, useTransition } from "react";
 
 import {
   endLiveBroadcastAction,
@@ -24,6 +24,7 @@ import { toastAppError, toastAppSuccess } from "@/utils/common/toast-message";
 
 const DEFAULT_TITLE = "";
 const DEFAULT_TAGS: string[] = [];
+const STREAM_OFFLINE_AUTO_END_GRACE_MS = 15000;
 
 interface ChannelLiveSavedSettingsSnapshot {
   alertSoundEnabled: boolean;
@@ -149,6 +150,9 @@ export function useChannelLiveOperation(initialSnapshot?: ChannelLiveStudioSnaps
   const [streamStatus, setStreamStatus] = useState<ChannelLiveStreamStatusResponse | null>(null);
   const [isBroadcastActionPending, startBroadcastTransition] = useTransition();
   const [isSettingsActionPending, startSettingsTransition] = useTransition();
+  const hasSeenOnlineStreamRef = useRef(Boolean(activeBroadcast));
+  const streamOfflineSinceRef = useRef<number | null>(null);
+  const isAutoEndPendingRef = useRef(false);
 
   const liveState: ChannelLiveState = {
     isBroadcasting,
@@ -204,9 +208,68 @@ export function useChannelLiveOperation(initialSnapshot?: ChannelLiveStudioSnaps
   const isStreamOnline = streamStatus?.state === "online";
   const shouldCaptureAutoThumbnail = !thumbnailFile && !thumbnailPreviewUrl.trim();
 
-  const handleStreamStatusChange = useCallback((nextStatus: ChannelLiveStreamStatusResponse) => {
-    setStreamStatus(nextStatus);
+  const completeBroadcastEnd = useCallback(() => {
+    setBroadcastId(null);
+    setBroadcastStartedAt(null);
+    setIsBroadcasting(false);
+    setHasEnded(true);
+    streamOfflineSinceRef.current = null;
+    isAutoEndPendingRef.current = false;
   }, []);
+
+  const endBroadcast = useCallback(async () => {
+    if (broadcastId) {
+      const result = await endLiveBroadcastAction({ broadcastId });
+
+      if (!result.success) {
+        isAutoEndPendingRef.current = false;
+        setBroadcastActionError(
+          getBroadcastActionErrorMessage(APP_MESSAGE_CODE.error.channel.liveEndSaveFailed),
+        );
+        return;
+      }
+    }
+
+    completeBroadcastEnd();
+  }, [broadcastId, completeBroadcastEnd]);
+
+  const handleStreamStatusChange = useCallback(
+    (nextStatus: ChannelLiveStreamStatusResponse) => {
+      setStreamStatus(nextStatus);
+
+      if (nextStatus.state === "online") {
+        hasSeenOnlineStreamRef.current = true;
+        streamOfflineSinceRef.current = null;
+        return;
+      }
+
+      if (
+        !broadcastId ||
+        !isBroadcasting ||
+        !hasSeenOnlineStreamRef.current ||
+        nextStatus.state !== "offline"
+      ) {
+        streamOfflineSinceRef.current = null;
+        return;
+      }
+
+      const checkedAt = new Date(nextStatus.checkedAt).getTime();
+      const now = Number.isFinite(checkedAt) ? checkedAt : Date.now();
+      const offlineSince = streamOfflineSinceRef.current ?? now;
+      streamOfflineSinceRef.current = offlineSince;
+
+      if (now - offlineSince < STREAM_OFFLINE_AUTO_END_GRACE_MS || isAutoEndPendingRef.current) {
+        return;
+      }
+
+      isAutoEndPendingRef.current = true;
+      setBroadcastActionError(null);
+      startBroadcastTransition(async () => {
+        await endBroadcast();
+      });
+    },
+    [broadcastId, endBroadcast, isBroadcasting, startBroadcastTransition],
+  );
 
   const handleStartBroadcast = () => {
     setBroadcastActionError(null);
@@ -248,6 +311,9 @@ export function useChannelLiveOperation(initialSnapshot?: ChannelLiveStudioSnaps
       setBroadcastStartedAt(new Date().toISOString());
       setIsBroadcasting(true);
       setHasEnded(false);
+      hasSeenOnlineStreamRef.current = isStreamOnline;
+      streamOfflineSinceRef.current = null;
+      isAutoEndPendingRef.current = false;
       setThumbnailFile(null);
       setIsThumbnailRemoved(false);
 
@@ -261,23 +327,9 @@ export function useChannelLiveOperation(initialSnapshot?: ChannelLiveStudioSnaps
   const handleEndBroadcast = useCallback(() => {
     setBroadcastActionError(null);
     startBroadcastTransition(async () => {
-      if (broadcastId) {
-        const result = await endLiveBroadcastAction({ broadcastId });
-
-        if (!result.success) {
-          setBroadcastActionError(
-            getBroadcastActionErrorMessage(APP_MESSAGE_CODE.error.channel.liveEndSaveFailed),
-          );
-          return;
-        }
-      }
-
-      setBroadcastId(null);
-      setBroadcastStartedAt(null);
-      setIsBroadcasting(false);
-      setHasEnded(true);
+      await endBroadcast();
     });
-  }, [broadcastId, startBroadcastTransition]);
+  }, [endBroadcast, startBroadcastTransition]);
 
   const handleAddTag = () => {
     const nextTag = tagInput.trim();
