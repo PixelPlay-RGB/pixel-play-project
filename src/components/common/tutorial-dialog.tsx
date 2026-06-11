@@ -82,7 +82,7 @@ export function TutorialDialog({ title, steps, trigger, triggerLabel = "가이�
           )
         }
       />
-      <DialogContent className="max-h-[94vh] sm:max-w-[92vw] 2xl:max-w-[1400px]">
+      <DialogContent className="max-h-[94vh] overflow-y-auto sm:max-w-[92vw] 2xl:max-w-[1400px]">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>
@@ -94,7 +94,9 @@ export function TutorialDialog({ title, steps, trigger, triggerLabel = "가이�
           type="button"
           aria-label="이미지 확대 보기"
           onClick={() => setIsZoomed(true)}
-          className="border-border bg-muted/40 hover:border-brand/60 group relative h-[68vh] min-h-80 w-full overflow-hidden rounded-xl border transition-colors duration-150"
+          // 헤더·설명·내비게이션과 합쳐 Dialog 최대 높이(94vh)를 넘지 않도록 이미지 높이를 제한한다.
+          // 디테일은 클릭 확대 보기로 확인하는 전제라 작게 보여도 괜찮다.
+          className="border-border bg-muted/40 hover:border-brand/60 group relative h-[52vh] min-h-64 w-full overflow-hidden rounded-xl border transition-colors duration-150"
         >
           <Image
             src={currentStep.imageSrc}
@@ -130,7 +132,8 @@ export function TutorialDialog({ title, steps, trigger, triggerLabel = "가이�
           <div className="flex items-center gap-1.5">
             {steps.map((step, index) => (
               <button
-                key={step.imageSrc}
+                // 같은 캡처 이미지를 여러 단계가 재사용할 수 있어 imageSrc는 key로 쓰지 않는다.
+                key={`${index}-${step.title}`}
                 type="button"
                 aria-label={`${index + 1}단계로 이동`}
                 onClick={() => setStepIndex(index)}
