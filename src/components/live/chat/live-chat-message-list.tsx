@@ -124,27 +124,24 @@ export function LiveChatMessageList({
     container.scrollTop += prependedCount * (ESTIMATED_ROW_HEIGHT + ROW_GAP);
   }, [messages, scrollRef]);
 
+  // 바닥 추적은 행 추가(rowCount)뿐 아니라 행 실측 보정으로 전체 높이(totalSize)가 바뀔 때도
+  // 다시 발화해야 한다 — 여러 줄 메시지는 추정 높이(32px)보다 커서, 추가 시점에만 바닥으로 보내면
+  // 실측 반영 직후 그 차이만큼 바닥에서 뜬다. scrollHeight 대입이라 어떤 행 높이에서도 정확하다.
+  const totalSize = virtualizer.getTotalSize();
   useLayoutEffect(() => {
-    // 1차 이동은 추정 행 높이 기준이라 바닥에 못 미칠 수 있다 — 행 실측(measureElement)이
-    // 반영된 다음 프레임에 scrollHeight 기준으로 한 번 더 바닥에 붙인다.
-    const scrollToBottom = () => {
-      virtualizer.scrollToIndex(rowCount - 1, { align: "end" });
-      requestAnimationFrame(() => {
-        const container = scrollRef.current;
-        if (container) container.scrollTop = container.scrollHeight;
-      });
-    };
+    const container = scrollRef.current;
+    if (!container) return;
 
     if (isInitialMount.current) {
       isInitialMount.current = false;
-      scrollToBottom();
+      container.scrollTop = container.scrollHeight;
       return;
     }
 
     if (wasNearBottomRef.current) {
-      scrollToBottom();
+      container.scrollTop = container.scrollHeight;
     }
-  }, [rowCount, virtualizer, scrollRef]);
+  }, [rowCount, totalSize, scrollRef]);
 
   return (
     // 채팅은 항상 바닥에서 위로 쌓인다 — 메시지가 적을 땐 입력바 바로 위부터 시작한다.
