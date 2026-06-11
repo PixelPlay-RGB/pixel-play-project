@@ -44,7 +44,9 @@ export function mapLiveMessageRowToMessage(
   const isOwnMessage = !!viewerId && row.sender_id !== null && row.sender_id === viewerId;
   const metadata = readJsonObject(row.metadata);
 
-  if (readString(metadata.source) === "live_draw_participation") {
+  const metadataSource = readString(metadata.source);
+
+  if (metadataSource === "live_draw_participation" || metadataSource === "live_interaction") {
     return null;
   }
 
