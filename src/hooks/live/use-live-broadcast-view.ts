@@ -41,16 +41,6 @@ export function useLiveBroadcastView(creatorId: string) {
   const isFollowing = optimisticFollowing ?? watchData?.viewerRelation?.isFollowing ?? false;
 
   // 채팅 규칙 게이트 통과 여부(메뉴 동의 칩 표시용) — 두 신호의 합집합.
-  // ① canChat=true: RPC가 규칙 게이트를 통과시킨 상태(본인 채널·규칙 미설정 채널 포함 — 이들은
-  //    동의 절차가 없어 chatRuleAcceptedVersion이 null이므로 전용 필드만으론 누락된다).
-  // ② 전용 필드(chatRuleAcceptedVersion>=chatRuleVersion): canChat이 follower_required 등
-  //    다른 사유로 false여도 동의 이력이 있으면 동의 완료로 본다.
-  // 동의 직후엔 acceptChatRule→onChatRuleAccepted(refetch)로 watchData가 갱신돼 신선하다.
-  const isChatRuleAccepted =
-    watchData?.viewerChatState.canChat === true ||
-    (watchData?.viewerRelation?.chatRuleAcceptedVersion != null &&
-      watchData.viewerRelation.chatRuleAcceptedVersion >= watchData.settings.chatRuleVersion);
-
   function onFollowToggled() {
     const next = !isFollowing;
     setOptimisticFollowing(next);
@@ -80,10 +70,8 @@ export function useLiveBroadcastView(creatorId: string) {
   ) {
     setLastBroadcast(broadcast);
   }
-  // 한 번이라도 라이브였는지(=시청 중 종료) vs 처음부터 종료된 방송 재진입 구분에 쓴다.
-  const hadLiveBroadcast = lastBroadcast !== null;
-
-  const messagesQuery = useLiveMessages(broadcast?.id ?? lastBroadcast?.id, creatorId, user?.id);
+  // 채팅은 채널 단위 타임라인(#111) — 방송 여부와 무관하게 creator 기준으로 조회·전송한다.
+  const messagesQuery = useLiveMessages(creatorId, user?.id);
   const messages = messagesQuery.messages;
 
   const pollsQuery = useLivePolls(broadcast?.id, user?.id);
@@ -169,12 +157,8 @@ export function useLiveBroadcastView(creatorId: string) {
     isAnonymous: boolean;
     idempotencyKey: string;
   }): Promise<boolean> {
-    // 최심층 가드 — UI disabled를 빠뜨린 표면이 생겨도 조용히 실패하지 않게 안내한다.
-    if (!broadcast?.id) {
-      toastAppInfo(APP_MESSAGE_CODE.info.live.broadcastEnded);
-      return false;
-    }
-    // 크리에이터는 본인 방송에 후원할 수 없다(서버도 거부하지만 즉시 명확히 안내한다).
+    // 후원도 채널 단위(#111) — 후원이 열려 있으면 방송 외 시간에도 가능하다.
+    // 크리에이터는 본인 채널에 후원할 수 없다(서버도 거부하지만 즉시 명확히 안내한다).
     if (user?.id && user.id === creatorId) {
       toastAppError(APP_MESSAGE_CODE.error.live.donationSelf);
       return false;
@@ -184,7 +168,7 @@ export function useLiveBroadcastView(creatorId: string) {
       return false;
     }
     try {
-      const result = await sendLiveDonationAction({ broadcastId: broadcast.id, ...params });
+      const result = await sendLiveDonationAction({ creatorId, ...params });
       if (result.success) {
         void queryClient.invalidateQueries({
           queryKey: QUERY_KEYS.donations.walletBalance(user?.id ?? undefined),
@@ -205,7 +189,6 @@ export function useLiveBroadcastView(creatorId: string) {
 
   const chatSession = useLiveChatSession({
     creatorId,
-    broadcastId: broadcast?.id,
     viewerChatState: watchData?.viewerChatState,
     onChatRuleAccepted: refetch,
   });
@@ -248,8 +231,12 @@ export function useLiveBroadcastView(creatorId: string) {
     lastBroadcast,
     endedElapsedSeconds,
     creator,
-    hadLiveBroadcast,
     messages,
+    // 과거 채팅 적재(무한 스크롤) — 초기 50건 이후 위로 스크롤 시 50건씩, 누적 300건에서 중단.
+    loadOlderMessages: messagesQuery.loadOlderMessages,
+    isLoadingOlderMessages: messagesQuery.isLoadingOlder,
+    hasMoreChatHistory: messagesQuery.hasMoreHistory,
+    entryNoticeAnchorId: messagesQuery.entryNoticeAnchorId,
     donations,
     polls: pollsQuery.polls,
     isPollsLoading: pollsQuery.isLoading,
@@ -268,7 +255,17 @@ export function useLiveBroadcastView(creatorId: string) {
     isFollowing,
     onFollowToggled,
     chatRuleText: watchData?.settings.chatRuleText,
-    isChatRuleAccepted,
+    // 팔로워 전용 대기 시간 안내용 설정값(초).
+    followerWaitSeconds: watchData?.settings.followerWaitSeconds ?? 0,
+    // 슬로우 모드 간격(초) — 서버 검증과 동일하게 크리에이터 본인에겐 걸지 않는다(0).
+    slowModeSeconds:
+      watchData?.settings.slowModeEnabled && user?.id !== creatorId
+        ? watchData.settings.slowModeSeconds
+        : 0,
+    // 팔로우 대기 카운트다운 종료 등 게이트 해제 시점에 viewer chat state를 다시 받는다.
+    refreshChatState: () => {
+      void refetch();
+    },
     ...chatSession,
     sendMessage,
   };

@@ -145,8 +145,9 @@ export function LiveDonationPopover({
         render={
           <Button
             // 라이브 상호작용(브랜드 민트 네온)과 같은 형태의 live 코랄 네온으로 톤을 맞춘다.
+            // h-8: 입력 섹션을 낮게 유지하기 위한 슬림 높이(비디오 하단 라인 정렬용).
             className={cn(
-              "h-9 flex-1 text-sm",
+              "h-8 flex-1 text-sm",
               "border-live/30 bg-live/10 text-live",
               "hover:border-live/50 hover:bg-live/18 dark:border-live/30 dark:bg-live/15 dark:text-live",
             )}
@@ -248,8 +249,9 @@ export function LiveDonationPopover({
               onChange={(e) =>
                 setMessage(e.target.value.slice(0, LIVE_DONATION_MESSAGE_MAX_LENGTH))
               }
-              // field-sizing-content(자동 확장)가 popover 높이를 키우지 않게 최대 높이를 고정한다.
-              className="max-h-20 resize-none text-sm"
+              // field-sizing-content(자동 확장)가 popover를 무한정 키우지 않게 최대 높이만 제한한다.
+              // 긴 메시지(최대 300자)도 max-h 안에서 스크롤로 전부 확인할 수 있다.
+              className="max-h-40 resize-none overflow-y-auto text-sm"
               rows={2}
             />
           </div>

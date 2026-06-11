@@ -19,7 +19,11 @@ export default function ChannelLivePreviewPlayer({ src, title }: Props) {
 
     if (!video) return;
 
-    if (video.canPlayType("application/vnd.apple.mpegurl")) {
+    // hls.js를 우선 사용한다 — 일부 크롬이 canPlayType에 "maybe"를 답해 네이티브 분기를
+    // 타고도 실제 라이브 재생이 진행되지 않는 사례가 있다(use-hls-player와 같은 정책).
+    if (!Hls.isSupported()) {
+      if (!video.canPlayType("application/vnd.apple.mpegurl")) return;
+
       let retryTimeout: ReturnType<typeof setTimeout> | null = null;
 
       const retryLoad = () => {
@@ -39,9 +43,8 @@ export default function ChannelLivePreviewPlayer({ src, title }: Props) {
       };
     }
 
-    if (!Hls.isSupported()) return;
-
     let retryTimeout: ReturnType<typeof setTimeout> | null = null;
+    // 미리보기는 항상 실시간만 보면 되므로 시청 플레이어와 달리 따라잡기 설정을 유지한다.
     const hls = new Hls({
       backBufferLength: 5,
       liveMaxLatencyDuration: 3,

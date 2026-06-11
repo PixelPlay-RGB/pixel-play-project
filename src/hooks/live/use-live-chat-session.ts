@@ -14,7 +14,6 @@ import type { LiveChatMessage, LiveViewerChatState } from "@/types/live/live";
 
 interface UseLiveChatSessionParams {
   creatorId: string;
-  broadcastId: string | null | undefined;
   viewerChatState: LiveViewerChatState | null | undefined;
   onChatRuleAccepted?: () => Promise<unknown>;
 }
@@ -28,7 +27,6 @@ const DEFAULT_CHAT_STATE: LiveViewerChatState = {
 
 export function useLiveChatSession({
   creatorId,
-  broadcastId,
   viewerChatState,
   onChatRuleAccepted,
 }: UseLiveChatSessionParams) {
@@ -41,14 +39,15 @@ export function useLiveChatSession({
   const chatState = viewerChatState ?? DEFAULT_CHAT_STATE;
 
   async function sendMessage(content: string): Promise<boolean> {
-    if (!broadcastId) return false;
+    // 채팅은 채널 단위(#111) — 방송 여부와 무관하게 creator 기준으로 전송한다.
+    if (!creatorId) return false;
     const trimmed = content.trim();
     if (!trimmed || trimmed.length > LIVE_CHAT_MESSAGE_MAX_LENGTH) {
       toastAppError(APP_MESSAGE_CODE.error.message.invalidInput);
       return false;
     }
 
-    const messagesKey = QUERY_KEYS.live.messages(broadcastId);
+    const messagesKey = QUERY_KEYS.live.messages(creatorId);
     const clientId = `optimistic-${crypto.randomUUID()}`;
     const isHost = !!user && user.id === creatorId;
     // 역할 마크 즉시 표시: 방장은 확정이고, 그 외(후원자 등)는 캐시에 있는 내 직전 메시지의
@@ -81,7 +80,7 @@ export function useLiveChatSession({
     );
 
     try {
-      const result = await sendLiveMessageAction(broadcastId, trimmed);
+      const result = await sendLiveMessageAction(creatorId, trimmed);
 
       if (!result.success || !result.data) {
         removeOptimistic();

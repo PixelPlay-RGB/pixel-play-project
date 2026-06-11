@@ -32,6 +32,9 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
   const isMobile = useIsMobile();
   const openChatButtonRef = useRef<HTMLButtonElement>(null);
   const collapseChatButtonRef = useRef<HTMLButtonElement>(null);
+  // 좌측 플레이어 칼럼 실측 — 채팅 입력 섹션 높이를 "칼럼 높이 - 비디오(폭 100%·16:9) 높이"로
+  // 동기화해, 입력 섹션 상단 separator가 비디오 하단 라인과 정확히 일직선이 되게 한다.
+  const playerColumnRef = useRef<HTMLDivElement>(null);
 
   const {
     isLoading,
@@ -39,8 +42,11 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     lastBroadcast,
     endedElapsedSeconds,
     creator,
-    hadLiveBroadcast,
     messages,
+    loadOlderMessages,
+    isLoadingOlderMessages,
+    hasMoreChatHistory,
+    entryNoticeAnchorId,
     donations,
     polls,
     isPollsLoading,
@@ -59,12 +65,14 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     isFollowing,
     onFollowToggled,
     chatRuleText,
-    isChatRuleAccepted,
     isLoggedIn,
     isAuthLoading,
     chatState,
     sendMessage,
     acceptChatRule,
+    refreshChatState,
+    followerWaitSeconds,
+    slowModeSeconds,
   } = useLiveBroadcastView(creatorId);
   const { handleFollow, isFollowPending } = useLiveFollowAction({
     creatorId,
@@ -97,6 +105,31 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
 
   // 방송을 보는 동안 하트비트를 보내 현재 시청자 수를 집계한다(로그인·익명 모두).
   useLiveViewerPresence(broadcast?.id);
+
+  // 채팅 입력 섹션의 동기화 높이(px). 송출/종료 프레임이 16:9로 폭을 꽉 채우는 일반 모드에서만 계산하고,
+  // 화면이 낮아 자연 높이보다 작아지면 입력바가 자체 콘텐츠 높이로 버틴다(min-height라 안전).
+  const [chatInputMinHeight, setChatInputMinHeight] = useState<number | null>(null);
+  const hasPlayerFrameForSync = !!creator;
+  useEffect(() => {
+    const column = playerColumnRef.current;
+
+    if (!column || isMobile || isTheater || !hasPlayerFrameForSync) {
+      setChatInputMinHeight(null);
+      return;
+    }
+
+    const sync = () => {
+      const rect = column.getBoundingClientRect();
+      const remaining = Math.round(rect.height - (rect.width * 9) / 16);
+      setChatInputMinHeight(remaining > 0 ? remaining : null);
+    };
+
+    sync();
+    const observer = new ResizeObserver(sync);
+    observer.observe(column);
+
+    return () => observer.disconnect();
+  }, [isMobile, isTheater, hasPlayerFrameForSync]);
 
   // 시청 화면을 떠나면 와이드 모드를 해제해, 목록 등 다른 라이브 화면에서 사이드바가 다시 보이게 한다.
   useEffect(() => () => setWideMode(false), [setWideMode]);
@@ -143,12 +176,6 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     );
   }
 
-  // 방송 종료/오프라인: 시청 셸은 유지하고 송출 자리는 종료 화면, 채팅은 입력만 막는다.
-  const isEnded = !broadcast;
-  // 처음부터 종료된 방송(재진입·새로고침)일 때만 채팅 본문 전체를 오버레이로 덮는다.
-  // 시청 중 종료(hadLiveBroadcast)면 그동안 받은 메시지를 그대로 두고 입력만 비활성화한다.
-  const showChatEndedOverlay = isEnded && !hadLiveBroadcast;
-
   return (
     <>
       <div
@@ -156,8 +183,15 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
       >
         {/* 치지직형 Box 레이아웃: 섹션 사이 여백·라운드 없이 보더로만 구분하고, 텍스트 행에만 자체 패딩을 준다. */}
         <div className={cn("h-full", "w-full", "md:flex md:flex-row")}>
-          <div className={cn("flex min-w-0 flex-1 flex-col", "md:overflow-hidden")}>
-            <div className={cn("md:flex md:min-h-0 md:flex-1 md:items-center md:justify-center")}>
+          {/* 플레이어는 항상 폭 100%+16:9(유튜브식) — 화면이 낮아 정보 행이 넘치면 이 칼럼만
+              세로 스크롤된다(스크롤바는 숨김, 채팅 패널은 우측 고정 유지). 극장 모드는 스크롤이 없다.
+              추후 정보 섹션 아래에 클립 섹션이 들어올 예정이라 칼럼 스크롤 구조를 전제로 한다. */}
+          <div
+            ref={playerColumnRef}
+            className={cn("flex min-w-0 flex-1 flex-col", "no-scrollbar md:overflow-y-auto")}
+          >
+            {/* 일반 모드는 shrink-0 — 칼럼이 넘칠 때 눌리는 대신 스크롤로 넘어가야 한다. */}
+            <div className={cn(isTheater ? "md:min-h-0 md:flex-1" : "md:shrink-0")}>
               {broadcast ? (
                 <LiveVideoPlayer
                   broadcast={broadcast}
@@ -206,6 +240,13 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
                       onFollow={handleFollow}
                       isFollowing={isFollowing}
                       isFollowPending={isFollowPending}
+                      onLoadOlderMessages={loadOlderMessages}
+                      isLoadingOlderMessages={isLoadingOlderMessages}
+                      hasMoreChatHistory={hasMoreChatHistory}
+                      entryNoticeAnchorId={entryNoticeAnchorId}
+                      onRefreshChatState={refreshChatState}
+                      followerWaitSeconds={followerWaitSeconds}
+                      slowModeSeconds={slowModeSeconds}
                     />
                   )}
                 />
@@ -225,7 +266,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
               영화관 모드 자체가 없으므로 motion height를 적용하지 않는다.
             */}
             <motion.div
-              className={cn("overflow-hidden", isInfoCollapsed && "pointer-events-none")}
+              className={cn("shrink-0 overflow-hidden", isInfoCollapsed && "pointer-events-none")}
               aria-hidden={isInfoCollapsed || undefined}
               inert={isInfoCollapsed || undefined}
               initial={false}
@@ -263,13 +304,15 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
 
               {/* 스트리머 정보 행(아바타·이름·팔로워 + 팔로우)은 라이브·종료 모두 동일하게 보여준다. */}
               {creator ? (
+                // py-3: 정보 영역을 141px로 낮춰(우측 입력바와 동일) FHD에서 비디오가 16:9에 딱 맞게
+                // 들어가도록 한다(149px일 땐 높이가 7px 모자라 좌우에 검은 필러박스가 생겼다).
                 <LiveStreamerRow
                   creator={creator}
                   isLive={!!broadcast}
                   isFollowing={isFollowing}
                   isPending={isFollowPending}
                   onFollow={handleFollow}
-                  className="px-4 py-4"
+                  className="px-4 py-3"
                 />
               ) : null}
             </motion.div>
@@ -307,15 +350,20 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
               onJoinDraw={joinDraw}
               onDonate={sendDonation}
               chatRuleText={chatRuleText}
-              isRuleAccepted={isChatRuleAccepted}
               onAcceptChatRule={acceptChatRule}
               onFollow={handleFollow}
               isFollowing={isFollowing}
               isFollowPending={isFollowPending}
               onCollapse={broadcast ? collapseDesktopChat : undefined}
               collapseButtonRef={collapseChatButtonRef}
-              isEnded={isEnded}
-              showEndedOverlay={showChatEndedOverlay}
+              onLoadOlderMessages={loadOlderMessages}
+              isLoadingOlderMessages={isLoadingOlderMessages}
+              hasMoreChatHistory={hasMoreChatHistory}
+              entryNoticeAnchorId={entryNoticeAnchorId}
+              onRefreshChatState={refreshChatState}
+              followerWaitSeconds={followerWaitSeconds}
+              slowModeSeconds={slowModeSeconds}
+              inputMinHeightPx={chatInputMinHeight}
             />
           </aside>
         </div>

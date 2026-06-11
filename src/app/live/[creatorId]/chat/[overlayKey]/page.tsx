@@ -24,5 +24,7 @@ export default async function LiveChatOverlayPage({
     notFound();
   }
 
-  return <LiveChatOverlay initialSnapshot={snapshot} isPreview={preview === "1"} />;
+  return (
+    <LiveChatOverlay creatorId={creatorId} initialSnapshot={snapshot} isPreview={preview === "1"} />
+  );
 }

@@ -66,6 +66,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
     broadcastId,
     broadcastStartedAt,
     chatRuleText,
+    donationFeedBroadcastId,
     handleAddTag,
     handleEndBroadcast,
     handleRemoveTag,
@@ -187,19 +188,17 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
         </div>
 
         <div className="border-border min-w-0 xl:h-full xl:min-h-0 xl:border-x">
-          <ChannelLiveChatPanel
-            key={broadcastId ?? "channel-live-chat-idle"}
-            broadcastId={broadcastId}
-            creatorId={creatorId}
-            chatRuleText={chatRuleText}
-          />
+          {/* 채팅은 채널 단위 타임라인(#111) — 방송 시작·종료에도 리마운트 없이 이어진다. */}
+          <ChannelLiveChatPanel creatorId={creatorId} chatRuleText={chatRuleText} />
         </div>
 
         <div className="min-w-0 xl:h-full xl:min-h-0 xl:overflow-y-auto">
           <ChannelLiveQuickSettingsPanel
+            broadcastId={donationFeedBroadcastId}
             canSaveSettings={isSettingsDirty}
+            chatScope={operation.chatScope}
+            initialDonations={initialSnapshot?.recentDonations ?? []}
             isAlertSoundEnabled={operation.isAlertSoundEnabled}
-            isChatDonationMessageEnabled={operation.isChatDonationMessageEnabled}
             isDonationAmountVisible={operation.isDonationAmountVisible}
             isDonationEnabled={operation.isDonationEnabled}
             isLinkBlocked={operation.isLinkBlocked}
@@ -208,7 +207,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
             isTtsEnabled={operation.isTtsEnabled}
             slowModeSeconds={operation.slowModeSeconds}
             onAlertSoundEnabledChange={operation.setIsAlertSoundEnabled}
-            onChatDonationMessageEnabledChange={operation.setIsChatDonationMessageEnabled}
+            onChatScopeChange={operation.setChatScope}
             onDonationAmountVisibleChange={operation.setIsDonationAmountVisible}
             onDonationEnabledChange={operation.setIsDonationEnabled}
             onLinkBlockedChange={operation.setIsLinkBlocked}

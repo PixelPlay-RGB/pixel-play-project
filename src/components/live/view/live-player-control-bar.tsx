@@ -8,7 +8,6 @@ import {
   PanelRightOpen,
   Pause,
   Play,
-  Radio,
   RectangleHorizontal,
   Users,
 } from "lucide-react";
@@ -43,6 +42,9 @@ interface Props {
   qualityLevels: HlsQualityLevel[];
   selectedQualityLevel: number;
   onSelectQualityLevel: (index: number) => void;
+  // 실시간 지점 여부(일시정지·시킹으로 뒤처지면 false)와 실시간 복귀 액션.
+  isAtLiveEdge: boolean;
+  onSeekToLive: () => void;
 }
 
 export function LivePlayerControlBar({
@@ -65,6 +67,8 @@ export function LivePlayerControlBar({
   qualityLevels,
   selectedQualityLevel,
   onSelectQualityLevel,
+  isAtLiveEdge,
+  onSeekToLive,
 }: Props) {
   return (
     <div className="flex items-center gap-2">
@@ -81,7 +85,12 @@ export function LivePlayerControlBar({
             />
           }
         >
-          {isPlaying ? <Pause className="size-5" /> : <Play className="size-5" />}
+          {/* 핵심 조작(재생/일시정지)은 유튜브처럼 채운 형태로 — 라인 아이콘보다 영상 위에서 또렷하다. */}
+          {isPlaying ? (
+            <Pause className="size-6 fill-current" />
+          ) : (
+            <Play className="size-6 fill-current" />
+          )}
         </TooltipTrigger>
         <TooltipContent>
           {isPlaying ? LIVE_LABEL.playerPause : LIVE_LABEL.playerPlay} (k)
@@ -95,28 +104,51 @@ export function LivePlayerControlBar({
         onVolumeChange={onVolumeChange}
       />
 
-      {/* 전체화면에선 LIVE 뱃지가 우상단 스택으로 이동하므로 하단에선 통째로 생략한다. */}
-      {!isFullscreen ? (
-        <span className="ml-1 flex items-center gap-1.5 font-mono text-xs font-bold text-white">
-          <span className="text-live flex items-center gap-1">
-            <Radio className="size-3 motion-safe:animate-pulse" />
+      {/* 컨트롤 아이콘(size-6)과 시각적 무게를 맞추기 위해 text-sm·size-4로 통일한다. */}
+      <span className="ml-2 flex items-center gap-2 font-mono text-sm font-bold text-white">
+        {/* LIVE는 실시간 여부 표시 겸 복귀 버튼 — 실시간이면 코랄 점+점멸, 일시정지·지연이면 회색(치지직식). */}
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <button
+                type="button"
+                aria-label={
+                  isAtLiveEdge ? LIVE_LABEL.playerAtLiveEdge : LIVE_LABEL.playerGoToLiveEdge
+                }
+                className={cn(
+                  "flex cursor-pointer items-center gap-1.5 transition-colors",
+                  isAtLiveEdge ? "text-live" : "text-white/50 hover:text-white/80",
+                )}
+                onClick={onSeekToLive}
+              />
+            }
+          >
+            <span
+              className={cn(
+                "size-2 rounded-full bg-current",
+                isAtLiveEdge && "motion-safe:animate-pulse",
+              )}
+            />
             {LIVE_LABEL.live}
-          </span>
-          {/* 몰입 모드에선 시간·시청자 수가 상단 오버레이로 이동하므로 하단에선 생략한다. */}
-          {!isImmersive ? (
-            <>
-              <span>· {elapsedText}</span>
-              <span className="flex items-center gap-1">
-                ·
-                <span className="text-brand flex items-center gap-1">
-                  <Users className="size-3" />
-                  {formatCount(viewerCount)}
-                </span>
-              </span>
-            </>
-          ) : null}
-        </span>
-      ) : null}
+          </TooltipTrigger>
+          <TooltipContent>
+            {isAtLiveEdge ? LIVE_LABEL.playerAtLiveEdge : LIVE_LABEL.playerGoToLiveEdge}
+          </TooltipContent>
+        </Tooltip>
+        {/* 몰입 모드(극장·전체화면)에선 시간·시청자 수가 상단 오버레이로 이동하므로 하단에선 생략하고,
+            모바일에선 비디오 아래 정보 행에 같은 값이 있어 좁은 컨트롤 바를 넘치지 않게 숨긴다. */}
+        {!isImmersive ? (
+          <>
+            <span className="hidden text-white/40 sm:inline">·</span>
+            <span className="hidden text-white/90 sm:inline">{elapsedText}</span>
+            <span className="hidden text-white/40 sm:inline">·</span>
+            <span className="text-brand hidden items-center gap-1 sm:flex">
+              <Users className="size-4" />
+              {formatCount(viewerCount)}
+            </span>
+          </>
+        ) : null}
+      </span>
 
       <div className="ml-auto flex items-center gap-1">
         <LivePlayerQualityMenu
@@ -143,7 +175,7 @@ export function LivePlayerControlBar({
                 />
               }
             >
-              <RectangleHorizontal className="size-5" />
+              <RectangleHorizontal className="size-6" />
             </TooltipTrigger>
             <TooltipContent>
               {isTheater ? LIVE_LABEL.playerTheaterExit : LIVE_LABEL.playerTheater} (t)
@@ -166,7 +198,7 @@ export function LivePlayerControlBar({
                 />
               }
             >
-              <PanelRightOpen className="size-5" />
+              <PanelRightOpen className="size-6" />
             </TooltipTrigger>
             <TooltipContent>{LIVE_LABEL.chatExpand}</TooltipContent>
           </Tooltip>
@@ -187,7 +219,7 @@ export function LivePlayerControlBar({
               />
             }
           >
-            {isFullscreen ? <Minimize2 className="size-5" /> : <Maximize2 className="size-5" />}
+            {isFullscreen ? <Minimize2 className="size-6" /> : <Maximize2 className="size-6" />}
           </TooltipTrigger>
           <TooltipContent>
             {isFullscreen ? LIVE_LABEL.playerFullscreenExit : LIVE_LABEL.playerFullscreen} (f)
