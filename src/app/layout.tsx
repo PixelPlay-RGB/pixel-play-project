@@ -75,7 +75,10 @@ export default function RootLayout({
             <Toaster />
             <Header />
             <AuthToastHandler />
-            <main className="flex flex-1 flex-col">{children}</main>
+            {/* tabIndex=-1: 미니플레이어 닫기 등 플로팅 UI가 사라질 때 포커스를 회수하는 본문 랜드마크. */}
+            <main tabIndex={-1} className="flex flex-1 flex-col">
+              {children}
+            </main>
             <RouteFooter />
           </RouteAccentProvider>
         </Providers>

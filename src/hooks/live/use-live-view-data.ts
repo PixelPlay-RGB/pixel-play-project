@@ -40,7 +40,10 @@ export function useLiveViewData(creatorId: string) {
 
       if (watchResult.error) {
         console.error("get_live_watch 실패", watchResult.error);
-        return null;
+        // null 반환(=오프라인 확정과 동일) 대신 throw해 TanStack retry를 태우고,
+        // background refetch 실패 시 직전 캐시(라이브 상태)를 보존한다 — 일시 오류가
+        // 시청 화면 오프라인 전환·시청 세션 종료로 오판되는 것을 막는다.
+        throw watchResult.error;
       }
 
       if (countResult.error) {

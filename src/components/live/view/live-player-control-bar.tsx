@@ -8,13 +8,13 @@ import {
   PanelRightOpen,
   Pause,
   Play,
-  Radio,
   RectangleHorizontal,
   Users,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { LivePlayerLiveIndicator } from "@/components/live/view/live-player-live-indicator";
 import { LivePlayerQualityMenu } from "@/components/live/view/live-player-quality-menu";
 import { LivePlayerVolumeControl } from "@/components/live/view/live-player-volume-control";
 import { LIVE_LABEL, LIVE_PLAYER_ICON_BUTTON_CLASS } from "@/constants/live/live";
@@ -98,10 +98,7 @@ export function LivePlayerControlBar({
       {/* 전체화면에선 LIVE 뱃지가 우상단 스택으로 이동하므로 하단에선 통째로 생략한다. */}
       {!isFullscreen ? (
         <span className="ml-1 flex items-center gap-1.5 font-mono text-xs font-bold text-white">
-          <span className="text-live flex items-center gap-1">
-            <Radio className="size-3 motion-safe:animate-pulse" />
-            {LIVE_LABEL.live}
-          </span>
+          <LivePlayerLiveIndicator />
           {/* 몰입 모드에선 시간·시청자 수가 상단 오버레이로 이동하므로 하단에선 생략한다. */}
           {!isImmersive ? (
             <>

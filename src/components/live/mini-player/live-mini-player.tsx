@@ -4,12 +4,15 @@
 
 import Link from "next/link";
 import { useRef } from "react";
-import { Pause, Play, Radio, SquareArrowOutUpRight, X } from "lucide-react";
+import { Pause, Play, SquareArrowOutUpRight, X } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 
+import { LivePlayerLiveIndicator } from "@/components/live/view/live-player-live-indicator";
 import { LivePlayerVolumeControl } from "@/components/live/view/live-player-volume-control";
 import { LivePlayerWaitingOverlay } from "@/components/live/view/live-player-waiting-overlay";
 import { Button } from "@/components/ui/button";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
+import { QUERY_KEYS } from "@/constants/common/query-keys";
 import { LIVE_LABEL, LIVE_PLAYER_ICON_BUTTON_CLASS } from "@/constants/live/live";
 import { useHlsPlayer } from "@/hooks/live/use-hls-player";
 import { useLiveBroadcastRealtime } from "@/hooks/live/use-live-broadcast-realtime";
@@ -33,12 +36,26 @@ const CONTROL_INTERACTIVITY_CLASS =
   "pointer-events-none group-focus-within:pointer-events-auto group-hover:pointer-events-auto pointer-coarse:pointer-events-auto";
 
 export function LiveMiniPlayer({ session, onClose }: Props) {
-  // 종료 이벤트가 언마운트 전에 중복 도착해도 토스트가 한 번만 뜨게 가드한다(use-live-view-data의 didEnd와 동일 정책).
-  const endedRef = useRef(false);
+  const queryClient = useQueryClient();
+  const rootRef = useRef<HTMLDivElement>(null);
   // 메인 플레이어와 동일한 재생·음량 정책 재사용(음소거 자동재생 시작, 음량 0=음소거 파생).
   // 컨트롤 자동 숨김 상태는 안 쓰고 CSS hover(group)로 처리한다.
   const { videoRef, isPlaying, togglePlay, muted, volume, toggleMute, setVolume } =
     useLivePlayerControls();
+
+  // 닫히면 포커스가 있던 컨트롤이 DOM에서 사라져 포커스가 body로 떨어진다(WCAG 2.4.3) —
+  // 포커스가 미니 안에 있을 때만 본문 랜드마크(layout의 main, tabIndex=-1)로 회수한다.
+  function recoverFocusBeforeClose() {
+    const root = rootRef.current;
+    if (!root || !root.contains(document.activeElement)) return;
+    const main = document.querySelector("main");
+    if (main instanceof HTMLElement) main.focus({ preventScroll: true });
+  }
+
+  function handleClose() {
+    recoverFocusBeforeClose();
+    onClose();
+  }
 
   // 메인 플레이어와 동일한 attach 정책 재사용. hlsSrc 미비(null)면 세션은 유지하고 대기 오버레이만 띄운다.
   const { playbackState } = useHlsPlayer({
@@ -48,10 +65,15 @@ export function LiveMiniPlayer({ session, onClose }: Props) {
   });
 
   // 미니 표시 중엔 시청 화면(use-live-view-data)이 언마운트라 여기서 방송 채널을 구독한다(상호 배타 — 중복 구독 없음).
+  // verifyOnFirstJoin: 시청→미니 핸드오프 갭(이전 구독 해제~새 구독 사이)에 종료된 방송을 첫 조인에서 잡는다.
   useLiveBroadcastRealtime(session.broadcastId, {
+    verifyOnFirstJoin: true,
     onEnded: () => {
-      if (endedRef.current) return;
-      endedRef.current = true;
+      // 시청 화면이 언마운트 상태라 watch 캐시가 '라이브'인 채 남는다 — staleTime 안에 재진입하면
+      // 죽은 방송으로 세션이 부활하므로 캐시를 제거해 재조회를 강제한다(userId 미포함 prefix 키라
+      // 로그인·익명 캐시 모두 매칭).
+      queryClient.removeQueries({ queryKey: QUERY_KEYS.live.watch(session.creatorId) });
+      recoverFocusBeforeClose();
       onClose();
       toastAppInfo(APP_MESSAGE_CODE.info.live.broadcastEnded);
     },
@@ -59,12 +81,18 @@ export function LiveMiniPlayer({ session, onClose }: Props) {
 
   return (
     <div
+      ref={rootRef}
+      role="complementary"
+      aria-label={LIVE_LABEL.miniPlayer}
       className={cn(
-        "group fixed right-4 bottom-4 z-50 w-80 overflow-hidden bg-black shadow-lg",
-        // 데스크탑 토스트(sonner)가 우하단 모서리에 떠서, 출현 영역 위로 올려 겹치지 않게 한다.
-        "md:bottom-24 md:w-96",
+        // bottom-24: 우하단 모서리에 뜨는 토스트(sonner)·하단 중앙의 설정 저장 바(StickySaveBar,
+        // bottom-6+높이 약 58px)의 출현 영역 위로 올려, 모든 폭에서 겹치지 않게 한다.
+        "group fixed right-4 bottom-24 z-50 w-80 overflow-hidden bg-black shadow-lg",
+        "md:w-96",
       )}
     >
+      {/* video+대기 오버레이는 메인(live-video-player)과 동일 마크업이지만, 그쪽은 전체화면 채팅
+          인셋 래퍼와 결합돼 있어 의도적으로 추출하지 않는다(attach 정책은 useHlsPlayer로 공유). */}
       <div className="relative aspect-video">
         <video
           ref={videoRef}
@@ -86,50 +114,58 @@ export function LiveMiniPlayer({ session, onClose }: Props) {
         {/* hover/포커스 시 상단 그라데이션: 우상단 복귀(시청 화면으로) + 닫기(X = 의도된 퇴장, 시청자 수 -1) */}
         <div
           className={cn(
-            "pointer-events-none absolute inset-x-0 top-0 flex justify-end gap-0.5 bg-linear-to-b from-black/60 to-transparent p-1.5 pb-8",
+            "pointer-events-none absolute inset-x-0 top-0",
+            "flex justify-end gap-0.5 p-1.5 pb-8",
+            "bg-linear-to-b from-black/60 to-transparent",
             OVERLAY_VISIBILITY_CLASS,
           )}
         >
-          <Button
-            size="icon"
-            variant="ghost"
-            nativeButton={false}
-            render={<Link href={`/live/${session.creatorId}`} />}
-            aria-label={LIVE_LABEL.miniPlayerReturn}
-            className={cn(LIVE_PLAYER_ICON_BUTTON_CLASS, CONTROL_INTERACTIVITY_CLASS)}
-          >
-            <SquareArrowOutUpRight className="size-5" />
-          </Button>
-          <Button
-            type="button"
-            size="icon"
-            variant="ghost"
-            aria-label={LIVE_LABEL.miniPlayerClose}
-            className={cn(LIVE_PLAYER_ICON_BUTTON_CLASS, CONTROL_INTERACTIVITY_CLASS)}
-            onClick={onClose}
-          >
-            <X className="size-5" />
-          </Button>
+          {/* 클릭 수신은 이 컨트롤 그룹 div 한 곳에서만 토글한다 — 버튼마다 부착하면 새 컨트롤 추가 시 누락된다. */}
+          <div className={cn("flex gap-0.5", CONTROL_INTERACTIVITY_CLASS)}>
+            <Button
+              size="icon"
+              variant="ghost"
+              nativeButton={false}
+              render={<Link href={`/live/${session.creatorId}`} />}
+              aria-label={LIVE_LABEL.miniPlayerReturn}
+              className={LIVE_PLAYER_ICON_BUTTON_CLASS}
+            >
+              <SquareArrowOutUpRight className="size-5" />
+            </Button>
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              aria-label={LIVE_LABEL.miniPlayerClose}
+              className={LIVE_PLAYER_ICON_BUTTON_CLASS}
+              onClick={handleClose}
+            >
+              <X className="size-5" />
+            </Button>
+          </div>
         </div>
 
-        {/* hover/포커스 시 하단 그라데이션: 좌하단 재생·음량 컨트롤 + 점멸 LIVE(메인 컨트롤 바와 동일 스타일) */}
+        {/* hover/포커스 시 하단 그라데이션: 좌하단 재생·음량 컨트롤 + 점멸 LIVE(메인 컨트롤 바와 공유) */}
         <div
           className={cn(
-            "pointer-events-none absolute inset-x-0 bottom-0 flex items-center gap-1 bg-linear-to-t from-black/70 to-transparent p-1.5 pt-8",
+            "pointer-events-none absolute inset-x-0 bottom-0",
+            "flex items-center gap-1 p-1.5 pt-8",
+            "bg-linear-to-t from-black/70 to-transparent",
             OVERLAY_VISIBILITY_CLASS,
           )}
         >
-          <Button
-            type="button"
-            size="icon"
-            variant="ghost"
-            aria-label={isPlaying ? LIVE_LABEL.playerPause : LIVE_LABEL.playerPlay}
-            className={cn(LIVE_PLAYER_ICON_BUTTON_CLASS, CONTROL_INTERACTIVITY_CLASS)}
-            onClick={togglePlay}
-          >
-            {isPlaying ? <Pause className="size-5" /> : <Play className="size-5" />}
-          </Button>
-          <div className={CONTROL_INTERACTIVITY_CLASS}>
+          {/* 클릭 수신은 이 컨트롤 그룹 div 한 곳에서만 토글한다 — 버튼마다 부착하면 새 컨트롤 추가 시 누락된다. */}
+          <div className={cn("flex items-center gap-1", CONTROL_INTERACTIVITY_CLASS)}>
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              aria-label={isPlaying ? LIVE_LABEL.playerPause : LIVE_LABEL.playerPlay}
+              className={LIVE_PLAYER_ICON_BUTTON_CLASS}
+              onClick={togglePlay}
+            >
+              {isPlaying ? <Pause className="size-5" /> : <Play className="size-5" />}
+            </Button>
             <LivePlayerVolumeControl
               muted={muted}
               volume={volume}
@@ -137,10 +173,7 @@ export function LiveMiniPlayer({ session, onClose }: Props) {
               onVolumeChange={setVolume}
             />
           </div>
-          <span className="text-live ml-1 flex items-center gap-1 font-mono text-xs font-bold">
-            <Radio className="size-3 motion-safe:animate-pulse" />
-            {LIVE_LABEL.live}
-          </span>
+          <LivePlayerLiveIndicator className="ml-1" />
         </div>
       </div>
     </div>

@@ -7,7 +7,7 @@
 import { usePathname } from "next/navigation";
 
 import { LiveMiniPlayer } from "@/components/live/mini-player/live-mini-player";
-import { LIVE_OVERLAY_ROUTE_PATTERN } from "@/constants/live/live";
+import { LIVE_OVERLAY_ROUTE_PATTERN, LIVE_WATCH_ROUTE_PATTERN } from "@/constants/live/live";
 import { useLiveViewerPresence } from "@/hooks/live/use-live-viewer-presence";
 import { useLiveWatchSessionStore } from "@/stores/live-watch-session";
 
@@ -18,9 +18,16 @@ export function LiveMiniPlayerHost() {
 
   useLiveViewerPresence(session?.broadcastId);
 
-  // 표시 여부는 순수 파생 — 시청 페이지에선 메인 플레이어가, 별도 창 라우트(OBS 출력·팝아웃)에선 아무것도 안 띄운다.
-  const isOnWatchPage = !!session && pathname === `/live/${session.creatorId}`;
-  if (!session || isOnWatchPage || LIVE_OVERLAY_ROUTE_PATTERN.test(pathname)) return null;
+  // 표시 여부는 순수 파생 — 시청 페이지(어느 크리에이터든 — LiveView가 세션을 인수/종료하므로,
+  // 시청 간 전환 로딩 중 직전 방송 미니가 잠깐 떠 HLS가 이중 기동하는 것 방지)와
+  // 별도 창 라우트(OBS 출력·팝아웃)에선 아무것도 안 띄운다.
+  if (
+    !session ||
+    LIVE_WATCH_ROUTE_PATTERN.test(pathname) ||
+    LIVE_OVERLAY_ROUTE_PATTERN.test(pathname)
+  ) {
+    return null;
+  }
 
   // broadcastId로 key를 묶어 세션 교체(다른 라이브) 시 시청자 수 등 내부 상태를 초기화한다.
   return <LiveMiniPlayer key={session.broadcastId} session={session} onClose={endSession} />;

@@ -35,6 +35,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
 
   const {
     isLoading,
+    isWatchError,
     broadcast,
     lastBroadcast,
     endedElapsedSeconds,
@@ -105,13 +106,24 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
   // 실제 값이 바뀔 때만 세션을 갱신한다(채팅 수신 등 무관한 렌더마다 재발사 방지).
   const liveBroadcastId = broadcast?.id;
   useEffect(() => {
-    if (isAuthLoading || isLoading) return;
+    // 쿼리 오류(재시도 소진)는 '오프라인 확정'이 아니다 — 일시 장애로 활성 세션(미니 연속성)을
+    // 끊지 않도록 판단을 보류한다. 진짜 오프라인은 쿼리가 성공하고 broadcast가 없을 때만.
+    if (isAuthLoading || isLoading || isWatchError) return;
     if (!liveBroadcastId) {
       endSession();
       return;
     }
     startSession({ creatorId, broadcastId: liveBroadcastId, hlsSrc });
-  }, [isAuthLoading, isLoading, liveBroadcastId, creatorId, hlsSrc, startSession, endSession]);
+  }, [
+    isAuthLoading,
+    isLoading,
+    isWatchError,
+    liveBroadcastId,
+    creatorId,
+    hlsSrc,
+    startSession,
+    endSession,
+  ]);
 
   // 시청 화면을 떠나면 와이드 모드를 해제해, 목록 등 다른 라이브 화면에서 사이드바가 다시 보이게 한다.
   useEffect(() => () => setWideMode(false), [setWideMode]);
