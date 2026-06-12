@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/sonner";
 import Providers from "@/components/common/providers";
 import RouteOverlayChromeController from "@/components/common/route-overlay-chrome-controller";
 import LiveDataRouteRefresher from "@/components/live/live-data-route-refresher";
+import { LiveMiniPlayerHost } from "@/components/live/mini-player/live-mini-player-host";
 import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
 import { Geist_Mono, Noto_Sans_KR } from "next/font/google";
@@ -70,10 +71,14 @@ export default function RootLayout({
           <RouteAccentProvider>
             <RouteOverlayChromeController />
             <LiveDataRouteRefresher />
+            <LiveMiniPlayerHost />
             <Toaster />
             <Header />
             <AuthToastHandler />
-            <main className="flex flex-1 flex-col">{children}</main>
+            {/* tabIndex=-1: 미니플레이어 닫기 등 플로팅 UI가 사라질 때 포커스를 회수하는 본문 랜드마크. */}
+            <main tabIndex={-1} className="flex flex-1 flex-col">
+              {children}
+            </main>
             <RouteFooter />
           </RouteAccentProvider>
         </Providers>

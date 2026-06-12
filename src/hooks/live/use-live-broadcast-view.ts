@@ -31,7 +31,13 @@ import {
 export function useLiveBroadcastView(creatorId: string) {
   const user = useAuthStore((state) => state.user);
   const queryClient = useQueryClient();
-  const { data: watchData, isLoading, refetch, endedElapsedSeconds } = useLiveViewData(creatorId);
+  const {
+    data: watchData,
+    isLoading,
+    error: watchError,
+    refetch,
+    endedElapsedSeconds,
+  } = useLiveViewData(creatorId);
 
   const broadcast = mapLiveWatchToBroadcast(watchData);
   // 방송이 종료/오프라인(broadcast=null)이어도 크리에이터 정보는 남아 종료 화면에서 쓴다.
@@ -226,6 +232,8 @@ export function useLiveBroadcastView(creatorId: string) {
 
   return {
     isLoading,
+    // watch 쿼리 오류(재시도 소진) 신호 — 오프라인 확정과 구분해 세션 종료를 보류하는 데 쓴다.
+    isWatchError: Boolean(watchError),
     broadcast,
     // 시청 중 종료 시 정보 행(제목·참여자)에 쓰는 마지막 라이브 스냅샷 + 멈춘 경과 시간.
     lastBroadcast,

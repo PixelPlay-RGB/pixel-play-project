@@ -4,11 +4,11 @@
 import { usePathname } from "next/navigation";
 import { useLayoutEffect } from "react";
 
-const OVERLAY_ROUTE_PATTERN = /^\/live\/[^/]+\/(?:chat|alerts\/donation)(?:\/[^/]+)?$/;
+import { LIVE_OVERLAY_ROUTE_PATTERN } from "@/constants/live/live";
 
 export default function RouteOverlayChromeController() {
   const pathname = usePathname();
-  const isOverlayRoute = OVERLAY_ROUTE_PATTERN.test(pathname);
+  const isOverlayRoute = LIVE_OVERLAY_ROUTE_PATTERN.test(pathname);
 
   useLayoutEffect(() => {
     document.body.classList.toggle("is-overlay-route", isOverlayRoute);
