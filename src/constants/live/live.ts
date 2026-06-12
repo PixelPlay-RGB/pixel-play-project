@@ -39,6 +39,7 @@ export const LIVE_LABEL = {
   chatFilterNotice:
     "쾌적한 시청 환경을 위해 일부 메시지는 필터링 됩니다.\n클린 라이브 채팅 문화 만들기에 동참해 주세요.",
   chatLoadingOlder: "이전 채팅 불러오는 중",
+  chatScrollToLatest: "최근 채팅으로",
   donationRankingTitle: "이번 주 후원 랭킹",
   donationRankingCollapse: "후원 랭킹 접기",
   donationRankingExpand: "후원 랭킹 펼치기",
