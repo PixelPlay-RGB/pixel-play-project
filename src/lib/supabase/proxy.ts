@@ -18,7 +18,13 @@ const PUBLIC_CHANNEL_PATTERN =
   /^\/channel\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\/|$)/i;
 
 function isPublicRoute(pathname: string) {
-  return pathname === "/" || pathname.startsWith("/live/") || PUBLIC_CHANNEL_PATTERN.test(pathname);
+  return (
+    pathname === "/" ||
+    pathname.startsWith("/live/") ||
+    // 클립 디테일은 공유 링크·OG 크롤러가 비로그인으로 접근한다(#124).
+    pathname.startsWith("/clip/") ||
+    PUBLIC_CHANNEL_PATTERN.test(pathname)
+  );
 }
 
 function isPublicAuthRoute(pathname: string) {

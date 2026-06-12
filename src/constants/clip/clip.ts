@@ -14,6 +14,8 @@ export const CLIP_SECTION_ROW_SIZE = 6;
 export const CLIP_SECTION_MAX_ROWS = 4;
 // 채널 클립 탭 한 번에 보여줄 최대 수(더보기 단위).
 export const CLIP_CHANNEL_PAGE_SIZE = 18;
+// 디테일 쇼츠 캐러셀이 한 번에 불러올 같은 채널 클립 수(채널당 보관 상한 30개를 덮는다).
+export const CLIP_SHORTS_LIST_LIMIT = 30;
 
 export const CLIP_LABEL = {
   // 생성
