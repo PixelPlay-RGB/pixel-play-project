@@ -171,6 +171,14 @@ npm run dev
 - 라이브 채팅 전송은 `send_live_message_v2`로 처리하며, 금칙어 매칭 시 메시지를 어디에도 저장하지 않고(Realtime 전파 0) 작성자 본인에게만 차단 안내를 돌려줍니다.
 - 시청 채팅은 방장(Crown)·후원자(Heart) 역할 마크(brand→live 그라디언트, 시청 채팅과 OBS 오버레이가 공용 컴포넌트 공유)와 닉네임별 해시 컬러를 표시하고, 클린봇(비속어 필터) 토글·첫 진입 필터링 안내·이번 주 후원 랭킹 접기(아코디언) UI를 제공합니다.
 
+### 라이브 클립
+
+- 시청자(로그인)는 플레이어 컨트롤 바의 가위 버튼으로 **방금 지나간 15~30초를 세로형(9:16) 클립**으로 만듭니다. 생성 Dialog에서 현재 프레임 스냅샷 위 크롭 박스를 드래그해 잘라낼 가로 위치를 고르고, 9:16 미리보기·제목(기본값=방송 제목)·길이 슬라이더를 제공합니다.
+- 추출은 녹화 없이 동작합니다 — MediaMTX가 시크바용으로 RAM에 보관하는 60초 HLS 버퍼에서 EC2 상주 워커(`pixelplay-live-clip-worker.service`, 4초 폴링)가 ffmpeg로 과거 구간을 추출(9:16 크롭 + 720×1280 인코딩)합니다. 자동 썸네일과 동일한 push 모델로, 워커는 `clip-worker` Edge Function에서 작업을 클레임(`X-Clip-Worker-Secret`)하고 **서명된 업로드 URL**로 Storage에 올립니다(EC2에 service key 비전달, 인바운드 포트 추가 없음). 무료 티어 보호를 위해 워커는 로컬 MediaMTX API로 송출 중일 때만 원격 클레임을 호출합니다.
+- 상태는 `pending → processing → ready/failed`로 전이되며, 클라이언트는 본인 클립 행의 Realtime UPDATE를 구독해 완료 토스트("클립 보기" 이동 버튼)를 띄웁니다. 요청 후 25초 안에 클레임되지 못하면(버퍼 슬라이드) 자동 실패 처리됩니다.
+- 정책: 유저당 분당 1개(rate limit), 채널당 보관 상한 30개(도달 시 생성 차단), 방송 시작 직후(요청 길이 미만 경과)에는 생성 불가. 모두 `create_live_clip` RPC가 검증합니다.
+- 노출 화면: 디테일 `/clip/[clipId]`(유튜브 쇼츠 스타일 — 세로 풀하이트, 위/아래 캐러셀로 같은 채널 클립 탐색, URL은 `history.replaceState` 동기화, OG 세로 썸네일 메타), 시청 페이지 "이 채널의 클립" 섹션(1줄→더보기 최대 4줄→전체보기), 채널 `클립` 탭(기간 전체/24시간/7일/30일 + 인기순/최신순). 조회수는 디테일 진입 시 단순 증가, 공유는 링크 복사로 제공합니다(좋아요·댓글은 추후 확장).
+
 ### OBS 오버레이
 
 - 크리에이터는 OBS 브라우저 소스에 붙일 채팅 오버레이(`/live/[creatorId]/chat/[overlayKey]`)와 후원 알림 오버레이(`/live/[creatorId]/alerts/donation/[overlayKey]`)를 사용합니다.
@@ -346,10 +354,11 @@ src/
 | 채팅방        | `create_chat_room`, `get_chat_room_list`, `get_chat_room_detail`, `get_public_chat_room_metadata`, `join_chat_room`, `leave_chat_room`, `mark_room_read`, `kick_chat_room_member`, `transfer_chat_room_owner`, `search_chat_rooms`                                                                                                                                     |
 | 메시지        | `send_chat_message`                                                                                                                                                                                                                                                                                                                                                    |
 | 라이브        | `get_landing_snapshot`, `get_live_hero`, `get_live_list`, `get_live_popular_keywords`, `search_live_results`, `get_live_watch`, `get_live_watch_count`, `start_live_broadcast`, `end_live_broadcast`, `send_live_message`, `send_live_message_v2`, `send_live_message_v3`, `send_live_donation_v2`, `get_live_donation_ranking`, `accept_live_chat_rule`               |
+| 클립          | `create_live_clip`(생성 검증·rate limit·채널 상한), `increment_live_clip_view_count`, `claim_live_clip_jobs`(워커 클레임 + 만료 정리 · `service_role` 전용)                                                                                                                                                                                                            |
 | 오버레이      | `get_live_chat_overlay_snapshot`, `get_live_donation_alert_overlay_snapshot`                                                                                                                                                                                                                                                                                           |
 | 투표          | `create_live_poll`, `end_live_poll`, `vote_live_poll`                                                                                                                                                                                                                                                                                                                  |
 | 채널/스튜디오 | `get_creator_studio_snapshot`, `upsert_creator_studio_setting`, `rotate_live_security_token_version`, `get_creator_donation_dashboard`                                                                                                                                                                                                                                 |
-| 동기화/인프라 | `get_live_sync_cron_secret`, `get_mediamtx_api_password`, `get_live_thumbnail_ingest_secret` (모두 Vault 조회 · `service_role` 전용 — 방송 자동 종료·자동 썸네일 Edge Function과 송출 상태 라우트가 사용)                                                                                                                                                              |
+| 동기화/인프라 | `get_live_sync_cron_secret`, `get_mediamtx_api_password`, `get_live_thumbnail_ingest_secret`, `get_live_clip_worker_secret` (모두 Vault 조회 · `service_role` 전용 — 방송 자동 종료·자동 썸네일·클립 워커 Edge Function과 송출 상태 라우트가 사용)                                                                                                                     |
 | 정산          | `get_creator_settlement_donations`, `get_creator_settlement_yearly_summary`                                                                                                                                                                                                                                                                                            |
 | 채널(공개)    | `get_channel_profile`, `update_channel_profile`, `get_channel_live_hero`, `get_channel_banners`, `insert_channel_banner`, `delete_channel_banner`, `reorder_channel_banners`                                                                                                                                                                                           |
 | 커뮤니티      | `get_channel_community_posts`, `get_community_post`, `get_community_adjacent_posts`, `get_community_comments`, `get_community_comment_replies`, `create_community_post`, `update_community_post`, `delete_community_post`, `create_community_comment`, `update_community_comment`, `delete_community_comment`, `set_community_post_like`, `set_community_comment_like` |
@@ -360,11 +369,12 @@ src/
 
 ### Supabase Storage
 
-| 버킷         | 경로                            | 용도             |
-| ------------ | ------------------------------- | ---------------- |
-| `user-media` | `{user.id}/avatar/avatar.{ext}` | 유저 프로필 사진 |
-| `user-media` | `{user.id}/banner/{name}.{ext}` | 채널 홈 배너     |
-| `user-media` | `{user.id}/live-thumbnail/...`  | 라이브 썸네일    |
+| 버킷         | 경로                            | 용도                          |
+| ------------ | ------------------------------- | ----------------------------- |
+| `user-media` | `{user.id}/avatar/avatar.{ext}` | 유저 프로필 사진              |
+| `user-media` | `{user.id}/banner/{name}.{ext}` | 채널 홈 배너                  |
+| `user-media` | `{user.id}/live-thumbnail/...`  | 라이브 썸네일                 |
+| `user-media` | `{user.id}/clip/{clipId}.{ext}` | 라이브 클립(mp4 + jpg 썸네일) |
 
 모든 유저 미디어를 단일 공개 버킷 `user-media`에 `{user.id}/{카테고리}/` 구조로 저장합니다. storage RLS는 본인 폴더(`foldername[1] = auth.uid()`)로만 제한하며(이미지 표시는 공개 CDN URL로 처리되어 SELECT 정책 불필요), 유저 삭제 시 `delete-user-storage` Edge Function이 `{user.id}/` 하위를 재귀적으로 정리합니다. 프로필 이미지는 `upsert`로 처리하고 확장자가 달라져 남은 파일을 정리하며, 공개 URL에는 캐시 갱신을 위해 `?t={Date.now()}` 쿼리를 붙입니다.
 
@@ -396,6 +406,7 @@ src/
 | `sync-live-broadcast-status` | pg_cron(1분)                | MediaMTX 송출이 끊긴 활성 방송을 자동 종료(운영 페이지 폴링은 보조 수단) |
 | `sweep_live_viewer_counts`   | pg_cron(30초)               | 라이브 시청자 수 정리(DB 함수 직접 호출)                                 |
 | `ingest-live-thumbnail`      | EC2 systemd 타이머(1분)     | EC2가 push한 송출 프레임(JPEG)을 활성 방송에 매핑해 자동 썸네일로 저장   |
+| `clip-worker`                | EC2 상주 워커(4초 폴링)     | 클립 작업 클레임·서명 업로드 URL 발급·완료/실패 보고 수신(#124)          |
 
 `sync-live-broadcast-status`는 Vault의 `service_role_key`(cron 인증)·`mediamtx_api_password`(Control API Basic 인증, EC2 `mediamtx.yml`의 `pixelplay-api` 계정과 동일 값)와 Edge Function secrets의 `LIVE_OVERLAY_TOKEN_SECRET`(스트림 키 HMAC)이 등록되어야 동작하며, 미등록 시 401/503으로 안전 실패합니다. MediaMTX Control API(`:9997`)는 인증 필수라 스트림 키가 외부에 노출되지 않습니다(송출 상태 라우트도 같은 계정으로 호출).
 
