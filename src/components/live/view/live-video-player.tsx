@@ -21,6 +21,10 @@ import { useLivePlayerControls } from "@/hooks/live/use-live-player-controls";
 import { cn } from "@/lib/utils";
 import type { LiveBroadcast } from "@/types/live/live";
 
+// 재생에 못 든 채(waiting) 이 시간이 지나면 "송출 대기"를 오프라인 안내로 바꾼다.
+// OBS 연결 지연(보통 수 초)은 넘기고, 실제 송출이 없는 경우만 오프라인으로 보이게 하는 여유값.
+const STREAM_OFFLINE_GRACE_MS = 12_000;
+
 // 전체화면 전용 채팅/후원 오버레이를 컨테이너 내부에 렌더하기 위한 렌더 프롭 컨텍스트.
 export interface FullscreenChatContext {
   // 전체화면 요소(모달·popover 포털 대상).
@@ -159,6 +163,20 @@ export function LiveVideoPlayer({
     enabled: !!hlsSrc,
   });
 
+  // 송출 없음 판정: 재생에 못 든 채(waiting) 일정 시간이 지나면 "연결 중" 대신 오프라인으로 안내한다.
+  // <video>·HLS는 계속 살아 있어, 크리에이터가 송출을 시작하면 playing으로 바뀌며 자동 복구된다.
+  // 짧은 버퍼링(waiting↔playing 토글)은 타이머가 매번 리셋돼 오프라인으로 넘어가지 않는다.
+  const [isStreamOffline, setIsStreamOffline] = useState(false);
+  useEffect(() => {
+    if (playbackState === "playing") {
+      setIsStreamOffline(false);
+      return;
+    }
+
+    const timer = setTimeout(() => setIsStreamOffline(true), STREAM_OFFLINE_GRACE_MS);
+    return () => clearTimeout(timer);
+  }, [playbackState]);
+
   const isFullscreenChatOpen = isFullscreen && isFsChatOpen;
 
   return (
@@ -199,8 +217,11 @@ export function LiveVideoPlayer({
             onDoubleClick={() => void toggleFullscreen()}
           />
           {/* 방송은 시작됐지만 송출 프레임이 아직 없으면(OBS 미송출/조인 지연) 비디오를 덮는다.
-              <video>는 언마운트하지 않고(언마운트 시 hls 재attach로 영원히 진행 안 됨) 위만 덮는다. */}
-          {playbackState !== "playing" ? <LivePlayerWaitingOverlay /> : null}
+              <video>는 언마운트하지 않고(언마운트 시 hls 재attach로 영원히 진행 안 됨) 위만 덮는다.
+              연결을 일정 시간 기다려도 송출이 없으면 "송출 대기" 대신 오프라인으로 안내한다. */}
+          {playbackState !== "playing" ? (
+            <LivePlayerWaitingOverlay variant={isStreamOffline ? "offline" : "connecting"} />
+          ) : null}
           {/* 일시정지 상태를 중앙 큰 아이콘으로 보여준다(유튜브식) — 누르면 그 자리에서 재생 재개.
               컨트롤 자동 숨김과 무관하게 떠 있어야 정지 상태가 한눈에 보인다. */}
           {playbackState === "playing" && !isPlaying ? (
