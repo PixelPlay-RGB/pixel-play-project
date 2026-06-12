@@ -181,6 +181,32 @@ export function useLiveMessages(creatorId: string | null | undefined, viewerId?:
           );
         },
       )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "live_message",
+          filter: `creator_id=eq.${creatorId}`,
+        },
+        (payload) => {
+          // 클린봇 판정(metadata.cleanbotStatus, #120) 같은 서버 측 사후 갱신을 반영한다.
+          // 캐시에 있는 메시지만 서버 버전으로 교체하고, 목록에 없는 메시지는 추가하지 않는다
+          // (히스토리 캡으로 밀려난 과거 메시지의 UPDATE가 목록 끝에 재등장하는 것을 방지).
+          const updatedMessage = mapLiveMessageRealtimePayload(payload.new, creatorId, viewerId);
+          if (!updatedMessage) return;
+
+          queryClient.setQueryData<LiveChatMessage[]>(
+            QUERY_KEYS.live.messages(creatorId),
+            (prev) =>
+              prev?.some((message) => message.id === updatedMessage.id)
+                ? prev.map((message) =>
+                    message.id === updatedMessage.id ? updatedMessage : message,
+                  )
+                : prev,
+          );
+        },
+      )
       .subscribe((status) => {
         if (status === "SUBSCRIBED") {
           // 재구독 사이의 갭에서 놓친 변경을 복구한다. live_message 구독을 이 훅으로 일원화했으므로

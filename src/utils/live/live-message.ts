@@ -3,7 +3,6 @@
 // (user·donation join을 빼야 anon RLS만으로 비로그인 시청자도 채팅을 볼 수 있다).
 
 import { LIVE_LABEL } from "@/constants/live/live";
-import { isCleanbotFlagged } from "@/utils/live/live-chat";
 import { readJsonObject, readNumber, readString } from "@/utils/common/json";
 import type { LiveChatMessage, LiveSenderRole } from "@/types/live/live";
 import type { Json } from "@/types/database.types";
@@ -82,8 +81,9 @@ export function mapLiveMessageRowToMessage(
     createdAt: row.created_at,
     senderRole: isHost ? "creator" : row.sender_role,
     isHost,
-    // 본인 메시지는 본인 화면에서 안 가린다. refetch 재매핑 시에도 일관 유지된다.
-    isCleanbotFlagged: !isOwnMessage && isCleanbotFlagged(row.content),
+    // 서버 클린봇(LLM 비동기 판정, #120)이 기록한 metadata 플래그가 가림 신호다 —
+    // 판정 전(키 없음)에는 가리지 않는다(fail-open). 본인 메시지는 본인 화면에서 안 가린다.
+    isCleanbotFlagged: !isOwnMessage && readString(metadata.cleanbotStatus) === "flagged",
   };
 }
 
