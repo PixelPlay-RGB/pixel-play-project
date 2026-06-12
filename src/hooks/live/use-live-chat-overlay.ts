@@ -8,10 +8,9 @@ import type { LiveChatOverlayItem, LiveChatOverlaySnapshot } from "@/types/live/
 import { mapLiveMessageToChatOverlayItem } from "@/utils/live/live-overlay-message";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 
-export function useLiveChatOverlay(initialSnapshot: LiveChatOverlaySnapshot) {
+export function useLiveChatOverlay(creatorId: string, initialSnapshot: LiveChatOverlaySnapshot) {
   const chatStackRef = useRef<HTMLDivElement>(null);
   const [visibleItems, setVisibleItems] = useState<LiveChatOverlayItem[]>(initialSnapshot.items);
-  const broadcast = initialSnapshot.broadcast;
   const donationMessageEnabled = initialSnapshot.donationMessageEnabled;
   const donationAmountVisible = initialSnapshot.donationAmountVisible;
 
@@ -66,27 +65,28 @@ export function useLiveChatOverlay(initialSnapshot: LiveChatOverlaySnapshot) {
     return () => resizeObserver.disconnect();
   }, [fitItemsToHeight, visibleItems]);
 
+  // 채팅은 채널 단위(#111) — 방송 중이 아니어도 채널 메시지를 실시간으로 받는다.
   useEffect(() => {
-    if (!broadcast) {
+    if (!creatorId) {
       return;
     }
 
     const supabase = createClient();
     const channel = supabase
-      .channel(`live-chat-overlay:${broadcast.id}`)
+      .channel(`live-chat-overlay:${creatorId}`)
       .on(
         "postgres_changes",
         {
           event: "INSERT",
           schema: "public",
           table: "live_message",
-          filter: `broadcast_id=eq.${broadcast.id}`,
+          filter: `creator_id=eq.${creatorId}`,
         },
         (payload) => {
           const message = payload.new as LiveMessageRow;
 
           const item = mapLiveMessageToChatOverlayItem(message, {
-            creatorId: broadcast.creatorId,
+            creatorId,
             donationMessageEnabled,
             amountVisible: donationAmountVisible,
           });
@@ -109,7 +109,7 @@ export function useLiveChatOverlay(initialSnapshot: LiveChatOverlaySnapshot) {
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [broadcast, donationMessageEnabled, donationAmountVisible]);
+  }, [creatorId, donationMessageEnabled, donationAmountVisible]);
 
   return {
     chatStackRef,

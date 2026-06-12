@@ -1,6 +1,8 @@
 // 라이브 OBS 오버레이의 표시 정책 상수를 정의합니다.
 import type { LiveChatOverlayItem } from "@/types/live/live-chat-overlay";
 
+// 닉네임 식별용 팔레트 — 어두운 채팅 배경 기준 가독 밝기 대역에서 색상환을 고르게 커버한다.
+// 앞 8색은 기존 색 유지(크리에이터 색 = index 1 고정), 뒤 8색은 색상환 빈 구간을 채운 확장분.
 export const LIVE_CHAT_OVERLAY_NICKNAME_COLOR_PALETTE = [
   "#d9b04f",
   "#46c6a9",
@@ -10,6 +12,14 @@ export const LIVE_CHAT_OVERLAY_NICKNAME_COLOR_PALETTE = [
   "#71d8ff",
   "#f59e0b",
   "#f472b6",
+  "#f87171",
+  "#fb923c",
+  "#eab308",
+  "#84cc16",
+  "#22c55e",
+  "#06b6d4",
+  "#818cf8",
+  "#e879f9",
 ] as const;
 
 export const LIVE_CHAT_OVERLAY_CREATOR_NICKNAME_COLOR = LIVE_CHAT_OVERLAY_NICKNAME_COLOR_PALETTE[1];

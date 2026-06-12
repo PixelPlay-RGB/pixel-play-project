@@ -13,14 +13,13 @@ import { ExternalLink } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 interface Props {
-  broadcastId?: string | null;
   creatorId?: string;
   chatRuleText?: string;
   onMessagesChange?: (messages: ChannelLiveChatMessage[]) => void;
 }
 
 // 운영(스튜디오) 화면은 크리에이터 본인 — 시청 화면과 동일하게 입력을 막지 않는다.
-// 방송 시작 전에도 입력칸은 열려 있고, broadcast가 없을 때의 전송만 조용히 무시된다.
+// 채팅은 채널 단위(#111)라 방송 시작 전에도 실제로 전송·표시된다.
 const STUDIO_CHAT_STATE: LiveViewerChatState = {
   canChat: true,
   chatUnavailableReason: null,
@@ -46,21 +45,18 @@ function toChannelLiveChatMessages(messages: LiveChatMessage[]): ChannelLiveChat
   });
 }
 
-export default function ChannelLiveChatPanel({
-  broadcastId,
-  creatorId,
-  chatRuleText,
-  onMessagesChange,
-}: Props) {
+export default function ChannelLiveChatPanel({ creatorId, chatRuleText, onMessagesChange }: Props) {
   const [cleanbot, setCleanbot] = useState(true);
   const [isPopoutOpen, setIsPopoutOpen] = useState(false);
+  // 메뉴의 "채팅 규칙" 클릭마다 증가 — 입력바 위 규칙 popover를 여는 요청 id.
+  const [ruleOpenRequestId, setRuleOpenRequestId] = useState(0);
   const popoutWindowRef = useRef<Window | null>(null);
   const popoutCheckIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const chatState = STUDIO_CHAT_STATE;
-  const { messages } = useLiveMessages(broadcastId, creatorId, creatorId);
+  const { messages, loadOlderMessages, isLoadingOlder, hasMoreHistory, entryNoticeAnchorId } =
+    useLiveMessages(creatorId, creatorId);
   const { donations } = useLiveDonationRanking(creatorId ?? "");
   const { isLoggedIn, sendMessage } = useLiveChatSession({
-    broadcastId,
     creatorId: creatorId ?? "",
     viewerChatState: chatState,
   });
@@ -101,13 +97,10 @@ export default function ChannelLiveChatPanel({
         {creatorId ? (
           <LiveChatMenu
             creatorId={creatorId}
-            chatRuleText={chatRuleText}
-            // 운영(스튜디오) 화면은 크리에이터 본인이라 규칙 동의 상태 칩을 표시하지 않는다.
-            isRuleAccepted={false}
-            isRulePending={false}
             cleanbot={cleanbot}
             onCleanbot={() => setCleanbot((prev) => !prev)}
             onPopoutOpen={handlePopoutOpen}
+            onShowRules={() => setRuleOpenRequestId((id) => id + 1)}
           />
         ) : null}
       </div>
@@ -134,6 +127,11 @@ export default function ChannelLiveChatPanel({
           cleanbotEnabled={cleanbot}
           onLoginPrompt={() => {}}
           onSendMessage={sendMessage}
+          onLoadOlderMessages={loadOlderMessages}
+          isLoadingOlderMessages={isLoadingOlder}
+          hasMoreChatHistory={hasMoreHistory}
+          entryNoticeAnchorId={entryNoticeAnchorId}
+          ruleOpenRequestId={ruleOpenRequestId}
         />
       )}
     </div>

@@ -6,13 +6,9 @@ export const LIVE_LABEL = {
   chatRuleDefaultText:
     "서로를 존중하며 대화해주세요. 반복 도배, 비방, 홍보성 메시지는 제한될 수 있습니다.",
   chatRuleAccept: "규칙 확인하고 채팅하기",
-  chatRuleAccepted: "채팅 규칙에 동의했습니다",
-  chatRulePending: "아직 채팅 규칙에 동의하지 않았습니다",
   live: "LIVE",
   chat: "라이브 채팅",
   follow: "팔로우",
-  unfollowConfirmTitle: "팔로우를 취소하시겠습니까?",
-  unfollowConfirmDescription: "팔로우를 취소하면 팔로워 전용 채팅에 참여할 수 없게 됩니다.",
   confirm: "확인",
   close: "닫기",
   share: "공유",
@@ -32,6 +28,9 @@ export const LIVE_LABEL = {
   playerTheater: "극장 모드",
   playerTheaterExit: "기본 모드",
   playerQualityAuto: "자동",
+  playerAtLiveEdge: "실시간 방송 중",
+  playerGoToLiveEdge: "실시간으로 이동",
+  playerTimeline: "재생 위치",
   viewers: "명 시청 중",
   followers: "팔로워",
   broadcasts: "방송",
@@ -39,6 +38,7 @@ export const LIVE_LABEL = {
   // 첫 진입 시 채팅 목록 상단에 항상 보여주는 필터링 안내.
   chatFilterNotice:
     "쾌적한 시청 환경을 위해 일부 메시지는 필터링 됩니다.\n클린 라이브 채팅 문화 만들기에 동참해 주세요.",
+  chatLoadingOlder: "이전 채팅 불러오는 중",
   donationRankingTitle: "이번 주 후원 랭킹",
   donationRankingCollapse: "후원 랭킹 접기",
   donationRankingExpand: "후원 랭킹 펼치기",
@@ -46,7 +46,6 @@ export const LIVE_LABEL = {
   chatLoginPlaceholder: "로그인 후 채팅할 수 있습니다.",
   chatPlaceholder: "채팅을 입력해보세요!",
   chatSend: "채팅 전송",
-  chatEndedPlaceholder: "방송이 종료되어 채팅할 수 없습니다.",
   loginRequired: "로그인이 필요합니다.",
   loginDescription: "라이브 채팅에 참여하려면 로그인해 주세요.",
   loginPromptSummaryTitle: "로그인 후 이용할 수 있어요",
@@ -57,7 +56,7 @@ export const LIVE_LABEL = {
   loginButton: "로그인",
   cancel: "취소",
   anonymousAuthor: "익명",
-  hostBadge: "방송 진행자",
+  hostBadge: "크리에이터",
   donorBadge: "후원자",
   managerBadge: "매니저",
   subscriberBadge: "구독자",
@@ -77,9 +76,13 @@ export const LIVE_LABEL = {
   chatManagerOnlyPlaceholder: "매니저만 채팅할 수 있습니다.",
   participationFollowerTitle: "팔로우 전용 채팅",
   participationFollowerDesc: "이 방송은 팔로우한 시청자만 채팅할 수 있습니다.",
+  // 팔로우 후 대기 시간이 설정된 채널에서 팔로우 popover에 덧붙이는 안내.
+  participationFollowerWaitDesc: (waitTime: string) =>
+    `팔로우 후 ${waitTime}이 지나면 참여할 수 있어요.`,
+  // 슬로우 모드 잠금 중 입력칸 placeholder — 남은 시간을 실시간으로 보여준다.
+  chatSlowModePlaceholder: (seconds: number) => `슬로우 모드 — ${seconds}초 후 입력할 수 있어요.`,
   participationWaitTitle: "팔로우 대기 중",
   participationWaitDesc: "팔로우 후 잠시 기다려야 채팅할 수 있습니다.",
-  openLiveWatch: "시청 화면에서 확인",
   chatPopoutBlocked: "팝업 차단을 해제한 뒤 다시 열어주세요.",
   selfAuthorFallback: "나",
   // 금칙어가 포함돼 메시지가 전송되지 않았을 때 작성자 본인에게만 보이는 안내.
@@ -99,7 +102,8 @@ export const LIVE_OVERLAY_ROUTE_PATTERN = /^\/live\/[^/]+\/(?:chat|alerts\/donat
 export const LIVE_WATCH_ROUTE_PATTERN = /^\/live\/(?!search$)[^/]+$/;
 
 // 어두운 플레이어 배경 위 아이콘 버튼 공통 스타일(컨트롤 바·음량·화질·미니플레이어 공유).
-export const LIVE_PLAYER_ICON_BUTTON_CLASS = "text-white/80 hover:bg-white/10 hover:text-white";
+// 영상 위에서도 또렷하도록 기본을 완전 흰색으로 둔다(흐림은 hover 배경으로만 구분).
+export const LIVE_PLAYER_ICON_BUTTON_CLASS = "text-white hover:bg-white/15 hover:text-white";
 
 // 전체화면 채팅 패널 폭(w-80)과, 패널을 피해 줄어드는 영상·상단/하단 오버레이의 우측 인셋(right-80)은
 // 같은 값(20rem)이어야 한다. 한쪽만 바꾸면 영상이 패널 밑으로 깔리거나 빈틈이 생기므로 여기 한 곳에서 관리한다.
@@ -113,8 +117,11 @@ export const LIVE_DONATION_MIN_AMOUNT = 1000;
 export const LIVE_DONATION_AMOUNTS = [1000, 3000, 5000, 10000, 50000] as const;
 export const LIVE_CHAT_MESSAGE_MAX_LENGTH = 2000;
 export const LIVE_DONATION_MESSAGE_MAX_LENGTH = 300;
-// 채팅 메시지 목록에 유지하는 최대 건수(쿼리 limit + 낙관적/realtime 추가 시 slice 기준).
-export const LIVE_MESSAGE_LIMIT = 100;
+// 채팅 로딩 정책(#111 확정): 첫 진입 50건 → 위로 스크롤 시 50건씩 과거 적재 → 누적 300건 도달 시 중단.
+// HISTORY_CAP은 낙관적/realtime 추가 시 slice 기준으로도 쓴다(과거 적재분은 새 메시지에 밀려 정리).
+export const LIVE_MESSAGE_INITIAL_LIMIT = 50;
+export const LIVE_MESSAGE_PAGE_SIZE = 50;
+export const LIVE_MESSAGE_HISTORY_CAP = 300;
 
 export const LIVE_DONATION_LABEL = {
   title: "후원하기",

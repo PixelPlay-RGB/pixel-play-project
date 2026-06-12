@@ -54,7 +54,8 @@ function ChannelLiveStatusMetricsFrame({ items }: { items: MetricItem[] }) {
             className="border-border bg-muted/30 flex min-w-0 flex-col gap-1 rounded-lg border px-3 py-2.5"
           >
             <dt className="text-muted-foreground truncate text-xs font-bold">{item.label}</dt>
-            <dd className="text-foreground truncate text-base font-black tabular-nums">
+            {/* 누적 후원 등 큰 수는 말줄임으로 잘리는 대신 줄바꿈해 끝자리까지 보여준다. */}
+            <dd className="text-foreground text-base font-black wrap-break-word tabular-nums">
               {item.value}
             </dd>
           </div>

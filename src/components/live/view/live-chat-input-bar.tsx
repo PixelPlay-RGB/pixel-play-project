@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { SendHorizontal } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { SendHorizontal, Timer, UserRoundPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ChatEmojiPicker from "@/components/common/chat-emoji-picker";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,10 @@ import {
 } from "@/components/live/view/live-donation-popover";
 import { LiveVotePopover } from "@/components/live/view/live-vote-popover";
 import { LIVE_CHAT_MESSAGE_MAX_LENGTH, LIVE_LABEL } from "@/constants/live/live";
+import {
+  formatFollowWaitTime,
+  useFollowWaitCountdown,
+} from "@/hooks/live/use-follow-wait-countdown";
 import { cn } from "@/lib/utils";
 import type { LiveInteractionNotice, LivePoll, LiveViewerChatState } from "@/types/live/live";
 
@@ -54,8 +58,17 @@ interface Props {
   onFollow?: () => void;
   isFollowing?: boolean;
   isFollowPending?: boolean;
-  // 방송 종료 시: 메시지 목록은 유지하되 입력칸을 비활성화하고 후원/투표 액션도 비활성화(disabled)한다.
-  isEnded?: boolean;
+  // 팔로우 대기 카운트다운 종료 시 viewer chat state를 다시 받아 입력 잠금을 푼다.
+  onRefreshChatState?: () => void;
+  // 팔로워 전용 채팅의 팔로우 후 대기 시간(설정값, 초) — 팔로우 popover 안내에 표시한다.
+  followerWaitSeconds?: number;
+  // 슬로우 모드 간격(설정값, 초). 0이면 미적용 — 전송 직후 이 시간 동안 입력칸을 잠근다.
+  slowModeSeconds?: number;
+  // 채팅 메뉴의 "채팅 규칙"이 요청하면 입력바 위 규칙 popover를 연다(값이 바뀔 때마다 1회).
+  ruleOpenRequestId?: number;
+  // 동기화 최소 높이(px) — 시청 화면에서 separator(상단 보더)를 비디오 하단 라인에 맞춘다.
+  // 화면이 낮아 이 값이 콘텐츠보다 작으면 자연 높이로 버틴다(min-height).
+  minHeightPx?: number | null;
   // 전체화면 오버레이 등에서 사용할 때 popover/dialog 포털 컨테이너를 전체화면 요소로 지정한다(미지정=body).
   portalContainer?: HTMLElement | null;
   // 전체화면 후원 버튼이 후원 popover 열기를 요청한다(LiveDonationPopover로 그대로 전달).
@@ -120,7 +133,11 @@ export function LiveChatInputBar({
   onFollow,
   isFollowing,
   isFollowPending,
-  isEnded = false,
+  onRefreshChatState,
+  followerWaitSeconds = 0,
+  slowModeSeconds = 0,
+  ruleOpenRequestId,
+  minHeightPx,
   portalContainer,
   donationOpenRequested,
   onDonationOpenSettled,
@@ -133,25 +150,69 @@ export function LiveChatInputBar({
   // 채팅 패널 테두리 안쪽 폭에 꽉 맞춘다(입력칸·버튼행보다 좌우 패딩만큼 더 넓게 테두리까지).
   const inputBarRef = useRef<HTMLDivElement>(null);
 
-  // 방송 종료 시엔 타이핑·게이트 popover·후원·투표를 모두 막는다(메시지 목록은 유지).
-  // 타이핑은 채팅 가능 상태에서만 허용한다.
-  const isEditable = !isEnded && isLoggedIn && chatState.canChat;
+  // 메뉴의 "채팅 규칙" 요청(id 변경)마다 규칙 popover를 연다 — 렌더 중 가드된 setState(조정 패턴).
+  const [handledRuleRequestId, setHandledRuleRequestId] = useState(ruleOpenRequestId);
+  if (ruleOpenRequestId !== handledRuleRequestId) {
+    setHandledRuleRequestId(ruleOpenRequestId);
+    if (ruleOpenRequestId !== undefined) setIsRuleOpen(true);
+  }
+
+  // 슬로우 모드: 진입 시 서버 스냅샷(remainingSlowModeSeconds)으로 시작하고, 이후엔 전송 성공
+  // 시점마다 설정 간격으로 다시 잠근다(toast 대신 입력칸 disabled + placeholder 카운트다운).
+  const serverSlowModeSeconds = Math.max(chatState.remainingSlowModeSeconds, 0);
+  const [syncedSlowModeSeconds, setSyncedSlowModeSeconds] = useState(serverSlowModeSeconds);
+  const [slowModeLeft, setSlowModeLeft] = useState(serverSlowModeSeconds);
+  if (syncedSlowModeSeconds !== serverSlowModeSeconds) {
+    setSyncedSlowModeSeconds(serverSlowModeSeconds);
+    setSlowModeLeft(serverSlowModeSeconds);
+  }
+
+  useEffect(() => {
+    if (slowModeLeft <= 0) return;
+
+    const timer = setTimeout(() => {
+      setSlowModeLeft((prev) => Math.max(prev - 1, 0));
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [slowModeLeft]);
+
+  const isSlowModeLocked = slowModeLeft > 0;
+
+  // 서버 스냅샷발 슬로우 모드 잠금(canChat=false)이 끝나면 상태를 다시 받아 입력을 푼다.
+  // 전송 직후의 로컬 잠금은 chatState가 이미 canChat이라 refetch가 필요 없다.
+  const isServerSlowModeGate =
+    !chatState.canChat && chatState.chatUnavailableReason === "slow_mode_required";
+  useEffect(() => {
+    if (!isServerSlowModeGate || isSlowModeLocked) return;
+    onRefreshChatState?.();
+  }, [isServerSlowModeGate, isSlowModeLocked, onRefreshChatState]);
+
+  // 채팅은 채널 단위(#111) — 방송 여부와 무관하게 채팅 가능 상태에서만 타이핑을 허용한다.
+  // 슬로우 모드 잠금 중에는 타이핑을 막고 placeholder 카운트다운으로 안내한다.
+  const isEditable = isLoggedIn && chatState.canChat && !isSlowModeLocked;
   const reason = chatState.chatUnavailableReason;
   // 미팔로우: 팔로우할 때까지 항상 떠 있는 안내 popover(팔로우 액션이 있을 때만).
   // 팔로우 직후 optimistic isFollowing으로 즉시 닫아, refetch 지연 중 재클릭→언팔로우를 막는다.
-  const isFollowGate =
-    !isEnded && isLoggedIn && reason === "follower_required" && !isFollowing && !!onFollow;
+  const isFollowGate = isLoggedIn && reason === "follower_required" && !isFollowing && !!onFollow;
+  // 팔로우 직후 대기: 같은 popover를 재사용해 내용만 카운트다운으로 바꿔 띄운다.
+  const isFollowWaitGate = isLoggedIn && reason === "follower_wait_required";
+  const waitSecondsLeft = useFollowWaitCountdown(
+    isFollowWaitGate,
+    chatState.remainingFollowWaitSeconds,
+    onRefreshChatState,
+  );
   // 클릭은 받되 타이핑은 막고 안내를 띄우는 게이트: 비로그인(로그인 유도), 규칙 미동의(규칙 popover).
-  const isLoginGate = !isEnded && !isLoggedIn;
-  const isRuleGate = !isEnded && isLoggedIn && reason === "chat_rule_acceptance_required";
+  const isLoginGate = !isLoggedIn;
+  const isRuleGate = isLoggedIn && reason === "chat_rule_acceptance_required";
   const isClickGate = isLoginGate || isRuleGate;
-  // 그 외 사유(팔로우 필요·대기·슬로우모드·매니저 전용)·방송 종료는 입력칸 자체를 비활성화한다.
+  // 그 외 사유(팔로우 필요·대기·슬로우모드·매니저 전용)는 입력칸 자체를 비활성화한다.
   // 전송 중(isSending)에는 비활성화하지 않는다 — disabled 전환은 input을 blur시켜
   // "한 번 보내면 포커스가 풀린다"는 문제를 만든다. 중복 전송은 handleSend 내부 가드가 막는다.
-  const isInputDisabled = isEnded || (!isEditable && !isClickGate);
+  const isInputDisabled = !isEditable && !isClickGate;
 
-  const placeholder = isEnded
-    ? LIVE_LABEL.chatEndedPlaceholder
+  const placeholder = isSlowModeLocked
+    ? LIVE_LABEL.chatSlowModePlaceholder(slowModeLeft)
     : getChatPlaceholder({ chatState, isLoggedIn });
   const draftValue = isEditable ? draft : "";
 
@@ -182,6 +243,8 @@ export function LiveChatInputBar({
       // 실패 시 원문을 복원하되, 전송 중에 사용자가 이미 새 메시지를 입력했다면 덮어쓰지 않는다
       // (입력칸이 전송 중에도 활성이라 연속 입력이 가능해졌기 때문).
       if (!isSuccess) setDraft((current) => (current ? current : clampChatDraft(trimmed)));
+      // 슬로우 모드: 전송이 받아들여진 직후부터 설정 간격만큼 입력칸을 잠근다(서버 검증과 동일 기준).
+      if (isSuccess && slowModeSeconds > 0) setSlowModeLeft(slowModeSeconds);
     } finally {
       setIsSending(false);
     }
@@ -202,14 +265,16 @@ export function LiveChatInputBar({
   return (
     <div
       ref={inputBarRef}
-      // 입력 섹션 높이를 좌측 비디오 하단 정보 영역(실측 149px)에 고정해 separator 라인을 맞춘다.
-      // 버튼(h-9)은 입력칸(h-11)보다 낮게 두고, 둘 사이 간격은 justify-between이 자동으로 벌린다.
+      // 입력칸(크게) + 후원·참여 버튼 행(슬림) 2줄 구조 — 패딩·버튼 높이를 줄여 섹션을 최대한
+      // 낮게 유지하고, minHeightPx(칼럼 높이 - 비디오 16:9 높이)가 콘텐츠보다 크면 늘어나
+      // separator(상단 보더)가 비디오 하단 라인과 일직선이 된다(남는 공간은 줄 사이로 분배).
+      style={minHeightPx ? { minHeight: minHeightPx } : undefined}
       className={cn(
-        "border-border flex h-[149px] flex-col justify-between border-t px-3 py-6",
+        "border-border flex flex-col justify-between gap-2 border-t px-3 py-2",
         className,
       )}
     >
-      {/* 이모지 버튼을 입력 필드 안(오른쪽 trailing)에 넣어, 입력 필드 좌측이 아래 버튼행과 정렬되게 한다. */}
+      {/* 이모지·전송 버튼은 입력 필드 안(오른쪽 trailing)에 넣어 입력칸 좌측을 버튼행과 정렬한다. */}
       <div className="relative">
         <Input
           value={draftValue}
@@ -261,11 +326,12 @@ export function LiveChatInputBar({
       </div>
 
       {/*
-        미팔로우: 팔로우할 때까지 입력칸에 항상 떠 있는 팔로우 유도 popover.
-        onOpenChange를 no-op으로 둬 Esc·바깥클릭으로는 닫히지 않게 한다(팔로우해야 해제).
+        미팔로우·팔로우 직후 대기: 해제될 때까지 입력칸에 항상 떠 있는 안내 popover(같은 popover를
+        재사용하고 내용만 상태에 따라 바꾼다 — 미팔로우는 팔로우 버튼, 대기는 남은 시간 카운트다운).
+        onOpenChange를 no-op으로 둬 Esc·바깥클릭으로는 닫히지 않게 한다(조건 해제로만 닫힘).
         대신 modal={false}로 포커스 트랩 없이 띄워, 키보드·스크린리더 사용자가 갇히지 않게 한다.
       */}
-      <Popover open={isFollowGate} onOpenChange={() => {}} modal={false}>
+      <Popover open={isFollowGate || isFollowWaitGate} onOpenChange={() => {}} modal={false}>
         <PopoverContent
           anchor={() => inputBarRef.current}
           container={portalContainer}
@@ -276,25 +342,45 @@ export function LiveChatInputBar({
           className="w-(--anchor-width) rounded-b-none"
         >
           <PopoverHeader>
-            <PopoverTitle>{LIVE_LABEL.participationFollowerTitle}</PopoverTitle>
-            <PopoverDescription>{LIVE_LABEL.participationFollowerDesc}</PopoverDescription>
+            <PopoverTitle>
+              {isFollowWaitGate
+                ? LIVE_LABEL.participationWaitTitle
+                : LIVE_LABEL.participationFollowerTitle}
+            </PopoverTitle>
+            <PopoverDescription>
+              {isFollowWaitGate
+                ? LIVE_LABEL.participationWaitDesc
+                : // 대기 시간이 설정돼 있으면 팔로우 후 얼마나 기다려야 하는지 미리 알려준다.
+                  followerWaitSeconds > 0
+                  ? `${LIVE_LABEL.participationFollowerDesc} ${LIVE_LABEL.participationFollowerWaitDesc(formatFollowWaitTime(followerWaitSeconds))}`
+                  : LIVE_LABEL.participationFollowerDesc}
+            </PopoverDescription>
           </PopoverHeader>
-          <Button
-            type="button"
-            className="bg-brand hover:bg-brand/90 text-brand-foreground"
-            disabled={isFollowPending}
-            onClick={onFollow}
-          >
-            {LIVE_LABEL.follow}
-          </Button>
+          {isFollowWaitGate ? (
+            <div
+              className="bg-muted/60 text-foreground flex h-10 items-center justify-center gap-1.5 rounded-lg text-sm font-semibold tabular-nums"
+              aria-live="polite"
+            >
+              <Timer className="text-brand size-4" />
+              {formatFollowWaitTime(waitSecondsLeft)}
+            </div>
+          ) : (
+            <Button
+              type="button"
+              className="bg-brand hover:bg-brand/90 text-brand-foreground h-10 w-full rounded-lg font-bold"
+              disabled={isFollowPending}
+              onClick={onFollow}
+            >
+              <UserRoundPlus className="size-4" />
+              {LIVE_LABEL.follow}
+            </Button>
+          )}
         </PopoverContent>
       </Popover>
 
-      {/* 규칙 미동의: 입력칸을 클릭하면 동의 popover. 동의 전엔 타이핑 불가. */}
-      <Popover
-        open={isRuleOpen && isRuleGate}
-        onOpenChange={(next) => setIsRuleOpen(isRuleGate && next)}
-      >
+      {/* 채팅 규칙: 미동의 게이트(입력칸 클릭)와 메뉴의 "채팅 규칙"이 같은 popover를 공유한다.
+          동의 버튼은 미동의 상태에서만 보이고, 열람일 땐 규칙 본문만 보여준다. */}
+      <Popover open={isRuleOpen} onOpenChange={setIsRuleOpen}>
         <PopoverContent
           anchor={() => inputBarRef.current}
           container={portalContainer}
@@ -311,14 +397,16 @@ export function LiveChatInputBar({
           <p className="text-foreground text-sm leading-relaxed whitespace-pre-wrap">
             {chatRuleText || LIVE_LABEL.chatRuleDefaultText}
           </p>
-          <Button
-            type="button"
-            className="bg-brand hover:bg-brand/90 text-brand-foreground"
-            disabled={isAcceptingRule || !onAcceptChatRule}
-            onClick={() => void handleAcceptRule()}
-          >
-            {LIVE_LABEL.chatRuleAccept}
-          </Button>
+          {isRuleGate ? (
+            <Button
+              type="button"
+              className="bg-brand hover:bg-brand/90 text-brand-foreground"
+              disabled={isAcceptingRule || !onAcceptChatRule}
+              onClick={() => void handleAcceptRule()}
+            >
+              {LIVE_LABEL.chatRuleAccept}
+            </Button>
+          ) : null}
         </PopoverContent>
       </Popover>
 
@@ -333,7 +421,6 @@ export function LiveChatInputBar({
             donationMinAmount={donationMinAmount}
             onLoginPrompt={onLoginPrompt}
             onDonate={onDonate}
-            disabled={isEnded}
             portalContainer={portalContainer}
             anchorRef={inputBarRef}
             openRequested={donationOpenRequested}
@@ -352,7 +439,6 @@ export function LiveChatInputBar({
             onJoinDraw={onJoinDraw}
             presentation={votePresentation}
             anchorRef={inputBarRef}
-            disabled={isEnded}
             portalContainer={portalContainer}
           />
         </div>

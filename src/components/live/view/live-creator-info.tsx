@@ -33,9 +33,14 @@ export function LiveCreatorInfo({ creator, isLive = false }: Props) {
         aria-label={`${creator.name} 채널 보기`}
         className={CREATOR_AVATAR_TRIGGER_CLASS}
       >
+        {/* 시청 페이지의 채널 행은 유튜브·치지직처럼 아바타를 한 단계 크게(48px) 보여준다.
+            (size prop의 data variant는 specificity가 높아 클래스로 못 덮으므로 클래스로만 지정) */}
         <Avatar
-          size="lg"
-          className={cn(CREATOR_AVATAR_TRIGGER_AVATAR_CLASS, isLive && "ring-live/80 ring-2")}
+          className={cn(
+            "size-12",
+            CREATOR_AVATAR_TRIGGER_AVATAR_CLASS,
+            isLive && "ring-live/80 ring-2",
+          )}
         >
           <AvatarImage src={avatarSrc} alt={`${creator.name} 프로필`} />
           <AvatarFallback>{fallback}</AvatarFallback>
@@ -43,7 +48,7 @@ export function LiveCreatorInfo({ creator, isLive = false }: Props) {
       </Link>
 
       <div className="flex min-w-0 flex-col gap-0.5">
-        <span className="text-foreground text-sm font-semibold">{creator.name}</span>
+        <span className="text-foreground text-base font-bold">{creator.name}</span>
         <div className="text-muted-foreground flex items-center gap-2 text-xs">
           <span>
             {formatCount(creator.followerCount)} {LIVE_LABEL.followers}

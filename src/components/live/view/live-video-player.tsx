@@ -2,11 +2,12 @@
 // 라이브 비디오 플레이어 — MediaMTX HLS <video>에 컨테이너 전체화면/극장 모드와 하단 컨트롤 바를 조립합니다.
 
 import { useCallback, useEffect, useRef, useState, type ReactNode, type Ref } from "react";
-import { HandCoins, MessageSquare } from "lucide-react";
+import { HandCoins, MessageSquare, Play } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import LiveBadge from "@/components/live/live-badge";
 import { LivePlayerControlBar } from "@/components/live/view/live-player-control-bar";
+import { LivePlayerTimeline } from "@/components/live/view/live-player-timeline";
 import { LivePlayerTopOverlay } from "@/components/live/view/live-player-top-overlay";
 import { LivePlayerWaitingOverlay } from "@/components/live/view/live-player-waiting-overlay";
 import {
@@ -106,16 +107,19 @@ export function LiveVideoPlayer({
     handleFocus,
     handleBlur,
   } = useLivePlayerControls(isImmersive);
-  // 유튜브식 플레이어 단축키 — k(재생/일시정지)·m(음소거)·f(전체화면)·t(영화관).
+  // 유튜브식 플레이어 단축키 — k/스페이스(재생/일시정지)·m(음소거)·f(전체화면)·t(영화관).
   // 입력 요소에 포커스가 있거나 조합키가 눌린 경우는 건드리지 않는다.
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.metaKey || event.ctrlKey || event.altKey) return;
       const target = event.target as HTMLElement | null;
       if (target?.closest("input, textarea, select, [contenteditable=true]")) return;
+      // 버튼에 포커스가 있을 때 스페이스는 그 버튼의 클릭(기본 동작)이 우선이다.
+      if (event.key === " " && target?.closest("button, [role='button']")) return;
 
       switch (event.key.toLowerCase()) {
         case "k":
+        case " ":
           event.preventDefault();
           togglePlay();
           break;
@@ -140,7 +144,16 @@ export function LiveVideoPlayer({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [togglePlay, toggleMute, toggleFullscreen, onToggleTheater, isFullscreen]);
 
-  const { levels, selectedLevel, setLevel, playbackState } = useHlsPlayer({
+  const {
+    levels,
+    selectedLevel,
+    setLevel,
+    playbackState,
+    isAtLiveEdge,
+    seekToLiveEdge,
+    timeline,
+    seekTo,
+  } = useHlsPlayer({
     videoRef,
     src: hlsSrc ?? "",
     enabled: !!hlsSrc,
@@ -157,7 +170,9 @@ export function LiveVideoPlayer({
       onBlur={handleBlur}
       className={cn(
         "relative w-full overflow-hidden bg-black",
-        isTheater ? "aspect-video md:aspect-auto md:h-full" : "aspect-video md:max-h-full",
+        // 일반 모드: 유튜브·치지직처럼 항상 폭 100% + 16:9 — 화면이 낮아 정보 행이 넘치면
+        // 좌측 칼럼이 세로 스크롤된다(LiveView). 높이를 캡하면 영상 좌우에 검은 띠가 생긴다.
+        isTheater ? "aspect-video md:aspect-auto md:h-full" : "aspect-video",
         // 몰입 모드(극장·전체화면)에서 컨트롤이 숨겨지면 커서도 함께 숨겨 몰입감을 준다.
         isImmersive && !controlsVisible && "cursor-none",
       )}
@@ -172,16 +187,32 @@ export function LiveVideoPlayer({
             isFullscreenChatOpen ? LIVE_FULLSCREEN_CHAT_INSET : "right-0",
           )}
         >
+          {/* 유튜브식 영상 영역 조작 — 클릭은 재생/일시정지, 더블클릭은 전체화면.
+              더블클릭의 클릭 2번이 재생 상태를 두 번 토글해 원래대로 돌아오므로 타이머 구분이 필요 없다. */}
           <video
             ref={videoRef}
             autoPlay
             muted
             playsInline
             className="size-full bg-black object-contain"
+            onClick={togglePlay}
+            onDoubleClick={() => void toggleFullscreen()}
           />
           {/* 방송은 시작됐지만 송출 프레임이 아직 없으면(OBS 미송출/조인 지연) 비디오를 덮는다.
               <video>는 언마운트하지 않고(언마운트 시 hls 재attach로 영원히 진행 안 됨) 위만 덮는다. */}
           {playbackState !== "playing" ? <LivePlayerWaitingOverlay /> : null}
+          {/* 일시정지 상태를 중앙 큰 아이콘으로 보여준다(유튜브식) — 누르면 그 자리에서 재생 재개.
+              컨트롤 자동 숨김과 무관하게 떠 있어야 정지 상태가 한눈에 보인다. */}
+          {playbackState === "playing" && !isPlaying ? (
+            <button
+              type="button"
+              aria-label={LIVE_LABEL.playerPlay}
+              className="absolute inset-0 m-auto flex size-20 cursor-pointer items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm transition-transform hover:scale-105"
+              onClick={togglePlay}
+            >
+              <Play className="size-9 fill-current" />
+            </button>
+          ) : null}
         </div>
       ) : (
         <div className="absolute inset-0 flex items-center justify-center px-6 text-center">
@@ -218,6 +249,11 @@ export function LiveVideoPlayer({
             isFullscreenChatOpen ? LIVE_FULLSCREEN_CHAT_INSET : "right-0",
           )}
         >
+          {/* 컨트롤 바 위 타임라인 시크바 — 일시정지·과거 이동 후 LIVE 버튼으로 실시간 복귀한다.
+              송출 대기 중에는 빈 바만 남아 혼란을 주므로 실제 재생 중에만 보여준다. */}
+          {playbackState === "playing" ? (
+            <LivePlayerTimeline timeline={timeline} isAtLiveEdge={isAtLiveEdge} onSeek={seekTo} />
+          ) : null}
           <LivePlayerControlBar
             isPlaying={isPlaying}
             onTogglePlay={togglePlay}
@@ -238,6 +274,8 @@ export function LiveVideoPlayer({
             qualityLevels={levels}
             selectedQualityLevel={selectedLevel}
             onSelectQualityLevel={setLevel}
+            isAtLiveEdge={isAtLiveEdge}
+            onSeekToLive={seekToLiveEdge}
           />
         </div>
       ) : null}

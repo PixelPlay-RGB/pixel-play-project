@@ -32,7 +32,12 @@ export function UrlTokenReissueDialog({
     <AlertDialog open={open} onOpenChange={(next) => !isRotating && setOpen(next)}>
       <AlertDialogTrigger
         render={
-          <Button variant="destructive" disabled={disabled}>
+          <Button
+            variant="destructive"
+            disabled={disabled}
+            // 비활성 사유(다른 보안 값 재발급 진행 중)를 hover로 알 수 있게 한다.
+            title={disabled && !isRotating ? "다른 보안 값을 발급하는 중이에요." : undefined}
+          >
             {isRotating ? <Spinner /> : <RefreshCw />}새 주소 만들기
           </Button>
         }
