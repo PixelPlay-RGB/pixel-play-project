@@ -402,7 +402,7 @@ src/
 
 자동 방송 썸네일은 EC2가 캡처를 담당합니다 — systemd 타이머(`pixelplay-live-thumbnail.timer`, 1분)가 MediaMTX에서 송출 중인 `live/*` 경로를 조회해 ffmpeg로 1프레임(JPEG)을 뜨고, `X-Capture-Secret`(Vault `live_thumbnail_ingest_secret`)으로 `ingest-live-thumbnail`에 push합니다. 함수가 활성 방송 매핑(스트림 키 HMAC 대조) → Storage `{user.id}/live-thumbnail/auto-thumbnail.jpg` upsert → `thumbnail_url` 1회 기록을 수행하며, 수동 썸네일이 있는 방송은 건드리지 않습니다. EC2 쪽 스크립트·유닛 파일은 `infra/mediamtx/`에 보관합니다(배치 경로는 파일 머리주석 참고).
 
-클린봇은 하이브리드입니다(#120) — 채팅은 즉시 전송·표시되고, **클라이언트 시드 사전**(`src/constants/live/cleanbot.ts`)이 명백한 욕설을 0초에 1차로 가립니다(공백 제거 정규화로 띄어쓰기 우회 포함). 그 사이 `moderate-live-messages`가 10초 주기로 미판정 채팅(최근 10분, 방장 제외)을 최대 20건씩 모아 Gemini(`gemini-2.5-flash-lite`, Edge Function secrets의 `GEMINI_API_KEY`) 1회 호출로 우회·맥락형까지 판정해 `live_message.metadata.cleanbotStatus`(`flagged`/`clean`)를 기록하고, 클라이언트는 Realtime UPDATE로 받아 갱신합니다. **판정이 도착하면 LLM 결과를 신뢰하므로 사전 오탐은 자동 해제**되며, 가림은 시청자에 무관한 순수 사실이라 본인 메시지도 동일하게 가립니다(로그인 로딩 타이밍에 가림이 뒤집히지 않음). 판정 실패·미판정은 가리지 않는 fail-open이고, 방장 금칙어(전송 차단)는 별도 1차 방어선으로 유지됩니다.
+클린봇은 하이브리드입니다(#120) — 채팅은 즉시 전송·표시되고, **클라이언트 시드 사전**(`src/constants/live/cleanbot.ts`)이 명백한 욕설을 0초에 1차로 가립니다(한글·영문 외 문자를 제거하는 정규화라 띄어쓰기·특수문자·숫자 끼워넣기 우회 `시@발`·`시1발`·`ㅅ ㅂ`까지 포함). 그 사이 `moderate-live-messages`가 10초 주기로 미판정 채팅(최근 10분, 방장 제외)을 최대 20건씩 모아 Gemini(`gemini-2.5-flash-lite`, Edge Function secrets의 `GEMINI_API_KEY`) 1회 호출로 우회·맥락형까지 판정해 `live_message.metadata.cleanbotStatus`(`flagged`/`clean`)를 기록하고, 클라이언트는 Realtime UPDATE로 받아 갱신합니다. **판정이 도착하면 LLM 결과를 신뢰하므로 사전 오탐은 자동 해제**되며, 가림은 시청자에 무관한 순수 사실이라 본인 메시지도 동일하게 가립니다(로그인 로딩 타이밍에 가림이 뒤집히지 않음). 판정 실패·미판정은 가리지 않는 fail-open이고, 방장 금칙어(전송 차단)는 별도 1차 방어선으로 유지됩니다.
 
 ### 스키마 변경 절차
 
