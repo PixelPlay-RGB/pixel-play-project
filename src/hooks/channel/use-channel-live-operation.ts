@@ -206,7 +206,6 @@ export function useChannelLiveOperation(initialSnapshot?: ChannelLiveStudioSnaps
     ttsRate,
   ]);
   const isStreamOnline = streamStatus?.state === "online";
-  const shouldCaptureAutoThumbnail = !thumbnailFile && !thumbnailPreviewUrl.trim();
 
   const completeBroadcastEnd = useCallback(() => {
     setBroadcastId(null);
@@ -470,7 +469,6 @@ export function useChannelLiveOperation(initialSnapshot?: ChannelLiveStudioSnaps
     setIsTtsEnabled,
     setTagInput,
     setTitle,
-    shouldCaptureAutoThumbnail,
     slowModeSeconds,
     tagInput,
     tags,

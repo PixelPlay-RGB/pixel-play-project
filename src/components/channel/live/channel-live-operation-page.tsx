@@ -80,7 +80,6 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
     liveState,
     setTagInput,
     setTitle,
-    shouldCaptureAutoThumbnail,
     tagInput,
     tags,
     thumbnail,
@@ -157,7 +156,6 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
                 <ChannelLiveStreamStatusPanel
                   activeBroadcastStartedAt={broadcastStartedAt}
                   onStatusChange={handleStreamStatusChange}
-                  shouldCaptureAutoThumbnail={shouldCaptureAutoThumbnail}
                   streamPath={streamPath}
                   variant="embedded"
                 />
