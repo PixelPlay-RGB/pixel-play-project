@@ -3,6 +3,7 @@
 // (user·donation join을 빼야 anon RLS만으로 비로그인 시청자도 채팅을 볼 수 있다).
 
 import { LIVE_LABEL } from "@/constants/live/live";
+import { containsSeedProfanity } from "@/utils/live/live-chat";
 import { readJsonObject, readNumber, readString } from "@/utils/common/json";
 import type { LiveChatMessage, LiveSenderRole } from "@/types/live/live";
 import type { Json } from "@/types/database.types";
@@ -69,6 +70,9 @@ export function mapLiveMessageRowToMessage(
     };
   }
 
+  // 서버 LLM 판정 결과("flagged"|"clean"|키 없음=null). 도착 전엔 클라 사전이 1차로 가린다.
+  const cleanbotStatus = readString(metadata.cleanbotStatus);
+
   return {
     id: row.id,
     type: "text",
@@ -78,10 +82,12 @@ export function mapLiveMessageRowToMessage(
     createdAt: row.created_at,
     senderRole: isHost ? "creator" : row.sender_role,
     isHost,
-    // 서버 클린봇(LLM 비동기 판정, #120)이 기록한 metadata 플래그가 가림 신호다 —
-    // 판정 전(키 없음)에는 가리지 않는다(fail-open). viewer에 무관한 순수 서버 사실이라
-    // 로그인 로딩 타이밍에 따라 가림이 뒤집히지 않는다(본인 메시지도 동일하게 가린다).
-    isCleanbotFlagged: readString(metadata.cleanbotStatus) === "flagged",
+    // 하이브리드 클린봇(#120): 서버 LLM 판정이 도착하면 그 결과(flagged/clean)를 신뢰하고,
+    // 판정 전(키 없음)에는 클라이언트 시드 사전으로 명백한 욕설만 즉시 가린다(0초). 두 신호 모두
+    // viewer에 무관한 순수 사실이라 로그인 로딩 타이밍에 가림이 뒤집히지 않는다(본인 메시지도 동일).
+    isCleanbotFlagged:
+      cleanbotStatus === "flagged" ||
+      (cleanbotStatus === null && containsSeedProfanity(row.content)),
   };
 }
 

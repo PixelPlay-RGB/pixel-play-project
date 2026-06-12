@@ -28,9 +28,11 @@ $func$;
 revoke execute on function public.set_live_message_cleanbot_status(uuid[], text) from public, anon, authenticated;
 grant execute on function public.set_live_message_cleanbot_status(uuid[], text) to service_role;
 
+-- 주기: 클라 시드 사전이 명백한 욕설을 0초에 가리므로 LLM은 우회·맥락형 2차 백스톱이다.
+-- 10초로 둬 백스톱 지연을 짧게 가져간다(무료 티어 RPM 한도 내).
 select cron.schedule(
   'moderate-live-messages',
-  '20 seconds',
+  '10 seconds',
   $$
   select net.http_post(
     url := 'https://ftvoynnfpfzmblgrntqj.supabase.co/functions/v1/moderate-live-messages',

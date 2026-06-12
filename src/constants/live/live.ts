@@ -65,9 +65,12 @@ export const LIVE_LABEL = {
   broadcastOfflineTitle: "지금은 방송 중이 아니에요",
   offlineInfoTitle: "다음 방송에서 만나요! 👋",
   offlineInfoDescription: "크리에이터가 방송을 시작하면 이곳에서 바로 시청할 수 있어요.",
-  // 방송은 시작됐지만 아직 송출(OBS) 영상이 도착하지 않은 동안 비디오 영역에 띄우는 안내.
+  // 방송 시작 직후 OBS 연결을 기다리는 짧은 구간에 띄우는 안내(연결 중).
   streamWaitingTitle: "송출 대기 중",
   streamWaitingDescription: "스트리머가 방송을 준비하고 있어요. 잠시만 기다려 주세요.",
+  // 연결을 일정 시간 기다려도 송출이 없으면 오프라인으로 안내한다(송출 시작 시 자동 재생).
+  streamOfflineTitle: "지금은 송출 중이 아니에요",
+  streamOfflineDescription: "스트리머가 송출을 시작하면 자동으로 재생돼요.",
   viewChannel: "채널 보기",
   browseLive: "다른 라이브 보기",
   chatUnavailable: "지금은 채팅을 이용할 수 없습니다",
