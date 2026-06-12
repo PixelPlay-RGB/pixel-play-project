@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { Timer, Users } from "lucide-react";
 import { ClipCreateDialog } from "@/components/clip/clip-create-dialog";
+import { ClipSection } from "@/components/clip/clip-section";
 import { LiveVideoPlayer } from "@/components/live/view/live-video-player";
 import { LiveFullscreenChatOverlay } from "@/components/live/view/live-fullscreen-chat-overlay";
 import { LiveBroadcastInfo } from "@/components/live/view/live-broadcast-info";
@@ -333,6 +334,10 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
                   className="px-4 py-3"
                 />
               ) : null}
+
+              {/* 이 채널의 클립(#124) — 좌측 칼럼 스크롤 영역에 들어가며, 극장 모드에선 정보
+                  영역과 함께 접힌다. 클립이 없는 채널은 섹션이 스스로 숨는다. */}
+              <ClipSection creatorId={creatorId} className="border-border/60 border-t px-4 py-4" />
             </motion.div>
           </div>
 

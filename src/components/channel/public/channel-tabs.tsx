@@ -1,5 +1,5 @@
 "use client";
-// 공개 채널 탭 내비게이션(홈/커뮤니티/동영상/클립). 동영상·클립은 준비중 안내.
+// 공개 채널 탭 내비게이션(홈/커뮤니티/동영상/클립). 동영상은 준비중 안내.
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -26,7 +26,7 @@ const TABS: ChannelTab[] = [
   { key: "home", label: "홈", ready: true, path: "", exact: true },
   { key: "community", label: "커뮤니티", ready: true, path: "/community" },
   { key: "videos", label: "동영상", ready: false },
-  { key: "clips", label: "클립", ready: false },
+  { key: "clips", label: "클립", ready: true, path: "/clip" },
 ];
 
 const tabClassName = cn(
