@@ -1520,6 +1520,10 @@ export type Database = {
         Args: { p_actor_user_id: string; p_liked: boolean; p_post_id: string }
         Returns: Json
       }
+      set_live_message_cleanbot_status: {
+        Args: { p_message_ids: string[]; p_status: string }
+        Returns: undefined
+      }
       start_live_broadcast: {
         Args: {
           p_actor_user_id: string

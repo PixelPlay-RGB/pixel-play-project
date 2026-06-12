@@ -9,8 +9,10 @@ import { ChannelManagerAddForm } from "@/components/channel/moderation/channel-m
 import { ChannelManagerTable } from "@/components/channel/moderation/channel-manager-table";
 import { SettingsPage } from "@/components/common/settings-page";
 import { Spinner } from "@/components/ui/spinner";
+import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { useChannelManagers } from "@/hooks/channel/use-channel-managers";
 import type { ChannelOwnerIdentity } from "@/types/channel/moderation";
+import { getAppMessage } from "@/utils/common/app-message";
 
 interface Props {
   creator: ChannelOwnerIdentity;
@@ -31,7 +33,7 @@ export function ChannelPermissionsPageContent({ creator }: Props) {
       title="채널 매니저를 관리해요"
       description={
         <>
-          매니저는 채팅에서 시청자를 강퇴할 수 있어요.
+          매니저는 채널 운영을 돕는 신뢰할 수 있는 시청자예요.
           <br />
           믿을 수 있는 시청자에게만 권한을 주고, 필요 없어지면 바로 해제하세요.
         </>
@@ -54,7 +56,7 @@ export function ChannelPermissionsPageContent({ creator }: Props) {
           <div className="border-destructive/20 bg-destructive/5 text-destructive flex flex-col items-center gap-2 rounded-xl border border-dashed p-8 text-center">
             <TriangleAlert className="size-6" />
             <p className="text-sm font-medium">
-              매니저 목록을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.
+              {getAppMessage(APP_MESSAGE_CODE.error.channel.managerListLoadFailed).description}
             </p>
           </div>
         ) : (

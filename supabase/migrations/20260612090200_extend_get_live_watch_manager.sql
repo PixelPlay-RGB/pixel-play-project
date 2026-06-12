@@ -4,12 +4,22 @@
 --   ② chat_scope='manager' 게이트에서 활성 매니저는 통과시킨다(기존엔 크리에이터만 통과).
 -- 사용처 전수 확인 결과 get_live_watch 는 use-live-view-data → live-view + chat-popout(둘 다 시청 화면)뿐이라
 -- additive 수정을 적용한다(밴 확장 isBanned/'banned' 는 이슈 #119에서 2차로 추가).
+--
+-- 보안 가드: 이 함수는 SECURITY DEFINER 이고 anon/authenticated 에 공개돼 있어, p_viewer_id 를 그대로
+-- 신뢰하면 임의 호출자가 타인의 UUID 를 넣어 팔로우/매니저 여부·채팅 규칙 동의·채팅 가능 상태를 조회할 수 있다.
+-- p_viewer_id 는 호출자 본인(auth.uid())과 일치할 때만 사용하고, 불일치 시 null 로 강등한다(viewer CTE).
+-- 정상 호출은 항상 본인 id 를 넘기므로(use-live-view-data: p_viewer_id = user.id) 무영향이고,
+-- 비로그인(anon)은 p_viewer_id=null·auth.uid()=null 이라 기존과 동일하다.
+-- MVP(20260527121136)부터 이어진 선재 패턴이라, 이 함수를 통째로 재정의하는 본 버전에 가드를 함께 넣는다.
 create or replace function public.get_live_watch(p_creator_id uuid, p_viewer_id uuid default null::uuid)
  returns jsonb
  language sql
  stable security definer
  set search_path to ''
 as $function$
+  with viewer as (
+    select case when p_viewer_id = auth.uid() then p_viewer_id else null end as id
+  )
   select coalesce(
     (
       select jsonb_build_object(
@@ -46,7 +56,7 @@ as $function$
           'donationAmountVisible', coalesce(setting.donation_amount_visible, true)
         ),
         'viewerRelation', case
-          when p_viewer_id is null then 'null'::jsonb
+          when viewer.id is null then 'null'::jsonb
           else jsonb_build_object(
             'isFollowing', relation.followed_at is not null,
             'followedAt', relation.followed_at,
@@ -56,8 +66,8 @@ as $function$
           )
         end,
         'viewerChatState', case
-          when p_viewer_id is null then jsonb_build_object('canChat', false, 'blockedReason', 'login_required', 'remainingFollowWaitSeconds', 0, 'remainingSlowModeSeconds', 0)
-          when p_viewer_id = creator.id then jsonb_build_object('canChat', true, 'blockedReason', 'null'::jsonb, 'remainingFollowWaitSeconds', 0, 'remainingSlowModeSeconds', 0)
+          when viewer.id is null then jsonb_build_object('canChat', false, 'blockedReason', 'login_required', 'remainingFollowWaitSeconds', 0, 'remainingSlowModeSeconds', 0)
+          when viewer.id = creator.id then jsonb_build_object('canChat', true, 'blockedReason', 'null'::jsonb, 'remainingFollowWaitSeconds', 0, 'remainingSlowModeSeconds', 0)
           when coalesce(setting.chat_scope, 'authenticated'::public.live_chat_scope) = 'manager'::public.live_chat_scope and not coalesce(manager.is_manager, false) then jsonb_build_object('canChat', false, 'blockedReason', 'manager_only', 'remainingFollowWaitSeconds', 0, 'remainingSlowModeSeconds', 0)
           when coalesce(setting.chat_scope, 'authenticated'::public.live_chat_scope) = 'follower'::public.live_chat_scope and relation.followed_at is null then jsonb_build_object('canChat', false, 'blockedReason', 'follower_required', 'remainingFollowWaitSeconds', coalesce(setting.follower_wait_seconds, 0), 'remainingSlowModeSeconds', 0)
           when coalesce(setting.chat_scope, 'authenticated'::public.live_chat_scope) = 'follower'::public.live_chat_scope and relation.followed_at > now() - make_interval(secs => coalesce(setting.follower_wait_seconds, 0)) then jsonb_build_object('canChat', false, 'blockedReason', 'follower_wait_required', 'remainingFollowWaitSeconds', greatest(ceil(extract(epoch from relation.followed_at + make_interval(secs => coalesce(setting.follower_wait_seconds, 0)) - now()))::integer, 0), 'remainingSlowModeSeconds', 0)
@@ -66,7 +76,8 @@ as $function$
           else jsonb_build_object('canChat', true, 'blockedReason', 'null'::jsonb, 'remainingFollowWaitSeconds', 0, 'remainingSlowModeSeconds', 0)
         end
       )
-      from public."user" as creator
+      from viewer
+      cross join public."user" as creator
       left join public.creator_studio_setting as setting on setting.creator_id = creator.id
       left join lateral (
         select *
@@ -75,18 +86,18 @@ as $function$
         order by active_broadcast.started_at desc
         limit 1
       ) as broadcast on true
-      left join public.viewer_creator_relation as relation on relation.creator_id = creator.id and relation.viewer_id = p_viewer_id
+      left join public.viewer_creator_relation as relation on relation.creator_id = creator.id and relation.viewer_id = viewer.id
       left join lateral (
         select exists (
           select 1
           from public.channel_manager as cm
-          where cm.creator_id = creator.id and cm.manager_id = p_viewer_id
+          where cm.creator_id = creator.id and cm.manager_id = viewer.id
         ) as is_manager
       ) as manager on true
       left join lateral (
         select message.created_at
         from public.live_message as message
-        where message.creator_id = creator.id and message.sender_id = p_viewer_id and message.message_type = 'chat'::public.live_message_type
+        where message.creator_id = creator.id and message.sender_id = viewer.id and message.message_type = 'chat'::public.live_message_type
         order by message.created_at desc
         limit 1
       ) as last_chat on true

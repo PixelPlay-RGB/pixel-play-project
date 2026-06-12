@@ -35,16 +35,18 @@ export function parseChannelManagers(value: Json): ChannelManagerItem[] {
 
       const managerRelationId = readString(object.managerRelationId);
       const managerId = readString(object.managerId);
+      const managerNickname = readString(object.managerNickname);
       const createdAt = readString(object.createdAt);
 
-      if (!managerRelationId || !managerId || !createdAt) {
+      // 닉네임은 목록·해제 다이얼로그가 대상을 식별하는 필수 필드라, 누락되면 깨진 행으로 보고 버린다.
+      if (!managerRelationId || !managerId || !managerNickname || !createdAt) {
         return null;
       }
 
       return {
         managerRelationId,
         managerId,
-        managerNickname: readString(object.managerNickname) ?? "알 수 없음",
+        managerNickname,
         managerPhotoUrl: readString(object.managerPhotoUrl),
         createdById: readString(object.createdById),
         createdByNickname: readString(object.createdByNickname),

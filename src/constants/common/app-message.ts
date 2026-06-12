@@ -430,6 +430,10 @@ export const APP_MESSAGE = {
         title: "배너 개수 초과",
         description: "배너는 최대 5개까지 등록할 수 있어요.",
       },
+      managerListLoadFailed: {
+        title: "매니저 목록 조회 실패",
+        description: "다시 로그인하거나 잠시 후 새로고침해주세요.",
+      },
       managerAddFailed: {
         title: "매니저 추가 실패",
         description: "잠시 후 다시 시도해주세요.",

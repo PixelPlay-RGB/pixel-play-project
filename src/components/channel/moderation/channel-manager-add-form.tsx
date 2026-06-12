@@ -39,8 +39,13 @@ export function ChannelManagerAddForm({ creatorId, existingManagerIds, onAdd, is
     }
 
     setIsSearching(true);
-    const result = await searchChannelUsersAction(trimmed);
-    setIsSearching(false);
+    let result: Awaited<ReturnType<typeof searchChannelUsersAction>>;
+    try {
+      result = await searchChannelUsersAction(trimmed);
+    } finally {
+      // 서버 액션이 전송 계층에서 reject 돼도 검색 버튼이 비활성으로 잠기지 않게 한다.
+      setIsSearching(false);
+    }
 
     if (!result.success || !result.data) {
       toastAppError(result.code ?? APP_MESSAGE_CODE.error.channel.userSearchFailed);
@@ -52,8 +57,11 @@ export function ChannelManagerAddForm({ creatorId, existingManagerIds, onAdd, is
 
   async function handleAdd(targetUserId: string) {
     setPendingAddId(targetUserId);
-    await onAdd(targetUserId);
-    setPendingAddId(null);
+    try {
+      await onAdd(targetUserId);
+    } finally {
+      setPendingAddId(null);
+    }
   }
 
   return (

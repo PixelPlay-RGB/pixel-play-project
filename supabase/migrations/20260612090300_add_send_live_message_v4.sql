@@ -132,11 +132,13 @@ begin
     raise sqlstate 'PX422' using message = 'link is blocked';
   end if;
 
+  -- 금칙어는 리터럴 부분문자열 검사로 비교한다. ilike '%word%' 는 word 안의 % / _ 가
+  -- 와일드카드로 해석돼(예: '100%' 가 '100abc' 매칭, '_' 하나로 거의 전체 차단) 오탐을 일으킨다.
   select word
   into v_forbidden_word
   from unnest(coalesce(v_setting.forbidden_words, '{}'::text[])) as word
   where btrim(word) <> ''
-    and v_content ilike '%' || btrim(word) || '%'
+    and position(lower(btrim(word)) in lower(v_content)) > 0
   limit 1;
 
   -- 금칙어 매칭: 어떤 행도 insert하지 않는다(Realtime fan-out 0). 작성자 본인에게만

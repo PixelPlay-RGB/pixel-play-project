@@ -145,6 +145,7 @@ export const APP_MESSAGE_CODE = {
       bannerDeleteFailed: "error.channel.bannerDeleteFailed",
       bannerImageTooLarge: "error.channel.bannerImageTooLarge",
       bannerLimitReached: "error.channel.bannerLimitReached",
+      managerListLoadFailed: "error.channel.managerListLoadFailed",
       managerAddFailed: "error.channel.managerAddFailed",
       managerRemoveFailed: "error.channel.managerRemoveFailed",
       managerAlreadyExists: "error.channel.managerAlreadyExists",
