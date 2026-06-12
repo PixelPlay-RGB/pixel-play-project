@@ -45,6 +45,9 @@ interface Props {
   onOpenChat?: () => void;
   // 전체화면일 때 컨테이너 내부에 렌더할 채팅/후원 오버레이. 데이터를 가진 상위(LiveView)가 주입한다.
   renderFullscreenChat?: (ctx: FullscreenChatContext) => ReactNode;
+  // 클립 버튼 클릭 — 현재 프레임 스냅샷(jpeg data URL, 실패 시 null)을 상위로 올린다.
+  // 로그인 게이트·Dialog 열기는 상위(LiveView)가 결정한다.
+  onClipRequest?: (snapshotDataUrl: string | null) => void;
 }
 
 export function LiveVideoPlayer({
@@ -57,6 +60,7 @@ export function LiveVideoPlayer({
   openChatButtonRef,
   onOpenChat,
   renderFullscreenChat,
+  onClipRequest,
 }: Props) {
   const { containerRef, isFullscreen, toggleFullscreen } = useFullscreen<HTMLDivElement>();
   // 전체화면 채팅 패널 열림 상태. 컨트롤 바 폭(채팅이 가리지 않게)과 공유해야 해 여기서 소유한다.
@@ -161,6 +165,37 @@ export function LiveVideoPlayer({
 
   const isFullscreenChatOpen = isFullscreen && isFsChatOpen;
 
+  // 클립 버튼: 현재 프레임을 canvas로 캡처해 상위로 올린다. hls.js(MSE)는 캔버스를
+  // 오염시키지 않고, Safari 네이티브 HLS는 <video crossOrigin>으로 안전하다 — 그래도
+  // 실패하면 스냅샷 없이 진행한다(서버 추출에는 영향 없음).
+  function handleClipClick() {
+    let snapshotDataUrl: string | null = null;
+    const video = videoRef.current;
+
+    if (video && video.videoWidth > 0) {
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const context = canvas.getContext("2d");
+
+        if (context) {
+          context.drawImage(video, 0, 0);
+          snapshotDataUrl = canvas.toDataURL("image/jpeg", 0.85);
+        }
+      } catch (error) {
+        console.error("클립 스냅샷 캡처 실패", error);
+      }
+    }
+
+    // 생성 Dialog는 body 포털이라 전체화면 컨테이너 위에선 보이지 않는다 — 먼저 빠져나온다.
+    if (isFullscreen) {
+      void toggleFullscreen();
+    }
+
+    onClipRequest?.(snapshotDataUrl);
+  }
+
   return (
     <div
       ref={registerContainer}
@@ -194,6 +229,9 @@ export function LiveVideoPlayer({
             autoPlay
             muted
             playsInline
+            // 클립 스냅샷용 — Safari 네이티브 HLS에서 canvas.toDataURL이 SecurityError로
+            // 죽지 않게 처음부터 부착한다(MediaMTX hlsAllowOrigin 기본 '*' 전제).
+            crossOrigin="anonymous"
             className="size-full bg-black object-contain"
             onClick={togglePlay}
             onDoubleClick={() => void toggleFullscreen()}
@@ -276,6 +314,8 @@ export function LiveVideoPlayer({
             onSelectQualityLevel={setLevel}
             isAtLiveEdge={isAtLiveEdge}
             onSeekToLive={seekToLiveEdge}
+            // 송출 프레임이 있어야 잘라낼 구간이 있다 — 대기 화면에선 버튼을 숨긴다.
+            onClipClick={onClipRequest && playbackState === "playing" ? handleClipClick : undefined}
           />
         </div>
       ) : null}
