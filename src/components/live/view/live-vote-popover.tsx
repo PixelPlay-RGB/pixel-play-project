@@ -26,9 +26,9 @@ import { formatCount } from "@/utils/live/live-chat";
 import type { LiveInteractionNotice, LivePoll, LivePollOption } from "@/types/live/live";
 
 // 후원(코랄 채움) 옆에 나란히 놓이는 투표 트리거는 브랜드 민트 아웃라인으로 역할을 구분한다.
-// (팝오버 내부 투표·추첨 UI가 브랜드 톤이라 트리거와도 일관된다.)
+// h-8: 입력 섹션을 낮게 유지하기 위한 슬림 높이(비디오 하단 라인 정렬용).
 const VOTE_TRIGGER_CLASS = cn(
-  "h-9 flex-1 text-sm",
+  "h-8 flex-1 text-sm",
   "border-brand/30 bg-brand/10 text-brand",
   "hover:border-brand/50 hover:bg-brand/18 dark:border-brand/30 dark:bg-brand/15 dark:text-brand",
 );
@@ -835,6 +835,7 @@ export function LiveVotePopover({
           title={!hasInteraction ? LIVE_VOTE_LABEL.emptyInteraction : undefined}
           onClick={handleOpen}
         >
+          <Sparkles className="size-4" />
           {triggerLabel}
         </Button>
         <Dialog open={open} onOpenChange={handleOpenChange}>

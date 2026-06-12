@@ -65,6 +65,7 @@ cp .env.example .env.local
 | `NEXT_PUBLIC_MEDIAMTX_HLS_BASE_URL`       | 라이브 미리보기 재생용 HLS 베이스 URL (미설정 시 기본 `http://live.pixel-play.studio:8888`)                       |
 | `NEXT_PUBLIC_MEDIAMTX_STREAM_PATH`        | 미리보기·송출 상태 조회 기본 스트림 path (미설정 시 기본 `mystream`)                                              |
 | `MEDIAMTX_API_BASE_URL`                   | 송출 상태 조회용 MediaMTX Control API 베이스 URL (서버 전용, 미설정 시 기본 `http://live.pixel-play.studio:9997`) |
+| `MEDIAMTX_HOOK_SECRET`                    | MediaMTX hook route 인증용 서버 secret                                                                            |
 
 환경 변수 키를 추가하거나 변경하면 루트의 `env.d.ts` 타입 선언도 함께 갱신합니다.
 
@@ -344,10 +345,11 @@ src/
 | 인증/프로필   | `check_email_exists`                                                                                                                                                                                                                                                                                                                                                   |
 | 채팅방        | `create_chat_room`, `get_chat_room_list`, `get_chat_room_detail`, `get_public_chat_room_metadata`, `join_chat_room`, `leave_chat_room`, `mark_room_read`, `kick_chat_room_member`, `transfer_chat_room_owner`, `search_chat_rooms`                                                                                                                                     |
 | 메시지        | `send_chat_message`                                                                                                                                                                                                                                                                                                                                                    |
-| 라이브        | `get_landing_snapshot`, `get_live_hero`, `get_live_list`, `get_live_popular_keywords`, `search_live_results`, `get_live_watch`, `get_live_watch_count`, `start_live_broadcast`, `end_live_broadcast`, `send_live_message`, `send_live_message_v2`, `get_live_donation_ranking`, `accept_live_chat_rule`                                                                |
+| 라이브        | `get_landing_snapshot`, `get_live_hero`, `get_live_list`, `get_live_popular_keywords`, `search_live_results`, `get_live_watch`, `get_live_watch_count`, `start_live_broadcast`, `end_live_broadcast`, `send_live_message`, `send_live_message_v2`, `send_live_message_v3`, `send_live_donation_v2`, `get_live_donation_ranking`, `accept_live_chat_rule`               |
 | 오버레이      | `get_live_chat_overlay_snapshot`, `get_live_donation_alert_overlay_snapshot`                                                                                                                                                                                                                                                                                           |
 | 투표          | `create_live_poll`, `end_live_poll`, `vote_live_poll`                                                                                                                                                                                                                                                                                                                  |
 | 채널/스튜디오 | `get_creator_studio_snapshot`, `upsert_creator_studio_setting`, `rotate_live_security_token_version`, `get_creator_donation_dashboard`                                                                                                                                                                                                                                 |
+| 동기화/인프라 | `get_live_sync_cron_secret`, `get_mediamtx_api_password`, `get_live_thumbnail_ingest_secret` (모두 Vault 조회 · `service_role` 전용 — 방송 자동 종료·자동 썸네일 Edge Function과 송출 상태 라우트가 사용)                                                                                                                                                              |
 | 정산          | `get_creator_settlement_donations`, `get_creator_settlement_yearly_summary`                                                                                                                                                                                                                                                                                            |
 | 채널(공개)    | `get_channel_profile`, `update_channel_profile`, `get_channel_live_hero`, `get_channel_banners`, `insert_channel_banner`, `delete_channel_banner`, `reorder_channel_banners`                                                                                                                                                                                           |
 | 커뮤니티      | `get_channel_community_posts`, `get_community_post`, `get_community_adjacent_posts`, `get_community_comments`, `get_community_comment_replies`, `create_community_post`, `update_community_post`, `delete_community_post`, `create_community_comment`, `update_community_comment`, `delete_community_comment`, `set_community_post_like`, `set_community_comment_like` |
@@ -383,7 +385,21 @@ src/
 | `community_comment_like_count_trigger`                    | 댓글 좋아요 INSERT·DELETE 시 댓글 좋아요 수를 갱신                                                  |
 | `community_comment_validate_parent_trigger`               | 대댓글 부모를 검증해 1단계 대댓글로 평탄화                                                          |
 | `trg_log_creator_follow_event`                            | `viewer_creator_relation.followed_at` 전이를 follow/unfollow 이벤트로 `creator_follow_event`에 적재 |
+| `broadcast_live_broadcast_ended`                          | `live_broadcast.ended_at` 세팅 시 시청 화면에 `broadcast_ended` Realtime 이벤트 전송                |
 | `set_*_modified_at`                                       | 각 테이블의 `modified_at` 타임스탬프 자동 갱신                                                      |
+
+### Edge Functions · Scheduled Jobs
+
+| 이름                         | 트리거                      | 설명                                                                     |
+| ---------------------------- | --------------------------- | ------------------------------------------------------------------------ |
+| `delete-user-storage`        | Database Webhook(유저 삭제) | `user-media/{user.id}/` 하위 파일을 재귀 정리                            |
+| `sync-live-broadcast-status` | pg_cron(1분)                | MediaMTX 송출이 끊긴 활성 방송을 자동 종료(운영 페이지 폴링은 보조 수단) |
+| `sweep_live_viewer_counts`   | pg_cron(30초)               | 라이브 시청자 수 정리(DB 함수 직접 호출)                                 |
+| `ingest-live-thumbnail`      | EC2 systemd 타이머(1분)     | EC2가 push한 송출 프레임(JPEG)을 활성 방송에 매핑해 자동 썸네일로 저장   |
+
+`sync-live-broadcast-status`는 Vault의 `service_role_key`(cron 인증)·`mediamtx_api_password`(Control API Basic 인증, EC2 `mediamtx.yml`의 `pixelplay-api` 계정과 동일 값)와 Edge Function secrets의 `LIVE_OVERLAY_TOKEN_SECRET`(스트림 키 HMAC)이 등록되어야 동작하며, 미등록 시 401/503으로 안전 실패합니다. MediaMTX Control API(`:9997`)는 인증 필수라 스트림 키가 외부에 노출되지 않습니다(송출 상태 라우트도 같은 계정으로 호출).
+
+자동 방송 썸네일은 EC2가 캡처를 담당합니다 — systemd 타이머(`pixelplay-live-thumbnail.timer`, 1분)가 MediaMTX에서 송출 중인 `live/*` 경로를 조회해 ffmpeg로 1프레임(JPEG)을 뜨고, `X-Capture-Secret`(Vault `live_thumbnail_ingest_secret`)으로 `ingest-live-thumbnail`에 push합니다. 함수가 활성 방송 매핑(스트림 키 HMAC 대조) → Storage `{user.id}/live-thumbnail/auto-thumbnail.jpg` upsert → `thumbnail_url` 1회 기록을 수행하며, 수동 썸네일이 있는 방송은 건드리지 않습니다. EC2 쪽 스크립트·유닛 파일은 `infra/mediamtx/`에 보관합니다(배치 경로는 파일 머리주석 참고).
 
 ### 스키마 변경 절차
 

@@ -29,8 +29,21 @@ export const DONATION_ALERT_SOUND_KEYS = DONATION_ALERT_SOUND_OPTIONS.map(
   (option) => option.value,
 ) as [string, ...string[]];
 
-// TTS 음성 식별자(voiceURI) 최대 길이 (Web Speech API).
+// TTS 음성 식별자 최대 길이 (DB tts_voice_uri CHECK와 동일).
 export const DONATION_TTS_VOICE_URI_MAX = 256;
+
+// Google Cloud TTS 한국어 음성 옵션. value는 GCP voice name이며 DB tts_voice_uri에 그대로 저장한다.
+// /api/tts의 화이트리스트로도 사용된다(목록 밖 값은 기본 음성으로 폴백).
+export const DONATION_TTS_VOICE_OPTIONS = [
+  { value: "ko-KR-Neural2-A", label: "여성 1 (기본)" },
+  { value: "ko-KR-Neural2-B", label: "여성 2" },
+  { value: "ko-KR-Neural2-C", label: "남성 1" },
+  { value: "ko-KR-Wavenet-D", label: "남성 2" },
+] as const;
+export const DONATION_TTS_VOICE_DEFAULT = DONATION_TTS_VOICE_OPTIONS[0].value;
+
+// /api/tts 입력 텍스트 상한(후원 머리말 + 메시지 300자 + 여유).
+export const DONATION_TTS_TEXT_MAX = 500;
 
 // donation_alert_duration_seconds CHECK: 3 ~ 30
 export const DONATION_ALERT_DURATION_OPTIONS = [

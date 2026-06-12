@@ -64,10 +64,16 @@ export function useLiveSidebar() {
     queryFn: () => fetchLivePopularKeywordSnapshot(LIVE_SIDEBAR_KEYWORD_LIMIT),
   });
 
-  const followingItems =
-    followingQuery.data?.pages
-      .flatMap((page) => page.items)
-      .slice(0, LIVE_SIDEBAR_FOLLOWING_MAX_VISIBLE_COUNT) ?? [];
+  // offset 페이지네이션은 적재 사이에 라이브 상태가 바뀌면(라이브 우선 정렬 변동)
+  // 앞 페이지 항목이 다음 페이지에 다시 내려올 수 있어 creatorId 기준으로 중복을 걷어낸다.
+  // Map은 첫 등장 순서를 유지하면서 값은 더 최신 페이지 스냅샷으로 덮는다.
+  const followingItems = [
+    ...new Map(
+      (followingQuery.data?.pages.flatMap((page) => page.items) ?? []).map(
+        (item) => [item.creatorId, item] as const,
+      ),
+    ).values(),
+  ].slice(0, LIVE_SIDEBAR_FOLLOWING_MAX_VISIBLE_COUNT);
   const followingTotalCount = followingQuery.data?.pages[0]?.totalCount ?? 0;
 
   // 팔로잉 섹션을 접으면 누적된 "더보기" 페이지를 첫 페이지(초기 노출 개수)로 되돌린다.

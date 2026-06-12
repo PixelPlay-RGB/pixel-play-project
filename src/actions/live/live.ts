@@ -49,13 +49,15 @@ interface JoinLiveDrawInput {
   drawNoticeId: string;
 }
 
+// 채팅은 채널(creator) 단위다 — 방송 중이면 RPC가 메시지를 활성 방송에 자동 귀속시키고,
+// 방송 외 시간에는 채널 메시지(broadcast_id null)로 기록한다(#111).
 export async function sendLiveMessageAction(
-  broadcastId: string,
+  creatorId: string,
   content: string,
 ): Promise<AppActionResult<SendLiveMessageResult>> {
   const trimmed = content.trim();
 
-  if (!broadcastId || !isUuid(broadcastId)) {
+  if (!creatorId || !isUuid(creatorId)) {
     return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
   }
 
@@ -80,9 +82,9 @@ export async function sendLiveMessageAction(
     return client.result;
   }
 
-  const { data, error } = await client.supabase.rpc("send_live_message_v2", {
+  const { data, error } = await client.supabase.rpc("send_live_message_v3", {
     p_actor_user_id: actor.userId,
-    p_broadcast_id: broadcastId,
+    p_creator_id: creatorId,
     p_content: trimmed,
   });
 
@@ -175,12 +177,14 @@ export async function joinLiveDrawAction({
 
   const { data: activeBroadcastRows, error: broadcastError } = await supabase
     .from("live_broadcast")
-    .select("id")
+    .select("id, creator_id")
     .eq("id", broadcastId)
     .is("ended_at", null)
     .limit(1);
 
-  if (broadcastError || (activeBroadcastRows ?? []).length === 0) {
+  const activeBroadcast = (activeBroadcastRows ?? [])[0];
+
+  if (broadcastError || !activeBroadcast) {
     console.error("라이브 추첨 참여 대상 방송 조회 실패", broadcastError);
     return false;
   }
@@ -213,6 +217,7 @@ export async function joinLiveDrawAction({
 
   const { error: insertError } = await supabase.from("live_message").insert({
     broadcast_id: broadcastId,
+    creator_id: activeBroadcast.creator_id,
     content: "draw participation",
     message_type: "moderation_notice",
     metadata,
@@ -227,18 +232,20 @@ export async function joinLiveDrawAction({
   return true;
 }
 
+// 후원도 채널(creator) 단위다 — 방송 중이면 RPC가 활성 방송에 자동 귀속시키고,
+// 방송 외 시간에는 채널 후원(broadcast_id null)으로 기록한다(#111).
 export async function sendLiveDonationAction(params: {
-  broadcastId: string;
+  creatorId: string;
   amount: number;
   message: string;
   isAnonymous: boolean;
   idempotencyKey: string;
 }): Promise<AppActionResult> {
-  const { broadcastId, amount, message, isAnonymous, idempotencyKey } = params;
+  const { creatorId, amount, message, isAnonymous, idempotencyKey } = params;
 
   if (
-    !broadcastId ||
-    !isUuid(broadcastId) ||
+    !creatorId ||
+    !isUuid(creatorId) ||
     !idempotencyKey ||
     !Number.isFinite(amount) ||
     !Number.isInteger(amount) ||
@@ -265,9 +272,9 @@ export async function sendLiveDonationAction(params: {
     return client.result;
   }
 
-  const { error } = await client.supabase.rpc("send_live_donation", {
+  const { error } = await client.supabase.rpc("send_live_donation_v2", {
     p_actor_user_id: actor.userId,
-    p_broadcast_id: broadcastId,
+    p_creator_id: creatorId,
     p_amount: amount,
     p_message: message,
     p_is_anonymous: isAnonymous,
