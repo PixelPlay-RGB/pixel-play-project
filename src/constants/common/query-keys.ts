@@ -24,6 +24,9 @@ export const QUERY_KEYS = {
       [...QUERY_KEYS.live.all, "watch", creatorId, userId].filter((v) => v !== undefined),
     messages: (broadcastId?: string) =>
       [...QUERY_KEYS.live.all, "messages", broadcastId].filter((v) => v !== undefined),
+    // 시청자 본인의 채팅 역할 스냅샷(후원 성공 시 donor로 즉시 승격) — 낙관적 메시지 뱃지용
+    viewerRole: (creatorId?: string) =>
+      [...QUERY_KEYS.live.all, "viewer-role", creatorId].filter((v) => v !== undefined),
     polls: (broadcastId?: string) =>
       [...QUERY_KEYS.live.all, "polls", broadcastId].filter((v) => v !== undefined),
     pollsForViewer: (broadcastId?: string, userId?: string | null) =>
