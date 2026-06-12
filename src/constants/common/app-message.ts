@@ -126,6 +126,16 @@ export const APP_MESSAGE = {
         description: "다른 항목 번호를 입력하면 투표가 변경됩니다.",
       },
     },
+    clip: {
+      created: {
+        title: "클립 생성 완료",
+        description: "클립이 준비되었어요.",
+      },
+      urlCopied: {
+        title: "링크 복사 완료",
+        description: "클립 링크 복사가 완료되었습니다.",
+      },
+    },
     notification: {
       allDeleted: {
         title: "알림 전체 삭제 완료",
@@ -529,6 +539,36 @@ export const APP_MESSAGE = {
         description: "잠시 후 다시 시도해주세요.",
       },
     },
+    clip: {
+      createFailed: {
+        title: "클립 생성 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      rateLimited: {
+        title: "클립 생성 제한",
+        description: "클립은 1분에 1개까지 만들 수 있어요.",
+      },
+      channelFull: {
+        title: "클립 보관함 가득 참",
+        description: "이 채널의 클립 보관 한도에 도달했어요.",
+      },
+      tooEarly: {
+        title: "클립 생성 불가",
+        description: "방송 시작 직후에는 클립을 만들 수 없어요. 잠시 후 시도해주세요.",
+      },
+      noBroadcast: {
+        title: "클립 생성 불가",
+        description: "지금은 방송 중이 아니에요.",
+      },
+      generationFailed: {
+        title: "클립 생성 실패",
+        description: "시간이 초과되어 클립을 만들지 못했어요. 다시 시도해주세요.",
+      },
+      loadFailed: {
+        title: "클립 불러오기 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+    },
     supabase: {
       permissionDenied: {
         title: "권한 없음",
@@ -551,6 +591,12 @@ export const APP_MESSAGE = {
       broadcastEnded: {
         title: "방송 종료",
         description: "방송이 종료되었습니다.",
+      },
+    },
+    clip: {
+      processing: {
+        title: "클립 생성 중",
+        description: "완성되면 알려드릴게요.",
       },
     },
   },

@@ -50,6 +50,10 @@ export const APP_MESSAGE_CODE = {
       urlCopied: "success.live.urlCopied",
       voteUnchanged: "success.live.voteUnchanged",
     },
+    clip: {
+      created: "success.clip.created",
+      urlCopied: "success.clip.urlCopied",
+    },
     notification: {
       allDeleted: "success.notification.allDeleted",
     },
@@ -176,6 +180,16 @@ export const APP_MESSAGE_CODE = {
       loadFailed: "error.notification.loadFailed",
       deleteFailed: "error.notification.deleteFailed",
     },
+    // 클립 RPC 에러 매핑(CLIP_RPC_ERROR_CODE_MAP)에서 사용.
+    clip: {
+      createFailed: "error.clip.createFailed",
+      rateLimited: "error.clip.rateLimited",
+      channelFull: "error.clip.channelFull",
+      tooEarly: "error.clip.tooEarly",
+      noBroadcast: "error.clip.noBroadcast",
+      generationFailed: "error.clip.generationFailed",
+      loadFailed: "error.clip.loadFailed",
+    },
     supabase: {
       permissionDenied: "error.supabase.permissionDenied",
       dataNotFound: "error.supabase.dataNotFound",
@@ -187,6 +201,9 @@ export const APP_MESSAGE_CODE = {
     },
     live: {
       broadcastEnded: "info.live.broadcastEnded",
+    },
+    clip: {
+      processing: "info.clip.processing",
     },
   },
 } as const satisfies AppMessageCodeSchema<typeof APP_MESSAGE>;

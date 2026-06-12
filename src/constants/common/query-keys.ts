@@ -67,6 +67,18 @@ export const QUERY_KEYS = {
     search: (query?: string, section?: string) =>
       [...QUERY_KEYS.live.searchAll(), query, section].filter((v) => v !== undefined),
   },
+  clip: {
+    all: ["clip"] as const,
+    channelAll: (creatorId?: string) =>
+      [...QUERY_KEYS.clip.all, "channel", creatorId].filter((v) => v !== undefined),
+    channel: (creatorId?: string, sort?: string, period?: string, limit?: number) =>
+      [...QUERY_KEYS.clip.channelAll(creatorId), sort, period, limit].filter(
+        (v) => v !== undefined,
+      ),
+    // 디테일 쇼츠 캐러셀의 같은 채널 인접(이전/다음) 클립 목록.
+    adjacent: (creatorId?: string) =>
+      [...QUERY_KEYS.clip.all, "adjacent", creatorId].filter((v) => v !== undefined),
+  },
   donations: {
     all: ["donations"] as const,
     walletBalance: (userId?: string) =>
