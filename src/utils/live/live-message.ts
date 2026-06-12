@@ -31,16 +31,13 @@ export interface LiveMessageRow {
 
 // creatorId(크리에이터 user UUID)와 sender_id가 같으면 호스트 메시지로 표시한다.
 // creatorId가 user UUID가 아니게 되면(예: 핸들) 매칭이 빗나가 호스트 강조만 사라지고 동작은 안전하게 유지된다.
-// viewerId(보는 사람 user UUID)와 sender_id가 같으면 본인 메시지이므로 클린봇으로 가리지 않는다.
 export function mapLiveMessageRowToMessage(
   row: LiveMessageRow,
   creatorId?: string,
-  viewerId?: string,
 ): LiveChatMessage | null {
   const isHost =
     row.sender_role === "creator" ||
     (!!creatorId && row.sender_id !== null && row.sender_id === creatorId);
-  const isOwnMessage = !!viewerId && row.sender_id !== null && row.sender_id === viewerId;
   const metadata = readJsonObject(row.metadata);
 
   if (readString(metadata.source) === "live_draw_participation") {
@@ -82,8 +79,9 @@ export function mapLiveMessageRowToMessage(
     senderRole: isHost ? "creator" : row.sender_role,
     isHost,
     // 서버 클린봇(LLM 비동기 판정, #120)이 기록한 metadata 플래그가 가림 신호다 —
-    // 판정 전(키 없음)에는 가리지 않는다(fail-open). 본인 메시지는 본인 화면에서 안 가린다.
-    isCleanbotFlagged: !isOwnMessage && readString(metadata.cleanbotStatus) === "flagged",
+    // 판정 전(키 없음)에는 가리지 않는다(fail-open). viewer에 무관한 순수 서버 사실이라
+    // 로그인 로딩 타이밍에 따라 가림이 뒤집히지 않는다(본인 메시지도 동일하게 가린다).
+    isCleanbotFlagged: readString(metadata.cleanbotStatus) === "flagged",
   };
 }
 
@@ -92,7 +90,6 @@ export function mapLiveMessageRowToMessage(
 export function mapLiveMessageRealtimePayload(
   raw: unknown,
   creatorId?: string,
-  viewerId?: string,
 ): LiveChatMessage | null {
   if (!raw || typeof raw !== "object") return null;
   const record = raw as Record<string, unknown>;
@@ -117,6 +114,5 @@ export function mapLiveMessageRealtimePayload(
       metadata: (record.metadata ?? null) as Json,
     },
     creatorId,
-    viewerId,
   );
 }

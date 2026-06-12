@@ -72,7 +72,7 @@ export function useLiveBroadcastView(creatorId: string) {
     setLastBroadcast(broadcast);
   }
   // 채팅은 채널 단위 타임라인(#111) — 방송 여부와 무관하게 creator 기준으로 조회·전송한다.
-  const messagesQuery = useLiveMessages(creatorId, user?.id);
+  const messagesQuery = useLiveMessages(creatorId);
   const messages = messagesQuery.messages;
 
   const pollsQuery = useLivePolls(broadcast?.id, user?.id);
