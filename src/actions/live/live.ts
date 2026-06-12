@@ -20,7 +20,7 @@ import {
 import { isRecord } from "@/utils/common/json";
 import { isUuid } from "@/utils/common/uuid";
 
-// send_live_message_v2의 jsonb 응답({ messageId, moderated })을 앱 타입으로 정규화한다.
+// send_live_message_v4의 jsonb 응답({ messageId, moderated })을 앱 타입으로 정규화한다.
 // 금칙어로 가려진 경우 messageId는 null, moderated는 true다.
 function normalizeSendLiveMessageResult(data: unknown): SendLiveMessageResult | null {
   if (!isRecord(data)) return null;
@@ -45,6 +45,7 @@ interface JoinLiveDrawInput {
 
 // 채팅은 채널(creator) 단위다 — 방송 중이면 RPC가 메시지를 활성 방송에 자동 귀속시키고,
 // 방송 외 시간에는 채널 메시지(broadcast_id null)로 기록한다(#111).
+// v4는 v3 본문 + 매니저 확장(매니저 전용 채팅 통과·sender_role manager)을 담는다(#118). v3는 동결.
 export async function sendLiveMessageAction(
   creatorId: string,
   content: string,
@@ -76,7 +77,7 @@ export async function sendLiveMessageAction(
     return client.result;
   }
 
-  const { data, error } = await client.supabase.rpc("send_live_message_v3", {
+  const { data, error } = await client.supabase.rpc("send_live_message_v4", {
     p_actor_user_id: actor.userId,
     p_creator_id: creatorId,
     p_content: trimmed,

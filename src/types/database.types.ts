@@ -52,6 +52,52 @@ export type Database = {
           },
         ]
       }
+      channel_manager: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          creator_id: string
+          id: string
+          manager_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          creator_id: string
+          id?: string
+          manager_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          creator_id?: string
+          id?: string
+          manager_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "channel_manager_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channel_manager_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channel_manager_manager_id_fkey"
+            columns: ["manager_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_room: {
         Row: {
           created_at: string
@@ -1030,6 +1076,10 @@ export type Database = {
         Args: { p_actor_user_id: string; p_creator_id: string }
         Returns: number
       }
+      add_channel_manager: {
+        Args: { p_actor_user_id: string; p_target_user_id: string }
+        Returns: Json
+      }
       anonymous_donor_alias: { Args: { p_donor_id: string }; Returns: string }
       check_email_exists: { Args: { target_email: string }; Returns: boolean }
       community_comment_to_json: {
@@ -1140,6 +1190,7 @@ export type Database = {
         Args: { p_creator_id: string; p_viewer_id?: string }
         Returns: Json
       }
+      get_channel_managers: { Args: { p_creator_id: string }; Returns: Json }
       get_channel_profile: {
         Args: { p_creator_id: string; p_viewer_id?: string }
         Returns: Json
@@ -1266,6 +1317,7 @@ export type Database = {
       }
       get_live_popular_keywords: { Args: { p_limit?: number }; Returns: Json }
       get_live_sync_cron_secret: { Args: never; Returns: string }
+      get_live_thumbnail_ingest_secret: { Args: never; Returns: string }
       get_live_watch: {
         Args: { p_creator_id: string; p_viewer_id?: string }
         Returns: Json
@@ -1330,6 +1382,10 @@ export type Database = {
         Args: { p_broadcast_id: string }
         Returns: number
       }
+      remove_channel_manager: {
+        Args: { p_actor_user_id: string; p_target_user_id: string }
+        Returns: undefined
+      }
       reorder_channel_banners: {
         Args: { p_actor_user_id: string; p_banner_ids: string[] }
         Returns: Json
@@ -1338,6 +1394,7 @@ export type Database = {
         Args: { p_actor_user_id: string; p_token_kind: string }
         Returns: Json
       }
+      search_channel_users: { Args: { p_query: string }; Returns: Json }
       search_chat_rooms: {
         Args: {
           p_limit?: number
@@ -1436,6 +1493,14 @@ export type Database = {
         Returns: Json
       }
       send_live_message_v3: {
+        Args: {
+          p_actor_user_id: string
+          p_content: string
+          p_creator_id: string
+        }
+        Returns: Json
+      }
+      send_live_message_v4: {
         Args: {
           p_actor_user_id: string
           p_content: string

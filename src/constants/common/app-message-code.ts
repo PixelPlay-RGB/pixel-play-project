@@ -30,6 +30,8 @@ export const APP_MESSAGE_CODE = {
       channelProfileSaved: "success.channel.channelProfileSaved",
       bannerSaved: "success.channel.bannerSaved",
       bannerDeleted: "success.channel.bannerDeleted",
+      managerAdded: "success.channel.managerAdded",
+      managerRemoved: "success.channel.managerRemoved",
     },
     following: {
       followed: "success.following.followed",
@@ -143,6 +145,11 @@ export const APP_MESSAGE_CODE = {
       bannerDeleteFailed: "error.channel.bannerDeleteFailed",
       bannerImageTooLarge: "error.channel.bannerImageTooLarge",
       bannerLimitReached: "error.channel.bannerLimitReached",
+      managerAddFailed: "error.channel.managerAddFailed",
+      managerRemoveFailed: "error.channel.managerRemoveFailed",
+      managerAlreadyExists: "error.channel.managerAlreadyExists",
+      managerSelfForbidden: "error.channel.managerSelfForbidden",
+      userSearchFailed: "error.channel.userSearchFailed",
     },
     following: {
       failed: "error.following.failed",
