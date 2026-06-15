@@ -2,6 +2,8 @@
 // 라이브 클립 생성·조회수 RPC를 호출하는 서버 액션입니다.
 // 추출·업로드는 EC2 워커가 비동기로 수행하므로 생성 액션은 pending 행 생성까지만 책임진다.
 
+import { cookies } from "next/headers";
+
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { createWriteClientForAction } from "@/actions/common/admin-client-action";
 import { getAuthenticatedActorId } from "@/actions/common/authenticated-actor";
@@ -14,6 +16,34 @@ import type { AppActionResult } from "@/types/common/action";
 import { isKnownClipRpcError, resolveClipRpcErrorCode } from "@/utils/common/app-message";
 import { isRecord } from "@/utils/common/json";
 import { isUuid } from "@/utils/common/uuid";
+import { resolveViewerId } from "@/utils/auth/viewer";
+
+// 조회수 dedup용 뷰어 식별 쿠키(익명용). 로그인 유저는 user id를 우선 쓴다.
+const CLIP_VIEWER_COOKIE = "clip_vk";
+const CLIP_VIEWER_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
+
+// 조회수 1회 카운트 기준이 되는 뷰어 키 — 로그인 'u:{uid}' / 익명 'a:{cookie_uuid}'.
+async function resolveClipViewerKey(): Promise<string | null> {
+  const userId = await resolveViewerId();
+  if (userId) return `u:${userId}`;
+
+  const store = await cookies();
+  const existing = store.get(CLIP_VIEWER_COOKIE)?.value;
+  if (existing) return `a:${existing}`;
+
+  const anonId = crypto.randomUUID();
+  try {
+    store.set(CLIP_VIEWER_COOKIE, anonId, {
+      maxAge: CLIP_VIEWER_COOKIE_MAX_AGE,
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+    });
+  } catch {
+    // 일부 컨텍스트에선 쿠키 설정이 막힐 수 있다 — 이번 호출은 새 익명 키로 진행한다.
+  }
+  return `a:${anonId}`;
+}
 
 export interface CreateLiveClipInput {
   // 빈 문자열이면 RPC가 방송 제목으로 폴백한다(입력칸 기본값과 동일 규칙).
@@ -103,9 +133,13 @@ export async function createLiveClipAction(
   return { success: true, data: result };
 }
 
-// 디테일 진입 시 단순 증가 — 실패해도 시청을 막지 않는 fire-and-forget이다.
+// 디테일 진입 시 조회수 증가 — 뷰어별 1회만 카운트(서버 dedup, 새로고침·반복 호출 어뷰징 방지).
+// 실패해도 시청을 막지 않는 fire-and-forget이다.
 export async function incrementLiveClipViewCountAction(clipId: string): Promise<void> {
   if (!clipId || !isUuid(clipId)) return;
+
+  const viewerKey = await resolveClipViewerKey();
+  if (!viewerKey) return;
 
   const client = await createWriteClientForAction("클립 조회수 Admin Client 생성 실패");
 
@@ -113,6 +147,7 @@ export async function incrementLiveClipViewCountAction(clipId: string): Promise<
 
   const { error } = await client.supabase.rpc("increment_live_clip_view_count", {
     p_clip_id: clipId,
+    p_viewer_key: viewerKey,
   });
 
   if (error) {

@@ -98,6 +98,81 @@ export type Database = {
           },
         ]
       }
+      channel_viewer_ban: {
+        Row: {
+          banned_at: string
+          banned_by: string | null
+          banned_by_nickname: string
+          banned_user_id: string
+          banned_user_nickname: string
+          broadcast_id: string | null
+          creator_id: string
+          id: string
+          unbanned_at: string | null
+          unbanned_by: string | null
+        }
+        Insert: {
+          banned_at?: string
+          banned_by?: string | null
+          banned_by_nickname: string
+          banned_user_id: string
+          banned_user_nickname: string
+          broadcast_id?: string | null
+          creator_id: string
+          id?: string
+          unbanned_at?: string | null
+          unbanned_by?: string | null
+        }
+        Update: {
+          banned_at?: string
+          banned_by?: string | null
+          banned_by_nickname?: string
+          banned_user_id?: string
+          banned_user_nickname?: string
+          broadcast_id?: string | null
+          creator_id?: string
+          id?: string
+          unbanned_at?: string | null
+          unbanned_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "channel_viewer_ban_banned_by_fkey"
+            columns: ["banned_by"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channel_viewer_ban_banned_user_id_fkey"
+            columns: ["banned_user_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channel_viewer_ban_broadcast_id_fkey"
+            columns: ["broadcast_id"]
+            isOneToOne: false
+            referencedRelation: "live_broadcast"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channel_viewer_ban_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channel_viewer_ban_unbanned_by_fkey"
+            columns: ["unbanned_by"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_room: {
         Row: {
           created_at: string
@@ -495,6 +570,54 @@ export type Database = {
           },
         ]
       }
+      creator_subscription: {
+        Row: {
+          created_at: string
+          creator_id: string
+          end_at: string
+          id: string
+          started_at: string
+          status: Database["public"]["Enums"]["creator_subscription_status"]
+          subscriber_id: string
+          total_months: number
+        }
+        Insert: {
+          created_at?: string
+          creator_id: string
+          end_at: string
+          id?: string
+          started_at?: string
+          status?: Database["public"]["Enums"]["creator_subscription_status"]
+          subscriber_id: string
+          total_months?: number
+        }
+        Update: {
+          created_at?: string
+          creator_id?: string
+          end_at?: string
+          id?: string
+          started_at?: string
+          status?: Database["public"]["Enums"]["creator_subscription_status"]
+          subscriber_id?: string
+          total_months?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_subscription_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_subscription_subscriber_id_fkey"
+            columns: ["subscriber_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       donation: {
         Row: {
           amount: number
@@ -688,6 +811,32 @@ export type Database = {
             columns: ["creator_id"]
             isOneToOne: false
             referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      live_clip_view: {
+        Row: {
+          clip_id: string
+          created_at: string
+          viewer_key: string
+        }
+        Insert: {
+          clip_id: string
+          created_at?: string
+          viewer_key: string
+        }
+        Update: {
+          clip_id?: string
+          created_at?: string
+          viewer_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_clip_view_clip_id_fkey"
+            columns: ["clip_id"]
+            isOneToOne: false
+            referencedRelation: "live_clip"
             referencedColumns: ["id"]
           },
         ]
@@ -1154,7 +1303,17 @@ export type Database = {
         Returns: Json
       }
       anonymous_donor_alias: { Args: { p_donor_id: string }; Returns: string }
+      ban_channel_viewer: {
+        Args: {
+          p_actor_user_id: string
+          p_broadcast_id?: string
+          p_creator_id: string
+          p_target_user_id: string
+        }
+        Returns: Json
+      }
       check_email_exists: { Args: { target_email: string }; Returns: boolean }
+      claim_live_clip_jobs: { Args: { p_limit?: number }; Returns: Json }
       community_comment_to_json: {
         Args: { p_comment_id: string; p_viewer_id: string }
         Returns: Json
@@ -1278,6 +1437,10 @@ export type Database = {
         Args: { p_creator_id: string; p_viewer_id?: string }
         Returns: Json
       }
+      get_channel_viewer_bans: {
+        Args: { p_creator_id: string; p_limit?: number; p_offset?: number }
+        Returns: Json
+      }
       get_chat_room_detail: {
         Args: { p_room_id: string }
         Returns: {
@@ -1377,6 +1540,7 @@ export type Database = {
         Args: { p_creator_id: string; p_limit?: number }
         Returns: Json
       }
+      get_live_clip_worker_secret: { Args: never; Returns: string }
       get_live_donation_alert_overlay_snapshot: {
         Args: { p_creator_id: string }
         Returns: Json
@@ -1401,6 +1565,10 @@ export type Database = {
       get_live_popular_keywords: { Args: { p_limit?: number }; Returns: Json }
       get_live_sync_cron_secret: { Args: never; Returns: string }
       get_live_thumbnail_ingest_secret: { Args: never; Returns: string }
+      get_live_viewer_profile: {
+        Args: { p_creator_id: string; p_target_user_id: string }
+        Returns: Json
+      }
       get_live_watch: {
         Args: { p_creator_id: string; p_viewer_id?: string }
         Returns: Json
@@ -1424,7 +1592,7 @@ export type Database = {
         Returns: Json
       }
       increment_live_clip_view_count: {
-        Args: { p_clip_id: string }
+        Args: { p_clip_id: string; p_viewer_key: string }
         Returns: undefined
       }
       insert_channel_banner: {
@@ -1435,6 +1603,10 @@ export type Database = {
           p_title: string
         }
         Returns: Json
+      }
+      is_channel_moderator: {
+        Args: { p_actor_user_id: string; p_creator_id: string }
+        Returns: boolean
       }
       join_chat_room: {
         Args: { p_actor_user_id: string; p_room_id: string }
@@ -1633,6 +1805,14 @@ export type Database = {
         }
         Returns: undefined
       }
+      unban_channel_viewer: {
+        Args: {
+          p_actor_user_id: string
+          p_creator_id: string
+          p_target_user_id: string
+        }
+        Returns: undefined
+      }
       unfollow_creator: {
         Args: { p_actor_user_id: string; p_creator_id: string }
         Returns: undefined
@@ -1696,6 +1876,7 @@ export type Database = {
       }
     }
     Enums: {
+      creator_subscription_status: "active" | "expired" | "canceled"
       gender: "male" | "female" | "none"
       live_chat_scope: "authenticated" | "follower" | "manager"
       live_clip_status: "pending" | "processing" | "ready" | "failed"
@@ -1837,6 +2018,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      creator_subscription_status: ["active", "expired", "canceled"],
       gender: ["male", "female", "none"],
       live_chat_scope: ["authenticated", "follower", "manager"],
       live_clip_status: ["pending", "processing", "ready", "failed"],
