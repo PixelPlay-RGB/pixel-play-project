@@ -152,15 +152,17 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     setIsLoginPromptOpen(true);
   }
 
-  // 클립 버튼: 로그인 게이트를 먼저 통과시키고, 스냅샷·제목을 store로 넘긴 뒤 에디터로 이동한다.
-  function handleClipRequest(snapshotDataUrl: string | null) {
+  // 클립 버튼: 로그인 게이트를 먼저 통과시키고, 스냅샷·필름스트립·제목을 store로 넘긴 뒤
+  // 에디터로 이동한다(인터셉팅 라우트가 라이브 위 모달로 띄운다).
+  function handleClipRequest(payload: { snapshotDataUrl: string | null; frames: string[] }) {
     if (!isLoggedIn) {
       openLoginPrompt();
       return;
     }
     setClipHandoff({
       creatorId,
-      snapshotDataUrl,
+      snapshotDataUrl: payload.snapshotDataUrl,
+      frames: payload.frames,
       defaultTitle: broadcast?.title ?? "",
     });
     router.push(`/clip/editor/${creatorId}`);

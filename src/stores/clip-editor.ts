@@ -9,6 +9,8 @@ export interface ClipEditorHandoff {
   creatorId: string;
   // 가위 클릭 시점의 프레임(jpeg data URL). 캡처 실패 시 null — 크롭은 그래도 동작한다.
   snapshotDataUrl: string | null;
+  // 지난 ~30초를 시킹하며 캡처한 필름스트립 프레임들(작은 jpeg). 비어 있으면 스냅샷 1장으로 폴백.
+  frames: string[];
   // 제목 입력 기본값 = 방송 제목.
   defaultTitle: string;
 }

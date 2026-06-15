@@ -15,6 +15,7 @@ import {
   LIVE_LABEL,
   LIVE_PLAYER_ICON_BUTTON_CLASS,
 } from "@/constants/live/live";
+import { CLIP_DURATION_MAX_SECONDS } from "@/constants/clip/clip";
 import { useFullscreen } from "@/hooks/live/use-fullscreen";
 import { useHlsPlayer } from "@/hooks/live/use-hls-player";
 import { useLivePlayerControls } from "@/hooks/live/use-live-player-controls";
@@ -45,9 +46,90 @@ interface Props {
   onOpenChat?: () => void;
   // 전체화면일 때 컨테이너 내부에 렌더할 채팅/후원 오버레이. 데이터를 가진 상위(LiveView)가 주입한다.
   renderFullscreenChat?: (ctx: FullscreenChatContext) => ReactNode;
-  // 클립 버튼 클릭 — 현재 프레임 스냅샷(jpeg data URL, 실패 시 null)을 상위로 올린다.
-  // 로그인 게이트·Dialog 열기는 상위(LiveView)가 결정한다.
-  onClipRequest?: (snapshotDataUrl: string | null) => void;
+  // 클립 버튼 클릭 — 현재 프레임 스냅샷(크롭용) + 지난 ~30초 필름스트립 프레임을 상위로 올린다.
+  // 로그인 게이트·에디터 이동은 상위(LiveView)가 결정한다.
+  onClipRequest?: (payload: { snapshotDataUrl: string | null; frames: string[] }) => void;
+}
+
+// 현재 프레임 1장(크롭용) — 동기 캡처.
+function captureCurrentFrame(video: HTMLVideoElement): string | null {
+  if (video.videoWidth === 0) return null;
+  try {
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const context = canvas.getContext("2d");
+    if (!context) return null;
+    context.drawImage(video, 0, 0);
+    return canvas.toDataURL("image/jpeg", 0.85);
+  } catch (error) {
+    console.error("클립 스냅샷 캡처 실패", error);
+    return null;
+  }
+}
+
+// 한 번의 시킹이 완료될 때까지 기다린다(타임아웃 안전망 — seeked가 안 오면 그냥 진행).
+function seekAndWait(video: HTMLVideoElement, time: number, timeoutMs: number): Promise<void> {
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      video.removeEventListener("seeked", finish);
+      resolve();
+    };
+    video.addEventListener("seeked", finish, { once: true });
+    video.currentTime = time;
+    setTimeout(finish, timeoutMs);
+  });
+}
+
+// 지난 ~30초를 시킹하며 작은 프레임 여러 장을 캡처한다(필름스트립용, best-effort).
+// 버퍼 밖이거나 seeked가 늦으면 중복/부족할 수 있어, 호출부에서 폴백을 둔다.
+async function captureFilmstrip(video: HTMLVideoElement): Promise<string[]> {
+  if (video.videoWidth === 0) return [];
+  const seekable = video.seekable;
+  if (seekable.length === 0) return [];
+
+  const edge = seekable.end(seekable.length - 1);
+  const start = Math.max(seekable.start(0), edge - CLIP_DURATION_MAX_SECONDS);
+  const span = edge - start;
+  if (span < 1) return [];
+
+  const FRAME_COUNT = 8;
+  const wasPaused = video.paused;
+  const originalTime = video.currentTime;
+  video.pause();
+
+  const scale = Math.min(1, 200 / video.videoHeight);
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(video.videoWidth * scale));
+  canvas.height = Math.max(1, Math.round(video.videoHeight * scale));
+  const context = canvas.getContext("2d");
+  const frames: string[] = [];
+
+  try {
+    if (context) {
+      for (let i = 0; i < FRAME_COUNT; i += 1) {
+        const target = start + (span * i) / (FRAME_COUNT - 1);
+        await seekAndWait(video, target, 350);
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        frames.push(canvas.toDataURL("image/jpeg", 0.5));
+      }
+    }
+  } catch (error) {
+    console.error("클립 필름스트립 캡처 실패", error);
+  } finally {
+    // 원위치 복귀 후 재생 상태 복원(라이브 엣지로 점프시키지 않고 보던 위치 유지).
+    try {
+      video.currentTime = originalTime;
+    } catch {
+      // 복귀 실패는 무시 — 다음 timeupdate에서 정상화된다.
+    }
+    if (!wasPaused) void video.play().catch(() => {});
+  }
+
+  return frames;
 }
 
 export function LiveVideoPlayer({
@@ -165,35 +247,32 @@ export function LiveVideoPlayer({
 
   const isFullscreenChatOpen = isFullscreen && isFsChatOpen;
 
-  // 클립 버튼: 현재 프레임을 canvas로 캡처해 상위로 올린다. hls.js(MSE)는 캔버스를
-  // 오염시키지 않고, Safari 네이티브 HLS는 <video crossOrigin>으로 안전하다 — 그래도
-  // 실패하면 스냅샷 없이 진행한다(서버 추출에는 영향 없음).
-  function handleClipClick() {
-    let snapshotDataUrl: string | null = null;
+  // 클립 버튼: 현재 프레임(크롭용)을 동기로, 지난 ~30초 필름스트립을 best-effort로 캡처해
+  // 상위로 올린다. hls.js(MSE)·<video crossOrigin>으로 캔버스 오염은 방지된다 — 필름스트립이
+  // 비면 스냅샷 1장으로 폴백한다. 중복 클릭은 ref로 막는다.
+  const clipCapturingRef = useRef(false);
+  async function handleClipClick() {
+    if (clipCapturingRef.current) return;
     const video = videoRef.current;
+    if (!video) return;
 
-    if (video && video.videoWidth > 0) {
-      try {
-        const canvas = document.createElement("canvas");
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        const context = canvas.getContext("2d");
-
-        if (context) {
-          context.drawImage(video, 0, 0);
-          snapshotDataUrl = canvas.toDataURL("image/jpeg", 0.85);
-        }
-      } catch (error) {
-        console.error("클립 스냅샷 캡처 실패", error);
+    clipCapturingRef.current = true;
+    try {
+      const snapshotDataUrl = captureCurrentFrame(video);
+      let frames = await captureFilmstrip(video);
+      if (frames.length === 0 && snapshotDataUrl) {
+        frames = [snapshotDataUrl];
       }
-    }
 
-    // 생성 Dialog는 body 포털이라 전체화면 컨테이너 위에선 보이지 않는다 — 먼저 빠져나온다.
-    if (isFullscreen) {
-      void toggleFullscreen();
-    }
+      // 에디터 모달은 전체화면 컨테이너 위에선 가려지므로 먼저 빠져나온다.
+      if (isFullscreen) {
+        void toggleFullscreen();
+      }
 
-    onClipRequest?.(snapshotDataUrl);
+      onClipRequest?.({ snapshotDataUrl, frames });
+    } finally {
+      clipCapturingRef.current = false;
+    }
   }
 
   return (
@@ -315,7 +394,11 @@ export function LiveVideoPlayer({
             isAtLiveEdge={isAtLiveEdge}
             onSeekToLive={seekToLiveEdge}
             // 송출 프레임이 있어야 잘라낼 구간이 있다 — 대기 화면에선 버튼을 숨긴다.
-            onClipClick={onClipRequest && playbackState === "playing" ? handleClipClick : undefined}
+            onClipClick={
+              onClipRequest && playbackState === "playing"
+                ? () => void handleClipClick()
+                : undefined
+            }
           />
         </div>
       ) : null}
