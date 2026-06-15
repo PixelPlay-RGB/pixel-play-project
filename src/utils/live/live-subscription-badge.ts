@@ -57,10 +57,9 @@ export function getLiveSubscriptionBadgeStoragePathByMonth(creatorId: string, mo
 }
 
 export function getLiveDefaultSubscriptionBadgeSrc(totalMonths?: number | null) {
-  const month = Math.min(
-    resolveLiveSubscriptionBadgeMonth(totalMonths),
-    LIVE_SUBSCRIPTION_BADGE_MAX_DEFAULT_MONTH,
-  );
+  const safeMonth =
+    Number.isFinite(totalMonths) && totalMonths ? Math.floor(Number(totalMonths)) : 1;
+  const month = Math.min(Math.max(safeMonth, 1), LIVE_SUBSCRIPTION_BADGE_MAX_DEFAULT_MONTH);
 
   return `/subscription-badges/${month}.png`;
 }
