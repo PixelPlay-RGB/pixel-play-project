@@ -13,9 +13,14 @@ export function getLiveChatOverlayNicknameColor(
     return LIVE_CHAT_OVERLAY_CREATOR_NICKNAME_COLOR;
   }
 
-  const hash = Array.from(author).reduce((acc, character) => acc + character.charCodeAt(0), 0);
+  // 단순 합산 해시는 글자 순서가 달라도 같은 값이 되어("가나"="나가") 색이 몰린다 —
+  // 자리 가중(31배) 누적으로 닉네임이 팔레트 전체에 고르게 분산되게 한다.
+  const hash = Array.from(author).reduce(
+    (acc, character) => (acc * 31 + character.charCodeAt(0)) | 0,
+    0,
+  );
 
   return LIVE_CHAT_OVERLAY_NICKNAME_COLOR_PALETTE[
-    hash % LIVE_CHAT_OVERLAY_NICKNAME_COLOR_PALETTE.length
+    Math.abs(hash) % LIVE_CHAT_OVERLAY_NICKNAME_COLOR_PALETTE.length
   ];
 }
