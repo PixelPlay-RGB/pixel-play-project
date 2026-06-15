@@ -33,36 +33,28 @@ export function ClipEditorView({ creatorId }: Props) {
   const router = useRouter();
   const clearHandoff = useClipEditorStore((state) => state.clearHandoff);
 
-  // 핸드오프는 마운트 시 한 번만 읽어 로컬로 복사하고 store는 비운다(뒤로/새로고침 stale 방지).
-  const [handoff, setHandoff] = useState<ClipEditorHandoff | null>(null);
-  const [hydrated, setHydrated] = useState(false);
+  // 핸드오프는 첫 렌더에서 동기적으로 읽는다 — 라이브에서 client 이동 시 store에 들어 있고,
+  // 직접 진입·새로고침이면 null이라 곧바로 안내 화면으로 폴백한다(깜빡임 없음).
+  const [handoff] = useState<ClipEditorHandoff | null>(() => {
+    const current = useClipEditorStore.getState().handoff;
+    return current && current.creatorId === creatorId ? current : null;
+  });
 
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = useState(() => handoff?.defaultTitle ?? "");
   const [durationSeconds, setDurationSeconds] = useState(CLIP_DURATION_DEFAULT_SECONDS);
   const [cropXFraction, setCropXFraction] = useState(DEFAULT_CROP_X_FRACTION);
 
   const { createClip, status, readyClipId, reset } = useClipCreation(creatorId);
 
+  // 한 번 읽은 핸드오프는 store에서 비운다(뒤로/새로고침 시 stale 스냅샷 재사용 방지).
   useEffect(() => {
-    const current = useClipEditorStore.getState().handoff;
-    if (current && current.creatorId === creatorId) {
-      setHandoff(current);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setTitle(current.defaultTitle);
-    }
     clearHandoff();
-    setHydrated(true);
-  }, [creatorId, clearHandoff]);
+  }, [clearHandoff]);
 
   const channelHref = `/channel/${creatorId}`;
 
   function goToLive() {
     router.push(`/live/${creatorId}`);
-  }
-
-  // 하이드레이션 전에는 빈 화면(핸드오프 판정 깜빡임 방지).
-  if (!hydrated) {
-    return <div className="flex-1" aria-hidden />;
   }
 
   // 직접 진입(핸드오프 없음 — 새로고침 포함): 안내 화면.

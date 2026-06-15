@@ -3,7 +3,7 @@
 // 슬라이드) + 시네마 딤 위 크리에이터/제목/생성일 오버레이 + 큰 우측 액션 레일(라이브·공유·
 // 음량·엠비언트·전체화면)을 렌더링합니다. 엠비언트 모드는 썸네일을 흐리게 깐 배경 글로우.
 
-import { useCallback, useEffect, useRef, useState, type ReactNode, type WheelEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type WheelEvent } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
