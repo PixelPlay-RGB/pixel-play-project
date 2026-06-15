@@ -27,12 +27,12 @@ export function ClipCard({
             alt={clip.title}
             fill
             sizes={sizes}
-            className="object-cover opacity-90 transition-opacity duration-200 group-hover:opacity-100"
+            className="object-cover opacity-90 transition-[transform,opacity] duration-200 group-hover:scale-105 group-hover:opacity-100"
           />
         ) : null}
 
-        {/* 시네마 딤 — 밝은 썸네일을 가라앉히고 하단 텍스트 가독성을 확보한다 */}
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-black/15 to-black/25" />
+        {/* 시네마 딤 — 밝은 썸네일을 진하게 가라앉히고 하단 텍스트 가독성을 확보한다 */}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-black/45" />
 
         {/* 길이 뱃지 */}
         <span className="absolute top-1.5 right-1.5 rounded bg-black/65 px-1.5 py-0.5 font-mono text-[11px] leading-none text-white backdrop-blur-sm">
