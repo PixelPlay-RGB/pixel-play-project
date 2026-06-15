@@ -2,13 +2,13 @@
 // 댓글/대댓글 작성 입력창. 텍스트영역 + 하단 한 줄(이모지·글자수·등록). 로그인 유저만 작성.
 
 import { SendHorizontal } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
+import RichEmojiInput from "@/components/common/rich-emoji-input";
 import StickerPicker from "@/components/sticker/sticker-picker";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { Textarea } from "@/components/ui/textarea";
 import { COMMUNITY_COMMENT_CONTENT_MAX } from "@/constants/community/community";
 import { useCreateCommunityComment } from "@/hooks/community/use-create-community-comment";
 import { useNullableUser } from "@/hooks/profile/use-profile";
@@ -40,6 +40,7 @@ export default function CommunityCommentComposer({
   const currentUserId = useViewerId(viewerId);
   const { data: profile } = useNullableUser();
   const [content, setContent] = useState("");
+  const formRef = useRef<HTMLFormElement>(null);
   const createComment = useCreateCommunityComment(postId);
 
   if (!currentUserId) {
@@ -78,6 +79,7 @@ export default function CommunityCommentComposer({
 
   return (
     <form
+      ref={formRef}
       onSubmit={handleSubmit}
       className="border-border/60 focus-within:border-brand/40 bg-muted/40 flex flex-col gap-2 rounded-2xl border p-3 transition-colors"
     >
@@ -88,22 +90,16 @@ export default function CommunityCommentComposer({
             {getAvatarFallbackText(profile?.nickname ?? "나", 1)}
           </AvatarFallback>
         </Avatar>
-        <Textarea
+        <RichEmojiInput
           value={content}
-          maxLength={COMMUNITY_COMMENT_CONTENT_MAX}
-          onChange={(event) => setContent(event.target.value)}
-          onKeyDown={(event) => {
-            // 한글 등 IME 조합 중 Enter는 조합 확정용이므로 제출로 처리하지 않습니다.
-            if (event.nativeEvent.isComposing) return;
-            if (event.key === "Enter" && !event.shiftKey) {
-              event.preventDefault();
-              event.currentTarget.form?.requestSubmit();
-            }
-          }}
+          onChange={setContent}
+          onSubmit={() => formRef.current?.requestSubmit()}
+          submitOnEnter
+          allowNewline
           placeholder={placeholder ?? (parentId ? "답글을 입력하세요." : "댓글을 입력하세요.")}
-          aria-label={parentId ? "답글 입력" : "댓글 입력"}
-          rows={1}
-          className="min-h-8 flex-1 resize-none border-0 bg-transparent p-0 text-base leading-relaxed shadow-none focus-visible:ring-0 disabled:bg-transparent md:text-sm dark:bg-transparent dark:disabled:bg-transparent"
+          maxLength={COMMUNITY_COMMENT_CONTENT_MAX}
+          ariaLabel={parentId ? "답글 입력" : "댓글 입력"}
+          className="min-h-8 flex-1 text-base leading-relaxed md:text-sm"
         />
       </div>
 

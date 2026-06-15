@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { SendHorizontal, Timer, UserRoundPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import StickerPicker from "@/components/sticker/sticker-picker";
-import { Input } from "@/components/ui/input";
+import RichEmojiInput from "@/components/common/rich-emoji-input";
 import {
   Popover,
   PopoverContent,
@@ -277,34 +277,24 @@ export function LiveChatInputBar({
     >
       {/* 이모지·전송 버튼은 입력 필드 안(오른쪽 trailing)에 넣어 입력칸 좌측을 버튼행과 정렬한다. */}
       <div className="relative">
-        <Input
+        <RichEmojiInput
           value={draftValue}
-          maxLength={LIVE_CHAT_MESSAGE_MAX_LENGTH}
+          onChange={setDraftValue}
+          onSubmit={() => void handleSend()}
+          submitOnEnter
+          allowNewline={false}
           placeholder={placeholder}
+          maxLength={LIVE_CHAT_MESSAGE_MAX_LENGTH}
           readOnly={!isEditable}
           disabled={isInputDisabled}
           onClick={handleInputClick}
-          onChange={(e) => setDraftValue(e.target.value)}
-          onKeyDown={(e) => {
-            // 게이트 상태(로그인/규칙)에선 Enter를 클릭과 동일하게 다뤄, 키보드 사용자도
-            // 마우스 클릭과 똑같이 안내 popover를 열 수 있게 한다(입력수단 동등성).
-            if (!isEditable) {
-              if (e.key === "Enter" && isClickGate) {
-                e.preventDefault();
-                handleInputClick();
-              }
-              return;
-            }
-            if (e.key === "Enter" && !e.nativeEvent.isComposing) {
-              e.preventDefault();
-              void handleSend();
-            }
-          }}
-          aria-label={placeholder}
+          ariaLabel={placeholder}
           className={cn(
-            "read-only:bg-muted/70 h-11 w-full pr-17 text-sm read-only:cursor-pointer",
+            "border-input min-h-11 w-full rounded-md border bg-transparent px-3 py-2 pr-17 text-sm leading-7",
+            "read-only:bg-muted/70 read-only:cursor-pointer",
             // 기본 ring(무채색) 대신 브랜드 민트 포커스로 시청 화면의 입력임을 또렷하게 한다.
-            "focus-visible:border-brand focus-visible:ring-brand/30",
+            "focus:border-brand focus:ring-brand/30 focus:ring-2",
+            isInputDisabled && "cursor-not-allowed opacity-60",
           )}
         />
         <div className="absolute inset-y-0 right-1 flex items-center gap-0.5">

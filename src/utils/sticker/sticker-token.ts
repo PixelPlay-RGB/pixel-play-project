@@ -1,8 +1,10 @@
-// 스티커 토큰(:pp-<id>:) 문자열 연산. 삽입·단독 판정·평문 변환을 한 곳에 모은다.
+// 스티커 토큰(:pp-<id>:) 문자열 연산. 삽입·세그먼트 분할·평문 변환을 한 곳에 모은다.
 import {
   DEFAULT_STICKERS,
+  STICKER_TOKEN_EXACT_PATTERN,
   STICKER_TOKEN_GLOBAL_PATTERN,
   STICKER_TOKEN_PREFIX,
+  STICKER_TOKEN_SPLIT_PATTERN,
 } from "@/constants/sticker/sticker";
 import type { Sticker } from "@/types/sticker/sticker";
 
@@ -24,6 +26,23 @@ function resolveTokenMatch(match: string): Sticker | undefined {
   // STICKER_TOKEN_PREFIX(":pp-") 이후 ~ 끝의 ":" 직전이 id.
   const id = match.slice(STICKER_TOKEN_PREFIX.length, -1);
   return getStickerById(id);
+}
+
+export type StickerSegment =
+  | { type: "text"; value: string }
+  | { type: "sticker"; sticker: Sticker };
+
+// 본문을 텍스트/스티커 세그먼트로 쪼갠다(렌더러·리치 입력기 공용). 미등록 토큰은 text로 남긴다.
+export function splitStickerSegments(text: string): StickerSegment[] {
+  const segments: StickerSegment[] = [];
+  for (const chunk of text.split(STICKER_TOKEN_SPLIT_PATTERN)) {
+    if (!chunk) continue;
+    const matched = STICKER_TOKEN_EXACT_PATTERN.exec(chunk);
+    const sticker = matched ? getStickerById(matched[1]) : undefined;
+    if (sticker) segments.push({ type: "sticker", sticker });
+    else segments.push({ type: "text", value: chunk });
+  }
+  return segments;
 }
 
 // 글자수 제한을 넘기지 않을 때만 토큰을 덧붙인다(토큰이 중간에 잘려 깨지는 것 방지).

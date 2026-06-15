@@ -404,6 +404,13 @@
   }
 }
 
+/* 이모지 입력기(contentEditable) — 비어 있을 때만 placeholder를 보여준다(.is-empty는 값으로 토글). */
+.rich-emoji-input.is-empty::before {
+  content: attr(data-placeholder);
+  color: var(--muted-foreground);
+  pointer-events: none;
+}
+
 /* 자동완성시 변하는 색 수정 */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
