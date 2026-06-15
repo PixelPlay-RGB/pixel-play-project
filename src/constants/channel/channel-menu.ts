@@ -6,6 +6,7 @@ import {
   MessageSquareText,
   ShieldCheck,
   SlidersHorizontal,
+  UsersRound,
 } from "lucide-react";
 
 export interface ChannelMenuGroup {
@@ -34,6 +35,7 @@ export const CHANNEL_MENU_GROUPS: ChannelMenuGroup[] = [
           { id: "settlement", label: "정산", href: "/channel/settlement" },
         ],
       },
+      { id: "subscribers", label: "구독자", href: "/channel/subscribers", icon: UsersRound },
     ],
   },
   {

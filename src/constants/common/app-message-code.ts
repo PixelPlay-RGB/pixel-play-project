@@ -139,6 +139,7 @@ export const APP_MESSAGE_CODE = {
       securityCopyFailed: "error.channel.securityCopyFailed",
       securityTokenRotateFailed: "error.channel.securityTokenRotateFailed",
       analyticsLoadFailed: "error.channel.analyticsLoadFailed",
+      subscriptionLoadFailed: "error.channel.subscriptionLoadFailed",
       channelProfileSaveFailed: "error.channel.channelProfileSaveFailed",
       bannerSaveFailed: "error.channel.bannerSaveFailed",
       bannerDeleteFailed: "error.channel.bannerDeleteFailed",
