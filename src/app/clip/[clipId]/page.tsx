@@ -3,7 +3,7 @@
 
 import { notFound } from "next/navigation";
 
-import { ClipShortsView } from "@/components/clip/clip-shorts-view";
+import { ClipShortsView, type ClipShortsCreator } from "@/components/clip/clip-shorts-view";
 import { getChannelProfile } from "@/utils/channel/channel-server";
 import { getLiveClip } from "@/utils/clip/clip-server";
 
@@ -21,12 +21,15 @@ export default async function ClipDetailPage({ params }: Props) {
   }
 
   const profile = await getChannelProfile(clip.creatorId);
-  const creator =
+  const creator: ClipShortsCreator | null =
     profile.success && profile.data
       ? {
           id: profile.data.id,
           nickname: profile.data.nickname,
           photoUrl: profile.data.photoUrl,
+          isFollowing: profile.data.isFollowing,
+          followerCount: profile.data.followerCount,
+          isOwnChannel: profile.data.isOwnChannel,
         }
       : null;
 

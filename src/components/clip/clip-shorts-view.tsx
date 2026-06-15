@@ -1,20 +1,46 @@
 "use client";
-// 클립 디테일(유튜브 쇼츠 스타일) — 세로 영상 풀하이트 + 위/아래 캐러셀(Motion 세로
-// 슬라이드) + 우측 액션 레일(공유·정보·탐색) + 정보 패널 토글을 렌더링합니다.
+// 클립 디테일(유튜브 쇼츠 스타일) — 세로 영상 풀하이트 + 위/아래·휠 캐러셀(Motion 세로
+// 슬라이드) + 시네마 딤 위 크리에이터/제목/생성일 오버레이 + 큰 우측 액션 레일(라이브·공유·
+// 음량·엠비언트·전체화면)을 렌더링합니다. 엠비언트 모드는 썸네일을 흐리게 깐 배경 글로우.
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode, type WheelEvent } from "react";
+import Image from "next/image";
+import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { ChevronDown, ChevronUp, Info, Share2 } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronUp,
+  Maximize2,
+  Minimize2,
+  Radio,
+  Share2,
+  Sparkles,
+} from "lucide-react";
 
-import { ClipInfoPanel, type ClipShortsCreator } from "@/components/clip/clip-info-panel";
 import { ClipMiniPlayer } from "@/components/clip/clip-mini-player";
-import { Button } from "@/components/ui/button";
+import { ClipVolumeControl } from "@/components/clip/clip-volume-control";
+import CreatorFollowingButton from "@/components/following/creator-following-button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { CLIP_LABEL } from "@/constants/clip/clip";
+import { useToggleChannelFollowing } from "@/hooks/channel/use-toggle-channel-following";
 import { useClipShorts, type ClipShortsDirection } from "@/hooks/clip/use-clip-shorts";
+import { useFullscreen } from "@/hooks/live/use-fullscreen";
 import { cn } from "@/lib/utils";
 import type { LiveClip } from "@/types/clip/clip";
+import { formatRelativeTime } from "@/utils/common/format";
+import { formatCount } from "@/utils/live/live-chat";
 import { toastAppError, toastAppSuccess } from "@/utils/common/toast-message";
+import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
+
+export interface ClipShortsCreator {
+  id: string;
+  nickname: string;
+  photoUrl: string | null;
+  isFollowing: boolean;
+  followerCount: number;
+  isOwnChannel: boolean;
+}
 
 interface Props {
   initialClip: LiveClip;
@@ -28,13 +54,25 @@ const slideVariants = {
   exit: (direction: ClipShortsDirection) => ({ y: direction > 0 ? "-100%" : "100%" }),
 };
 
+// 우측 레일 공용 버튼 스타일 — 크게(size-12), hover는 opacity로 은은하게.
+const RAIL_BUTTON_CLASS =
+  "flex size-12 cursor-pointer items-center justify-center rounded-full text-white opacity-90 backdrop-blur-sm transition-opacity hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-30";
+
 export function ClipShortsView({ initialClip, creator }: Props) {
   const { currentClip, direction, prevClip, nextClip, goPrev, goNext } = useClipShorts(initialClip);
   const prefersReducedMotion = useReducedMotion();
   // 음소거/음량은 클립 전환 간 유지한다(한 번 소리를 켜면 다음 클립도 켜진 채 재생).
   const [muted, setMuted] = useState(true);
   const [volume, setVolume] = useState(0.8);
-  const [isInfoOpen, setIsInfoOpen] = useState(false);
+  const [isAmbient, setIsAmbient] = useState(false);
+  const { containerRef, isFullscreen, toggleFullscreen } = useFullscreen<HTMLDivElement>();
+
+  // 같은 채널 캐러셀이라 크리에이터는 고정 — 팔로우 토글을 한 번만 시드한다.
+  const following = useToggleChannelFollowing({
+    creatorId: creator?.id ?? "",
+    initialIsFollowing: creator?.isFollowing ?? false,
+    initialFollowerCount: creator?.followerCount ?? 0,
+  });
 
   // 키보드 ↑/↓로도 캐러셀을 탐색한다.
   useEffect(() => {
@@ -52,6 +90,22 @@ export function ClipShortsView({ initialClip, creator }: Props) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [goPrev, goNext]);
 
+  // 마우스 휠로도 탐색한다 — 한 번의 스크롤이 한 칸만 넘어가게 스로틀한다.
+  const lastWheelRef = useRef(0);
+  const handleWheel = useCallback(
+    (event: WheelEvent<HTMLDivElement>) => {
+      if (Math.abs(event.deltaY) < 16) return;
+      if (event.timeStamp - lastWheelRef.current < 450) return;
+      lastWheelRef.current = event.timeStamp;
+      if (event.deltaY > 0) {
+        goNext();
+      } else {
+        goPrev();
+      }
+    },
+    [goNext, goPrev],
+  );
+
   async function copyClipLink() {
     try {
       await navigator.clipboard.writeText(`${window.location.origin}/clip/${currentClip.id}`);
@@ -65,60 +119,102 @@ export function ClipShortsView({ initialClip, creator }: Props) {
   // 데스크탑 우측 레일과 모바일 오버레이가 같은 버튼 구성을 공유한다.
   function renderActions(className: string) {
     return (
-      <div className={cn("flex flex-col items-center gap-2", className)}>
-        <Button
+      <div className={cn("flex flex-col items-center gap-2.5", className)}>
+        {creator ? (
+          <Link
+            href={`/live/${creator.id}`}
+            aria-label={CLIP_LABEL.liveLink}
+            className={cn(RAIL_BUTTON_CLASS, "bg-black/40")}
+          >
+            <Radio className="size-6" aria-hidden />
+          </Link>
+        ) : null}
+        <button
           type="button"
-          variant="secondary"
-          size="icon"
-          className="cursor-pointer rounded-full"
           aria-label={CLIP_LABEL.share}
           onClick={copyClipLink}
+          className={cn(RAIL_BUTTON_CLASS, "bg-black/40")}
         >
-          <Share2 aria-hidden />
-        </Button>
-        <Button
+          <Share2 className="size-6" aria-hidden />
+        </button>
+        <ClipVolumeControl
+          muted={muted}
+          volume={volume}
+          onToggleMute={() => setMuted((prev) => !prev)}
+          onVolumeChange={(next) => {
+            setVolume(next);
+            setMuted(next === 0);
+          }}
+        />
+        <button
           type="button"
-          variant={isInfoOpen ? "default" : "secondary"}
-          size="icon"
-          className="cursor-pointer rounded-full"
-          aria-label={CLIP_LABEL.infoToggle}
-          aria-pressed={isInfoOpen}
-          onClick={() => setIsInfoOpen((prev) => !prev)}
+          aria-label={CLIP_LABEL.ambient}
+          aria-pressed={isAmbient}
+          onClick={() => setIsAmbient((prev) => !prev)}
+          className={cn(RAIL_BUTTON_CLASS, isAmbient ? "bg-brand/80" : "bg-black/40")}
         >
-          <Info aria-hidden />
-        </Button>
-        <div className="h-4" />
-        <Button
+          <Sparkles className="size-6" aria-hidden />
+        </button>
+        <button
           type="button"
-          variant="secondary"
-          size="icon"
-          className="cursor-pointer rounded-full"
+          aria-label={isFullscreen ? CLIP_LABEL.exitFullscreen : CLIP_LABEL.fullscreen}
+          onClick={toggleFullscreen}
+          className={cn(RAIL_BUTTON_CLASS, "bg-black/40")}
+        >
+          {isFullscreen ? (
+            <Minimize2 className="size-6" aria-hidden />
+          ) : (
+            <Maximize2 className="size-6" aria-hidden />
+          )}
+        </button>
+        <div className="h-2" />
+        <button
+          type="button"
           aria-label={CLIP_LABEL.prevClip}
           disabled={!prevClip}
           onClick={goPrev}
+          className={cn(RAIL_BUTTON_CLASS, "bg-black/40")}
         >
-          <ChevronUp aria-hidden />
-        </Button>
-        <Button
+          <ChevronUp className="size-6" aria-hidden />
+        </button>
+        <button
           type="button"
-          variant="secondary"
-          size="icon"
-          className="cursor-pointer rounded-full"
           aria-label={CLIP_LABEL.nextClip}
           disabled={!nextClip}
           onClick={goNext}
+          className={cn(RAIL_BUTTON_CLASS, "bg-black/40")}
         >
-          <ChevronDown aria-hidden />
-        </Button>
+          <ChevronDown className="size-6" aria-hidden />
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="h-chat-content bg-background overflow-hidden">
-      <div className="mx-auto flex h-full max-w-5xl items-center justify-center gap-4 px-3 py-4">
+    <div
+      ref={containerRef}
+      onWheel={handleWheel}
+      className={cn(
+        "bg-background relative overflow-hidden",
+        isFullscreen ? "h-screen" : "h-chat-content",
+      )}
+    >
+      {/* 엠비언트 모드: 썸네일을 크게 흐리게 깔아 화면 전체에 은은한 색 글로우를 만든다 */}
+      {isAmbient && currentClip.thumbnailUrl ? (
+        <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+          <Image
+            src={currentClip.thumbnailUrl}
+            alt=""
+            fill
+            sizes="100vw"
+            className="scale-125 object-cover opacity-40 blur-3xl"
+          />
+        </div>
+      ) : null}
+
+      <div className="relative mx-auto flex h-full max-w-5xl items-center justify-center gap-3 px-3 py-4">
         {/* 세로 스테이지 — 캐러셀 전환이 일어나는 영역 */}
-        <div className="relative aspect-[9/16] h-full w-auto max-w-full overflow-hidden rounded-xl bg-black">
+        <div className="relative aspect-[9/16] h-full w-auto max-w-full overflow-hidden rounded-xl bg-black shadow-2xl">
           <AnimatePresence mode="popLayout" custom={direction} initial={false}>
             <motion.div
               key={currentClip.id}
@@ -132,44 +228,60 @@ export function ClipShortsView({ initialClip, creator }: Props) {
                 prefersReducedMotion ? { duration: 0 } : { duration: 0.25, ease: "easeOut" }
               }
             >
-              <ClipMiniPlayer
-                clip={currentClip}
-                muted={muted}
-                volume={volume}
-                onMutedChange={setMuted}
-                onVolumeChange={setVolume}
-              />
+              <ClipMiniPlayer clip={currentClip} muted={muted} volume={volume} />
             </motion.div>
           </AnimatePresence>
 
-          {/* 제목·채널 오버레이(컨트롤 바 위) */}
-          <div className="pointer-events-none absolute inset-x-3 bottom-24 z-10">
+          {/* 시네마 딤 — 밝은 영상을 가라앉히고 하단 정보의 가독성을 확보한다 */}
+          <div className="pointer-events-none absolute inset-0 z-[5] bg-gradient-to-t from-black/70 via-transparent to-black/10" />
+
+          {/* 정보 오버레이 — 크리에이터·팔로우·제목·조회수·생성일(진행바 위) */}
+          <div className="pointer-events-none absolute inset-x-3 bottom-16 z-10 flex flex-col gap-2">
+            {creator ? (
+              <div className="pointer-events-auto flex items-center gap-2">
+                <Link
+                  href={`/channel/${creator.id}`}
+                  prefetch={false}
+                  className="flex min-w-0 items-center gap-2 transition-opacity hover:opacity-80"
+                  aria-label={`${creator.nickname} ${CLIP_LABEL.channelLink}`}
+                >
+                  <Avatar className="size-8 ring-1 ring-white/30">
+                    <AvatarImage
+                      src={getAvatarImageSrc(creator.photoUrl)}
+                      alt={`${creator.nickname} 프로필`}
+                    />
+                    <AvatarFallback>{getAvatarFallbackText(creator.nickname)}</AvatarFallback>
+                  </Avatar>
+                  <span className="truncate text-sm font-bold text-white drop-shadow-sm">
+                    {creator.nickname}
+                  </span>
+                </Link>
+                {!creator.isOwnChannel ? (
+                  <CreatorFollowingButton
+                    creatorNickname={creator.nickname}
+                    isFollowing={following.isFollowing}
+                    isOwnChannel={creator.isOwnChannel}
+                    isPending={following.isPending}
+                    onClick={following.toggle}
+                  />
+                ) : null}
+              </div>
+            ) : null}
             <p className="line-clamp-2 text-sm font-semibold text-white drop-shadow-sm">
               {currentClip.title}
             </p>
-            {creator && <p className="mt-0.5 text-xs text-white/80">{creator.nickname}</p>}
+            <p className="text-xs text-white/75">
+              조회수 {formatCount(currentClip.viewCount)}
+              {CLIP_LABEL.viewCountSuffix} · {formatRelativeTime(currentClip.createdAt)}
+            </p>
           </div>
 
-          {/* 모바일 정보 패널 — 스테이지 위 오버레이 */}
-          {isInfoOpen && (
-            <ClipInfoPanel
-              clip={currentClip}
-              creator={creator}
-              className="absolute inset-x-2 bottom-2 z-20 md:hidden"
-            />
-          )}
-
-          {/* 모바일 액션 오버레이 */}
-          {renderActions("absolute right-2 bottom-28 z-10 md:hidden")}
+          {/* 모바일 액션 레일 — 우측 세로 가운데(쇼츠 결) */}
+          {renderActions("absolute top-1/2 right-2 z-20 -translate-y-1/2 md:hidden")}
         </div>
 
         {/* 데스크탑 우측 레일 */}
-        {renderActions("hidden self-end pb-2 md:flex")}
-
-        {/* 데스크탑 정보 패널 */}
-        {isInfoOpen && (
-          <ClipInfoPanel clip={currentClip} creator={creator} className="hidden w-72 md:flex" />
-        )}
+        {renderActions("hidden self-center md:flex")}
       </div>
 
       {/* 인접 클립 메타데이터 프리로드 — 전환 시 시작 지연을 줄인다 */}

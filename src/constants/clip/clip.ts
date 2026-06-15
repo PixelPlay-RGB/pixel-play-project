@@ -58,14 +58,14 @@ export const CLIP_LABEL = {
   // 디테일(쇼츠)
   prevClip: "이전 클립",
   nextClip: "다음 클립",
-  infoToggle: "정보",
   share: "공유",
-  unmute: "탭하여 소리 켜기",
   play: "재생",
-  pause: "일시정지",
   volume: "음량",
   channelLink: "채널 보기",
-  clippedBy: "클립한 사람",
+  liveLink: "라이브 보기",
+  ambient: "엠비언트 모드",
+  fullscreen: "전체화면",
+  exitFullscreen: "전체화면 종료",
 } as const;
 
 export const CLIP_SORT_OPTIONS: Array<{ value: ClipSort; label: string }> = [

@@ -1,11 +1,11 @@
 "use client";
-// 클립 mp4 미니 플레이어 — 음소거 자동재생·반복·재생/일시정지·음량·진행바를 제공합니다.
-// 음소거/음량은 캐러셀 이동 간에 유지되도록 부모(ClipShortsView)가 소유한다.
+// 클립 mp4 미니 플레이어 — 음소거 자동재생·반복·진행바와, 일시정지 시 중앙 재생 아이콘
+// (방송 시청 뷰와 동일한 관성)을 제공한다. 음소거/음량은 캐러셀 이동 간 유지되도록 부모
+// (ClipShortsView)가 소유하며, 재생/음량 토글은 우측 레일에서 조작한다.
 
 import { useEffect, useRef, useState } from "react";
-import { Pause, Play, Volume2, VolumeX } from "lucide-react";
+import { Play } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { CLIP_LABEL } from "@/constants/clip/clip";
 import type { LiveClip } from "@/types/clip/clip";
@@ -15,11 +15,9 @@ interface Props {
   muted: boolean;
   // 0~1 — video.volume과 동일 스케일.
   volume: number;
-  onMutedChange: (muted: boolean) => void;
-  onVolumeChange: (volume: number) => void;
 }
 
-export function ClipMiniPlayer({ clip, muted, volume, onMutedChange, onVolumeChange }: Props) {
+export function ClipMiniPlayer({ clip, muted, volume }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(true);
   const [progress, setProgress] = useState(0);
@@ -71,22 +69,20 @@ export function ClipMiniPlayer({ clip, muted, volume, onMutedChange, onVolumeCha
         onLoadedMetadata={(event) => setDuration(event.currentTarget.duration)}
       />
 
-      {/* 음소거 자동재생 안내 — 탭 한 번으로 소리를 켠다(autoplay 정책) */}
-      {muted && (
-        <Button
+      {/* 일시정지 중에는 중앙에 큰 재생 아이콘을 띄운다(방송 시청 뷰와 동일) */}
+      {!isPlaying ? (
+        <button
           type="button"
-          variant="secondary"
-          size="sm"
-          className="absolute top-3 left-1/2 -translate-x-1/2 cursor-pointer rounded-full bg-black/60 text-white backdrop-blur-sm hover:bg-black/70"
-          onClick={() => onMutedChange(false)}
+          aria-label={CLIP_LABEL.play}
+          className="absolute inset-0 z-10 m-auto flex size-20 cursor-pointer items-center justify-center rounded-full bg-black/55 text-white backdrop-blur-sm transition-opacity hover:bg-black/65"
+          onClick={togglePlay}
         >
-          <VolumeX aria-hidden />
-          {CLIP_LABEL.unmute}
-        </Button>
-      )}
+          <Play className="size-9 fill-current" aria-hidden />
+        </button>
+      ) : null}
 
-      {/* 하단 컨트롤 — 진행바 + 재생/음량 */}
-      <div className="absolute inset-x-0 bottom-0 flex flex-col gap-1.5 bg-gradient-to-t from-black/70 to-transparent px-3 pt-8 pb-2.5">
+      {/* 하단 진행바 — 시킹 전용(재생/음량은 우측 레일에서 조작) */}
+      <div className="absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/60 to-transparent px-3 pt-8 pb-2.5">
         <Slider
           value={Math.min(progress, duration || clip.durationSeconds)}
           max={duration || clip.durationSeconds}
@@ -95,39 +91,6 @@ export function ClipMiniPlayer({ clip, muted, volume, onMutedChange, onVolumeCha
           aria-label={CLIP_LABEL.play}
           className="cursor-pointer"
         />
-        <div className="flex items-center gap-1">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="cursor-pointer text-white hover:bg-white/15 hover:text-white"
-            aria-label={isPlaying ? CLIP_LABEL.pause : CLIP_LABEL.play}
-            onClick={togglePlay}
-          >
-            {isPlaying ? <Pause aria-hidden /> : <Play aria-hidden />}
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="cursor-pointer text-white hover:bg-white/15 hover:text-white"
-            aria-label={CLIP_LABEL.volume}
-            onClick={() => onMutedChange(!muted)}
-          >
-            {muted ? <VolumeX aria-hidden /> : <Volume2 aria-hidden />}
-          </Button>
-          <Slider
-            value={muted ? 0 : volume}
-            max={1}
-            step={0.05}
-            onValueChange={(next) => {
-              onVolumeChange(next);
-              onMutedChange(next === 0);
-            }}
-            aria-label={CLIP_LABEL.volume}
-            className="hidden w-20 cursor-pointer sm:flex"
-          />
-        </div>
       </div>
     </div>
   );
