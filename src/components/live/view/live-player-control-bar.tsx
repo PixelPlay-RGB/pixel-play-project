@@ -14,6 +14,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { LivePlayerLiveIndicator } from "@/components/live/view/live-player-live-indicator";
 import { LivePlayerQualityMenu } from "@/components/live/view/live-player-quality-menu";
 import { LivePlayerVolumeControl } from "@/components/live/view/live-player-volume-control";
 import { LIVE_LABEL, LIVE_PLAYER_ICON_BUTTON_CLASS } from "@/constants/live/live";
@@ -106,35 +107,8 @@ export function LivePlayerControlBar({
 
       {/* 컨트롤 아이콘(size-6)과 시각적 무게를 맞추기 위해 text-sm·size-4로 통일한다. */}
       <span className="ml-2 flex items-center gap-2 font-mono text-sm font-bold text-white">
-        {/* LIVE는 실시간 여부 표시 겸 복귀 버튼 — 실시간이면 코랄 점+점멸, 일시정지·지연이면 회색(치지직식). */}
-        <Tooltip>
-          <TooltipTrigger
-            render={
-              <button
-                type="button"
-                aria-label={
-                  isAtLiveEdge ? LIVE_LABEL.playerAtLiveEdge : LIVE_LABEL.playerGoToLiveEdge
-                }
-                className={cn(
-                  "flex cursor-pointer items-center gap-1.5 transition-colors",
-                  isAtLiveEdge ? "text-live" : "text-white/50 hover:text-white/80",
-                )}
-                onClick={onSeekToLive}
-              />
-            }
-          >
-            <span
-              className={cn(
-                "size-2 rounded-full bg-current",
-                isAtLiveEdge && "motion-safe:animate-pulse",
-              )}
-            />
-            {LIVE_LABEL.live}
-          </TooltipTrigger>
-          <TooltipContent>
-            {isAtLiveEdge ? LIVE_LABEL.playerAtLiveEdge : LIVE_LABEL.playerGoToLiveEdge}
-          </TooltipContent>
-        </Tooltip>
+        {/* LIVE 표시 겸 실시간 복귀 버튼 — 컨트롤 바·미니플레이어가 공유하는 인디케이터에 위임한다. */}
+        <LivePlayerLiveIndicator isAtLiveEdge={isAtLiveEdge} onSeekToLive={onSeekToLive} />
         {/* 몰입 모드(극장·전체화면)에선 시간·시청자 수가 상단 오버레이로 이동하므로 하단에선 생략하고,
             모바일에선 비디오 아래 정보 행에 같은 값이 있어 좁은 컨트롤 바를 넘치지 않게 숨긴다. */}
         {!isImmersive ? (

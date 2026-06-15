@@ -15,11 +15,11 @@ import { useIsMobile } from "@/hooks/common/use-mobile";
 import { useLiveBroadcastView } from "@/hooks/live/use-live-broadcast-view";
 import { useLiveFollowAction } from "@/hooks/live/use-live-follow-action";
 import { useLiveElapsed } from "@/hooks/live/use-live-elapsed";
-import { useLiveViewerPresence } from "@/hooks/live/use-live-viewer-presence";
 import { useMoveToLogin } from "@/hooks/live/use-move-to-login";
 import { cn } from "@/lib/utils";
 import { formatCount } from "@/utils/live/live-chat";
 import { useLiveTheaterStore } from "@/stores/live-theater";
+import { useLiveWatchSessionStore } from "@/stores/live-watch-session";
 import { LIVE_LABEL } from "@/constants/live/live";
 
 interface Props {
@@ -38,6 +38,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
 
   const {
     isLoading,
+    isWatchError,
     broadcast,
     lastBroadcast,
     endedElapsedSeconds,
@@ -103,8 +104,43 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     !!broadcast,
   );
 
-  // 방송을 보는 동안 하트비트를 보내 현재 시청자 수를 집계한다(로그인·익명 모두).
-  useLiveViewerPresence(broadcast?.id);
+  // 시청 세션을 루트 미니플레이어 호스트와 공유한다 — 시청자 presence(하트비트)도 호스트가
+  // 세션 기준으로 단독 호출해, 페이지를 떠나도(미니 전환) 퇴장 처리되지 않는다.
+  // 라이브면 최신 스냅샷으로 시작/갱신하고, 종료·오프라인이 확정되면 세션도 끝낸다.
+  // 로딩 중엔 판단을 보류해, 다른 라이브의 미니가 재생 중이면 새 화면 데이터가 올 때까지 유지한다.
+  const startSession = useLiveWatchSessionStore((state) => state.startSession);
+  const endSession = useLiveWatchSessionStore((state) => state.endSession);
+  // 현재 store에 들어있는 세션의 크리에이터 — 오류 시 '이 화면 것'인지 '묵은 다른 방송 것'인지 구분한다.
+  const sessionCreatorId = useLiveWatchSessionStore((state) => state.session?.creatorId);
+  // broadcast 객체는 매 렌더 재생성되므로(map 함수) 원시값만 deps에 두어,
+  // 실제 값이 바뀔 때만 세션을 갱신한다(채팅 수신 등 무관한 렌더마다 재발사 방지).
+  const liveBroadcastId = broadcast?.id;
+  useEffect(() => {
+    if (isAuthLoading || isLoading) return;
+    // 쿼리 오류(재시도 소진)는 '오프라인 확정'이 아니다 — 같은 크리에이터의 일시 장애면 판단을
+    // 보류해 활성 세션(미니 연속성)을 끊지 않는다. 단, store에 남은 세션이 '다른 크리에이터'면
+    // 정리한다: 이 방송 조회가 실패한 채 화면을 떠나면 LiveMiniPlayerHost가 그 이전 방송 PiP를
+    // 되살리기 때문(오프라인 확정 경로와 동일하게 정리). 진짜 오프라인은 쿼리 성공+broadcast 없음.
+    if (isWatchError) {
+      if (sessionCreatorId && sessionCreatorId !== creatorId) endSession();
+      return;
+    }
+    if (!liveBroadcastId) {
+      endSession();
+      return;
+    }
+    startSession({ creatorId, broadcastId: liveBroadcastId, hlsSrc });
+  }, [
+    isAuthLoading,
+    isLoading,
+    isWatchError,
+    liveBroadcastId,
+    creatorId,
+    hlsSrc,
+    sessionCreatorId,
+    startSession,
+    endSession,
+  ]);
 
   // 채팅 입력 섹션의 동기화 높이(px). 송출/종료 프레임이 16:9로 폭을 꽉 채우는 일반 모드에서만 계산하고,
   // 화면이 낮아 자연 높이보다 작아지면 입력바가 자체 콘텐츠 높이로 버틴다(min-height라 안전).
