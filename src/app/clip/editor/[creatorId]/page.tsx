@@ -16,5 +16,11 @@ export default async function ClipEditorPage({
 }) {
   const { creatorId } = await params;
 
-  return <ClipEditorView creatorId={creatorId} />;
+  // 직접 진입(하드 로드) — 풀페이지로 카드를 가운데 띄운다. 라이브에서 진입하면 인터셉팅
+  // 라우트(@modal)가 같은 카드를 모달로 띄운다.
+  return (
+    <div className="flex flex-1 flex-col items-center justify-center px-4 py-8">
+      <ClipEditorView creatorId={creatorId} />
+    </div>
+  );
 }
