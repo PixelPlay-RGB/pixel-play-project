@@ -1,27 +1,24 @@
 "use client";
-// 채널 클립 탭 본문 — 기간 필터(전체/24시간/7일/30일) + 정렬(인기순 기본/최신순) 툴바와
-// 세로 카드 그리드, 더보기 페이지네이션을 렌더링합니다.
+// 채널 클립 탭 본문 — 정렬 Select + 기간 세그먼트 필터 툴바, 세로 카드 그리드,
+// 스크롤 sentinel 기반 무한 로딩, 브랜드 톤 빈 상태를 렌더링합니다.
 
 import { useState } from "react";
 
 import { ClipCard } from "@/components/clip/clip-card";
+import { ClipEmptyState } from "@/components/clip/clip-empty-state";
 import { ClipPillGroup } from "@/components/clip/clip-pill-group";
-import LoadMoreButton from "@/components/common/load-more-button";
+import { ClipSortSelect } from "@/components/clip/clip-sort-select";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  CLIP_CHANNEL_PAGE_SIZE,
-  CLIP_LABEL,
-  CLIP_PERIOD_OPTIONS,
-  CLIP_SORT_OPTIONS,
-} from "@/constants/clip/clip";
+import { CLIP_CHANNEL_PAGE_SIZE, CLIP_LABEL, CLIP_PERIOD_OPTIONS } from "@/constants/clip/clip";
 import { useChannelClips } from "@/hooks/clip/use-channel-clips";
+import { useIntersectionObserver } from "@/hooks/common/use-intersection-observer";
 import type { ClipPeriod, ClipSort } from "@/types/clip/clip";
 
 interface Props {
   creatorId: string;
 }
 
-const GRID_CLASS = "grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5";
+const GRID_CLASS = "grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6";
 
 export function ClipChannelGrid({ creatorId }: Props) {
   const [sort, setSort] = useState<ClipSort>("popular");
@@ -37,6 +34,11 @@ export function ClipChannelGrid({ creatorId }: Props) {
 
   const visibleClips = clips.slice(0, visibleCount);
   const hasMore = clips.length > visibleCount;
+
+  // 스크롤이 sentinel에 닿으면 다음 페이지를 자동으로 펼친다(채널당 최대 30개 — 가벼운 재조회).
+  const sentinelRef = useIntersectionObserver(() => {
+    if (hasMore) setVisibleCount((count) => count + CLIP_CHANNEL_PAGE_SIZE);
+  });
 
   function changeFilter(next: { sort?: ClipSort; period?: ClipPeriod }) {
     // 필터가 바뀌면 첫 페이지부터 다시 본다.
@@ -54,28 +56,24 @@ export function ClipChannelGrid({ creatorId }: Props) {
           onChange={(value) => changeFilter({ period: value })}
           ariaLabel="클립 기간 필터"
         />
-        <ClipPillGroup
-          options={CLIP_SORT_OPTIONS}
-          value={sort}
-          onChange={(value) => changeFilter({ sort: value })}
-          ariaLabel="클립 정렬"
-        />
+        <ClipSortSelect value={sort} onChange={(value) => changeFilter({ sort: value })} />
       </div>
 
       {isLoading ? (
         <div className={GRID_CLASS}>
           {Array.from({ length: CLIP_CHANNEL_PAGE_SIZE }, (_, index) => (
-            <div key={index} className="flex flex-col gap-2">
-              <Skeleton className="aspect-[9/16] w-full rounded-lg" />
-              <Skeleton className="h-4 w-4/5" />
-              <Skeleton className="h-3 w-3/5" />
-            </div>
+            <Skeleton key={index} className="aspect-[9/16] w-full rounded-lg" />
           ))}
         </div>
       ) : visibleClips.length === 0 ? (
-        <p className="text-muted-foreground py-16 text-center text-sm">
-          {period === "all" ? CLIP_LABEL.empty : CLIP_LABEL.emptyPeriod}
-        </p>
+        <ClipEmptyState
+          title={period === "all" ? CLIP_LABEL.empty : CLIP_LABEL.emptyPeriod}
+          description={
+            period === "all"
+              ? "라이브 방송에서 인상적인 순간을 클립으로 남겨보세요."
+              : "다른 기간을 선택하면 더 많은 클립을 볼 수 있어요."
+          }
+        />
       ) : (
         <>
           <div className={GRID_CLASS}>
@@ -83,18 +81,11 @@ export function ClipChannelGrid({ creatorId }: Props) {
               <ClipCard
                 key={clip.id}
                 clip={clip}
-                sizes="(min-width: 1280px) 18vw, (min-width: 640px) 30vw, 45vw"
+                sizes="(min-width: 1280px) 15vw, (min-width: 640px) 24vw, 30vw"
               />
             ))}
           </div>
-
-          {hasMore ? (
-            <LoadMoreButton
-              isLoading={false}
-              onClick={() => setVisibleCount((count) => count + CLIP_CHANNEL_PAGE_SIZE)}
-              label={CLIP_LABEL.showMore}
-            />
-          ) : null}
+          {hasMore ? <div ref={sentinelRef} className="h-8" aria-hidden /> : null}
         </>
       )}
     </div>
