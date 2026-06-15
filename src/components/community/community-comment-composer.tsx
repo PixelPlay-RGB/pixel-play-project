@@ -104,17 +104,22 @@ export default function CommunityCommentComposer({
       </div>
 
       <div className="flex items-center justify-between gap-2">
-        <StickerPicker disabled={createComment.isPending} onStickerSelect={handleStickerSelect} />
+        <span
+          className={cn(
+            "text-muted-foreground text-xs font-semibold tabular-nums",
+            overLimit && "text-destructive",
+          )}
+        >
+          {formatNumber(content.length)} / {formatNumber(COMMUNITY_COMMENT_CONTENT_MAX)}
+        </span>
 
-        <div className="flex items-center gap-3">
-          <span
-            className={cn(
-              "text-muted-foreground text-xs font-semibold tabular-nums",
-              overLimit && "text-destructive",
-            )}
-          >
-            {formatNumber(content.length)} / {formatNumber(COMMUNITY_COMMENT_CONTENT_MAX)}
-          </span>
+        {/* 이모지 피커를 전송 버튼 옆에 둔다. 위로 열면 입력칸을 가려 아래로 연다. */}
+        <div className="flex items-center gap-1">
+          <StickerPicker
+            disabled={createComment.isPending}
+            onStickerSelect={handleStickerSelect}
+            side="bottom"
+          />
           <Button
             type="submit"
             size="icon-lg"

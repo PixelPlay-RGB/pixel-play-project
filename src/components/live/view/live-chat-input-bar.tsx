@@ -276,7 +276,17 @@ export function LiveChatInputBar({
       )}
     >
       {/* 이모지·전송 버튼은 입력 필드 안(오른쪽 trailing)에 넣어 입력칸 좌측을 버튼행과 정렬한다. */}
-      <div className="relative">
+      {/* 테두리·고정 높이(h-11)는 래퍼가 갖고, 안의 contentEditable은 자연 높이로 세로 중앙 정렬한다 —
+          이모지(28px)가 들어가도 래퍼 높이가 늘지 않게(입력칸이 안 커지게) 한다. */}
+      <div
+        className={cn(
+          "border-input relative flex h-11 items-center rounded-md border bg-transparent text-sm",
+          // 포커스는 래퍼에서 받는다(focus-within) — 입력은 안의 contentEditable이 갖는다.
+          "focus-within:border-brand focus-within:ring-brand/30 focus-within:ring-2",
+          !isEditable && !isInputDisabled && "bg-muted/70 cursor-pointer",
+          isInputDisabled && "cursor-not-allowed opacity-60",
+        )}
+      >
         <RichEmojiInput
           value={draftValue}
           onChange={setDraftValue}
@@ -289,13 +299,7 @@ export function LiveChatInputBar({
           disabled={isInputDisabled}
           onClick={handleInputClick}
           ariaLabel={placeholder}
-          className={cn(
-            "border-input min-h-11 w-full rounded-md border bg-transparent px-3 py-2 pr-17 text-sm leading-7",
-            "read-only:bg-muted/70 read-only:cursor-pointer",
-            // 기본 ring(무채색) 대신 브랜드 민트 포커스로 시청 화면의 입력임을 또렷하게 한다.
-            "focus:border-brand focus:ring-brand/30 focus:ring-2",
-            isInputDisabled && "cursor-not-allowed opacity-60",
-          )}
+          className="w-full min-w-0 px-3 pr-17 leading-8 outline-none"
         />
         <div className="absolute inset-y-0 right-1 flex items-center gap-0.5">
           <StickerPicker

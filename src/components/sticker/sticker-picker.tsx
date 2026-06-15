@@ -13,9 +13,11 @@ import { buildStickerToken } from "@/utils/sticker/sticker-token";
 interface Props {
   onStickerSelect: (token: string) => void;
   disabled?: boolean;
+  // 팝오버 열림 방향 — 입력칸이 아래(채팅)면 "top", 위(커뮤니티 작성/댓글)면 "bottom"으로 본문을 안 가린다.
+  side?: "top" | "bottom";
 }
 
-export default function StickerPicker({ onStickerSelect, disabled = false }: Props) {
+export default function StickerPicker({ onStickerSelect, disabled = false, side = "top" }: Props) {
   const [open, setOpen] = useState(false);
 
   function handleSelect(id: string) {
@@ -41,7 +43,7 @@ export default function StickerPicker({ onStickerSelect, disabled = false }: Pro
           </Button>
         )}
       />
-      <PopoverContent align="start" side="top" sideOffset={8} className="w-auto p-2">
+      <PopoverContent align="start" side={side} sideOffset={8} className="w-auto p-2">
         <div className="grid grid-cols-5 gap-1">
           {DEFAULT_STICKERS.map((sticker) => (
             <button
