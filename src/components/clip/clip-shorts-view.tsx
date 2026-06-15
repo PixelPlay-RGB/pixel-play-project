@@ -12,14 +12,14 @@ import {
   ChevronUp,
   Maximize2,
   Minimize2,
-  Radio,
   Share2,
   Sparkles,
+  UserRound,
 } from "lucide-react";
 
 import { ClipMiniPlayer } from "@/components/clip/clip-mini-player";
 import { ClipVolumeControl } from "@/components/clip/clip-volume-control";
-import CreatorFollowingButton from "@/components/following/creator-following-button";
+import CreatorFollowToggle from "@/components/following/creator-follow-toggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { CLIP_LABEL } from "@/constants/clip/clip";
@@ -122,11 +122,12 @@ export function ClipShortsView({ initialClip, creator }: Props) {
       <div className={cn("flex flex-col items-center gap-2.5", className)}>
         {creator ? (
           <Link
-            href={`/live/${creator.id}`}
-            aria-label={CLIP_LABEL.liveLink}
+            href={`/channel/${creator.id}`}
+            prefetch={false}
+            aria-label={CLIP_LABEL.channelLink}
             className={cn(RAIL_BUTTON_CLASS, "bg-black/40")}
           >
-            <Radio className="size-6" aria-hidden />
+            <UserRound className="size-6" aria-hidden />
           </Link>
         ) : null}
         <button
@@ -195,11 +196,14 @@ export function ClipShortsView({ initialClip, creator }: Props) {
       ref={containerRef}
       onWheel={handleWheel}
       className={cn(
-        "bg-background relative overflow-hidden",
+        "relative overflow-hidden transition-colors duration-300",
+        // 엠비언트 ON이면 주변을 극장처럼 검게 가라앉힌다.
+        isAmbient ? "bg-black" : "bg-background",
         isFullscreen ? "h-screen" : "h-chat-content",
       )}
     >
-      {/* 엠비언트 모드: 썸네일을 크게 흐리게 깔아 화면 전체에 은은한 색 글로우를 만든다 */}
+      {/* 엠비언트(영화관) 모드: 썸네일을 흑백·고휘도로 크게 흐리게 깔아 색감 없는 은은한
+          백라이트 글로우만 남긴다(유튜브 엠비언트의 무채색 버전 — 무지개 색 번짐 제거). */}
       {isAmbient && currentClip.thumbnailUrl ? (
         <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
           <Image
@@ -207,7 +211,7 @@ export function ClipShortsView({ initialClip, creator }: Props) {
             alt=""
             fill
             sizes="100vw"
-            className="scale-125 object-cover opacity-40 blur-3xl"
+            className="scale-125 object-cover opacity-25 blur-3xl brightness-125 grayscale"
           />
         </div>
       ) : null}
@@ -239,11 +243,14 @@ export function ClipShortsView({ initialClip, creator }: Props) {
           <div className="pointer-events-none absolute inset-x-3 bottom-16 z-10 flex flex-col gap-2">
             {creator ? (
               <div className="pointer-events-auto flex items-center gap-2">
+                {/* 치지직처럼 — 크리에이터를 누르면 새 탭으로 라이브 시청 페이지를 연다
+                    (지금 보던 클립은 그대로 두고 방송으로 바로 이동). */}
                 <Link
-                  href={`/channel/${creator.id}`}
-                  prefetch={false}
+                  href={`/live/${creator.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="flex min-w-0 items-center gap-2 transition-opacity hover:opacity-80"
-                  aria-label={`${creator.nickname} ${CLIP_LABEL.channelLink}`}
+                  aria-label={`${creator.nickname} ${CLIP_LABEL.liveLink}`}
                 >
                   <Avatar className="size-8 ring-1 ring-white/30">
                     <AvatarImage
@@ -257,12 +264,12 @@ export function ClipShortsView({ initialClip, creator }: Props) {
                   </span>
                 </Link>
                 {!creator.isOwnChannel ? (
-                  <CreatorFollowingButton
+                  <CreatorFollowToggle
                     creatorNickname={creator.nickname}
                     isFollowing={following.isFollowing}
                     isOwnChannel={creator.isOwnChannel}
                     isPending={following.isPending}
-                    onClick={following.toggle}
+                    onToggle={following.toggle}
                   />
                 ) : null}
               </div>
