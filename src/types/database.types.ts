@@ -449,6 +449,54 @@ export type Database = {
           },
         ]
       }
+      creator_subscription: {
+        Row: {
+          created_at: string
+          creator_id: string
+          end_at: string
+          id: string
+          started_at: string
+          status: Database["public"]["Enums"]["creator_subscription_status"]
+          subscriber_id: string
+          total_months: number
+        }
+        Insert: {
+          created_at?: string
+          creator_id: string
+          end_at: string
+          id?: string
+          started_at?: string
+          status?: Database["public"]["Enums"]["creator_subscription_status"]
+          subscriber_id: string
+          total_months?: number
+        }
+        Update: {
+          created_at?: string
+          creator_id?: string
+          end_at?: string
+          id?: string
+          started_at?: string
+          status?: Database["public"]["Enums"]["creator_subscription_status"]
+          subscriber_id?: string
+          total_months?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_subscription_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_subscription_subscriber_id_fkey"
+            columns: ["subscriber_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       donation: {
         Row: {
           amount: number
@@ -1506,6 +1554,7 @@ export type Database = {
       }
     }
     Enums: {
+      creator_subscription_status: "active" | "expired" | "canceled"
       gender: "male" | "female" | "none"
       live_chat_scope: "authenticated" | "follower" | "manager"
       live_message_type: "chat" | "moderation_notice" | "donation"
@@ -1646,6 +1695,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      creator_subscription_status: ["active", "expired", "canceled"],
       gender: ["male", "female", "none"],
       live_chat_scope: ["authenticated", "follower", "manager"],
       live_message_type: ["chat", "moderation_notice", "donation"],
