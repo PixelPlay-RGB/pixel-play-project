@@ -22,7 +22,7 @@ import type { LiveChatMessage } from "@/types/live/live";
 // 닉네임·후원 금액은 metadata에 스냅샷으로 들어 있어 join이 필요 없다(Realtime payload와 동일 경로).
 // user·donation join을 빼야 anon RLS("Anyone can read live messages")만으로 비로그인도 조회된다.
 const LIVE_MESSAGE_SELECT =
-  "id, created_at, sender_id, message_type, content, sender_role, metadata" as const;
+  "id, created_at, sender_id, message_type, content, is_chat_visible, sender_role, metadata" as const;
 const EMPTY_LIVE_MESSAGES: LiveChatMessage[] = [];
 
 export function useLiveMessages(creatorId: string | null | undefined, viewerId?: string) {

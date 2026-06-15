@@ -148,6 +148,9 @@ export interface LiveInteractionNotice {
   participantCount?: number;
   participantNames?: string[];
   resultLabel?: string;
+  rouletteDurationSeconds?: number;
+  rouletteItems?: string[];
+  rouletteRotationKeyframes?: number[];
   status: LiveInteractionNoticeStatus;
   type: LiveInteractionNoticeType;
   winnerNames?: string[];
