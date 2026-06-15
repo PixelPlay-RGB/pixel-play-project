@@ -2,9 +2,9 @@
 // 라이브 시청 메인 화면 — 비디오, 방송 정보, 채팅 패널을 조합합니다.
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "motion/react";
 import { Timer, Users } from "lucide-react";
-import { ClipCreateDialog } from "@/components/clip/clip-create-dialog";
 import { ClipSection } from "@/components/clip/clip-section";
 import { LiveVideoPlayer } from "@/components/live/view/live-video-player";
 import { LiveFullscreenChatOverlay } from "@/components/live/view/live-fullscreen-chat-overlay";
@@ -13,7 +13,6 @@ import { LiveStreamerRow } from "@/components/live/view/live-streamer-row";
 import { LiveChatPanel } from "@/components/live/view/live-chat-panel";
 import { LiveEndedScreen } from "@/components/live/view/live-ended-screen";
 import { LiveLoginPromptDialog } from "@/components/live/view/live-login-prompt-dialog";
-import { useClipCreation } from "@/hooks/clip/use-clip-creation";
 import { useIsMobile } from "@/hooks/common/use-mobile";
 import { useLiveBroadcastView } from "@/hooks/live/use-live-broadcast-view";
 import { useLiveFollowAction } from "@/hooks/live/use-live-follow-action";
@@ -22,6 +21,7 @@ import { useLiveViewerPresence } from "@/hooks/live/use-live-viewer-presence";
 import { useMoveToLogin } from "@/hooks/live/use-move-to-login";
 import { cn } from "@/lib/utils";
 import { formatCount } from "@/utils/live/live-chat";
+import { useClipEditorStore } from "@/stores/clip-editor";
 import { useLiveTheaterStore } from "@/stores/live-theater";
 import { LIVE_LABEL } from "@/constants/live/live";
 
@@ -87,12 +87,10 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
 
   const [isLoginPromptOpen, setIsLoginPromptOpen] = useState(false);
   const [isDesktopChatCollapsed, setIsDesktopChatCollapsed] = useState(false);
-  // 클립 생성 Dialog — 열림 여부와 버튼 클릭 시점의 프레임 스냅샷을 함께 든다.
-  const [clipDialog, setClipDialog] = useState<{
-    open: boolean;
-    snapshotDataUrl: string | null;
-  }>({ open: false, snapshotDataUrl: null });
-  const { createClip, isSubmitting: isClipSubmitting } = useClipCreation(creatorId);
+  const router = useRouter();
+  // 클립 생성은 별도 라우트(/clip/editor)에서 진행한다 — 가위 클릭 시점의 스냅샷·제목을
+  // store로 넘기고 이동한다(형제 라우트라 prop으로 못 잇는다).
+  const setClipHandoff = useClipEditorStore((state) => state.setHandoff);
   // 와이드(극장) 모드는 전역 사이드바(LiveShell)와 공유해야 해 store에 둔다.
   const isTheater = useLiveTheaterStore((state) => state.isWideMode);
   const toggleTheater = useLiveTheaterStore((state) => state.toggleWideMode);
@@ -154,13 +152,18 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     setIsLoginPromptOpen(true);
   }
 
-  // 클립 버튼: 로그인 게이트를 먼저 통과시키고, 스냅샷과 함께 생성 Dialog를 연다.
+  // 클립 버튼: 로그인 게이트를 먼저 통과시키고, 스냅샷·제목을 store로 넘긴 뒤 에디터로 이동한다.
   function handleClipRequest(snapshotDataUrl: string | null) {
     if (!isLoggedIn) {
       openLoginPrompt();
       return;
     }
-    setClipDialog({ open: true, snapshotDataUrl });
+    setClipHandoff({
+      creatorId,
+      snapshotDataUrl,
+      defaultTitle: broadcast?.title ?? "",
+    });
+    router.push(`/clip/editor/${creatorId}`);
   }
 
   function collapseDesktopChat() {
@@ -396,15 +399,6 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
         open={isLoginPromptOpen}
         onOpenChange={setIsLoginPromptOpen}
         onLogin={moveToLogin}
-      />
-
-      <ClipCreateDialog
-        open={clipDialog.open}
-        onOpenChange={(open) => setClipDialog((prev) => ({ ...prev, open }))}
-        snapshotDataUrl={clipDialog.snapshotDataUrl}
-        defaultTitle={broadcast?.title ?? ""}
-        isSubmitting={isClipSubmitting}
-        onSubmit={createClip}
       />
     </>
   );

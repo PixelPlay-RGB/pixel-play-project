@@ -164,7 +164,7 @@ export function LivePlayerControlBar({
                   type="button"
                   size="icon"
                   variant="ghost"
-                  aria-label={CLIP_LABEL.createDialogTitle}
+                  aria-label={CLIP_LABEL.editorTitle}
                   className={LIVE_PLAYER_ICON_BUTTON_CLASS}
                   onClick={onClipClick}
                 />
@@ -172,7 +172,7 @@ export function LivePlayerControlBar({
             >
               <Scissors className="size-6" />
             </TooltipTrigger>
-            <TooltipContent>{CLIP_LABEL.createDialogTitle}</TooltipContent>
+            <TooltipContent>{CLIP_LABEL.editorTitle}</TooltipContent>
           </Tooltip>
         ) : null}
 

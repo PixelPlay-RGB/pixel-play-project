@@ -14,7 +14,7 @@ export function ClipVerticalPreview({ snapshotDataUrl, cropXFraction, className 
   return (
     <div className={cn("flex shrink-0 flex-col items-center gap-1.5", className)}>
       <div
-        className="bg-muted aspect-[9/16] h-full min-h-0 overflow-hidden rounded-lg"
+        className="bg-muted aspect-[9/16] w-full overflow-hidden rounded-lg"
         aria-hidden
         style={
           snapshotDataUrl

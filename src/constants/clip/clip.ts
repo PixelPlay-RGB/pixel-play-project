@@ -18,10 +18,10 @@ export const CLIP_CHANNEL_PAGE_SIZE = 18;
 export const CLIP_SHORTS_LIST_LIMIT = 30;
 
 export const CLIP_LABEL = {
-  // 생성
+  // 생성(에디터)
   create: "클립",
-  createDialogTitle: "클립 만들기",
-  createDialogDescription: "방금 지나간 순간을 세로형 클립으로 저장해요.",
+  editorTitle: "클립 만들기",
+  editorSubtitle: "방금 지나간 순간을 세로형 클립으로 저장해요.",
   cropGuide: "화면을 좌우로 드래그해 잘라낼 위치를 정해요.",
   preview: "미리보기",
   titleLabel: "제목",
@@ -31,6 +31,18 @@ export const CLIP_LABEL = {
   submit: "클립 생성",
   submitting: "요청 중",
   viewClip: "클립 보기",
+  backToLive: "라이브로 돌아가기",
+  goToChannel: "채널로 가기",
+  close: "닫기",
+  retry: "다시 시도",
+  processingTitle: "클립을 만들고 있어요",
+  processingDescription: "잠시만 기다리면 완성된 클립을 보여드릴게요.",
+  readyTitle: "클립이 완성됐어요!",
+  readyDescription: "지금 바로 확인하거나 라이브로 돌아갈 수 있어요.",
+  failedTitle: "클립 생성에 실패했어요",
+  failedDescription: "방송 상태를 확인하고 잠시 후 다시 시도해 주세요.",
+  directEntryTitle: "라이브에서 클립을 만들 수 있어요",
+  directEntryDescription: "방송을 보다가 클립 버튼을 누르면 이 화면이 열려요.",
   loginRequiredTitle: "로그인 필요",
   loginRequiredDescription: "클립을 만들려면 로그인이 필요해요.",
   // 목록(시청 페이지 섹션·채널 탭)

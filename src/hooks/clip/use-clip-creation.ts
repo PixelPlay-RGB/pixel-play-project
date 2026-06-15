@@ -1,6 +1,7 @@
 "use client";
 // 클립 생성 요청과 완료 추적을 담당합니다 — 생성 액션 호출 후 해당 행의 Realtime
-// UPDATE(pending→ready/failed)를 구독해 완료/실패 토스트를 띄웁니다.
+// UPDATE(pending→ready/failed)를 구독해 상태를 갱신하고 토스트를 띄웁니다. 에디터 화면이
+// status로 인라인 단계(요청 중·생성 중·완료·실패)를 그린다.
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -12,6 +13,9 @@ import { CLIP_LABEL } from "@/constants/clip/clip";
 import { QUERY_KEYS } from "@/constants/common/query-keys";
 import { toastAppError, toastAppInfo, toastAppSuccess } from "@/utils/common/toast-message";
 
+// idle: 입력 중 / submitting: 액션 전송 중 / processing: 워커 대기 / ready·failed: 결판.
+export type ClipCreationStatus = "idle" | "submitting" | "processing" | "ready" | "failed";
+
 // 워커 경로(클레임 25초 컷 + 추출·업로드)가 전부 막혀도 결판이 나는 안전망 시한.
 const CLIP_RESULT_TIMEOUT_MS = 90_000;
 
@@ -19,30 +23,39 @@ export function useClipCreation(creatorId: string) {
   const supabase = useMemo(() => createClient(), []);
   const queryClient = useQueryClient();
   const router = useRouter();
+  const [status, setStatus] = useState<ClipCreationStatus>("idle");
   const [pendingClipId, setPendingClipId] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [readyClipId, setReadyClipId] = useState<string | null>(null);
 
   async function createClip(input: CreateLiveClipInput): Promise<boolean> {
-    if (isSubmitting) return false;
-    setIsSubmitting(true);
+    if (status === "submitting" || status === "processing") return false;
+    setStatus("submitting");
     try {
       const result = await createLiveClipAction(creatorId, input);
 
       if (!result.success || !result.data) {
         toastAppError(result.code ?? APP_MESSAGE_CODE.error.clip.createFailed);
+        // 검증·레이트리밋 실패는 입력 화면을 유지해 바로 다시 시도하게 한다.
+        setStatus("idle");
         return false;
       }
 
       toastAppInfo(APP_MESSAGE_CODE.info.clip.processing);
       setPendingClipId(result.data.clipId);
+      setStatus("processing");
       return true;
     } catch (error) {
       console.error("클립 생성 요청 실패", error);
       toastAppError(APP_MESSAGE_CODE.error.clip.createFailed);
+      setStatus("idle");
       return false;
-    } finally {
-      setIsSubmitting(false);
     }
+  }
+
+  function reset() {
+    setStatus("idle");
+    setPendingClipId(null);
+    setReadyClipId(null);
   }
 
   // 본인 클립은 RLS("Clippers can read own live clips")로 상태 무관 조회·구독된다.
@@ -52,11 +65,13 @@ export function useClipCreation(creatorId: string) {
     const clipId = pendingClipId;
     let settled = false;
 
-    const settle = (status: "ready" | "failed") => {
+    const settle = (next: "ready" | "failed") => {
       if (settled) return;
       settled = true;
 
-      if (status === "ready") {
+      if (next === "ready") {
+        setReadyClipId(clipId);
+        setStatus("ready");
         toastAppSuccess(APP_MESSAGE_CODE.success.clip.created, undefined, {
           label: CLIP_LABEL.viewClip,
           onClick: () => router.push(`/clip/${clipId}`),
@@ -64,6 +79,7 @@ export function useClipCreation(creatorId: string) {
         // 시청 페이지 섹션·채널 탭 목록에 새 클립이 바로 보이게 한다.
         void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.clip.channelAll(creatorId) });
       } else {
+        setStatus("failed");
         toastAppError(APP_MESSAGE_CODE.error.clip.generationFailed);
       }
 
@@ -93,19 +109,19 @@ export function useClipCreation(creatorId: string) {
           filter: `id=eq.${clipId}`,
         },
         (payload) => {
-          const status =
+          const next =
             payload.new && typeof payload.new === "object"
               ? (payload.new as { status?: string }).status
               : undefined;
 
-          if (status === "ready" || status === "failed") {
-            settle(status);
+          if (next === "ready" || next === "failed") {
+            settle(next);
           }
         },
       )
-      .subscribe((status) => {
+      .subscribe((subscribeStatus) => {
         // 구독이 붙기 전에 워커가 이미 끝냈을 수 있다 — 단건 확인으로 레이스를 봉합한다.
-        if (status === "SUBSCRIBED") {
+        if (subscribeStatus === "SUBSCRIBED") {
           void checkOnce();
         }
       });
@@ -125,7 +141,8 @@ export function useClipCreation(creatorId: string) {
 
   return {
     createClip,
-    isSubmitting,
-    isWaitingResult: !!pendingClipId,
+    status,
+    readyClipId,
+    reset,
   };
 }
