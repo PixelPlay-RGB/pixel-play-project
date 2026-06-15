@@ -1,10 +1,11 @@
 // 라이브 구독 뱃지의 방송인별 storage 경로와 public URL을 생성합니다.
 
 const LIVE_SUBSCRIPTION_BADGE_BUCKET = "user-media";
+const LIVE_DEFAULT_SUBSCRIPTION_BADGE_VERSION = "20260615-fixed-slots-v1";
 export const LIVE_SUBSCRIPTION_BADGE_VERSION_FILE = ".version";
 export const LIVE_SUBSCRIPTION_BADGE_FIXED_MONTHS = [1, 2, 3, 6, 9, 12, 18] as const;
 export const LIVE_SUBSCRIPTION_BADGE_MAX_MONTH = 120;
-export const LIVE_SUBSCRIPTION_BADGE_MAX_DEFAULT_MONTH = 12;
+export const LIVE_SUBSCRIPTION_BADGE_MAX_DEFAULT_MONTH = 18;
 export const LIVE_SUBSCRIPTION_BADGE_MIN_CUSTOM_MONTH = 19;
 
 export interface LiveSubscriptionBadgeAssetInfo {
@@ -57,11 +58,12 @@ export function getLiveSubscriptionBadgeStoragePathByMonth(creatorId: string, mo
 }
 
 export function getLiveDefaultSubscriptionBadgeSrc(totalMonths?: number | null) {
-  const safeMonth =
-    Number.isFinite(totalMonths) && totalMonths ? Math.floor(Number(totalMonths)) : 1;
-  const month = Math.min(Math.max(safeMonth, 1), LIVE_SUBSCRIPTION_BADGE_MAX_DEFAULT_MONTH);
+  const month = Math.min(
+    resolveLiveSubscriptionBadgeMonth(totalMonths),
+    LIVE_SUBSCRIPTION_BADGE_MAX_DEFAULT_MONTH,
+  );
 
-  return `/subscription-badges/${month}.png`;
+  return `/subscription-badges/${month}.png?v=${LIVE_DEFAULT_SUBSCRIPTION_BADGE_VERSION}`;
 }
 
 function readSubscriptionBadgeFileMonth(name: string) {

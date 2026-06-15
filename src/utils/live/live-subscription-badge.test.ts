@@ -73,8 +73,20 @@ test("readLiveSubscriptionBadgeAssetInfo keeps custom months and newest storage 
 });
 
 test("getLiveDefaultSubscriptionBadgeSrc builds the bundled fallback badge URL", () => {
-  assert.equal(getLiveDefaultSubscriptionBadgeSrc(3), "/subscription-badges/3.png");
-  assert.equal(getLiveDefaultSubscriptionBadgeSrc(4), "/subscription-badges/4.png");
-  assert.equal(getLiveDefaultSubscriptionBadgeSrc(11), "/subscription-badges/11.png");
-  assert.equal(getLiveDefaultSubscriptionBadgeSrc(99), "/subscription-badges/12.png");
+  assert.equal(
+    getLiveDefaultSubscriptionBadgeSrc(3),
+    "/subscription-badges/3.png?v=20260615-fixed-slots-v1",
+  );
+  assert.equal(
+    getLiveDefaultSubscriptionBadgeSrc(4),
+    "/subscription-badges/3.png?v=20260615-fixed-slots-v1",
+  );
+  assert.equal(
+    getLiveDefaultSubscriptionBadgeSrc(11),
+    "/subscription-badges/9.png?v=20260615-fixed-slots-v1",
+  );
+  assert.equal(
+    getLiveDefaultSubscriptionBadgeSrc(99),
+    "/subscription-badges/18.png?v=20260615-fixed-slots-v1",
+  );
 });
