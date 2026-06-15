@@ -1,5 +1,7 @@
-// 클립 기간 필터(전체/24시간/7일/30일) 세그먼트 컨트롤 — bg-muted 트랙 위에서
-// 활성 항목만 떠오르는(bg-background+shadow) iOS풍 토글. 단순 chip보다 묶음이 또렷하다.
+// 클립 기간 필터(전체/24시간/7일/30일) 세그먼트 컨트롤 — 앱 공용 Tabs 결과 동일하게
+// bg-muted 트랙 + 브랜드 채움(active)으로 맞춘다. 모든 칸은 grid로 동일 너비를 갖는다.
+
+import type { CSSProperties } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -20,7 +22,9 @@ export function ClipPillGroup<T extends string>({ options, value, onChange, aria
     <div
       role="group"
       aria-label={ariaLabel}
-      className="bg-muted/70 inline-flex shrink-0 items-center gap-0.5 rounded-full p-0.5"
+      // 동일 너비 칸: grid + 옵션 수만큼 1fr. 트랙 radius(rounded-lg) 안에 칸 radius(rounded-md)를 중첩.
+      className="bg-muted grid w-full shrink-0 items-center gap-0.5 rounded-lg p-[3px] sm:w-auto"
+      style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` } as CSSProperties}
     >
       {options.map((option) => {
         const isActive = option.value === value;
@@ -32,9 +36,9 @@ export function ClipPillGroup<T extends string>({ options, value, onChange, aria
             aria-pressed={isActive}
             onClick={() => onChange(option.value)}
             className={cn(
-              "focus-visible:ring-ring inline-flex h-7 shrink-0 cursor-pointer items-center rounded-full px-3 text-xs font-bold transition-all outline-none focus-visible:ring-2",
+              "focus-visible:ring-ring inline-flex h-7 w-full shrink-0 cursor-pointer items-center justify-center rounded-md px-2 text-xs font-bold whitespace-nowrap transition-all outline-none focus-visible:ring-2 sm:px-4",
               isActive
-                ? "bg-background text-foreground shadow-sm"
+                ? "bg-brand text-brand-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground",
             )}
           >

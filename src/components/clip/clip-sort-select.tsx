@@ -27,7 +27,7 @@ export function ClipSortSelect({ value, onChange, className }: Props) {
       items={CLIP_SORT_OPTIONS}
       onValueChange={(next) => onChange(next as ClipSort)}
     >
-      <SelectTrigger aria-label="클립 정렬" className={cn("h-8 min-w-24 rounded-full", className)}>
+      <SelectTrigger aria-label="클립 정렬" className={cn("h-8 min-w-24 rounded-lg", className)}>
         <SelectValue />
         <SelectIcon />
       </SelectTrigger>
