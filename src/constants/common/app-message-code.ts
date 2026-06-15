@@ -53,6 +53,7 @@ export const APP_MESSAGE_CODE = {
     clip: {
       created: "success.clip.created",
       urlCopied: "success.clip.urlCopied",
+      deleted: "success.clip.deleted",
     },
     notification: {
       allDeleted: "success.notification.allDeleted",
@@ -189,6 +190,7 @@ export const APP_MESSAGE_CODE = {
       noBroadcast: "error.clip.noBroadcast",
       generationFailed: "error.clip.generationFailed",
       loadFailed: "error.clip.loadFailed",
+      deleteFailed: "error.clip.deleteFailed",
     },
     supabase: {
       permissionDenied: "error.supabase.permissionDenied",

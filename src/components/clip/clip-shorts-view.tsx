@@ -1,20 +1,33 @@
 "use client";
-// 클립 디테일(유튜브 쇼츠 스타일) — 세로 영상 풀하이트 + 위/아래·휠 캐러셀(Motion 세로
-// 슬라이드). 영상 우상단에 독립 음량 컨트롤(YT 쇼츠 결), 우측에 액션 레일(공유·엠비언트·
-// 전체화면·이전/다음), 하단에 크리에이터(아바타=요약 Popover)·제목·생성일 오버레이.
-// 엠비언트(영화관) 모드는 기본 ON — 썸네일을 흑백·고휘도로 흐리게 깐 무채색 백라이트 글로우.
+// 클립 디테일(유튜브 쇼츠 스타일) — 세로 영상 풀하이트 + 위/아래·휠 캐러셀(Motion 세로 슬라이드).
+// 우측 레일: 맨 위 음량(항상 보이는 인디케이터), 아래로 공유·삭제·엠비언트·전체화면·이전/다음.
+// 하단에 크리에이터(아바타=요약 Popover)·제목·생성일 오버레이. 배경은 항상 어두운 극장(라이트
+// 모드 대비) + 엠비언트 ON 시 재생 영상을 저해상도 canvas로 샘플링한 유튜브식 컬러 글로우.
 
 import { useCallback, useEffect, useRef, useState, type ReactNode, type WheelEvent } from "react";
+import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { ChevronDown, ChevronUp, Maximize2, Minimize2, Share2, Sparkles } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronUp,
+  Maximize2,
+  Minimize2,
+  Share2,
+  Sparkles,
+  Trash2,
+} from "lucide-react";
 
+import { deleteLiveClipAction } from "@/actions/clip/clip";
 import { ClipAmbientGlow } from "@/components/clip/clip-ambient-glow";
 import { ClipMiniPlayer, type ClipMiniPlayerHandle } from "@/components/clip/clip-mini-player";
 import { ClipVolumeControl } from "@/components/clip/clip-volume-control";
+import DeleteConfirmDialog from "@/components/common/delete-confirm-dialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import CreatorAvatarPopover from "@/components/creator/creator-avatar-popover";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { CLIP_LABEL } from "@/constants/clip/clip";
+import { QUERY_KEYS } from "@/constants/common/query-keys";
 import { useClipShorts, type ClipShortsDirection } from "@/hooks/clip/use-clip-shorts";
 import { useFullscreen } from "@/hooks/live/use-fullscreen";
 import { cn } from "@/lib/utils";
@@ -37,6 +50,8 @@ export interface ClipShortsCreator {
 interface Props {
   initialClip: LiveClip;
   creator: ClipShortsCreator | null;
+  // 로그인 뷰어 id(없으면 null) — 클립 제작자(clipper) 판별용. 채널 주인은 creator.isOwnChannel로도 알 수 있다.
+  viewerId: string | null;
 }
 
 // 다음(1)은 아래에서 올라오고, 이전(-1)은 위에서 내려온다 — 쇼츠 스와이프 방향과 동일.
@@ -60,6 +75,7 @@ function RailButton({
   disabled,
   pressed,
   active,
+  className,
   children,
 }: {
   label: string;
@@ -67,6 +83,7 @@ function RailButton({
   disabled?: boolean;
   pressed?: boolean;
   active?: boolean;
+  className?: string;
   children: ReactNode;
 }) {
   return (
@@ -80,7 +97,7 @@ function RailButton({
             disabled={disabled}
             whileTap={{ scale: 0.9 }}
             onClick={onClick}
-            className={cn(RAIL_BUTTON_CLASS, active ? RAIL_ACTIVE_CLASS : "bg-black/40")}
+            className={cn(RAIL_BUTTON_CLASS, active ? RAIL_ACTIVE_CLASS : "bg-black/40", className)}
           >
             {children}
           </motion.button>
@@ -91,14 +108,18 @@ function RailButton({
   );
 }
 
-export function ClipShortsView({ initialClip, creator }: Props) {
+export function ClipShortsView({ initialClip, creator, viewerId }: Props) {
   const { currentClip, direction, prevClip, nextClip, goPrev, goNext } = useClipShorts(initialClip);
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const prefersReducedMotion = useReducedMotion();
   // 음소거/음량은 클립 전환 간 유지한다(한 번 소리를 켜면 다음 클립도 켜진 채 재생).
   const [muted, setMuted] = useState(true);
   const [volume, setVolume] = useState(0.8);
   // 엠비언트(영화관) 모드 기본 ON.
   const [isAmbient, setIsAmbient] = useState(true);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const { containerRef, isFullscreen, toggleFullscreen } = useFullscreen<HTMLDivElement>();
   // 캐러셀 전환 중 이전 플레이어가 언마운트되며 ref를 null로 만들지 않게, handle이 있을 때만
   // 저장하는 콜백 ref를 쓴다(공유 ref면 새 플레이어 mount 뒤 옛 플레이어 unmount가 null로 덮어씀).
@@ -175,6 +196,36 @@ export function ClipShortsView({ initialClip, creator }: Props) {
     }
   }
 
+  // 채널 주인 또는 클립 제작자만 삭제할 수 있다(서버 RPC가 최종 검증).
+  const canDelete =
+    !!viewerId && (viewerId === currentClip.clipperUserId || viewerId === currentClip.creatorId);
+
+  async function handleDeleteClip() {
+    if (deleting) return;
+    setDeleting(true);
+    const result = await deleteLiveClipAction(currentClip.id);
+
+    if (result.success) {
+      const creatorId = currentClip.creatorId;
+      toastAppSuccess(APP_MESSAGE_CODE.success.clip.deleted);
+      setDeleteOpen(false);
+      // 삭제한 클립에서 벗어난다 — 인접 클립으로 이동, 둘 다 없으면 채널 클립 탭으로.
+      if (nextClip) {
+        goNext();
+      } else if (prevClip) {
+        goPrev();
+      } else {
+        router.push(`/channel/${creatorId}/clip`);
+      }
+      // 목록 캐시에서 삭제된 클립을 치운다(채널 클립 전 쿼리를 prefix로 무효화).
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.clip.channelAll(creatorId) });
+    } else {
+      toastAppError(result.code ?? APP_MESSAGE_CODE.error.clip.deleteFailed);
+    }
+
+    setDeleting(false);
+  }
+
   // 데스크탑 우측 레일과 모바일 오버레이가 같은 버튼 구성을 공유한다. 음량은 클립 최상단에 고정하고
   // (치지직 결), 나머지 액션은 아래로 내려 justify-between으로 위아래로 벌린다.
   function renderActions(className: string) {
@@ -201,6 +252,15 @@ export function ClipShortsView({ initialClip, creator }: Props) {
           <RailButton label={CLIP_LABEL.share} onClick={copyClipLink}>
             <Share2 className="size-6" aria-hidden />
           </RailButton>
+          {canDelete ? (
+            <RailButton
+              label={CLIP_LABEL.delete}
+              onClick={() => setDeleteOpen(true)}
+              className="text-red-300 hover:text-red-200"
+            >
+              <Trash2 className="size-6" aria-hidden />
+            </RailButton>
+          ) : null}
           <RailButton
             label={CLIP_LABEL.ambient}
             pressed={isAmbient}
@@ -340,6 +400,16 @@ export function ClipShortsView({ initialClip, creator }: Props) {
           />
         ) : null,
       )}
+
+      <DeleteConfirmDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        title={CLIP_LABEL.deleteTitle}
+        description={CLIP_LABEL.deleteDescription}
+        isPending={deleting}
+        onConfirm={() => void handleDeleteClip()}
+        confirmLabel={CLIP_LABEL.delete}
+      />
     </div>
   );
 }

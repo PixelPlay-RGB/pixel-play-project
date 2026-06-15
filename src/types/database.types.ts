@@ -1395,6 +1395,10 @@ export type Database = {
         Args: { p_actor_user_id: string; p_post_id: string }
         Returns: string
       }
+      delete_live_clip: {
+        Args: { p_actor_user_id: string; p_clip_id: string }
+        Returns: Json
+      }
       delete_notification: {
         Args: { p_actor_user_id: string; p_notification_id: string }
         Returns: undefined

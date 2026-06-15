@@ -5,6 +5,7 @@
 import { cookies } from "next/headers";
 
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
+import { USER_MEDIA_BUCKET } from "@/constants/common/storage";
 import { createWriteClientForAction } from "@/actions/common/admin-client-action";
 import { getAuthenticatedActorId } from "@/actions/common/authenticated-actor";
 import {
@@ -161,4 +162,68 @@ export async function incrementLiveClipViewCountAction(clipId: string): Promise<
   if (error) {
     console.error("클립 조회수 증가 RPC 실패", error);
   }
+}
+
+// delete_live_clip의 jsonb 응답({ storagePath, thumbnailPath })을 정규화한다.
+function normalizeDeleteLiveClipResult(data: unknown): {
+  storagePath: string | null;
+  thumbnailPath: string | null;
+} {
+  if (!isRecord(data)) return { storagePath: null, thumbnailPath: null };
+  return {
+    storagePath: typeof data.storagePath === "string" ? data.storagePath : null,
+    thumbnailPath: typeof data.thumbnailPath === "string" ? data.thumbnailPath : null,
+  };
+}
+
+// 클립 삭제 — 채널 주인(creator) 또는 클립 제작자(clipper)만 가능(RPC가 sqlstate로 권한 검증).
+// 성공 시 Storage의 mp4·jpg도 함께 제거한다(행은 이미 지워졌으므로 정리가 실패해도 성공으로 본다).
+export async function deleteLiveClipAction(clipId: string): Promise<AppActionResult<null>> {
+  if (!clipId || !isUuid(clipId)) {
+    return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
+  }
+
+  const actor = await getAuthenticatedActorId({
+    logLabel: "클립 삭제 중 인증 사용자 조회 실패",
+  });
+
+  if (!actor.success) {
+    return { success: false, code: actor.result.code };
+  }
+
+  const client = await createWriteClientForAction<null>(
+    "클립 삭제 Admin Client 생성 실패",
+    APP_MESSAGE_CODE.error.clip.deleteFailed,
+  );
+
+  if (!client.success) {
+    return client.result;
+  }
+
+  const { data, error } = await client.supabase.rpc("delete_live_clip", {
+    p_actor_user_id: actor.userId,
+    p_clip_id: clipId,
+  });
+
+  if (error) {
+    console.error("클립 삭제 RPC 실패", error);
+    return { success: false, code: APP_MESSAGE_CODE.error.clip.deleteFailed };
+  }
+
+  const { storagePath, thumbnailPath } = normalizeDeleteLiveClipResult(data);
+  const objectsToRemove = [storagePath, thumbnailPath].filter(
+    (path): path is string => typeof path === "string" && path.length > 0,
+  );
+
+  if (objectsToRemove.length > 0) {
+    const { error: removeError } = await client.supabase.storage
+      .from(USER_MEDIA_BUCKET)
+      .remove(objectsToRemove);
+
+    if (removeError) {
+      console.error("클립 Storage 정리 실패", removeError);
+    }
+  }
+
+  return { success: true, data: null };
 }

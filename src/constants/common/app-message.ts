@@ -135,6 +135,10 @@ export const APP_MESSAGE = {
         title: "링크 복사 완료",
         description: "클립 링크 복사가 완료되었습니다.",
       },
+      deleted: {
+        title: "클립 삭제 완료",
+        description: "클립을 삭제했어요.",
+      },
     },
     notification: {
       allDeleted: {
@@ -566,6 +570,10 @@ export const APP_MESSAGE = {
       },
       loadFailed: {
         title: "클립 불러오기 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      deleteFailed: {
+        title: "클립 삭제 실패",
         description: "잠시 후 다시 시도해주세요.",
       },
     },
