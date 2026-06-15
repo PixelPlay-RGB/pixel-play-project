@@ -22,6 +22,7 @@ import type {
 interface Props {
   creatorId: string;
   messages: LiveChatMessage[];
+  subscriptionBadgeCustomMonths?: number[];
   donations: LiveDonation[];
   polls: LivePoll[];
   interactionNotices?: LiveInteractionNotice[];
@@ -72,6 +73,7 @@ interface Props {
 export function LiveChatBody({
   creatorId,
   messages,
+  subscriptionBadgeCustomMonths,
   donations,
   polls,
   interactionNotices,
@@ -129,6 +131,7 @@ export function LiveChatBody({
           <LiveChatMessageList
             creatorId={creatorId}
             messages={messages}
+            subscriptionBadgeCustomMonths={subscriptionBadgeCustomMonths}
             cleanbotEnabled={cleanbotEnabled}
             topInsetPx={bannerHeight}
             scrollRef={chatScrollRef}

@@ -302,6 +302,7 @@ export function useLiveBroadcastView(creatorId: string) {
     isWalletError,
     donationEnabled,
     donationMinAmount,
+    subscriptionBadgeCustomMonths: watchData?.subscriptionBadgeCustomMonths ?? [],
     votePoll,
     joinDraw,
     sendDonation,

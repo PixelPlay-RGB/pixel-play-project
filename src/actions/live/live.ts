@@ -4,10 +4,12 @@
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { createWriteClientForAction } from "@/actions/common/admin-client-action";
 import { getAuthenticatedActorId } from "@/actions/common/authenticated-actor";
+import { USER_MEDIA_BUCKET } from "@/constants/common/storage";
 import {
   LIVE_CHAT_MESSAGE_MAX_LENGTH,
   LIVE_DONATION_MESSAGE_MAX_LENGTH,
 } from "@/constants/live/live";
+import { createAdminClient } from "@/lib/supabase/admin-client";
 import type { AppActionResult } from "@/types/common/action";
 import type { Json } from "@/types/database.types";
 import type {
@@ -23,6 +25,10 @@ import {
 } from "@/utils/common/app-message";
 import { isRecord } from "@/utils/common/json";
 import { isUuid } from "@/utils/common/uuid";
+import {
+  LIVE_SUBSCRIPTION_BADGE_MAX_MONTH,
+  LIVE_SUBSCRIPTION_BADGE_MIN_CUSTOM_MONTH,
+} from "@/utils/live/live-subscription-badge";
 
 // send_live_message_v2의 jsonb 응답({ messageId, moderated })을 앱 타입으로 정규화한다.
 // 금칙어로 가려진 경우 messageId는 null, moderated는 true다.
@@ -81,6 +87,18 @@ function normalizeCreatorSubscriptionResult(data: unknown): CreatorSubscriptionA
 }
 
 const LIVE_DRAW_PARTICIPATION_SOURCE = "live_draw_participation";
+
+function readLiveSubscriptionBadgeMonths(files: { name: string }[] | null) {
+  return (files ?? [])
+    .map((file) => Number(file.name.replace(/\.png$/i, "")))
+    .filter(
+      (month) =>
+        Number.isInteger(month) &&
+        month >= LIVE_SUBSCRIPTION_BADGE_MIN_CUSTOM_MONTH &&
+        month <= LIVE_SUBSCRIPTION_BADGE_MAX_MONTH,
+    )
+    .sort((a, b) => a - b);
+}
 
 interface JoinLiveDrawInput {
   broadcastId: string;
@@ -193,6 +211,29 @@ export async function subscribeCreatorAction({
     code: APP_MESSAGE_CODE.success.live.subscribed,
     data: result,
   };
+}
+
+export async function getLiveSubscriptionBadgeMonthsAction(
+  creatorId: string,
+): Promise<AppActionResult<number[]>> {
+  if (!creatorId || !isUuid(creatorId)) {
+    return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
+  }
+
+  const supabase = createAdminClient();
+  const { data, error } = await supabase.storage
+    .from(USER_MEDIA_BUCKET)
+    .list(`${creatorId}/subscription`, {
+      limit: 120,
+      sortBy: { column: "name", order: "asc" },
+    });
+
+  if (error) {
+    console.error("라이브 구독 배지 목록 조회 실패", error);
+    return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
+  }
+
+  return { success: true, data: readLiveSubscriptionBadgeMonths(data ?? null) };
 }
 
 export async function voteLivePollAction(pollId: string, optionId: string): Promise<boolean> {

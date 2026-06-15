@@ -15,6 +15,7 @@ import { useState } from "react";
 interface Props {
   creatorId: string;
   totalMonths?: number | null;
+  customMonths?: number[];
   size?: "sm" | "lg";
   withTooltip?: boolean;
   className?: string;
@@ -23,13 +24,14 @@ interface Props {
 export function LiveSubscriptionBadge({
   creatorId,
   totalMonths,
+  customMonths = [],
   size = "sm",
   withTooltip = false,
   className,
 }: Props) {
-  const month = resolveLiveSubscriptionBadgeMonth(totalMonths);
+  const month = resolveLiveSubscriptionBadgeMonth(totalMonths, customMonths);
   const label = `${LIVE_LABEL.subscriberBadge} ${month}개월`;
-  const storageSrc = getLiveSubscriptionBadgePublicUrl(creatorId, month);
+  const storageSrc = getLiveSubscriptionBadgePublicUrl(creatorId, month, customMonths);
   const fallbackSrc = getLiveDefaultSubscriptionBadgeSrc(month);
   const [failedStorageSrc, setFailedStorageSrc] = useState<string | null>(null);
   const imageSrc = failedStorageSrc === storageSrc ? fallbackSrc : storageSrc;

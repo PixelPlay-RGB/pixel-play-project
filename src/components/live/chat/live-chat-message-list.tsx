@@ -20,6 +20,7 @@ const ROW_GAP = 12;
 interface Props {
   creatorId: string;
   messages: LiveChatMessage[];
+  subscriptionBadgeCustomMonths?: number[];
   // 클린봇 토글 상태. ON이면 비속어로 걸린 메시지를 가린다. 기본 ON.
   cleanbotEnabled?: boolean;
   // 후원 랭킹 배너(absolute 오버레이)가 덮는 실측 높이(px). 접고 펼칠 때마다 호출부가 갱신해 넘긴다.
@@ -31,6 +32,7 @@ interface Props {
 export function LiveChatMessageList({
   creatorId,
   messages,
+  subscriptionBadgeCustomMonths = [],
   cleanbotEnabled = true,
   topInsetPx = 0,
   scrollRef,
@@ -103,6 +105,7 @@ export function LiveChatMessageList({
               <MessageItem
                 creatorId={creatorId}
                 message={messages[item.index - 1]}
+                subscriptionBadgeCustomMonths={subscriptionBadgeCustomMonths}
                 cleanbotEnabled={cleanbotEnabled}
               />
             )}
@@ -116,6 +119,7 @@ export function LiveChatMessageList({
 interface MessageItemProps {
   creatorId: string;
   message: LiveChatMessage;
+  subscriptionBadgeCustomMonths: number[];
   cleanbotEnabled: boolean;
 }
 
@@ -124,6 +128,7 @@ interface MessageItemProps {
 const MessageItem = memo(function MessageItem({
   creatorId,
   message,
+  subscriptionBadgeCustomMonths,
   cleanbotEnabled,
 }: MessageItemProps) {
   if (message.type === "system") {
@@ -166,16 +171,25 @@ const MessageItem = memo(function MessageItem({
   // 클린봇에 걸린 메시지: 토글 ON이면 닉네임·마크는 그대로 두고 본문만 안내 문구로 가린다.
   const isMasked = !!message.isCleanbotFlagged && cleanbotEnabled;
 
-  return <TextMessage creatorId={creatorId} message={message} isMasked={isMasked} />;
+  return (
+    <TextMessage
+      creatorId={creatorId}
+      message={message}
+      subscriptionBadgeCustomMonths={subscriptionBadgeCustomMonths}
+      isMasked={isMasked}
+    />
+  );
 });
 
 function TextMessage({
   creatorId,
   message,
+  subscriptionBadgeCustomMonths,
   isMasked,
 }: {
   creatorId: string;
   message: LiveChatMessage;
+  subscriptionBadgeCustomMonths: number[];
   isMasked: boolean;
 }) {
   // 역할 마크는 DB가 전송 시점에 스냅샷한 sender_role을 그대로 쓴다(viewer는 마크 없음).
@@ -203,6 +217,7 @@ function TextMessage({
             <LiveSubscriptionBadge
               creatorId={creatorId}
               totalMonths={message.subscriptionTotalMonths}
+              customMonths={subscriptionBadgeCustomMonths}
               withTooltip
             />
           ) : null}
@@ -211,6 +226,7 @@ function TextMessage({
         <LiveSubscriptionBadge
           creatorId={creatorId}
           totalMonths={message.subscriptionTotalMonths}
+          customMonths={subscriptionBadgeCustomMonths}
           withTooltip
           className="mr-1.5"
         />

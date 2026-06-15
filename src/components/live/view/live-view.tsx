@@ -42,6 +42,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     creator,
     hadLiveBroadcast,
     messages,
+    subscriptionBadgeCustomMonths,
     donations,
     polls,
     isPollsLoading,
@@ -190,6 +191,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
                       isChatOpen={isChatOpen}
                       onToggleChat={onToggleChat}
                       creatorId={creatorId}
+                      subscriptionBadgeCustomMonths={subscriptionBadgeCustomMonths}
                       donationOpenRequested={isDonationRequested}
                       onDonationOpenSettled={onDonationSettled}
                       messages={messages}
@@ -301,6 +303,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
             <LiveChatPanel
               creatorId={creatorId}
               messages={messages}
+              subscriptionBadgeCustomMonths={subscriptionBadgeCustomMonths}
               donations={donations}
               polls={polls}
               isPollsLoading={isPollsLoading}

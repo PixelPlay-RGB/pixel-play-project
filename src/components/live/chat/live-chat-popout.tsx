@@ -22,6 +22,7 @@ export function LiveChatPopout({ creatorId }: Props) {
     isLoading,
     broadcast,
     messages,
+    subscriptionBadgeCustomMonths,
     donations,
     polls,
     isPollsLoading,
@@ -85,6 +86,7 @@ export function LiveChatPopout({ creatorId }: Props) {
       <LiveChatBody
         creatorId={creatorId}
         messages={messages}
+        subscriptionBadgeCustomMonths={subscriptionBadgeCustomMonths}
         donations={donations}
         polls={polls}
         isPollsLoading={isPollsLoading}

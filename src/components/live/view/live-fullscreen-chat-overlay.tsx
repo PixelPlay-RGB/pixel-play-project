@@ -28,6 +28,7 @@ interface Props {
   onToggleChat: () => void;
   creatorId: string;
   messages: LiveChatMessage[];
+  subscriptionBadgeCustomMonths?: number[];
   donations: LiveDonation[];
   polls: LivePoll[];
   interactionNotices?: LiveInteractionNotice[];
@@ -69,6 +70,7 @@ export function LiveFullscreenChatOverlay({
   onToggleChat,
   creatorId,
   messages,
+  subscriptionBadgeCustomMonths,
   donations,
   polls,
   interactionNotices,
@@ -139,6 +141,7 @@ export function LiveFullscreenChatOverlay({
       <LiveChatBody
         creatorId={creatorId}
         messages={messages}
+        subscriptionBadgeCustomMonths={subscriptionBadgeCustomMonths}
         donations={donations}
         polls={polls}
         interactionNotices={interactionNotices}

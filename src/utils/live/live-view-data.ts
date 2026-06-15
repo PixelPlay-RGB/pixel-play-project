@@ -88,5 +88,6 @@ export function normalizeLiveViewData(
       chatUnavailableReason: blockedReason,
     },
     viewerRelation,
+    subscriptionBadgeCustomMonths: [],
   };
 }
