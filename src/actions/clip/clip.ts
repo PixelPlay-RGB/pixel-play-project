@@ -88,6 +88,7 @@ export async function createLiveClipAction(
 
   if (
     title.length > CLIP_TITLE_MAX_LENGTH ||
+    !Number.isFinite(durationSeconds) ||
     durationSeconds < CLIP_DURATION_MIN_SECONDS ||
     durationSeconds > CLIP_DURATION_MAX_SECONDS ||
     !Number.isFinite(cropXFraction) ||

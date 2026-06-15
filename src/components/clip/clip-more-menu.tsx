@@ -57,19 +57,24 @@ export function ClipMoreMenu({
   async function handleDelete() {
     if (deleting) return;
     setDeleting(true);
-    const result = await deleteLiveClipAction(clip.id);
+    try {
+      const result = await deleteLiveClipAction(clip.id);
 
-    if (result.success) {
-      toastAppSuccess(APP_MESSAGE_CODE.success.clip.deleted);
-      setDeleteOpen(false);
-      // 디테일은 삭제한 클립에서 먼저 벗어난 뒤(onDeleted) 목록 캐시를 무효화한다.
-      onDeleted?.();
-      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.clip.channelAll(clip.creatorId) });
-    } else {
-      toastAppError(result.code ?? APP_MESSAGE_CODE.error.clip.deleteFailed);
+      if (result.success) {
+        toastAppSuccess(APP_MESSAGE_CODE.success.clip.deleted);
+        setDeleteOpen(false);
+        // 디테일은 삭제한 클립에서 먼저 벗어난 뒤(onDeleted) 목록 캐시를 무효화한다.
+        onDeleted?.();
+        void queryClient.invalidateQueries({
+          queryKey: QUERY_KEYS.clip.channelAll(clip.creatorId),
+        });
+      } else {
+        toastAppError(result.code ?? APP_MESSAGE_CODE.error.clip.deleteFailed);
+      }
+    } finally {
+      // 예외로 빠져나가도 다이얼로그가 영구 pending에 갇히지 않게 보장한다.
+      setDeleting(false);
     }
-
-    setDeleting(false);
   }
 
   return (
