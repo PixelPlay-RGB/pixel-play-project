@@ -103,20 +103,33 @@ def fetch_text(url):
 
 
 def resolve_media_playlist(hls_base_url, stream_path):
-    # index.m3u8은 멀티배리언트일 수 있다 — STREAM-INF가 가리키는 media playlist로 내려간다.
+    # index.m3u8은 멀티배리언트일 수 있다 — STREAM-INF가 가리키는 (비디오) media playlist로 내려간다.
+    # MediaMTX 설정에 따라 오디오가 별도 렌디션(EXT-X-MEDIA:TYPE=AUDIO)으로 분리될 수 있는데,
+    # 그 경우 비디오 플레이리스트만 추출하면 클립이 무음이 된다 — 오디오 렌디션 URI도 함께 돌려준다.
+    # 반환: (video_media_url, video_text, audio_media_url|None)
     index_url = f"{hls_base_url}/{stream_path}/index.m3u8"
     text = fetch_text(index_url)
     if "#EXT-X-STREAM-INF" not in text:
-        return index_url, text
+        # 멀티배리언트가 아니면 단일 플레이리스트(보통 A+V 머스드).
+        return index_url, text, None
 
     lines = text.splitlines()
+
+    audio_media_url = None
+    for line in lines:
+        if line.startswith("#EXT-X-MEDIA:") and "TYPE=AUDIO" in line:
+            match = re.search(r'URI="([^"]+)"', line)
+            if match:
+                audio_media_url = urllib.parse.urljoin(index_url, match.group(1))
+                break
+
     for i, line in enumerate(lines):
         if line.startswith("#EXT-X-STREAM-INF"):
             for candidate in lines[i + 1 :]:
                 candidate = candidate.strip()
                 if candidate and not candidate.startswith("#"):
                     media_url = urllib.parse.urljoin(index_url, candidate)
-                    return media_url, fetch_text(media_url)
+                    return media_url, fetch_text(media_url), audio_media_url
     raise RuntimeError("media playlist not found in multivariant playlist")
 
 
@@ -217,27 +230,47 @@ def run_ffmpeg(args, timeout):
         raise RuntimeError(message[-400:])
 
 
-def extract_clip(vod_playlist_path, fine_ss, duration, crop_x_fraction, output_path):
+def extract_clip(
+    vod_playlist_path, audio_vod_path, fine_ss, audio_fine_ss, duration, crop_x_fraction, output_path
+):
     # crop: 높이를 유지한 9:16 폭(짝수 보정), x는 잔여 폭 대비 비율 매핑.
-    # -ss를 -i 뒤(출력 시킹)에 둬 키프레임 경계 오차 없이 정렬한다(입력 ≤35초라 비용 무시).
     crop = (
         "crop=w='floor(ih*9/16/2)*2':h=ih:"
         f"x='floor((iw-ow)*{crop_x_fraction:.6f}/2)*2':y=0"
     )
-    run_ffmpeg(
-        [
+    video_filter = f"{crop},scale={OUTPUT_SCALE},setsar=1"
+
+    if audio_vod_path:
+        # 비디오·오디오가 별도 렌디션 — 각 입력을 window_start로 입력 시킹(-ss를 -i 앞)해 A/V를 맞춘다.
+        args = [
             "-protocol_whitelist", "file,http,https,tcp,tls",
-            "-i", vod_playlist_path,
-            "-ss", f"{fine_ss:.3f}", "-t", str(duration),
-            "-vf", f"{crop},scale={OUTPUT_SCALE},setsar=1",
+            "-ss", f"{fine_ss:.3f}", "-i", vod_playlist_path,
+            "-protocol_whitelist", "file,http,https,tcp,tls",
+            "-ss", f"{audio_fine_ss:.3f}", "-i", audio_vod_path,
+            "-t", str(duration),
+            "-map", "0:v:0", "-map", "1:a:0",
+            "-vf", video_filter,
             "-c:v", "libx264", "-preset", "veryfast", "-crf", "23",
             "-pix_fmt", "yuv420p",
             "-c:a", "aac", "-b:a", "128k",
             "-movflags", "+faststart",
             "-y", output_path,
-        ],
-        FFMPEG_EXTRACT_TIMEOUT_SEC,
-    )
+        ]
+    else:
+        # 머스드(A+V 한 세그먼트) — -ss를 -i 뒤(출력 시킹)에 둬 키프레임 경계 오차 없이 정렬(기존 동작).
+        args = [
+            "-protocol_whitelist", "file,http,https,tcp,tls",
+            "-i", vod_playlist_path,
+            "-ss", f"{fine_ss:.3f}", "-t", str(duration),
+            "-vf", video_filter,
+            "-c:v", "libx264", "-preset", "veryfast", "-crf", "23",
+            "-pix_fmt", "yuv420p",
+            "-c:a", "aac", "-b:a", "128k",
+            "-movflags", "+faststart",
+            "-y", output_path,
+        ]
+
+    run_ffmpeg(args, FFMPEG_EXTRACT_TIMEOUT_SEC)
 
 
 def extract_thumbnail(video_path, midpoint_sec, output_path):
@@ -276,16 +309,39 @@ def process_job(job, hls_base_url, worker_url, worker_secret):
     window_start = window_end - timedelta(seconds=duration)
 
     vod_path = os.path.join(WORK_DIR, f"{clip_id}.m3u8")
+    audio_vod_path = os.path.join(WORK_DIR, f"{clip_id}.audio.m3u8")
     video_path = os.path.join(WORK_DIR, f"{clip_id}.mp4")
     thumbnail_path = os.path.join(WORK_DIR, f"{clip_id}.jpg")
 
     try:
-        playlist_url, playlist_text = resolve_media_playlist(hls_base_url, job["streamPath"])
+        playlist_url, playlist_text, audio_playlist_url = resolve_media_playlist(
+            hls_base_url, job["streamPath"]
+        )
         map_uri, segments = parse_media_playlist(playlist_url, playlist_text)
         selected, fine_ss = select_window_segments(segments, window_start, window_end)
         build_vod_playlist(vod_path, map_uri, selected)
 
-        extract_clip(vod_path, fine_ss, duration, float(job["cropXFraction"]), video_path)
+        # 오디오가 별도 렌디션이면 같은 구간으로 오디오 VOD도 합성해 함께 먹인다(머스드면 None → 단일 입력).
+        audio_input = None
+        audio_fine_ss = 0.0
+        if audio_playlist_url:
+            audio_text = fetch_text(audio_playlist_url)
+            audio_map, audio_segments = parse_media_playlist(audio_playlist_url, audio_text)
+            audio_selected, audio_fine_ss = select_window_segments(
+                audio_segments, window_start, window_end
+            )
+            build_vod_playlist(audio_vod_path, audio_map, audio_selected)
+            audio_input = audio_vod_path
+
+        extract_clip(
+            vod_path,
+            audio_input,
+            fine_ss,
+            audio_fine_ss,
+            duration,
+            float(job["cropXFraction"]),
+            video_path,
+        )
         extract_thumbnail(video_path, duration / 2, thumbnail_path)
 
         upload_file(job["videoUploadUrl"], video_path, "video/mp4")
@@ -304,7 +360,7 @@ def process_job(job, hls_base_url, worker_url, worker_secret):
             # 보고 실패 시 RPC의 processing 타임아웃(3분)이 안전망으로 정리한다.
             print(f"{clip_id}: fail report error - {report_error}", file=sys.stderr)
     finally:
-        for path in (vod_path, video_path, thumbnail_path):
+        for path in (vod_path, audio_vod_path, video_path, thumbnail_path):
             try:
                 os.remove(path)
             except FileNotFoundError:
