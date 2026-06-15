@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import {
   getLiveDefaultSubscriptionBadgeSrc,
   getLiveSubscriptionBadgePublicUrl,
-  normalizeLiveSubscriptionBadgeMonth,
+  resolveLiveSubscriptionBadgeMonth,
 } from "@/utils/live/live-subscription-badge";
 import Image from "next/image";
 import { useState } from "react";
@@ -27,7 +27,7 @@ export function LiveSubscriptionBadge({
   withTooltip = false,
   className,
 }: Props) {
-  const month = normalizeLiveSubscriptionBadgeMonth(totalMonths);
+  const month = resolveLiveSubscriptionBadgeMonth(totalMonths);
   const label = `${LIVE_LABEL.subscriberBadge} ${month}개월`;
   const storageSrc = getLiveSubscriptionBadgePublicUrl(creatorId, month);
   const fallbackSrc = getLiveDefaultSubscriptionBadgeSrc(month);

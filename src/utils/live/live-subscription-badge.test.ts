@@ -3,18 +3,29 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import {
+  buildLiveSubscriptionBadgeMonths,
   getLiveDefaultSubscriptionBadgeSrc,
   getLiveSubscriptionBadgePublicUrl,
-  normalizeLiveSubscriptionBadgeMonth,
+  resolveLiveSubscriptionBadgeMonth,
 } from "./live-subscription-badge.ts";
 
 const CREATOR_ID = "89dac974-c64f-431f-b593-dd71882c0d33";
 
-test("normalizeLiveSubscriptionBadgeMonth clamps subscription months to the available badge range", () => {
-  assert.equal(normalizeLiveSubscriptionBadgeMonth(null), 1);
-  assert.equal(normalizeLiveSubscriptionBadgeMonth(0), 1);
-  assert.equal(normalizeLiveSubscriptionBadgeMonth(4.8), 4);
-  assert.equal(normalizeLiveSubscriptionBadgeMonth(99), 12);
+test("resolveLiveSubscriptionBadgeMonth picks the nearest configured month at or below total months", () => {
+  assert.equal(resolveLiveSubscriptionBadgeMonth(null), 1);
+  assert.equal(resolveLiveSubscriptionBadgeMonth(0), 1);
+  assert.equal(resolveLiveSubscriptionBadgeMonth(4.8), 3);
+  assert.equal(resolveLiveSubscriptionBadgeMonth(17), 12);
+  assert.equal(resolveLiveSubscriptionBadgeMonth(18), 18);
+  assert.equal(resolveLiveSubscriptionBadgeMonth(25, [24, 36]), 24);
+  assert.equal(resolveLiveSubscriptionBadgeMonth(121, [24, 120]), 120);
+});
+
+test("buildLiveSubscriptionBadgeMonths keeps fixed months and valid custom months only", () => {
+  assert.deepEqual(
+    buildLiveSubscriptionBadgeMonths([18, 24, 120, 121, 2, 36]),
+    [1, 2, 3, 6, 9, 12, 18, 24, 36, 120],
+  );
 });
 
 test("getLiveSubscriptionBadgePublicUrl builds the creator scoped storage URL", () => {

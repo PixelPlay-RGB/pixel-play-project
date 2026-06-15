@@ -2,6 +2,7 @@
 import "server-only";
 
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
+import { USER_MEDIA_BUCKET } from "@/constants/common/storage";
 import { createAdminClient } from "@/lib/supabase/admin-client";
 import { createClient } from "@/lib/supabase/server";
 import type { AppActionResult } from "@/types/common/action";
@@ -12,6 +13,7 @@ import {
   type ChannelSubscriptionSnapshot,
 } from "@/utils/channel/channel-subscription";
 import { isAuthSessionMissingError } from "@/utils/auth/auth-error";
+import { LIVE_SUBSCRIPTION_BADGE_MIN_CUSTOM_MONTH } from "@/utils/live/live-subscription-badge";
 
 type CreatorSubscriptionRow = Pick<
   GenericTables<"creator_subscription">,
@@ -21,6 +23,18 @@ type CreatorSubscriptionRow = Pick<
 type SubscriberProfileRow = Pick<GenericTables<"user">, "id" | "nickname">;
 
 const UNKNOWN_SUBSCRIBER_NICKNAME = "알 수 없음";
+
+function readCustomBadgeMonths(files: { name: string }[] | null) {
+  return (files ?? [])
+    .map((file) => Number(file.name.replace(/\.png$/i, "")))
+    .filter(
+      (month) =>
+        Number.isInteger(month) &&
+        month >= LIVE_SUBSCRIPTION_BADGE_MIN_CUSTOM_MONTH &&
+        month <= 120,
+    )
+    .sort((a, b) => a - b);
+}
 
 export async function getChannelSubscriptionSnapshot(): Promise<
   AppActionResult<ChannelSubscriptionSnapshot>
@@ -52,10 +66,28 @@ export async function getChannelSubscriptionSnapshot(): Promise<
   }
 
   const subscriptionRows = (subscriptions ?? []) as CreatorSubscriptionRow[];
+  const { data: badgeFiles, error: badgeListError } = await supabase.storage
+    .from(USER_MEDIA_BUCKET)
+    .list(`${user.id}/subscription`, {
+      limit: 120,
+      sortBy: { column: "name", order: "asc" },
+    });
+
+  if (badgeListError) {
+    console.error("구독 배지 목록 조회 실패", badgeListError);
+  }
+
+  const customBadgeMonths = readCustomBadgeMonths(badgeFiles ?? null);
   const subscriberIds = Array.from(new Set(subscriptionRows.map((row) => row.subscriber_id)));
 
   if (subscriberIds.length === 0) {
-    return { success: true, data: buildChannelSubscriptionSnapshot([]) };
+    return {
+      success: true,
+      data: buildChannelSubscriptionSnapshot([], new Date(), {
+        creatorId: user.id,
+        customBadgeMonths,
+      }),
+    };
   }
 
   const { data: profiles, error: profileError } = await supabase
@@ -84,6 +116,9 @@ export async function getChannelSubscriptionSnapshot(): Promise<
 
   return {
     success: true,
-    data: buildChannelSubscriptionSnapshot(items),
+    data: buildChannelSubscriptionSnapshot(items, new Date(), {
+      creatorId: user.id,
+      customBadgeMonths,
+    }),
   };
 }

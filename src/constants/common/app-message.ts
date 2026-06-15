@@ -68,6 +68,14 @@ export const APP_MESSAGE = {
         title: "테스트 후원 전송 완료",
         description: "OBS 후원 알림 화면에서 확인해주세요.",
       },
+      subscriptionBadgeSaved: {
+        title: "구독 배지 저장 완료",
+        description: "채팅에 표시되는 구독 배지가 변경됐어요.",
+      },
+      subscriptionBadgeDeleted: {
+        title: "구독 배지 기본값 적용",
+        description: "커스텀 배지를 제거했어요.",
+      },
       channelProfileSaved: {
         title: "채널 정보 저장 완료",
         description: "변경한 채널 소개와 링크가 적용되었어요.",
@@ -411,6 +419,22 @@ export const APP_MESSAGE = {
       subscriptionLoadFailed: {
         title: "구독자 조회 실패",
         description: "다시 로그인하거나 잠시 후 새로고침해주세요.",
+      },
+      subscriptionBadgeSaveFailed: {
+        title: "구독 배지 저장 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      subscriptionBadgeDeleteFailed: {
+        title: "구독 배지 삭제 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      subscriptionBadgeImageInvalid: {
+        title: "구독 배지 이미지 확인 필요",
+        description: "가로세로 60px인 PNG 파일을 올려주세요.",
+      },
+      subscriptionBadgeImageTooLarge: {
+        title: "구독 배지 용량 초과",
+        description: "1MB 이하의 PNG 파일을 올려주세요.",
       },
       channelProfileSaveFailed: {
         title: "채널 정보 저장 실패",

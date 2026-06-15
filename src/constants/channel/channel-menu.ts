@@ -35,7 +35,7 @@ export const CHANNEL_MENU_GROUPS: ChannelMenuGroup[] = [
           { id: "settlement", label: "정산", href: "/channel/settlement" },
         ],
       },
-      { id: "subscribers", label: "구독자", href: "/channel/subscribers", icon: UsersRound },
+      { id: "subscribers", label: "구독 관리", href: "/channel/subscribers", icon: UsersRound },
     ],
   },
   {

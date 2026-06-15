@@ -4,6 +4,7 @@
 import { Search, UsersRound } from "lucide-react";
 import { useMemo, useState } from "react";
 
+import { ChannelSubscriptionBadgeSettingsCard } from "@/components/channel/subscription/channel-subscription-badge-settings-card";
 import { SettingsCard } from "@/components/common/settings-card";
 import { SettingsPage } from "@/components/common/settings-page";
 import { Input } from "@/components/ui/input";
@@ -63,8 +64,8 @@ export function ChannelSubscribersPageContent({ snapshot }: Props) {
 
   return (
     <SettingsPage
-      kicker="구독자 관리"
-      title="내 채널 구독자를 확인해요"
+      kicker="구독 관리"
+      title="내 채널 구독을 관리해요"
       description="구독 시작일과 누적 구독 기간을 기준으로 구독자 목록을 살펴볼 수 있어요."
     >
       <section className="border-border bg-card flex flex-col gap-4 rounded-xl border p-5 sm:flex-row sm:items-center sm:justify-between">
@@ -178,6 +179,11 @@ export function ChannelSubscribersPageContent({ snapshot }: Props) {
           </div>
         )}
       </SettingsCard>
+
+      <ChannelSubscriptionBadgeSettingsCard
+        creatorId={snapshot.creatorId}
+        customMonths={snapshot.customBadgeMonths}
+      />
     </SettingsPage>
   );
 }
