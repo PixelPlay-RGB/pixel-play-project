@@ -4,7 +4,7 @@
 import Link from "next/link";
 import { Settings, UsersRound } from "lucide-react";
 
-import CreatorFollowingButton from "@/components/following/creator-following-button";
+import CreatorFollowToggle from "@/components/following/creator-follow-toggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { buttonVariants } from "@/components/ui/button";
 import { useToggleChannelFollowing } from "@/hooks/channel/use-toggle-channel-following";
@@ -73,12 +73,12 @@ export default function ChannelProfileHeader({ profile }: Props) {
           채널 설정
         </Link>
       ) : (
-        <CreatorFollowingButton
+        <CreatorFollowToggle
           creatorNickname={profile.nickname}
           isFollowing={isFollowing}
           isOwnChannel={profile.isOwnChannel}
           isPending={isPending}
-          onClick={toggle}
+          onToggle={toggle}
           className="h-9 px-4 text-sm"
         />
       )}
