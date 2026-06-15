@@ -26,6 +26,7 @@ interface Props {
   // 채팅 패널 열림 상태는 LiveVideoPlayer가 소유한다(비디오/컨트롤 폭 축소와 공유해야 하므로).
   isChatOpen: boolean;
   onToggleChat: () => void;
+  creatorId: string;
   messages: LiveChatMessage[];
   donations: LiveDonation[];
   polls: LivePoll[];
@@ -66,6 +67,7 @@ export function LiveFullscreenChatOverlay({
   container,
   isChatOpen,
   onToggleChat,
+  creatorId,
   messages,
   donations,
   polls,
@@ -135,6 +137,7 @@ export function LiveFullscreenChatOverlay({
       </div>
 
       <LiveChatBody
+        creatorId={creatorId}
         messages={messages}
         donations={donations}
         polls={polls}

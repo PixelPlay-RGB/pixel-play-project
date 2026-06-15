@@ -121,6 +121,7 @@ export default function ChannelLiveChatPanel({
         // 시청 화면과 같은 채팅 본문(배너 오버레이+동적 inset+바닥 정렬)을 그대로 재사용해
         // 두 화면의 채팅 동작이 항상 함께 움직이게 한다. 운영 화면은 후원·투표 액션만 끈다.
         <LiveChatBody
+          creatorId={creatorId ?? ""}
           messages={messages}
           donations={donations}
           polls={[]}

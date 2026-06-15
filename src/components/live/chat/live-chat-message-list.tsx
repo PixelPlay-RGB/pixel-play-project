@@ -18,6 +18,7 @@ const ESTIMATED_ROW_HEIGHT = 32;
 const ROW_GAP = 12;
 
 interface Props {
+  creatorId: string;
   messages: LiveChatMessage[];
   // 클린봇 토글 상태. ON이면 비속어로 걸린 메시지를 가린다. 기본 ON.
   cleanbotEnabled?: boolean;
@@ -28,6 +29,7 @@ interface Props {
 }
 
 export function LiveChatMessageList({
+  creatorId,
   messages,
   cleanbotEnabled = true,
   topInsetPx = 0,
@@ -98,7 +100,11 @@ export function LiveChatMessageList({
                 {LIVE_LABEL.chatFilterNotice}
               </p>
             ) : (
-              <MessageItem message={messages[item.index - 1]} cleanbotEnabled={cleanbotEnabled} />
+              <MessageItem
+                creatorId={creatorId}
+                message={messages[item.index - 1]}
+                cleanbotEnabled={cleanbotEnabled}
+              />
             )}
           </div>
         ))}
@@ -108,13 +114,18 @@ export function LiveChatMessageList({
 }
 
 interface MessageItemProps {
+  creatorId: string;
   message: LiveChatMessage;
   cleanbotEnabled: boolean;
 }
 
 // 메시지가 바뀌지 않은 기존 항목은 새 메시지 도착마다 재렌더되지 않게 memo로 감싼다.
 // props가 모두 원시값/안정 ref(message 객체는 캐시에서 ref 유지)라 얕은 비교로 충분하다.
-const MessageItem = memo(function MessageItem({ message, cleanbotEnabled }: MessageItemProps) {
+const MessageItem = memo(function MessageItem({
+  creatorId,
+  message,
+  cleanbotEnabled,
+}: MessageItemProps) {
   if (message.type === "system") {
     return (
       <p className="text-muted-foreground my-1 text-center text-sm wrap-break-word">
@@ -155,16 +166,24 @@ const MessageItem = memo(function MessageItem({ message, cleanbotEnabled }: Mess
   // 클린봇에 걸린 메시지: 토글 ON이면 닉네임·마크는 그대로 두고 본문만 안내 문구로 가린다.
   const isMasked = !!message.isCleanbotFlagged && cleanbotEnabled;
 
-  return <TextMessage message={message} isMasked={isMasked} />;
+  return <TextMessage creatorId={creatorId} message={message} isMasked={isMasked} />;
 });
 
-function TextMessage({ message, isMasked }: { message: LiveChatMessage; isMasked: boolean }) {
+function TextMessage({
+  creatorId,
+  message,
+  isMasked,
+}: {
+  creatorId: string;
+  message: LiveChatMessage;
+  isMasked: boolean;
+}) {
   // 역할 마크는 DB가 전송 시점에 스냅샷한 sender_role을 그대로 쓴다(viewer는 마크 없음).
   const role: LiveChatRole | null =
     message.senderRole && message.senderRole !== "viewer" ? message.senderRole : null;
   const roles: LiveChatRole[] = role && role !== "subscriber" ? [role] : [];
   const showSubscriptionBadge =
-    (message.isSubscriber || role === "subscriber") && role !== "creator";
+    creatorId.length > 0 && (message.isSubscriber || role === "subscriber") && role !== "creator";
   // OBS 채팅 오버레이와 같은 규칙으로 닉네임별 랜덤(해시) 컬러를 적용한다.
   const nicknameColor = getLiveChatOverlayNicknameColor(
     message.author ?? "",
@@ -181,11 +200,16 @@ function TextMessage({ message, isMasked }: { message: LiveChatMessage; isMasked
             <LiveChatRoleBadge key={item} role={item} withTooltip />
           ))}
           {showSubscriptionBadge ? (
-            <LiveSubscriptionBadge totalMonths={message.subscriptionTotalMonths} withTooltip />
+            <LiveSubscriptionBadge
+              creatorId={creatorId}
+              totalMonths={message.subscriptionTotalMonths}
+              withTooltip
+            />
           ) : null}
         </span>
       ) : showSubscriptionBadge ? (
         <LiveSubscriptionBadge
+          creatorId={creatorId}
           totalMonths={message.subscriptionTotalMonths}
           withTooltip
           className="mr-1.5"

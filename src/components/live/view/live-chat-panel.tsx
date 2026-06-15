@@ -179,6 +179,7 @@ export function LiveChatPanel({
         </div>
       ) : (
         <LiveChatBody
+          creatorId={creatorId}
           messages={messages}
           donations={donations}
           polls={polls}

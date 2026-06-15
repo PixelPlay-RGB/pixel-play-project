@@ -27,7 +27,7 @@ export function parseLiveChatOverlaySnapshot(value: Json): LiveChatOverlaySnapsh
   const broadcast =
     object.broadcast === null ? null : parseLiveChatOverlayBroadcast(object.broadcast);
   const items = readArray(object.items)
-    .map(parseLiveChatOverlayItem)
+    .map((item) => parseLiveChatOverlayItem(item, broadcast?.creatorId))
     .filter((item) => item !== null);
 
   if (object.broadcast !== null && !broadcast) {
@@ -119,14 +119,17 @@ function parseLiveChatOverlayBroadcast(value: Json | undefined): LiveBroadcastSu
   };
 }
 
-function parseLiveChatOverlayItem(value: Json): LiveChatOverlayItem | null {
+function parseLiveChatOverlayItem(
+  value: Json,
+  fallbackCreatorId?: string,
+): LiveChatOverlayItem | null {
   const object = readObject(value);
 
   if (!object || object.type !== "message") {
     return null;
   }
 
-  const message = parseLiveChatOverlayMessage(object.message);
+  const message = parseLiveChatOverlayMessage(object.message, fallbackCreatorId);
 
   return message
     ? {
@@ -136,7 +139,10 @@ function parseLiveChatOverlayItem(value: Json): LiveChatOverlayItem | null {
     : null;
 }
 
-function parseLiveChatOverlayMessage(value: Json | undefined): LiveChatOverlayMessage | null {
+function parseLiveChatOverlayMessage(
+  value: Json | undefined,
+  fallbackCreatorId?: string,
+): LiveChatOverlayMessage | null {
   const object = readObject(value);
 
   if (!object) {
@@ -144,26 +150,38 @@ function parseLiveChatOverlayMessage(value: Json | undefined): LiveChatOverlayMe
   }
 
   const id = readString(object.id);
+  const creatorId = readString(object.creatorId) ?? readString(fallbackCreatorId);
   const author = readString(object.author);
   const content = readText(object.content);
   const createdAt = readString(object.createdAt);
   const kind = object.kind === "donation" ? "donation" : "chat";
   const amount = readNumber(object.amount);
+  const isSubscriber = object.isSubscriber === true || object.role === "subscriber";
   const role =
-    object.role === "creator" ? "creator" : object.role === "donor" ? "donor" : undefined;
+    object.role === "creator"
+      ? "creator"
+      : object.role === "donor"
+        ? "donor"
+        : object.role === "subscriber"
+          ? "subscriber"
+          : undefined;
+  const subscriptionTotalMonths = readNumber(object.subscriptionTotalMonths);
   const tone = readMessageTone(object.tone);
 
-  if (!id || !author || content === null || !createdAt) {
+  if (!id || !creatorId || !author || content === null || !createdAt) {
     return null;
   }
 
   return {
     id,
+    creatorId,
     kind,
     author,
     content,
     createdAt,
     amount,
+    isSubscriber,
+    subscriptionTotalMonths,
     role,
     tone,
   };

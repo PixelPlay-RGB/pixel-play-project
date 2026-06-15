@@ -4,31 +4,30 @@
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { LIVE_LABEL } from "@/constants/live/live";
 import { cn } from "@/lib/utils";
+import {
+  getLiveSubscriptionBadgePublicUrl,
+  normalizeLiveSubscriptionBadgeMonth,
+} from "@/utils/live/live-subscription-badge";
 import Image from "next/image";
 
 interface Props {
+  creatorId: string;
   totalMonths?: number | null;
   size?: "sm" | "lg";
   withTooltip?: boolean;
   className?: string;
 }
 
-const MAX_BADGE_MONTH = 12;
-
-function normalizeBadgeMonth(totalMonths?: number | null) {
-  if (!Number.isFinite(totalMonths) || !totalMonths) return 1;
-
-  return Math.min(Math.max(Math.floor(totalMonths), 1), MAX_BADGE_MONTH);
-}
-
 export function LiveSubscriptionBadge({
+  creatorId,
   totalMonths,
   size = "sm",
   withTooltip = false,
   className,
 }: Props) {
-  const month = normalizeBadgeMonth(totalMonths);
+  const month = normalizeLiveSubscriptionBadgeMonth(totalMonths);
   const label = `${LIVE_LABEL.subscriberBadge} ${month}개월`;
+  const src = getLiveSubscriptionBadgePublicUrl(creatorId, month);
   const badge = (
     <span
       className={cn(
@@ -40,7 +39,7 @@ export function LiveSubscriptionBadge({
       role={withTooltip ? undefined : "img"}
     >
       <Image
-        src={`/subscription-badges/${month}.png`}
+        src={src}
         alt=""
         aria-hidden
         className="size-full object-contain"

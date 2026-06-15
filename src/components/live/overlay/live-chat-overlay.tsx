@@ -49,7 +49,12 @@ function ChatMessageItem({ message }: { message: LiveChatOverlayMessage }) {
 
   return (
     <div className="inline-flex max-w-130 items-start gap-1.5 rounded-xl bg-black/50 px-3.5 py-2">
-      <MessagePrefix role={message.role} totalMonths={message.subscriptionTotalMonths} />
+      <MessagePrefix
+        creatorId={message.creatorId}
+        isSubscriber={message.isSubscriber}
+        role={message.role}
+        totalMonths={message.subscriptionTotalMonths}
+      />
       <p className="min-w-0 text-3xl leading-9 font-normal wrap-break-word">
         <span
           className={cn("mr-1.5 font-medium", message.tone === "muted" && "text-white/55")}
@@ -85,19 +90,31 @@ function DonationMessageItem({ message }: { message: LiveChatOverlayMessage }) {
 
 // 시청 채팅과 같은 마크 컴포넌트를 쓰되, OBS 출력용이라 tooltip은 끈다.
 function MessagePrefix({
+  creatorId,
+  isSubscriber,
   role,
   totalMonths,
 }: {
+  creatorId: string;
+  isSubscriber?: boolean;
   role?: LiveChatOverlayMessage["role"];
   totalMonths?: number | null;
 }) {
-  if (role !== "creator" && role !== "donor" && role !== "subscriber") {
+  if (role !== "creator" && role !== "donor" && role !== "subscriber" && !isSubscriber) {
     return null;
   }
 
-  if (role === "subscriber") {
-    return <LiveSubscriptionBadge totalMonths={totalMonths} size="lg" />;
-  }
+  const roleBadge =
+    role === "creator" || role === "donor" ? <LiveChatRoleBadge role={role} size="lg" /> : null;
+  const subscriptionBadge =
+    (isSubscriber || role === "subscriber") && role !== "creator" ? (
+      <LiveSubscriptionBadge creatorId={creatorId} totalMonths={totalMonths} size="lg" />
+    ) : null;
 
-  return <LiveChatRoleBadge role={role} size="lg" />;
+  return (
+    <span className="inline-flex items-center gap-1">
+      {roleBadge}
+      {subscriptionBadge}
+    </span>
+  );
 }

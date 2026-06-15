@@ -83,6 +83,7 @@ export function LiveChatPopout({ creatorId }: Props) {
       </div>
 
       <LiveChatBody
+        creatorId={creatorId}
         messages={messages}
         donations={donations}
         polls={polls}

@@ -32,10 +32,12 @@ export function mapLiveMessageToChatOverlayItem(
 
     const overlayMessage: LiveChatOverlayMessage = {
       id: message.id,
+      creatorId: options.creatorId,
       kind: "chat",
       author,
       content: message.content,
       createdAt: message.created_at,
+      isSubscriber,
       subscriptionTotalMonths: readNumber(metadata.subscriptionTotalMonths),
       role: isCreator ? "creator" : isDonor ? "donor" : isSubscriber ? "subscriber" : undefined,
       tone: isCreator ? "brand" : undefined,
@@ -58,6 +60,7 @@ export function mapLiveMessageToChatOverlayItem(
 
     const overlayMessage: LiveChatOverlayMessage = {
       id: message.id,
+      creatorId: options.creatorId,
       kind: "donation",
       author,
       content: message.content,

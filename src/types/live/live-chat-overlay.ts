@@ -3,11 +3,13 @@ import type { LiveBroadcastSummary, LiveMessageRow } from "@/types/live/live";
 
 export interface LiveChatOverlayMessage {
   id: LiveMessageRow["id"];
+  creatorId: LiveBroadcastSummary["creatorId"];
   kind: "chat" | "donation";
   author: string;
   content: LiveMessageRow["content"];
   createdAt: LiveMessageRow["created_at"];
   amount?: number | null;
+  isSubscriber?: boolean;
   subscriptionTotalMonths?: number | null;
   tone?: "brand" | "live" | "muted" | "default";
   role?: "creator" | "donor" | "subscriber";

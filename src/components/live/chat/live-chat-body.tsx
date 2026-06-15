@@ -20,6 +20,7 @@ import type {
 } from "@/types/live/live";
 
 interface Props {
+  creatorId: string;
   messages: LiveChatMessage[];
   donations: LiveDonation[];
   polls: LivePoll[];
@@ -69,6 +70,7 @@ interface Props {
 }
 
 export function LiveChatBody({
+  creatorId,
   messages,
   donations,
   polls,
@@ -125,6 +127,7 @@ export function LiveChatBody({
           viewportClassName="overscroll-contain"
         >
           <LiveChatMessageList
+            creatorId={creatorId}
             messages={messages}
             cleanbotEnabled={cleanbotEnabled}
             topInsetPx={bannerHeight}

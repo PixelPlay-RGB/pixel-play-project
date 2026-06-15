@@ -189,6 +189,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
                       container={container}
                       isChatOpen={isChatOpen}
                       onToggleChat={onToggleChat}
+                      creatorId={creatorId}
                       donationOpenRequested={isDonationRequested}
                       onDonationOpenSettled={onDonationSettled}
                       messages={messages}
