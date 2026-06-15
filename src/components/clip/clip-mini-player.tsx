@@ -1,14 +1,18 @@
 "use client";
 // 클립 mp4 미니 플레이어 — 음소거 자동재생·반복·진행바와, 일시정지 시 중앙 재생 아이콘
 // (방송 시청 뷰와 동일한 관성)을 제공한다. 음소거/음량은 캐러셀 이동 간 유지되도록 부모
-// (ClipShortsView)가 소유하며, 재생/음량 토글은 우측 레일에서 조작한다.
+// (ClipShortsView)가 소유하며, 재생 토글은 부모의 단축키에서 ref로도 호출한다.
 
-import { useEffect, useRef, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { Play } from "lucide-react";
 
 import { Slider } from "@/components/ui/slider";
 import { CLIP_LABEL } from "@/constants/clip/clip";
 import type { LiveClip } from "@/types/clip/clip";
+
+export interface ClipMiniPlayerHandle {
+  togglePlay: () => void;
+}
 
 interface Props {
   clip: LiveClip;
@@ -17,7 +21,10 @@ interface Props {
   volume: number;
 }
 
-export function ClipMiniPlayer({ clip, muted, volume }: Props) {
+export const ClipMiniPlayer = forwardRef<ClipMiniPlayerHandle, Props>(function ClipMiniPlayer(
+  { clip, muted, volume },
+  ref,
+) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(true);
   const [progress, setProgress] = useState(0);
@@ -42,6 +49,9 @@ export function ClipMiniPlayer({ clip, muted, volume }: Props) {
       video.pause();
     }
   }
+
+  // 부모(ClipShortsView)의 스페이스/k 단축키가 재생을 토글할 수 있게 노출한다.
+  useImperativeHandle(ref, () => ({ togglePlay }), []);
 
   function seekTo(next: number) {
     const video = videoRef.current;
@@ -81,7 +91,7 @@ export function ClipMiniPlayer({ clip, muted, volume }: Props) {
         </button>
       ) : null}
 
-      {/* 하단 진행바 — 시킹 전용(재생/음량은 우측 레일에서 조작) */}
+      {/* 하단 진행바 — 시킹 전용(재생/음량은 별도 컨트롤) */}
       <div className="absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/60 to-transparent px-3 pt-8 pb-2.5">
         <Slider
           value={Math.min(progress, duration || clip.durationSeconds)}
@@ -94,4 +104,4 @@ export function ClipMiniPlayer({ clip, muted, volume }: Props) {
       </div>
     </div>
   );
-}
+});

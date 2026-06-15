@@ -1,29 +1,19 @@
 "use client";
 // 클립 디테일(유튜브 쇼츠 스타일) — 세로 영상 풀하이트 + 위/아래·휠 캐러셀(Motion 세로
-// 슬라이드) + 시네마 딤 위 크리에이터/제목/생성일 오버레이 + 큰 우측 액션 레일(라이브·공유·
-// 음량·엠비언트·전체화면)을 렌더링합니다. 엠비언트 모드는 썸네일을 흐리게 깐 배경 글로우.
+// 슬라이드). 영상 우상단에 독립 음량 컨트롤(YT 쇼츠 결), 우측에 액션 레일(공유·엠비언트·
+// 전체화면·이전/다음), 하단에 크리에이터(아바타=요약 Popover)·제목·생성일 오버레이.
+// 엠비언트(영화관) 모드는 기본 ON — 썸네일을 흑백·고휘도로 흐리게 깐 무채색 백라이트 글로우.
 
 import { useCallback, useEffect, useRef, useState, type WheelEvent } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import {
-  ChevronDown,
-  ChevronUp,
-  Maximize2,
-  Minimize2,
-  Share2,
-  Sparkles,
-  UserRound,
-} from "lucide-react";
+import { ChevronDown, ChevronUp, Maximize2, Minimize2, Share2, Sparkles } from "lucide-react";
 
-import { ClipMiniPlayer } from "@/components/clip/clip-mini-player";
+import { ClipMiniPlayer, type ClipMiniPlayerHandle } from "@/components/clip/clip-mini-player";
 import { ClipVolumeControl } from "@/components/clip/clip-volume-control";
-import CreatorFollowToggle from "@/components/following/creator-follow-toggle";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import CreatorAvatarPopover from "@/components/creator/creator-avatar-popover";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { CLIP_LABEL } from "@/constants/clip/clip";
-import { useToggleChannelFollowing } from "@/hooks/channel/use-toggle-channel-following";
 import { useClipShorts, type ClipShortsDirection } from "@/hooks/clip/use-clip-shorts";
 import { useFullscreen } from "@/hooks/live/use-fullscreen";
 import { cn } from "@/lib/utils";
@@ -31,7 +21,6 @@ import type { LiveClip } from "@/types/clip/clip";
 import { formatRelativeTime } from "@/utils/common/format";
 import { formatCount } from "@/utils/live/live-chat";
 import { toastAppError, toastAppSuccess } from "@/utils/common/toast-message";
-import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
 
 export interface ClipShortsCreator {
   id: string;
@@ -64,31 +53,47 @@ export function ClipShortsView({ initialClip, creator }: Props) {
   // 음소거/음량은 클립 전환 간 유지한다(한 번 소리를 켜면 다음 클립도 켜진 채 재생).
   const [muted, setMuted] = useState(true);
   const [volume, setVolume] = useState(0.8);
-  const [isAmbient, setIsAmbient] = useState(false);
+  // 엠비언트(영화관) 모드 기본 ON.
+  const [isAmbient, setIsAmbient] = useState(true);
   const { containerRef, isFullscreen, toggleFullscreen } = useFullscreen<HTMLDivElement>();
+  const playerRef = useRef<ClipMiniPlayerHandle>(null);
 
-  // 같은 채널 캐러셀이라 크리에이터는 고정 — 팔로우 토글을 한 번만 시드한다.
-  const following = useToggleChannelFollowing({
-    creatorId: creator?.id ?? "",
-    initialIsFollowing: creator?.isFollowing ?? false,
-    initialFollowerCount: creator?.followerCount ?? 0,
-  });
-
-  // 키보드 ↑/↓로도 캐러셀을 탐색한다.
+  // 단축키 — ↑/↓: 이전/다음, 스페이스·k: 재생/일시정지, m: 음소거, f: 전체화면.
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "ArrowUp") {
-        event.preventDefault();
-        goPrev();
-      } else if (event.key === "ArrowDown") {
-        event.preventDefault();
-        goNext();
+      const target = event.target as HTMLElement | null;
+      if (target?.closest("input, textarea, select, [contenteditable=true]")) return;
+
+      switch (event.key.toLowerCase()) {
+        case "arrowup":
+          event.preventDefault();
+          goPrev();
+          break;
+        case "arrowdown":
+          event.preventDefault();
+          goNext();
+          break;
+        case " ":
+        case "k":
+          // 버튼에 포커스가 있을 때 스페이스는 그 버튼 클릭이 우선.
+          if (event.key === " " && target?.closest("button, [role='button']")) return;
+          event.preventDefault();
+          playerRef.current?.togglePlay();
+          break;
+        case "m":
+          event.preventDefault();
+          setMuted((prev) => !prev);
+          break;
+        case "f":
+          event.preventDefault();
+          toggleFullscreen();
+          break;
       }
     }
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [goPrev, goNext]);
+  }, [goPrev, goNext, toggleFullscreen]);
 
   // 마우스 휠로도 탐색한다 — 한 번의 스크롤이 한 칸만 넘어가게 스로틀한다.
   const lastWheelRef = useRef(0);
@@ -116,20 +121,10 @@ export function ClipShortsView({ initialClip, creator }: Props) {
     }
   }
 
-  // 데스크탑 우측 레일과 모바일 오버레이가 같은 버튼 구성을 공유한다.
+  // 데스크탑 우측 레일과 모바일 오버레이가 같은 버튼 구성을 공유한다(공유·엠비언트·전체화면·탐색).
   function renderActions(className: string) {
     return (
       <div className={cn("flex flex-col items-center gap-2.5", className)}>
-        {creator ? (
-          <Link
-            href={`/channel/${creator.id}`}
-            prefetch={false}
-            aria-label={CLIP_LABEL.channelLink}
-            className={cn(RAIL_BUTTON_CLASS, "bg-black/40")}
-          >
-            <UserRound className="size-6" aria-hidden />
-          </Link>
-        ) : null}
         <button
           type="button"
           aria-label={CLIP_LABEL.share}
@@ -138,15 +133,6 @@ export function ClipShortsView({ initialClip, creator }: Props) {
         >
           <Share2 className="size-6" aria-hidden />
         </button>
-        <ClipVolumeControl
-          muted={muted}
-          volume={volume}
-          onToggleMute={() => setMuted((prev) => !prev)}
-          onVolumeChange={(next) => {
-            setVolume(next);
-            setMuted(next === 0);
-          }}
-        />
         <button
           type="button"
           aria-label={CLIP_LABEL.ambient}
@@ -216,9 +202,19 @@ export function ClipShortsView({ initialClip, creator }: Props) {
         </div>
       ) : null}
 
-      <div className="relative mx-auto flex h-full max-w-5xl items-center justify-center gap-3 px-3 py-4">
-        {/* 세로 스테이지 — 캐러셀 전환이 일어나는 영역 */}
-        <div className="relative aspect-[9/16] h-full w-auto max-w-full overflow-hidden rounded-xl bg-black shadow-2xl">
+      <div
+        className={cn(
+          "relative mx-auto flex h-full items-center justify-center gap-3",
+          isFullscreen ? "max-w-none p-0" : "max-w-5xl px-3 py-4",
+        )}
+      >
+        {/* 세로 스테이지 — 캐러셀 전환이 일어나는 영역. 전체화면에선 radius·여백 없이 상하 꽉 채운다. */}
+        <div
+          className={cn(
+            "relative aspect-[9/16] h-full w-auto max-w-full overflow-hidden bg-black",
+            isFullscreen ? "rounded-none" : "rounded-xl shadow-2xl",
+          )}
+        >
           <AnimatePresence mode="popLayout" custom={direction} initial={false}>
             <motion.div
               key={currentClip.id}
@@ -232,46 +228,43 @@ export function ClipShortsView({ initialClip, creator }: Props) {
                 prefersReducedMotion ? { duration: 0 } : { duration: 0.25, ease: "easeOut" }
               }
             >
-              <ClipMiniPlayer clip={currentClip} muted={muted} volume={volume} />
+              <ClipMiniPlayer ref={playerRef} clip={currentClip} muted={muted} volume={volume} />
             </motion.div>
           </AnimatePresence>
 
           {/* 시네마 딤 — 밝은 영상을 가라앉히고 하단 정보의 가독성을 확보한다 */}
           <div className="pointer-events-none absolute inset-0 z-[5] bg-gradient-to-t from-black/70 via-transparent to-black/10" />
 
-          {/* 정보 오버레이 — 크리에이터·팔로우·제목·조회수·생성일(진행바 위) */}
+          {/* 음량 — 영상 우상단 독립 배치(YT 쇼츠 결) */}
+          <div className="absolute top-3 right-3 z-20">
+            <ClipVolumeControl
+              muted={muted}
+              volume={volume}
+              onToggleMute={() => setMuted((prev) => !prev)}
+              onVolumeChange={(next) => {
+                setVolume(next);
+                setMuted(next === 0);
+              }}
+            />
+          </div>
+
+          {/* 정보 오버레이 — 크리에이터(아바타=요약 Popover)·제목·조회수·생성일(진행바 위) */}
           <div className="pointer-events-none absolute inset-x-3 bottom-16 z-10 flex flex-col gap-2">
             {creator ? (
               <div className="pointer-events-auto flex items-center gap-2">
-                {/* 치지직처럼 — 크리에이터를 누르면 새 탭으로 라이브 시청 페이지를 연다
-                    (지금 보던 클립은 그대로 두고 방송으로 바로 이동). */}
-                <Link
-                  href={`/live/${creator.id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex min-w-0 items-center gap-2 transition-opacity hover:opacity-80"
-                  aria-label={`${creator.nickname} ${CLIP_LABEL.liveLink}`}
-                >
-                  <Avatar className="size-8 ring-1 ring-white/30">
-                    <AvatarImage
-                      src={getAvatarImageSrc(creator.photoUrl)}
-                      alt={`${creator.nickname} 프로필`}
-                    />
-                    <AvatarFallback>{getAvatarFallbackText(creator.nickname)}</AvatarFallback>
-                  </Avatar>
-                  <span className="truncate text-sm font-bold text-white drop-shadow-sm">
-                    {creator.nickname}
-                  </span>
-                </Link>
-                {!creator.isOwnChannel ? (
-                  <CreatorFollowToggle
-                    creatorNickname={creator.nickname}
-                    isFollowing={following.isFollowing}
-                    isOwnChannel={creator.isOwnChannel}
-                    isPending={following.isPending}
-                    onToggle={following.toggle}
-                  />
-                ) : null}
+                {/* 아바타 클릭 = 요약 Popover(채널 보기·라이브·팔로우) — 공용 컴포넌트 재사용 */}
+                <CreatorAvatarPopover
+                  creatorId={creator.id}
+                  creatorNickname={creator.nickname}
+                  creatorPhotoUrl={creator.photoUrl}
+                  isFollowing={creator.isFollowing}
+                  confirmUnfollow
+                  avatarSize="default"
+                  avatarClassName="ring-1 ring-white/30"
+                />
+                <span className="truncate text-sm font-bold text-white drop-shadow-sm">
+                  {creator.nickname}
+                </span>
               </div>
             ) : null}
             <p className="line-clamp-2 text-sm font-semibold text-white drop-shadow-sm">
