@@ -1,10 +1,15 @@
 "use server";
 // 라이브 채팅 메시지와 채팅 규칙 동의 RPC를 호출하는 서버 액션입니다.
 
+import { randomUUID } from "crypto";
+
+import { cookies } from "next/headers";
+
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { createWriteClientForAction } from "@/actions/common/admin-client-action";
 import { getAuthenticatedActorId } from "@/actions/common/authenticated-actor";
 import {
+  ANON_VIEWER_COOKIE,
   LIVE_CHAT_MESSAGE_MAX_LENGTH,
   LIVE_DONATION_MESSAGE_MAX_LENGTH,
 } from "@/constants/live/live";
@@ -19,6 +24,7 @@ import {
 } from "@/utils/common/app-message";
 import { isRecord } from "@/utils/common/json";
 import { isUuid } from "@/utils/common/uuid";
+import { signAnonViewerKey, verifyAnonViewerKey } from "@/utils/live/live-security";
 
 // send_live_message_v4의 jsonb 응답({ messageId, moderated })을 앱 타입으로 정규화한다.
 // 금칙어로 가려진 경우 messageId는 null, moderated는 true다.
@@ -214,6 +220,7 @@ export async function joinLiveDrawAction({
     broadcast_id: broadcastId,
     creator_id: activeBroadcast.creator_id,
     content: "draw participation",
+    is_chat_visible: false,
     message_type: "moderation_notice",
     metadata,
     sender_id: actor.userId,
@@ -292,22 +299,46 @@ export async function sendLiveDonationAction(params: {
 }
 
 // 시청자 식별 키 — 로그인 시청자는 신뢰 가능한 user id('u:'), 익명 시청자는
-// 클라이언트가 생성한 세션 토큰('a:')을 쓴다. 로그인 여부는 서버에서 판단하므로
-// 클라이언트가 보낸 익명 키는 비로그인일 때만 채택한다(스푸핑 방어).
-const ANON_VIEWER_KEY_MAX_LENGTH = 64;
-
-async function resolveLiveViewerKey(anonViewerKey: string | undefined): Promise<string | null> {
+// 서버가 발급·검증하는 HttpOnly 쿠키('a:')를 쓴다. 서명 덕에 클라이언트가 '지정한' 익명 신원을
+// 위조할 순 없다(#97 A 트랙). 단 쿠키를 매번 비우고 신규 발급을 반복하는 부풀림은 막지 못하며,
+// 이는 후속 레이트리밋(⑤)에서 완화한다(MVP 허용). 로그인 여부는 서버에서 판단한다.
+async function resolveLiveViewerKey({
+  allowIssueAnonCookie,
+}: {
+  allowIssueAnonCookie: boolean;
+}): Promise<string | null> {
   const actor = await getAuthenticatedActorId({
     logLabel: "라이브 시청자 집계 중 인증 사용자 조회 실패",
   });
 
   if (actor.success) return `u:${actor.userId}`;
 
-  const trimmed = anonViewerKey?.trim() ?? "";
+  const cookieStore = await cookies();
+  const existing = cookieStore.get(ANON_VIEWER_COOKIE)?.value;
 
-  if (!trimmed || trimmed.length > ANON_VIEWER_KEY_MAX_LENGTH) return null;
+  if (existing) {
+    const verifiedUuid = verifyAnonViewerKey(existing);
+    if (verifiedUuid) return `a:${verifiedUuid}`;
+  }
 
-  return `a:${trimmed}`;
+  // 쿠키가 없거나 변조됐다. 하트비트(sync)에서만 새로 발급하고, 이탈(leave)에선 발급하지 않는다 —
+  // 신원 없는 이탈은 지울 행도 없어 no-op이면 충분하고, 퇴장 순간 새 신원을 만들 이유도 없다.
+  // ⚠️ 불변식: leave 경로는 절대 쿠키를 set하지 않는다. leave는 훅 cleanup에서 서버 액션으로
+  // 직접 호출되는데, 서버 액션에서 쿠키를 set하면 라우터 캐시가 무효화돼 재생 화면이 새로고침된다
+  // (그래서 sync만 라우트 핸들러로 분리했다). 이 게이트가 그 불변식을 강제한다.
+  if (!allowIssueAnonCookie) return null;
+
+  const uuid = randomUUID();
+  // maxAge를 두지 않아 세션 쿠키로 발급한다(브라우저 종료 시 소멸). SameSite=Lax라 동일 출처
+  // fetch/sendBeacon에 자동 동봉되고, HttpOnly라 클라이언트 스크립트가 신원을 읽거나 위조할 수 없다.
+  cookieStore.set(ANON_VIEWER_COOKIE, `${uuid}.${signAnonViewerKey(uuid)}`, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+  });
+
+  return `a:${uuid}`;
 }
 
 // 시청자 하트비트 sync/leave 공통 골격 — RPC 이름에서 로그 라벨까지 도출한다.
@@ -315,44 +346,49 @@ async function resolveLiveViewerKey(anonViewerKey: string | undefined): Promise<
 async function runLiveViewerPresenceRpc(
   rpc: "sync_live_viewer_presence" | "leave_live_viewer_presence",
   broadcastId: string,
-  anonViewerKey: string | undefined,
 ): Promise<void> {
   if (!broadcastId || !isUuid(broadcastId)) return;
 
-  const viewerKey = await resolveLiveViewerKey(anonViewerKey);
-
-  if (!viewerKey) return;
-
   const action = rpc === "sync_live_viewer_presence" ? "집계" : "이탈";
 
-  const client = await createWriteClientForAction(`라이브 시청자 ${action} Admin Client 생성 실패`);
+  // 이 헬퍼는 라우트 핸들러와 훅 cleanup의 직접 호출 양쪽에서 쓰이는 부수효과 경로다.
+  // 신원 해석(쿠키 서명·env 의존)이나 RPC가 throw해도 호출자(204 라우트·cleanup)를 깨뜨리지
+  // 않도록 전 구간을 감싸 조용히 로깅만 한다 — "화면에 영향을 주지 않는다"는 계약을 강제한다.
+  try {
+    const viewerKey = await resolveLiveViewerKey({
+      allowIssueAnonCookie: rpc === "sync_live_viewer_presence",
+    });
 
-  if (!client.success) return;
+    if (!viewerKey) return;
 
-  const { error } = await client.supabase.rpc(rpc, {
-    p_broadcast_id: broadcastId,
-    p_viewer_key: viewerKey,
-  });
+    const client = await createWriteClientForAction(
+      `라이브 시청자 ${action} Admin Client 생성 실패`,
+    );
 
-  if (error) {
-    console.error(`라이브 시청자 ${action} RPC 실패`, error);
+    if (!client.success) return;
+
+    const { error } = await client.supabase.rpc(rpc, {
+      p_broadcast_id: broadcastId,
+      p_viewer_key: viewerKey,
+    });
+
+    if (error) {
+      console.error(`라이브 시청자 ${action} RPC 실패`, error);
+    }
+  } catch (error) {
+    console.error(`라이브 시청자 ${action} 처리 중 예외`, error);
   }
 }
 
 // 시청 화면 하트비트 — current_viewer_count 집계용(로그인·익명 모두 집계).
-export async function syncLiveViewerPresenceAction(
-  broadcastId: string,
-  anonViewerKey?: string,
-): Promise<void> {
-  await runLiveViewerPresenceRpc("sync_live_viewer_presence", broadcastId, anonViewerKey);
+// 신원은 서버가 쿠키로 해석·발급하므로 broadcastId만 받는다.
+export async function syncLiveViewerPresenceAction(broadcastId: string): Promise<void> {
+  await runLiveViewerPresenceRpc("sync_live_viewer_presence", broadcastId);
 }
 
 // 시청 화면 이탈 시 본인 하트비트를 제거해 시청자 수를 즉시 줄인다.
-export async function leaveLiveViewerPresenceAction(
-  broadcastId: string,
-  anonViewerKey?: string,
-): Promise<void> {
-  await runLiveViewerPresenceRpc("leave_live_viewer_presence", broadcastId, anonViewerKey);
+export async function leaveLiveViewerPresenceAction(broadcastId: string): Promise<void> {
+  await runLiveViewerPresenceRpc("leave_live_viewer_presence", broadcastId);
 }
 
 export async function acceptLiveChatRuleAction(

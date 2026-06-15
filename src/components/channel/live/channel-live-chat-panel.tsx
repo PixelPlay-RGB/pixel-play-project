@@ -54,7 +54,7 @@ export default function ChannelLiveChatPanel({ creatorId, chatRuleText, onMessag
   const popoutCheckIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const chatState = STUDIO_CHAT_STATE;
   const { messages, loadOlderMessages, isLoadingOlder, hasMoreHistory, entryNoticeAnchorId } =
-    useLiveMessages(creatorId, creatorId);
+    useLiveMessages(creatorId);
   const { donations } = useLiveDonationRanking(creatorId ?? "");
   const { isLoggedIn, sendMessage } = useLiveChatSession({
     creatorId: creatorId ?? "",

@@ -2,8 +2,10 @@
 // 라이브 시청 메인 화면 — 비디오, 방송 정보, 채팅 패널을 조합합니다.
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "motion/react";
 import { Timer, Users } from "lucide-react";
+import { ClipSection } from "@/components/clip/clip-section";
 import { LiveVideoPlayer } from "@/components/live/view/live-video-player";
 import { LiveFullscreenChatOverlay } from "@/components/live/view/live-fullscreen-chat-overlay";
 import { LiveBroadcastInfo } from "@/components/live/view/live-broadcast-info";
@@ -16,11 +18,12 @@ import { useIsMobile } from "@/hooks/common/use-mobile";
 import { useLiveBroadcastView } from "@/hooks/live/use-live-broadcast-view";
 import { useLiveFollowAction } from "@/hooks/live/use-live-follow-action";
 import { useLiveElapsed } from "@/hooks/live/use-live-elapsed";
-import { useLiveViewerPresence } from "@/hooks/live/use-live-viewer-presence";
 import { useMoveToLogin } from "@/hooks/live/use-move-to-login";
 import { cn } from "@/lib/utils";
 import { formatCount } from "@/utils/live/live-chat";
+import { useClipEditorStore } from "@/stores/clip-editor";
 import { useLiveTheaterStore } from "@/stores/live-theater";
+import { useLiveWatchSessionStore } from "@/stores/live-watch-session";
 import { LIVE_LABEL } from "@/constants/live/live";
 
 interface Props {
@@ -39,6 +42,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
 
   const {
     isLoading,
+    isWatchError,
     broadcast,
     lastBroadcast,
     endedElapsedSeconds,
@@ -95,6 +99,10 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
 
   const [isLoginPromptOpen, setIsLoginPromptOpen] = useState(false);
   const [isDesktopChatCollapsed, setIsDesktopChatCollapsed] = useState(false);
+  const router = useRouter();
+  // 클립 생성은 별도 라우트(/clip/editor)에서 진행한다 — 가위 클릭 시점의 스냅샷·제목을
+  // store로 넘기고 이동한다(형제 라우트라 prop으로 못 잇는다).
+  const setClipHandoff = useClipEditorStore((state) => state.setHandoff);
   // 와이드(극장) 모드는 전역 사이드바(LiveShell)와 공유해야 해 store에 둔다.
   const isTheater = useLiveTheaterStore((state) => state.isWideMode);
   const toggleTheater = useLiveTheaterStore((state) => state.toggleWideMode);
@@ -114,10 +122,6 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     !!broadcast,
   );
 
-  // 방송을 보는 동안 하트비트를 보내 현재 시청자 수를 집계한다(로그인·익명 모두).
-  // 강퇴(밴)되면 차단 화면으로 전환되므로 하트비트를 멈춰 시청자 수에서 즉시 빠진다(#119).
-  useLiveViewerPresence(isBanned ? undefined : broadcast?.id);
-
   // 시청 중 강퇴(즉시 퇴장) vs 강퇴 상태로 재진입(입장 차단)을 구분하기 위해, 한 번이라도
   // 강퇴 아닌 상태로 방송을 봤는지 기억한다(렌더 중 가드된 setState — 라치 패턴).
   const [hasViewedUnbanned, setHasViewedUnbanned] = useState(false);
@@ -125,6 +129,50 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     setHasViewedUnbanned(true);
   }
   const wasEvicted = isBanned && hasViewedUnbanned;
+
+  // 시청 세션을 루트 미니플레이어 호스트와 공유한다 — 시청자 presence(하트비트)도 호스트가
+  // 세션 기준으로 단독 호출해, 페이지를 떠나도(미니 전환) 퇴장 처리되지 않는다.
+  // 라이브면 최신 스냅샷으로 시작/갱신하고, 종료·오프라인이 확정되면 세션도 끝낸다.
+  // 로딩 중엔 판단을 보류해, 다른 라이브의 미니가 재생 중이면 새 화면 데이터가 올 때까지 유지한다.
+  const startSession = useLiveWatchSessionStore((state) => state.startSession);
+  const endSession = useLiveWatchSessionStore((state) => state.endSession);
+  // 현재 store에 들어있는 세션의 크리에이터 — 오류 시 '이 화면 것'인지 '묵은 다른 방송 것'인지 구분한다.
+  const sessionCreatorId = useLiveWatchSessionStore((state) => state.session?.creatorId);
+  // broadcast 객체는 매 렌더 재생성되므로(map 함수) 원시값만 deps에 두어,
+  // 실제 값이 바뀔 때만 세션을 갱신한다(채팅 수신 등 무관한 렌더마다 재발사 방지).
+  const liveBroadcastId = broadcast?.id;
+  useEffect(() => {
+    if (isAuthLoading || isLoading) return;
+    // 강퇴(밴)되면 세션을 끝내 호스트의 하트비트를 멈춘다 — 시청자 수에서 즉시 빠진다(#119).
+    if (isBanned) {
+      endSession();
+      return;
+    }
+    // 쿼리 오류(재시도 소진)는 '오프라인 확정'이 아니다 — 같은 크리에이터의 일시 장애면 판단을
+    // 보류해 활성 세션(미니 연속성)을 끊지 않는다. 단, store에 남은 세션이 '다른 크리에이터'면
+    // 정리한다: 이 방송 조회가 실패한 채 화면을 떠나면 LiveMiniPlayerHost가 그 이전 방송 PiP를
+    // 되살리기 때문(오프라인 확정 경로와 동일하게 정리). 진짜 오프라인은 쿼리 성공+broadcast 없음.
+    if (isWatchError) {
+      if (sessionCreatorId && sessionCreatorId !== creatorId) endSession();
+      return;
+    }
+    if (!liveBroadcastId) {
+      endSession();
+      return;
+    }
+    startSession({ creatorId, broadcastId: liveBroadcastId, hlsSrc });
+  }, [
+    isAuthLoading,
+    isLoading,
+    isBanned,
+    isWatchError,
+    liveBroadcastId,
+    creatorId,
+    hlsSrc,
+    sessionCreatorId,
+    startSession,
+    endSession,
+  ]);
 
   // 채팅 입력 섹션의 동기화 높이(px). 송출/종료 프레임이 16:9로 폭을 꽉 채우는 일반 모드에서만 계산하고,
   // 화면이 낮아 자연 높이보다 작아지면 입력바가 자체 콘텐츠 높이로 버틴다(min-height라 안전).
@@ -163,6 +211,28 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
   function openLoginPrompt() {
     if (isAuthLoading) return;
     setIsLoginPromptOpen(true);
+  }
+
+  // 클립 버튼: 캡처가 끝나면 핸드오프를 store(localStorage persist)에 넣고 별도 창(팝업)을
+  // 에디터로 보낸다 — 라이브를 보면서 편집할 수 있게. 팝업이 차단됐으면 같은 탭으로 폴백한다.
+  function handleClipReady(payload: {
+    popup: Window | null;
+    snapshotDataUrl: string | null;
+    frames: string[];
+  }) {
+    setClipHandoff({
+      creatorId,
+      snapshotDataUrl: payload.snapshotDataUrl,
+      frames: payload.frames,
+      defaultTitle: broadcast?.title ?? "",
+    });
+
+    const url = `/clip/editor/${creatorId}`;
+    if (payload.popup && !payload.popup.closed) {
+      payload.popup.location.href = url;
+    } else {
+      router.push(url);
+    }
   }
 
   function collapseDesktopChat() {
@@ -225,6 +295,9 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
                   onToggleTheater={toggleTheater}
                   openChatButtonRef={openChatButtonRef}
                   onOpenChat={expandDesktopChat}
+                  clipLoggedIn={isLoggedIn}
+                  onClipRequireLogin={openLoginPrompt}
+                  onClipReady={handleClipReady}
                   renderFullscreenChat={({
                     container,
                     isChatOpen,
@@ -344,6 +417,10 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
                   className="px-4 py-3"
                 />
               ) : null}
+
+              {/* 이 채널의 클립(#124) — 좌측 칼럼 스크롤 영역에 들어가며, 극장 모드에선 정보
+                  영역과 함께 접힌다. 클립이 없는 채널은 섹션이 스스로 숨는다. */}
+              <ClipSection creatorId={creatorId} className="border-border/60 border-t px-4 py-4" />
             </motion.div>
           </div>
 

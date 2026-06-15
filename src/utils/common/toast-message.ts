@@ -6,11 +6,17 @@ import { toast } from "sonner";
 import type { AppMessageCode } from "@/constants/common/app-message-code";
 import { getAppMessage } from "@/utils/common/app-message";
 
-export function toastAppSuccess(code: AppMessageCode, description?: string) {
+export function toastAppSuccess(
+  code: AppMessageCode,
+  description?: string,
+  // Sonner 네이티브 action — 완료 토스트에 이동 버튼(예: 클립 보기)을 붙일 때 쓴다.
+  action?: { label: string; onClick: () => void },
+) {
   const message = getAppMessage(code);
 
   toast.success(message.title, {
     description: description ?? message.description,
+    action,
   });
 }
 

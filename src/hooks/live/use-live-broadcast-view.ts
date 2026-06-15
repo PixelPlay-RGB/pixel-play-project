@@ -26,12 +26,19 @@ import {
   mapLiveWatchToBroadcast,
   type LiveBroadcast,
   type LivePoll,
+  type LiveSenderRole,
 } from "@/types/live/live";
 
 export function useLiveBroadcastView(creatorId: string) {
   const user = useAuthStore((state) => state.user);
   const queryClient = useQueryClient();
-  const { data: watchData, isLoading, refetch, endedElapsedSeconds } = useLiveViewData(creatorId);
+  const {
+    data: watchData,
+    isLoading,
+    error: watchError,
+    refetch,
+    endedElapsedSeconds,
+  } = useLiveViewData(creatorId);
 
   const broadcast = mapLiveWatchToBroadcast(watchData);
   // 방송이 종료/오프라인(broadcast=null)이어도 크리에이터 정보는 남아 종료 화면에서 쓴다.
@@ -76,7 +83,7 @@ export function useLiveBroadcastView(creatorId: string) {
     setLastBroadcast(broadcast);
   }
   // 채팅은 채널 단위 타임라인(#111) — 방송 여부와 무관하게 creator 기준으로 조회·전송한다.
-  const messagesQuery = useLiveMessages(creatorId, user?.id);
+  const messagesQuery = useLiveMessages(creatorId);
   const messages = messagesQuery.messages;
 
   const pollsQuery = useLivePolls(broadcast?.id, user?.id);
@@ -175,6 +182,9 @@ export function useLiveBroadcastView(creatorId: string) {
     try {
       const result = await sendLiveDonationAction({ creatorId, ...params });
       if (result.success) {
+        // 후원 성공 즉시 내 역할 스냅샷을 donor로 승격한다(#120) — 서버는 전송 시점에
+        // 후원 이력을 직접 조회하므로 이미 정확하고, 낙관적 메시지의 뱃지만 이 신호로 따라온다.
+        queryClient.setQueryData<LiveSenderRole>(QUERY_KEYS.live.viewerRole(creatorId), "donor");
         void queryClient.invalidateQueries({
           queryKey: QUERY_KEYS.donations.walletBalance(user?.id ?? undefined),
         });
@@ -231,6 +241,8 @@ export function useLiveBroadcastView(creatorId: string) {
 
   return {
     isLoading,
+    // watch 쿼리 오류(재시도 소진) 신호 — 오프라인 확정과 구분해 세션 종료를 보류하는 데 쓴다.
+    isWatchError: Boolean(watchError),
     broadcast,
     // 시청 중 종료 시 정보 행(제목·참여자)에 쓰는 마지막 라이브 스냅샷 + 멈춘 경과 시간.
     lastBroadcast,

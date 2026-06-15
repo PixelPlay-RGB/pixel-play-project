@@ -10,7 +10,7 @@ import { useNullableUser } from "@/hooks/profile/use-profile";
 import { useAuthStore } from "@/stores/auth";
 import { appendLiveMessage } from "@/utils/live/live-chat";
 import { toastAppError } from "@/utils/common/toast-message";
-import type { LiveChatMessage, LiveViewerChatState } from "@/types/live/live";
+import type { LiveChatMessage, LiveSenderRole, LiveViewerChatState } from "@/types/live/live";
 
 interface UseLiveChatSessionParams {
   creatorId: string;
@@ -55,6 +55,14 @@ export function useLiveChatSession({
     const lastOwnRole = queryClient
       .getQueryData<LiveChatMessage[]>(messagesKey)
       ?.findLast((message) => message.senderId === user?.id && message.senderRole)?.senderRole;
+    // 후원 직후엔 직전 메시지 스냅샷이 후원 전 역할(viewer)이라 뱃지가 realtime echo 시점에야
+    // 붙는다(#120) — 후원 성공 시 승격해둔 역할이 있으면 viewer 스냅샷보다 우선한다.
+    // manager 등 상위 역할 스냅샷은 그대로 둔다(승격 신호는 donor 한정).
+    const promotedRole = queryClient.getQueryData<LiveSenderRole>(
+      QUERY_KEYS.live.viewerRole(creatorId),
+    );
+    const optimisticViewerRole =
+      lastOwnRole && lastOwnRole !== "viewer" ? lastOwnRole : (promotedRole ?? lastOwnRole);
     // 본인이 보낸 메시지는 클린봇으로 가리지 않는다(isCleanbotFlagged 미부여).
     // 자기 메시지는 본인 화면에서 항상 보이는 게 자연스럽다.
     const optimisticMessage: LiveChatMessage = {
@@ -66,7 +74,7 @@ export function useLiveChatSession({
       author: profile?.nickname ?? LIVE_LABEL.selfAuthorFallback,
       content: trimmed,
       isHost,
-      senderRole: isHost ? "creator" : lastOwnRole,
+      senderRole: isHost ? "creator" : optimisticViewerRole,
     };
 
     const removeOptimistic = () =>

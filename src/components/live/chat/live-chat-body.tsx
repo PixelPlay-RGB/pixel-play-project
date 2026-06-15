@@ -3,7 +3,8 @@
 // 시청 패널(LiveChatPanel)·팝아웃(LiveChatPopout)·전체화면 오버레이(LiveFullscreenChatOverlay)가
 // 머리말/컨테이너만 각자 두고 본문은 이 컴포넌트를 재사용한다(복붙 금지·추출).
 
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { ChevronDown } from "lucide-react";
 
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Spinner } from "@/components/ui/spinner";
@@ -21,6 +22,9 @@ import type {
 } from "@/types/live/live";
 
 const DONATION_BANNER_TOP_INSET_PX = 88;
+// 바닥에서 이만큼 멀어지면 "최근 채팅으로" 버튼을 띄운다 — 목록의 바닥 고정 해제 기준(60px)보다
+// 넉넉하게 둬서, 바닥 근처 미세 스크롤에 버튼이 깜빡이지 않게 한다.
+const SCROLL_TO_LATEST_VISIBLE_THRESHOLD_PX = 150;
 
 interface Props {
   messages: LiveChatMessage[];
@@ -128,6 +132,33 @@ export function LiveChatBody({
 }: Props) {
   // 가상화 목록의 스크롤 컨테이너(ScrollArea viewport) ref — 목록 컴포넌트와 공유한다.
   const chatScrollRef = useRef<HTMLDivElement>(null);
+  // 위로 스크롤해 바닥에서 멀어졌는지 — "최근 채팅으로" 버튼 노출 조건(같은 값이면 리렌더 없음).
+  const [isAwayFromBottom, setIsAwayFromBottom] = useState(false);
+
+  useEffect(() => {
+    const container = chatScrollRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const distanceFromBottom =
+        container.scrollHeight - container.scrollTop - container.clientHeight;
+      setIsAwayFromBottom(distanceFromBottom > SCROLL_TO_LATEST_VISIBLE_THRESHOLD_PX);
+    };
+
+    container.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => {
+      container.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
+  // 즉시 점프(smooth 미사용) — 가상화 행 실측으로 높이가 변해도 목록의 바닥 고정이
+  // 곧바로 다시 걸리도록 한 프레임에 바닥까지 내린다(점프 후 scroll 이벤트로 고정 복귀).
+  const scrollToLatest = () => {
+    const container = chatScrollRef.current;
+    if (!container) return;
+    container.scrollTop = container.scrollHeight;
+  };
 
   return (
     <>
@@ -167,6 +198,19 @@ export function LiveChatBody({
             profileContext={profileContext}
           />
         </ScrollArea>
+        {/* 과거 채팅을 보다가 한 번에 바닥(최신)으로 복귀하는 플로팅 버튼 — 입력바 바로 위에 뜬다. */}
+        {isAwayFromBottom ? (
+          <div className="pointer-events-none absolute inset-x-0 bottom-2 z-10 flex justify-center">
+            <button
+              type="button"
+              onClick={scrollToLatest}
+              className="bg-background/95 border-border text-foreground hover:bg-accent pointer-events-auto flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-semibold shadow-md transition-colors"
+            >
+              <ChevronDown className="size-3.5" />
+              {LIVE_LABEL.chatScrollToLatest}
+            </button>
+          </div>
+        ) : null}
       </div>
       <LiveChatInputBar
         className={inputClassName}

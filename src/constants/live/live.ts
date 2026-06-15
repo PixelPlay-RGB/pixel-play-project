@@ -39,6 +39,7 @@ export const LIVE_LABEL = {
   chatFilterNotice:
     "쾌적한 시청 환경을 위해 일부 메시지는 필터링 됩니다.\n클린 라이브 채팅 문화 만들기에 동참해 주세요.",
   chatLoadingOlder: "이전 채팅 불러오는 중",
+  chatScrollToLatest: "최근 채팅으로",
   donationRankingTitle: "이번 주 후원 랭킹",
   donationRankingCollapse: "후원 랭킹 접기",
   donationRankingExpand: "후원 랭킹 펼치기",
@@ -70,9 +71,12 @@ export const LIVE_LABEL = {
   bannedEvictedTitle: "강퇴되었습니다",
   bannedEvictedDescription: "이 채널에서 강퇴되어 더 이상 시청할 수 없어요.",
   bannedChatPlaceholder: "강퇴되어 채팅할 수 없어요",
-  // 방송은 시작됐지만 아직 송출(OBS) 영상이 도착하지 않은 동안 비디오 영역에 띄우는 안내.
+  // 방송 시작 직후 OBS 연결을 기다리는 짧은 구간에 띄우는 안내(연결 중).
   streamWaitingTitle: "송출 대기 중",
   streamWaitingDescription: "스트리머가 방송을 준비하고 있어요. 잠시만 기다려 주세요.",
+  // 연결을 일정 시간 기다려도 송출이 없으면 오프라인으로 안내한다(송출 시작 시 자동 재생).
+  streamOfflineTitle: "지금은 송출 중이 아니에요",
+  streamOfflineDescription: "스트리머가 송출을 시작하면 자동으로 재생돼요.",
   viewChannel: "채널 보기",
   browseLive: "다른 라이브 보기",
   chatUnavailable: "지금은 채팅을 이용할 수 없습니다",
@@ -93,9 +97,29 @@ export const LIVE_LABEL = {
   selfAuthorFallback: "나",
   // 금칙어가 포함돼 메시지가 전송되지 않았을 때 작성자 본인에게만 보이는 안내.
   bannedWordNotice: "금칙어가 포함되어 메시지가 전송되지 않았습니다.",
+  miniPlayer: "라이브 미니플레이어",
+  miniPlayerReturn: "시청 화면으로 돌아가기",
+  miniPlayerClose: "미니플레이어 닫기",
 } as const;
 
-// 어두운 플레이어 배경 위 아이콘 버튼 공통 스타일(컨트롤 바·음량·화질 공유).
+// OBS 출력·채팅 팝아웃 등 별도 창 전용 라우트 — 앱 공통 크롬과 미니플레이어를 모두 숨긴다.
+// (RouteOverlayChromeController·LiveMiniPlayerHost·RouteFooter 공유)
+export const LIVE_OVERLAY_ROUTE_PATTERN = /^\/live\/[^/]+\/(?:chat|alerts\/donation)(?:\/[^/]+)?$/;
+
+// 라이브 시청 페이지(/live/[creatorId]) — 같은 단일 세그먼트인 검색(/live/search)은 제외.
+// 시청 페이지에선(어느 크리에이터든) LiveView가 세션을 인수하거나 종료하므로 미니플레이어를 숨긴다 —
+// 시청 간 전환 로딩 중 직전 방송의 미니가 잠깐 떠서 HLS가 이중 기동·번쩍이는 것을 막는다.
+export const LIVE_WATCH_ROUTE_PATTERN = /^\/live\/(?!search$)[^/]+$/;
+
+// 익명 시청자 식별용 HttpOnly 쿠키 이름 — 서버가 발급·검증한다(#97 A 트랙).
+// 쿠키 이름 상수를 모듈 로컬에 두지 않고 여기서 관리한다(OAUTH_NEXT_COOKIE 선례).
+export const ANON_VIEWER_COOKIE = "pp_anon_viewer";
+
+// 시청자 하트비트 sync/leave 라우트 경로 — 훅(클라)과 라우트 파일 계약이 갈리지 않게 한 곳에서 관리한다.
+export const LIVE_VIEWER_SYNC_API_PATH = "/api/live/viewer-sync";
+export const LIVE_VIEWER_LEAVE_API_PATH = "/api/live/viewer-leave";
+
+// 어두운 플레이어 배경 위 아이콘 버튼 공통 스타일(컨트롤 바·음량·화질·미니플레이어 공유).
 // 영상 위에서도 또렷하도록 기본을 완전 흰색으로 둔다(흐림은 hover 배경으로만 구분).
 export const LIVE_PLAYER_ICON_BUTTON_CLASS = "text-white hover:bg-white/15 hover:text-white";
 

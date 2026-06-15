@@ -4,6 +4,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ChevronRight, Tv } from "lucide-react";
 
 import CreatorFollowingButton from "@/components/following/creator-following-button";
@@ -32,6 +33,9 @@ interface CreatorAvatarPopoverProps {
   showLivePill?: boolean;
   // 언팔로우 시 확인 다이얼로그를 띄울지 (팔로잉 관리 화면 등)
   confirmUnfollow?: boolean;
+  // 라이브 목록 캐시가 없는 화면(클립 디테일 등)에서 토글 후 서버 데이터를 다시 받아
+  // isFollowing prop을 갱신하기 위해 router.refresh를 호출할지.
+  refreshOnToggle?: boolean;
   avatarClassName?: string;
   avatarSize?: "default" | "sm" | "lg";
   triggerClassName?: string;
@@ -46,10 +50,12 @@ export default function CreatorAvatarPopover({
   showLiveRing = false,
   showLivePill = false,
   confirmUnfollow = false,
+  refreshOnToggle = false,
   avatarClassName,
   avatarSize = "lg",
   triggerClassName,
 }: CreatorAvatarPopoverProps) {
+  const router = useRouter();
   const currentUserId = useAuthStore((state) => state.user?.id);
   const toggleCreatorFollowing = useToggleCreatorFollowing();
   const [isUnfollowDialogOpen, setIsUnfollowDialogOpen] = useState(false);
@@ -62,7 +68,11 @@ export default function CreatorAvatarPopover({
 
   const runToggle = (nextFollowing: boolean) => {
     if (isOwnChannel || isPending) return;
-    toggleCreatorFollowing.mutate({ creatorId, nextFollowing });
+    toggleCreatorFollowing.mutate(
+      { creatorId, nextFollowing },
+      // 라이브 목록 캐시가 없는 화면에선 settle 후 서버 데이터를 다시 받아 버튼 상태를 갱신한다.
+      refreshOnToggle ? { onSettled: () => router.refresh() } : undefined,
+    );
   };
 
   const handleFollowingClick = () => {

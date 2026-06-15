@@ -1,15 +1,17 @@
-// 클린봇 비속어 판정·메시지 버퍼 관리와 시청자 수·후원 금액·경과 시간 포맷 유틸을 제공합니다.
+// 메시지 버퍼 관리와 시청자 수·후원 금액·경과 시간 포맷 유틸을 제공합니다.
 
 import { CLEANBOT_PROFANITY_WORDS } from "@/constants/live/cleanbot";
 import { LIVE_MESSAGE_HISTORY_CAP } from "@/constants/live/live";
 import type { LiveChatMessage } from "@/types/live/live";
 import { formatNumber } from "@/utils/common/format";
 
-// 메시지 본문이 클린봇 시드 사전의 비속어를 포함하는지(대소문자 무시 부분일치) 판정한다.
-// 방장 금칙어(서버 차단)와 별개의 best-effort 필터다.
-export function isCleanbotFlagged(content: string): boolean {
+// 클린봇 1차(클라이언트 즉시) 가림 — 서버 LLM 판정 도착 전, 명백한 욕설을 0초에 가린다(#120).
+// 한글(완성형·자모)과 영문 글자만 남기고 공백·숫자·특수문자(@ . - * ~ 등)·이모지를 모두 제거한
+// 뒤 부분일치한다. "ㅅ ㅂ", "시@발", "병.신", "시1발" 같은 끼워넣기 우회를 한 번에 잡는다.
+// 서버 판정이 도착하면(mapLiveMessageRowToMessage) 그 결과를 신뢰하므로 사전 오탐은 LLM이 해제한다.
+export function containsSeedProfanity(content: string): boolean {
   if (!content) return false;
-  const normalized = content.toLowerCase();
+  const normalized = content.toLowerCase().replace(/[^a-z가-힣ㄱ-ㅎㅏ-ㅣ]/g, "");
   return CLEANBOT_PROFANITY_WORDS.some((word) => normalized.includes(word));
 }
 
