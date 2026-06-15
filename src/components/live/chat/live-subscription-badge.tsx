@@ -39,8 +39,8 @@ export function LiveSubscriptionBadge({
   const badge = (
     <span
       className={cn(
-        "inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full align-bottom",
-        size === "sm" ? "size-5" : "mt-0.5 size-8",
+        "inline-flex shrink-0 items-center justify-center overflow-hidden align-bottom",
+        size === "sm" ? "size-5 rounded-sm" : "mt-0.5 size-8 rounded-md",
         className,
       )}
       aria-label={withTooltip ? undefined : label}
@@ -50,7 +50,7 @@ export function LiveSubscriptionBadge({
         src={imageSrc}
         alt=""
         aria-hidden
-        className="size-full object-contain"
+        className="size-full object-cover"
         width={size === "sm" ? 20 : 32}
         height={size === "sm" ? 20 : 32}
         onError={() => {

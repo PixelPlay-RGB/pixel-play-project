@@ -197,28 +197,28 @@ function BadgeSlot({ creatorId, month, isCustomSlot, onCustomSlotDeleted }: Badg
         <div className="flex items-end gap-3">
           <div className="flex flex-col items-center gap-1">
             <span className="text-muted-foreground text-[11px] font-bold">원본</span>
-            <span className="border-border bg-background flex size-15 items-center justify-center overflow-hidden rounded-full border">
+            <span className="border-border bg-background flex size-15 items-center justify-center overflow-hidden rounded-md border">
               <Image
                 src={imageSrc}
                 alt=""
                 aria-hidden
                 width={60}
                 height={60}
-                className="size-full object-contain"
+                className="size-full object-cover"
                 onError={() => setUsesFallback(true)}
               />
             </span>
           </div>
           <div className="flex flex-col items-center gap-1">
             <span className="text-muted-foreground text-[11px] font-bold">채팅</span>
-            <span className="border-border bg-background flex size-5 items-center justify-center overflow-hidden rounded-full border">
+            <span className="border-border bg-background flex size-5 items-center justify-center overflow-hidden rounded-sm border">
               <Image
                 src={imageSrc}
                 alt=""
                 aria-hidden
                 width={20}
                 height={20}
-                className="size-full object-contain"
+                className="size-full object-cover"
                 onError={() => setUsesFallback(true)}
               />
             </span>
