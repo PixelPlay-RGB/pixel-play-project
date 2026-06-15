@@ -2,13 +2,17 @@
 // 방송 운영 화면에서 실제 라이브 시청 채팅과 같은 외형의 채팅 패널을 렌더링합니다.
 
 import type { ChannelLiveChatMessage } from "@/actions/channel/live";
+import { getLiveSubscriptionBadgeAssetsAction } from "@/actions/live/live";
 import { LiveChatBody } from "@/components/live/chat/live-chat-body";
 import { LiveChatMenu } from "@/components/live/view/live-chat-menu";
+import { QUERY_KEYS } from "@/constants/common/query-keys";
 import { LIVE_DONATION_MIN_AMOUNT, LIVE_LABEL } from "@/constants/live/live";
 import { useLiveChatSession } from "@/hooks/live/use-live-chat-session";
 import { useLiveDonationRanking } from "@/hooks/live/use-live-donation-ranking";
 import { useLiveMessages } from "@/hooks/live/use-live-messages";
 import type { LiveChatMessage, LiveViewerChatState } from "@/types/live/live";
+import type { LiveSubscriptionBadgeAssetInfo } from "@/utils/live/live-subscription-badge";
+import { useQuery } from "@tanstack/react-query";
 import { ExternalLink } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -59,6 +63,18 @@ export default function ChannelLiveChatPanel({
   const chatState = STUDIO_CHAT_STATE;
   const { messages } = useLiveMessages(broadcastId, creatorId, creatorId);
   const { donations } = useLiveDonationRanking(creatorId ?? "");
+  const { data: subscriptionBadgeAssets } = useQuery<LiveSubscriptionBadgeAssetInfo | null>({
+    queryKey: QUERY_KEYS.live.subscriptionBadgeAssets(creatorId),
+    enabled: Boolean(creatorId),
+    staleTime: Infinity,
+    queryFn: async () => {
+      if (!creatorId) return null;
+
+      const result = await getLiveSubscriptionBadgeAssetsAction(creatorId);
+
+      return result.success ? (result.data ?? null) : null;
+    },
+  });
   const { isLoggedIn, sendMessage } = useLiveChatSession({
     broadcastId,
     creatorId: creatorId ?? "",
@@ -123,6 +139,8 @@ export default function ChannelLiveChatPanel({
         <LiveChatBody
           creatorId={creatorId ?? ""}
           messages={messages}
+          subscriptionBadgeCustomMonths={subscriptionBadgeAssets?.customMonths}
+          subscriptionBadgeVersion={subscriptionBadgeAssets?.version}
           donations={donations}
           polls={[]}
           chatState={chatState}

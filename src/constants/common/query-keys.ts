@@ -24,6 +24,10 @@ export const QUERY_KEYS = {
       [...QUERY_KEYS.live.all, "watch", creatorId, userId].filter((v) => v !== undefined),
     messages: (broadcastId?: string) =>
       [...QUERY_KEYS.live.all, "messages", broadcastId].filter((v) => v !== undefined),
+    subscriptionBadgeAssets: (creatorId?: string) =>
+      [...QUERY_KEYS.live.all, "subscription-badge-assets", creatorId].filter(
+        (v) => v !== undefined,
+      ),
     polls: (broadcastId?: string) =>
       [...QUERY_KEYS.live.all, "polls", broadcastId].filter((v) => v !== undefined),
     pollsForViewer: (broadcastId?: string, userId?: string | null) =>
