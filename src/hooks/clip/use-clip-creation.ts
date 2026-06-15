@@ -16,7 +16,7 @@ import { toastAppError, toastAppInfo, toastAppSuccess } from "@/utils/common/toa
 // idle: 입력 중 / submitting: 액션 전송 중 / processing: 워커 대기 / ready·failed: 결판.
 export type ClipCreationStatus = "idle" | "submitting" | "processing" | "ready" | "failed";
 
-// 워커 경로(클레임 25초 컷 + 추출·업로드)가 전부 막혀도 결판이 나는 안전망 시한.
+// 워커 경로(클레임 15초 컷 + 추출·업로드)가 전부 막혀도 결판이 나는 안전망 시한.
 const CLIP_RESULT_TIMEOUT_MS = 90_000;
 
 export function useClipCreation(creatorId: string) {
@@ -50,12 +50,6 @@ export function useClipCreation(creatorId: string) {
       setStatus("idle");
       return false;
     }
-  }
-
-  function reset() {
-    setStatus("idle");
-    setPendingClipId(null);
-    setReadyClipId(null);
   }
 
   // 본인 클립은 RLS("Clippers can read own live clips")로 상태 무관 조회·구독된다.
@@ -143,6 +137,5 @@ export function useClipCreation(creatorId: string) {
     createClip,
     status,
     readyClipId,
-    reset,
   };
 }

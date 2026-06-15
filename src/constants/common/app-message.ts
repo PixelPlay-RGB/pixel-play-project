@@ -576,6 +576,10 @@ export const APP_MESSAGE = {
         title: "클립 삭제 실패",
         description: "잠시 후 다시 시도해주세요.",
       },
+      notFound: {
+        title: "클립을 찾을 수 없어요",
+        description: "이미 삭제되었거나 없는 클립이에요.",
+      },
     },
     supabase: {
       permissionDenied: {

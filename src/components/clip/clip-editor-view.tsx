@@ -128,7 +128,7 @@ export function ClipEditorView({ creatorId }: Props) {
     }
 
     // 편집 폼(idle·submitting·processing·failed 공용) — 처리 중에도 폼은 유지하고 버튼만 스피너로.
-    const frames = handoff.frames.length > 0 ? handoff.frames : [];
+    const frames = handoff.frames;
 
     return (
       <div className="flex flex-1 flex-col gap-5 overflow-y-auto p-5">

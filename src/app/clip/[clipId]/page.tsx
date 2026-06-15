@@ -33,7 +33,6 @@ export default async function ClipDetailPage({ params }: Props) {
           nickname: profile.data.nickname,
           photoUrl: profile.data.photoUrl,
           isFollowing: profile.data.isFollowing,
-          followerCount: profile.data.followerCount,
           isOwnChannel: profile.data.isOwnChannel,
           isLive: profile.data.isLive,
         }

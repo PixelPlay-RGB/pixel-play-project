@@ -30,7 +30,6 @@ export interface ClipShortsCreator {
   nickname: string;
   photoUrl: string | null;
   isFollowing: boolean;
-  followerCount: number;
   isOwnChannel: boolean;
   // 현재 라이브 여부 — 팝오버에서 "라이브 보기" 링크 노출에 쓴다.
   isLive: boolean;

@@ -15,7 +15,12 @@ import {
   CLIP_TITLE_MAX_LENGTH,
 } from "@/constants/clip/clip";
 import type { AppActionResult } from "@/types/common/action";
-import { isKnownClipRpcError, resolveClipRpcErrorCode } from "@/utils/common/app-message";
+import {
+  isKnownClipDeleteRpcError,
+  isKnownClipRpcError,
+  resolveClipDeleteRpcErrorCode,
+  resolveClipRpcErrorCode,
+} from "@/utils/common/app-message";
 import { isRecord } from "@/utils/common/json";
 import { isUuid } from "@/utils/common/uuid";
 import { resolveViewerId } from "@/utils/auth/viewer";
@@ -206,8 +211,11 @@ export async function deleteLiveClipAction(clipId: string): Promise<AppActionRes
   });
 
   if (error) {
-    console.error("클립 삭제 RPC 실패", error);
-    return { success: false, code: APP_MESSAGE_CODE.error.clip.deleteFailed };
+    // 권한 없음(PX403)·이미 없음(PX404) 같은 예상된 결과는 로깅하지 않고 메시지로만 안내한다.
+    if (!isKnownClipDeleteRpcError(error)) {
+      console.error("클립 삭제 RPC 실패", error);
+    }
+    return { success: false, code: resolveClipDeleteRpcErrorCode(error) };
   }
 
   const { storagePath, thumbnailPath } = normalizeDeleteLiveClipResult(data);

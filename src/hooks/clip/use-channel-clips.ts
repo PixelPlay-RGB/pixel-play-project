@@ -6,15 +6,13 @@ import { useQuery } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { QUERY_KEYS } from "@/constants/common/query-keys";
 import {
+  LIVE_CLIP_LIST_COLUMNS,
   mapLiveClipRowToLiveClip,
   type ClipPeriod,
   type ClipSort,
   type LiveClip,
   type LiveClipRow,
 } from "@/types/clip/clip";
-
-const CHANNEL_CLIP_SELECT =
-  "id, creator_id, broadcast_id, clipper_user_id, title, duration_seconds, crop_x_fraction, status, storage_path, thumbnail_path, error_reason, claimed_at, view_count, created_at" as const;
 const EMPTY_CLIPS: LiveClip[] = [];
 
 const PERIOD_HOURS: Record<Exclude<ClipPeriod, "all">, number> = {
@@ -50,7 +48,7 @@ export function useChannelClips(
 
       let builder = supabase
         .from("live_clip")
-        .select(CHANNEL_CLIP_SELECT)
+        .select(LIVE_CLIP_LIST_COLUMNS)
         .eq("creator_id", creatorId)
         .eq("status", "ready");
 

@@ -105,7 +105,7 @@ export const ClipMiniPlayer = forwardRef<ClipMiniPlayerHandle, Props>(function C
           max={duration || clip.durationSeconds}
           step={0.1}
           onValueChange={seekTo}
-          aria-label={CLIP_LABEL.play}
+          aria-label={CLIP_LABEL.seek}
           className="cursor-pointer"
         />
       </div>

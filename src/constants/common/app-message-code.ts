@@ -191,6 +191,7 @@ export const APP_MESSAGE_CODE = {
       generationFailed: "error.clip.generationFailed",
       loadFailed: "error.clip.loadFailed",
       deleteFailed: "error.clip.deleteFailed",
+      notFound: "error.clip.notFound",
     },
     supabase: {
       permissionDenied: "error.supabase.permissionDenied",

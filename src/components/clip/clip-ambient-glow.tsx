@@ -29,6 +29,9 @@ export function ClipAmbientGlow({ getVideo, clipId }: Props) {
     const ctx = canvas?.getContext("2d");
     if (!canvas || !ctx) return;
 
+    // 클립이 바뀌면 새 영상이 준비될 때까지 이전 프레임 색 잔상이 남지 않게 비운다.
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
     let raf = 0;
     let last = 0;
     const draw = (now: number) => {
