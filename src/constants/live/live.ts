@@ -10,6 +10,8 @@ export const LIVE_LABEL = {
   chatRulePending: "아직 채팅 규칙에 동의하지 않았습니다",
   live: "LIVE",
   chat: "라이브 채팅",
+  subscribe: "구독",
+  subscribed: "구독중",
   follow: "팔로우",
   unfollowConfirmTitle: "팔로우를 취소하시겠습니까?",
   unfollowConfirmDescription: "팔로우를 취소하면 팔로워 전용 채팅에 참여할 수 없게 됩니다.",

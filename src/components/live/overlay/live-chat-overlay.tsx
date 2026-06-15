@@ -3,6 +3,7 @@
 import { HandCoins } from "lucide-react";
 
 import { LiveChatRoleBadge } from "@/components/live/chat/live-chat-role-badge";
+import { LiveSubscriptionBadge } from "@/components/live/chat/live-subscription-badge";
 import { useLiveChatOverlay } from "@/hooks/live/use-live-chat-overlay";
 import { cn } from "@/lib/utils";
 import type {
@@ -48,7 +49,7 @@ function ChatMessageItem({ message }: { message: LiveChatOverlayMessage }) {
 
   return (
     <div className="inline-flex max-w-130 items-start gap-1.5 rounded-xl bg-black/50 px-3.5 py-2">
-      <MessagePrefix role={message.role} />
+      <MessagePrefix role={message.role} totalMonths={message.subscriptionTotalMonths} />
       <p className="min-w-0 text-3xl leading-9 font-normal wrap-break-word">
         <span
           className={cn("mr-1.5 font-medium", message.tone === "muted" && "text-white/55")}
@@ -83,9 +84,19 @@ function DonationMessageItem({ message }: { message: LiveChatOverlayMessage }) {
 }
 
 // 시청 채팅과 같은 마크 컴포넌트를 쓰되, OBS 출력용이라 tooltip은 끈다.
-function MessagePrefix({ role }: { role?: LiveChatOverlayMessage["role"] }) {
-  if (role !== "creator" && role !== "donor") {
+function MessagePrefix({
+  role,
+  totalMonths,
+}: {
+  role?: LiveChatOverlayMessage["role"];
+  totalMonths?: number | null;
+}) {
+  if (role !== "creator" && role !== "donor" && role !== "subscriber") {
     return null;
+  }
+
+  if (role === "subscriber") {
+    return <LiveSubscriptionBadge totalMonths={totalMonths} size="lg" />;
   }
 
   return <LiveChatRoleBadge role={role} size="lg" />;

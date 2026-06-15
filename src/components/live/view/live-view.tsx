@@ -14,6 +14,7 @@ import { LiveLoginPromptDialog } from "@/components/live/view/live-login-prompt-
 import { useIsMobile } from "@/hooks/common/use-mobile";
 import { useLiveBroadcastView } from "@/hooks/live/use-live-broadcast-view";
 import { useLiveFollowAction } from "@/hooks/live/use-live-follow-action";
+import { useLiveSubscribeAction } from "@/hooks/live/use-live-subscribe-action";
 import { useLiveElapsed } from "@/hooks/live/use-live-elapsed";
 import { useLiveViewerPresence } from "@/hooks/live/use-live-viewer-presence";
 import { useMoveToLogin } from "@/hooks/live/use-move-to-login";
@@ -58,6 +59,8 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     sendDonation,
     isFollowing,
     onFollowToggled,
+    isSubscribed,
+    onSubscribed,
     chatRuleText,
     isChatRuleAccepted,
     isLoggedIn,
@@ -71,6 +74,13 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     isFollowing,
     isLoggedIn,
     onFollowToggled,
+    onUnauthenticated: openLoginPrompt,
+  });
+  const { handleSubscribe, isSubscribePending } = useLiveSubscribeAction({
+    creatorId,
+    isSubscribed,
+    isLoggedIn,
+    onSubscribed,
     onUnauthenticated: openLoginPrompt,
   });
 
@@ -267,8 +277,11 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
                   creator={creator}
                   isLive={!!broadcast}
                   isFollowing={isFollowing}
+                  isSubscribed={isSubscribed}
                   isPending={isFollowPending}
+                  isSubscribePending={isSubscribePending}
                   onFollow={handleFollow}
+                  onSubscribe={handleSubscribe}
                   className="px-4 py-4"
                 />
               ) : null}

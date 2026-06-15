@@ -24,8 +24,10 @@ import { parseLiveVoteCommand } from "@/utils/live/live-vote-command";
 import {
   mapLiveWatchCreator,
   mapLiveWatchToBroadcast,
+  type CreatorSubscriptionActionResult,
   type LiveBroadcast,
   type LivePoll,
+  type LiveWatchData,
 } from "@/types/live/live";
 
 export function useLiveBroadcastView(creatorId: string) {
@@ -39,6 +41,8 @@ export function useLiveBroadcastView(creatorId: string) {
 
   const [optimisticFollowing, setOptimisticFollowing] = useState<boolean | null>(null);
   const isFollowing = optimisticFollowing ?? watchData?.viewerRelation?.isFollowing ?? false;
+  const [optimisticSubscribed, setOptimisticSubscribed] = useState<boolean | null>(null);
+  const isSubscribed = optimisticSubscribed ?? watchData?.viewerRelation?.isSubscribed ?? false;
 
   // 채팅 규칙 게이트 통과 여부(메뉴 동의 칩 표시용) — 두 신호의 합집합.
   // ① canChat=true: RPC가 규칙 게이트를 통과시킨 상태(본인 채널·규칙 미설정 채널 포함 — 이들은
@@ -64,6 +68,40 @@ export function useLiveBroadcastView(creatorId: string) {
       })
       .catch((error) => {
         console.error("follow state refetch failed", error);
+      });
+  }
+
+  function onSubscribed(result: CreatorSubscriptionActionResult) {
+    const next = result.isSubscribed;
+    const watchKey = QUERY_KEYS.live.watch(creatorId, user?.id);
+
+    setOptimisticSubscribed(next);
+    queryClient.setQueryData<LiveWatchData | null>(watchKey, (prev) => {
+      if (!prev?.viewerRelation) return prev;
+
+      return {
+        ...prev,
+        viewerRelation: {
+          ...prev.viewerRelation,
+          isSubscribed: next,
+          subscriptionStartedAt: result.startedAt,
+          subscriptionEndAt: result.endAt,
+          subscriptionTotalMonths: result.totalMonths,
+          subscriptionStatus: result.status,
+        },
+      };
+    });
+
+    void refetch()
+      .then((refetchResult) => {
+        if ((refetchResult.data?.viewerRelation?.isSubscribed ?? false) !== next) {
+          console.error("구독 상태 refetch 결과가 optimistic 상태와 다름");
+          return;
+        }
+        setOptimisticSubscribed(null);
+      })
+      .catch((error) => {
+        console.error("subscription state refetch failed", error);
       });
   }
 
@@ -207,6 +245,8 @@ export function useLiveBroadcastView(creatorId: string) {
     creatorId,
     broadcastId: broadcast?.id,
     viewerChatState: watchData?.viewerChatState,
+    viewerIsSubscriber: isSubscribed,
+    viewerSubscriptionTotalMonths: watchData?.viewerRelation?.subscriptionTotalMonths,
     onChatRuleAccepted: refetch,
   });
 
@@ -267,6 +307,8 @@ export function useLiveBroadcastView(creatorId: string) {
     sendDonation,
     isFollowing,
     onFollowToggled,
+    isSubscribed,
+    onSubscribed,
     chatRuleText: watchData?.settings.chatRuleText,
     isChatRuleAccepted,
     ...chatSession,

@@ -64,6 +64,7 @@ export interface FollowingChannelSnapshot {
 export type LiveBroadcastRow = GenericTables<"live_broadcast">;
 export type LiveMessageRow = GenericTables<"live_message">;
 export type DonationRow = GenericTables<"donation">;
+export type CreatorSubscriptionStatus = GenericTables<"creator_subscription">["status"];
 export type LiveOverlayKind = "chat" | "donation";
 
 export interface LiveBroadcastSummary {
@@ -97,6 +98,9 @@ export interface LiveChatMessage {
   senderId?: string;
   // 전송 시점 발신자 역할 스냅샷(text 메시지). 역할 마크 표시에 쓴다.
   senderRole?: LiveSenderRole;
+  // 후원자 역할과 구독자 뱃지를 함께 표시할 때 쓰는 구독 스냅샷이다.
+  isSubscriber?: boolean;
+  subscriptionTotalMonths?: number;
   // 작성자가 방송 진행자(크리에이터) 본인인지 여부. 채팅에서 호스트 메시지를 강조하는 데 쓴다.
   isHost?: boolean;
   // 클린봇 자동 비속어 사전에 걸린 text 메시지. 클린봇 토글 ON이면 가리고 펼쳐볼 수 있다.
@@ -108,6 +112,16 @@ export interface LiveChatMessage {
 export interface SendLiveMessageResult {
   messageId: string | null;
   moderated: boolean;
+}
+
+export interface CreatorSubscriptionActionResult {
+  id: string;
+  isSubscribed: boolean;
+  alreadySubscribed: boolean;
+  startedAt: string;
+  endAt: string;
+  totalMonths: number;
+  status: CreatorSubscriptionStatus;
 }
 
 export interface LiveDonation {
@@ -209,6 +223,11 @@ export interface LiveWatchSettings {
 export interface LiveWatchViewerRelation {
   isFollowing: boolean;
   followedAt: string | null;
+  isSubscribed: boolean;
+  subscriptionStartedAt: string | null;
+  subscriptionEndAt: string | null;
+  subscriptionTotalMonths: number | null;
+  subscriptionStatus: CreatorSubscriptionStatus | null;
   chatRuleAcceptedVersion: number | null;
   chatRuleAcceptedAt: string | null;
 }

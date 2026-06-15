@@ -16,6 +16,8 @@ interface UseLiveChatSessionParams {
   creatorId: string;
   broadcastId: string | null | undefined;
   viewerChatState: LiveViewerChatState | null | undefined;
+  viewerIsSubscriber?: boolean;
+  viewerSubscriptionTotalMonths?: number | null;
   onChatRuleAccepted?: () => Promise<unknown>;
 }
 
@@ -30,6 +32,8 @@ export function useLiveChatSession({
   creatorId,
   broadcastId,
   viewerChatState,
+  viewerIsSubscriber = false,
+  viewerSubscriptionTotalMonths,
   onChatRuleAccepted,
 }: UseLiveChatSessionParams) {
   const user = useAuthStore((state) => state.user);
@@ -67,7 +71,12 @@ export function useLiveChatSession({
       author: profile?.nickname ?? LIVE_LABEL.selfAuthorFallback,
       content: trimmed,
       isHost,
-      senderRole: isHost ? "creator" : lastOwnRole,
+      senderRole: isHost
+        ? "creator"
+        : (lastOwnRole ?? (viewerIsSubscriber ? "subscriber" : undefined)),
+      isSubscriber: !isHost && viewerIsSubscriber,
+      subscriptionTotalMonths:
+        !isHost && viewerIsSubscriber ? (viewerSubscriptionTotalMonths ?? undefined) : undefined,
     };
 
     const removeOptimistic = () =>

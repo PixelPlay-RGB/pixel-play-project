@@ -117,6 +117,10 @@ export const APP_MESSAGE = {
       },
     },
     live: {
+      subscribed: {
+        title: "구독 완료",
+        description: "구독자 뱃지가 채팅에 표시됩니다.",
+      },
       urlCopied: {
         title: "링크 복사 완료",
         description: "방송 링크 복사가 완료되었습니다.",
@@ -475,6 +479,10 @@ export const APP_MESSAGE = {
       voteInvalidOption: {
         title: "잘못된 투표 번호",
         description: "유효하지 않은 투표 번호입니다.",
+      },
+      subscriptionFailed: {
+        title: "구독 실패",
+        description: "구독 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
       },
     },
     community: {

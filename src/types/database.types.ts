@@ -1431,6 +1431,10 @@ export type Database = {
         }
         Returns: Json
       }
+      subscribe_creator: {
+        Args: { p_actor_user_id: string; p_creator_id: string }
+        Returns: Json
+      }
       send_live_interaction_notice: {
         Args: {
           p_actor_user_id: string

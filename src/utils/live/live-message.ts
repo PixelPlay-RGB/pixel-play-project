@@ -81,6 +81,8 @@ export function mapLiveMessageRowToMessage(
     content: row.content,
     createdAt: row.created_at,
     senderRole: isHost ? "creator" : row.sender_role,
+    isSubscriber: metadata.isSubscriber === true,
+    subscriptionTotalMonths: readNumber(metadata.subscriptionTotalMonths) ?? undefined,
     isHost,
     // 본인 메시지는 본인 화면에서 안 가린다. refetch 재매핑 시에도 일관 유지된다.
     isCleanbotFlagged: !isOwnMessage && isCleanbotFlagged(row.content),

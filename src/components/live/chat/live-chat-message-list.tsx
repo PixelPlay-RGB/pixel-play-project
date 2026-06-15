@@ -6,6 +6,7 @@
 import { memo, useEffect, useLayoutEffect, useRef, type RefObject } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { LiveChatRoleBadge, type LiveChatRole } from "@/components/live/chat/live-chat-role-badge";
+import { LiveSubscriptionBadge } from "@/components/live/chat/live-subscription-badge";
 import { LIVE_LABEL } from "@/constants/live/live";
 import { formatDonationAmount } from "@/utils/live/live-chat";
 import { getLiveChatOverlayNicknameColor } from "@/utils/live/live-chat-overlay-style";
@@ -161,6 +162,9 @@ function TextMessage({ message, isMasked }: { message: LiveChatMessage; isMasked
   // 역할 마크는 DB가 전송 시점에 스냅샷한 sender_role을 그대로 쓴다(viewer는 마크 없음).
   const role: LiveChatRole | null =
     message.senderRole && message.senderRole !== "viewer" ? message.senderRole : null;
+  const roles: LiveChatRole[] = role && role !== "subscriber" ? [role] : [];
+  const showSubscriptionBadge =
+    (message.isSubscriber || role === "subscriber") && role !== "creator";
   // OBS 채팅 오버레이와 같은 규칙으로 닉네임별 랜덤(해시) 컬러를 적용한다.
   const nicknameColor = getLiveChatOverlayNicknameColor(
     message.author ?? "",
@@ -171,7 +175,22 @@ function TextMessage({ message, isMasked }: { message: LiveChatMessage; isMasked
     // line-height(leading-5=20px)를 마크 높이(size-5)와 일치시켜 마크가 라인박스를 정확히 채우고,
     // 닉네임·본문은 같은 인라인 텍스트라 베이스라인이 자동으로 맞는다(마크·닉네임·본문 모두 동일 정렬).
     <p className="min-w-0 text-sm leading-5 wrap-break-word">
-      {role ? <LiveChatRoleBadge role={role} withTooltip className="mr-1.5 align-bottom" /> : null}
+      {roles.length > 0 ? (
+        <span className="mr-1.5 inline-flex items-center gap-1 align-bottom">
+          {roles.map((item) => (
+            <LiveChatRoleBadge key={item} role={item} withTooltip />
+          ))}
+          {showSubscriptionBadge ? (
+            <LiveSubscriptionBadge totalMonths={message.subscriptionTotalMonths} withTooltip />
+          ) : null}
+        </span>
+      ) : showSubscriptionBadge ? (
+        <LiveSubscriptionBadge
+          totalMonths={message.subscriptionTotalMonths}
+          withTooltip
+          className="mr-1.5"
+        />
+      ) : null}
       <span className="mr-1.5 font-medium" style={{ color: nicknameColor }}>
         {message.author}
       </span>

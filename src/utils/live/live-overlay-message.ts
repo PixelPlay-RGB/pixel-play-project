@@ -26,6 +26,9 @@ export function mapLiveMessageToChatOverlayItem(
       readString(metadata.senderNickname) ??
       options.authorFallback ??
       LIVE_OVERLAY_DEFAULT_VIEWER_NAME;
+    const isCreator = message.sender_id === options.creatorId;
+    const isDonor = metadata.isDonor === true;
+    const isSubscriber = metadata.isSubscriber === true;
 
     const overlayMessage: LiveChatOverlayMessage = {
       id: message.id,
@@ -33,13 +36,9 @@ export function mapLiveMessageToChatOverlayItem(
       author,
       content: message.content,
       createdAt: message.created_at,
-      role:
-        message.sender_id === options.creatorId
-          ? "creator"
-          : metadata.isDonor === true
-            ? "donor"
-            : undefined,
-      tone: message.sender_id === options.creatorId ? "brand" : undefined,
+      subscriptionTotalMonths: readNumber(metadata.subscriptionTotalMonths),
+      role: isCreator ? "creator" : isDonor ? "donor" : isSubscriber ? "subscriber" : undefined,
+      tone: isCreator ? "brand" : undefined,
     };
 
     return {

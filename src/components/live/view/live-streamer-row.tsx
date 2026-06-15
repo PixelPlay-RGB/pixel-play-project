@@ -9,8 +9,11 @@ interface Props {
   creator: LiveCreator;
   isLive: boolean;
   isFollowing: boolean;
+  isSubscribed: boolean;
   isPending: boolean;
+  isSubscribePending: boolean;
   onFollow: () => void;
+  onSubscribe: () => void;
   className?: string;
 }
 
@@ -18,8 +21,11 @@ export function LiveStreamerRow({
   creator,
   isLive,
   isFollowing,
+  isSubscribed,
   isPending,
+  isSubscribePending,
   onFollow,
+  onSubscribe,
   className,
 }: Props) {
   return (
@@ -28,8 +34,11 @@ export function LiveStreamerRow({
       <LiveCreatorActions
         creatorNickname={creator.name}
         isFollowing={isFollowing}
+        isSubscribed={isSubscribed}
         isPending={isPending}
+        isSubscribePending={isSubscribePending}
         onFollow={onFollow}
+        onSubscribe={onSubscribe}
       />
     </div>
   );

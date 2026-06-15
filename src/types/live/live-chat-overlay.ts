@@ -8,8 +8,9 @@ export interface LiveChatOverlayMessage {
   content: LiveMessageRow["content"];
   createdAt: LiveMessageRow["created_at"];
   amount?: number | null;
+  subscriptionTotalMonths?: number | null;
   tone?: "brand" | "live" | "muted" | "default";
-  role?: "creator" | "donor";
+  role?: "creator" | "donor" | "subscriber";
 }
 
 export interface LiveChatOverlayItem {

@@ -47,6 +47,7 @@ export const APP_MESSAGE_CODE = {
       commentUpdated: "success.community.commentUpdated",
     },
     live: {
+      subscribed: "success.live.subscribed",
       urlCopied: "success.live.urlCopied",
       voteUnchanged: "success.live.voteUnchanged",
     },
@@ -159,6 +160,7 @@ export const APP_MESSAGE_CODE = {
       voteFailed: "error.live.voteFailed",
       voteNoActivePoll: "error.live.voteNoActivePoll",
       voteInvalidOption: "error.live.voteInvalidOption",
+      subscriptionFailed: "error.live.subscriptionFailed",
     },
     community: {
       postCreateFailed: "error.community.postCreateFailed",
