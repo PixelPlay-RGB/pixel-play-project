@@ -8,6 +8,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode, type WheelEve
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { ChevronDown, ChevronUp, Maximize2, Minimize2, Share2, Sparkles } from "lucide-react";
 
+import { ClipAmbientGlow } from "@/components/clip/clip-ambient-glow";
 import { ClipMiniPlayer, type ClipMiniPlayerHandle } from "@/components/clip/clip-mini-player";
 import { ClipVolumeControl } from "@/components/clip/clip-volume-control";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -105,6 +106,8 @@ export function ClipShortsView({ initialClip, creator }: Props) {
   const setPlayerRef = useCallback((handle: ClipMiniPlayerHandle | null) => {
     if (handle) playerHandleRef.current = handle;
   }, []);
+  // 엠비언트 글로우가 현재 재생 중인 영상을 canvas로 샘플링하도록 핸들에서 video를 꺼내준다.
+  const getActiveVideo = useCallback(() => playerHandleRef.current?.getVideo() ?? null, []);
 
   // 단축키 — ↑/↓: 이전/다음, 스페이스·k: 재생/일시정지, m: 음소거, f: 전체화면.
   useEffect(() => {
@@ -233,27 +236,15 @@ export function ClipShortsView({ initialClip, creator }: Props) {
       ref={containerRef}
       onWheel={handleWheel}
       className={cn(
-        "relative overflow-hidden transition-colors duration-300",
-        // 엠비언트 ON이면 주변을 극장처럼 검게 가라앉힌다.
-        isAmbient ? "bg-black" : "bg-background",
+        // 쇼츠 뷰어는 테마와 무관하게 항상 어두운 극장 배경 — 흰 텍스트·컨트롤 대비(라이트 모드)와
+        // 시네마 무드를 함께 확보한다. 엠비언트는 이 위에 색 글로우만 더한다.
+        "relative overflow-hidden bg-black",
         isFullscreen ? "h-screen" : "h-chat-content",
       )}
     >
-      {/* 유튜브 엠비언트 모드 — 재생 중인 영상을 크게 흐리게 깔아 화면 밖으로 색이 번지는 라이브
-          글로우(앰비언트 라이팅). 정적 썸네일이 아니라 같은 영상이라 색이 실시간으로 따라 움직인다. */}
-      {isAmbient && currentClip.videoUrl ? (
-        <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
-          <video
-            key={currentClip.id}
-            src={currentClip.videoUrl}
-            muted
-            loop
-            playsInline
-            autoPlay
-            className="absolute inset-0 size-full scale-150 object-cover opacity-40 blur-3xl saturate-150"
-          />
-        </div>
-      ) : null}
+      {/* 유튜브 엠비언트 — 재생 중인 영상을 저해상도 canvas로 샘플링해 컨테이너 전체에 크게 흐리게
+          깐다(지배색만 번지는 라이브 글로우). 별도 영상 디코드 없이 메인 플레이어 프레임을 그린다. */}
+      {isAmbient ? <ClipAmbientGlow getVideo={getActiveVideo} clipId={currentClip.id} /> : null}
 
       <div
         className={cn(
@@ -292,8 +283,10 @@ export function ClipShortsView({ initialClip, creator }: Props) {
             </motion.div>
           </AnimatePresence>
 
-          {/* 시네마 딤 — 밝은 영상을 가라앉히고 하단 정보의 가독성을 확보한다 */}
-          <div className="pointer-events-none absolute inset-0 z-[5] bg-gradient-to-t from-black/70 via-transparent to-black/10" />
+          {/* 시네마 딤 — 하단을 영화관처럼 짙게 가라앉혀 정보 가독성·무드를 잡고(강한 bottom 그라데이션),
+              상단도 살짝 어둡혀 위아래로 프레이밍한다. */}
+          <div className="pointer-events-none absolute inset-0 z-[5] bg-gradient-to-t from-black/90 via-black/25 to-transparent" />
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-[5] h-1/5 bg-gradient-to-b from-black/45 to-transparent" />
 
           {/* 정보 오버레이 — 크리에이터(아바타=요약 Popover)·제목·조회수·생성일(진행바 위).
               모바일은 우측 레일이 영상 안에 있어 right 여백을 둬 제목이 레일 밑으로 안 들어가게 한다. */}

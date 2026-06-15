@@ -12,6 +12,8 @@ import type { LiveClip } from "@/types/clip/clip";
 
 export interface ClipMiniPlayerHandle {
   togglePlay: () => void;
+  // 엠비언트 글로우가 현재 프레임을 canvas로 샘플링하도록 재생 중인 video element를 노출한다.
+  getVideo: () => HTMLVideoElement | null;
 }
 
 interface Props {
@@ -52,8 +54,9 @@ export const ClipMiniPlayer = forwardRef<ClipMiniPlayerHandle, Props>(function C
     }
   }
 
-  // 부모(ClipShortsView)의 스페이스/k 단축키가 재생을 토글할 수 있게 노출한다.
-  useImperativeHandle(ref, () => ({ togglePlay }), []);
+  // 부모(ClipShortsView)의 스페이스/k 단축키가 재생을 토글하고, 엠비언트 글로우가 프레임을
+  // 샘플링할 수 있게 노출한다.
+  useImperativeHandle(ref, () => ({ togglePlay, getVideo: () => videoRef.current }), []);
 
   function seekTo(next: number) {
     const video = videoRef.current;
