@@ -9,10 +9,10 @@ import { useRouter } from "next/navigation";
 import { Check, Loader2, Scissors, TriangleAlert, X } from "lucide-react";
 
 import { ClipCropSelector } from "@/components/clip/clip-crop-selector";
+import { ClipDurationTrimmer } from "@/components/clip/clip-duration-trimmer";
 import { ClipVerticalPreview } from "@/components/clip/clip-vertical-preview";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Slider } from "@/components/ui/slider";
 import {
   CLIP_DURATION_DEFAULT_SECONDS,
   CLIP_DURATION_MAX_SECONDS,
@@ -194,26 +194,12 @@ export function ClipEditorView({ creatorId }: Props) {
             />
           </div>
 
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <span className="text-foreground text-sm font-medium">
-                {CLIP_LABEL.durationLabel}
-              </span>
-              <span className="text-muted-foreground text-sm tabular-nums">
-                {durationSeconds}
-                {CLIP_LABEL.durationUnit}
-              </span>
-            </div>
-            <Slider
-              value={durationSeconds}
-              min={CLIP_DURATION_MIN_SECONDS}
-              max={CLIP_DURATION_MAX_SECONDS}
-              step={1}
-              onValueChange={setDurationSeconds}
-              aria-label={CLIP_LABEL.durationLabel}
-              className="cursor-pointer"
-            />
-          </div>
+          <ClipDurationTrimmer
+            value={durationSeconds}
+            min={CLIP_DURATION_MIN_SECONDS}
+            max={CLIP_DURATION_MAX_SECONDS}
+            onChange={setDurationSeconds}
+          />
 
           <Button
             type="button"
