@@ -25,7 +25,7 @@ const LIVE_MESSAGE_SELECT =
   "id, created_at, sender_id, message_type, content, is_chat_visible, sender_role, metadata" as const;
 const EMPTY_LIVE_MESSAGES: LiveChatMessage[] = [];
 
-export function useLiveMessages(creatorId: string | null | undefined, viewerId?: string) {
+export function useLiveMessages(creatorId: string | null | undefined) {
   const supabase = useMemo(() => createClient(), []);
   const queryClient = useQueryClient();
   const enabled = !!creatorId;
@@ -57,7 +57,7 @@ export function useLiveMessages(creatorId: string | null | undefined, viewerId?:
       if (error) throw error;
 
       return (data ?? []).reverse().flatMap((row) => {
-        const message = mapLiveMessageRowToMessage(row, creatorId ?? undefined, viewerId);
+        const message = mapLiveMessageRowToMessage(row, creatorId ?? undefined);
 
         return message ? [message] : [];
       });
@@ -106,7 +106,7 @@ export function useLiveMessages(creatorId: string | null | undefined, viewerId?:
       if (error) throw error;
 
       const olderMessages = (data ?? []).reverse().flatMap((row) => {
-        const message = mapLiveMessageRowToMessage(row, creatorId, viewerId);
+        const message = mapLiveMessageRowToMessage(row, creatorId);
         return message ? [message] : [];
       });
 
@@ -131,7 +131,7 @@ export function useLiveMessages(creatorId: string | null | undefined, viewerId?:
     } finally {
       setIsLoadingOlder(false);
     }
-  }, [creatorId, viewerId, isLoadingOlder, hasMoreHistory, supabase, queryClient]);
+  }, [creatorId, isLoadingOlder, hasMoreHistory, supabase, queryClient]);
 
   // Realtime — 새 메시지 실시간 수신
   useEffect(() => {
@@ -164,7 +164,7 @@ export function useLiveMessages(creatorId: string | null | undefined, viewerId?:
           if (row?.is_chat_visible === false) return;
 
           // Realtime payload의 metadata로 바로 매핑한다(추가 단건 조회 없음).
-          const nextMessage = mapLiveMessageRealtimePayload(payload.new, creatorId, viewerId);
+          const nextMessage = mapLiveMessageRealtimePayload(payload.new, creatorId);
           if (!nextMessage) return;
 
           queryClient.setQueryData<LiveChatMessage[]>(
@@ -181,11 +181,37 @@ export function useLiveMessages(creatorId: string | null | undefined, viewerId?:
           );
         },
       )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "live_message",
+          filter: `creator_id=eq.${creatorId}`,
+        },
+        (payload) => {
+          // 클린봇 판정(metadata.cleanbotStatus, #120) 같은 서버 측 사후 갱신을 반영한다.
+          // 캐시에 있는 메시지만 서버 버전으로 교체하고, 목록에 없는 메시지는 추가하지 않는다
+          // (히스토리 캡으로 밀려난 과거 메시지의 UPDATE가 목록 끝에 재등장하는 것을 방지).
+          const updatedMessage = mapLiveMessageRealtimePayload(payload.new, creatorId);
+          if (!updatedMessage) return;
+
+          queryClient.setQueryData<LiveChatMessage[]>(
+            QUERY_KEYS.live.messages(creatorId),
+            (prev) =>
+              prev?.some((message) => message.id === updatedMessage.id)
+                ? prev.map((message) =>
+                    message.id === updatedMessage.id ? updatedMessage : message,
+                  )
+                : prev,
+          );
+        },
+      )
       .subscribe((status) => {
         if (status === "SUBSCRIBED") {
           // 재구독 사이의 갭에서 놓친 변경을 복구한다. live_message 구독을 이 훅으로 일원화했으므로
           // (use-live-donation-ranking 참고) 메시지뿐 아니라 후원 랭킹도 함께 복구해야 한다 —
-          // viewerId(로그인) 변경으로 재구독되는 틈에 후원 INSERT가 도착하면 랭킹이 stale로 남는다.
+          // 재구독되는 틈에 후원 INSERT가 도착하면 랭킹이 stale로 남기 때문이다.
           void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.live.messages(creatorId) });
           void queryClient.invalidateQueries({
             queryKey: QUERY_KEYS.donations.liveRanking(creatorId),
@@ -196,7 +222,7 @@ export function useLiveMessages(creatorId: string | null | undefined, viewerId?:
     return () => {
       void channel.unsubscribe();
     };
-  }, [creatorId, viewerId, supabase, queryClient]);
+  }, [creatorId, supabase, queryClient]);
 
   return {
     messages: query.data ?? EMPTY_LIVE_MESSAGES,
