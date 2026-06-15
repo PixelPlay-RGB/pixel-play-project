@@ -126,11 +126,11 @@ export function ChannelSubscriptionBadgeSettingsCard({ creatorId, customMonths }
 
 function BadgeSlot({ creatorId, month, isCustomSlot, onCustomSlotDeleted }: BadgeSlotProps) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [version, setVersion] = useState(() => Date.now());
+  const [version, setVersion] = useState("initial");
   const [usesFallback, setUsesFallback] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  const storageSrc = getLiveSubscriptionBadgePublicUrl(creatorId, month, [month], String(version));
+  const storageSrc = getLiveSubscriptionBadgePublicUrl(creatorId, month, [month], version);
   const fallbackSrc = getLiveDefaultSubscriptionBadgeSrc(month);
   const imageSrc = usesFallback ? fallbackSrc : storageSrc;
 
@@ -150,7 +150,7 @@ function BadgeSlot({ creatorId, month, isCustomSlot, onCustomSlotDeleted }: Badg
         }
 
         setUsesFallback(false);
-        setVersion(result.data.updatedAt);
+        setVersion(String(result.data.updatedAt));
         toastAppSuccess(result.code ?? "success.channel.subscriptionBadgeSaved");
       } catch (error) {
         console.error("구독 배지 업로드 실패", error);
@@ -173,7 +173,7 @@ function BadgeSlot({ creatorId, month, isCustomSlot, onCustomSlotDeleted }: Badg
         }
 
         setUsesFallback(true);
-        setVersion(result.data.updatedAt);
+        setVersion(String(result.data.updatedAt));
         if (isCustomSlot) {
           onCustomSlotDeleted(month);
         }
