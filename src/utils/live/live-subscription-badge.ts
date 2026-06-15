@@ -18,6 +18,12 @@ export function getLiveSubscriptionBadgeStoragePath(
   return `${creatorId}/subscription/${month}.png`;
 }
 
+export function getLiveDefaultSubscriptionBadgeSrc(totalMonths?: number | null) {
+  const month = normalizeLiveSubscriptionBadgeMonth(totalMonths);
+
+  return `/subscription-badges/${month}.png`;
+}
+
 export function getLiveSubscriptionBadgePublicUrl(creatorId: string, totalMonths?: number | null) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
   const path = getLiveSubscriptionBadgeStoragePath(creatorId, totalMonths);

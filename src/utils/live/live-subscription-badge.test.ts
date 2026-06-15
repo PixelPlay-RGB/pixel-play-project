@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import {
+  getLiveDefaultSubscriptionBadgeSrc,
   getLiveSubscriptionBadgePublicUrl,
   normalizeLiveSubscriptionBadgeMonth,
 } from "./live-subscription-badge.ts";
@@ -28,4 +29,9 @@ test("getLiveSubscriptionBadgePublicUrl builds the creator scoped storage URL", 
   } finally {
     process.env.NEXT_PUBLIC_SUPABASE_URL = previousUrl;
   }
+});
+
+test("getLiveDefaultSubscriptionBadgeSrc builds the bundled fallback badge URL", () => {
+  assert.equal(getLiveDefaultSubscriptionBadgeSrc(3), "/subscription-badges/3.png");
+  assert.equal(getLiveDefaultSubscriptionBadgeSrc(99), "/subscription-badges/12.png");
 });

@@ -5,10 +5,12 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { LIVE_LABEL } from "@/constants/live/live";
 import { cn } from "@/lib/utils";
 import {
+  getLiveDefaultSubscriptionBadgeSrc,
   getLiveSubscriptionBadgePublicUrl,
   normalizeLiveSubscriptionBadgeMonth,
 } from "@/utils/live/live-subscription-badge";
 import Image from "next/image";
+import { useState } from "react";
 
 interface Props {
   creatorId: string;
@@ -27,7 +29,11 @@ export function LiveSubscriptionBadge({
 }: Props) {
   const month = normalizeLiveSubscriptionBadgeMonth(totalMonths);
   const label = `${LIVE_LABEL.subscriberBadge} ${month}개월`;
-  const src = getLiveSubscriptionBadgePublicUrl(creatorId, month);
+  const storageSrc = getLiveSubscriptionBadgePublicUrl(creatorId, month);
+  const fallbackSrc = getLiveDefaultSubscriptionBadgeSrc(month);
+  const [failedStorageSrc, setFailedStorageSrc] = useState<string | null>(null);
+  const imageSrc = failedStorageSrc === storageSrc ? fallbackSrc : storageSrc;
+
   const badge = (
     <span
       className={cn(
@@ -39,12 +45,17 @@ export function LiveSubscriptionBadge({
       role={withTooltip ? undefined : "img"}
     >
       <Image
-        src={src}
+        src={imageSrc}
         alt=""
         aria-hidden
         className="size-full object-contain"
         width={size === "sm" ? 20 : 32}
         height={size === "sm" ? 20 : 32}
+        onError={() => {
+          if (imageSrc === storageSrc) {
+            setFailedStorageSrc(storageSrc);
+          }
+        }}
       />
     </span>
   );
