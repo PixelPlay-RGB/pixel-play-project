@@ -63,14 +63,15 @@ export function ClipVolumeControl({ muted, volume, onToggleMute, onVolumeChange 
 
   return (
     <div className="relative flex flex-col items-center gap-2">
-      {/* 음소거 안내 — 음소거 중 잠깐 떴다 사라지는 튜토리얼 메시지(좌측). */}
+      {/* 음소거 안내 — 음소거 중 잠깐 떴다 사라지는 튜토리얼 메시지. 클립(영상)은 왼쪽에 있으므로
+          힌트는 버튼 오른쪽(바깥쪽)으로 띄워 영상을 가리지 않게 한다. */}
       {muted ? (
         <motion.div
           // muted가 true가 될 때마다 새로 마운트돼 애니메이션이 재생된다(unmute 시 사라짐).
-          initial={{ opacity: 0, x: 6 }}
+          initial={{ opacity: 0, x: -6 }}
           animate={{ opacity: [0, 1, 1, 0], x: 0 }}
           transition={{ duration: 3.6, times: [0, 0.1, 0.82, 1], ease: "easeOut" }}
-          className="bg-brand text-brand-foreground pointer-events-none absolute top-3 right-full mr-3 -translate-y-1/2 rounded-full px-3 py-1.5 text-xs font-bold whitespace-nowrap shadow-md"
+          className="bg-brand text-brand-foreground pointer-events-none absolute top-3 left-full ml-3 -translate-y-1/2 rounded-full px-3 py-1.5 text-xs font-bold whitespace-nowrap shadow-md"
         >
           {CLIP_LABEL.unmuteHint}
         </motion.div>

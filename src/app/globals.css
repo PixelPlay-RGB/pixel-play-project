@@ -247,13 +247,14 @@
     min-height: 100dvh;
   }
 
-  /* 클립 에디터(별도 창) — 헤더·푸터만 숨기고 배경은 불투명 유지(투명 오버레이와 다름). */
-  body.is-chromeless-route header.sticky,
-  body.is-chromeless-route footer {
-    display: none;
+  /* 클립 에디터(별도 창) — 헤더·푸터만 숨기고 배경은 불투명 유지(투명 오버레이와 다름).
+     마커 클래스 기반 :has()라 SSR 첫 페인트부터 적용된다(JS 클래스 토글의 헤더 깜빡임 없음). */
+  body:has(.clip-editor-root) header.sticky,
+  body:has(.clip-editor-root) footer {
+    display: none !important;
   }
 
-  body.is-chromeless-route main {
+  body:has(.clip-editor-root) main {
     height: 100dvh;
     min-height: 100dvh;
   }

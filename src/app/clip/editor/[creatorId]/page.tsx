@@ -17,10 +17,10 @@ export default async function ClipEditorPage({
 }) {
   const { creatorId } = await params;
 
-  // 헤더·푸터 없이 화면을 꽉 채운다(팝업·직접 진입 모두 동일). 카드/여백 없이 ClipEditorView가
-  // 풀블리드로 내부를 구성한다.
+  // 헤더·푸터 없이 화면을 꽉 채운다(팝업·직접 진입 모두 동일). `clip-editor-root` 마커는
+  // globals.css의 body:has(...)로 SSR 첫 페인트부터 헤더·푸터를 숨긴다(JS 토글의 플래시 없음).
   return (
-    <div className="flex flex-1 flex-col">
+    <div className="clip-editor-root flex flex-1 flex-col">
       <ClipEditorView creatorId={creatorId} />
     </div>
   );
