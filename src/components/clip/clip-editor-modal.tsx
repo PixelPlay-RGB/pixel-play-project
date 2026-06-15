@@ -6,7 +6,8 @@
 import { useRouter } from "next/navigation";
 
 import { ClipEditorView } from "@/components/clip/clip-editor-view";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { CLIP_LABEL } from "@/constants/clip/clip";
 
 interface Props {
   creatorId: string;
@@ -27,6 +28,8 @@ export function ClipEditorModal({ creatorId }: Props) {
         // 기본 chrome 중화 — 카드 모양은 ClipEditorView가 갖는다.
         className="block max-h-[90vh] gap-0 overflow-y-auto rounded-none border-0 bg-transparent p-0 shadow-none ring-0 sm:max-w-3xl"
       >
+        {/* 다이얼로그 접근성 이름 — 화면엔 ClipEditorView의 헤더가 보이고, 스크린리더용으로만 둔다. */}
+        <DialogTitle className="sr-only">{CLIP_LABEL.editorTitle}</DialogTitle>
         <ClipEditorView creatorId={creatorId} onClose={() => router.back()} />
       </DialogContent>
     </Dialog>

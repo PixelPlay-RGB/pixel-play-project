@@ -56,13 +56,21 @@ export function ClipShortsView({ initialClip, creator }: Props) {
   // 엠비언트(영화관) 모드 기본 ON.
   const [isAmbient, setIsAmbient] = useState(true);
   const { containerRef, isFullscreen, toggleFullscreen } = useFullscreen<HTMLDivElement>();
-  const playerRef = useRef<ClipMiniPlayerHandle>(null);
+  // 캐러셀 전환 중 이전 플레이어가 언마운트되며 ref를 null로 만들지 않게, handle이 있을 때만
+  // 저장하는 콜백 ref를 쓴다(공유 ref면 새 플레이어 mount 뒤 옛 플레이어 unmount가 null로 덮어씀).
+  const playerHandleRef = useRef<ClipMiniPlayerHandle | null>(null);
+  const setPlayerRef = useCallback((handle: ClipMiniPlayerHandle | null) => {
+    if (handle) playerHandleRef.current = handle;
+  }, []);
 
   // 단축키 — ↑/↓: 이전/다음, 스페이스·k: 재생/일시정지, m: 음소거, f: 전체화면.
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       const target = event.target as HTMLElement | null;
-      if (target?.closest("input, textarea, select, [contenteditable=true]")) return;
+      // 음량 슬라이더(role=slider) 등 자체 키 처리를 하는 컨트롤에 포커스가 있으면 단축키를 막는다
+      // (안 막으면 음량 ↑/↓가 클립 탐색까지 동시에 발동한다).
+      if (target?.closest("input, textarea, select, [contenteditable=true], [role='slider']"))
+        return;
 
       switch (event.key.toLowerCase()) {
         case "arrowup":
@@ -78,7 +86,7 @@ export function ClipShortsView({ initialClip, creator }: Props) {
           // 버튼에 포커스가 있을 때 스페이스는 그 버튼 클릭이 우선.
           if (event.key === " " && target?.closest("button, [role='button']")) return;
           event.preventDefault();
-          playerRef.current?.togglePlay();
+          playerHandleRef.current?.togglePlay();
           break;
         case "m":
           event.preventDefault();
@@ -228,7 +236,7 @@ export function ClipShortsView({ initialClip, creator }: Props) {
                 prefersReducedMotion ? { duration: 0 } : { duration: 0.25, ease: "easeOut" }
               }
             >
-              <ClipMiniPlayer ref={playerRef} clip={currentClip} muted={muted} volume={volume} />
+              <ClipMiniPlayer ref={setPlayerRef} clip={currentClip} muted={muted} volume={volume} />
             </motion.div>
           </AnimatePresence>
 
@@ -259,6 +267,7 @@ export function ClipShortsView({ initialClip, creator }: Props) {
                   creatorPhotoUrl={creator.photoUrl}
                   isFollowing={creator.isFollowing}
                   confirmUnfollow
+                  refreshOnToggle
                   avatarSize="default"
                   avatarClassName="ring-1 ring-white/30"
                 />

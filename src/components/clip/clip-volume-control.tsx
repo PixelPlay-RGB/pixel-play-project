@@ -50,6 +50,8 @@ export function ClipVolumeControl({ muted, volume, onToggleMute, onVolumeChange 
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
     if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return;
     event.preventDefault();
+    // 부모(쇼츠 뷰) window 핸들러로 전파되어 클립 탐색까지 발동하는 것을 막는다.
+    event.stopPropagation();
     const delta = event.key === "ArrowUp" ? KEYBOARD_STEP : -KEYBOARD_STEP;
     onVolumeChange(Math.min(1, Math.max(0, Number((volume + delta).toFixed(2)))));
   }

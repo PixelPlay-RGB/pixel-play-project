@@ -8,7 +8,7 @@ import Image from "next/image";
 
 import { CLIP_LABEL } from "@/constants/clip/clip";
 
-const SPROCKET_COUNT = 28;
+const SPROCKET_COUNT = 20;
 
 interface Props {
   value: number;
@@ -20,10 +20,11 @@ interface Props {
 }
 
 function SprocketRow() {
+  // flex-1 천공이라 폭에 따라 균등 분배·축소 — 좁은 모바일에서도 넘치지 않는다.
   return (
-    <div className="flex h-3 items-center justify-between gap-1 bg-black px-1.5" aria-hidden>
+    <div className="flex h-3 items-center gap-1.5 bg-black px-1.5" aria-hidden>
       {Array.from({ length: SPROCKET_COUNT }, (_, index) => (
-        <span key={index} className="h-1.5 w-1.5 shrink-0 rounded-[2px] bg-white/55" />
+        <span key={index} className="h-1.5 flex-1 rounded-[1px] bg-white/45" />
       ))}
     </div>
   );
@@ -59,11 +60,28 @@ export function ClipDurationTrimmer({ value, min, max, frames, onChange }: Props
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
-    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+    // 왼쪽/위=길게, 오른쪽/아래=짧게, Home=최소, End=최대(WAI-ARIA slider).
+    let next: number;
+    switch (event.key) {
+      case "ArrowLeft":
+      case "ArrowUp":
+        next = value + 1;
+        break;
+      case "ArrowRight":
+      case "ArrowDown":
+        next = value - 1;
+        break;
+      case "Home":
+        next = min;
+        break;
+      case "End":
+        next = max;
+        break;
+      default:
+        return;
+    }
     event.preventDefault();
-    // 왼쪽=길게, 오른쪽=짧게.
-    const delta = event.key === "ArrowLeft" ? 1 : -1;
-    onChange(Math.min(max, Math.max(min, value + delta)));
+    onChange(Math.min(max, Math.max(min, next)));
   }
 
   // 선택 구간의 왼쪽 위치(%) = 잘려나간 앞부분 비율.

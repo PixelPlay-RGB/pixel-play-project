@@ -72,15 +72,17 @@ function captureCurrentFrame(video: HTMLVideoElement): string | null {
 function seekAndWait(video: HTMLVideoElement, time: number, timeoutMs: number): Promise<void> {
   return new Promise((resolve) => {
     let settled = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
     const finish = () => {
       if (settled) return;
       settled = true;
+      if (timer) clearTimeout(timer);
       video.removeEventListener("seeked", finish);
       resolve();
     };
     video.addEventListener("seeked", finish, { once: true });
     video.currentTime = time;
-    setTimeout(finish, timeoutMs);
+    timer = setTimeout(finish, timeoutMs);
   });
 }
 
@@ -120,13 +122,19 @@ async function captureFilmstrip(video: HTMLVideoElement): Promise<string[]> {
   } catch (error) {
     console.error("클립 필름스트립 캡처 실패", error);
   } finally {
-    // 원위치 복귀 후 재생 상태 복원(라이브 엣지로 점프시키지 않고 보던 위치 유지).
     try {
-      video.currentTime = originalTime;
+      if (wasPaused) {
+        // 과거를 보던 중이었으면 보던 위치를 유지한다.
+        video.currentTime = originalTime;
+      } else {
+        // 라이브 시청 중이었으면 캡처 동안 흘러간 만큼 라이브 엣지로 되돌려 실시간을 유지한다.
+        const sk = video.seekable;
+        video.currentTime = sk.length > 0 ? sk.end(sk.length - 1) : originalTime;
+        void video.play().catch(() => {});
+      }
     } catch {
       // 복귀 실패는 무시 — 다음 timeupdate에서 정상화된다.
     }
-    if (!wasPaused) void video.play().catch(() => {});
   }
 
   return frames;
@@ -251,12 +259,15 @@ export function LiveVideoPlayer({
   // 상위로 올린다. hls.js(MSE)·<video crossOrigin>으로 캔버스 오염은 방지된다 — 필름스트립이
   // 비면 스냅샷 1장으로 폴백한다. 중복 클릭은 ref로 막는다.
   const clipCapturingRef = useRef(false);
+  // 캡처 중에는 일시정지(seek)로 인한 중앙 Play 오버레이 깜빡임을 숨긴다.
+  const [isCapturingClip, setIsCapturingClip] = useState(false);
   async function handleClipClick() {
     if (clipCapturingRef.current) return;
     const video = videoRef.current;
     if (!video) return;
 
     clipCapturingRef.current = true;
+    setIsCapturingClip(true);
     try {
       const snapshotDataUrl = captureCurrentFrame(video);
       let frames = await captureFilmstrip(video);
@@ -272,6 +283,7 @@ export function LiveVideoPlayer({
       onClipRequest?.({ snapshotDataUrl, frames });
     } finally {
       clipCapturingRef.current = false;
+      setIsCapturingClip(false);
     }
   }
 
@@ -320,7 +332,7 @@ export function LiveVideoPlayer({
           {playbackState !== "playing" ? <LivePlayerWaitingOverlay /> : null}
           {/* 일시정지 상태를 중앙 큰 아이콘으로 보여준다(유튜브식) — 누르면 그 자리에서 재생 재개.
               컨트롤 자동 숨김과 무관하게 떠 있어야 정지 상태가 한눈에 보인다. */}
-          {playbackState === "playing" && !isPlaying ? (
+          {playbackState === "playing" && !isPlaying && !isCapturingClip ? (
             <button
               type="button"
               aria-label={LIVE_LABEL.playerPlay}
