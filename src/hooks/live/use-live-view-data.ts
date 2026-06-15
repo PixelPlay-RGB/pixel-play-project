@@ -28,6 +28,10 @@ export function useLiveViewData(creatorId: string) {
     queryKey: QUERY_KEYS.live.watch(creatorId, user?.id),
     enabled: !isAuthLoading && isValidCreatorId,
     staleTime: 1000 * 30,
+    // 시청 화면 재진입 시 항상 서버 상태를 다시 확인한다 — 강퇴 캐시(setQueryData로 isBanned=true)가
+    // 해제 후에도 stale 로 남아, 백그라운드 refetch 동안 차단 다이얼로그가 0.5초 깜빡이는 문제를 막는다.
+    // (밴 상태는 입장마다 서버로 확정해야 하므로 always 가 정책적으로도 옳다.)
+    refetchOnMount: "always",
     queryFn: async () => {
       const [watchResult, countResult] = await Promise.all([
         supabase.rpc("get_live_watch", {
@@ -132,6 +136,9 @@ export function useLiveViewData(creatorId: string) {
   return {
     data: query.data,
     isLoading: query.isLoading,
+    // 이번 마운트에서 서버 응답을 한 번이라도 받았는지 — stale 캐시(밴 해제 전 상태)만으로
+    // 차단 다이얼로그를 띄우지 않도록, 차단 표시 게이트로 쓴다(refetchOnMount:"always" 와 짝).
+    isWatchSettled: query.isFetchedAfterMount,
     error: query.error,
     refetch: query.refetch,
     endedElapsedSeconds,

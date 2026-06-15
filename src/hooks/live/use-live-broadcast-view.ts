@@ -35,6 +35,7 @@ export function useLiveBroadcastView(creatorId: string) {
   const {
     data: watchData,
     isLoading,
+    isWatchSettled,
     error: watchError,
     refetch,
     endedElapsedSeconds,
@@ -250,6 +251,8 @@ export function useLiveBroadcastView(creatorId: string) {
     creator,
     // 강퇴/매니저 상태 — 차단 화면(isBanned)·닉네임 팝업 강퇴 게이트(canModerate).
     isBanned,
+    // 서버 응답 확정 여부 — stale 캐시만으로 차단 다이얼로그가 깜빡이지 않게 하는 게이트(#119).
+    isWatchSettled,
     canModerate,
     viewerId: user?.id ?? null,
     messages,

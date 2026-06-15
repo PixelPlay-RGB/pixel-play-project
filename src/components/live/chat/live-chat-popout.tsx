@@ -88,7 +88,9 @@ export function LiveChatPopout({ creatorId }: Props) {
   if (isBanned) {
     return (
       <div className="live-overlay-root live-popout-root bg-background flex h-dvh min-h-0 w-full flex-col items-center justify-center gap-2 overflow-hidden px-4 text-center">
-        <p className="text-foreground text-sm font-bold">{LIVE_LABEL.bannedEvictedTitle}</p>
+        <p className="text-foreground text-sm font-bold">
+          {LIVE_LABEL.bannedEvictedTitle(creator?.name)}
+        </p>
         <p className="text-muted-foreground text-sm">{LIVE_LABEL.bannedEvictedDescription}</p>
       </div>
     );

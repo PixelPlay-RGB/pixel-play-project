@@ -17,7 +17,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import {
   Table,
@@ -53,12 +53,16 @@ function BannedIdentity({ nickname, userId }: { nickname: string; userId: string
   );
 }
 
+// 처리 상태는 같은 행 "관리"의 해제 버튼과 너비·높이·라운드를 맞춘다(둘 다 buttonVariants 기본 크기
+// + min-w-12). 강퇴는 부정 동작이라 브랜드색이 아닌 destructive(라이트=연한 빨강, 다크는 변형이 처리)로,
+// 비대화형(span)이라 hover/active는 무의미하다.
 function StatusTag({ isActive }: { isActive: boolean }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold",
-        isActive ? "bg-error/10 text-error" : "bg-muted text-muted-foreground",
+        buttonVariants({ variant: isActive ? "destructive" : "outline", size: "default" }),
+        "pointer-events-none min-w-12 font-bold",
+        !isActive && "text-muted-foreground",
       )}
     >
       {isActive ? "강퇴" : "해제됨"}
@@ -117,7 +121,12 @@ export function ChannelViewerBanList({ bans, onUnban, isUnbanning }: Props) {
                 </TableCell>
                 <TableCell className="text-center">
                   {ban.isActive ? (
-                    <Button variant="outline" size="sm" onClick={() => setUnbanTarget(ban)}>
+                    <Button
+                      variant="outline"
+                      size="default"
+                      className="min-w-12"
+                      onClick={() => setUnbanTarget(ban)}
+                    >
                       해제
                     </Button>
                   ) : (
@@ -148,8 +157,8 @@ export function ChannelViewerBanList({ bans, onUnban, isUnbanning }: Props) {
             {ban.isActive && (
               <Button
                 variant="outline"
-                size="sm"
-                className="self-end"
+                size="default"
+                className="min-w-12 self-end"
                 onClick={() => setUnbanTarget(ban)}
               >
                 해제

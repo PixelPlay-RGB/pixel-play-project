@@ -70,6 +70,19 @@ export function LiveChatProfilePopover({
 
   const displayNickname = profile?.nickname ?? fallbackNickname;
 
+  // 팔로우 시작일 문구는 버튼과 같은 진실 소스(isFollowing)에 묶는다 — profile.followedAt(별도 RPC)에
+  // 묶으면 즉시 언팔 후 프로필 refetch 전까지 "팔로우 …"가 남아 버튼과 어긋난다(#119). 권한자가 강퇴
+  // 대상을 보는(팔로우 미조회) 경우엔 isFollowing 을 받지 않으므로 profile.followedAt 으로 폴백한다.
+  const isFollowingForDisplay = showFollow ? isFollowing : profile?.followedAt != null;
+  const followStatusText =
+    isLoading || (showFollow && isFollowStatusLoading)
+      ? "불러오는 중…"
+      : isFollowingForDisplay
+        ? profile?.followedAt
+          ? `팔로우 ${formatKstDateTimeNumeric(profile.followedAt)}`
+          : "팔로잉"
+        : "팔로우 안 함";
+
   function handleFollow() {
     if (!isLoggedIn) {
       setIsOpen(false);
@@ -118,21 +131,18 @@ export function LiveChatProfilePopover({
             <div className="min-w-0 flex-1">
               <p className="text-foreground truncate text-sm font-black">{displayNickname}</p>
               <p className="text-muted-foreground mt-1 truncate text-xs font-medium">
-                {isLoading
-                  ? "불러오는 중…"
-                  : profile?.followedAt
-                    ? `팔로우 ${formatKstDateTimeNumeric(profile.followedAt)}`
-                    : "팔로우 안 함"}
+                {followStatusText}
               </p>
             </div>
           </div>
 
-          <div className="border-border/60 bg-muted/30 flex items-center gap-2 border-t px-3 py-3">
+          {/* 두 버튼은 grid 로 정확히 50:50 — flex-1 은 min-width:auto 때문에 "채널 보기"가 더 넓어진다. */}
+          <div className="border-border/60 bg-muted/30 grid grid-cols-2 items-center gap-2 border-t px-3 py-3">
             <Link
               href={`/channel/${targetUserId}`}
               className={cn(
                 buttonVariants({ variant: "outline", size: "sm" }),
-                "h-8 flex-1 justify-center gap-1.5 rounded-full px-3 text-xs font-bold",
+                "h-8 w-full min-w-0 justify-center gap-1.5 rounded-full px-3 text-xs font-bold",
               )}
               onClick={() => setIsOpen(false)}
             >
@@ -145,27 +155,25 @@ export function LiveChatProfilePopover({
                 type="button"
                 variant="destructive"
                 size="sm"
-                className="h-8 flex-1 justify-center gap-1.5 rounded-full px-3 text-xs font-bold"
+                className="h-8 w-full min-w-0 justify-center gap-1.5 rounded-full px-3 text-xs font-bold"
                 onClick={openBanConfirm}
               >
                 <UserX className="size-3.5" />
                 강퇴하기
               </Button>
             ) : showFollow ? (
-              <div className="flex-1">
-                <CreatorFollowingButton
-                  creatorNickname={displayNickname}
-                  isFollowing={isFollowing}
-                  isOwnChannel={isSelf}
-                  // 팔로우 상태 로딩 중에도 비활성화해 방향이 정해지기 전 클릭을 막는다.
-                  isPending={isFollowPending || isFollowStatusLoading}
-                  onClick={handleFollow}
-                  className="w-full"
-                />
-              </div>
+              <CreatorFollowingButton
+                creatorNickname={displayNickname}
+                isFollowing={isFollowing}
+                isOwnChannel={isSelf}
+                // 팔로우 상태 로딩 중에도 비활성화해 방향이 정해지기 전 클릭을 막는다.
+                isPending={isFollowPending || isFollowStatusLoading}
+                onClick={handleFollow}
+                className="w-full min-w-0"
+              />
             ) : (
               // 권한자 역할 로딩 중 — 자리만 유지해 강퇴/팔로우 버튼이 뒤늦게 끼어드는 깜빡임을 막는다.
-              <div className="flex-1" />
+              <div />
             )}
           </div>
         </PopoverContent>

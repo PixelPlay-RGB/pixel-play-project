@@ -15,10 +15,14 @@ interface Props {
   open: boolean;
   // true = 시청 중 강퇴(즉시 퇴장), false = 강퇴 상태로 입장 시도(입장 차단).
   wasEvicted: boolean;
+  // 강퇴된 채널의 크리에이터 닉네임 — "{닉네임} 방송에서 강퇴되었습니다" 안내에 쓴다.
+  creatorNickname?: string;
 }
 
-export function LiveBannedDialog({ open, wasEvicted }: Props) {
-  const title = wasEvicted ? LIVE_LABEL.bannedEvictedTitle : LIVE_LABEL.bannedEntryTitle;
+export function LiveBannedDialog({ open, wasEvicted, creatorNickname }: Props) {
+  const title = wasEvicted
+    ? LIVE_LABEL.bannedEvictedTitle(creatorNickname)
+    : LIVE_LABEL.bannedEntryTitle;
   const description = wasEvicted
     ? LIVE_LABEL.bannedEvictedDescription
     : LIVE_LABEL.bannedEntryDescription;

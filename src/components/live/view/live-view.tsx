@@ -79,6 +79,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     followerWaitSeconds,
     slowModeSeconds,
     isBanned,
+    isWatchSettled,
     canModerate,
     viewerId,
   } = useLiveBroadcastView(creatorId);
@@ -129,6 +130,10 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     setHasViewedUnbanned(true);
   }
   const wasEvicted = isBanned && hasViewedUnbanned;
+  // 강퇴 다이얼로그는 "서버로 확정된 밴"일 때만 띄운다 — 해제 후 재진입 시 stale 캐시의 isBanned=true 가
+  // 백그라운드 refetch 동안 다이얼로그를 깜빡이게 하던 문제를 막는다(#119). 단, 영상/검은 프레임 차단은
+  // raw isBanned 로 즉시 처리해(아래), 강퇴자가 재입장할 때 확정 전 0.5초간 스트림이 노출되는 누출을 막는다.
+  const isConfirmedBanned = isBanned && isWatchSettled;
 
   // 시청 세션을 루트 미니플레이어 호스트와 공유한다 — 시청자 presence(하트비트)도 호스트가
   // 세션 기준으로 단독 호출해, 페이지를 떠나도(미니 전환) 퇴장 처리되지 않는다.
@@ -482,7 +487,11 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
         onLogin={moveToLogin}
       />
 
-      <LiveBannedDialog open={isBanned} wasEvicted={wasEvicted} />
+      <LiveBannedDialog
+        open={isConfirmedBanned}
+        wasEvicted={wasEvicted}
+        creatorNickname={creator?.name}
+      />
     </>
   );
 }
