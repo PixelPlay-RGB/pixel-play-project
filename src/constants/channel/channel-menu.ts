@@ -6,6 +6,7 @@ import {
   MessageSquareText,
   ShieldCheck,
   SlidersHorizontal,
+  Sticker,
   Users,
 } from "lucide-react";
 
@@ -14,13 +15,14 @@ export interface ChannelMenuGroup {
   items: ChannelMenuItem[];
 }
 
-// 성격별 섹션: 방송(운영·채팅) / 수익(후원) / 관리(통계·보안).
+// 성격별 섹션: 방송(운영·채팅·연결) / 수익(후원) / 구독(이모지) / 관리(통계·권한).
 export const CHANNEL_MENU_GROUPS: ChannelMenuGroup[] = [
   {
     label: "방송",
     items: [
       { id: "live", label: "방송 운영", href: "/channel/live", icon: SlidersHorizontal },
       { id: "chat", label: "채팅 설정", href: "/channel/chat", icon: MessageSquareText },
+      { id: "security", label: "방송 연결", href: "/channel/security", icon: ShieldCheck },
     ],
   },
   {
@@ -38,6 +40,10 @@ export const CHANNEL_MENU_GROUPS: ChannelMenuGroup[] = [
     ],
   },
   {
+    label: "구독",
+    items: [{ id: "emoji", label: "이모지", href: "/channel/emoji", icon: Sticker }],
+  },
+  {
     label: "관리",
     items: [
       {
@@ -50,7 +56,6 @@ export const CHANNEL_MENU_GROUPS: ChannelMenuGroup[] = [
         ],
       },
       { id: "permissions", label: "권한 관리", href: "/channel/permissions", icon: Users },
-      { id: "security", label: "방송 연결", href: "/channel/security", icon: ShieldCheck },
     ],
   },
 ];
