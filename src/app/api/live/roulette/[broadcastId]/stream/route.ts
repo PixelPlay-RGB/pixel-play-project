@@ -37,9 +37,11 @@ export async function GET(_request: Request, context: RouteContext) {
 
   const encoder = new TextEncoder();
 
+  let closeStream: (() => void) | null = null;
   const stream = new ReadableStream<Uint8Array>({
     start(controller) {
       let isClosed = false;
+      const onAbort = () => close();
 
       function enqueue(message: string) {
         if (isClosed) return;
@@ -58,12 +60,17 @@ export async function GET(_request: Request, context: RouteContext) {
         isClosed = true;
         clearInterval(keepAlive);
         unsubscribe();
+        _request.signal.removeEventListener("abort", onAbort);
         controller.close();
       }
+      closeStream = close;
 
       enqueue(": connected\n\n");
 
-      _request.signal.addEventListener("abort", close);
+      _request.signal.addEventListener("abort", onAbort, { once: true });
+    },
+    cancel() {
+      closeStream?.();
     },
   });
 
