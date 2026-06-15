@@ -4,13 +4,14 @@
 // 전체화면·이전/다음), 하단에 크리에이터(아바타=요약 Popover)·제목·생성일 오버레이.
 // 엠비언트(영화관) 모드는 기본 ON — 썸네일을 흑백·고휘도로 흐리게 깐 무채색 백라이트 글로우.
 
-import { useCallback, useEffect, useRef, useState, type WheelEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode, type WheelEvent } from "react";
 import Image from "next/image";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { ChevronDown, ChevronUp, Maximize2, Minimize2, Share2, Sparkles } from "lucide-react";
 
 import { ClipMiniPlayer, type ClipMiniPlayerHandle } from "@/components/clip/clip-mini-player";
 import { ClipVolumeControl } from "@/components/clip/clip-volume-control";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import CreatorAvatarPopover from "@/components/creator/creator-avatar-popover";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { CLIP_LABEL } from "@/constants/clip/clip";
@@ -48,6 +49,59 @@ const slideVariants = {
 // 우측 레일 공용 버튼 스타일 — 크게(size-12), hover는 opacity로 은은하게.
 const RAIL_BUTTON_CLASS =
   "flex size-12 cursor-pointer items-center justify-center rounded-full text-white opacity-90 backdrop-blur-sm transition-opacity hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-30";
+// ON 상태 — brand 채움 + 부드러운 brand 글로우 링(평면 단색보다 또렷하게).
+const RAIL_ACTIVE_CLASS =
+  "bg-brand text-brand-foreground opacity-100 shadow-lg shadow-brand/40 ring-2 ring-brand/40";
+
+// 레일 등장 — 위에서 아래로 가볍게 스태거 페이드(마운트 1회). reduced-motion은 상위에서 끈다.
+const railContainerVariants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.04, delayChildren: 0.05 } },
+};
+const railItemVariants = {
+  hidden: { opacity: 0, x: 10 },
+  show: { opacity: 1, x: 0 },
+};
+
+// 레일 버튼 — 툴팁 + 탭 스케일 피드백 + ON 글로우를 공통으로 묶는다.
+function RailButton({
+  label,
+  onClick,
+  disabled,
+  pressed,
+  active,
+  children,
+}: {
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+  pressed?: boolean;
+  active?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <motion.div variants={railItemVariants}>
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <motion.button
+              type="button"
+              aria-label={label}
+              aria-pressed={pressed}
+              disabled={disabled}
+              whileTap={{ scale: 0.9 }}
+              onClick={onClick}
+              className={cn(RAIL_BUTTON_CLASS, active ? RAIL_ACTIVE_CLASS : "bg-black/40")}
+            >
+              {children}
+            </motion.button>
+          }
+        />
+        <TooltipContent side="left">{label}</TooltipContent>
+      </Tooltip>
+    </motion.div>
+  );
+}
 
 export function ClipShortsView({ initialClip, creator }: Props) {
   const { currentClip, direction, prevClip, nextClip, goPrev, goNext } = useClipShorts(initialClip);
@@ -134,70 +188,54 @@ export function ClipShortsView({ initialClip, creator }: Props) {
   // 데스크탑 우측 레일과 모바일 오버레이가 같은 버튼 구성을 공유한다(음량·공유·엠비언트·전체화면·탐색).
   function renderActions(className: string) {
     return (
-      <div className={cn("flex flex-col items-center gap-2.5", className)}>
-        {/* 음량 — 레일 맨 위(데스크탑은 영상 밖 여백), 나머지와 구분되게 둔다 */}
-        <ClipVolumeControl
-          muted={muted}
-          volume={volume}
-          onToggleMute={() => setMuted((prev) => !prev)}
-          onVolumeChange={(next) => {
-            setVolume(next);
-            setMuted(next === 0);
-          }}
-        />
+      <motion.div
+        variants={railContainerVariants}
+        initial={prefersReducedMotion ? false : "hidden"}
+        animate="show"
+        className={cn("flex flex-col items-center gap-2.5", className)}
+      >
+        {/* 음량 — 레일 맨 위(데스크탑은 영상 밖 여백), 항상 보이는 인디케이터 */}
+        <motion.div variants={railItemVariants}>
+          <ClipVolumeControl
+            muted={muted}
+            volume={volume}
+            onToggleMute={() => setMuted((prev) => !prev)}
+            onVolumeChange={(next) => {
+              setVolume(next);
+              setMuted(next === 0);
+            }}
+          />
+        </motion.div>
         <div className="h-px w-6 bg-white/15" aria-hidden />
-        <button
-          type="button"
-          aria-label={CLIP_LABEL.share}
-          onClick={copyClipLink}
-          className={cn(RAIL_BUTTON_CLASS, "bg-black/40")}
-        >
+        <RailButton label={CLIP_LABEL.share} onClick={copyClipLink}>
           <Share2 className="size-6" aria-hidden />
-        </button>
-        <button
-          type="button"
-          aria-label={CLIP_LABEL.ambient}
-          aria-pressed={isAmbient}
+        </RailButton>
+        <RailButton
+          label={CLIP_LABEL.ambient}
+          pressed={isAmbient}
+          active={isAmbient}
           onClick={() => setIsAmbient((prev) => !prev)}
-          className={cn(
-            RAIL_BUTTON_CLASS,
-            isAmbient ? "bg-brand text-brand-foreground opacity-100" : "bg-black/40",
-          )}
         >
-          <Sparkles className="size-6" aria-hidden />
-        </button>
-        <button
-          type="button"
-          aria-label={isFullscreen ? CLIP_LABEL.exitFullscreen : CLIP_LABEL.fullscreen}
+          <Sparkles className={cn("size-6", isAmbient && "fill-current")} aria-hidden />
+        </RailButton>
+        <RailButton
+          label={isFullscreen ? CLIP_LABEL.exitFullscreen : CLIP_LABEL.fullscreen}
           onClick={toggleFullscreen}
-          className={cn(RAIL_BUTTON_CLASS, "bg-black/40")}
         >
           {isFullscreen ? (
             <Minimize2 className="size-6" aria-hidden />
           ) : (
             <Maximize2 className="size-6" aria-hidden />
           )}
-        </button>
+        </RailButton>
         <div className="h-2" />
-        <button
-          type="button"
-          aria-label={CLIP_LABEL.prevClip}
-          disabled={!prevClip}
-          onClick={goPrev}
-          className={cn(RAIL_BUTTON_CLASS, "bg-black/40")}
-        >
+        <RailButton label={CLIP_LABEL.prevClip} disabled={!prevClip} onClick={goPrev}>
           <ChevronUp className="size-6" aria-hidden />
-        </button>
-        <button
-          type="button"
-          aria-label={CLIP_LABEL.nextClip}
-          disabled={!nextClip}
-          onClick={goNext}
-          className={cn(RAIL_BUTTON_CLASS, "bg-black/40")}
-        >
+        </RailButton>
+        <RailButton label={CLIP_LABEL.nextClip} disabled={!nextClip} onClick={goNext}>
           <ChevronDown className="size-6" aria-hidden />
-        </button>
-      </div>
+        </RailButton>
+      </motion.div>
     );
   }
 
@@ -252,7 +290,14 @@ export function ClipShortsView({ initialClip, creator }: Props) {
                 prefersReducedMotion ? { duration: 0 } : { duration: 0.25, ease: "easeOut" }
               }
             >
-              <ClipMiniPlayer ref={setPlayerRef} clip={currentClip} muted={muted} volume={volume} />
+              <ClipMiniPlayer
+                ref={setPlayerRef}
+                clip={currentClip}
+                muted={muted}
+                volume={volume}
+                // 다음 클립이 있으면 종료 시 자동 전환, 없으면 무한 반복(미니 플레이어 내부 처리).
+                onRequestNext={nextClip ? goNext : undefined}
+              />
             </motion.div>
           </AnimatePresence>
 

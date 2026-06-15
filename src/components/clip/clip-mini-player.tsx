@@ -19,10 +19,12 @@ interface Props {
   muted: boolean;
   // 0~1 — video.volume과 동일 스케일.
   volume: number;
+  // 다음 클립이 있으면 종료 시 호출(자동 전환). 없으면(undefined) 영상이 무한 반복된다.
+  onRequestNext?: () => void;
 }
 
 export const ClipMiniPlayer = forwardRef<ClipMiniPlayerHandle, Props>(function ClipMiniPlayer(
-  { clip, muted, volume },
+  { clip, muted, volume, onRequestNext },
   ref,
 ) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -69,12 +71,14 @@ export const ClipMiniPlayer = forwardRef<ClipMiniPlayerHandle, Props>(function C
         poster={clip.thumbnailUrl ?? undefined}
         className="h-full w-full cursor-pointer object-contain"
         autoPlay
-        loop
+        // 다음 클립이 있으면 종료 시 자동 전환(loop 끔), 없으면 네이티브 무한 반복.
+        loop={!onRequestNext}
         playsInline
         muted={muted}
         onClick={togglePlay}
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
+        onEnded={() => onRequestNext?.()}
         onTimeUpdate={(event) => setProgress(event.currentTarget.currentTime)}
         onLoadedMetadata={(event) => setDuration(event.currentTarget.duration)}
       />

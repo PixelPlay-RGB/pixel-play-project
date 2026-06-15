@@ -1,12 +1,13 @@
 "use client";
-// 클립 쇼츠 음량 — 유튜브 쇼츠처럼 영상 우상단에 독립 배치하는 눈에 띄는 스피커 버튼 +
-// hover/포커스 시 아래로 펼쳐지는 세로 음량 슬라이더. 음소거 상태에선 "소리를 켜려면
-// 누르세요" 힌트가 잠깐 떴다 사라지는 튜토리얼 메시지로 동작한다(치지직 결).
+// 클립 쇼츠 음량 — 치지직처럼 레일 최상단에 스피커 버튼 + "항상 보이는" 세로 음량 슬라이더를 둔다.
+// 음량 레벨이 인디케이터로 늘 보이고(hover 게이트 없음), 드래그/방향키로 조절한다. 음소거 상태에선
+// brand로 강조 + "소리를 켜려면 누르세요" 힌트가 잠깐 떴다 사라진다(튜토리얼).
 
 import { useRef, type KeyboardEvent, type PointerEvent } from "react";
 import { motion } from "motion/react";
-import { Volume2, VolumeX } from "lucide-react";
+import { Volume1, Volume2, VolumeX } from "lucide-react";
 
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { CLIP_LABEL } from "@/constants/clip/clip";
 import { cn } from "@/lib/utils";
 
@@ -57,9 +58,11 @@ export function ClipVolumeControl({ muted, volume, onToggleMute, onVolumeChange 
   }
 
   const level = muted ? 0 : volume;
+  const Icon = level === 0 ? VolumeX : level < 0.5 ? Volume1 : Volume2;
+  const toggleLabel = muted ? CLIP_LABEL.unmute : CLIP_LABEL.mute;
 
   return (
-    <div className="group/vol relative flex flex-col items-center">
+    <div className="relative flex flex-col items-center gap-2">
       {/* 음소거 안내 — 음소거 중 잠깐 떴다 사라지는 튜토리얼 메시지(좌측). */}
       {muted ? (
         <motion.div
@@ -67,33 +70,37 @@ export function ClipVolumeControl({ muted, volume, onToggleMute, onVolumeChange 
           initial={{ opacity: 0, x: 6 }}
           animate={{ opacity: [0, 1, 1, 0], x: 0 }}
           transition={{ duration: 3.6, times: [0, 0.1, 0.82, 1], ease: "easeOut" }}
-          className="bg-brand text-brand-foreground pointer-events-none absolute top-1/2 right-full mr-3 -translate-y-1/2 rounded-full px-3 py-1.5 text-xs font-bold whitespace-nowrap shadow-md"
+          className="bg-brand text-brand-foreground pointer-events-none absolute top-3 right-full mr-3 -translate-y-1/2 rounded-full px-3 py-1.5 text-xs font-bold whitespace-nowrap shadow-md"
         >
           {CLIP_LABEL.unmuteHint}
         </motion.div>
       ) : null}
 
-      {/* 스피커 버튼 — 음소거 시 brand 링으로 강조 */}
-      <button
-        type="button"
-        aria-label={CLIP_LABEL.volume}
-        onClick={onToggleMute}
-        className={cn(
-          "flex size-12 cursor-pointer items-center justify-center rounded-full backdrop-blur-sm transition-opacity",
-          muted
-            ? "bg-brand text-brand-foreground"
-            : "bg-black/45 text-white opacity-90 hover:opacity-100",
-        )}
-      >
-        {muted ? (
-          <VolumeX className="size-7" aria-hidden />
-        ) : (
-          <Volume2 className="size-7" aria-hidden />
-        )}
-      </button>
+      {/* 스피커 버튼 — 음소거 시 brand 글로우로 강조 */}
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <motion.button
+              type="button"
+              aria-label={toggleLabel}
+              whileTap={{ scale: 0.9 }}
+              onClick={onToggleMute}
+              className={cn(
+                "flex size-12 cursor-pointer items-center justify-center rounded-full backdrop-blur-sm transition-opacity",
+                muted
+                  ? "bg-brand text-brand-foreground shadow-brand/40 shadow-lg"
+                  : "bg-black/45 text-white opacity-90 hover:opacity-100",
+              )}
+            >
+              <Icon className="size-7" aria-hidden />
+            </motion.button>
+          }
+        />
+        <TooltipContent side="left">{toggleLabel}</TooltipContent>
+      </Tooltip>
 
-      {/* hover/포커스 시 아래로 펼쳐지는 세로 음량 슬라이더 */}
-      <div className="pointer-events-none absolute top-full mt-2 flex flex-col items-center rounded-full bg-black/70 px-2.5 py-3 opacity-0 backdrop-blur-sm transition-opacity group-focus-within/vol:pointer-events-auto group-focus-within/vol:opacity-100 group-hover/vol:pointer-events-auto group-hover/vol:opacity-100">
+      {/* 항상 보이는 세로 음량 슬라이더(치지직 결) — 레벨 인디케이터가 늘 보인다 */}
+      <div className="flex flex-col items-center rounded-full bg-black/45 px-2 py-2.5 backdrop-blur-sm">
         <div
           ref={trackRef}
           role="slider"
@@ -102,20 +109,22 @@ export function ClipVolumeControl({ muted, volume, onToggleMute, onVolumeChange 
           aria-valuemin={0}
           aria-valuemax={100}
           aria-valuenow={Math.round(level * 100)}
-          className="focus-visible:ring-ring relative h-24 w-1.5 cursor-pointer touch-none rounded-full bg-white/30 outline-none focus-visible:ring-2"
+          className="focus-visible:ring-ring relative h-16 w-1.5 cursor-pointer touch-none rounded-full bg-white/25 outline-none focus-visible:ring-2"
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerUp}
           onKeyDown={handleKeyDown}
         >
-          <div
-            className="absolute bottom-0 w-full rounded-full bg-white"
-            style={{ height: `${level * 100}%` }}
+          <motion.div
+            className="bg-brand absolute bottom-0 w-full rounded-full"
+            animate={{ height: `${level * 100}%` }}
+            transition={{ type: "tween", duration: 0.12 }}
           />
-          <div
+          <motion.div
             className="absolute left-1/2 size-3 -translate-x-1/2 rounded-full bg-white shadow"
-            style={{ bottom: `calc(${level * 100}% - 6px)` }}
+            animate={{ bottom: `calc(${level * 100}% - 6px)` }}
+            transition={{ type: "tween", duration: 0.12 }}
           />
         </div>
       </div>
