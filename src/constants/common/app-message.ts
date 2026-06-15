@@ -605,12 +605,6 @@ export const APP_MESSAGE = {
         description: "방송이 종료되었습니다.",
       },
     },
-    clip: {
-      processing: {
-        title: "클립 생성 중",
-        description: "완성되면 알려드릴게요.",
-      },
-    },
   },
 } as const satisfies {
   success: Record<string, Record<string, AppMessage>>;

@@ -38,7 +38,7 @@ export const CLIP_LABEL = {
   submit: "클립 생성",
   submitting: "요청 중",
   creating: "생성 중",
-  keepOpenHint: "완성 알림을 받을 때까지 창을 닫지 마세요.",
+  keepOpenHint: "생성이 끝날 때까지 이 창을 닫지 마세요.",
   viewClip: "클립 보기",
   backToLive: "라이브로 돌아가기",
   goToChannel: "채널로 가기",

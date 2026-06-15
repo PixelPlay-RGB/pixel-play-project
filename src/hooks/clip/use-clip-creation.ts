@@ -12,7 +12,7 @@ import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { CLIP_LABEL } from "@/constants/clip/clip";
 import { QUERY_KEYS } from "@/constants/common/query-keys";
 import { openClipDetail } from "@/utils/clip/open-clip-detail";
-import { toastAppError, toastAppInfo, toastAppSuccess } from "@/utils/common/toast-message";
+import { toastAppError, toastAppSuccess } from "@/utils/common/toast-message";
 
 // idle: 입력 중 / submitting: 액션 전송 중 / processing: 워커 대기 / ready·failed: 결판.
 export type ClipCreationStatus = "idle" | "submitting" | "processing" | "ready" | "failed";
@@ -41,7 +41,6 @@ export function useClipCreation(creatorId: string) {
         return false;
       }
 
-      toastAppInfo(APP_MESSAGE_CODE.info.clip.processing);
       setPendingClipId(result.data.clipId);
       setStatus("processing");
       return true;

@@ -205,9 +205,6 @@ export const APP_MESSAGE_CODE = {
     live: {
       broadcastEnded: "info.live.broadcastEnded",
     },
-    clip: {
-      processing: "info.clip.processing",
-    },
   },
 } as const satisfies AppMessageCodeSchema<typeof APP_MESSAGE>;
 
