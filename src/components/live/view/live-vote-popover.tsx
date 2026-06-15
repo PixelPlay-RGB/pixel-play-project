@@ -1,7 +1,7 @@
 "use client";
 // 투표 참여와 라이브 상호작용 결과를 채팅 패널 액션 팝오버로 제공합니다.
 
-import { useEffect, useId, useMemo, useRef, useState, type RefObject } from "react";
+import { useId, useMemo, useRef, useState, type RefObject } from "react";
 import { Check, Crown, FerrisWheel, Sparkles, Trophy, X } from "lucide-react";
 import { motion } from "motion/react";
 
@@ -841,18 +841,16 @@ export function LiveVotePopover({
   const hasInteraction = currentInteraction.type !== "empty";
   const triggerLabel = getTriggerLabel(currentInteraction);
 
-  useEffect(() => {
-    if (
-      currentInteraction.type !== "roulette" ||
-      currentInteraction.mode !== "active" ||
-      autoOpenedRouletteNoticeIdRef.current === currentInteraction.notice.id
-    ) {
-      return;
-    }
-
+  if (
+    !disabled &&
+    currentInteraction.type === "roulette" &&
+    currentInteraction.mode === "active" &&
+    autoOpenedRouletteNoticeIdRef.current !== currentInteraction.notice.id &&
+    !open
+  ) {
     autoOpenedRouletteNoticeIdRef.current = currentInteraction.notice.id;
     setOpen(true);
-  }, [currentInteraction]);
+  }
 
   function handleOpenChange(next: boolean) {
     if (next && !isLoggedIn && shouldPromptLoginOnOpen(currentInteraction)) {

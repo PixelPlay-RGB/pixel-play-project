@@ -67,14 +67,14 @@ export const endChannelLivePollSchema = z.object({
 export const sendChannelLiveInteractionNoticeSchema = z.object({
   broadcastId: z.string().uuid(),
   content: z.string().trim().min(1).max(300),
-  interactionType: z.enum(["poll", "draw", "roulette"]),
+  interactionType: z.enum(["poll", "draw"]),
   metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 export const sendChannelLiveRouletteNoticeSchema = z.object({
   broadcastId: z.string().uuid(),
   payload: z.object({
-    createdAt: z.string().datetime(),
+    createdAt: z.string().datetime().optional(),
     durationSeconds: z.number().positive().max(30).optional(),
     id: z.string().uuid(),
     items: z.array(z.string().trim().min(1).max(24)).min(2).max(24),

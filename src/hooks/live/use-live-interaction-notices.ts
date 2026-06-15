@@ -63,12 +63,19 @@ function readStringArray(value: Json | undefined): string[] | undefined {
   return items.length > 0 ? items : undefined;
 }
 
-function readRouletteBroadcastNotice(value: unknown): LiveInteractionNotice | null {
+function readRouletteBroadcastNotice(
+  value: unknown,
+  receivedAtMs: number,
+): LiveInteractionNotice | null {
   if (!value || typeof value !== "object") return null;
 
   const payload = value as Partial<LiveRouletteSsePayload>;
   const id = typeof payload.id === "string" ? payload.id : "";
-  const createdAt = typeof payload.createdAt === "string" ? payload.createdAt : "";
+  const fallbackCreatedAt = new Date(receivedAtMs).toISOString();
+  const createdAt =
+    typeof payload.createdAt === "string" && Number.isFinite(new Date(payload.createdAt).getTime())
+      ? payload.createdAt
+      : fallbackCreatedAt;
   const resultLabel = typeof payload.resultLabel === "string" ? payload.resultLabel : "";
   const status =
     payload.status === "active" ? "active" : payload.status === "ended" ? "ended" : null;
@@ -83,7 +90,7 @@ function readRouletteBroadcastNotice(value: unknown): LiveInteractionNotice | nu
       ? payload.durationSeconds
       : undefined;
 
-  if (!id || !createdAt || !resultLabel || !status || items.length < 2) {
+  if (!id || !resultLabel || !status || items.length < 2) {
     return null;
   }
 
@@ -259,11 +266,11 @@ export function useLiveInteractionNotices(
       const eventMessage = message as MessageEvent<string>;
 
       try {
-        const notice = readRouletteBroadcastNotice(JSON.parse(eventMessage.data));
+        const receivedAtMs = Date.now();
+        const notice = readRouletteBroadcastNotice(JSON.parse(eventMessage.data), receivedAtMs);
 
         if (!notice) return;
 
-        const receivedAtMs = Date.now();
         const currentRealtimeRouletteNotice =
           realtimeRouletteNoticeRef.current?.broadcastId === broadcastId
             ? realtimeRouletteNoticeRef.current

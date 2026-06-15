@@ -4,19 +4,24 @@
 import { useCallback } from "react";
 
 import { sendChannelLiveRouletteNoticeAction } from "@/actions/channel/live";
-import type { LiveRouletteSsePayload } from "@/utils/live/live-roulette-sse";
+import type { LiveRouletteSsePublishPayload } from "@/utils/live/live-roulette-sse";
 
 export function useChannelLiveRouletteNotice(broadcastId: string | null) {
   const publishRouletteNotice = useCallback(
-    async (payload: LiveRouletteSsePayload) => {
+    async (payload: LiveRouletteSsePublishPayload) => {
       if (!broadcastId) return false;
 
-      const result = await sendChannelLiveRouletteNoticeAction({
-        broadcastId,
-        payload,
-      });
+      try {
+        const result = await sendChannelLiveRouletteNoticeAction({
+          broadcastId,
+          payload,
+        });
 
-      return result.success;
+        return result.success;
+      } catch (error) {
+        console.error("Live roulette notice publish failed", error);
+        return false;
+      }
     },
     [broadcastId],
   );

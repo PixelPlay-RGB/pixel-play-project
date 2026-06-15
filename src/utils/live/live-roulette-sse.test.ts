@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  createServerStampedLiveRouletteSsePayload,
   createLiveRouletteSseStore,
   formatLiveRouletteSseMessage,
   getLiveRouletteResultDelayMs,
@@ -51,6 +52,27 @@ test("formatLiveRouletteSseMessage serializes a roulette notice event", () => {
     formatLiveRouletteSseMessage(payload),
     `event: roulette_notice\ndata: ${JSON.stringify(payload)}\n\n`,
   );
+});
+
+test("createServerStampedLiveRouletteSsePayload uses server time over client time", () => {
+  const stampedPayload = createServerStampedLiveRouletteSsePayload(
+    { ...payload, createdAt: "2026-06-11T00:00:00.000Z" },
+    "2026-06-11T00:00:05.000Z",
+  );
+
+  assert.equal(stampedPayload.createdAt, "2026-06-11T00:00:05.000Z");
+  assert.equal(stampedPayload.id, payload.id);
+});
+
+test("createServerStampedLiveRouletteSsePayload accepts payload without client time", () => {
+  const { createdAt: _createdAt, ...payloadWithoutCreatedAt } = payload;
+  const stampedPayload = createServerStampedLiveRouletteSsePayload(
+    payloadWithoutCreatedAt,
+    "2026-06-11T00:00:05.000Z",
+  );
+
+  assert.equal(stampedPayload.createdAt, "2026-06-11T00:00:05.000Z");
+  assert.equal(stampedPayload.resultLabel, payload.resultLabel);
 });
 
 test("getLiveRouletteResultDelayMs delays ended notice until active animation duration finishes", () => {

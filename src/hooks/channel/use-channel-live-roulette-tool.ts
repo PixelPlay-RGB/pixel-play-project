@@ -111,7 +111,6 @@ export function useChannelLiveRouletteTool(publishRouletteNotice: PublishRoulett
 
     pendingRouletteNoticeIdRef.current = noticeId;
     void publishRouletteNotice({
-      createdAt: new Date().toISOString(),
       durationSeconds: ROULETTE_SPIN_DURATION_SECONDS,
       id: noticeId,
       items: validRouletteItems.map((item) => item.label),
@@ -133,7 +132,6 @@ export function useChannelLiveRouletteTool(publishRouletteNotice: PublishRoulett
 
     pendingRouletteNoticeIdRef.current = null;
     void publishRouletteNotice({
-      createdAt: new Date().toISOString(),
       id: noticeId,
       items: validRouletteItems.map((item) => item.label),
       resultLabel: nextResult,
@@ -154,7 +152,6 @@ export function useChannelLiveRouletteTool(publishRouletteNotice: PublishRoulett
   const exitTool = async () => {
     if (isRouletteSpinning || pendingRouletteResult) {
       const didPublish = await publishRouletteNotice({
-        createdAt: new Date().toISOString(),
         id: pendingRouletteNoticeIdRef.current ?? crypto.randomUUID(),
         items: validRouletteItems.map((item) => item.label),
         resultLabel: "룰렛 종료",

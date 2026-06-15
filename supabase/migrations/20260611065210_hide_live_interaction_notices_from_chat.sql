@@ -36,7 +36,7 @@ begin
     raise sqlstate 'PX400' using message = 'invalid broadcast';
   end if;
 
-  if v_interaction_type not in ('poll', 'draw', 'roulette') then
+  if v_interaction_type not in ('poll', 'draw') then
     raise sqlstate 'PX400' using message = 'invalid interaction type';
   end if;
 

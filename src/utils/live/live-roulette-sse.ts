@@ -4,8 +4,8 @@ export const LIVE_ROULETTE_SSE_EVENT = "roulette_notice";
 
 export type LiveRouletteSseStatus = "active" | "ended";
 
-export interface LiveRouletteSsePayload {
-  createdAt: string;
+export interface LiveRouletteSsePublishPayload {
+  createdAt?: string;
   durationSeconds?: number;
   id: string;
   items: string[];
@@ -13,6 +13,10 @@ export interface LiveRouletteSsePayload {
   rotationKeyframes: number[];
   status: LiveRouletteSseStatus;
 }
+
+export type LiveRouletteSsePayload = LiveRouletteSsePublishPayload & {
+  createdAt: string;
+};
 
 type LiveRouletteSseListener = (message: string) => void;
 
@@ -31,6 +35,13 @@ interface LiveRouletteResultDelayInput {
 
 export function formatLiveRouletteSseMessage(payload: LiveRouletteSsePayload) {
   return `event: ${LIVE_ROULETTE_SSE_EVENT}\ndata: ${JSON.stringify(payload)}\n\n`;
+}
+
+export function createServerStampedLiveRouletteSsePayload(
+  payload: LiveRouletteSsePublishPayload,
+  createdAt = new Date().toISOString(),
+): LiveRouletteSsePayload {
+  return { ...payload, createdAt };
 }
 
 export function getLiveRouletteResultDelayMs({

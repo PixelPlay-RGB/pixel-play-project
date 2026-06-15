@@ -29,7 +29,10 @@ import {
   LIVE_THUMBNAIL_DIRECTORY,
 } from "@/utils/channel/channel-live-thumbnail";
 import { buildLiveStreamKey } from "@/utils/live/live-security";
-import { liveRouletteSseStore } from "@/utils/live/live-roulette-sse";
+import {
+  createServerStampedLiveRouletteSsePayload,
+  liveRouletteSseStore,
+} from "@/utils/live/live-roulette-sse";
 import { revalidatePath } from "next/cache";
 
 interface EndLiveBroadcastInput {
@@ -916,7 +919,10 @@ export async function sendChannelLiveRouletteNoticeAction(
     return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
   }
 
-  liveRouletteSseStore.publish(parsed.data.broadcastId, parsed.data.payload);
+  liveRouletteSseStore.publish(
+    parsed.data.broadcastId,
+    createServerStampedLiveRouletteSsePayload(parsed.data.payload),
+  );
 
   return { success: true };
 }

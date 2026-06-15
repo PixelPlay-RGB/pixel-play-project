@@ -1,4 +1,5 @@
 // 라이브 룰렛 이벤트를 Server-Sent Events 스트림으로 전달합니다.
+import { createAdminClient } from "@/lib/supabase/admin-client";
 import { liveRouletteSseStore } from "@/utils/live/live-roulette-sse";
 
 export const dynamic = "force-dynamic";
@@ -14,6 +15,23 @@ export async function GET(_request: Request, context: RouteContext) {
   const { broadcastId } = await context.params;
 
   if (!UUID_PATTERN.test(broadcastId)) {
+    return new Response(null, { status: 404 });
+  }
+
+  const supabase = createAdminClient();
+  const { data: broadcast, error } = await supabase
+    .from("live_broadcast")
+    .select("id")
+    .eq("id", broadcastId)
+    .is("ended_at", null)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Live roulette SSE broadcast lookup failed", error);
+    return new Response(null, { status: 500 });
+  }
+
+  if (!broadcast) {
     return new Response(null, { status: 404 });
   }
 
