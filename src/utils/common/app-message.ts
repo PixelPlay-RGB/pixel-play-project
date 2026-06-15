@@ -84,6 +84,40 @@ const DONATION_RPC_ERROR_CODE_MAP: Array<{
   },
 ];
 
+// 클립 RPC(create_live_clip)의 sqlstate를 사용자 메시지 코드로 매핑한다.
+const CLIP_RPC_ERROR_CODE_MAP: Array<{
+  errorCode: string;
+  code: AppMessageCode;
+}> = [
+  {
+    errorCode: "PX400",
+    code: APP_MESSAGE_CODE.error.clip.createFailed,
+  },
+  {
+    errorCode: "PX401",
+    code: APP_MESSAGE_CODE.error.auth.authInfoNotFound,
+  },
+  {
+    // 활성 방송 없음 — 시청 중 방송이 끝난 직후 요청하는 경합 케이스.
+    errorCode: "PX404",
+    code: APP_MESSAGE_CODE.error.clip.noBroadcast,
+  },
+  {
+    // 채널당 보관 상한(30개) 도달 — 정책상 생성 차단(삭제 없음).
+    errorCode: "PX413",
+    code: APP_MESSAGE_CODE.error.clip.channelFull,
+  },
+  {
+    // 방송 시작 직후 — 버퍼에 요청 길이만큼의 영상이 아직 없다.
+    errorCode: "PX425",
+    code: APP_MESSAGE_CODE.error.clip.tooEarly,
+  },
+  {
+    errorCode: "PX429",
+    code: APP_MESSAGE_CODE.error.clip.rateLimited,
+  },
+];
+
 export function getAppMessage(code?: AppMessageCode): AppMessage {
   if (!code) {
     return APP_MESSAGE.error.common.unknown;
@@ -165,4 +199,43 @@ export function resolveDonationRpcErrorCode(
 
 export function isKnownDonationRpcError(error: unknown) {
   return isKnownRpcError(error, DONATION_RPC_ERROR_CODE_MAP);
+}
+
+export function resolveClipRpcErrorCode(
+  error: unknown,
+  fallbackCode: AppMessageCode = APP_MESSAGE_CODE.error.clip.createFailed,
+): AppMessageCode {
+  return resolveRpcErrorCode(error, CLIP_RPC_ERROR_CODE_MAP, fallbackCode);
+}
+
+export function isKnownClipRpcError(error: unknown) {
+  return isKnownRpcError(error, CLIP_RPC_ERROR_CODE_MAP);
+}
+
+// 클립 삭제 RPC(delete_live_clip)의 sqlstate 매핑 — create와 PX코드 의미가 달라(PX404=클립 없음,
+// PX403=권한 없음) 별도 맵을 둔다(create 맵의 PX404=noBroadcast를 재사용하면 안 됨).
+const CLIP_DELETE_RPC_ERROR_CODE_MAP: RpcErrorCodeMap = [
+  {
+    errorCode: "PX401",
+    code: APP_MESSAGE_CODE.error.auth.authInfoNotFound,
+  },
+  {
+    errorCode: "PX403",
+    code: APP_MESSAGE_CODE.error.supabase.permissionDenied,
+  },
+  {
+    errorCode: "PX404",
+    code: APP_MESSAGE_CODE.error.clip.notFound,
+  },
+];
+
+export function resolveClipDeleteRpcErrorCode(
+  error: unknown,
+  fallbackCode: AppMessageCode = APP_MESSAGE_CODE.error.clip.deleteFailed,
+): AppMessageCode {
+  return resolveRpcErrorCode(error, CLIP_DELETE_RPC_ERROR_CODE_MAP, fallbackCode);
+}
+
+export function isKnownClipDeleteRpcError(error: unknown) {
+  return isKnownRpcError(error, CLIP_DELETE_RPC_ERROR_CODE_MAP);
 }

@@ -9,6 +9,7 @@ import {
   Pause,
   Play,
   RectangleHorizontal,
+  Scissors,
   Users,
 } from "lucide-react";
 
@@ -17,6 +18,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { LivePlayerLiveIndicator } from "@/components/live/view/live-player-live-indicator";
 import { LivePlayerQualityMenu } from "@/components/live/view/live-player-quality-menu";
 import { LivePlayerVolumeControl } from "@/components/live/view/live-player-volume-control";
+import { CLIP_LABEL } from "@/constants/clip/clip";
 import { LIVE_LABEL, LIVE_PLAYER_ICON_BUTTON_CLASS } from "@/constants/live/live";
 import type { HlsQualityLevel } from "@/hooks/live/use-hls-player";
 import { cn } from "@/lib/utils";
@@ -46,6 +48,8 @@ interface Props {
   // 실시간 지점 여부(일시정지·시킹으로 뒤처지면 false)와 실시간 복귀 액션.
   isAtLiveEdge: boolean;
   onSeekToLive: () => void;
+  // 클립 생성(#124) — 송출 프레임이 있을 때만 상위에서 핸들러를 내려준다.
+  onClipClick?: () => void;
 }
 
 export function LivePlayerControlBar({
@@ -70,6 +74,7 @@ export function LivePlayerControlBar({
   onSelectQualityLevel,
   isAtLiveEdge,
   onSeekToLive,
+  onClipClick,
 }: Props) {
   return (
     <div className="flex items-center gap-2">
@@ -125,6 +130,26 @@ export function LivePlayerControlBar({
       </span>
 
       <div className="ml-auto flex items-center gap-1">
+        {onClipClick ? (
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  aria-label={CLIP_LABEL.editorTitle}
+                  className={LIVE_PLAYER_ICON_BUTTON_CLASS}
+                  onClick={onClipClick}
+                />
+              }
+            >
+              <Scissors className="size-6" />
+            </TooltipTrigger>
+            <TooltipContent>{CLIP_LABEL.editorTitle}</TooltipContent>
+          </Tooltip>
+        ) : null}
+
         <LivePlayerQualityMenu
           levels={qualityLevels}
           selectedLevel={selectedQualityLevel}

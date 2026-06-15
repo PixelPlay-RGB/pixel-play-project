@@ -2,8 +2,10 @@
 // 라이브 시청 메인 화면 — 비디오, 방송 정보, 채팅 패널을 조합합니다.
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "motion/react";
 import { Timer, Users } from "lucide-react";
+import { ClipSection } from "@/components/clip/clip-section";
 import { LiveVideoPlayer } from "@/components/live/view/live-video-player";
 import { LiveFullscreenChatOverlay } from "@/components/live/view/live-fullscreen-chat-overlay";
 import { LiveBroadcastInfo } from "@/components/live/view/live-broadcast-info";
@@ -18,6 +20,7 @@ import { useLiveElapsed } from "@/hooks/live/use-live-elapsed";
 import { useMoveToLogin } from "@/hooks/live/use-move-to-login";
 import { cn } from "@/lib/utils";
 import { formatCount } from "@/utils/live/live-chat";
+import { useClipEditorStore } from "@/stores/clip-editor";
 import { useLiveTheaterStore } from "@/stores/live-theater";
 import { useLiveWatchSessionStore } from "@/stores/live-watch-session";
 import { LIVE_LABEL } from "@/constants/live/live";
@@ -85,6 +88,10 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
 
   const [isLoginPromptOpen, setIsLoginPromptOpen] = useState(false);
   const [isDesktopChatCollapsed, setIsDesktopChatCollapsed] = useState(false);
+  const router = useRouter();
+  // 클립 생성은 별도 라우트(/clip/editor)에서 진행한다 — 가위 클릭 시점의 스냅샷·제목을
+  // store로 넘기고 이동한다(형제 라우트라 prop으로 못 잇는다).
+  const setClipHandoff = useClipEditorStore((state) => state.setHandoff);
   // 와이드(극장) 모드는 전역 사이드바(LiveShell)와 공유해야 해 store에 둔다.
   const isTheater = useLiveTheaterStore((state) => state.isWideMode);
   const toggleTheater = useLiveTheaterStore((state) => state.toggleWideMode);
@@ -181,6 +188,28 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     setIsLoginPromptOpen(true);
   }
 
+  // 클립 버튼: 캡처가 끝나면 핸드오프를 store(localStorage persist)에 넣고 별도 창(팝업)을
+  // 에디터로 보낸다 — 라이브를 보면서 편집할 수 있게. 팝업이 차단됐으면 같은 탭으로 폴백한다.
+  function handleClipReady(payload: {
+    popup: Window | null;
+    snapshotDataUrl: string | null;
+    frames: string[];
+  }) {
+    setClipHandoff({
+      creatorId,
+      snapshotDataUrl: payload.snapshotDataUrl,
+      frames: payload.frames,
+      defaultTitle: broadcast?.title ?? "",
+    });
+
+    const url = `/clip/editor/${creatorId}`;
+    if (payload.popup && !payload.popup.closed) {
+      payload.popup.location.href = url;
+    } else {
+      router.push(url);
+    }
+  }
+
   function collapseDesktopChat() {
     setIsDesktopChatCollapsed(true);
     requestAnimationFrame(() => {
@@ -238,6 +267,9 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
                   onToggleTheater={toggleTheater}
                   openChatButtonRef={openChatButtonRef}
                   onOpenChat={expandDesktopChat}
+                  clipLoggedIn={isLoggedIn}
+                  onClipRequireLogin={openLoginPrompt}
+                  onClipReady={handleClipReady}
                   renderFullscreenChat={({
                     container,
                     isChatOpen,
@@ -351,6 +383,10 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
                   className="px-4 py-3"
                 />
               ) : null}
+
+              {/* 이 채널의 클립(#124) — 좌측 칼럼 스크롤 영역에 들어가며, 극장 모드에선 정보
+                  영역과 함께 접힌다. 클립이 없는 채널은 섹션이 스스로 숨는다. */}
+              <ClipSection creatorId={creatorId} className="border-border/60 border-t px-4 py-4" />
             </motion.div>
           </div>
 

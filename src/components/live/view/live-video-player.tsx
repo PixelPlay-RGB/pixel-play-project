@@ -15,6 +15,7 @@ import {
   LIVE_LABEL,
   LIVE_PLAYER_ICON_BUTTON_CLASS,
 } from "@/constants/live/live";
+import { CLIP_BUFFER_SECONDS } from "@/constants/clip/clip";
 import { useFullscreen } from "@/hooks/live/use-fullscreen";
 import { useHlsPlayer } from "@/hooks/live/use-hls-player";
 import { useLivePlayerControls } from "@/hooks/live/use-live-player-controls";
@@ -49,6 +50,114 @@ interface Props {
   onOpenChat?: () => void;
   // 전체화면일 때 컨테이너 내부에 렌더할 채팅/후원 오버레이. 데이터를 가진 상위(LiveView)가 주입한다.
   renderFullscreenChat?: (ctx: FullscreenChatContext) => ReactNode;
+  // 클립 버튼: 로그인 여부(상위 결정) + 비로그인 시 콜백 + 캡처 완료 콜백. 에디터는 별도 창으로
+  // 열어 라이브를 보면서 편집하게 한다(팝업은 제스처 동기 시점에 열려야 차단되지 않는다).
+  clipLoggedIn?: boolean;
+  onClipRequireLogin?: () => void;
+  onClipReady?: (payload: {
+    popup: Window | null;
+    snapshotDataUrl: string | null;
+    frames: string[];
+  }) => void;
+}
+
+// 별도 창 핸드오프(localStorage)로 넘기므로 과대 용량을 막으려 720p로 다운스케일한다.
+const CLIP_EDITOR_WINDOW_NAME = "pixelplay-clip-editor";
+const CLIP_EDITOR_WINDOW_FEATURES = "popup=yes,width=980,height=920";
+const CLIP_EDITOR_LOADING_HTML =
+  "<!doctype html><html lang='ko'><head><meta charset='utf-8'><title>클립 만들기</title></head>" +
+  "<body style='margin:0;height:100vh;display:flex;align-items:center;justify-content:center;" +
+  "background:#0b0b0c;color:#9ca3af;font-family:system-ui,sans-serif;font-size:14px'>" +
+  "클립을 준비하고 있어요…</body></html>";
+
+// 현재 프레임 1장(크롭용) — 동기 캡처. 720p 다운스케일로 핸드오프 용량을 줄인다.
+function captureCurrentFrame(video: HTMLVideoElement): string | null {
+  if (video.videoWidth === 0) return null;
+  try {
+    const scale = Math.min(1, 720 / video.videoHeight);
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(video.videoWidth * scale));
+    canvas.height = Math.max(1, Math.round(video.videoHeight * scale));
+    const context = canvas.getContext("2d");
+    if (!context) return null;
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL("image/jpeg", 0.8);
+  } catch (error) {
+    console.error("클립 스냅샷 캡처 실패", error);
+    return null;
+  }
+}
+
+// 한 번의 시킹이 완료될 때까지 기다린다(타임아웃 안전망 — seeked가 안 오면 그냥 진행).
+function seekAndWait(video: HTMLVideoElement, time: number, timeoutMs: number): Promise<void> {
+  return new Promise((resolve) => {
+    let settled = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      if (timer) clearTimeout(timer);
+      video.removeEventListener("seeked", finish);
+      resolve();
+    };
+    video.addEventListener("seeked", finish, { once: true });
+    video.currentTime = time;
+    timer = setTimeout(finish, timeoutMs);
+  });
+}
+
+// 지난 ~{CLIP_BUFFER_SECONDS}초를 시킹하며 작은 프레임 여러 장을 캡처한다(필름스트립용, best-effort).
+// 버퍼 밖이거나 seeked가 늦으면 중복/부족할 수 있어, 호출부에서 폴백을 둔다.
+async function captureFilmstrip(video: HTMLVideoElement): Promise<string[]> {
+  if (video.videoWidth === 0) return [];
+  const seekable = video.seekable;
+  if (seekable.length === 0) return [];
+
+  const edge = seekable.end(seekable.length - 1);
+  const start = Math.max(seekable.start(0), edge - CLIP_BUFFER_SECONDS);
+  const span = edge - start;
+  if (span < 1) return [];
+
+  const FRAME_COUNT = 12;
+  const wasPaused = video.paused;
+  const originalTime = video.currentTime;
+  video.pause();
+
+  const scale = Math.min(1, 200 / video.videoHeight);
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(video.videoWidth * scale));
+  canvas.height = Math.max(1, Math.round(video.videoHeight * scale));
+  const context = canvas.getContext("2d");
+  const frames: string[] = [];
+
+  try {
+    if (context) {
+      for (let i = 0; i < FRAME_COUNT; i += 1) {
+        const target = start + (span * i) / (FRAME_COUNT - 1);
+        await seekAndWait(video, target, 350);
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        frames.push(canvas.toDataURL("image/jpeg", 0.5));
+      }
+    }
+  } catch (error) {
+    console.error("클립 필름스트립 캡처 실패", error);
+  } finally {
+    try {
+      if (wasPaused) {
+        // 과거를 보던 중이었으면 보던 위치를 유지한다.
+        video.currentTime = originalTime;
+      } else {
+        // 라이브 시청 중이었으면 캡처 동안 흘러간 만큼 라이브 엣지로 되돌려 실시간을 유지한다.
+        const sk = video.seekable;
+        video.currentTime = sk.length > 0 ? sk.end(sk.length - 1) : originalTime;
+        void video.play().catch(() => {});
+      }
+    } catch {
+      // 복귀 실패는 무시 — 다음 timeupdate에서 정상화된다.
+    }
+  }
+
+  return frames;
 }
 
 export function LiveVideoPlayer({
@@ -61,6 +170,9 @@ export function LiveVideoPlayer({
   openChatButtonRef,
   onOpenChat,
   renderFullscreenChat,
+  clipLoggedIn,
+  onClipRequireLogin,
+  onClipReady,
 }: Props) {
   const { containerRef, isFullscreen, toggleFullscreen } = useFullscreen<HTMLDivElement>();
   // 전체화면 채팅 패널 열림 상태. 컨트롤 바 폭(채팅이 가리지 않게)과 공유해야 해 여기서 소유한다.
@@ -179,6 +291,53 @@ export function LiveVideoPlayer({
 
   const isFullscreenChatOpen = isFullscreen && isFsChatOpen;
 
+  // 클립 버튼: 현재 프레임(크롭용)을 동기로, 지난 ~30초 필름스트립을 best-effort로 캡처해
+  // 상위로 올린다. hls.js(MSE)·<video crossOrigin>으로 캔버스 오염은 방지된다 — 필름스트립이
+  // 비면 스냅샷 1장으로 폴백한다. 중복 클릭은 ref로 막는다.
+  const clipCapturingRef = useRef(false);
+  // 캡처 중에는 일시정지(seek)로 인한 중앙 Play 오버레이 깜빡임을 숨긴다.
+  const [isCapturingClip, setIsCapturingClip] = useState(false);
+  async function handleClipClick() {
+    if (clipCapturingRef.current) return;
+    if (!clipLoggedIn) {
+      onClipRequireLogin?.();
+      return;
+    }
+    const video = videoRef.current;
+    if (!video) return;
+
+    // 팝업은 반드시 제스처 동기 시점에 연다(await 뒤면 차단된다). 캡처가 끝나면 상위가 location을 채운다.
+    const popup = window.open("", CLIP_EDITOR_WINDOW_NAME, CLIP_EDITOR_WINDOW_FEATURES);
+    if (popup) {
+      try {
+        popup.document.write(CLIP_EDITOR_LOADING_HTML);
+        popup.document.close();
+      } catch {
+        // about:blank 문서 쓰기를 막는 브라우저가 있어도 무시 — 곧 location으로 대체된다.
+      }
+    }
+
+    clipCapturingRef.current = true;
+    setIsCapturingClip(true);
+    try {
+      const snapshotDataUrl = captureCurrentFrame(video);
+      let frames = await captureFilmstrip(video);
+      if (frames.length === 0 && snapshotDataUrl) {
+        frames = [snapshotDataUrl];
+      }
+
+      // 라이브 전체화면 상태면 별도 창이 가려질 수 있어 먼저 빠져나온다.
+      if (isFullscreen) {
+        void toggleFullscreen();
+      }
+
+      onClipReady?.({ popup, snapshotDataUrl, frames });
+    } finally {
+      clipCapturingRef.current = false;
+      setIsCapturingClip(false);
+    }
+  }
+
   return (
     <div
       ref={registerContainer}
@@ -212,6 +371,9 @@ export function LiveVideoPlayer({
             autoPlay
             muted
             playsInline
+            // 클립 스냅샷용 — Safari 네이티브 HLS에서 canvas.toDataURL이 SecurityError로
+            // 죽지 않게 처음부터 부착한다(MediaMTX hlsAllowOrigin 기본 '*' 전제).
+            crossOrigin="anonymous"
             className="size-full bg-black object-contain"
             onClick={togglePlay}
             onDoubleClick={() => void toggleFullscreen()}
@@ -224,7 +386,7 @@ export function LiveVideoPlayer({
           ) : null}
           {/* 일시정지 상태를 중앙 큰 아이콘으로 보여준다(유튜브식) — 누르면 그 자리에서 재생 재개.
               컨트롤 자동 숨김과 무관하게 떠 있어야 정지 상태가 한눈에 보인다. */}
-          {playbackState === "playing" && !isPlaying ? (
+          {playbackState === "playing" && !isPlaying && !isCapturingClip ? (
             <button
               type="button"
               aria-label={LIVE_LABEL.playerPlay}
@@ -297,6 +459,10 @@ export function LiveVideoPlayer({
             onSelectQualityLevel={setLevel}
             isAtLiveEdge={isAtLiveEdge}
             onSeekToLive={seekToLiveEdge}
+            // 송출 프레임이 있어야 잘라낼 구간이 있다 — 대기 화면에선 버튼을 숨긴다.
+            onClipClick={
+              onClipReady && playbackState === "playing" ? () => void handleClipClick() : undefined
+            }
           />
         </div>
       ) : null}

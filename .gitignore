@@ -64,3 +64,6 @@ supabase/.temp/
 
 # Playwright MCP 디버그 산출물
 .playwright-mcp/
+
+# Python 바이트코드 캐시 (infra 워커 py_compile 산출물)
+__pycache__/
