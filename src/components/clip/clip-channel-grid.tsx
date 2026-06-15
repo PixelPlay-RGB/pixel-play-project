@@ -6,6 +6,7 @@ import { useState } from "react";
 
 import { ClipCard } from "@/components/clip/clip-card";
 import { ClipEmptyState } from "@/components/clip/clip-empty-state";
+import { ClipMoreMenu } from "@/components/clip/clip-more-menu";
 import { ClipPillGroup } from "@/components/clip/clip-pill-group";
 import { ClipSortSelect } from "@/components/clip/clip-sort-select";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,11 +17,16 @@ import type { ClipPeriod, ClipSort } from "@/types/clip/clip";
 
 interface Props {
   creatorId: string;
+  // 로그인 뷰어 id — 카드 ⋮ 메뉴에서 삭제 권한(제작자/채널 주인) 판별용.
+  viewerId: string | null;
 }
 
 const GRID_CLASS = "grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6";
+// 카드 우상단 ⋮ 트리거 — 썸네일 위 작은 코너 버튼.
+const CARD_MENU_TRIGGER_CLASS =
+  "flex size-7 cursor-pointer items-center justify-center rounded-md bg-black/55 text-white backdrop-blur-sm transition hover:bg-black/75";
 
-export function ClipChannelGrid({ creatorId }: Props) {
+export function ClipChannelGrid({ creatorId, viewerId }: Props) {
   const [sort, setSort] = useState<ClipSort>("popular");
   const [period, setPeriod] = useState<ClipPeriod>("all");
   const [visibleCount, setVisibleCount] = useState(CLIP_CHANNEL_PAGE_SIZE);
@@ -82,6 +88,15 @@ export function ClipChannelGrid({ creatorId }: Props) {
                 key={clip.id}
                 clip={clip}
                 sizes="(min-width: 1280px) 15vw, (min-width: 640px) 24vw, 30vw"
+                menu={
+                  <ClipMoreMenu
+                    clip={clip}
+                    viewerId={viewerId}
+                    side="bottom"
+                    triggerClassName={CARD_MENU_TRIGGER_CLASS}
+                    iconClassName="size-4"
+                  />
+                }
               />
             ))}
           </div>

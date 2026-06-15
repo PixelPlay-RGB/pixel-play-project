@@ -1,7 +1,8 @@
 "use client";
-// 유튜브 엠비언트 라이팅 — 재생 중인 영상 프레임을 아주 작은 canvas에 저해상도로 그려(지배색만
-// 남김) 컨테이너 전체에 크게 깔고 강하게 흐린다. 화면 밖으로 색이 번지는 은은한 글로우.
-// 매 프레임이 아니라 ~12fps로 천천히 갱신해 차분하게(YouTube 결, CPU 절약).
+// 유튜브 쇼츠 엠비언트 라이팅 — 재생 중인 영상 프레임을 아주 작은 canvas에 저해상도로 그려(지배색만
+// 남김) 영상 뒤에 크게 깔고 강하게 흐린 뒤, "아주 낮은 opacity"로 은은하게만 비친다. 실제 유튜브
+// 쇼츠도 거의 검은 배경에 영상 주변으로 색이 살짝 번지는 정도라(영상 전체를 진하게 blur하지 않는다),
+// opacity를 낮춰 그림자처럼 은은하게 둔다. ~12fps로 천천히 갱신해 차분하게(CPU 절약).
 // canvas는 표시 전용(getImageData/toDataURL 같은 readback 없음)이라 cross-origin 영상이어도
 // tainted 상태로 정상 렌더된다 — crossOrigin 속성이 필요 없다.
 
@@ -49,7 +50,7 @@ export function ClipAmbientGlow({ getVideo, clipId }: Props) {
       width={SAMPLE_WIDTH}
       height={SAMPLE_HEIGHT}
       aria-hidden
-      className="pointer-events-none absolute inset-0 size-full scale-110 opacity-50 blur-3xl saturate-150"
+      className="pointer-events-none absolute inset-0 size-full scale-110 opacity-20 blur-3xl saturate-125"
     />
   );
 }
