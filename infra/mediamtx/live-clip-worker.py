@@ -168,17 +168,22 @@ def parse_media_playlist(playlist_url, text):
     if not segments:
         raise RuntimeError("no full segments in media playlist")
 
-    # 세그먼트 시작 시각 산출: PDT가 있으면 그 지점부터 누적, 전혀 없으면
-    # "플레이리스트 끝 ≈ 현재 시각"으로 앵커링해 역산한다.
-    cursor = None
-    for segment in segments:
-        if segment["pdt"] is not None:
-            cursor = segment["pdt"]
-        segment["start"] = cursor
-        if cursor is not None:
+    # 세그먼트 시작 시각 산출: 첫 PDT 보유 세그먼트를 앵커로 삼아 이후는 누적, 이전은 역산으로
+    # 채운다(일부 세그먼트에만 PDT가 있어도 정확한 시각을 버리지 않는다). PDT가 전혀 없으면
+    # "플레이리스트 끝 ≈ 현재 시각"으로 앵커링해 전체를 역산한다.
+    anchor_index = next(
+        (i for i, segment in enumerate(segments) if segment["pdt"] is not None), None
+    )
+    if anchor_index is not None:
+        cursor = segments[anchor_index]["pdt"]
+        for segment in segments[anchor_index:]:
+            segment["start"] = cursor
             cursor = cursor + timedelta(seconds=segment["duration"])
-
-    if segments[0]["start"] is None:
+        cursor = segments[anchor_index]["pdt"]
+        for segment in reversed(segments[:anchor_index]):
+            cursor = cursor - timedelta(seconds=segment["duration"])
+            segment["start"] = cursor
+    else:
         total = sum(segment["duration"] for segment in segments)
         cursor = datetime.now(timezone.utc) - timedelta(seconds=total)
         for segment in segments:
