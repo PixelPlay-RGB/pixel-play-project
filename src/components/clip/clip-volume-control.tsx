@@ -79,8 +79,10 @@ export function ClipVolumeControl({ muted, volume, onToggleMute, onVolumeChange 
         aria-label={CLIP_LABEL.volume}
         onClick={onToggleMute}
         className={cn(
-          "flex size-12 cursor-pointer items-center justify-center rounded-full text-white opacity-90 backdrop-blur-sm transition-opacity hover:opacity-100",
-          muted ? "ring-brand bg-brand/30 ring-2" : "bg-black/45",
+          "flex size-12 cursor-pointer items-center justify-center rounded-full backdrop-blur-sm transition-opacity",
+          muted
+            ? "bg-brand text-brand-foreground"
+            : "bg-black/45 text-white opacity-90 hover:opacity-100",
         )}
       >
         {muted ? (

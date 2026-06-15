@@ -29,6 +29,8 @@ export interface ClipShortsCreator {
   isFollowing: boolean;
   followerCount: number;
   isOwnChannel: boolean;
+  // 현재 라이브 여부 — 팝오버에서 "라이브 보기" 링크 노출에 쓴다.
+  isLive: boolean;
 }
 
 interface Props {
@@ -129,10 +131,21 @@ export function ClipShortsView({ initialClip, creator }: Props) {
     }
   }
 
-  // 데스크탑 우측 레일과 모바일 오버레이가 같은 버튼 구성을 공유한다(공유·엠비언트·전체화면·탐색).
+  // 데스크탑 우측 레일과 모바일 오버레이가 같은 버튼 구성을 공유한다(음량·공유·엠비언트·전체화면·탐색).
   function renderActions(className: string) {
     return (
       <div className={cn("flex flex-col items-center gap-2.5", className)}>
+        {/* 음량 — 레일 맨 위(데스크탑은 영상 밖 여백), 나머지와 구분되게 둔다 */}
+        <ClipVolumeControl
+          muted={muted}
+          volume={volume}
+          onToggleMute={() => setMuted((prev) => !prev)}
+          onVolumeChange={(next) => {
+            setVolume(next);
+            setMuted(next === 0);
+          }}
+        />
+        <div className="h-px w-6 bg-white/15" aria-hidden />
         <button
           type="button"
           aria-label={CLIP_LABEL.share}
@@ -146,7 +159,10 @@ export function ClipShortsView({ initialClip, creator }: Props) {
           aria-label={CLIP_LABEL.ambient}
           aria-pressed={isAmbient}
           onClick={() => setIsAmbient((prev) => !prev)}
-          className={cn(RAIL_BUTTON_CLASS, isAmbient ? "bg-brand/80" : "bg-black/40")}
+          className={cn(
+            RAIL_BUTTON_CLASS,
+            isAmbient ? "bg-brand text-brand-foreground opacity-100" : "bg-black/40",
+          )}
         >
           <Sparkles className="size-6" aria-hidden />
         </button>
@@ -243,19 +259,6 @@ export function ClipShortsView({ initialClip, creator }: Props) {
           {/* 시네마 딤 — 밝은 영상을 가라앉히고 하단 정보의 가독성을 확보한다 */}
           <div className="pointer-events-none absolute inset-0 z-[5] bg-gradient-to-t from-black/70 via-transparent to-black/10" />
 
-          {/* 음량 — 영상 우상단 독립 배치(YT 쇼츠 결) */}
-          <div className="absolute top-3 right-3 z-20">
-            <ClipVolumeControl
-              muted={muted}
-              volume={volume}
-              onToggleMute={() => setMuted((prev) => !prev)}
-              onVolumeChange={(next) => {
-                setVolume(next);
-                setMuted(next === 0);
-              }}
-            />
-          </div>
-
           {/* 정보 오버레이 — 크리에이터(아바타=요약 Popover)·제목·조회수·생성일(진행바 위) */}
           <div className="pointer-events-none absolute inset-x-3 bottom-16 z-10 flex flex-col gap-2">
             {creator ? (
@@ -266,6 +269,7 @@ export function ClipShortsView({ initialClip, creator }: Props) {
                   creatorNickname={creator.nickname}
                   creatorPhotoUrl={creator.photoUrl}
                   isFollowing={creator.isFollowing}
+                  isLive={creator.isLive}
                   confirmUnfollow
                   refreshOnToggle
                   avatarSize="default"

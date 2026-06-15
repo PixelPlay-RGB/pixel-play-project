@@ -1,9 +1,16 @@
 "use client";
 // 클립 길이 트리머 — 지난 ~30초를 담은 필름스트립(프레임 셀 + 스프로킷 홀) 위에서, 오른쪽
-// (클립 시점)에 고정된 선택 구간의 왼쪽 핸들을 드래그해 길이(min~max초)를 정한다(치지직 결).
+// (클립 시점)에 고정된 선택 구간의 왼쪽 핸들을 드래그(또는 클릭)해 길이(min~max초)를 정한다.
 // ※ 버퍼 구조상 구간은 "클립 시점까지의 마지막 N초" — 시작점만 당기고 끝(클립 시점)은 고정.
 
-import { useRef, type KeyboardEvent, type PointerEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type PointerEvent,
+} from "react";
 import Image from "next/image";
 
 import { CLIP_LABEL } from "@/constants/clip/clip";
@@ -20,9 +27,10 @@ interface Props {
 }
 
 function SprocketRow() {
-  // flex-1 천공이라 폭에 따라 균등 분배·축소 — 좁은 모바일에서도 넘치지 않는다.
+  // flex-1 천공이라 폭에 따라 균등 분배·축소 — 좁은 모바일에서도 넘치지 않는다. 드래그를 막지 않게
+  // pointer-events-none(아래 트랙이 포인터를 받는다).
   return (
-    <div className="flex h-3 items-center gap-1.5 bg-black px-1.5" aria-hidden>
+    <div className="pointer-events-none flex h-3 items-center gap-1.5 bg-black px-1.5" aria-hidden>
       {Array.from({ length: SPROCKET_COUNT }, (_, index) => (
         <span key={index} className="h-1.5 flex-1 rounded-[1px] bg-white/45" />
       ))}
@@ -32,31 +40,41 @@ function SprocketRow() {
 
 export function ClipDurationTrimmer({ value, min, max, frames, onChange }: Props) {
   const trackRef = useRef<HTMLDivElement>(null);
-  const draggingRef = useRef(false);
+  const [isDragging, setIsDragging] = useState(false);
 
-  // 트랙: 왼쪽=가장 과거(max초 전), 오른쪽=클립 시점. 클릭/드래그 지점이 선택 구간의
+  // 트랙: 왼쪽=가장 과거(max초 전), 오른쪽=클립 시점. 포인터 지점이 선택 구간의
   // 왼쪽 경계 → 길이 = (1 - leftRatio) * max.
-  function updateFromPointer(clientX: number) {
-    const track = trackRef.current;
-    if (!track) return;
-    const rect = track.getBoundingClientRect();
-    const leftRatio = (clientX - rect.left) / rect.width;
-    const seconds = (1 - leftRatio) * max;
-    onChange(Math.min(max, Math.max(min, Math.round(seconds))));
-  }
+  const updateFromPointer = useCallback(
+    (clientX: number) => {
+      const track = trackRef.current;
+      if (!track) return;
+      const rect = track.getBoundingClientRect();
+      const leftRatio = (clientX - rect.left) / rect.width;
+      const seconds = (1 - leftRatio) * max;
+      onChange(Math.min(max, Math.max(min, Math.round(seconds))));
+    },
+    [max, min, onChange],
+  );
+
+  // 드래그는 window 리스너로 추적한다 — 포인터가 트랙 밖으로 나가도, 위에 다른 요소가 있어도
+  // 끊기지 않는다(setPointerCapture·element move보다 견고).
+  useEffect(() => {
+    if (!isDragging) return;
+    const handleMove = (event: globalThis.PointerEvent) => updateFromPointer(event.clientX);
+    const handleUp = () => setIsDragging(false);
+    window.addEventListener("pointermove", handleMove);
+    window.addEventListener("pointerup", handleUp);
+    window.addEventListener("pointercancel", handleUp);
+    return () => {
+      window.removeEventListener("pointermove", handleMove);
+      window.removeEventListener("pointerup", handleUp);
+      window.removeEventListener("pointercancel", handleUp);
+    };
+  }, [isDragging, updateFromPointer]);
 
   function handlePointerDown(event: PointerEvent<HTMLDivElement>) {
-    draggingRef.current = true;
-    event.currentTarget.setPointerCapture(event.pointerId);
+    setIsDragging(true);
     updateFromPointer(event.clientX);
-  }
-
-  function handlePointerMove(event: PointerEvent<HTMLDivElement>) {
-    if (draggingRef.current) updateFromPointer(event.clientX);
-  }
-
-  function handlePointerUp() {
-    draggingRef.current = false;
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
@@ -107,21 +125,26 @@ export function ClipDurationTrimmer({ value, min, max, frames, onChange }: Props
         aria-valuenow={value}
         className="bg-muted focus-visible:ring-ring/50 relative w-full cursor-ew-resize touch-none overflow-hidden rounded-xl outline-none select-none focus-visible:ring-2"
         onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerUp}
         onKeyDown={handleKeyDown}
       >
         <SprocketRow />
-        {/* 프레임 셀 — 지난 ~30초의 실제 장면 */}
-        <div className="bg-background flex h-16">
+        {/* 프레임 셀 — 지난 ~30초의 실제 장면. pointer-events-none으로 native 이미지 드래그가
+            포인터를 가로채지 않게 해 트랙 드래그가 끊기지 않는다. */}
+        <div className="bg-background pointer-events-none flex h-16 select-none">
           {frames.length > 0 ? (
             frames.map((frame, index) => (
               <div
                 key={index}
                 className="relative h-full min-w-0 flex-1 border-r border-black/50 last:border-r-0"
               >
-                <Image src={frame} alt="" fill unoptimized className="object-cover" />
+                <Image
+                  src={frame}
+                  alt=""
+                  fill
+                  unoptimized
+                  draggable={false}
+                  className="object-cover"
+                />
               </div>
             ))
           ) : (
