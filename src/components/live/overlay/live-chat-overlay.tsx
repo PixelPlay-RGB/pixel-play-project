@@ -2,7 +2,9 @@
 // OBS 브라우저 소스에 붙이는 라이브 채팅 출력 화면을 렌더링합니다.
 import { LiveChatOverlayDonationCard } from "@/components/live/overlay/live-chat-overlay-donation-card";
 import { LiveChatRoleBadge } from "@/components/live/chat/live-chat-role-badge";
+import RichMessageText from "@/components/common/rich-message-text";
 import { LIVE_CHAT_OVERLAY_PREVIEW_ITEMS } from "@/constants/live/live-overlay";
+import { STICKER_PX } from "@/constants/sticker/sticker";
 import { useLiveChatOverlay } from "@/hooks/live/use-live-chat-overlay";
 import { cn } from "@/lib/utils";
 import type {
@@ -76,7 +78,7 @@ function ChatMessageItem({ message }: { message: LiveChatOverlayMessage }) {
         >
           {message.author}
         </span>
-        {message.content}
+        <RichMessageText as="span" text={message.content} stickerPx={STICKER_PX.overlay} />
       </p>
     </div>
   );

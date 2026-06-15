@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { ImagePlus, X } from "lucide-react";
 
-import ChatEmojiPicker from "@/components/common/chat-emoji-picker";
+import StickerPicker from "@/components/sticker/sticker-picker";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,6 +22,7 @@ import { useCreateCommunityPost } from "@/hooks/community/use-create-community-p
 import { useUpdateCommunityPost } from "@/hooks/community/use-update-community-post";
 import { cn } from "@/lib/utils";
 import { toastAppError } from "@/utils/common/toast-message";
+import { appendStickerToken } from "@/utils/sticker/sticker-token";
 
 interface Props {
   creatorId: string;
@@ -94,8 +95,8 @@ export default function CommunityComposer({
   const trimmedLength = content.trim().length;
   const isSubmittable = trimmedLength > 0 && content.length <= COMMUNITY_POST_CONTENT_MAX;
 
-  const handleEmojiSelect = (emoji: string) => {
-    setContent((prev) => (prev + emoji).slice(0, COMMUNITY_POST_CONTENT_MAX));
+  const handleStickerSelect = (token: string) => {
+    setContent((prev) => appendStickerToken(prev, token, COMMUNITY_POST_CONTENT_MAX));
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -168,7 +169,7 @@ export default function CommunityComposer({
 
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1">
-          <ChatEmojiPicker disabled={isPending} onEmojiSelect={handleEmojiSelect} />
+          <StickerPicker disabled={isPending} onStickerSelect={handleStickerSelect} />
           {!displayImage && (
             <Button
               type="button"

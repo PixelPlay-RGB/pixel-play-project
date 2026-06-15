@@ -6,8 +6,11 @@ import { memo, useEffect, useLayoutEffect, useRef, type RefObject } from "react"
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { LiveChatDonationMessageCard } from "@/components/live/chat/live-chat-donation-message-card";
 import { LiveChatRoleBadge, type LiveChatRole } from "@/components/live/chat/live-chat-role-badge";
+import RichMessageText from "@/components/common/rich-message-text";
 import { LIVE_LABEL } from "@/constants/live/live";
+import { STICKER_PX } from "@/constants/sticker/sticker";
 import { getLiveChatOverlayNicknameColor } from "@/utils/live/live-chat-overlay-style";
+import { isStickerOnly } from "@/utils/sticker/sticker-token";
 import type { LiveChatMessage } from "@/types/live/live";
 
 // 한 줄 텍스트 채팅 기준 추정 높이(px). 실제 높이는 measureElement가 행마다 보정한다.
@@ -214,6 +217,28 @@ function TextMessage({ message, isMasked }: { message: LiveChatMessage; isMasked
     message.isHost ? "creator" : undefined,
   );
 
+  // 이모지(스티커)만 있는 메시지는 치지직식으로 닉네임 아래에 크게 단독 렌더한다.
+  if (!isMasked && isStickerOnly(message.content)) {
+    return (
+      <div className="min-w-0">
+        <p className="text-sm leading-5 wrap-break-word">
+          {role ? (
+            <LiveChatRoleBadge role={role} withTooltip className="mr-1.5 align-bottom" />
+          ) : null}
+          <span className="font-medium" style={{ color: nicknameColor }}>
+            {message.author}
+          </span>
+        </p>
+        <RichMessageText
+          as="div"
+          text={message.content}
+          stickerPx={STICKER_PX.standalone}
+          className="mt-1 flex flex-wrap items-center gap-1"
+        />
+      </div>
+    );
+  }
+
   return (
     // line-height(leading-5=20px)를 마크 높이(size-5)와 일치시켜 마크가 라인박스를 정확히 채우고,
     // 닉네임·본문은 같은 인라인 텍스트라 베이스라인이 자동으로 맞는다(마크·닉네임·본문 모두 동일 정렬).
@@ -225,7 +250,7 @@ function TextMessage({ message, isMasked }: { message: LiveChatMessage; isMasked
       {isMasked ? (
         <span className="text-muted-foreground">{LIVE_LABEL.cleanbotHidden}</span>
       ) : (
-        <span className="text-foreground">{message.content}</span>
+        <RichMessageText as="span" text={message.content} className="text-foreground" />
       )}
     </p>
   );

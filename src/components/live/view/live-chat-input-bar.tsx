@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { SendHorizontal, Timer, UserRoundPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import ChatEmojiPicker from "@/components/common/chat-emoji-picker";
+import StickerPicker from "@/components/sticker/sticker-picker";
 import { Input } from "@/components/ui/input";
 import {
   Popover,
@@ -23,6 +23,7 @@ import {
   useFollowWaitCountdown,
 } from "@/hooks/live/use-follow-wait-countdown";
 import { cn } from "@/lib/utils";
+import { appendStickerToken } from "@/utils/sticker/sticker-token";
 import type { LiveInteractionNotice, LivePoll, LiveViewerChatState } from "@/types/live/live";
 
 interface Props {
@@ -307,8 +308,10 @@ export function LiveChatInputBar({
           )}
         />
         <div className="absolute inset-y-0 right-1 flex items-center gap-0.5">
-          <ChatEmojiPicker
-            onEmojiSelect={(emoji) => setDraftValue(draftValue + emoji)}
+          <StickerPicker
+            onStickerSelect={(token) =>
+              setDraftValue(appendStickerToken(draftValue, token, LIVE_CHAT_MESSAGE_MAX_LENGTH))
+            }
             disabled={!isEditable}
           />
           <Button

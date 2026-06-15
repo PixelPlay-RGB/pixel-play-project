@@ -9,6 +9,7 @@ import CommunityActionMenu from "@/components/community/community-action-menu";
 import CommunityCommentLikeButton from "@/components/community/community-comment-like-button";
 import CommunityCommentReplies from "@/components/community/community-comment-replies";
 import DeleteConfirmDialog from "@/components/common/delete-confirm-dialog";
+import RichMessageText from "@/components/common/rich-message-text";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
@@ -171,9 +172,10 @@ export default function CommunityCommentItem({
             </div>
           </div>
         ) : (
-          <p className="text-foreground/90 mt-1 text-sm leading-relaxed wrap-break-word whitespace-pre-wrap">
-            {comment.content}
-          </p>
+          <RichMessageText
+            text={comment.content}
+            className="text-foreground/90 mt-1 text-sm leading-relaxed wrap-break-word whitespace-pre-wrap"
+          />
         )}
 
         {!isEditing && (

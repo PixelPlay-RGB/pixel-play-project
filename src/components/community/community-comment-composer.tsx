@@ -4,7 +4,7 @@
 import { SendHorizontal } from "lucide-react";
 import { useState } from "react";
 
-import ChatEmojiPicker from "@/components/common/chat-emoji-picker";
+import StickerPicker from "@/components/sticker/sticker-picker";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
@@ -15,6 +15,7 @@ import { useNullableUser } from "@/hooks/profile/use-profile";
 import { cn } from "@/lib/utils";
 import { useViewerId } from "@/hooks/common/use-viewer-id";
 import { formatNumber } from "@/utils/common/format";
+import { appendStickerToken } from "@/utils/sticker/sticker-token";
 import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
 
 interface Props {
@@ -53,8 +54,8 @@ export default function CommunityCommentComposer({
   const trimmedLength = content.trim().length;
   const isSubmittable = trimmedLength > 0 && !overLimit;
 
-  const handleEmojiSelect = (emoji: string) => {
-    setContent((prev) => (prev + emoji).slice(0, COMMUNITY_COMMENT_CONTENT_MAX));
+  const handleStickerSelect = (token: string) => {
+    setContent((prev) => appendStickerToken(prev, token, COMMUNITY_COMMENT_CONTENT_MAX));
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -107,7 +108,7 @@ export default function CommunityCommentComposer({
       </div>
 
       <div className="flex items-center justify-between gap-2">
-        <ChatEmojiPicker disabled={createComment.isPending} onEmojiSelect={handleEmojiSelect} />
+        <StickerPicker disabled={createComment.isPending} onStickerSelect={handleStickerSelect} />
 
         <div className="flex items-center gap-3">
           <span

@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import type { AppNotification } from "@/types/notification/notification";
 import { formatRelativeTime } from "@/utils/common/format";
+import { stickerTokensToText } from "@/utils/sticker/sticker-token";
 import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
 
 interface Props {
@@ -37,7 +38,9 @@ export default function NotificationItem({ notification, onNavigate, onDelete }:
         <div className="min-w-0 flex-1">
           <p className="text-foreground truncate text-sm font-bold">{notification.title}</p>
           {notification.body && (
-            <p className="text-muted-foreground line-clamp-1 text-xs">{notification.body}</p>
+            <p className="text-muted-foreground line-clamp-1 text-xs">
+              {stickerTokensToText(notification.body)}
+            </p>
           )}
           <p className="text-muted-foreground/70 mt-0.5 text-xs">
             {formatRelativeTime(notification.createdAt)}

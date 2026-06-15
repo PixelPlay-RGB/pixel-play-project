@@ -14,6 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useDeleteCommunityPost } from "@/hooks/community/use-delete-community-post";
 import type { CommunityCreator, CommunityPost } from "@/types/community/community";
 import { formatNumber, formatRelativeTime } from "@/utils/common/format";
+import { stickerTokensToText } from "@/utils/sticker/sticker-token";
 import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
 
 interface Props {
@@ -58,7 +59,7 @@ export default function CommunityPostCard({ creatorId, creator, post, isOwner }:
 
         <div className="mt-3 flex min-h-0 flex-1 gap-3">
           <ClampedText
-            text={post.content}
+            text={stickerTokensToText(post.content)}
             className="flex-1"
             textClassName="text-foreground/90 line-clamp-3 text-sm leading-relaxed wrap-break-word whitespace-pre-wrap"
           />
