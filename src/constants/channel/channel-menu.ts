@@ -6,6 +6,7 @@ import {
   MessageSquareText,
   ShieldCheck,
   SlidersHorizontal,
+  Users,
 } from "lucide-react";
 
 export interface ChannelMenuGroup {
@@ -48,6 +49,7 @@ export const CHANNEL_MENU_GROUPS: ChannelMenuGroup[] = [
           { id: "analytics-report", label: "지난 방송 분석", href: "/channel/analytics/report" },
         ],
       },
+      { id: "permissions", label: "권한 관리", href: "/channel/permissions", icon: Users },
       { id: "security", label: "방송 연결", href: "/channel/security", icon: ShieldCheck },
     ],
   },

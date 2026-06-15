@@ -110,6 +110,9 @@ export const QUERY_KEYS = {
       [...QUERY_KEYS.channel.all, "analytics", "follow-feed", creatorId].filter(
         (v) => v !== undefined,
       ),
+    managersAll: () => [...QUERY_KEYS.channel.all, "managers"],
+    managers: (creatorId?: string) =>
+      [...QUERY_KEYS.channel.managersAll(), creatorId].filter((v) => v !== undefined),
   },
   notification: {
     all: ["notification"] as const,
