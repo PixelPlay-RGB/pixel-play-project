@@ -193,6 +193,21 @@ export function useLiveMessages(creatorId: string | null | undefined) {
           // 클린봇 판정(metadata.cleanbotStatus, #120) 같은 서버 측 사후 갱신을 반영한다.
           // 캐시에 있는 메시지만 서버 버전으로 교체하고, 목록에 없는 메시지는 추가하지 않는다
           // (히스토리 캡으로 밀려난 과거 메시지의 UPDATE가 목록 끝에 재등장하는 것을 방지).
+          const row =
+            payload.new && typeof payload.new === "object"
+              ? (payload.new as { id?: string; is_chat_visible?: boolean })
+              : null;
+
+          // 서버가 UPDATE로 메시지를 숨기면(is_chat_visible=false) 캐시에서도 제거해
+          // INSERT 경로(숨김 메시지 미추가)와 같은 계약을 유지한다.
+          if (row?.is_chat_visible === false && row.id) {
+            queryClient.setQueryData<LiveChatMessage[]>(
+              QUERY_KEYS.live.messages(creatorId),
+              (prev) => prev?.filter((message) => message.id !== row.id) ?? prev,
+            );
+            return;
+          }
+
           const updatedMessage = mapLiveMessageRealtimePayload(payload.new, creatorId);
           if (!updatedMessage) return;
 

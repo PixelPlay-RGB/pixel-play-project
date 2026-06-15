@@ -59,7 +59,7 @@ export function useLiveChatSession({
     // 붙는다(#120) — 후원 성공 시 승격해둔 역할이 있으면 viewer 스냅샷보다 우선한다.
     // manager 등 상위 역할 스냅샷은 그대로 둔다(승격 신호는 donor 한정).
     const promotedRole = queryClient.getQueryData<LiveSenderRole>(
-      QUERY_KEYS.live.viewerRole(creatorId),
+      QUERY_KEYS.live.viewerRole(creatorId, user?.id ?? undefined),
     );
     const optimisticViewerRole =
       lastOwnRole && lastOwnRole !== "viewer" ? lastOwnRole : (promotedRole ?? lastOwnRole);
