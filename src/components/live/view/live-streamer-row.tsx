@@ -11,6 +11,8 @@ interface Props {
   isFollowing: boolean;
   isPending: boolean;
   onFollow: () => void;
+  // 강퇴 권한자(크리에이터/매니저) 여부 — 유저관리 버튼 노출 게이트(#119).
+  canModerate?: boolean;
   className?: string;
 }
 
@@ -20,16 +22,19 @@ export function LiveStreamerRow({
   isFollowing,
   isPending,
   onFollow,
+  canModerate = false,
   className,
 }: Props) {
   return (
     <div className={cn("flex items-center justify-between gap-3", className)}>
       <LiveCreatorInfo creator={creator} isLive={isLive} />
       <LiveCreatorActions
+        creatorId={creator.id}
         creatorNickname={creator.name}
         isFollowing={isFollowing}
         isPending={isPending}
         onFollow={onFollow}
+        canModerate={canModerate}
       />
     </div>
   );

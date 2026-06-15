@@ -6,18 +6,29 @@ import { Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import CreatorFollowingButton from "@/components/following/creator-following-button";
 import CreatorUnfollowDialog from "@/components/creator/creator-unfollow-dialog";
+import { LiveUserManageDialog } from "@/components/live/view/live-user-manage-dialog";
 import { LIVE_LABEL } from "@/constants/live/live";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { toastAppSuccess, toastAppError } from "@/utils/common/toast-message";
 
 interface Props {
+  creatorId: string;
   creatorNickname: string;
   isFollowing: boolean;
   isPending: boolean;
   onFollow: () => void;
+  // 강퇴 권한자(크리에이터/매니저)면 팔로우 버튼 왼쪽에 유저관리 버튼을 노출한다(#119).
+  canModerate: boolean;
 }
 
-export function LiveCreatorActions({ creatorNickname, isFollowing, isPending, onFollow }: Props) {
+export function LiveCreatorActions({
+  creatorId,
+  creatorNickname,
+  isFollowing,
+  isPending,
+  onFollow,
+  canModerate,
+}: Props) {
   const [isUnfollowDialogOpen, setIsUnfollowDialogOpen] = useState(false);
 
   function handleFollowClick() {
@@ -46,6 +57,8 @@ export function LiveCreatorActions({ creatorNickname, isFollowing, isPending, on
   return (
     <>
       <div className="flex shrink-0 items-center gap-2">
+        {canModerate && <LiveUserManageDialog creatorId={creatorId} />}
+
         <CreatorFollowingButton
           creatorNickname={creatorNickname}
           isFollowing={isFollowing}

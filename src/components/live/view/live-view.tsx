@@ -1,7 +1,7 @@
 "use client";
 // 라이브 시청 메인 화면 — 비디오, 방송 정보, 채팅 패널을 조합합니다.
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { Timer, Users } from "lucide-react";
 import { LiveVideoPlayer } from "@/components/live/view/live-video-player";
@@ -10,6 +10,7 @@ import { LiveBroadcastInfo } from "@/components/live/view/live-broadcast-info";
 import { LiveStreamerRow } from "@/components/live/view/live-streamer-row";
 import { LiveChatPanel } from "@/components/live/view/live-chat-panel";
 import { LiveEndedScreen } from "@/components/live/view/live-ended-screen";
+import { LiveBannedScreen } from "@/components/live/view/live-banned-screen";
 import { LiveLoginPromptDialog } from "@/components/live/view/live-login-prompt-dialog";
 import { useIsMobile } from "@/hooks/common/use-mobile";
 import { useLiveBroadcastView } from "@/hooks/live/use-live-broadcast-view";
@@ -73,7 +74,17 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     refreshChatState,
     followerWaitSeconds,
     slowModeSeconds,
+    isBanned,
+    canModerate,
+    viewerId,
   } = useLiveBroadcastView(creatorId);
+
+  // 닉네임 클릭 팝업(프로필/강퇴) 컨텍스트 — 채팅 패널·전체화면 오버레이로 관통시킨다(#119).
+  // 메시지 목록의 memo 보존을 위해 안정적인 참조가 되도록 useMemo로 묶는다.
+  const profileContext = useMemo(
+    () => ({ creatorId, viewerId, canModerate, broadcastId: broadcast?.id ?? null }),
+    [creatorId, viewerId, canModerate, broadcast?.id],
+  );
   const { handleFollow, isFollowPending } = useLiveFollowAction({
     creatorId,
     isFollowing,
@@ -104,7 +115,16 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
   );
 
   // 방송을 보는 동안 하트비트를 보내 현재 시청자 수를 집계한다(로그인·익명 모두).
-  useLiveViewerPresence(broadcast?.id);
+  // 강퇴(밴)되면 차단 화면으로 전환되므로 하트비트를 멈춰 시청자 수에서 즉시 빠진다(#119).
+  useLiveViewerPresence(isBanned ? undefined : broadcast?.id);
+
+  // 시청 중 강퇴(즉시 퇴장) vs 강퇴 상태로 재진입(입장 차단)을 구분하기 위해, 한 번이라도
+  // 강퇴 아닌 상태로 방송을 봤는지 기억한다(렌더 중 가드된 setState — 라치 패턴).
+  const [hasViewedUnbanned, setHasViewedUnbanned] = useState(false);
+  if (!isBanned && !isLoading && creator && !hasViewedUnbanned) {
+    setHasViewedUnbanned(true);
+  }
+  const wasEvicted = isBanned && hasViewedUnbanned;
 
   // 채팅 입력 섹션의 동기화 높이(px). 송출/종료 프레임이 16:9로 폭을 꽉 채우는 일반 모드에서만 계산하고,
   // 화면이 낮아 자연 높이보다 작아지면 입력바가 자체 콘텐츠 높이로 버틴다(min-height라 안전).
@@ -165,6 +185,12 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
         <div className="border-brand/30 border-t-brand h-8 w-8 animate-spin rounded-full border-2" />
       </div>
     );
+  }
+
+  // 강퇴(밴)된 시청자는 플레이어/채팅을 렌더하지 않고 차단 화면만 보여준다(다른 어떤 상태보다 우선).
+  // 해제되면 isBanned 가 false 로 돌아와 자동으로 시청 화면으로 복귀한다(realtime UPDATE invalidate).
+  if (isBanned) {
+    return <LiveBannedScreen wasEvicted={wasEvicted} />;
   }
 
   // 채널 자체가 없는 경우(broadcast·creator 모두 없음)에만 단순 안내로 끝낸다.
@@ -247,6 +273,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
                       onRefreshChatState={refreshChatState}
                       followerWaitSeconds={followerWaitSeconds}
                       slowModeSeconds={slowModeSeconds}
+                      profileContext={profileContext}
                     />
                   )}
                 />
@@ -312,6 +339,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
                   isFollowing={isFollowing}
                   isPending={isFollowPending}
                   onFollow={handleFollow}
+                  canModerate={canModerate}
                   className="px-4 py-3"
                 />
               ) : null}
@@ -364,6 +392,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
               followerWaitSeconds={followerWaitSeconds}
               slowModeSeconds={slowModeSeconds}
               inputMinHeightPx={chatInputMinHeight}
+              profileContext={profileContext}
             />
           </aside>
         </div>

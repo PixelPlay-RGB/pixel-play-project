@@ -28,6 +28,10 @@ export const QUERY_KEYS = {
       [...QUERY_KEYS.live.all, "polls", broadcastId].filter((v) => v !== undefined),
     pollsForViewer: (broadcastId?: string, userId?: string | null) =>
       [...QUERY_KEYS.live.polls(broadcastId), userId ?? "public"].filter((v) => v !== undefined),
+    viewerProfile: (creatorId?: string, targetUserId?: string) =>
+      [...QUERY_KEYS.live.all, "viewer-profile", creatorId, targetUserId].filter(
+        (v) => v !== undefined,
+      ),
     interactionNotices: (broadcastId?: string, userId?: string | null) =>
       [...QUERY_KEYS.live.all, "interaction-notices", broadcastId, userId ?? "public"].filter(
         (v) => v !== undefined,
@@ -113,6 +117,9 @@ export const QUERY_KEYS = {
     managersAll: () => [...QUERY_KEYS.channel.all, "managers"],
     managers: (creatorId?: string) =>
       [...QUERY_KEYS.channel.managersAll(), creatorId].filter((v) => v !== undefined),
+    viewerBansAll: () => [...QUERY_KEYS.channel.all, "viewer-bans"],
+    viewerBans: (creatorId?: string, page?: number) =>
+      [...QUERY_KEYS.channel.viewerBansAll(), creatorId, page].filter((v) => v !== undefined),
   },
   notification: {
     all: ["notification"] as const,

@@ -64,6 +64,12 @@ export const LIVE_LABEL = {
   broadcastOfflineTitle: "지금은 방송 중이 아니에요",
   offlineInfoTitle: "다음 방송에서 만나요! 👋",
   offlineInfoDescription: "크리에이터가 방송을 시작하면 이곳에서 바로 시청할 수 있어요.",
+  // 강퇴(밴) 차단 화면 — 강퇴당한 상태로 재진입(입장 차단) vs 시청 중 강퇴(즉시 퇴장)를 구분한다.
+  bannedEntryTitle: "입장할 수 없어요",
+  bannedEntryDescription: "강퇴당한 채널은 입장할 수 없어요.",
+  bannedEvictedTitle: "강퇴되었습니다",
+  bannedEvictedDescription: "이 채널에서 강퇴되어 더 이상 시청할 수 없어요.",
+  bannedChatPlaceholder: "강퇴되어 채팅할 수 없어요",
   // 방송은 시작됐지만 아직 송출(OBS) 영상이 도착하지 않은 동안 비디오 영역에 띄우는 안내.
   streamWaitingTitle: "송출 대기 중",
   streamWaitingDescription: "스트리머가 방송을 준비하고 있어요. 잠시만 기다려 주세요.",

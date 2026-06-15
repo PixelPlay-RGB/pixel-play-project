@@ -110,6 +110,19 @@ export interface SendLiveMessageResult {
   moderated: boolean;
 }
 
+// 채팅 닉네임 클릭 팝업(프로필/강퇴)에 필요한 시청 컨텍스트 — 패널·본문·목록을 관통해 전달한다(#119).
+// 객체 1개로 묶어 메시지 목록까지 내려보내고, 목록은 memo 보존을 위해 원시값으로 펼쳐 각 메시지에 넘긴다.
+export interface LiveChatProfileContext {
+  // 시청 중인 채널(크리에이터) id. 강퇴/프로필 RPC 의 p_creator_id.
+  creatorId: string;
+  // 현재 로그인 유저 id(비로그인 null) — 본인 메시지 강퇴 숨김 판정에 쓴다.
+  viewerId: string | null;
+  // 현재 유저가 이 채널의 강퇴 권한자(크리에이터/매니저)인지 — 강퇴 버튼 노출 게이트.
+  canModerate: boolean;
+  // 강퇴 사건 컨텍스트로 기록할 활성 방송 id(없으면 null).
+  broadcastId: string | null;
+}
+
 export interface LiveDonation {
   id: string;
   author: string;
@@ -211,12 +224,17 @@ export interface LiveWatchViewerRelation {
   followedAt: string | null;
   chatRuleAcceptedVersion: number | null;
   chatRuleAcceptedAt: string | null;
+  // 이 채널의 활성 매니저인지(#118) — 유저관리/매니저 채팅 분기에 쓴다.
+  isManager: boolean;
+  // 이 채널에서 강퇴(활성 밴)되었는지(#119) — 차단 화면 전환에 쓴다.
+  isBanned: boolean;
 }
 
 // RPC가 계산해 주는 채팅 불가 사유 — 차단/블랙리스트가 아닌 채팅 가능 여부 판단용
 export type LiveChatUnavailableReason =
   | "login_required"
   | "live_offline"
+  | "banned"
   | "manager_only"
   | "follower_required"
   | "follower_wait_required"

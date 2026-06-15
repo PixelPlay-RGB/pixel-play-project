@@ -10,6 +10,7 @@ import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { toastAppInfo } from "@/utils/common/toast-message";
 import { normalizeLiveViewData } from "@/utils/live/live-view-data";
 import { isUuid } from "@/utils/common/uuid";
+import { useLiveBanEviction } from "@/hooks/live/use-live-ban-eviction";
 import type { LiveWatchData } from "@/types/live/live";
 
 export function useLiveViewData(creatorId: string) {
@@ -51,6 +52,14 @@ export function useLiveViewData(creatorId: string) {
   });
 
   const broadcastId = query.data?.broadcast?.id;
+
+  // 강퇴/해제 realtime 단독 소유 — 당사자에게만 전달되며, watch 캐시를 통해 메인+팝아웃이 함께 반응한다(#119).
+  useLiveBanEviction({
+    supabase,
+    queryClient,
+    creatorId,
+    viewerId: user?.id ?? null,
+  });
 
   useEffect(() => {
     if (!broadcastId) return;
