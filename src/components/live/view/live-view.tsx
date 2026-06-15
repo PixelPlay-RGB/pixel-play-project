@@ -152,20 +152,26 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     setIsLoginPromptOpen(true);
   }
 
-  // 클립 버튼: 로그인 게이트를 먼저 통과시키고, 스냅샷·필름스트립·제목을 store로 넘긴 뒤
-  // 에디터로 이동한다(인터셉팅 라우트가 라이브 위 모달로 띄운다).
-  function handleClipRequest(payload: { snapshotDataUrl: string | null; frames: string[] }) {
-    if (!isLoggedIn) {
-      openLoginPrompt();
-      return;
-    }
+  // 클립 버튼: 캡처가 끝나면 핸드오프를 store(localStorage persist)에 넣고 별도 창(팝업)을
+  // 에디터로 보낸다 — 라이브를 보면서 편집할 수 있게. 팝업이 차단됐으면 같은 탭으로 폴백한다.
+  function handleClipReady(payload: {
+    popup: Window | null;
+    snapshotDataUrl: string | null;
+    frames: string[];
+  }) {
     setClipHandoff({
       creatorId,
       snapshotDataUrl: payload.snapshotDataUrl,
       frames: payload.frames,
       defaultTitle: broadcast?.title ?? "",
     });
-    router.push(`/clip/editor/${creatorId}`);
+
+    const url = `/clip/editor/${creatorId}`;
+    if (payload.popup && !payload.popup.closed) {
+      payload.popup.location.href = url;
+    } else {
+      router.push(url);
+    }
   }
 
   function collapseDesktopChat() {
@@ -225,7 +231,9 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
                   onToggleTheater={toggleTheater}
                   openChatButtonRef={openChatButtonRef}
                   onOpenChat={expandDesktopChat}
-                  onClipRequest={handleClipRequest}
+                  clipLoggedIn={isLoggedIn}
+                  onClipRequireLogin={openLoginPrompt}
+                  onClipReady={handleClipReady}
                   renderFullscreenChat={({
                     container,
                     isChatOpen,

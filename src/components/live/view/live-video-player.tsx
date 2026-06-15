@@ -46,22 +46,38 @@ interface Props {
   onOpenChat?: () => void;
   // 전체화면일 때 컨테이너 내부에 렌더할 채팅/후원 오버레이. 데이터를 가진 상위(LiveView)가 주입한다.
   renderFullscreenChat?: (ctx: FullscreenChatContext) => ReactNode;
-  // 클립 버튼 클릭 — 현재 프레임 스냅샷(크롭용) + 지난 ~30초 필름스트립 프레임을 상위로 올린다.
-  // 로그인 게이트·에디터 이동은 상위(LiveView)가 결정한다.
-  onClipRequest?: (payload: { snapshotDataUrl: string | null; frames: string[] }) => void;
+  // 클립 버튼: 로그인 여부(상위 결정) + 비로그인 시 콜백 + 캡처 완료 콜백. 에디터는 별도 창으로
+  // 열어 라이브를 보면서 편집하게 한다(팝업은 제스처 동기 시점에 열려야 차단되지 않는다).
+  clipLoggedIn?: boolean;
+  onClipRequireLogin?: () => void;
+  onClipReady?: (payload: {
+    popup: Window | null;
+    snapshotDataUrl: string | null;
+    frames: string[];
+  }) => void;
 }
 
-// 현재 프레임 1장(크롭용) — 동기 캡처.
+// 별도 창 핸드오프(localStorage)로 넘기므로 과대 용량을 막으려 720p로 다운스케일한다.
+const CLIP_EDITOR_WINDOW_NAME = "pixelplay-clip-editor";
+const CLIP_EDITOR_WINDOW_FEATURES = "popup=yes,width=980,height=920";
+const CLIP_EDITOR_LOADING_HTML =
+  "<!doctype html><html lang='ko'><head><meta charset='utf-8'><title>클립 만들기</title></head>" +
+  "<body style='margin:0;height:100vh;display:flex;align-items:center;justify-content:center;" +
+  "background:#0b0b0c;color:#9ca3af;font-family:system-ui,sans-serif;font-size:14px'>" +
+  "클립을 준비하고 있어요…</body></html>";
+
+// 현재 프레임 1장(크롭용) — 동기 캡처. 720p 다운스케일로 핸드오프 용량을 줄인다.
 function captureCurrentFrame(video: HTMLVideoElement): string | null {
   if (video.videoWidth === 0) return null;
   try {
+    const scale = Math.min(1, 720 / video.videoHeight);
     const canvas = document.createElement("canvas");
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    canvas.width = Math.max(1, Math.round(video.videoWidth * scale));
+    canvas.height = Math.max(1, Math.round(video.videoHeight * scale));
     const context = canvas.getContext("2d");
     if (!context) return null;
-    context.drawImage(video, 0, 0);
-    return canvas.toDataURL("image/jpeg", 0.85);
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL("image/jpeg", 0.8);
   } catch (error) {
     console.error("클립 스냅샷 캡처 실패", error);
     return null;
@@ -150,7 +166,9 @@ export function LiveVideoPlayer({
   openChatButtonRef,
   onOpenChat,
   renderFullscreenChat,
-  onClipRequest,
+  clipLoggedIn,
+  onClipRequireLogin,
+  onClipReady,
 }: Props) {
   const { containerRef, isFullscreen, toggleFullscreen } = useFullscreen<HTMLDivElement>();
   // 전체화면 채팅 패널 열림 상태. 컨트롤 바 폭(채팅이 가리지 않게)과 공유해야 해 여기서 소유한다.
@@ -263,8 +281,23 @@ export function LiveVideoPlayer({
   const [isCapturingClip, setIsCapturingClip] = useState(false);
   async function handleClipClick() {
     if (clipCapturingRef.current) return;
+    if (!clipLoggedIn) {
+      onClipRequireLogin?.();
+      return;
+    }
     const video = videoRef.current;
     if (!video) return;
+
+    // 팝업은 반드시 제스처 동기 시점에 연다(await 뒤면 차단된다). 캡처가 끝나면 상위가 location을 채운다.
+    const popup = window.open("", CLIP_EDITOR_WINDOW_NAME, CLIP_EDITOR_WINDOW_FEATURES);
+    if (popup) {
+      try {
+        popup.document.write(CLIP_EDITOR_LOADING_HTML);
+        popup.document.close();
+      } catch {
+        // about:blank 문서 쓰기를 막는 브라우저가 있어도 무시 — 곧 location으로 대체된다.
+      }
+    }
 
     clipCapturingRef.current = true;
     setIsCapturingClip(true);
@@ -275,12 +308,12 @@ export function LiveVideoPlayer({
         frames = [snapshotDataUrl];
       }
 
-      // 에디터 모달은 전체화면 컨테이너 위에선 가려지므로 먼저 빠져나온다.
+      // 라이브 전체화면 상태면 별도 창이 가려질 수 있어 먼저 빠져나온다.
       if (isFullscreen) {
         void toggleFullscreen();
       }
 
-      onClipRequest?.({ snapshotDataUrl, frames });
+      onClipReady?.({ popup, snapshotDataUrl, frames });
     } finally {
       clipCapturingRef.current = false;
       setIsCapturingClip(false);
@@ -407,9 +440,7 @@ export function LiveVideoPlayer({
             onSeekToLive={seekToLiveEdge}
             // 송출 프레임이 있어야 잘라낼 구간이 있다 — 대기 화면에선 버튼을 숨긴다.
             onClipClick={
-              onClipRequest && playbackState === "playing"
-                ? () => void handleClipClick()
-                : undefined
+              onClipReady && playbackState === "playing" ? () => void handleClipClick() : undefined
             }
           />
         </div>

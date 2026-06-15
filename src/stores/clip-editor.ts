@@ -1,9 +1,9 @@
-// 라이브 시청 화면(가위 버튼)에서 잡은 프레임 스냅샷·기본 제목을 클립 에디터 라우트로
-// 넘기기 위한 일회성 핸드오프 store. 라이브 페이지와 /clip/editor는 형제 라우트라 prop으로
-// 못 잇는다. 스냅샷 data URL은 휘발성 — 새로고침으로 사라지면 에디터가 안내 화면으로 폴백한다.
+// 라이브 시청 화면(가위 버튼)에서 잡은 프레임 스냅샷·필름스트립·기본 제목을 클립 에디터로
+// 넘기기 위한 핸드오프 store. 에디터는 별도 창(window.open)으로 열려 라이브를 보면서 편집할 수
+// 있어야 하므로, 같은 오리진의 다른 창으로 값을 넘기려면 localStorage(persist)가 필요하다.
 
 import { create } from "zustand";
-import { devtools } from "zustand/middleware";
+import { persist } from "zustand/middleware";
 
 export interface ClipEditorHandoff {
   creatorId: string;
@@ -22,15 +22,16 @@ interface ClipEditorState {
 }
 
 export const useClipEditorStore = create<ClipEditorState>()(
-  devtools(
+  persist(
     (set) => ({
       handoff: null,
-      setHandoff: (handoff) => set({ handoff }, false, "clipEditor/setHandoff"),
-      clearHandoff: () => set({ handoff: null }, false, "clipEditor/clearHandoff"),
+      setHandoff: (handoff) => set({ handoff }),
+      clearHandoff: () => set({ handoff: null }),
     }),
     {
-      name: "ClipEditorStore",
-      enabled: process.env.NODE_ENV !== "production",
+      name: "pixelplay-clip-editor-handoff",
+      // 상태만 persist(액션 제외). 핸드오프는 에디터가 읽은 뒤 곧바로 비운다.
+      partialize: (state) => ({ handoff: state.handoff }),
     },
   ),
 );

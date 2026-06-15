@@ -1,7 +1,8 @@
 "use client";
-// 클립 에디터 카드 — 라이브 가위 버튼이 넘긴 스냅샷/필름스트림 위에서 크롭 위치·제목·길이를
+// 클립 에디터 카드 — 라이브 가위 버튼이 넘긴 스냅샷/필름스트립 위에서 크롭 위치·제목·길이를
 // 정하고 생성한다. 생성 후엔 같은 카드 안에서 처리 중 → 완료/실패 단계를 보여준다.
-// 풀페이지(직접 진입)와 모달(라이브 위 인터셉트) 양쪽에서 같은 카드로 쓰인다.
+// 라이브 가위 클릭 시 별도 창(팝업)으로 열려 라이브를 보면서 편집할 수 있고, 직접 URL 진입 시엔
+// 풀페이지로 뜬다 — 두 경우 모두 같은 카드를 쓴다.
 
 import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
@@ -28,36 +29,46 @@ const DEFAULT_CROP_X_FRACTION = 0.5;
 
 interface Props {
   creatorId: string;
-  // 닫기 동작 — 모달은 router.back(), 풀페이지는 라이브로 이동(미지정 시 기본값).
-  onClose?: () => void;
 }
 
 const CARD_CLASS =
   "bg-card border-border flex w-full max-w-3xl flex-col overflow-hidden rounded-2xl border shadow-xl";
 
-export function ClipEditorView({ creatorId, onClose }: Props) {
+export function ClipEditorView({ creatorId }: Props) {
   const router = useRouter();
-  const clearHandoff = useClipEditorStore((state) => state.clearHandoff);
 
-  // 핸드오프는 첫 렌더에서 동기적으로 읽는다 — 라이브에서 client 이동 시 store에 들어 있고,
-  // 직접 진입·새로고침이면 null이라 곧바로 안내 화면으로 폴백한다(깜빡임 없음).
-  const [handoff] = useState<ClipEditorHandoff | null>(() => {
-    const current = useClipEditorStore.getState().handoff;
-    return current && current.creatorId === creatorId ? current : null;
-  });
+  // 핸드오프는 localStorage(persist)에 있어 클라에서만 읽는다(별도 창으로 넘어오기 때문).
+  // SSR 불일치를 막으려 mount 후 effect에서 읽고, 읽자마자 store를 비운다(stale 재사용 방지).
+  const [handoff, setLocalHandoff] = useState<ClipEditorHandoff | null>(null);
+  const [hydrated, setHydrated] = useState(false);
 
-  const [title, setTitle] = useState(() => handoff?.defaultTitle ?? "");
+  const [title, setTitle] = useState("");
   const [durationSeconds, setDurationSeconds] = useState(CLIP_DURATION_DEFAULT_SECONDS);
   const [cropXFraction, setCropXFraction] = useState(DEFAULT_CROP_X_FRACTION);
 
   const { createClip, status, readyClipId, reset } = useClipCreation(creatorId);
 
-  // 한 번 읽은 핸드오프는 store에서 비운다(뒤로/새로고침 시 stale 스냅샷 재사용 방지).
   useEffect(() => {
-    clearHandoff();
-  }, [clearHandoff]);
+    const current = useClipEditorStore.getState().handoff;
+    if (current && current.creatorId === creatorId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setLocalHandoff(current);
 
-  const handleClose = onClose ?? (() => router.push(`/live/${creatorId}`));
+      setTitle(current.defaultTitle);
+    }
+    useClipEditorStore.getState().clearHandoff();
+
+    setHydrated(true);
+  }, [creatorId]);
+
+  // 닫기 — 별도 창(팝업)이면 창을 닫고, 아니면 라이브로 이동(직접 진입/하드로드).
+  function handleClose() {
+    if (typeof window !== "undefined" && window.opener && window.opener !== window) {
+      window.close();
+    } else {
+      router.push(`/live/${creatorId}`);
+    }
+  }
 
   function renderHeader() {
     return (
@@ -86,6 +97,15 @@ export function ClipEditorView({ creatorId, onClose }: Props) {
   }
 
   function renderBody() {
+    // 핸드오프 읽기 전(1프레임)엔 중립 로딩 — SSR/클라 첫 렌더가 같아 하이드레이션 안전.
+    if (!hydrated) {
+      return (
+        <div className="flex min-h-80 items-center justify-center px-6 py-12">
+          <Loader2 className="text-muted-foreground size-7 animate-spin" aria-hidden />
+        </div>
+      );
+    }
+
     if (!handoff) {
       return (
         <Panel

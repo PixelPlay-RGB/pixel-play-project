@@ -56,11 +56,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-  modal,
 }: Readonly<{
   children: React.ReactNode;
-  // 인터셉팅 라우트 모달 슬롯(클립 에디터 등). 매칭 없으면 @modal/default.tsx가 null을 렌더.
-  modal: React.ReactNode;
 }>) {
   return (
     <html
@@ -77,7 +74,6 @@ export default function RootLayout({
             <Header />
             <AuthToastHandler />
             <main className="flex flex-1 flex-col">{children}</main>
-            {modal}
             <RouteFooter />
           </RouteAccentProvider>
         </Providers>
