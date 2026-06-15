@@ -91,7 +91,11 @@ export function ClipEditorView({ creatorId }: Props) {
           title={CLIP_LABEL.directEntryTitle}
           description={CLIP_LABEL.directEntryDescription}
         >
-          <Button className="rounded-xl font-bold" render={<Link href={`/channel/${creatorId}`} />}>
+          <Button
+            className="rounded-xl font-bold"
+            nativeButton={false}
+            render={<Link href={`/channel/${creatorId}`} />}
+          >
             {CLIP_LABEL.goToChannel}
           </Button>
         </Panel>
@@ -109,6 +113,7 @@ export function ClipEditorView({ creatorId }: Props) {
           <div className="flex w-full max-w-sm flex-col gap-2 sm:flex-row">
             <Button
               className="flex-1 rounded-xl font-bold"
+              nativeButton={false}
               render={<Link href={`/clip/${readyClipId}`} />}
             >
               <Scissors aria-hidden />

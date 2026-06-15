@@ -76,6 +76,7 @@ export function ClipSection({ creatorId, className }: Props) {
           <Button
             variant="secondary"
             className="cursor-pointer rounded-full"
+            nativeButton={false}
             render={<Link href={`/channel/${creatorId}/clip`} prefetch={false} />}
           >
             {CLIP_LABEL.viewAll}
