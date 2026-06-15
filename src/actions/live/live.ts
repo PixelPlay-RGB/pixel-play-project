@@ -347,25 +347,34 @@ async function runLiveViewerPresenceRpc(
 ): Promise<void> {
   if (!broadcastId || !isUuid(broadcastId)) return;
 
-  const viewerKey = await resolveLiveViewerKey({
-    allowIssueAnonCookie: rpc === "sync_live_viewer_presence",
-  });
-
-  if (!viewerKey) return;
-
   const action = rpc === "sync_live_viewer_presence" ? "집계" : "이탈";
 
-  const client = await createWriteClientForAction(`라이브 시청자 ${action} Admin Client 생성 실패`);
+  // 이 헬퍼는 라우트 핸들러와 훅 cleanup의 직접 호출 양쪽에서 쓰이는 부수효과 경로다.
+  // 신원 해석(쿠키 서명·env 의존)이나 RPC가 throw해도 호출자(204 라우트·cleanup)를 깨뜨리지
+  // 않도록 전 구간을 감싸 조용히 로깅만 한다 — "화면에 영향을 주지 않는다"는 계약을 강제한다.
+  try {
+    const viewerKey = await resolveLiveViewerKey({
+      allowIssueAnonCookie: rpc === "sync_live_viewer_presence",
+    });
 
-  if (!client.success) return;
+    if (!viewerKey) return;
 
-  const { error } = await client.supabase.rpc(rpc, {
-    p_broadcast_id: broadcastId,
-    p_viewer_key: viewerKey,
-  });
+    const client = await createWriteClientForAction(
+      `라이브 시청자 ${action} Admin Client 생성 실패`,
+    );
 
-  if (error) {
-    console.error(`라이브 시청자 ${action} RPC 실패`, error);
+    if (!client.success) return;
+
+    const { error } = await client.supabase.rpc(rpc, {
+      p_broadcast_id: broadcastId,
+      p_viewer_key: viewerKey,
+    });
+
+    if (error) {
+      console.error(`라이브 시청자 ${action} RPC 실패`, error);
+    }
+  } catch (error) {
+    console.error(`라이브 시청자 ${action} 처리 중 예외`, error);
   }
 }
 

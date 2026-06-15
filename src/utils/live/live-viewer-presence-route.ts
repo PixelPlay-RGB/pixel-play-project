@@ -21,6 +21,8 @@ export function createViewerPresenceRouteHandler(action: (broadcastId: string) =
     }
 
     if (typeof broadcastId === "string") {
+      // action은 스스로 예외를 삼키는 부수효과 계약을 따른다(runLiveViewerPresenceRpc의 내부
+      // try/catch). 그래서 여기서 다시 감싸지 않아도 항상 204 응답 불변식이 유지된다.
       await action(broadcastId);
     }
 

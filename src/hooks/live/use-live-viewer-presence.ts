@@ -8,18 +8,15 @@ import { leaveLiveViewerPresenceAction } from "@/actions/live/live";
 import { LIVE_VIEWER_LEAVE_API_PATH, LIVE_VIEWER_SYNC_API_PATH } from "@/constants/live/live";
 
 const HEARTBEAT_INTERVAL_MS = 10_000;
-// 하트비트 sync 엔드포인트 — 익명 식별 쿠키(pp_anon_viewer)를 서버가 발급·검증한다.
-const SYNC_URL = LIVE_VIEWER_SYNC_API_PATH;
-// pagehide 시 sendBeacon으로 leave를 보내는 동일 출처 엔드포인트.
-const LEAVE_BEACON_URL = LIVE_VIEWER_LEAVE_API_PATH;
 
 export function useLiveViewerPresence(broadcastId: string | null | undefined) {
   useEffect(() => {
     if (!broadcastId) return;
 
     const sendHeartbeat = () => {
+      // 하트비트 sync 엔드포인트 — 익명 식별 쿠키(pp_anon_viewer)를 서버가 발급·검증한다.
       // 동일 출처 fetch라 쿠키가 자동 동봉된다(서버가 익명 식별 쿠키를 읽거나 첫 요청에 발급).
-      void fetch(SYNC_URL, {
+      void fetch(LIVE_VIEWER_SYNC_API_PATH, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ broadcastId }),
@@ -44,7 +41,11 @@ export function useLiveViewerPresence(broadcastId: string | null | undefined) {
       if (event.persisted) return;
       if (typeof navigator === "undefined" || typeof navigator.sendBeacon !== "function") return;
       const payload = JSON.stringify({ broadcastId });
-      navigator.sendBeacon(LEAVE_BEACON_URL, new Blob([payload], { type: "application/json" }));
+      // pagehide 시 sendBeacon으로 leave를 보내는 동일 출처 엔드포인트.
+      navigator.sendBeacon(
+        LIVE_VIEWER_LEAVE_API_PATH,
+        new Blob([payload], { type: "application/json" }),
+      );
     };
     window.addEventListener("pagehide", handlePageHide);
 
