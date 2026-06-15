@@ -1,13 +1,14 @@
 "use client";
-// 클립 에디터 카드 — 라이브 가위 버튼이 넘긴 스냅샷/필름스트립 위에서 크롭 위치·제목·길이를
-// 정하고 생성한다. 생성 후엔 같은 카드 안에서 처리 중 → 완료/실패 단계를 보여준다.
-// 라이브 가위 클릭 시 별도 창(팝업)으로 열려 라이브를 보면서 편집할 수 있고, 직접 URL 진입 시엔
-// 풀페이지로 뜬다 — 두 경우 모두 같은 카드를 쓴다.
+// 클립 에디터 — 라이브 가위가 넘긴 스냅샷/필름스트립 위에서 크롭 위치·구간(길이+위치)·제목을 정해
+// 생성한다. 별도 창(팝업)으로 열려 라이브를 보면서 편집하며, 헤더·푸터 없이 풀블리드로 채운다.
+// 생성 중에는 "창을 닫지 마세요" 안내와 함께 생성 버튼이 스피너로 처리 상태를 보여준다(창을 닫아도
+// 클립 자체는 백그라운드에서 완성되지만, 완료 알림은 이 창에서만 뜬다).
 
 import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Check, Loader2, Scissors, TriangleAlert, X } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
+import { Check, Loader2, Scissors, TriangleAlert } from "lucide-react";
 
 import { ClipCropSelector } from "@/components/clip/clip-crop-selector";
 import { ClipDurationTrimmer } from "@/components/clip/clip-duration-trimmer";
@@ -15,6 +16,7 @@ import { ClipVerticalPreview } from "@/components/clip/clip-vertical-preview";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  CLIP_BUFFER_SECONDS,
   CLIP_DURATION_DEFAULT_SECONDS,
   CLIP_DURATION_MAX_SECONDS,
   CLIP_DURATION_MIN_SECONDS,
@@ -31,9 +33,6 @@ interface Props {
   creatorId: string;
 }
 
-const CARD_CLASS =
-  "bg-card border-border flex w-full max-w-3xl flex-col overflow-hidden rounded-2xl border shadow-xl";
-
 export function ClipEditorView({ creatorId }: Props) {
   const router = useRouter();
 
@@ -44,9 +43,11 @@ export function ClipEditorView({ creatorId }: Props) {
 
   const [title, setTitle] = useState("");
   const [durationSeconds, setDurationSeconds] = useState(CLIP_DURATION_DEFAULT_SECONDS);
+  // 클립 시점(지금)으로부터 윈도우 끝까지의 거리. 0 = 직전 N초(기본).
+  const [endOffsetSeconds, setEndOffsetSeconds] = useState(0);
   const [cropXFraction, setCropXFraction] = useState(DEFAULT_CROP_X_FRACTION);
 
-  const { createClip, status, readyClipId, reset } = useClipCreation(creatorId);
+  const { createClip, status, readyClipId } = useClipCreation(creatorId);
 
   useEffect(() => {
     const current = useClipEditorStore.getState().handoff;
@@ -70,37 +71,13 @@ export function ClipEditorView({ creatorId }: Props) {
     }
   }
 
-  function renderHeader() {
-    return (
-      <div className="border-border/60 flex items-center justify-between gap-3 border-b px-5 py-4">
-        <div className="flex items-center gap-2.5">
-          <span className="bg-brand/10 text-brand flex size-9 items-center justify-center rounded-xl">
-            <Scissors className="size-5" aria-hidden />
-          </span>
-          <div>
-            <h1 className="text-foreground text-base font-bold">{CLIP_LABEL.editorTitle}</h1>
-            <p className="text-muted-foreground text-xs">{CLIP_LABEL.editorSubtitle}</p>
-          </div>
-        </div>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          aria-label={CLIP_LABEL.close}
-          className="text-muted-foreground hover:text-foreground rounded-full"
-          onClick={handleClose}
-        >
-          <X aria-hidden />
-        </Button>
-      </div>
-    );
-  }
+  const isBusy = status === "submitting" || status === "processing";
 
   function renderBody() {
     // 핸드오프 읽기 전(1프레임)엔 중립 로딩 — SSR/클라 첫 렌더가 같아 하이드레이션 안전.
     if (!hydrated) {
       return (
-        <div className="flex min-h-80 items-center justify-center px-6 py-12">
+        <div className="flex flex-1 items-center justify-center">
           <Loader2 className="text-muted-foreground size-7 animate-spin" aria-hidden />
         </div>
       );
@@ -121,25 +98,6 @@ export function ClipEditorView({ creatorId }: Props) {
       );
     }
 
-    if (status === "processing") {
-      return (
-        <Panel
-          tone="brand"
-          icon={<Loader2 className="size-8 animate-spin" aria-hidden />}
-          title={CLIP_LABEL.processingTitle}
-          description={CLIP_LABEL.processingDescription}
-        >
-          <Button
-            variant="ghost"
-            className="text-muted-foreground hover:text-foreground rounded-xl"
-            onClick={handleClose}
-          >
-            {CLIP_LABEL.backToLive}
-          </Button>
-        </Panel>
-      );
-    }
-
     if (status === "ready") {
       return (
         <Panel
@@ -148,7 +106,7 @@ export function ClipEditorView({ creatorId }: Props) {
           title={CLIP_LABEL.readyTitle}
           description={CLIP_LABEL.readyDescription}
         >
-          <div className="flex w-full flex-col gap-2 sm:flex-row">
+          <div className="flex w-full max-w-sm flex-col gap-2 sm:flex-row">
             <Button
               className="flex-1 rounded-xl font-bold"
               render={<Link href={`/clip/${readyClipId}`} />}
@@ -164,32 +122,11 @@ export function ClipEditorView({ creatorId }: Props) {
       );
     }
 
-    if (status === "failed") {
-      return (
-        <Panel
-          tone="destructive"
-          icon={<TriangleAlert className="size-8" aria-hidden />}
-          title={CLIP_LABEL.failedTitle}
-          description={CLIP_LABEL.failedDescription}
-        >
-          <div className="flex w-full flex-col gap-2 sm:flex-row">
-            <Button className="flex-1 rounded-xl font-bold" onClick={reset}>
-              {CLIP_LABEL.retry}
-            </Button>
-            <Button variant="secondary" className="flex-1 rounded-xl" onClick={handleClose}>
-              {CLIP_LABEL.backToLive}
-            </Button>
-          </div>
-        </Panel>
-      );
-    }
-
-    // 기본: 편집 폼(idle·submitting).
-    const isSubmitting = status === "submitting";
+    // 편집 폼(idle·submitting·processing·failed 공용) — 처리 중에도 폼은 유지하고 버튼만 스피너로.
     const frames = handoff.frames.length > 0 ? handoff.frames : [];
 
     return (
-      <div className="flex flex-col gap-5 p-5">
+      <div className="flex flex-1 flex-col gap-5 overflow-y-auto p-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
           <div className="flex min-w-0 flex-1 flex-col gap-1.5">
             <ClipCropSelector
@@ -215,42 +152,76 @@ export function ClipEditorView({ creatorId }: Props) {
             value={title}
             maxLength={CLIP_TITLE_MAX_LENGTH}
             placeholder={CLIP_LABEL.titlePlaceholder}
+            disabled={isBusy}
             onChange={(event) => setTitle(event.target.value)}
           />
         </div>
 
-        <ClipDurationTrimmer
-          value={durationSeconds}
-          min={CLIP_DURATION_MIN_SECONDS}
-          max={CLIP_DURATION_MAX_SECONDS}
-          frames={frames}
-          onChange={setDurationSeconds}
-        />
+        <div className="flex flex-col gap-1.5">
+          <ClipDurationTrimmer
+            durationSeconds={durationSeconds}
+            endOffsetSeconds={endOffsetSeconds}
+            min={CLIP_DURATION_MIN_SECONDS}
+            max={CLIP_DURATION_MAX_SECONDS}
+            bufferSeconds={CLIP_BUFFER_SECONDS}
+            frames={frames}
+            onChange={(next) => {
+              setDurationSeconds(next.durationSeconds);
+              setEndOffsetSeconds(next.endOffsetSeconds);
+            }}
+          />
+          <p className="text-muted-foreground text-xs">{CLIP_LABEL.windowGuide}</p>
+        </div>
 
-        <Button
-          type="button"
-          size="lg"
-          className="rounded-xl font-bold"
-          disabled={isSubmitting}
-          onClick={() => void createClip({ title, durationSeconds, cropXFraction })}
-        >
-          {isSubmitting ? (
-            <Loader2 className="animate-spin" aria-hidden />
-          ) : (
-            <Scissors aria-hidden />
-          )}
-          {isSubmitting ? CLIP_LABEL.submitting : CLIP_LABEL.submit}
-        </Button>
+        <div className="mt-auto flex flex-col gap-2.5">
+          <AnimatePresence initial={false}>
+            {status === "failed" ? (
+              <motion.p
+                key="failed"
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 4 }}
+                className="text-destructive flex items-center gap-1.5 text-sm font-medium"
+              >
+                <TriangleAlert className="size-4 shrink-0" aria-hidden />
+                {CLIP_LABEL.failedDescription}
+              </motion.p>
+            ) : isBusy ? (
+              <motion.p
+                key="busy"
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 4 }}
+                className="text-muted-foreground flex items-center gap-1.5 text-xs"
+              >
+                <TriangleAlert className="text-brand size-4 shrink-0" aria-hidden />
+                {CLIP_LABEL.keepOpenHint}
+              </motion.p>
+            ) : null}
+          </AnimatePresence>
+
+          <Button
+            type="button"
+            size="lg"
+            className="rounded-xl font-bold"
+            disabled={isBusy}
+            onClick={() =>
+              void createClip({ title, durationSeconds, cropXFraction, endOffsetSeconds })
+            }
+          >
+            {isBusy ? <Loader2 className="animate-spin" aria-hidden /> : <Scissors aria-hidden />}
+            {isBusy
+              ? CLIP_LABEL.creating
+              : status === "failed"
+                ? CLIP_LABEL.retry
+                : CLIP_LABEL.submit}
+          </Button>
+        </div>
       </div>
     );
   }
 
-  return (
-    <div className={CARD_CLASS}>
-      {renderHeader()}
-      {renderBody()}
-    </div>
-  );
+  return <div className="bg-background flex h-full w-full flex-1 flex-col">{renderBody()}</div>;
 }
 
 const TONE_CLASS = {
@@ -267,10 +238,14 @@ interface PanelProps {
   children: ReactNode;
 }
 
-// 카드 본문 안에서 중앙 정렬되는 상태 패널(안내·처리 중·완료·실패).
+// 풀블리드 안에서 가운데 정렬되는 상태 패널(안내·완료).
 function Panel({ tone, icon, title, description, children }: PanelProps) {
   return (
-    <div className="flex min-h-80 flex-col items-center justify-center gap-4 px-6 py-12 text-center">
+    <motion.div
+      initial={{ opacity: 0, scale: 0.98 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="flex flex-1 flex-col items-center justify-center gap-4 px-6 py-12 text-center"
+    >
       <span
         className={cn("flex size-16 items-center justify-center rounded-2xl", TONE_CLASS[tone])}
       >
@@ -281,6 +256,6 @@ function Panel({ tone, icon, title, description, children }: PanelProps) {
         <p className="text-muted-foreground text-sm">{description}</p>
       </div>
       {children}
-    </div>
+    </motion.div>
   );
 }

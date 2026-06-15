@@ -22,6 +22,9 @@ interface ClaimedJob {
   createdAt: string;
   durationSeconds: number;
   cropXFraction: number;
+  // 클립 시점(now)으로부터 "윈도우 끝"까지의 거리(초). 0이면 직전 N초(기존 동작).
+  // claim RPC의 jsonb 출력에 포함되며, 아래 responseJobs는 job을 그대로 펼쳐 워커로 전달한다.
+  endOffsetSeconds: number;
 }
 
 interface StudioSettingRow {

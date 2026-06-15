@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # PixelPlay 라이브 클립 워커(#124) — EC2(MediaMTX 호스트)에서 systemd 상주 서비스로 실행.
 # clip-worker Edge Function에서 pending 클립을 클레임(4초 폴링)하고, MediaMTX의 60초
-# HLS RAM 버퍼에서 요청 구간(직전 15~30초)을 ffmpeg로 추출(9:16 세로 크롭)해 서명된
-# 업로드 URL로 Storage에 올린 뒤 완료/실패를 보고한다. service key는 받지 않는다.
+# HLS RAM 버퍼에서 요청 구간(클립 시점에서 end_offset만큼 당긴 15~30초)을 ffmpeg로 추출
+# (9:16 세로 크롭)해 서명된 업로드 URL로 Storage에 올린 뒤 완료/실패를 보고한다. service key는 받지 않는다.
 #
 # 추출 방식: 라이브 플레이리스트를 ffmpeg에 직접 물리지 않는다(LL-HLS part·리로드
 # 레이스 회피). media playlist를 직접 파싱해 필요한 풀 세그먼트만으로 로컬 VOD
@@ -269,7 +269,10 @@ def upload_file(upload_url, file_path, content_type):
 def process_job(job, hls_base_url, worker_url, worker_secret):
     clip_id = job["clipId"]
     duration = int(job["durationSeconds"])
-    window_end = parse_iso_datetime(job["createdAt"])
+    # 윈도우 끝 = 클립 시점(created_at) − end_offset. 0이면 직전 N초(기존 동작),
+    # 양수면 그만큼 과거로 당긴 [created_at-(offset+duration), created_at-offset] 구간을 뽑는다.
+    end_offset = int(job.get("endOffsetSeconds", 0) or 0)
+    window_end = parse_iso_datetime(job["createdAt"]) - timedelta(seconds=end_offset)
     window_start = window_end - timedelta(seconds=duration)
 
     vod_path = os.path.join(WORK_DIR, f"{clip_id}.m3u8")

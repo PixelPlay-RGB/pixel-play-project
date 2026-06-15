@@ -8,6 +8,7 @@ import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { createWriteClientForAction } from "@/actions/common/admin-client-action";
 import { getAuthenticatedActorId } from "@/actions/common/authenticated-actor";
 import {
+  CLIP_BUFFER_SECONDS,
   CLIP_DURATION_MAX_SECONDS,
   CLIP_DURATION_MIN_SECONDS,
   CLIP_TITLE_MAX_LENGTH,
@@ -50,6 +51,8 @@ export interface CreateLiveClipInput {
   title: string;
   durationSeconds: number;
   cropXFraction: number;
+  // 클립 시점(now)으로부터 "윈도우 끝"까지의 거리(초). 0이면 직전 N초, 양수면 그만큼 과거로 당긴 구간.
+  endOffsetSeconds: number;
 }
 
 export interface CreateLiveClipResult {
@@ -71,6 +74,7 @@ export async function createLiveClipAction(
   const title = input.title.trim();
   const durationSeconds = Math.round(input.durationSeconds);
   const cropXFraction = input.cropXFraction;
+  const endOffsetSeconds = Math.round(input.endOffsetSeconds);
 
   if (!creatorId || !isUuid(creatorId)) {
     return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
@@ -82,7 +86,10 @@ export async function createLiveClipAction(
     durationSeconds > CLIP_DURATION_MAX_SECONDS ||
     !Number.isFinite(cropXFraction) ||
     cropXFraction < 0 ||
-    cropXFraction > 1
+    cropXFraction > 1 ||
+    !Number.isFinite(endOffsetSeconds) ||
+    endOffsetSeconds < 0 ||
+    endOffsetSeconds + durationSeconds > CLIP_BUFFER_SECONDS
   ) {
     return { success: false, code: APP_MESSAGE_CODE.error.clip.createFailed };
   }
@@ -110,6 +117,7 @@ export async function createLiveClipAction(
     p_title: title,
     p_duration_seconds: durationSeconds,
     p_crop_x_fraction: cropXFraction,
+    p_end_offset_seconds: endOffsetSeconds,
   });
 
   if (error) {

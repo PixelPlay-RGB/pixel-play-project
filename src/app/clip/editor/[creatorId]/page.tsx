@@ -1,4 +1,5 @@
-// 클립 에디터 라우트 — 라이브 시청 화면 가위 버튼에서 진입한다(스냅샷은 store로 전달).
+// 클립 에디터 라우트 — 라이브 시청 화면 가위 버튼이 연 별도 창(팝업)에서 뜬다(스냅샷·필름은
+// store로 전달). 헤더·푸터 없이 풀블리드로 채운다(RouteOverlayChromeController가 크롬을 숨김).
 // 생성·처리·완료 전 과정을 ClipEditorView가 소유한다. 인증 필요(미들웨어에서 보호).
 import type { Metadata } from "next";
 
@@ -16,10 +17,10 @@ export default async function ClipEditorPage({
 }) {
   const { creatorId } = await params;
 
-  // 직접 진입(하드 로드) — 풀페이지로 카드를 가운데 띄운다. 라이브에서 진입하면 인터셉팅
-  // 라우트(@modal)가 같은 카드를 모달로 띄운다.
+  // 헤더·푸터 없이 화면을 꽉 채운다(팝업·직접 진입 모두 동일). 카드/여백 없이 ClipEditorView가
+  // 풀블리드로 내부를 구성한다.
   return (
-    <div className="flex flex-1 flex-col items-center justify-center px-4 py-8">
+    <div className="flex flex-1 flex-col">
       <ClipEditorView creatorId={creatorId} />
     </div>
   );

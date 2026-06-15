@@ -15,7 +15,7 @@ import {
   LIVE_LABEL,
   LIVE_PLAYER_ICON_BUTTON_CLASS,
 } from "@/constants/live/live";
-import { CLIP_DURATION_MAX_SECONDS } from "@/constants/clip/clip";
+import { CLIP_BUFFER_SECONDS } from "@/constants/clip/clip";
 import { useFullscreen } from "@/hooks/live/use-fullscreen";
 import { useHlsPlayer } from "@/hooks/live/use-hls-player";
 import { useLivePlayerControls } from "@/hooks/live/use-live-player-controls";
@@ -102,7 +102,7 @@ function seekAndWait(video: HTMLVideoElement, time: number, timeoutMs: number): 
   });
 }
 
-// 지난 ~30초를 시킹하며 작은 프레임 여러 장을 캡처한다(필름스트립용, best-effort).
+// 지난 ~{CLIP_BUFFER_SECONDS}초를 시킹하며 작은 프레임 여러 장을 캡처한다(필름스트립용, best-effort).
 // 버퍼 밖이거나 seeked가 늦으면 중복/부족할 수 있어, 호출부에서 폴백을 둔다.
 async function captureFilmstrip(video: HTMLVideoElement): Promise<string[]> {
   if (video.videoWidth === 0) return [];
@@ -110,11 +110,11 @@ async function captureFilmstrip(video: HTMLVideoElement): Promise<string[]> {
   if (seekable.length === 0) return [];
 
   const edge = seekable.end(seekable.length - 1);
-  const start = Math.max(seekable.start(0), edge - CLIP_DURATION_MAX_SECONDS);
+  const start = Math.max(seekable.start(0), edge - CLIP_BUFFER_SECONDS);
   const span = edge - start;
   if (span < 1) return [];
 
-  const FRAME_COUNT = 8;
+  const FRAME_COUNT = 12;
   const wasPaused = video.paused;
   const originalTime = video.currentTime;
   video.pause();

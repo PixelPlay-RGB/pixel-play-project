@@ -751,6 +751,7 @@ export type Database = {
           creator_id: string
           crop_x_fraction: number
           duration_seconds: number
+          end_offset_seconds: number
           error_reason: string | null
           id: string
           status: Database["public"]["Enums"]["live_clip_status"]
@@ -767,6 +768,7 @@ export type Database = {
           creator_id: string
           crop_x_fraction: number
           duration_seconds: number
+          end_offset_seconds?: number
           error_reason?: string | null
           id?: string
           status?: Database["public"]["Enums"]["live_clip_status"]
@@ -783,6 +785,7 @@ export type Database = {
           creator_id?: string
           crop_x_fraction?: number
           duration_seconds?: number
+          end_offset_seconds?: number
           error_reason?: string | null
           id?: string
           status?: Database["public"]["Enums"]["live_clip_status"]
@@ -1361,6 +1364,7 @@ export type Database = {
           p_creator_id: string
           p_crop_x_fraction: number
           p_duration_seconds: number
+          p_end_offset_seconds?: number
           p_title: string
         }
         Returns: Json
@@ -1791,6 +1795,10 @@ export type Database = {
           p_title?: string
         }
         Returns: string
+      }
+      subscribe_creator: {
+        Args: { p_actor_user_id: string; p_creator_id: string }
+        Returns: Json
       }
       sweep_live_viewer_counts: { Args: never; Returns: undefined }
       sync_live_viewer_presence: {

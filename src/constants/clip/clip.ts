@@ -6,6 +6,10 @@ import type { ClipPeriod, ClipSort } from "@/types/clip/clip";
 export const CLIP_DURATION_MIN_SECONDS = 15;
 export const CLIP_DURATION_MAX_SECONDS = 30;
 export const CLIP_DURATION_DEFAULT_SECONDS = 30;
+// 필름 트리머가 보여주는 "되돌리기" 범위(초) = 안전 추출 한계. HLS 버퍼(≈60초)에서 클레임/추출
+// 예약분을 뺀 값으로, create_live_clip RPC의 윈도우 검증(end_offset + duration ≤ 40)과 동일해야 한다.
+// EC2 MediaMTX 버퍼를 키우면 이 값과 RPC 검증·claim 컷오프를 함께 올려 60초까지 확장할 수 있다.
+export const CLIP_BUFFER_SECONDS = 40;
 export const CLIP_TITLE_MAX_LENGTH = 100;
 
 // 시청 페이지 섹션: 한 줄 어림치(그리드 최대 칼럼 수)와 더보기 최대 줄 수.
@@ -29,8 +33,12 @@ export const CLIP_LABEL = {
   durationLabel: "길이",
   durationUnit: "초",
   clipMoment: "클립 시점",
+  windowGuide: "구간의 양옆을 끌어 길이와 위치를 정해요.",
+  now: "지금",
   submit: "클립 생성",
   submitting: "요청 중",
+  creating: "생성 중",
+  keepOpenHint: "완성 알림을 받을 때까지 창을 닫지 마세요.",
   viewClip: "클립 보기",
   backToLive: "라이브로 돌아가기",
   goToChannel: "채널로 가기",
@@ -62,6 +70,8 @@ export const CLIP_LABEL = {
   share: "공유",
   play: "재생",
   volume: "음량",
+  mute: "음소거",
+  unmute: "음소거 해제",
   unmuteHint: "소리를 켜려면 누르세요",
   channelLink: "채널 보기",
   liveLink: "라이브 보기",
