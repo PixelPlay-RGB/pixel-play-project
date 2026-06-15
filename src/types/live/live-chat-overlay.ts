@@ -24,5 +24,7 @@ export interface LiveChatOverlaySnapshot {
   broadcast: LiveBroadcastSummary | null;
   donationMessageEnabled: boolean;
   donationAmountVisible: boolean;
+  subscriptionBadgeCustomMonths: number[];
+  subscriptionBadgeVersion: string | null;
   items: LiveChatOverlayItem[];
 }

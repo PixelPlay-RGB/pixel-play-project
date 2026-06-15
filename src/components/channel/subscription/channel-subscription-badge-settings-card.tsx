@@ -130,7 +130,7 @@ function BadgeSlot({ creatorId, month, isCustomSlot, onCustomSlotDeleted }: Badg
   const [usesFallback, setUsesFallback] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  const storageSrc = `${getLiveSubscriptionBadgePublicUrl(creatorId, month, [month])}?v=${version}`;
+  const storageSrc = getLiveSubscriptionBadgePublicUrl(creatorId, month, [month], String(version));
   const fallbackSrc = getLiveDefaultSubscriptionBadgeSrc(month);
   const imageSrc = usesFallback ? fallbackSrc : storageSrc;
 

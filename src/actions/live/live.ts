@@ -26,8 +26,8 @@ import {
 import { isRecord } from "@/utils/common/json";
 import { isUuid } from "@/utils/common/uuid";
 import {
-  LIVE_SUBSCRIPTION_BADGE_MAX_MONTH,
-  LIVE_SUBSCRIPTION_BADGE_MIN_CUSTOM_MONTH,
+  readLiveSubscriptionBadgeAssetInfo,
+  type LiveSubscriptionBadgeAssetInfo,
 } from "@/utils/live/live-subscription-badge";
 
 // send_live_message_v2의 jsonb 응답({ messageId, moderated })을 앱 타입으로 정규화한다.
@@ -87,18 +87,6 @@ function normalizeCreatorSubscriptionResult(data: unknown): CreatorSubscriptionA
 }
 
 const LIVE_DRAW_PARTICIPATION_SOURCE = "live_draw_participation";
-
-function readLiveSubscriptionBadgeMonths(files: { name: string }[] | null) {
-  return (files ?? [])
-    .map((file) => Number(file.name.replace(/\.png$/i, "")))
-    .filter(
-      (month) =>
-        Number.isInteger(month) &&
-        month >= LIVE_SUBSCRIPTION_BADGE_MIN_CUSTOM_MONTH &&
-        month <= LIVE_SUBSCRIPTION_BADGE_MAX_MONTH,
-    )
-    .sort((a, b) => a - b);
-}
 
 interface JoinLiveDrawInput {
   broadcastId: string;
@@ -213,9 +201,9 @@ export async function subscribeCreatorAction({
   };
 }
 
-export async function getLiveSubscriptionBadgeMonthsAction(
+export async function getLiveSubscriptionBadgeAssetsAction(
   creatorId: string,
-): Promise<AppActionResult<number[]>> {
+): Promise<AppActionResult<LiveSubscriptionBadgeAssetInfo>> {
   if (!creatorId || !isUuid(creatorId)) {
     return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
   }
@@ -233,7 +221,7 @@ export async function getLiveSubscriptionBadgeMonthsAction(
     return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
   }
 
-  return { success: true, data: readLiveSubscriptionBadgeMonths(data ?? null) };
+  return { success: true, data: readLiveSubscriptionBadgeAssetInfo(data ?? null) };
 }
 
 export async function voteLivePollAction(pollId: string, optionId: string): Promise<boolean> {

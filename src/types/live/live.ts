@@ -256,6 +256,7 @@ export interface LiveWatchData {
   viewerRelation: LiveWatchViewerRelation | null;
   viewerChatState: LiveViewerChatState;
   subscriptionBadgeCustomMonths: number[];
+  subscriptionBadgeVersion: string | null;
 }
 
 // RPC의 크리에이터 응답을 UI에서 쓰는 LiveCreator로 정규화한다.

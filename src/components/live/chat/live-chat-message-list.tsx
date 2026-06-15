@@ -21,6 +21,7 @@ interface Props {
   creatorId: string;
   messages: LiveChatMessage[];
   subscriptionBadgeCustomMonths?: number[];
+  subscriptionBadgeVersion?: string | null;
   // 클린봇 토글 상태. ON이면 비속어로 걸린 메시지를 가린다. 기본 ON.
   cleanbotEnabled?: boolean;
   // 후원 랭킹 배너(absolute 오버레이)가 덮는 실측 높이(px). 접고 펼칠 때마다 호출부가 갱신해 넘긴다.
@@ -33,6 +34,7 @@ export function LiveChatMessageList({
   creatorId,
   messages,
   subscriptionBadgeCustomMonths = [],
+  subscriptionBadgeVersion = null,
   cleanbotEnabled = true,
   topInsetPx = 0,
   scrollRef,
@@ -106,6 +108,7 @@ export function LiveChatMessageList({
                 creatorId={creatorId}
                 message={messages[item.index - 1]}
                 subscriptionBadgeCustomMonths={subscriptionBadgeCustomMonths}
+                subscriptionBadgeVersion={subscriptionBadgeVersion}
                 cleanbotEnabled={cleanbotEnabled}
               />
             )}
@@ -120,6 +123,7 @@ interface MessageItemProps {
   creatorId: string;
   message: LiveChatMessage;
   subscriptionBadgeCustomMonths: number[];
+  subscriptionBadgeVersion: string | null;
   cleanbotEnabled: boolean;
 }
 
@@ -129,6 +133,7 @@ const MessageItem = memo(function MessageItem({
   creatorId,
   message,
   subscriptionBadgeCustomMonths,
+  subscriptionBadgeVersion,
   cleanbotEnabled,
 }: MessageItemProps) {
   if (message.type === "system") {
@@ -176,6 +181,7 @@ const MessageItem = memo(function MessageItem({
       creatorId={creatorId}
       message={message}
       subscriptionBadgeCustomMonths={subscriptionBadgeCustomMonths}
+      subscriptionBadgeVersion={subscriptionBadgeVersion}
       isMasked={isMasked}
     />
   );
@@ -185,11 +191,13 @@ function TextMessage({
   creatorId,
   message,
   subscriptionBadgeCustomMonths,
+  subscriptionBadgeVersion,
   isMasked,
 }: {
   creatorId: string;
   message: LiveChatMessage;
   subscriptionBadgeCustomMonths: number[];
+  subscriptionBadgeVersion: string | null;
   isMasked: boolean;
 }) {
   // 역할 마크는 DB가 전송 시점에 스냅샷한 sender_role을 그대로 쓴다(viewer는 마크 없음).
@@ -218,6 +226,7 @@ function TextMessage({
               creatorId={creatorId}
               totalMonths={message.subscriptionTotalMonths}
               customMonths={subscriptionBadgeCustomMonths}
+              version={subscriptionBadgeVersion}
               withTooltip
             />
           ) : null}
@@ -227,6 +236,7 @@ function TextMessage({
           creatorId={creatorId}
           totalMonths={message.subscriptionTotalMonths}
           customMonths={subscriptionBadgeCustomMonths}
+          version={subscriptionBadgeVersion}
           withTooltip
           className="mr-1.5"
         />

@@ -3,7 +3,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getLiveSubscriptionBadgeMonthsAction } from "@/actions/live/live";
+import { getLiveSubscriptionBadgeAssetsAction } from "@/actions/live/live";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth";
 import { QUERY_KEYS } from "@/constants/common/query-keys";
@@ -28,7 +28,7 @@ export function useLiveViewData(creatorId: string) {
     enabled: !isAuthLoading && isValidCreatorId,
     staleTime: 1000 * 30,
     queryFn: async () => {
-      const [watchResult, countResult, badgeMonthsResult] = await Promise.all([
+      const [watchResult, countResult, badgeAssetsResult] = await Promise.all([
         supabase.rpc("get_live_watch", {
           p_creator_id: creatorId,
           ...(user?.id ? { p_viewer_id: user.id } : {}),
@@ -36,7 +36,7 @@ export function useLiveViewData(creatorId: string) {
         supabase.rpc("get_live_watch_count", {
           p_creator_id: creatorId,
         }),
-        getLiveSubscriptionBadgeMonthsAction(creatorId),
+        getLiveSubscriptionBadgeAssetsAction(creatorId),
       ]);
 
       if (watchResult.error) {
@@ -51,11 +51,12 @@ export function useLiveViewData(creatorId: string) {
       const watchData = normalizeLiveViewData(watchResult.data, countResult.data);
       if (!watchData) return null;
 
+      const badgeAssets = badgeAssetsResult.success ? badgeAssetsResult.data : null;
+
       return {
         ...watchData,
-        subscriptionBadgeCustomMonths: badgeMonthsResult.success
-          ? (badgeMonthsResult.data ?? [])
-          : [],
+        subscriptionBadgeCustomMonths: badgeAssets?.customMonths ?? [],
+        subscriptionBadgeVersion: badgeAssets?.version ?? null,
       };
     },
   });

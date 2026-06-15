@@ -43,6 +43,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     hadLiveBroadcast,
     messages,
     subscriptionBadgeCustomMonths,
+    subscriptionBadgeVersion,
     donations,
     polls,
     isPollsLoading,
@@ -192,6 +193,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
                       onToggleChat={onToggleChat}
                       creatorId={creatorId}
                       subscriptionBadgeCustomMonths={subscriptionBadgeCustomMonths}
+                      subscriptionBadgeVersion={subscriptionBadgeVersion}
                       donationOpenRequested={isDonationRequested}
                       onDonationOpenSettled={onDonationSettled}
                       messages={messages}
@@ -304,6 +306,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
               creatorId={creatorId}
               messages={messages}
               subscriptionBadgeCustomMonths={subscriptionBadgeCustomMonths}
+              subscriptionBadgeVersion={subscriptionBadgeVersion}
               donations={donations}
               polls={polls}
               isPollsLoading={isPollsLoading}

@@ -38,6 +38,8 @@ export function parseLiveChatOverlaySnapshot(value: Json): LiveChatOverlaySnapsh
     broadcast,
     donationMessageEnabled: object.donationMessageEnabled === true,
     donationAmountVisible: object.donationAmountVisible !== false,
+    subscriptionBadgeCustomMonths: [],
+    subscriptionBadgeVersion: null,
     items,
   };
 }

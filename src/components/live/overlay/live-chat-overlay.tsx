@@ -15,6 +15,8 @@ import { getLiveChatOverlayNicknameColor } from "@/utils/live/live-chat-overlay-
 
 export function LiveChatOverlay({ initialSnapshot }: { initialSnapshot: LiveChatOverlaySnapshot }) {
   const { chatStackRef, visibleItems } = useLiveChatOverlay(initialSnapshot);
+  const subscriptionBadgeCustomMonths = initialSnapshot.subscriptionBadgeCustomMonths;
+  const subscriptionBadgeVersion = initialSnapshot.subscriptionBadgeVersion;
 
   return (
     <main className="live-overlay-root min-h-screen overflow-hidden bg-transparent p-0 text-white">
@@ -32,7 +34,12 @@ export function LiveChatOverlay({ initialSnapshot }: { initialSnapshot: LiveChat
           )}
         >
           {visibleItems.map((item) => (
-            <ChatMessageItem key={item.message.id} message={item.message} />
+            <ChatMessageItem
+              key={item.message.id}
+              message={item.message}
+              subscriptionBadgeCustomMonths={subscriptionBadgeCustomMonths}
+              subscriptionBadgeVersion={subscriptionBadgeVersion}
+            />
           ))}
         </div>
       </section>
@@ -40,7 +47,15 @@ export function LiveChatOverlay({ initialSnapshot }: { initialSnapshot: LiveChat
   );
 }
 
-function ChatMessageItem({ message }: { message: LiveChatOverlayMessage }) {
+function ChatMessageItem({
+  message,
+  subscriptionBadgeCustomMonths,
+  subscriptionBadgeVersion,
+}: {
+  message: LiveChatOverlayMessage;
+  subscriptionBadgeCustomMonths: number[];
+  subscriptionBadgeVersion: string | null;
+}) {
   if (message.kind === "donation") {
     return <DonationMessageItem message={message} />;
   }
@@ -54,6 +69,8 @@ function ChatMessageItem({ message }: { message: LiveChatOverlayMessage }) {
         isSubscriber={message.isSubscriber}
         role={message.role}
         totalMonths={message.subscriptionTotalMonths}
+        subscriptionBadgeCustomMonths={subscriptionBadgeCustomMonths}
+        subscriptionBadgeVersion={subscriptionBadgeVersion}
       />
       <p className="min-w-0 text-3xl leading-9 font-normal wrap-break-word">
         <span
@@ -94,11 +111,15 @@ function MessagePrefix({
   isSubscriber,
   role,
   totalMonths,
+  subscriptionBadgeCustomMonths,
+  subscriptionBadgeVersion,
 }: {
   creatorId: string;
   isSubscriber?: boolean;
   role?: LiveChatOverlayMessage["role"];
   totalMonths?: number | null;
+  subscriptionBadgeCustomMonths: number[];
+  subscriptionBadgeVersion: string | null;
 }) {
   if (role !== "creator" && role !== "donor" && role !== "subscriber" && !isSubscriber) {
     return null;
@@ -108,7 +129,13 @@ function MessagePrefix({
     role === "creator" || role === "donor" ? <LiveChatRoleBadge role={role} size="lg" /> : null;
   const subscriptionBadge =
     (isSubscriber || role === "subscriber") && role !== "creator" ? (
-      <LiveSubscriptionBadge creatorId={creatorId} totalMonths={totalMonths} size="lg" />
+      <LiveSubscriptionBadge
+        creatorId={creatorId}
+        totalMonths={totalMonths}
+        customMonths={subscriptionBadgeCustomMonths}
+        version={subscriptionBadgeVersion}
+        size="lg"
+      />
     ) : null;
 
   return (

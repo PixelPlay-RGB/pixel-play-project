@@ -8,7 +8,14 @@ interface LiveWatchCountResult {
   broadcastCount: number;
 }
 
-type RawLiveWatchData = Omit<LiveWatchData, "creator" | "viewerRelation" | "viewerChatState"> & {
+type RawLiveWatchData = Omit<
+  LiveWatchData,
+  | "creator"
+  | "viewerRelation"
+  | "viewerChatState"
+  | "subscriptionBadgeCustomMonths"
+  | "subscriptionBadgeVersion"
+> & {
   creator: Omit<LiveWatchData["creator"], "followerCount" | "broadcastCount">;
   viewerRelation:
     | (Omit<
@@ -89,5 +96,6 @@ export function normalizeLiveViewData(
     },
     viewerRelation,
     subscriptionBadgeCustomMonths: [],
+    subscriptionBadgeVersion: null,
   };
 }
