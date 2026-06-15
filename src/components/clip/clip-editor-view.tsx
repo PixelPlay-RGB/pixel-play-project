@@ -25,6 +25,7 @@ import {
 } from "@/constants/clip/clip";
 import { cn } from "@/lib/utils";
 import { useClipCreation } from "@/hooks/clip/use-clip-creation";
+import { openClipDetail } from "@/utils/clip/open-clip-detail";
 import { useClipEditorStore, type ClipEditorHandoff } from "@/stores/clip-editor";
 
 const DEFAULT_CROP_X_FRACTION = 0.5;
@@ -113,8 +114,7 @@ export function ClipEditorView({ creatorId }: Props) {
           <div className="flex w-full max-w-sm flex-col gap-2 sm:flex-row">
             <Button
               className="flex-1 rounded-xl font-bold"
-              nativeButton={false}
-              render={<Link href={`/clip/${readyClipId}`} />}
+              onClick={() => readyClipId && openClipDetail(readyClipId, router)}
             >
               <Scissors aria-hidden />
               {CLIP_LABEL.viewClip}

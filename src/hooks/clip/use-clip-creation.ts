@@ -11,6 +11,7 @@ import { createLiveClipAction, type CreateLiveClipInput } from "@/actions/clip/c
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { CLIP_LABEL } from "@/constants/clip/clip";
 import { QUERY_KEYS } from "@/constants/common/query-keys";
+import { openClipDetail } from "@/utils/clip/open-clip-detail";
 import { toastAppError, toastAppInfo, toastAppSuccess } from "@/utils/common/toast-message";
 
 // idle: 입력 중 / submitting: 액션 전송 중 / processing: 워커 대기 / ready·failed: 결판.
@@ -68,7 +69,8 @@ export function useClipCreation(creatorId: string) {
         setStatus("ready");
         toastAppSuccess(APP_MESSAGE_CODE.success.clip.created, undefined, {
           label: CLIP_LABEL.viewClip,
-          onClick: () => router.push(`/clip/${clipId}`),
+          // 팝업이면 메인 탭에서 디테일을 열고 팝업을 닫는다(작은 팝업 안에서 보지 않게).
+          onClick: () => openClipDetail(clipId, router),
         });
         // 시청 페이지 섹션·채널 탭 목록에 새 클립이 바로 보이게 한다.
         void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.clip.channelAll(creatorId) });

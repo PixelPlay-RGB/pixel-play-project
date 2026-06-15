@@ -275,7 +275,7 @@ export function ClipShortsView({ initialClip, creator, viewerId }: Props) {
         {/* 세로 스테이지 — 캐러셀 전환이 일어나는 영역. 전체화면에선 radius·여백 없이 상하 꽉 채운다. */}
         <div
           className={cn(
-            "relative aspect-[9/16] h-full w-auto max-w-full overflow-hidden bg-black",
+            "group relative aspect-[9/16] h-full w-auto max-w-full overflow-hidden bg-black",
             isFullscreen ? "rounded-none" : "rounded-xl shadow-2xl",
           )}
         >
@@ -309,10 +309,16 @@ export function ClipShortsView({ initialClip, creator, viewerId }: Props) {
           <div className="pointer-events-none absolute inset-x-0 top-0 z-[5] h-1/5 bg-gradient-to-b from-black/45 to-transparent" />
 
           {/* 정보 오버레이 — 크리에이터(아바타=요약 Popover)·제목·조회수·생성일(진행바 위).
-              모바일은 우측 레일이 영상 안에 있어 right 여백을 둬 제목이 레일 밑으로 안 들어가게 한다. */}
-          <div className="pointer-events-none absolute right-16 bottom-16 left-3 z-10 flex flex-col gap-2 md:right-3">
+              모바일은 우측 레일이 영상 안에 있어 right 여백을 둬 제목이 레일 밑으로 안 들어가게 한다.
+              데스크탑은 hover 시에만 슬라이드·페이드로 나타난다(유튜브 결). 모바일(hover 없음)은 상시 노출. */}
+          <div
+            className={cn(
+              "pointer-events-none absolute right-16 bottom-16 left-3 z-10 flex flex-col gap-2 md:right-3",
+              "transition-all duration-300 md:translate-y-1 md:opacity-0 md:group-hover:translate-y-0 md:group-hover:opacity-100",
+            )}
+          >
             {creator ? (
-              <div className="pointer-events-auto flex items-center gap-2">
+              <div className="pointer-events-auto flex items-center gap-2 md:pointer-events-none md:group-hover:pointer-events-auto">
                 {/* 아바타 클릭 = 요약 Popover(채널 보기·라이브·팔로우) — 공용 컴포넌트 재사용 */}
                 <CreatorAvatarPopover
                   creatorId={creator.id}
