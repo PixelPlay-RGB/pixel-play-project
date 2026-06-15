@@ -10,7 +10,7 @@ import { LiveBroadcastInfo } from "@/components/live/view/live-broadcast-info";
 import { LiveStreamerRow } from "@/components/live/view/live-streamer-row";
 import { LiveChatPanel } from "@/components/live/view/live-chat-panel";
 import { LiveEndedScreen } from "@/components/live/view/live-ended-screen";
-import { LiveBannedScreen } from "@/components/live/view/live-banned-screen";
+import { LiveBannedDialog } from "@/components/live/view/live-banned-dialog";
 import { LiveLoginPromptDialog } from "@/components/live/view/live-login-prompt-dialog";
 import { useIsMobile } from "@/hooks/common/use-mobile";
 import { useLiveBroadcastView } from "@/hooks/live/use-live-broadcast-view";
@@ -187,11 +187,8 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     );
   }
 
-  // 강퇴(밴)된 시청자는 플레이어/채팅을 렌더하지 않고 차단 화면만 보여준다(다른 어떤 상태보다 우선).
-  // 해제되면 isBanned 가 false 로 돌아와 자동으로 시청 화면으로 복귀한다(realtime UPDATE invalidate).
-  if (isBanned) {
-    return <LiveBannedScreen wasEvicted={wasEvicted} />;
-  }
+  // 강퇴(밴)된 시청자에겐 시청 화면을 그대로 두고 그 위에 차단 다이얼로그(모달)를 띄운다(아래 LiveBannedDialog).
+  // 모달은 닫기/바깥 클릭이 막혀 있어 시청을 계속할 수 없고, 해제되면 isBanned 가 false 로 돌아와 자동으로 닫힌다.
 
   // 채널 자체가 없는 경우(broadcast·creator 모두 없음)에만 단순 안내로 끝낸다.
   if (!broadcast && !creator) {
@@ -218,7 +215,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
           >
             {/* 일반 모드는 shrink-0 — 칼럼이 넘칠 때 눌리는 대신 스크롤로 넘어가야 한다. */}
             <div className={cn(isTheater ? "md:min-h-0 md:flex-1" : "md:shrink-0")}>
-              {broadcast ? (
+              {broadcast && !isBanned ? (
                 <LiveVideoPlayer
                   broadcast={broadcast}
                   hlsSrc={hlsSrc}
@@ -277,6 +274,10 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
                     />
                   )}
                 />
+              ) : isBanned && broadcast ? (
+                // 강퇴 상태에선 플레이어를 언마운트해 영상/오디오를 즉시 끊고, 같은 16:9 자리에 검은 프레임만
+                // 남겨 레이아웃(채팅 입력 높이 동기화)을 유지한다. 위에는 LiveBannedDialog 모달이 덮인다.
+                <div aria-hidden className="aspect-video w-full bg-black" />
               ) : (
                 <LiveEndedScreen creator={creator} />
               )}
@@ -403,6 +404,8 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
         onOpenChange={setIsLoginPromptOpen}
         onLogin={moveToLogin}
       />
+
+      <LiveBannedDialog open={isBanned} wasEvicted={wasEvicted} />
     </>
   );
 }

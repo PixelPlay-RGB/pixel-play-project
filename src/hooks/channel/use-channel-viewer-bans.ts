@@ -24,6 +24,8 @@ export function useChannelViewerBans(creatorId: string, page: number) {
         p_creator_id: creatorId,
         p_limit: CHANNEL_VIEWER_BAN_PAGE_SIZE,
         p_offset: (page - 1) * CHANNEL_VIEWER_BAN_PAGE_SIZE,
+        // 시청자 관리 목록은 현재 강퇴 중인 시청자만 보여준다(해제된 행은 관리 동작이 없어 제외).
+        p_active_only: true,
       });
 
       if (error) {

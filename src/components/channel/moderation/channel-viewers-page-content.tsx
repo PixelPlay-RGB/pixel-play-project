@@ -16,7 +16,7 @@ export function ChannelViewersPageContent({ creatorId }: Props) {
       title="강퇴한 시청자를 관리해요"
       description={
         <>
-          라이브 채팅에서 강퇴한 시청자의 이력을 한곳에서 확인할 수 있어요.
+          라이브 채팅에서 현재 강퇴 중인 시청자를 한곳에서 확인할 수 있어요.
           <br />
           강퇴는 채널 전체에 영구 적용되며, 필요하면 언제든 해제할 수 있어요.
         </>

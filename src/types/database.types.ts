@@ -570,6 +570,54 @@ export type Database = {
           },
         ]
       }
+      creator_subscription: {
+        Row: {
+          created_at: string
+          creator_id: string
+          end_at: string
+          id: string
+          started_at: string
+          status: Database["public"]["Enums"]["creator_subscription_status"]
+          subscriber_id: string
+          total_months: number
+        }
+        Insert: {
+          created_at?: string
+          creator_id: string
+          end_at: string
+          id?: string
+          started_at?: string
+          status?: Database["public"]["Enums"]["creator_subscription_status"]
+          subscriber_id: string
+          total_months?: number
+        }
+        Update: {
+          created_at?: string
+          creator_id?: string
+          end_at?: string
+          id?: string
+          started_at?: string
+          status?: Database["public"]["Enums"]["creator_subscription_status"]
+          subscriber_id?: string
+          total_months?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_subscription_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_subscription_subscriber_id_fkey"
+            columns: ["subscriber_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       donation: {
         Row: {
           amount: number
@@ -703,6 +751,7 @@ export type Database = {
           creator_id: string
           crop_x_fraction: number
           duration_seconds: number
+          end_offset_seconds: number
           error_reason: string | null
           id: string
           status: Database["public"]["Enums"]["live_clip_status"]
@@ -719,6 +768,7 @@ export type Database = {
           creator_id: string
           crop_x_fraction: number
           duration_seconds: number
+          end_offset_seconds?: number
           error_reason?: string | null
           id?: string
           status?: Database["public"]["Enums"]["live_clip_status"]
@@ -735,6 +785,7 @@ export type Database = {
           creator_id?: string
           crop_x_fraction?: number
           duration_seconds?: number
+          end_offset_seconds?: number
           error_reason?: string | null
           id?: string
           status?: Database["public"]["Enums"]["live_clip_status"]
@@ -763,6 +814,32 @@ export type Database = {
             columns: ["creator_id"]
             isOneToOne: false
             referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      live_clip_view: {
+        Row: {
+          clip_id: string
+          created_at: string
+          viewer_key: string
+        }
+        Insert: {
+          clip_id: string
+          created_at?: string
+          viewer_key: string
+        }
+        Update: {
+          clip_id?: string
+          created_at?: string
+          viewer_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_clip_view_clip_id_fkey"
+            columns: ["clip_id"]
+            isOneToOne: false
+            referencedRelation: "live_clip"
             referencedColumns: ["id"]
           },
         ]
@@ -1287,6 +1364,7 @@ export type Database = {
           p_creator_id: string
           p_crop_x_fraction: number
           p_duration_seconds: number
+          p_end_offset_seconds?: number
           p_title: string
         }
         Returns: Json
@@ -1316,6 +1394,10 @@ export type Database = {
       delete_community_post: {
         Args: { p_actor_user_id: string; p_post_id: string }
         Returns: string
+      }
+      delete_live_clip: {
+        Args: { p_actor_user_id: string; p_clip_id: string }
+        Returns: Json
       }
       delete_notification: {
         Args: { p_actor_user_id: string; p_notification_id: string }
@@ -1364,7 +1446,12 @@ export type Database = {
         Returns: Json
       }
       get_channel_viewer_bans: {
-        Args: { p_creator_id: string; p_limit?: number; p_offset?: number }
+        Args: {
+          p_active_only?: boolean
+          p_creator_id: string
+          p_limit?: number
+          p_offset?: number
+        }
         Returns: Json
       }
       get_chat_room_detail: {
@@ -1518,7 +1605,7 @@ export type Database = {
         Returns: Json
       }
       increment_live_clip_view_count: {
-        Args: { p_clip_id: string }
+        Args: { p_clip_id: string; p_viewer_key: string }
         Returns: undefined
       }
       insert_channel_banner: {
@@ -1718,6 +1805,10 @@ export type Database = {
         }
         Returns: string
       }
+      subscribe_creator: {
+        Args: { p_actor_user_id: string; p_creator_id: string }
+        Returns: Json
+      }
       sweep_live_viewer_counts: { Args: never; Returns: undefined }
       sync_live_viewer_presence: {
         Args: { p_broadcast_id: string; p_viewer_key: string }
@@ -1802,6 +1893,7 @@ export type Database = {
       }
     }
     Enums: {
+      creator_subscription_status: "active" | "expired" | "canceled"
       gender: "male" | "female" | "none"
       live_chat_scope: "authenticated" | "follower" | "manager"
       live_clip_status: "pending" | "processing" | "ready" | "failed"
@@ -1943,6 +2035,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      creator_subscription_status: ["active", "expired", "canceled"],
       gender: ["male", "female", "none"],
       live_chat_scope: ["authenticated", "follower", "manager"],
       live_clip_status: ["pending", "processing", "ready", "failed"],

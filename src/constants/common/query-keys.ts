@@ -32,6 +32,11 @@ export const QUERY_KEYS = {
       [...QUERY_KEYS.live.all, "viewer-profile", creatorId, targetUserId].filter(
         (v) => v !== undefined,
       ),
+    // 닉네임 팝업의 팔로우 버튼 — "현재 시청자가 대상 채널을 팔로우 중인지".
+    viewerFollowStatus: (viewerId?: string, targetUserId?: string) =>
+      [...QUERY_KEYS.live.all, "viewer-follow-status", viewerId, targetUserId].filter(
+        (v) => v !== undefined,
+      ),
     interactionNotices: (broadcastId?: string, userId?: string | null) =>
       [...QUERY_KEYS.live.all, "interaction-notices", broadcastId, userId ?? "public"].filter(
         (v) => v !== undefined,

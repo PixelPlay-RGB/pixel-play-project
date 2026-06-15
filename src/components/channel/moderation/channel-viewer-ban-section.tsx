@@ -60,7 +60,7 @@ export function ChannelViewerBanSection({ creatorId, scrollable = false }: Props
   if (bans.length === 0) {
     return (
       <p className="text-muted-foreground rounded-xl border border-dashed p-8 text-center text-sm">
-        아직 강퇴한 시청자가 없어요.
+        현재 강퇴 중인 시청자가 없어요.
       </p>
     );
   }

@@ -61,7 +61,7 @@ function StatusTag({ isActive }: { isActive: boolean }) {
         isActive ? "bg-error/10 text-error" : "bg-muted text-muted-foreground",
       )}
     >
-      {isActive ? "강퇴 중" : "해제됨"}
+      {isActive ? "강퇴" : "해제됨"}
     </span>
   );
 }
@@ -85,7 +85,7 @@ export function ChannelViewerBanList({ bans, onUnban, isUnbanning }: Props) {
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead scope="col">대상</TableHead>
+              <TableHead scope="col">닉네임</TableHead>
               <TableHead scope="col" className="text-center">
                 강퇴한 사람
               </TableHead>
@@ -93,7 +93,7 @@ export function ChannelViewerBanList({ bans, onUnban, isUnbanning }: Props) {
                 일시
               </TableHead>
               <TableHead scope="col" className="text-center">
-                상태
+                처리 상태
               </TableHead>
               <TableHead scope="col" className="text-center">
                 관리
