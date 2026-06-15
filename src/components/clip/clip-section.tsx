@@ -7,15 +7,10 @@ import Link from "next/link";
 import { ArrowRight, RotateCw } from "lucide-react";
 
 import { ClipCard } from "@/components/clip/clip-card";
-import { ClipPillGroup } from "@/components/clip/clip-pill-group";
+import { ClipSortSelect } from "@/components/clip/clip-sort-select";
 import LoadMoreButton from "@/components/common/load-more-button";
 import { Button } from "@/components/ui/button";
-import {
-  CLIP_LABEL,
-  CLIP_SECTION_MAX_ROWS,
-  CLIP_SECTION_ROW_SIZE,
-  CLIP_SORT_OPTIONS,
-} from "@/constants/clip/clip";
+import { CLIP_LABEL, CLIP_SECTION_MAX_ROWS, CLIP_SECTION_ROW_SIZE } from "@/constants/clip/clip";
 import { useChannelClips } from "@/hooks/clip/use-channel-clips";
 import { cn } from "@/lib/utils";
 import type { ClipSort } from "@/types/clip/clip";
@@ -61,12 +56,7 @@ export function ClipSection({ creatorId, className }: Props) {
             <RotateCw className={cn("size-4", isRefetching && "animate-spin")} />
           </Button>
         </div>
-        <ClipPillGroup
-          options={CLIP_SORT_OPTIONS}
-          value={sort}
-          onChange={setSort}
-          ariaLabel={`${CLIP_LABEL.sectionTitle} 정렬`}
-        />
+        <ClipSortSelect value={sort} onChange={setSort} />
       </div>
 
       <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-5 2xl:grid-cols-6">

@@ -1,12 +1,11 @@
-// 클립 세로 카드 — 9:16 썸네일 + 길이 뱃지 + 제목 + 조회수·시각. 시청 페이지 섹션과
-// 채널 클립 탭이 같은 카드를 쓴다(디테일 /clip/[clipId]로 이동).
+// 클립 세로 카드 — 9:16 썸네일 한 장에 시네마 딤·길이 뱃지·제목·조회수를 모두 얹는다
+// (치지직 결의 인포-온-썸네일 구성). 시청 페이지 섹션과 채널 클립 탭이 같은 카드를 쓴다.
 
 import Image from "next/image";
 import Link from "next/link";
+import { Eye } from "lucide-react";
 
-import { CLIP_LABEL } from "@/constants/clip/clip";
 import type { LiveClip } from "@/types/clip/clip";
-import { formatRelativeTime } from "@/utils/common/format";
 import { formatCount, formatElapsedTime } from "@/utils/live/live-chat";
 
 interface Props {
@@ -28,20 +27,27 @@ export function ClipCard({
             alt={clip.title}
             fill
             sizes={sizes}
-            className="object-cover transition-transform duration-200 group-hover:scale-105"
+            className="object-cover opacity-90 transition-opacity duration-200 group-hover:opacity-100"
           />
         ) : null}
-        <span className="absolute right-1.5 bottom-1.5 rounded bg-black/70 px-1 py-0.5 font-mono text-[11px] leading-none text-white">
+
+        {/* 시네마 딤 — 밝은 썸네일을 가라앉히고 하단 텍스트 가독성을 확보한다 */}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-black/15 to-black/25" />
+
+        {/* 길이 뱃지 */}
+        <span className="absolute top-1.5 right-1.5 rounded bg-black/65 px-1.5 py-0.5 font-mono text-[11px] leading-none text-white backdrop-blur-sm">
           {formatElapsedTime(clip.durationSeconds)}
         </span>
+
+        {/* 제목 + 조회수(썸네일 내부 하단 오버레이) */}
+        <div className="absolute inset-x-0 bottom-0 flex flex-col gap-1 p-2">
+          <h3 className="truncate text-xs font-semibold text-white drop-shadow-sm">{clip.title}</h3>
+          <span className="flex items-center gap-1 text-[11px] font-medium text-white/85">
+            <Eye className="size-3 shrink-0" aria-hidden />
+            {formatCount(clip.viewCount)}
+          </span>
+        </div>
       </div>
-      <h3 className="text-foreground mt-2 line-clamp-2 text-sm leading-snug font-medium">
-        {clip.title}
-      </h3>
-      <p className="text-muted-foreground mt-0.5 text-xs">
-        조회수 {formatCount(clip.viewCount)}
-        {CLIP_LABEL.viewCountSuffix} · {formatRelativeTime(clip.createdAt)}
-      </p>
     </Link>
   );
 }
