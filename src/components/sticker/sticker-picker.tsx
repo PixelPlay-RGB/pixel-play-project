@@ -21,7 +21,7 @@ export default function StickerPicker({ onStickerSelect, disabled = false }: Pro
   function handleSelect(id: string) {
     if (disabled) return;
     onStickerSelect(buildStickerToken(id));
-    setOpen(false);
+    // 피커는 닫지 않는다 — 치지직처럼 여러 개를 연속으로 선택할 수 있게 한다.
   }
 
   return (

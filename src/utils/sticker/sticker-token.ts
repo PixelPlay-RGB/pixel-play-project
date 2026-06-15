@@ -32,19 +32,6 @@ export function appendStickerToken(text: string, token: string, maxLength: numbe
   return next.length <= maxLength ? next : text;
 }
 
-// 본문이 "등록 스티커 토큰만"으로 이뤄졌는지(공백 제외). 채팅에서 단독 큰 렌더 판정에 쓴다.
-export function isStickerOnly(text: string): boolean {
-  let stickerCount = 0;
-  const remainder = text.replace(STICKER_TOKEN_GLOBAL_PATTERN, (match) => {
-    if (resolveTokenMatch(match)) {
-      stickerCount += 1;
-      return "";
-    }
-    return match; // 미등록 토큰은 평문으로 남겨 판정에 포함한다.
-  });
-  return stickerCount > 0 && remainder.trim().length === 0;
-}
-
 // 이미지로 못 띄우는 평문 맥락(목록 스니펫·알림)에서 토큰을 라벨로 치환한다. 미등록 토큰은 그대로 둔다.
 export function stickerTokensToText(text: string): string {
   return text.replace(

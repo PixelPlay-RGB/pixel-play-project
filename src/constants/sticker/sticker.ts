@@ -13,10 +13,9 @@ export const STICKER_TOKEN_SPLIT_PATTERN = /(:pp-[a-z0-9-]+:)/g;
 export const STICKER_TOKEN_GLOBAL_PATTERN = /:pp-[a-z0-9-]+:/g;
 export const STICKER_TOKEN_EXACT_PATTERN = /^:pp-([a-z0-9-]+):$/;
 
-// 렌더 크기(px) — 인라인(본문 중)·단독(채팅에서 이모지만)·오버레이(OBS)·피커 그리드.
+// 렌더 크기(px) — 인라인(본문 중)·오버레이(OBS)·피커 그리드. 치지직처럼 작게 유지한다.
 export const STICKER_PX = {
   inline: 28,
-  standalone: 96,
   overlay: 44,
   picker: 56,
 } as const;
