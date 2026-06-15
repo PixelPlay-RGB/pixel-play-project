@@ -27,7 +27,7 @@ export function ClipCard({
             alt={clip.title}
             fill
             sizes={sizes}
-            className="object-cover opacity-90 transition-[transform,opacity] duration-200 group-hover:scale-105 group-hover:opacity-100"
+            className="object-cover opacity-90 transition duration-300 ease-out group-hover:scale-105 group-hover:opacity-100"
           />
         ) : null}
 
