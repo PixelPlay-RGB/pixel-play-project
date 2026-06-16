@@ -6,6 +6,7 @@ import { Fragment, type ElementType, type ReactNode } from "react";
 import StickerImage from "@/components/sticker/sticker-image";
 import { STICKER_PX } from "@/constants/sticker/sticker";
 import { cn } from "@/lib/utils";
+import type { Sticker } from "@/types/sticker/sticker";
 import { splitStickerSegments } from "@/utils/sticker/sticker-token";
 
 // 캡처 그룹으로 split하면 URL 조각도 결과 배열에 포함된다.
@@ -22,6 +23,8 @@ interface Props {
   linkify?: boolean;
   // 스티커 렌더 px. 기본 인라인(STICKER_PX.inline). 오버레이는 STICKER_PX.overlay를 넘긴다.
   stickerPx?: number;
+  // 기본 스티커 외에 맥락별로 해석할 추가 스티커(채널 채팅의 채널 이모지). 미지정 시 기본만.
+  extraStickers?: Sticker[];
 }
 
 function renderNodes(
@@ -29,11 +32,12 @@ function renderNodes(
   linkify: boolean,
   stickerPx: number,
   linkClassName: string | undefined,
+  extraStickers: Sticker[] | undefined,
 ): ReactNode[] {
   const nodes: ReactNode[] = [];
   let key = 0;
 
-  for (const segment of splitStickerSegments(text)) {
+  for (const segment of splitStickerSegments(text, extraStickers)) {
     if (segment.type === "sticker") {
       nodes.push(<StickerImage key={key++} sticker={segment.sticker} px={stickerPx} />);
       continue;
@@ -75,7 +79,12 @@ export default function RichMessageText({
   linkClassName,
   linkify = false,
   stickerPx = STICKER_PX.inline,
+  extraStickers,
 }: Props) {
   const Tag = (as ?? "p") as ElementType;
-  return <Tag className={className}>{renderNodes(text, linkify, stickerPx, linkClassName)}</Tag>;
+  return (
+    <Tag className={className}>
+      {renderNodes(text, linkify, stickerPx, linkClassName, extraStickers)}
+    </Tag>
+  );
 }

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "motion/react";
 import { Timer, Users } from "lucide-react";
 import { ClipSection } from "@/components/clip/clip-section";
+import { ChannelStickerProvider } from "@/components/live/chat/channel-sticker-context";
 import { LiveVideoPlayer } from "@/components/live/view/live-video-player";
 import { LiveFullscreenChatOverlay } from "@/components/live/view/live-fullscreen-chat-overlay";
 import { LiveBroadcastInfo } from "@/components/live/view/live-broadcast-info";
@@ -242,7 +243,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
   }
 
   return (
-    <>
+    <ChannelStickerProvider creatorId={creatorId}>
       <div
         className={cn("bg-background overflow-hidden", "min-h-app-content", "md:h-full md:min-h-0")}
       >
@@ -446,6 +447,6 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
         onOpenChange={setIsLoginPromptOpen}
         onLogin={moveToLogin}
       />
-    </>
+    </ChannelStickerProvider>
   );
 }

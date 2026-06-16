@@ -23,6 +23,9 @@ export const STICKER_PX = {
 export const STICKER_LABEL = {
   trigger: "스티커 선택",
   item: (label: string) => `${label} 스티커`,
+  // 피커 탭 — 기본(PixelPlay) / 내 채널(채널 이모지).
+  tabDefault: "기본",
+  tabChannel: "내 채널",
 } as const;
 
 // 기본 스티커 정의(id ↔ public/stickers/<id>.png). label은 접근성·스니펫용 짧은 한글.

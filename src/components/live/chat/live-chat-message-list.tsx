@@ -6,6 +6,7 @@ import { memo, useEffect, useLayoutEffect, useRef, type RefObject } from "react"
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { LiveChatDonationMessageCard } from "@/components/live/chat/live-chat-donation-message-card";
 import { LiveChatRoleBadge, type LiveChatRole } from "@/components/live/chat/live-chat-role-badge";
+import { useChannelStickers } from "@/components/live/chat/channel-sticker-context";
 import RichMessageText from "@/components/common/rich-message-text";
 import { LIVE_LABEL } from "@/constants/live/live";
 import { getLiveChatOverlayNicknameColor } from "@/utils/live/live-chat-overlay-style";
@@ -206,6 +207,9 @@ const MessageItem = memo(function MessageItem({ message, cleanbotEnabled }: Mess
 });
 
 function TextMessage({ message, isMasked }: { message: LiveChatMessage; isMasked: boolean }) {
+  // 채널 이모지(:pp-<uuid>:)도 이미지로 렌더한다 — context는 memo된 MessageItem을 건너뛰고
+  // 소비처(여기)만 다시 그리므로 가상화 목록에서도 안전하다.
+  const { stickers: channelStickers } = useChannelStickers();
   // 역할 마크는 DB가 전송 시점에 스냅샷한 sender_role을 그대로 쓴다(viewer는 마크 없음).
   const role: LiveChatRole | null =
     message.senderRole && message.senderRole !== "viewer" ? message.senderRole : null;
@@ -226,7 +230,12 @@ function TextMessage({ message, isMasked }: { message: LiveChatMessage; isMasked
       {isMasked ? (
         <span className="text-muted-foreground">{LIVE_LABEL.cleanbotHidden}</span>
       ) : (
-        <RichMessageText as="span" text={message.content} className="text-foreground" />
+        <RichMessageText
+          as="span"
+          text={message.content}
+          className="text-foreground"
+          extraStickers={channelStickers}
+        />
       )}
     </p>
   );

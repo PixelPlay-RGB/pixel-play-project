@@ -2,6 +2,7 @@
 // 방송 운영 화면에서 실제 라이브 시청 채팅과 같은 외형의 채팅 패널을 렌더링합니다.
 
 import type { ChannelLiveChatMessage } from "@/actions/channel/live";
+import { ChannelStickerProvider } from "@/components/live/chat/channel-sticker-context";
 import { LiveChatBody } from "@/components/live/chat/live-chat-body";
 import { LiveChatMenu } from "@/components/live/view/live-chat-menu";
 import { LIVE_DONATION_MIN_AMOUNT, LIVE_LABEL } from "@/constants/live/live";
@@ -90,50 +91,52 @@ export default function ChannelLiveChatPanel({ creatorId, chatRuleText, onMessag
   }, [isPopoutOpen]);
 
   return (
-    // 시청 화면 채팅 패널과 같은 풀블리드 — 칼럼 구분은 부모(border-x)가 담당한다.
-    <div className="bg-card flex h-full min-h-96 flex-col overflow-hidden md:min-h-0">
-      <div className="border-border flex items-center justify-between border-b px-4 py-3">
-        <span className="text-foreground text-sm font-semibold">{LIVE_LABEL.chat}</span>
-        {creatorId ? (
-          <LiveChatMenu
-            creatorId={creatorId}
-            cleanbot={cleanbot}
-            onCleanbot={() => setCleanbot((prev) => !prev)}
-            onPopoutOpen={handlePopoutOpen}
-            onShowRules={() => setRuleOpenRequestId((id) => id + 1)}
-          />
-        ) : null}
-      </div>
-
-      {isPopoutOpen ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-2 px-4 text-center">
-          <ExternalLink className="text-muted-foreground size-5" />
-          <p className="text-muted-foreground text-sm">{LIVE_LABEL.chatPopoutActive}</p>
+    <ChannelStickerProvider creatorId={creatorId}>
+      {/* 시청 화면 채팅 패널과 같은 풀블리드 — 칼럼 구분은 부모(border-x)가 담당한다. */}
+      <div className="bg-card flex h-full min-h-96 flex-col overflow-hidden md:min-h-0">
+        <div className="border-border flex items-center justify-between border-b px-4 py-3">
+          <span className="text-foreground text-sm font-semibold">{LIVE_LABEL.chat}</span>
+          {creatorId ? (
+            <LiveChatMenu
+              creatorId={creatorId}
+              cleanbot={cleanbot}
+              onCleanbot={() => setCleanbot((prev) => !prev)}
+              onPopoutOpen={handlePopoutOpen}
+              onShowRules={() => setRuleOpenRequestId((id) => id + 1)}
+            />
+          ) : null}
         </div>
-      ) : (
-        // 시청 화면과 같은 채팅 본문(배너 오버레이+동적 inset+바닥 정렬)을 그대로 재사용해
-        // 두 화면의 채팅 동작이 항상 함께 움직이게 한다. 운영 화면은 후원·투표 액션만 끈다.
-        <LiveChatBody
-          messages={messages}
-          donations={donations}
-          polls={[]}
-          chatState={chatState}
-          isLoggedIn={isLoggedIn}
-          walletBalance={0}
-          donationEnabled={false}
-          donationMinAmount={LIVE_DONATION_MIN_AMOUNT}
-          showActions={false}
-          chatRuleText={chatRuleText}
-          cleanbotEnabled={cleanbot}
-          onLoginPrompt={() => {}}
-          onSendMessage={sendMessage}
-          onLoadOlderMessages={loadOlderMessages}
-          isLoadingOlderMessages={isLoadingOlder}
-          hasMoreChatHistory={hasMoreHistory}
-          entryNoticeAnchorId={entryNoticeAnchorId}
-          ruleOpenRequestId={ruleOpenRequestId}
-        />
-      )}
-    </div>
+
+        {isPopoutOpen ? (
+          <div className="flex flex-1 flex-col items-center justify-center gap-2 px-4 text-center">
+            <ExternalLink className="text-muted-foreground size-5" />
+            <p className="text-muted-foreground text-sm">{LIVE_LABEL.chatPopoutActive}</p>
+          </div>
+        ) : (
+          // 시청 화면과 같은 채팅 본문(배너 오버레이+동적 inset+바닥 정렬)을 그대로 재사용해
+          // 두 화면의 채팅 동작이 항상 함께 움직이게 한다. 운영 화면은 후원·투표 액션만 끈다.
+          <LiveChatBody
+            messages={messages}
+            donations={donations}
+            polls={[]}
+            chatState={chatState}
+            isLoggedIn={isLoggedIn}
+            walletBalance={0}
+            donationEnabled={false}
+            donationMinAmount={LIVE_DONATION_MIN_AMOUNT}
+            showActions={false}
+            chatRuleText={chatRuleText}
+            cleanbotEnabled={cleanbot}
+            onLoginPrompt={() => {}}
+            onSendMessage={sendMessage}
+            onLoadOlderMessages={loadOlderMessages}
+            isLoadingOlderMessages={isLoadingOlder}
+            hasMoreChatHistory={hasMoreHistory}
+            entryNoticeAnchorId={entryNoticeAnchorId}
+            ruleOpenRequestId={ruleOpenRequestId}
+          />
+        )}
+      </div>
+    </ChannelStickerProvider>
   );
 }

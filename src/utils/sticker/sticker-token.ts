@@ -33,12 +33,21 @@ export type StickerSegment =
   | { type: "sticker"; sticker: Sticker };
 
 // 본문을 텍스트/스티커 세그먼트로 쪼갠다(렌더러·리치 입력기 공용). 미등록 토큰은 text로 남긴다.
-export function splitStickerSegments(text: string): StickerSegment[] {
+// extraStickers: 채널 이모지처럼 맥락별로 추가되는 스티커(채널 채팅에서 주입). 기본 스티커를 먼저
+// 찾고, 없으면 추가 목록에서 찾는다(id 공간이 겹치지 않아 안전 — 기본은 슬러그, 채널은 UUID).
+export function splitStickerSegments(text: string, extraStickers?: Sticker[]): StickerSegment[] {
+  const extraById =
+    extraStickers && extraStickers.length > 0
+      ? new Map(extraStickers.map((sticker) => [sticker.id, sticker]))
+      : null;
+
   const segments: StickerSegment[] = [];
   for (const chunk of text.split(STICKER_TOKEN_SPLIT_PATTERN)) {
     if (!chunk) continue;
     const matched = STICKER_TOKEN_EXACT_PATTERN.exec(chunk);
-    const sticker = matched ? getStickerById(matched[1]) : undefined;
+    const sticker = matched
+      ? (getStickerById(matched[1]) ?? extraById?.get(matched[1]))
+      : undefined;
     if (sticker) segments.push({ type: "sticker", sticker });
     else segments.push({ type: "text", value: chunk });
   }

@@ -27,6 +27,8 @@ interface Props {
   onClick?: () => void;
   className?: string;
   ariaLabel?: string;
+  // 기본 스티커 외 맥락별 스티커(채널 채팅의 채널 이모지) — 피커로 삽입한 토큰을 입력창에서도 이미지로 그린다.
+  extraStickers?: Sticker[];
 }
 
 function makeStickerImage(sticker: Sticker): HTMLImageElement {
@@ -45,8 +47,8 @@ function makeStickerImage(sticker: Sticker): HTMLImageElement {
   return img;
 }
 
-function valueToNodes(value: string): Node[] {
-  return splitStickerSegments(value).map((segment) =>
+function valueToNodes(value: string, extraStickers?: Sticker[]): Node[] {
+  return splitStickerSegments(value, extraStickers).map((segment) =>
     segment.type === "sticker"
       ? makeStickerImage(segment.sticker)
       : document.createTextNode(segment.value),
@@ -106,6 +108,7 @@ export default function RichEmojiInput({
   onClick,
   className,
   ariaLabel,
+  extraStickers,
 }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const composingRef = useRef(false);
@@ -119,10 +122,10 @@ export default function RichEmojiInput({
     const root = ref.current;
     if (!root) return;
     if (value === lastEmittedRef.current) return;
-    root.replaceChildren(...valueToNodes(value));
+    root.replaceChildren(...valueToNodes(value, extraStickers));
     lastEmittedRef.current = value;
     if (document.activeElement === root) placeCaretAtEnd(root);
-  }, [value]);
+  }, [value, extraStickers]);
 
   // maxLength 강제(삽입만 차단, 삭제·IME 조합은 허용) — contentEditable엔 네이티브 maxLength가 없다.
   useEffect(() => {

@@ -5,6 +5,7 @@ import { SendHorizontal, Timer, UserRoundPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import StickerPicker from "@/components/sticker/sticker-picker";
 import RichEmojiInput from "@/components/common/rich-emoji-input";
+import { useChannelStickers } from "@/components/live/chat/channel-sticker-context";
 import {
   Popover,
   PopoverContent,
@@ -150,6 +151,9 @@ export function LiveChatInputBar({
   // 입력바 컨테이너(좌우 px-3 패딩 포함) 전체를 popover anchor로 삼아, 팝오버 폭(--anchor-width)을
   // 채팅 패널 테두리 안쪽 폭에 꽉 맞춘다(입력칸·버튼행보다 좌우 패딩만큼 더 넓게 테두리까지).
   const inputBarRef = useRef<HTMLDivElement>(null);
+
+  // 채널 이모지 — 피커 "내 채널" 탭. 지금은 크리에이터 본인만 보내기 가능(canUseInPicker).
+  const { stickers: channelStickers, canUseInPicker } = useChannelStickers();
 
   // 메뉴의 "채팅 규칙" 요청(id 변경)마다 규칙 popover를 연다 — 렌더 중 가드된 setState(조정 패턴).
   const [handledRuleRequestId, setHandledRuleRequestId] = useState(ruleOpenRequestId);
@@ -299,6 +303,7 @@ export function LiveChatInputBar({
           disabled={isInputDisabled}
           onClick={handleInputClick}
           ariaLabel={placeholder}
+          extraStickers={channelStickers}
           className="w-full min-w-0 px-3 pr-17 leading-8 outline-none"
         />
         <div className="absolute inset-y-0 right-1 flex items-center gap-0.5">
@@ -307,6 +312,7 @@ export function LiveChatInputBar({
               setDraftValue(appendStickerToken(draftValue, token, LIVE_CHAT_MESSAGE_MAX_LENGTH))
             }
             disabled={!isEditable}
+            channelStickers={canUseInPicker ? channelStickers : undefined}
           />
           <Button
             type="button"

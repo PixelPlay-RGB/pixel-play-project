@@ -5,12 +5,14 @@ import { LiveChatRoleBadge } from "@/components/live/chat/live-chat-role-badge";
 import RichMessageText from "@/components/common/rich-message-text";
 import { LIVE_CHAT_OVERLAY_PREVIEW_ITEMS } from "@/constants/live/live-overlay";
 import { STICKER_PX } from "@/constants/sticker/sticker";
+import { useChannelEmojiStickers } from "@/hooks/channel/use-channel-emoji-stickers";
 import { useLiveChatOverlay } from "@/hooks/live/use-live-chat-overlay";
 import { cn } from "@/lib/utils";
 import type {
   LiveChatOverlayMessage,
   LiveChatOverlaySnapshot,
 } from "@/types/live/live-chat-overlay";
+import type { Sticker } from "@/types/sticker/sticker";
 import { getLiveChatOverlayNicknameColor } from "@/utils/live/live-chat-overlay-style";
 
 export function LiveChatOverlay({
@@ -23,6 +25,9 @@ export function LiveChatOverlay({
   isPreview?: boolean;
 }) {
   const { chatStackRef, visibleItems } = useLiveChatOverlay(creatorId, initialSnapshot);
+  // 채널 이모지(:pp-<uuid>:)도 이미지로 출력한다 — OBS는 비로그인이라 피커는 없고 렌더만 필요해
+  // provider 없이 공개 조회로 가져온다(채널 이모지는 읽기 공개 RLS).
+  const { data: channelStickers } = useChannelEmojiStickers(creatorId);
   // 미리보기는 방송·채팅 이력이 없어도 화면 구성을 보여줘야 하므로 샘플로 채운다(실데이터가 있으면 그대로).
   const items =
     isPreview && visibleItems.length === 0 ? LIVE_CHAT_OVERLAY_PREVIEW_ITEMS : visibleItems;
@@ -43,7 +48,11 @@ export function LiveChatOverlay({
           )}
         >
           {items.map((item) => (
-            <ChatMessageItem key={item.message.id} message={item.message} />
+            <ChatMessageItem
+              key={item.message.id}
+              message={item.message}
+              extraStickers={channelStickers}
+            />
           ))}
         </div>
       </section>
@@ -59,7 +68,13 @@ export function LiveChatOverlay({
   );
 }
 
-function ChatMessageItem({ message }: { message: LiveChatOverlayMessage }) {
+function ChatMessageItem({
+  message,
+  extraStickers,
+}: {
+  message: LiveChatOverlayMessage;
+  extraStickers?: Sticker[];
+}) {
   if (message.kind === "donation") {
     return <DonationMessageItem message={message} />;
   }
@@ -78,7 +93,12 @@ function ChatMessageItem({ message }: { message: LiveChatOverlayMessage }) {
         >
           {message.author}
         </span>
-        <RichMessageText as="span" text={message.content} stickerPx={STICKER_PX.overlay} />
+        <RichMessageText
+          as="span"
+          text={message.content}
+          stickerPx={STICKER_PX.overlay}
+          extraStickers={extraStickers}
+        />
       </p>
     </div>
   );
