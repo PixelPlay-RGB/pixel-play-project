@@ -10,10 +10,12 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
+  AlertDialogMedia,
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
@@ -247,7 +249,14 @@ export default function ChannelLiveSettingsPanel({
         </section>
       </div>
 
-      <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
+        {/* 방송 종료는 서버 자동 동기화가 처리하므로(OBS 송출 종료 감지) 버튼은 즉시 종료용 보조 수단임을 안내한다. */}
+        {liveState.isBroadcasting ? (
+          <p className="text-muted-foreground mr-auto text-xs leading-5 text-pretty">
+            방송 종료는 OBS Studio에서 송출을 끄면 잠시 후 자동으로 처리돼요. 버튼은 지금 바로
+            종료하고 싶을 때 사용하세요.
+          </p>
+        ) : null}
         <Button
           type="button"
           variant="outline"
@@ -276,22 +285,55 @@ export default function ChannelLiveSettingsPanel({
                 </Button>
               }
             />
-            <AlertDialogContent size="sm" showCloseButton={false}>
-              <AlertDialogHeader>
-                <AlertDialogTitle>방송을 종료할까요?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  종료하면 시청자에게 더 이상 라이브가 공개되지 않습니다. OBS 송출은 별도로
-                  중지해주세요.
-                </AlertDialogDescription>
+            {/* 프로젝트 배너 헤더 Dialog 컨벤션 — 방송 종료는 되돌리기 어려운 액션이라 danger 톤. */}
+            <AlertDialogContent
+              showCloseButton={false}
+              className={cn(
+                "overflow-hidden rounded-2xl p-0 shadow-xl sm:max-w-md",
+                "border-destructive/20 shadow-destructive/10",
+              )}
+            >
+              <AlertDialogHeader
+                className={cn(
+                  "flex items-center gap-4 border-b px-5 pt-5 pb-4 text-left",
+                  "bg-destructive/5 border-destructive/10",
+                )}
+              >
+                <AlertDialogMedia
+                  className={cn(
+                    "mb-0 shrink-0 rounded-xl ring-1",
+                    "bg-destructive/10 text-destructive ring-destructive/20",
+                  )}
+                >
+                  <CircleStop />
+                </AlertDialogMedia>
+                <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                  <AlertDialogTitle className="text-lg leading-tight font-bold">
+                    방송을 종료할까요?
+                  </AlertDialogTitle>
+                  <AlertDialogDescription className="leading-snug text-pretty">
+                    종료하면 시청자에게 더 이상 라이브가 공개되지 않습니다. OBS Studio에서 송출만
+                    종료해도 잠시 후 자동으로 종료됩니다.
+                  </AlertDialogDescription>
+                </div>
               </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel disabled={isBroadcastActionPending}>취소</AlertDialogCancel>
+              <AlertDialogFooter className="m-0 flex-row justify-end gap-2 border-0 bg-transparent px-5 pt-4 pb-5">
+                <AlertDialogCancel
+                  disabled={isBroadcastActionPending}
+                  className={cn(
+                    "h-10 min-w-24 rounded-xl px-4 font-semibold",
+                    "border-border bg-background text-foreground hover:bg-muted",
+                  )}
+                >
+                  취소
+                </AlertDialogCancel>
                 <AlertDialogAction
                   variant="destructive"
                   disabled={isBroadcastActionPending}
                   onClick={handleConfirmEndBroadcast}
+                  className="shadow-destructive/10 h-10 min-w-24 rounded-xl px-4 font-bold shadow-sm"
                 >
-                  방송 종료
+                  {isBroadcastActionPending ? <Spinner /> : "방송 종료"}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>

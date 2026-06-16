@@ -247,6 +247,18 @@
     min-height: 100dvh;
   }
 
+  /* 클립 에디터(별도 창) — 헤더·푸터만 숨기고 배경은 불투명 유지(투명 오버레이와 다름).
+     마커 클래스 기반 :has()라 SSR 첫 페인트부터 적용된다(JS 클래스 토글의 헤더 깜빡임 없음). */
+  body:has(.clip-editor-root) header.sticky,
+  body:has(.clip-editor-root) footer {
+    display: none !important;
+  }
+
+  body:has(.clip-editor-root) main {
+    height: 100dvh;
+    min-height: 100dvh;
+  }
+
   body:has(.live-popout-root) main {
     height: 100dvh;
     min-height: 100dvh;
@@ -254,7 +266,7 @@
   }
 
   .live-chat-overlay-stack {
-    mask-image: linear-gradient(to bottom, transparent 0, black 42px, black 100%);
+    mask-image: linear-gradient(to bottom, transparent 0, black 24px, black 100%);
   }
 
   .dark .app-shell-background {
@@ -467,4 +479,13 @@ input:-webkit-autofill:focus {
 
 *::-webkit-scrollbar-thumb:hover {
   background-color: color-mix(in srgb, var(--brand) 70%, transparent);
+}
+
+/* 스크롤은 되지만 스크롤바는 그리지 않는 영역(시청 페이지 좌측 칼럼, 사이드바 등). */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }

@@ -10,11 +10,10 @@ import { useNullableUser } from "@/hooks/profile/use-profile";
 import { useAuthStore } from "@/stores/auth";
 import { appendLiveMessage } from "@/utils/live/live-chat";
 import { toastAppError } from "@/utils/common/toast-message";
-import type { LiveChatMessage, LiveViewerChatState } from "@/types/live/live";
+import type { LiveChatMessage, LiveSenderRole, LiveViewerChatState } from "@/types/live/live";
 
 interface UseLiveChatSessionParams {
   creatorId: string;
-  broadcastId: string | null | undefined;
   viewerChatState: LiveViewerChatState | null | undefined;
   viewerIsSubscriber?: boolean;
   viewerSubscriptionTotalMonths?: number | null;
@@ -30,7 +29,6 @@ const DEFAULT_CHAT_STATE: LiveViewerChatState = {
 
 export function useLiveChatSession({
   creatorId,
-  broadcastId,
   viewerChatState,
   viewerIsSubscriber = false,
   viewerSubscriptionTotalMonths,
@@ -45,14 +43,15 @@ export function useLiveChatSession({
   const chatState = viewerChatState ?? DEFAULT_CHAT_STATE;
 
   async function sendMessage(content: string): Promise<boolean> {
-    if (!broadcastId) return false;
+    // 채팅은 채널 단위(#111) — 방송 여부와 무관하게 creator 기준으로 전송한다.
+    if (!creatorId) return false;
     const trimmed = content.trim();
     if (!trimmed || trimmed.length > LIVE_CHAT_MESSAGE_MAX_LENGTH) {
       toastAppError(APP_MESSAGE_CODE.error.message.invalidInput);
       return false;
     }
 
-    const messagesKey = QUERY_KEYS.live.messages(broadcastId);
+    const messagesKey = QUERY_KEYS.live.messages(creatorId);
     const clientId = `optimistic-${crypto.randomUUID()}`;
     const isHost = !!user && user.id === creatorId;
     // 역할 마크 즉시 표시: 방장은 확정이고, 그 외(후원자 등)는 캐시에 있는 내 직전 메시지의
@@ -60,6 +59,21 @@ export function useLiveChatSession({
     const lastOwnRole = queryClient
       .getQueryData<LiveChatMessage[]>(messagesKey)
       ?.findLast((message) => message.senderId === user?.id && message.senderRole)?.senderRole;
+    // 후원 직후엔 직전 메시지 스냅샷이 후원 전 역할(viewer)이라 뱃지가 realtime echo 시점에야
+    // 붙는다(#120) — 후원 성공 시 승격해둔 역할이 있으면 viewer 스냅샷보다 우선한다.
+    // manager 등 상위 역할 스냅샷은 그대로 둔다(승격 신호는 donor 한정).
+    const promotedRole = queryClient.getQueryData<LiveSenderRole>(
+      QUERY_KEYS.live.viewerRole(creatorId, user?.id ?? undefined),
+    );
+    const optimisticViewerRole =
+      lastOwnRole && lastOwnRole !== "viewer" ? lastOwnRole : (promotedRole ?? lastOwnRole);
+    const senderRole: LiveSenderRole | undefined = isHost
+      ? "creator"
+      : optimisticViewerRole && optimisticViewerRole !== "viewer"
+        ? optimisticViewerRole
+        : viewerIsSubscriber
+          ? "subscriber"
+          : optimisticViewerRole;
     // 본인이 보낸 메시지는 클린봇으로 가리지 않는다(isCleanbotFlagged 미부여).
     // 자기 메시지는 본인 화면에서 항상 보이는 게 자연스럽다.
     const optimisticMessage: LiveChatMessage = {
@@ -71,9 +85,7 @@ export function useLiveChatSession({
       author: profile?.nickname ?? LIVE_LABEL.selfAuthorFallback,
       content: trimmed,
       isHost,
-      senderRole: isHost
-        ? "creator"
-        : (lastOwnRole ?? (viewerIsSubscriber ? "subscriber" : undefined)),
+      senderRole,
       isSubscriber: !isHost && viewerIsSubscriber,
       subscriptionTotalMonths:
         !isHost && viewerIsSubscriber ? (viewerSubscriptionTotalMonths ?? undefined) : undefined,
@@ -90,7 +102,7 @@ export function useLiveChatSession({
     );
 
     try {
-      const result = await sendLiveMessageAction(broadcastId, trimmed);
+      const result = await sendLiveMessageAction(creatorId, trimmed);
 
       if (!result.success || !result.data) {
         removeOptimistic();

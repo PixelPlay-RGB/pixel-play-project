@@ -8,4 +8,4 @@ export const CREATOR_AVATAR_TRIGGER_CLASS =
 
 // 라이브 링이 잘 안 보이는 사이드바에서도 hover 피드백을 주기 위해 투명도도 함께 변화.
 export const CREATOR_AVATAR_TRIGGER_AVATAR_CLASS =
-  "transition-[box-shadow,opacity] group-hover/avatar-trigger:ring-live/70 group-focus-visible/avatar-trigger:ring-live/70 group-hover/avatar-trigger:ring-2 group-focus-visible/avatar-trigger:ring-2 group-hover/avatar-trigger:opacity-60 group-focus-visible/avatar-trigger:opacity-60";
+  "transition-[box-shadow,opacity] group-hover/avatar-trigger:ring-live/70 group-focus-visible/avatar-trigger:ring-live/70 group-hover/avatar-trigger:ring-2 group-focus-visible/avatar-trigger:ring-2 group-hover/avatar-trigger:opacity-85 group-focus-visible/avatar-trigger:opacity-85";

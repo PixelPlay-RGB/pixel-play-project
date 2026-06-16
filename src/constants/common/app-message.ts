@@ -86,6 +86,12 @@ export const APP_MESSAGE = {
       bannerDeleted: {
         title: "배너 삭제 완료",
       },
+      managerAdded: {
+        title: "매니저 추가 완료",
+      },
+      managerRemoved: {
+        title: "매니저 해제 완료",
+      },
     },
     following: {
       followed: {
@@ -136,6 +142,20 @@ export const APP_MESSAGE = {
       voteUnchanged: {
         title: "이미 선택한 항목",
         description: "다른 항목 번호를 입력하면 투표가 변경됩니다.",
+      },
+    },
+    clip: {
+      created: {
+        title: "클립 생성 완료",
+        description: "클립이 준비되었어요.",
+      },
+      urlCopied: {
+        title: "링크 복사 완료",
+        description: "클립 링크 복사가 완료되었습니다.",
+      },
+      deleted: {
+        title: "클립 삭제 완료",
+        description: "클립을 삭제했어요.",
       },
     },
     notification: {
@@ -456,6 +476,30 @@ export const APP_MESSAGE = {
         title: "배너 개수 초과",
         description: "배너는 최대 5개까지 등록할 수 있어요.",
       },
+      managerListLoadFailed: {
+        title: "매니저 목록 조회 실패",
+        description: "다시 로그인하거나 잠시 후 새로고침해주세요.",
+      },
+      managerAddFailed: {
+        title: "매니저 추가 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      managerRemoveFailed: {
+        title: "매니저 해제 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      managerAlreadyExists: {
+        title: "이미 매니저",
+        description: "이미 매니저로 등록된 유저예요.",
+      },
+      managerSelfForbidden: {
+        title: "본인 지정 불가",
+        description: "자신을 매니저로 지정할 수 없어요.",
+      },
+      userSearchFailed: {
+        title: "유저 검색 실패",
+        description: "잠시 후 다시 검색해 주세요.",
+      },
     },
     following: {
       failed: {
@@ -563,6 +607,44 @@ export const APP_MESSAGE = {
       deleteFailed: {
         title: "알림 삭제 실패",
         description: "잠시 후 다시 시도해주세요.",
+      },
+    },
+    clip: {
+      createFailed: {
+        title: "클립 생성 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      rateLimited: {
+        title: "클립 생성 제한",
+        description: "클립은 1분에 1개까지 만들 수 있어요.",
+      },
+      channelFull: {
+        title: "클립 보관함 가득 참",
+        description: "이 채널의 클립 보관 한도에 도달했어요.",
+      },
+      tooEarly: {
+        title: "클립 생성 불가",
+        description: "방송 시작 직후에는 클립을 만들 수 없어요. 잠시 후 시도해주세요.",
+      },
+      noBroadcast: {
+        title: "클립 생성 불가",
+        description: "지금은 방송 중이 아니에요.",
+      },
+      generationFailed: {
+        title: "클립 생성 실패",
+        description: "시간이 초과되어 클립을 만들지 못했어요. 다시 시도해주세요.",
+      },
+      loadFailed: {
+        title: "클립 불러오기 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      deleteFailed: {
+        title: "클립 삭제 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      notFound: {
+        title: "클립을 찾을 수 없어요",
+        description: "이미 삭제되었거나 없는 클립이에요.",
       },
     },
     supabase: {

@@ -1,0 +1,11 @@
+# PixelPlay 자동 방송 썸네일 캡처 주기 — /etc/systemd/system/pixelplay-live-thumbnail.timer
+[Unit]
+Description=Run PixelPlay live thumbnail capture every minute
+
+[Timer]
+OnBootSec=90
+OnUnitActiveSec=60
+AccuracySec=5
+
+[Install]
+WantedBy=timers.target

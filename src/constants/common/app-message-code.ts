@@ -32,6 +32,8 @@ export const APP_MESSAGE_CODE = {
       channelProfileSaved: "success.channel.channelProfileSaved",
       bannerSaved: "success.channel.bannerSaved",
       bannerDeleted: "success.channel.bannerDeleted",
+      managerAdded: "success.channel.managerAdded",
+      managerRemoved: "success.channel.managerRemoved",
     },
     following: {
       followed: "success.following.followed",
@@ -52,6 +54,11 @@ export const APP_MESSAGE_CODE = {
       subscribed: "success.live.subscribed",
       urlCopied: "success.live.urlCopied",
       voteUnchanged: "success.live.voteUnchanged",
+    },
+    clip: {
+      created: "success.clip.created",
+      urlCopied: "success.clip.urlCopied",
+      deleted: "success.clip.deleted",
     },
     notification: {
       allDeleted: "success.notification.allDeleted",
@@ -151,6 +158,12 @@ export const APP_MESSAGE_CODE = {
       bannerDeleteFailed: "error.channel.bannerDeleteFailed",
       bannerImageTooLarge: "error.channel.bannerImageTooLarge",
       bannerLimitReached: "error.channel.bannerLimitReached",
+      managerListLoadFailed: "error.channel.managerListLoadFailed",
+      managerAddFailed: "error.channel.managerAddFailed",
+      managerRemoveFailed: "error.channel.managerRemoveFailed",
+      managerAlreadyExists: "error.channel.managerAlreadyExists",
+      managerSelfForbidden: "error.channel.managerSelfForbidden",
+      userSearchFailed: "error.channel.userSearchFailed",
     },
     following: {
       failed: "error.following.failed",
@@ -184,6 +197,18 @@ export const APP_MESSAGE_CODE = {
     notification: {
       loadFailed: "error.notification.loadFailed",
       deleteFailed: "error.notification.deleteFailed",
+    },
+    // 클립 RPC 에러 매핑(CLIP_RPC_ERROR_CODE_MAP)에서 사용.
+    clip: {
+      createFailed: "error.clip.createFailed",
+      rateLimited: "error.clip.rateLimited",
+      channelFull: "error.clip.channelFull",
+      tooEarly: "error.clip.tooEarly",
+      noBroadcast: "error.clip.noBroadcast",
+      generationFailed: "error.clip.generationFailed",
+      loadFailed: "error.clip.loadFailed",
+      deleteFailed: "error.clip.deleteFailed",
+      notFound: "error.clip.notFound",
     },
     supabase: {
       permissionDenied: "error.supabase.permissionDenied",

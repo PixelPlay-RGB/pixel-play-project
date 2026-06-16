@@ -52,6 +52,127 @@ export type Database = {
           },
         ]
       }
+      channel_manager: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          creator_id: string
+          id: string
+          manager_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          creator_id: string
+          id?: string
+          manager_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          creator_id?: string
+          id?: string
+          manager_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "channel_manager_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channel_manager_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channel_manager_manager_id_fkey"
+            columns: ["manager_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      channel_viewer_ban: {
+        Row: {
+          banned_at: string
+          banned_by: string | null
+          banned_by_nickname: string
+          banned_user_id: string
+          banned_user_nickname: string
+          broadcast_id: string | null
+          creator_id: string
+          id: string
+          unbanned_at: string | null
+          unbanned_by: string | null
+        }
+        Insert: {
+          banned_at?: string
+          banned_by?: string | null
+          banned_by_nickname: string
+          banned_user_id: string
+          banned_user_nickname: string
+          broadcast_id?: string | null
+          creator_id: string
+          id?: string
+          unbanned_at?: string | null
+          unbanned_by?: string | null
+        }
+        Update: {
+          banned_at?: string
+          banned_by?: string | null
+          banned_by_nickname?: string
+          banned_user_id?: string
+          banned_user_nickname?: string
+          broadcast_id?: string | null
+          creator_id?: string
+          id?: string
+          unbanned_at?: string | null
+          unbanned_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "channel_viewer_ban_banned_by_fkey"
+            columns: ["banned_by"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channel_viewer_ban_banned_user_id_fkey"
+            columns: ["banned_user_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channel_viewer_ban_broadcast_id_fkey"
+            columns: ["broadcast_id"]
+            isOneToOne: false
+            referencedRelation: "live_broadcast"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channel_viewer_ban_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channel_viewer_ban_unbanned_by_fkey"
+            columns: ["unbanned_by"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_room: {
         Row: {
           created_at: string
@@ -500,7 +621,7 @@ export type Database = {
       donation: {
         Row: {
           amount: number
-          broadcast_id: string
+          broadcast_id: string | null
           created_at: string
           creator_id: string
           donor_id: string
@@ -511,7 +632,7 @@ export type Database = {
         }
         Insert: {
           amount: number
-          broadcast_id: string
+          broadcast_id?: string | null
           created_at?: string
           creator_id: string
           donor_id: string
@@ -522,7 +643,7 @@ export type Database = {
         }
         Update: {
           amount?: number
-          broadcast_id?: string
+          broadcast_id?: string | null
           created_at?: string
           creator_id?: string
           donor_id?: string
@@ -621,35 +742,143 @@ export type Database = {
           },
         ]
       }
-      live_message: {
+      live_clip: {
         Row: {
           broadcast_id: string
+          claimed_at: string | null
+          clipper_user_id: string
+          created_at: string
+          creator_id: string
+          crop_x_fraction: number
+          duration_seconds: number
+          end_offset_seconds: number
+          error_reason: string | null
+          id: string
+          status: Database["public"]["Enums"]["live_clip_status"]
+          storage_path: string | null
+          thumbnail_path: string | null
+          title: string
+          view_count: number
+        }
+        Insert: {
+          broadcast_id: string
+          claimed_at?: string | null
+          clipper_user_id: string
+          created_at?: string
+          creator_id: string
+          crop_x_fraction: number
+          duration_seconds: number
+          end_offset_seconds?: number
+          error_reason?: string | null
+          id?: string
+          status?: Database["public"]["Enums"]["live_clip_status"]
+          storage_path?: string | null
+          thumbnail_path?: string | null
+          title: string
+          view_count?: number
+        }
+        Update: {
+          broadcast_id?: string
+          claimed_at?: string | null
+          clipper_user_id?: string
+          created_at?: string
+          creator_id?: string
+          crop_x_fraction?: number
+          duration_seconds?: number
+          end_offset_seconds?: number
+          error_reason?: string | null
+          id?: string
+          status?: Database["public"]["Enums"]["live_clip_status"]
+          storage_path?: string | null
+          thumbnail_path?: string | null
+          title?: string
+          view_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_clip_broadcast_id_fkey"
+            columns: ["broadcast_id"]
+            isOneToOne: false
+            referencedRelation: "live_broadcast"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "live_clip_clipper_user_id_fkey"
+            columns: ["clipper_user_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "live_clip_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      live_clip_view: {
+        Row: {
+          clip_id: string
+          created_at: string
+          viewer_key: string
+        }
+        Insert: {
+          clip_id: string
+          created_at?: string
+          viewer_key: string
+        }
+        Update: {
+          clip_id?: string
+          created_at?: string
+          viewer_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_clip_view_clip_id_fkey"
+            columns: ["clip_id"]
+            isOneToOne: false
+            referencedRelation: "live_clip"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      live_message: {
+        Row: {
+          broadcast_id: string | null
           content: string
           created_at: string
+          creator_id: string
           donation_id: string | null
           id: string
+          is_chat_visible: boolean
           message_type: Database["public"]["Enums"]["live_message_type"]
           metadata: Json
           sender_id: string | null
           sender_role: Database["public"]["Enums"]["live_sender_role"]
         }
         Insert: {
-          broadcast_id: string
+          broadcast_id?: string | null
           content: string
           created_at?: string
+          creator_id: string
           donation_id?: string | null
           id?: string
+          is_chat_visible?: boolean
           message_type?: Database["public"]["Enums"]["live_message_type"]
           metadata?: Json
           sender_id?: string | null
           sender_role?: Database["public"]["Enums"]["live_sender_role"]
         }
         Update: {
-          broadcast_id?: string
+          broadcast_id?: string | null
           content?: string
           created_at?: string
+          creator_id?: string
           donation_id?: string | null
           id?: string
+          is_chat_visible?: boolean
           message_type?: Database["public"]["Enums"]["live_message_type"]
           metadata?: Json
           sender_id?: string | null
@@ -661,6 +890,13 @@ export type Database = {
             columns: ["broadcast_id"]
             isOneToOne: false
             referencedRelation: "live_broadcast"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "live_message_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "user"
             referencedColumns: ["id"]
           },
           {
@@ -1065,8 +1301,22 @@ export type Database = {
         Args: { p_actor_user_id: string; p_creator_id: string }
         Returns: number
       }
+      add_channel_manager: {
+        Args: { p_actor_user_id: string; p_target_user_id: string }
+        Returns: Json
+      }
       anonymous_donor_alias: { Args: { p_donor_id: string }; Returns: string }
+      ban_channel_viewer: {
+        Args: {
+          p_actor_user_id: string
+          p_broadcast_id?: string
+          p_creator_id: string
+          p_target_user_id: string
+        }
+        Returns: Json
+      }
       check_email_exists: { Args: { target_email: string }; Returns: boolean }
+      claim_live_clip_jobs: { Args: { p_limit?: number }; Returns: Json }
       community_comment_to_json: {
         Args: { p_comment_id: string; p_viewer_id: string }
         Returns: Json
@@ -1108,6 +1358,17 @@ export type Database = {
         }
         Returns: string
       }
+      create_live_clip: {
+        Args: {
+          p_actor_user_id: string
+          p_creator_id: string
+          p_crop_x_fraction: number
+          p_duration_seconds: number
+          p_end_offset_seconds?: number
+          p_title: string
+        }
+        Returns: Json
+      }
       create_live_poll: {
         Args: {
           p_actor_user_id: string
@@ -1133,6 +1394,10 @@ export type Database = {
       delete_community_post: {
         Args: { p_actor_user_id: string; p_post_id: string }
         Returns: string
+      }
+      delete_live_clip: {
+        Args: { p_actor_user_id: string; p_clip_id: string }
+        Returns: Json
       }
       delete_notification: {
         Args: { p_actor_user_id: string; p_notification_id: string }
@@ -1175,8 +1440,18 @@ export type Database = {
         Args: { p_creator_id: string; p_viewer_id?: string }
         Returns: Json
       }
+      get_channel_managers: { Args: { p_creator_id: string }; Returns: Json }
       get_channel_profile: {
         Args: { p_creator_id: string; p_viewer_id?: string }
+        Returns: Json
+      }
+      get_channel_viewer_bans: {
+        Args: {
+          p_active_only?: boolean
+          p_creator_id: string
+          p_limit?: number
+          p_offset?: number
+        }
         Returns: Json
       }
       get_chat_room_detail: {
@@ -1278,6 +1553,7 @@ export type Database = {
         Args: { p_creator_id: string; p_limit?: number }
         Returns: Json
       }
+      get_live_clip_worker_secret: { Args: never; Returns: string }
       get_live_donation_alert_overlay_snapshot: {
         Args: { p_creator_id: string }
         Returns: Json
@@ -1300,11 +1576,18 @@ export type Database = {
         Returns: Json
       }
       get_live_popular_keywords: { Args: { p_limit?: number }; Returns: Json }
+      get_live_sync_cron_secret: { Args: never; Returns: string }
+      get_live_thumbnail_ingest_secret: { Args: never; Returns: string }
+      get_live_viewer_profile: {
+        Args: { p_creator_id: string; p_target_user_id: string }
+        Returns: Json
+      }
       get_live_watch: {
         Args: { p_creator_id: string; p_viewer_id?: string }
         Returns: Json
       }
       get_live_watch_count: { Args: { p_creator_id: string }; Returns: Json }
+      get_mediamtx_api_password: { Args: never; Returns: string }
       get_public_chat_room_metadata: {
         Args: { p_room_id: string }
         Returns: {
@@ -1321,6 +1604,10 @@ export type Database = {
         Args: { p_actor_user_id: string; p_month?: number; p_year?: number }
         Returns: Json
       }
+      increment_live_clip_view_count: {
+        Args: { p_clip_id: string; p_viewer_key: string }
+        Returns: undefined
+      }
       insert_channel_banner: {
         Args: {
           p_actor_user_id: string
@@ -1329,6 +1616,10 @@ export type Database = {
           p_title: string
         }
         Returns: Json
+      }
+      is_channel_moderator: {
+        Args: { p_actor_user_id: string; p_creator_id: string }
+        Returns: boolean
       }
       join_chat_room: {
         Args: { p_actor_user_id: string; p_room_id: string }
@@ -1363,6 +1654,10 @@ export type Database = {
         Args: { p_broadcast_id: string }
         Returns: number
       }
+      remove_channel_manager: {
+        Args: { p_actor_user_id: string; p_target_user_id: string }
+        Returns: undefined
+      }
       reorder_channel_banners: {
         Args: { p_actor_user_id: string; p_banner_ids: string[] }
         Returns: Json
@@ -1371,6 +1666,7 @@ export type Database = {
         Args: { p_actor_user_id: string; p_token_kind: string }
         Returns: Json
       }
+      search_channel_users: { Args: { p_query: string }; Returns: Json }
       search_chat_rooms: {
         Args: {
           p_limit?: number
@@ -1431,8 +1727,15 @@ export type Database = {
         }
         Returns: Json
       }
-      subscribe_creator: {
-        Args: { p_actor_user_id: string; p_creator_id: string }
+      send_live_donation_v2: {
+        Args: {
+          p_actor_user_id: string
+          p_amount: number
+          p_creator_id: string
+          p_idempotency_key?: string
+          p_is_anonymous?: boolean
+          p_message?: string
+        }
         Returns: Json
       }
       send_live_interaction_notice: {
@@ -1461,6 +1764,22 @@ export type Database = {
         }
         Returns: Json
       }
+      send_live_message_v3: {
+        Args: {
+          p_actor_user_id: string
+          p_content: string
+          p_creator_id: string
+        }
+        Returns: Json
+      }
+      send_live_message_v4: {
+        Args: {
+          p_actor_user_id: string
+          p_content: string
+          p_creator_id: string
+        }
+        Returns: Json
+      }
       set_community_comment_like: {
         Args: {
           p_actor_user_id: string
@@ -1473,6 +1792,10 @@ export type Database = {
         Args: { p_actor_user_id: string; p_liked: boolean; p_post_id: string }
         Returns: Json
       }
+      set_live_message_cleanbot_status: {
+        Args: { p_message_ids: string[]; p_status: string }
+        Returns: undefined
+      }
       start_live_broadcast: {
         Args: {
           p_actor_user_id: string
@@ -1481,6 +1804,10 @@ export type Database = {
           p_title?: string
         }
         Returns: string
+      }
+      subscribe_creator: {
+        Args: { p_actor_user_id: string; p_creator_id: string }
+        Returns: Json
       }
       sweep_live_viewer_counts: { Args: never; Returns: undefined }
       sync_live_viewer_presence: {
@@ -1491,6 +1818,14 @@ export type Database = {
         Args: {
           p_actor_user_id: string
           p_room_id: string
+          p_target_user_id: string
+        }
+        Returns: undefined
+      }
+      unban_channel_viewer: {
+        Args: {
+          p_actor_user_id: string
+          p_creator_id: string
           p_target_user_id: string
         }
         Returns: undefined
@@ -1561,6 +1896,7 @@ export type Database = {
       creator_subscription_status: "active" | "expired" | "canceled"
       gender: "male" | "female" | "none"
       live_chat_scope: "authenticated" | "follower" | "manager"
+      live_clip_status: "pending" | "processing" | "ready" | "failed"
       live_message_type: "chat" | "moderation_notice" | "donation"
       live_sender_role:
         | "creator"
@@ -1702,6 +2038,7 @@ export const Constants = {
       creator_subscription_status: ["active", "expired", "canceled"],
       gender: ["male", "female", "none"],
       live_chat_scope: ["authenticated", "follower", "manager"],
+      live_clip_status: ["pending", "processing", "ready", "failed"],
       live_message_type: ["chat", "moderation_notice", "donation"],
       live_sender_role: ["creator", "manager", "donor", "subscriber", "viewer"],
       message_type: ["text", "system"],

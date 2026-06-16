@@ -24,11 +24,12 @@ import {
   DONATION_ALERT_SOUND_OPTIONS,
   DONATION_TEST_ALERT_SAMPLE,
   DONATION_TTS_RATE_OPTIONS,
+  DONATION_TTS_VOICE_OPTIONS,
 } from "@/constants/channel/donation";
 import type { ChannelDonationSettingsInput } from "@/lib/zod/channel-donation";
-import { useSpeechSynthesis } from "@/hooks/common/use-speech-synthesis";
 import { playDonationSound } from "@/utils/channel/donation-sound";
 import { buildDonationTtsText } from "@/utils/channel/donation-tts";
+import { playDonationTts } from "@/utils/channel/donation-tts-player";
 
 interface Props {
   control: Control<ChannelDonationSettingsInput>;
@@ -36,8 +37,6 @@ interface Props {
 }
 
 export function ChannelDonationAlertSettingsCard({ control, isSaving }: Props) {
-  const { voices, speak } = useSpeechSynthesis();
-
   const amountVisible = useWatch({ control, name: "donationAmountVisible" });
   const alertSoundEnabled = useWatch({ control, name: "alertSoundEnabled" });
   const alertSoundKey = useWatch({ control, name: "alertSoundKey" });
@@ -47,28 +46,10 @@ export function ChannelDonationAlertSettingsCard({ control, isSaving }: Props) {
   const ttsVolume = useWatch({ control, name: "ttsVolume" });
   const ttsVoiceUri = useWatch({ control, name: "ttsVoiceUri" });
 
-  // 사용 가능한 한국어 음성 목록.
-  // OBS 브라우저 소스(CEF)에는 Google 클라우드 음성 같은 "원격 음성"이 없어 기본 음성으로 대체되므로,
-  // OS에 설치돼 OBS·Chrome 양쪽에서 동작하는 "로컬 음성"만 노출합니다.
-  // (엔진명이 낯설어 일반화된 라벨로 표시하고, 같은 이름으로 중복되는 음성은 합칩니다.)
-  const seenVoiceNames = new Set<string>();
-  const voiceItems = voices
-    .filter((voice) => voice.lang.toLowerCase().startsWith("ko"))
-    .filter((voice) => voice.localService)
-    .filter((voice) => {
-      if (seenVoiceNames.has(voice.name)) {
-        return false;
-      }
-      seenVoiceNames.add(voice.name);
-      return true;
-    })
-    .map((voice, index) => ({
-      value: voice.voiceURI,
-      label: `TTS 기본 음성 - ${String(index + 1).padStart(2, "0")}`,
-    }));
-  // 저장값이 현재 목록(로컬 음성)에 없으면(예: 기존에 저장된 원격 음성) Select를 비워 다시 고르도록 유도합니다.
+  // Google Cloud TTS 한국어 음성 목록(서버 합성 — OBS 브라우저 소스에서도 동일하게 재생).
+  // 저장값이 목록에 없으면(예: 과거 Web Speech voiceURI 저장값) Select를 비워 다시 고르도록 유도합니다.
   // 폼 값 자체는 건드리지 않습니다(사용자가 직접 고른 값만 저장).
-  const voiceValueSet = new Set(voiceItems.map((item) => item.value));
+  const voiceValueSet = new Set<string>(DONATION_TTS_VOICE_OPTIONS.map((item) => item.value));
   const ttsVoiceValue = ttsVoiceUri && voiceValueSet.has(ttsVoiceUri) ? ttsVoiceUri : "";
 
   // 알림음만 현재 볼륨으로 미리듣기.
@@ -80,8 +61,7 @@ export function ChannelDonationAlertSettingsCard({ control, isSaving }: Props) {
   const handlePreviewTts = () => {
     const { donorNickname, amount, message } = DONATION_TEST_ALERT_SAMPLE;
 
-    // 음성 선택은 준비 중이라 기본 음성으로 고정합니다(voiceURI 미지정).
-    speak(
+    playDonationTts(
       buildDonationTtsText({
         donorNickname,
         amount,
@@ -89,6 +69,7 @@ export function ChannelDonationAlertSettingsCard({ control, isSaving }: Props) {
         amountVisible: Boolean(amountVisible),
       }),
       {
+        voiceName: ttsVoiceUri || undefined,
         rate: ttsRate ?? 1,
         volume: (ttsVolume ?? 0) / 100,
       },
@@ -247,29 +228,36 @@ export function ChannelDonationAlertSettingsCard({ control, isSaving }: Props) {
         render={({ field }) => (
           <SettingFieldRow
             label="TTS 음성"
-            description="현재는 기본 TTS 음성만 지원해요. 음성 선택은 준비 중이에요."
+            description="후원 메시지를 읽어줄 음성을 골라요."
             isDimmed={!ttsEnabled}
           >
-            <Select
-              value={ttsVoiceValue}
-              items={voiceItems}
-              disabled
-              onValueChange={(value) => field.onChange(value as string)}
-            >
-              <SelectTrigger aria-label="TTS 음성" className="w-52">
-                <SelectValue placeholder="기본 음성 (준비중)" />
-                <SelectIcon />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectList>
-                  {voiceItems.map((option) => (
-                    <SelectItem key={option.value} value={option.value} label={option.label}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectList>
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-2">
+              <Select
+                value={ttsVoiceValue}
+                items={DONATION_TTS_VOICE_OPTIONS}
+                disabled={isSaving || !ttsEnabled}
+                onValueChange={(value) => field.onChange(value as string)}
+              >
+                <SelectTrigger aria-label="TTS 음성" className="w-40">
+                  <SelectValue placeholder="여성 1 (기본)" />
+                  <SelectIcon />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectList>
+                    {DONATION_TTS_VOICE_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value} label={option.label}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectList>
+                </SelectContent>
+              </Select>
+              <DonationPreviewButton
+                ariaLabel="TTS 음성 미리듣기"
+                disabled={isSaving || !ttsEnabled}
+                onPreview={handlePreviewTts}
+              />
+            </div>
           </SettingFieldRow>
         )}
       />

@@ -5,10 +5,10 @@ import { Volume2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { DONATION_TEST_ALERT_SAMPLE } from "@/constants/channel/donation";
-import { useSpeechSynthesis } from "@/hooks/common/use-speech-synthesis";
 import { cn } from "@/lib/utils";
 import { playDonationSound } from "@/utils/channel/donation-sound";
 import { buildDonationTtsText } from "@/utils/channel/donation-tts";
+import { playDonationTts } from "@/utils/channel/donation-tts-player";
 
 interface Props {
   alertSoundEnabled: boolean;
@@ -17,6 +17,7 @@ interface Props {
   ttsEnabled: boolean;
   ttsRate: number;
   ttsVolume: number;
+  ttsVoiceUri?: string;
   amountVisible: boolean;
   disabled?: boolean;
   className?: string;
@@ -29,31 +30,29 @@ export default function DonationTestAlertButton({
   ttsEnabled,
   ttsRate,
   ttsVolume,
+  ttsVoiceUri,
   amountVisible,
   disabled,
   className,
 }: Props) {
-  const { isSupported, speak } = useSpeechSynthesis();
-
   // 효과음만으로도 미리듣기가 가능하므로 둘 중 하나라도 켜져 있으면 재생합니다.
-  const isPlayable = !disabled && (alertSoundEnabled || (ttsEnabled && isSupported));
+  // (TTS는 서버 합성 mp3라 브라우저 음성 지원 여부와 무관합니다)
+  const isPlayable = !disabled && (alertSoundEnabled || ttsEnabled);
 
   const title =
     !alertSoundEnabled && !ttsEnabled
       ? "효과음이나 음성 읽기를 켜면 미리 들어볼 수 있어요."
-      : !alertSoundEnabled && !isSupported
-        ? "이 브라우저는 음성 읽기를 지원하지 않아요."
-        : undefined;
+      : undefined;
 
   const playTts = () => {
-    if (!ttsEnabled || !isSupported) {
+    if (!ttsEnabled) {
       return;
     }
 
     const { donorNickname, amount, message } = DONATION_TEST_ALERT_SAMPLE;
 
-    // 음성 선택은 준비 중이라 기본 음성으로 고정합니다(voiceURI 미지정).
-    speak(buildDonationTtsText({ donorNickname, amount, message, amountVisible }), {
+    playDonationTts(buildDonationTtsText({ donorNickname, amount, message, amountVisible }), {
+      voiceName: ttsVoiceUri || undefined,
       rate: ttsRate,
       volume: ttsVolume / 100,
     });

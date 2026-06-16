@@ -2,8 +2,10 @@
 // 라이브 시청 메인 화면 — 비디오, 방송 정보, 채팅 패널을 조합합니다.
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "motion/react";
 import { Timer, Users } from "lucide-react";
+import { ClipSection } from "@/components/clip/clip-section";
 import { LiveVideoPlayer } from "@/components/live/view/live-video-player";
 import { LiveFullscreenChatOverlay } from "@/components/live/view/live-fullscreen-chat-overlay";
 import { LiveBroadcastInfo } from "@/components/live/view/live-broadcast-info";
@@ -16,11 +18,12 @@ import { useLiveBroadcastView } from "@/hooks/live/use-live-broadcast-view";
 import { useLiveFollowAction } from "@/hooks/live/use-live-follow-action";
 import { useLiveSubscribeAction } from "@/hooks/live/use-live-subscribe-action";
 import { useLiveElapsed } from "@/hooks/live/use-live-elapsed";
-import { useLiveViewerPresence } from "@/hooks/live/use-live-viewer-presence";
 import { useMoveToLogin } from "@/hooks/live/use-move-to-login";
 import { cn } from "@/lib/utils";
 import { formatCount } from "@/utils/live/live-chat";
+import { useClipEditorStore } from "@/stores/clip-editor";
 import { useLiveTheaterStore } from "@/stores/live-theater";
+import { useLiveWatchSessionStore } from "@/stores/live-watch-session";
 import { LIVE_LABEL } from "@/constants/live/live";
 
 interface Props {
@@ -33,19 +36,26 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
   const isMobile = useIsMobile();
   const openChatButtonRef = useRef<HTMLButtonElement>(null);
   const collapseChatButtonRef = useRef<HTMLButtonElement>(null);
+  // 좌측 플레이어 칼럼 실측 — 채팅 입력 섹션 높이를 "칼럼 높이 - 비디오(폭 100%·16:9) 높이"로
+  // 동기화해, 입력 섹션 상단 separator가 비디오 하단 라인과 정확히 일직선이 되게 한다.
+  const playerColumnRef = useRef<HTMLDivElement>(null);
 
   const {
     isLoading,
+    isWatchError,
     broadcast,
     lastBroadcast,
     endedElapsedSeconds,
     creator,
-    hadLiveBroadcast,
     messages,
     subscriptionBadgeCustomMonths,
     subscriptionBadgeVersion,
     subscriptionBadgeImageSources,
     subscriptionEmotes,
+    loadOlderMessages,
+    isLoadingOlderMessages,
+    hasMoreChatHistory,
+    entryNoticeAnchorId,
     donations,
     polls,
     isPollsLoading,
@@ -66,12 +76,14 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     isSubscribed,
     onSubscribed,
     chatRuleText,
-    isChatRuleAccepted,
     isLoggedIn,
     isAuthLoading,
     chatState,
     sendMessage,
     acceptChatRule,
+    refreshChatState,
+    followerWaitSeconds,
+    slowModeSeconds,
   } = useLiveBroadcastView(creatorId);
   const { handleFollow, isFollowPending } = useLiveFollowAction({
     creatorId,
@@ -90,6 +102,10 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
 
   const [isLoginPromptOpen, setIsLoginPromptOpen] = useState(false);
   const [isDesktopChatCollapsed, setIsDesktopChatCollapsed] = useState(false);
+  const router = useRouter();
+  // 클립 생성은 별도 라우트(/clip/editor)에서 진행한다 — 가위 클릭 시점의 스냅샷·제목을
+  // store로 넘기고 이동한다(형제 라우트라 prop으로 못 잇는다).
+  const setClipHandoff = useClipEditorStore((state) => state.setHandoff);
   // 와이드(극장) 모드는 전역 사이드바(LiveShell)와 공유해야 해 store에 둔다.
   const isTheater = useLiveTheaterStore((state) => state.isWideMode);
   const toggleTheater = useLiveTheaterStore((state) => state.toggleWideMode);
@@ -109,8 +125,68 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     !!broadcast,
   );
 
-  // 방송을 보는 동안 하트비트를 보내 현재 시청자 수를 집계한다(로그인·익명 모두).
-  useLiveViewerPresence(broadcast?.id);
+  // 시청 세션을 루트 미니플레이어 호스트와 공유한다 — 시청자 presence(하트비트)도 호스트가
+  // 세션 기준으로 단독 호출해, 페이지를 떠나도(미니 전환) 퇴장 처리되지 않는다.
+  // 라이브면 최신 스냅샷으로 시작/갱신하고, 종료·오프라인이 확정되면 세션도 끝낸다.
+  // 로딩 중엔 판단을 보류해, 다른 라이브의 미니가 재생 중이면 새 화면 데이터가 올 때까지 유지한다.
+  const startSession = useLiveWatchSessionStore((state) => state.startSession);
+  const endSession = useLiveWatchSessionStore((state) => state.endSession);
+  // 현재 store에 들어있는 세션의 크리에이터 — 오류 시 '이 화면 것'인지 '묵은 다른 방송 것'인지 구분한다.
+  const sessionCreatorId = useLiveWatchSessionStore((state) => state.session?.creatorId);
+  // broadcast 객체는 매 렌더 재생성되므로(map 함수) 원시값만 deps에 두어,
+  // 실제 값이 바뀔 때만 세션을 갱신한다(채팅 수신 등 무관한 렌더마다 재발사 방지).
+  const liveBroadcastId = broadcast?.id;
+  useEffect(() => {
+    if (isAuthLoading || isLoading) return;
+    // 쿼리 오류(재시도 소진)는 '오프라인 확정'이 아니다 — 같은 크리에이터의 일시 장애면 판단을
+    // 보류해 활성 세션(미니 연속성)을 끊지 않는다. 단, store에 남은 세션이 '다른 크리에이터'면
+    // 정리한다: 이 방송 조회가 실패한 채 화면을 떠나면 LiveMiniPlayerHost가 그 이전 방송 PiP를
+    // 되살리기 때문(오프라인 확정 경로와 동일하게 정리). 진짜 오프라인은 쿼리 성공+broadcast 없음.
+    if (isWatchError) {
+      if (sessionCreatorId && sessionCreatorId !== creatorId) endSession();
+      return;
+    }
+    if (!liveBroadcastId) {
+      endSession();
+      return;
+    }
+    startSession({ creatorId, broadcastId: liveBroadcastId, hlsSrc });
+  }, [
+    isAuthLoading,
+    isLoading,
+    isWatchError,
+    liveBroadcastId,
+    creatorId,
+    hlsSrc,
+    sessionCreatorId,
+    startSession,
+    endSession,
+  ]);
+
+  // 채팅 입력 섹션의 동기화 높이(px). 송출/종료 프레임이 16:9로 폭을 꽉 채우는 일반 모드에서만 계산하고,
+  // 화면이 낮아 자연 높이보다 작아지면 입력바가 자체 콘텐츠 높이로 버틴다(min-height라 안전).
+  const [chatInputMinHeight, setChatInputMinHeight] = useState<number | null>(null);
+  const hasPlayerFrameForSync = !!creator;
+  useEffect(() => {
+    const column = playerColumnRef.current;
+
+    if (!column || isMobile || isTheater || !hasPlayerFrameForSync) {
+      setChatInputMinHeight(null);
+      return;
+    }
+
+    const sync = () => {
+      const rect = column.getBoundingClientRect();
+      const remaining = Math.round(rect.height - (rect.width * 9) / 16);
+      setChatInputMinHeight(remaining > 0 ? remaining : null);
+    };
+
+    sync();
+    const observer = new ResizeObserver(sync);
+    observer.observe(column);
+
+    return () => observer.disconnect();
+  }, [isMobile, isTheater, hasPlayerFrameForSync]);
 
   // 시청 화면을 떠나면 와이드 모드를 해제해, 목록 등 다른 라이브 화면에서 사이드바가 다시 보이게 한다.
   useEffect(() => () => setWideMode(false), [setWideMode]);
@@ -124,6 +200,28 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
   function openLoginPrompt() {
     if (isAuthLoading) return;
     setIsLoginPromptOpen(true);
+  }
+
+  // 클립 버튼: 캡처가 끝나면 핸드오프를 store(localStorage persist)에 넣고 별도 창(팝업)을
+  // 에디터로 보낸다 — 라이브를 보면서 편집할 수 있게. 팝업이 차단됐으면 같은 탭으로 폴백한다.
+  function handleClipReady(payload: {
+    popup: Window | null;
+    snapshotDataUrl: string | null;
+    frames: string[];
+  }) {
+    setClipHandoff({
+      creatorId,
+      snapshotDataUrl: payload.snapshotDataUrl,
+      frames: payload.frames,
+      defaultTitle: broadcast?.title ?? "",
+    });
+
+    const url = `/clip/editor/${creatorId}`;
+    if (payload.popup && !payload.popup.closed) {
+      payload.popup.location.href = url;
+    } else {
+      router.push(url);
+    }
   }
 
   function collapseDesktopChat() {
@@ -157,12 +255,6 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     );
   }
 
-  // 방송 종료/오프라인: 시청 셸은 유지하고 송출 자리는 종료 화면, 채팅은 입력만 막는다.
-  const isEnded = !broadcast;
-  // 처음부터 종료된 방송(재진입·새로고침)일 때만 채팅 본문 전체를 오버레이로 덮는다.
-  // 시청 중 종료(hadLiveBroadcast)면 그동안 받은 메시지를 그대로 두고 입력만 비활성화한다.
-  const showChatEndedOverlay = isEnded && !hadLiveBroadcast;
-
   return (
     <>
       <div
@@ -170,8 +262,15 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
       >
         {/* 치지직형 Box 레이아웃: 섹션 사이 여백·라운드 없이 보더로만 구분하고, 텍스트 행에만 자체 패딩을 준다. */}
         <div className={cn("h-full", "w-full", "md:flex md:flex-row")}>
-          <div className={cn("flex min-w-0 flex-1 flex-col", "md:overflow-hidden")}>
-            <div className={cn("md:flex md:min-h-0 md:flex-1 md:items-center md:justify-center")}>
+          {/* 플레이어는 항상 폭 100%+16:9(유튜브식) — 화면이 낮아 정보 행이 넘치면 이 칼럼만
+              세로 스크롤된다(스크롤바는 숨김, 채팅 패널은 우측 고정 유지). 극장 모드는 스크롤이 없다.
+              추후 정보 섹션 아래에 클립 섹션이 들어올 예정이라 칼럼 스크롤 구조를 전제로 한다. */}
+          <div
+            ref={playerColumnRef}
+            className={cn("flex min-w-0 flex-1 flex-col", "no-scrollbar md:overflow-y-auto")}
+          >
+            {/* 일반 모드는 shrink-0 — 칼럼이 넘칠 때 눌리는 대신 스크롤로 넘어가야 한다. */}
+            <div className={cn(isTheater ? "md:min-h-0 md:flex-1" : "md:shrink-0")}>
               {broadcast ? (
                 <LiveVideoPlayer
                   broadcast={broadcast}
@@ -182,6 +281,9 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
                   onToggleTheater={toggleTheater}
                   openChatButtonRef={openChatButtonRef}
                   onOpenChat={expandDesktopChat}
+                  clipLoggedIn={isLoggedIn}
+                  onClipRequireLogin={openLoginPrompt}
+                  onClipReady={handleClipReady}
                   renderFullscreenChat={({
                     container,
                     isChatOpen,
@@ -224,6 +326,13 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
                       onFollow={handleFollow}
                       isFollowing={isFollowing}
                       isFollowPending={isFollowPending}
+                      onLoadOlderMessages={loadOlderMessages}
+                      isLoadingOlderMessages={isLoadingOlderMessages}
+                      hasMoreChatHistory={hasMoreChatHistory}
+                      entryNoticeAnchorId={entryNoticeAnchorId}
+                      onRefreshChatState={refreshChatState}
+                      followerWaitSeconds={followerWaitSeconds}
+                      slowModeSeconds={slowModeSeconds}
                     />
                   )}
                 />
@@ -243,7 +352,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
               영화관 모드 자체가 없으므로 motion height를 적용하지 않는다.
             */}
             <motion.div
-              className={cn("overflow-hidden", isInfoCollapsed && "pointer-events-none")}
+              className={cn("shrink-0 overflow-hidden", isInfoCollapsed && "pointer-events-none")}
               aria-hidden={isInfoCollapsed || undefined}
               inert={isInfoCollapsed || undefined}
               initial={false}
@@ -281,6 +390,8 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
 
               {/* 스트리머 정보 행(아바타·이름·팔로워 + 팔로우)은 라이브·종료 모두 동일하게 보여준다. */}
               {creator ? (
+                // py-3: 정보 영역을 141px로 낮춰(우측 입력바와 동일) FHD에서 비디오가 16:9에 딱 맞게
+                // 들어가도록 한다(149px일 땐 높이가 7px 모자라 좌우에 검은 필러박스가 생겼다).
                 <LiveStreamerRow
                   creator={creator}
                   isLive={!!broadcast}
@@ -294,9 +405,13 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
                   subscriptionEmotes={subscriptionEmotes}
                   onFollow={handleFollow}
                   onSubscribe={handleSubscribe}
-                  className="px-4 py-4"
+                  className="px-4 py-3"
                 />
               ) : null}
+
+              {/* 이 채널의 클립(#124) — 좌측 칼럼 스크롤 영역에 들어가며, 극장 모드에선 정보
+                  영역과 함께 접힌다. 클립이 없는 채널은 섹션이 스스로 숨는다. */}
+              <ClipSection creatorId={creatorId} className="border-border/60 border-t px-4 py-4" />
             </motion.div>
           </div>
 
@@ -335,15 +450,20 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
               onJoinDraw={joinDraw}
               onDonate={sendDonation}
               chatRuleText={chatRuleText}
-              isRuleAccepted={isChatRuleAccepted}
               onAcceptChatRule={acceptChatRule}
               onFollow={handleFollow}
               isFollowing={isFollowing}
               isFollowPending={isFollowPending}
               onCollapse={broadcast ? collapseDesktopChat : undefined}
               collapseButtonRef={collapseChatButtonRef}
-              isEnded={isEnded}
-              showEndedOverlay={showChatEndedOverlay}
+              onLoadOlderMessages={loadOlderMessages}
+              isLoadingOlderMessages={isLoadingOlderMessages}
+              hasMoreChatHistory={hasMoreChatHistory}
+              entryNoticeAnchorId={entryNoticeAnchorId}
+              onRefreshChatState={refreshChatState}
+              followerWaitSeconds={followerWaitSeconds}
+              slowModeSeconds={slowModeSeconds}
+              inputMinHeightPx={chatInputMinHeight}
             />
           </aside>
         </div>

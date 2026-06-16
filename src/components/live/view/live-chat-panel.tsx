@@ -2,7 +2,7 @@
 // 채팅 패널 컨테이너 — 메시지 목록, 입력창, 참여 조건 안내, 클린봇 상태를 조합합니다.
 
 import { useEffect, useRef, useState, type Ref } from "react";
-import { ExternalLink, MessageSquareOff, PanelRightClose } from "lucide-react";
+import { ExternalLink, PanelRightClose } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { LiveChatBody } from "@/components/live/chat/live-chat-body";
@@ -47,20 +47,22 @@ interface Props {
     idempotencyKey: string;
   }) => Promise<boolean>;
   chatRuleText?: string;
-  // 채팅 규칙 동의 여부(훅이 RPC 신호로 판정). 메뉴 동의 칩 표시용.
-  // required — optional+기본값이면 새 콜사이트가 배선을 빠뜨려도 조용히 '미동의'로 퇴화한다.
-  isRuleAccepted: boolean;
   onAcceptChatRule?: () => Promise<boolean>;
   onFollow?: () => void;
   isFollowing?: boolean;
   isFollowPending?: boolean;
   onCollapse?: () => void;
   collapseButtonRef?: Ref<HTMLButtonElement>;
-  // 방송 종료(broadcast=null): 입력만 비활성화하고 메시지 목록은 유지한다.
-  isEnded?: boolean;
-  // 재진입·새로고침으로 처음부터 종료 상태일 때만 채팅 본문 전체를 "이용 불가"로 덮는다
-  // (시청 중 종료는 그동안 받은 메시지를 그대로 보여주므로 덮지 않는다).
-  showEndedOverlay?: boolean;
+  // 과거 채팅 적재(무한 스크롤)·진입 안내 위치·게이트 설정값 — LiveChatBody로 그대로 전달한다.
+  onLoadOlderMessages?: () => void;
+  isLoadingOlderMessages?: boolean;
+  hasMoreChatHistory?: boolean;
+  entryNoticeAnchorId?: string | null;
+  onRefreshChatState?: () => void;
+  followerWaitSeconds?: number;
+  slowModeSeconds?: number;
+  // 입력 섹션 동기화 높이(px) — separator가 좌측 비디오 하단 라인과 일직선이 되게 한다.
+  inputMinHeightPx?: number | null;
 }
 
 export function LiveChatPanel({
@@ -89,25 +91,27 @@ export function LiveChatPanel({
   onJoinDraw,
   onDonate,
   chatRuleText,
-  isRuleAccepted,
   onAcceptChatRule,
   onFollow,
   isFollowing,
   isFollowPending,
   onCollapse,
   collapseButtonRef,
-  isEnded = false,
-  showEndedOverlay = false,
+  onLoadOlderMessages,
+  isLoadingOlderMessages,
+  hasMoreChatHistory,
+  entryNoticeAnchorId,
+  onRefreshChatState,
+  followerWaitSeconds,
+  slowModeSeconds,
+  inputMinHeightPx,
 }: Props) {
   const [cleanbot, setCleanbot] = useState(true);
   const [isPopoutOpen, setIsPopoutOpen] = useState(false);
-  // 동의 완료는 prop(RPC 전용 필드 기반)으로 받고, "동의 필요" 안내만 사유로 파생한다.
-  const isRulePending =
-    isLoggedIn && chatState.chatUnavailableReason === "chat_rule_acceptance_required";
+  // 메뉴의 "채팅 규칙" 클릭마다 증가 — 입력바 위 규칙 popover를 여는 요청 id.
+  const [ruleOpenRequestId, setRuleOpenRequestId] = useState(0);
   const popoutWindowRef = useRef<Window | null>(null);
   const popoutCheckIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  // 채팅 규칙 popover를 패널 폭에 맞추기 위한 anchor(헤더 전체 폭). 입력바 popover와 동일 방식.
-  const chatHeaderRef = useRef<HTMLDivElement>(null);
 
   function handlePopoutOpen(win: Window) {
     popoutWindowRef.current = win;
@@ -134,10 +138,7 @@ export function LiveChatPanel({
 
   return (
     <div className="border-border bg-card flex h-full min-h-96 flex-col overflow-hidden border-t md:min-h-0 md:border-t-0 md:border-l">
-      <div
-        ref={chatHeaderRef}
-        className="border-border flex items-center justify-between border-b px-4 py-3"
-      >
+      <div className="border-border flex items-center justify-between border-b px-4 py-3">
         <span className="text-foreground text-sm font-semibold">{LIVE_LABEL.chat}</span>
         <div className="flex items-center gap-1">
           {onCollapse ? (
@@ -162,23 +163,15 @@ export function LiveChatPanel({
           ) : null}
           <LiveChatMenu
             creatorId={creatorId}
-            chatRuleText={chatRuleText}
-            isRuleAccepted={isRuleAccepted}
-            isRulePending={isRulePending}
             cleanbot={cleanbot}
             onCleanbot={() => setCleanbot((prev) => !prev)}
             onPopoutOpen={handlePopoutOpen}
-            anchorRef={chatHeaderRef}
+            onShowRules={() => setRuleOpenRequestId((id) => id + 1)}
           />
         </div>
       </div>
 
-      {showEndedOverlay ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-2 px-4 text-center">
-          <MessageSquareOff className="text-muted-foreground size-5" />
-          <p className="text-muted-foreground text-sm">{LIVE_LABEL.chatUnavailable}</p>
-        </div>
-      ) : isPopoutOpen ? (
+      {isPopoutOpen ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-2 px-4 text-center">
           <ExternalLink className="text-muted-foreground size-5" />
           <p className="text-muted-foreground text-sm">{LIVE_LABEL.chatPopoutActive}</p>
@@ -214,8 +207,16 @@ export function LiveChatPanel({
           onFollow={onFollow}
           isFollowing={isFollowing}
           isFollowPending={isFollowPending}
-          isEnded={isEnded}
           cleanbotEnabled={cleanbot}
+          onLoadOlderMessages={onLoadOlderMessages}
+          isLoadingOlderMessages={isLoadingOlderMessages}
+          hasMoreChatHistory={hasMoreChatHistory}
+          entryNoticeAnchorId={entryNoticeAnchorId}
+          onRefreshChatState={onRefreshChatState}
+          followerWaitSeconds={followerWaitSeconds}
+          slowModeSeconds={slowModeSeconds}
+          ruleOpenRequestId={ruleOpenRequestId}
+          inputMinHeightPx={inputMinHeightPx}
         />
       )}
     </div>

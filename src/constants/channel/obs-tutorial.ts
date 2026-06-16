@@ -76,13 +76,18 @@ export const OBS_DONATION_OVERLAY_TUTORIAL_STEPS: TutorialStep[] = [
     imageSrc: OBS_OVERLAY_PROPERTIES_IMAGE,
   },
   {
+    title: "알림 소리가 방송에 나가게 설정해요",
+    description: `같은 속성 창에서 "OBS를 통해 오디오 제어"를 꼭 체크해주세요.\n체크하면 효과음과 TTS가 OBS 오디오 믹서로 직접 들어가서, 화면 캡처 방식과 상관없이 방송에 실려요.\n테스트 후원을 보냈을 때 오디오 믹서의 볼륨 미터가 움직이면 정상이에요.\n소리가 본인에게 안 들리면 믹서의 톱니바퀴 → 오디오 고급 속성에서 해당 소스를 "모니터링 및 출력"으로 바꿔주세요.`,
+    imageSrc: OBS_OVERLAY_PROPERTIES_IMAGE,
+  },
+  {
     title: "주소는 이 페이지에서 복사해요",
-    description: `후원 알림 주소는 이 페이지의 후원 알림 주소에서 복사할 수 있어요.\n미리보기를 누르면 알림이 어떻게 보일지 미리 확인할 수도 있어요.`,
+    description: `후원 알림 주소는 이 페이지의 후원 알림 주소에서 복사할 수 있어요.\n방송 중이 아니어도 후원 설정 페이지에서 테스트 후원을 보내 OBS 소스를 확인할 수 있어요.`,
     imageSrc: "/tutorial/obs-donation-copy.png",
   },
   {
     title: "위치를 잡으면 끝이에요",
-    description: `추가된 후원 알림을 방송 화면에서 원하는 위치로 옮기고 크기를 조절해주세요.\n후원이 들어오면 알림이 기본으로 5초 동안 보여요.`,
+    description: `추가된 후원 알림을 방송 화면에서 원하는 위치로 옮기고 크기를 조절해주세요.\n테스트 후원과 실제 후원 모두 설정한 표시 시간만큼 보여요.`,
     imageSrc: OBS_OVERLAY_POSITION_IMAGE,
   },
 ];

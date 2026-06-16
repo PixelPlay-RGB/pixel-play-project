@@ -3,7 +3,7 @@ import type { LiveBroadcastSummary, LiveMessageRow } from "@/types/live/live";
 
 export interface LiveChatOverlayMessage {
   id: LiveMessageRow["id"];
-  creatorId: LiveBroadcastSummary["creatorId"];
+  creatorId?: LiveBroadcastSummary["creatorId"];
   kind: "chat" | "donation";
   author: string;
   content: LiveMessageRow["content"];

@@ -3,7 +3,7 @@ import type { ChannelLiveDrawParticipant } from "@/actions/channel/live";
 
 export type InteractionTool = "poll" | "draw" | "roulette";
 
-export type InteractionNoticeType = "draw" | "roulette";
+export type InteractionNoticeType = "poll" | "draw";
 
 export interface DrawState {
   endedAt: string | null;

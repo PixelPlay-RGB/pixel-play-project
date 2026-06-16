@@ -29,6 +29,9 @@ function AvatarImage({ className, ...props }: AvatarPrimitive.Image.Props) {
   return (
     <AvatarPrimitive.Image
       data-slot="avatar-image"
+      // Google(lh3.googleusercontent.com) 프로필 이미지는 referrer가 붙으면 403/429로
+      // 막혀 fallback 이니셜로 빠진다 — no-referrer로 보내 안정적으로 로드한다.
+      referrerPolicy="no-referrer"
       className={cn("aspect-square size-full rounded-full object-cover", className)}
       {...props}
     />

@@ -20,6 +20,8 @@ const Toaster = ({ ...props }: ToasterProps) => {
     <Sonner
       theme={theme as ToasterProps["theme"]}
       position={isMobile ? "top-center" : "bottom-right"}
+      // 모든 토스트에 닫기 버튼 노출(지호님 요청) — hover 시 좌상단에 X.
+      closeButton
       className="toaster group"
       icons={{
         success: <CircleCheckIcon className="size-4" />,

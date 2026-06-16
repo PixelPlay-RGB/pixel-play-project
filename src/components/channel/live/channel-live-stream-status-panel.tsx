@@ -9,7 +9,6 @@ import { useEffect, useRef, useState } from "react";
 interface Props {
   activeBroadcastStartedAt?: string | null;
   onStatusChange?: (status: ChannelLiveStreamStatusResponse) => void;
-  shouldCaptureAutoThumbnail?: boolean;
   streamPath: string;
   variant?: "card" | "embedded";
 }
@@ -113,7 +112,6 @@ function StreamStatusContent({
 export default function ChannelLiveStreamStatusPanel({
   activeBroadcastStartedAt,
   onStatusChange,
-  shouldCaptureAutoThumbnail = false,
   streamPath,
   variant = "card",
 }: Props) {
@@ -129,11 +127,6 @@ export default function ChannelLiveStreamStatusPanel({
     const loadStreamStatus = async () => {
       try {
         const params = new URLSearchParams({ path: streamPath });
-
-        if (shouldCaptureAutoThumbnail) {
-          params.set("autoThumbnail", "1");
-        }
-
         const response = await fetch(`/api/channel/live/stream-status?${params.toString()}`, {
           cache: "no-store",
           signal: abortController.signal,
@@ -182,7 +175,7 @@ export default function ChannelLiveStreamStatusPanel({
       abortController.abort();
       clearInterval(interval);
     };
-  }, [onStatusChange, shouldCaptureAutoThumbnail, streamPath]);
+  }, [onStatusChange, streamPath]);
 
   useEffect(() => {
     const startedAt = streamStatus?.onlineTime ?? activeBroadcastStartedAt;
