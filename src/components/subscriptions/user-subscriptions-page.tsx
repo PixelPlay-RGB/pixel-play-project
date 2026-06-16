@@ -340,30 +340,45 @@ function UserSubscriptionManagementDialog({
                     <h3 className="text-sm font-black">내 구독 배지</h3>
                   </div>
                   <div className="grid grid-cols-4 gap-3 sm:grid-cols-7">
-                    {badgeMonths.map((month) => (
-                      <div key={month} className="flex min-w-0 flex-col items-center gap-1.5">
+                    {badgeMonths.map((month) => {
+                      const isCurrentBadge = month === currentBadgeMonth;
+
+                      return (
                         <div
+                          key={month}
                           className={cn(
-                            "flex size-10 items-center justify-center rounded-lg ring-1",
-                            month === currentBadgeMonth
-                              ? "bg-brand/10 ring-brand/30"
-                              : "bg-muted/40 ring-border",
+                            "flex min-w-0 flex-col items-center gap-1.5 rounded-xl px-2 py-2 ring-1 transition-colors",
+                            isCurrentBadge ? "bg-brand/10 ring-brand/30" : "ring-transparent",
                           )}
                         >
-                          <LiveSubscriptionBadge
-                            creatorId={subscription.creatorId}
-                            totalMonths={month}
-                            customMonths={subscription.badge.customMonths}
-                            version={subscription.badge.version}
-                            imageSourcesByMonth={subscription.badge.imageSourcesByMonth}
-                            size="lg"
-                          />
+                          <div
+                            className={cn(
+                              "flex size-10 items-center justify-center rounded-lg ring-1",
+                              isCurrentBadge
+                                ? "bg-background/70 ring-brand/20"
+                                : "bg-muted/40 ring-border",
+                            )}
+                          >
+                            <LiveSubscriptionBadge
+                              creatorId={subscription.creatorId}
+                              totalMonths={month}
+                              customMonths={subscription.badge.customMonths}
+                              version={subscription.badge.version}
+                              imageSourcesByMonth={subscription.badge.imageSourcesByMonth}
+                              size="lg"
+                            />
+                          </div>
+                          <span
+                            className={cn(
+                              "text-xs font-medium",
+                              isCurrentBadge ? "text-brand font-black" : "text-muted-foreground",
+                            )}
+                          >
+                            {month}개월
+                          </span>
                         </div>
-                        <span className="text-muted-foreground text-xs font-medium">
-                          {month}개월
-                        </span>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </section>
               </div>
