@@ -58,8 +58,6 @@ interface Props {
   onRefreshChatState?: () => void;
   followerWaitSeconds?: number;
   slowModeSeconds?: number;
-  // 입력 섹션 동기화 높이(px) — separator가 좌측 비디오 하단 라인과 일직선이 되게 한다.
-  inputMinHeightPx?: number | null;
 }
 
 export function LiveChatPanel({
@@ -98,7 +96,6 @@ export function LiveChatPanel({
   onRefreshChatState,
   followerWaitSeconds,
   slowModeSeconds,
-  inputMinHeightPx,
 }: Props) {
   const [cleanbot, setCleanbot] = useState(true);
   const [isPopoutOpen, setIsPopoutOpen] = useState(false);
@@ -206,7 +203,6 @@ export function LiveChatPanel({
           followerWaitSeconds={followerWaitSeconds}
           slowModeSeconds={slowModeSeconds}
           ruleOpenRequestId={ruleOpenRequestId}
-          inputMinHeightPx={inputMinHeightPx}
         />
       )}
     </div>
