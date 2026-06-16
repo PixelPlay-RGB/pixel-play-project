@@ -91,9 +91,8 @@ function SubscriptionAssetActionButton({
   return (
     <Button
       type="button"
-      variant="outline"
       size="sm"
-      className="border-brand/30 text-brand hover:bg-brand/10 hover:text-brand"
+      className="bg-brand hover:bg-brand/90 text-brand-foreground hover:text-brand-foreground shadow-brand/20 h-8 rounded-xl px-3 font-bold shadow-sm"
       onClick={onAction}
     >
       <Plus className="size-4" />
