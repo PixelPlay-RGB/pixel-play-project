@@ -57,7 +57,7 @@ export const CHANNEL_MENU_GROUPS: ChannelMenuGroup[] = [
           { id: "analytics-report", label: "지난 방송 분석", href: "/channel/analytics/report" },
         ],
       },
-      { id: "permissions", label: "권한 관리", href: "/channel/permissions", icon: Users },
+      { id: "permissions", label: "매니저 관리", href: "/channel/permissions", icon: Users },
     ],
   },
 ];
