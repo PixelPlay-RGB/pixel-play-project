@@ -50,6 +50,7 @@ export function useLiveBroadcastView(creatorId: string) {
   const isFollowing = optimisticFollowing ?? watchData?.viewerRelation?.isFollowing ?? false;
   const [optimisticSubscribed, setOptimisticSubscribed] = useState<boolean | null>(null);
   const isSubscribed = optimisticSubscribed ?? watchData?.viewerRelation?.isSubscribed ?? false;
+  const subscriptionStatus = watchData?.viewerRelation?.subscriptionStatus ?? null;
 
   // 채팅 규칙 게이트 통과 여부(메뉴 동의 칩 표시용) — 두 신호의 합집합.
   function onFollowToggled() {
@@ -313,6 +314,7 @@ export function useLiveBroadcastView(creatorId: string) {
     isFollowing,
     onFollowToggled,
     isSubscribed,
+    subscriptionStatus,
     onSubscribed,
     chatRuleText: watchData?.settings.chatRuleText,
     // 팔로워 전용 대기 시간 안내용 설정값(초).

@@ -17,6 +17,7 @@ import {
   getLiveSubscriptionBadgeSourcesByMonth,
   readLiveSubscriptionBadgeAssetInfo,
 } from "@/utils/live/live-subscription-badge";
+import { isSubscriptionBenefitActive } from "@/utils/subscriptions/user-subscription-status";
 
 type CreatorSubscriptionRow = Pick<
   GenericTables<"creator_subscription">,
@@ -173,7 +174,11 @@ function createUserSubscriptionItem({
 }
 
 function isSubscriptionActive(subscription: CreatorSubscriptionRow, now: Date) {
-  const endAtMs = Date.parse(subscription.end_at);
-
-  return subscription.status === "active" && Number.isFinite(endAtMs) && endAtMs > now.getTime();
+  return isSubscriptionBenefitActive(
+    {
+      status: subscription.status,
+      endAt: subscription.end_at,
+    },
+    now,
+  );
 }

@@ -20,6 +20,8 @@ interface Props {
   trigger: ReactElement;
   creator: LiveCreator;
   isSubscribed: boolean;
+  canSubscribe: boolean;
+  isRenewalCanceled: boolean;
   isPending: boolean;
   subscriptionBadgeCustomMonths: number[];
   subscriptionBadgeVersion: string | null;
@@ -42,6 +44,8 @@ export function LiveSubscribeDialog({
   trigger,
   creator,
   isSubscribed,
+  canSubscribe,
+  isRenewalCanceled,
   isPending,
   subscriptionBadgeCustomMonths,
   subscriptionBadgeVersion,
@@ -52,9 +56,12 @@ export function LiveSubscribeDialog({
   const fallback = getAvatarFallbackText(creator.name);
   const avatarSrc = getAvatarImageSrc(creator.avatarUrl);
   const badgeMonths = buildLiveSubscriptionBadgeMonths(subscriptionBadgeCustomMonths);
-  const submitLabel = isSubscribed
-    ? "이미 구독 중"
-    : `매월 ${formatPrice(LIVE_SUBSCRIPTION_PRICE)}원 결제하고 구독하기`;
+  const submitLabel =
+    !canSubscribe && isSubscribed
+      ? "이미 구독 중"
+      : isRenewalCanceled
+        ? `매월 ${formatPrice(LIVE_SUBSCRIPTION_PRICE)}원으로 다시 구독하기`
+        : `매월 ${formatPrice(LIVE_SUBSCRIPTION_PRICE)}원 결제하고 구독하기`;
 
   return (
     <Popover open={open} onOpenChange={onOpenChange}>
@@ -140,7 +147,7 @@ export function LiveSubscribeDialog({
             type="button"
             size="lg"
             className="bg-brand text-brand-foreground hover:bg-brand/90 h-11 w-full font-black"
-            disabled={isSubscribed || isPending}
+            disabled={!canSubscribe || isPending}
             onClick={onConfirm}
           >
             <CreditCard className="size-4" />

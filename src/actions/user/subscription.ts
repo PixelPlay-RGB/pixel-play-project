@@ -38,7 +38,6 @@ export async function cancelCreatorSubscriptionAction(
     .from("creator_subscription")
     .update({
       status: "canceled",
-      end_at: new Date().toISOString(),
     })
     .eq("id", subscriptionId)
     .eq("subscriber_id", actor.userId)

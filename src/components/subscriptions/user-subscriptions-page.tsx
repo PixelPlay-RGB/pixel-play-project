@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import { useMemo, useState, useTransition } from "react";
 import { BadgeCheck, CalendarDays, Gift, Sparkles } from "lucide-react";
 
+import { subscribeCreatorAction } from "@/actions/live/live";
 import { cancelCreatorSubscriptionAction } from "@/actions/user/subscription";
 import { SettingsCard } from "@/components/common/settings-card";
 import { SettingsPage } from "@/components/common/settings-page";
@@ -36,6 +37,7 @@ import {
   resolveLiveSubscriptionBadgeMonth,
 } from "@/utils/live/live-subscription-badge";
 import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
+import { canStartCreatorSubscription } from "@/utils/subscriptions/user-subscription-status";
 
 type UserSubscriptionTab = "active" | "expired" | "gift";
 
@@ -62,7 +64,7 @@ const STATUS_META: Record<
 > = {
   active: { label: "구독중", className: "bg-brand/15 text-brand" },
   expired: { label: "만료", className: "bg-muted text-muted-foreground" },
-  canceled: { label: "해지됨", className: "bg-destructive/10 text-destructive" },
+  canceled: { label: "해지 예약", className: "bg-warning/15 text-warning" },
   ended: { label: "만료", className: "bg-muted text-muted-foreground" },
 };
 
@@ -223,11 +225,13 @@ function SubscriptionCard({
             {subscription.totalMonths.toLocaleString("ko-KR")}개월 동안 정기구독 중
           </p>
           <p className="text-muted-foreground mt-1 text-sm">
-            {subscription.isActive
+            {subscription.isActive && subscription.status === "active"
               ? `다음 결제일 ${formatKstDateLabel(subscription.endAt)}`
-              : `${formatKstDateLabel(subscription.startedAt)}부터 ${formatKstDateLabel(
-                  subscription.endAt,
-                )}까지 구독`}
+              : subscription.isActive
+                ? `구독 종료일 ${formatKstDateLabel(subscription.endAt)}`
+                : `${formatKstDateLabel(subscription.startedAt)}부터 ${formatKstDateLabel(
+                    subscription.endAt,
+                  )}까지 구독`}
           </p>
         </div>
       </div>
@@ -258,6 +262,13 @@ function UserSubscriptionManagementDialog({
     subscription?.totalMonths,
     subscription?.badge.customMonths ?? [],
   );
+  const canSubscribe = subscription
+    ? canStartCreatorSubscription({
+        isSubscribed: subscription.isActive,
+        status: subscription.status,
+      })
+    : false;
+  const shouldCancel = Boolean(subscription?.isActive && subscription.status === "active");
 
   const handleCancel = () => {
     if (!subscription || isPending) return;
@@ -271,6 +282,23 @@ function UserSubscriptionManagementDialog({
       }
 
       toastAppSuccess(result.code ?? APP_MESSAGE_CODE.success.user.subscriptionCanceled);
+      onOpenChange(false);
+      router.refresh();
+    });
+  };
+
+  const handleSubscribe = () => {
+    if (!subscription || isPending || !canSubscribe) return;
+
+    startTransition(async () => {
+      const result = await subscribeCreatorAction({ creatorId: subscription.creatorId });
+
+      if (!result.success || !result.data) {
+        toastAppError(result.code ?? APP_MESSAGE_CODE.error.live.subscriptionFailed);
+        return;
+      }
+
+      toastAppSuccess(result.code ?? APP_MESSAGE_CODE.success.live.subscribed);
       onOpenChange(false);
       router.refresh();
     });
@@ -294,11 +322,13 @@ function UserSubscriptionManagementDialog({
 
                 <DialogInfoPanel
                   icon={<CalendarDays className="size-4" />}
-                  label="다음 결제일"
+                  label={getDialogDateLabel(subscription)}
                   value={
                     subscription.isActive
                       ? formatKstDateLabel(subscription.endAt)
-                      : "구독이 종료되었습니다."
+                      : `${formatKstDateLabel(subscription.startedAt)}부터 ${formatKstDateLabel(
+                          subscription.endAt,
+                        )}까지`
                   }
                   actionLabel="결제수단 변경"
                   disabled
@@ -342,12 +372,12 @@ function UserSubscriptionManagementDialog({
             <footer className="border-border border-t p-5">
               <Button
                 type="button"
-                variant="destructive"
+                variant={shouldCancel ? "destructive" : "default"}
                 className="h-11 w-full font-black"
-                disabled={!subscription.isActive || isPending}
-                onClick={handleCancel}
+                disabled={isPending || (!shouldCancel && !canSubscribe)}
+                onClick={shouldCancel ? handleCancel : handleSubscribe}
               >
-                {isPending ? "구독 해지 중" : subscription.isActive ? "구독 해지" : "종료된 구독"}
+                {getDialogPrimaryActionLabel(subscription, isPending)}
               </Button>
             </footer>
           </>
@@ -427,8 +457,8 @@ function SubscriptionPolicyNotice() {
       </div>
       <div>
         <h2 className="text-foreground mb-2 font-black">구독 중지 안내</h2>
-        <p>구독 해지 상태에서는 구독 혜택이 제공되지 않습니다.</p>
-        <p>구독을 다시 시작하면 누적 구독 기간을 기준으로 배지가 표시됩니다.</p>
+        <p>구독을 해지해도 이미 결제된 기간이 끝날 때까지 구독 혜택이 유지됩니다.</p>
+        <p>해지 예약 중이거나 만료된 구독은 구독 관리에서 다시 시작할 수 있습니다.</p>
       </div>
     </section>
   );
@@ -441,11 +471,30 @@ function getTabCount(snapshot: UserSubscriptionSnapshot, value: UserSubscription
 }
 
 function getSubscriptionStatusMeta(subscription: UserSubscriptionItem) {
-  if (!subscription.isActive && subscription.status === "active") {
+  if (!subscription.isActive) {
     return STATUS_META.ended;
   }
 
   return STATUS_META[subscription.status];
+}
+
+function getDialogDateLabel(subscription: UserSubscriptionItem) {
+  if (!subscription.isActive) return "구독 기간";
+  if (subscription.status === "canceled") return "구독 종료일";
+
+  return "다음 결제일";
+}
+
+function getDialogPrimaryActionLabel(subscription: UserSubscriptionItem, isPending: boolean) {
+  if (subscription.isActive && subscription.status === "active") {
+    return isPending ? "구독 해지 중" : "구독 해지";
+  }
+
+  if (subscription.isActive && subscription.status === "canceled") {
+    return isPending ? "구독 재개 중" : "구독 다시 시작";
+  }
+
+  return isPending ? "구독 처리 중" : "다시 구독";
 }
 
 function formatKstDateLabel(value: string) {

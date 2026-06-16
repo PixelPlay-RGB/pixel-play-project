@@ -9,13 +9,13 @@ import type { CreatorSubscriptionActionResult } from "@/types/live/live";
 
 export function useSubscribeCreator(
   creatorId: string,
-  isSubscribed: boolean,
+  canSubscribe: boolean,
   onSuccess: (result: CreatorSubscriptionActionResult) => void,
 ) {
   const [isPending, setIsPending] = useState(false);
 
   async function subscribe() {
-    if (isPending || isSubscribed) return;
+    if (isPending || !canSubscribe) return;
     setIsPending(true);
 
     try {

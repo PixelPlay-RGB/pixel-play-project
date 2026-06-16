@@ -73,6 +73,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     isFollowing,
     onFollowToggled,
     isSubscribed,
+    subscriptionStatus,
     onSubscribed,
     chatRuleText,
     isLoggedIn,
@@ -94,6 +95,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
   const { handleSubscribe, isSubscribePending } = useLiveSubscribeAction({
     creatorId,
     isSubscribed,
+    subscriptionStatus,
     isLoggedIn,
     onSubscribed,
     onUnauthenticated: openLoginPrompt,
@@ -396,6 +398,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
                   isLive={!!broadcast}
                   isFollowing={isFollowing}
                   isSubscribed={isSubscribed}
+                  subscriptionStatus={subscriptionStatus}
                   isPending={isFollowPending}
                   isSubscribePending={isSubscribePending}
                   subscriptionBadgeCustomMonths={subscriptionBadgeCustomMonths}

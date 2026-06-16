@@ -48,10 +48,19 @@ const SUBSCRIBERS = [
     totalMonths: 3,
     status: "active",
   },
+  {
+    id: "sub-5",
+    subscriberId: "user-5",
+    nickname: "해지예약",
+    startedAt: "2026-06-01T00:00:00.000Z",
+    endAt: "2026-07-01T00:00:00.000Z",
+    totalMonths: 2,
+    status: "canceled",
+  },
 ] satisfies ChannelSubscriberItem[];
 
-test("getActiveChannelSubscriberCount counts only active subscriptions that have not ended", () => {
-  assert.equal(getActiveChannelSubscriberCount(SUBSCRIBERS, NOW), 2);
+test("getActiveChannelSubscriberCount counts subscriptions with benefits until end_at", () => {
+  assert.equal(getActiveChannelSubscriberCount(SUBSCRIBERS, NOW), 3);
 });
 
 test("filterAndSortChannelSubscribers filters by nickname", () => {
@@ -74,11 +83,11 @@ test("filterAndSortChannelSubscribers sorts without mutating the source list", (
 
   assert.deepEqual(
     result.map((item) => item.id),
-    ["sub-3", "sub-1", "sub-4", "sub-2"],
+    ["sub-3", "sub-1", "sub-4", "sub-5", "sub-2"],
   );
   assert.deepEqual(
     SUBSCRIBERS.map((item) => item.id),
-    ["sub-1", "sub-2", "sub-3", "sub-4"],
+    ["sub-1", "sub-2", "sub-3", "sub-4", "sub-5"],
   );
 });
 

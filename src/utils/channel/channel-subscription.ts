@@ -1,5 +1,7 @@
 // 채널 구독자 관리 목록의 활성 카운트와 검색·정렬 값을 계산합니다.
 
+import { isSubscriptionBenefitActive } from "../subscriptions/user-subscription-status.ts";
+
 export type ChannelSubscriptionStatus = "active" | "expired" | "canceled";
 
 export type ChannelSubscriberSort =
@@ -45,12 +47,7 @@ export function getActiveChannelSubscriberCount(
   subscribers: readonly ChannelSubscriberItem[],
   now: Date = new Date(),
 ) {
-  const nowTime = now.getTime();
-
-  return subscribers.filter(
-    (subscriber) =>
-      subscriber.status === "active" && new Date(subscriber.endAt).getTime() > nowTime,
-  ).length;
+  return subscribers.filter((subscriber) => isSubscriptionBenefitActive(subscriber, now)).length;
 }
 
 export function filterAndSortChannelSubscribers(

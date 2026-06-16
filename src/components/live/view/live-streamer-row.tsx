@@ -3,13 +3,14 @@
 import { LiveCreatorActions } from "@/components/live/view/live-creator-actions";
 import { LiveCreatorInfo } from "@/components/live/view/live-creator-info";
 import { cn } from "@/lib/utils";
-import type { LiveCreator } from "@/types/live/live";
+import type { CreatorSubscriptionStatus, LiveCreator } from "@/types/live/live";
 
 interface Props {
   creator: LiveCreator;
   isLive: boolean;
   isFollowing: boolean;
   isSubscribed: boolean;
+  subscriptionStatus: CreatorSubscriptionStatus | null;
   isPending: boolean;
   isSubscribePending: boolean;
   subscriptionBadgeCustomMonths: number[];
@@ -25,6 +26,7 @@ export function LiveStreamerRow({
   isLive,
   isFollowing,
   isSubscribed,
+  subscriptionStatus,
   isPending,
   isSubscribePending,
   subscriptionBadgeCustomMonths,
@@ -41,6 +43,7 @@ export function LiveStreamerRow({
         creator={creator}
         isFollowing={isFollowing}
         isSubscribed={isSubscribed}
+        subscriptionStatus={subscriptionStatus}
         isPending={isPending}
         isSubscribePending={isSubscribePending}
         subscriptionBadgeCustomMonths={subscriptionBadgeCustomMonths}

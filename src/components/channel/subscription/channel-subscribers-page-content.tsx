@@ -37,7 +37,7 @@ const SORT_OPTIONS: { value: ChannelSubscriberSort; label: string }[] = [
 const STATUS_BADGE: Record<ChannelSubscriptionStatus, { label: string; className: string }> = {
   active: { label: "구독중", className: "bg-brand/15 text-brand" },
   expired: { label: "만료", className: "bg-muted text-muted-foreground" },
-  canceled: { label: "취소", className: "bg-destructive/10 text-destructive" },
+  canceled: { label: "해지 예약", className: "bg-warning/15 text-warning" },
 };
 
 const TH_CLASS = "text-muted-foreground px-4 py-3 text-xs font-semibold";
