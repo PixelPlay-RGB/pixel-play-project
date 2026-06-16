@@ -4,7 +4,7 @@
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import { useMemo, useState, useTransition } from "react";
-import { BadgeCheck, CalendarDays, Sparkles } from "lucide-react";
+import { CalendarDays, Sparkles } from "lucide-react";
 
 import { subscribeCreatorAction } from "@/actions/live/live";
 import { cancelCreatorSubscriptionAction } from "@/actions/user/subscription";
@@ -178,7 +178,6 @@ function SubscriptionCard({
             <h3 className="text-foreground truncate text-base font-black">
               {subscription.creatorNickname}
             </h3>
-            <BadgeCheck className="text-brand size-4 shrink-0 fill-current" />
             <span
               className={cn(
                 "inline-flex rounded-full px-2 py-0.5 text-xs font-black whitespace-nowrap",
@@ -303,10 +302,7 @@ function UserSubscriptionManagementDialog({
                 />
 
                 <section className="border-border flex flex-col gap-3 rounded-xl border p-4">
-                  <div className="flex items-center gap-2">
-                    <BadgeCheck className="text-brand size-4" />
-                    <h3 className="text-sm font-black">내 구독 배지</h3>
-                  </div>
+                  <h3 className="text-sm font-black">내 구독 배지</h3>
                   <div className="grid grid-cols-4 gap-3 sm:grid-cols-7">
                     {badgeMonths.map((month) => {
                       const isCurrentBadge = month === currentBadgeMonth;
@@ -383,7 +379,6 @@ function DialogCreatorSummary({ subscription }: { subscription: UserSubscription
       <div className="min-w-0">
         <div className="flex min-w-0 items-center gap-1.5">
           <h3 className="truncate text-xl font-black">{subscription.creatorNickname}</h3>
-          <BadgeCheck className="text-brand size-4 shrink-0 fill-current" />
         </div>
         <p className="text-muted-foreground mt-1 text-base font-black">
           구독기간 {subscription.totalMonths.toLocaleString("ko-KR")}개월
