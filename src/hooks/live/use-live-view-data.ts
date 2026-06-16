@@ -3,10 +3,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  getLiveSubscriptionBadgeAssetsAction,
-  getLiveSubscriptionEmotesAction,
-} from "@/actions/live/live";
+import { getLiveSubscriptionBadgeAssetsAction } from "@/actions/live/live";
 import { createClient } from "@/lib/supabase/client";
 import {
   clearLiveSubscriptionBadgeSourceCache,
@@ -37,7 +34,7 @@ export function useLiveViewData(creatorId: string) {
     enabled: !isAuthLoading && isValidCreatorId,
     staleTime: 1000 * 30,
     queryFn: async () => {
-      const [watchResult, countResult, badgeAssetsResult, emotesResult] = await Promise.all([
+      const [watchResult, countResult, badgeAssetsResult] = await Promise.all([
         supabase.rpc("get_live_watch", {
           p_creator_id: creatorId,
           ...(user?.id ? { p_viewer_id: user.id } : {}),
@@ -46,7 +43,6 @@ export function useLiveViewData(creatorId: string) {
           p_creator_id: creatorId,
         }),
         getLiveSubscriptionBadgeAssetsAction(creatorId),
-        getLiveSubscriptionEmotesAction(creatorId),
       ]);
 
       if (watchResult.error) {
@@ -65,7 +61,6 @@ export function useLiveViewData(creatorId: string) {
       if (!watchData) return null;
 
       const badgeAssets = badgeAssetsResult.success ? badgeAssetsResult.data : null;
-      const subscriptionEmotes = emotesResult.success ? (emotesResult.data ?? []) : [];
 
       return {
         ...watchData,
@@ -76,7 +71,6 @@ export function useLiveViewData(creatorId: string) {
           availableMonths: badgeAssets?.availableMonths ?? [],
           version: badgeAssets?.version ?? null,
         }),
-        subscriptionEmotes,
       };
     },
   });

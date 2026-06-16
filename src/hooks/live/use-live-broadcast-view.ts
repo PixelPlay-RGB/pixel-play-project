@@ -307,7 +307,6 @@ export function useLiveBroadcastView(creatorId: string) {
     subscriptionBadgeCustomMonths: watchData?.subscriptionBadgeCustomMonths ?? [],
     subscriptionBadgeVersion: watchData?.subscriptionBadgeVersion ?? null,
     subscriptionBadgeImageSources: watchData?.subscriptionBadgeImageSources ?? {},
-    subscriptionEmotes: watchData?.subscriptionEmotes ?? [],
     votePoll,
     joinDraw,
     sendDonation,

@@ -1,19 +1,17 @@
 "use client";
-// 라이브 시청자가 방송인 구독 선택을 확인하고 구독 결제를 시작하는 Popover입니다.
+// 라이브 시청자가 방송인 구독 혜택을 확인하고 구독 결제를 시작하는 Popover입니다.
 
-import Image from "next/image";
 import type { ReactElement } from "react";
-import { BadgeCheck, CreditCard, Heart, MessageCircle, SmilePlus, Star } from "lucide-react";
+import { BadgeCheck, CreditCard, Heart, Star } from "lucide-react";
 
+import { LiveSubscriptionBadge } from "@/components/live/chat/live-subscription-badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { LiveSubscriptionBadge } from "@/components/live/chat/live-subscription-badge";
-import { cn } from "@/lib/utils";
-import type { LiveCreator, LiveSubscriptionEmote } from "@/types/live/live";
-import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
+import type { LiveCreator } from "@/types/live/live";
 import { buildLiveSubscriptionBadgeMonths } from "@/utils/live/live-subscription-badge";
+import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
 
 const LIVE_SUBSCRIPTION_PRICE = 4900;
 
@@ -26,14 +24,12 @@ interface Props {
   subscriptionBadgeCustomMonths: number[];
   subscriptionBadgeVersion: string | null;
   subscriptionBadgeImageSources: Record<number, string>;
-  subscriptionEmotes: LiveSubscriptionEmote[];
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
 }
 
 const BENEFITS = [
   { icon: Heart, label: "이 채널의 스트리머 자동 후원" },
-  { icon: MessageCircle, label: "구독자 전용 이모티콘" },
   { icon: BadgeCheck, label: "구독 기간에 맞는 전용 배지" },
 ] as const;
 
@@ -50,7 +46,6 @@ export function LiveSubscribeDialog({
   subscriptionBadgeCustomMonths,
   subscriptionBadgeVersion,
   subscriptionBadgeImageSources,
-  subscriptionEmotes,
   onOpenChange,
   onConfirm,
 }: Props) {
@@ -79,8 +74,8 @@ export function LiveSubscribeDialog({
             </Avatar>
             <div className="min-w-0 flex-1">
               <h2 className="truncate text-lg font-black">{creator.name}</h2>
-              <p className="text-muted-foreground mt-1 text-xs">
-                구독 선택을 확인하고 결제를 진행합니다.
+              <p className="text-muted-foreground mt-1 text-xs leading-5">
+                매월 정기구독으로 채널을 후원하고 구독 배지를 사용할 수 있어요.
               </p>
             </div>
           </div>
@@ -126,47 +121,21 @@ export function LiveSubscribeDialog({
                 ))}
               </div>
             </section>
-
-            <section className="flex flex-col gap-3">
-              <div className="flex items-center gap-2">
-                <SmilePlus className="text-brand size-4" />
-                <h3 className="text-sm font-black">구독 이모티콘</h3>
-              </div>
-              {subscriptionEmotes.length > 0 ? (
-                <div className="grid grid-cols-6 gap-3 sm:grid-cols-8">
-                  {subscriptionEmotes.map((emote) => (
-                    <div
-                      key={emote.src}
-                      className={cn(
-                        "border-border bg-background flex aspect-square items-center justify-center overflow-hidden rounded-md border",
-                        "hover:bg-muted/60 transition-colors",
-                      )}
-                      title={emote.name}
-                    >
-                      <Image
-                        src={emote.src}
-                        alt={emote.name}
-                        width={40}
-                        height={40}
-                        className="size-8 object-contain"
-                        unoptimized={emote.src.toLowerCase().includes(".gif")}
-                      />
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="border-border bg-muted/30 text-muted-foreground rounded-lg border px-3 py-4 text-center text-sm">
-                  아직 등록된 구독 이모티콘이 없습니다.
-                </div>
-              )}
-            </section>
           </div>
         </ScrollArea>
 
         <footer className="border-border mx-0 mb-0 flex flex-col items-stretch gap-3 border-t p-5">
-          <p className="text-muted-foreground w-full text-xs">
-            정기구독 자동결제에 동의합니다. 토스 결제 연동 전까지는 버튼을 누르면 바로 구독합니다.
-          </p>
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-sm font-black">정기 구독 설명</p>
+              <p className="text-muted-foreground mt-1 text-xs leading-5">
+                매월 자동 결제되는 구독 상품입니다.
+              </p>
+            </div>
+            <Button type="button" variant="ghost" size="sm" className="h-8 shrink-0 text-xs">
+              약관안내
+            </Button>
+          </div>
           <Button
             type="button"
             size="lg"

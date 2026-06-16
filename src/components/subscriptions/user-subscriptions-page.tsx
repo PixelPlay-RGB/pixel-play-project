@@ -1,11 +1,10 @@
 "use client";
 // 사용자 구독 목록과 구독 관리 다이얼로그를 렌더링합니다.
 
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import { useMemo, useState, useTransition } from "react";
-import { BadgeCheck, CalendarDays, CreditCard, Gift, SmilePlus, Sparkles } from "lucide-react";
+import { BadgeCheck, CalendarDays, Gift, Sparkles } from "lucide-react";
 
 import { cancelCreatorSubscriptionAction } from "@/actions/user/subscription";
 import { SettingsCard } from "@/components/common/settings-card";
@@ -48,7 +47,7 @@ interface Props {
 const PAGE_HEADER = {
   kicker: "SUBSCRIPTIONS",
   title: "내 구독",
-  description: "구독 중인 방송인의 배지, 다음 결제일, 구독자 전용 이모티콘을 확인합니다.",
+  description: "구독 중인 방송인의 배지와 다음 결제일을 확인합니다.",
 } as const;
 
 const TAB_ITEMS: Array<{ value: UserSubscriptionTab; label: string }> = [
@@ -305,14 +304,6 @@ function UserSubscriptionManagementDialog({
                   disabled
                 />
 
-                <DialogInfoPanel
-                  icon={<CreditCard className="size-4" />}
-                  label="현재 구독 티어"
-                  value="기본 구독"
-                  actionLabel="티어 변경"
-                  disabled
-                />
-
                 <section className="border-border flex flex-col gap-3 rounded-xl border p-4">
                   <div className="flex items-center gap-2">
                     <BadgeCheck className="text-brand size-4" />
@@ -344,37 +335,6 @@ function UserSubscriptionManagementDialog({
                       </div>
                     ))}
                   </div>
-                </section>
-
-                <section className="border-border flex flex-col gap-3 rounded-xl border p-4">
-                  <div className="flex items-center gap-2">
-                    <SmilePlus className="text-brand size-4" />
-                    <h3 className="text-sm font-black">구독자 전용 이모티콘</h3>
-                  </div>
-                  {subscription.emotes.length > 0 ? (
-                    <div className="grid grid-cols-5 gap-3 sm:grid-cols-6">
-                      {subscription.emotes.map((emote) => (
-                        <div
-                          key={emote.src}
-                          className="border-border bg-muted/30 flex aspect-square items-center justify-center overflow-hidden rounded-lg border"
-                          title={emote.name}
-                        >
-                          <Image
-                            src={emote.src}
-                            alt={emote.name}
-                            width={40}
-                            height={40}
-                            className="size-8 object-contain"
-                            unoptimized={emote.src.toLowerCase().includes(".gif")}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="bg-muted/30 text-muted-foreground rounded-lg px-3 py-5 text-center text-sm">
-                      등록된 구독자 전용 이모티콘이 없습니다.
-                    </div>
-                  )}
                 </section>
               </div>
             </ScrollArea>

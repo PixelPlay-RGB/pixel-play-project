@@ -69,9 +69,7 @@ export const FORM_MESSAGE = {
   },
   channelSubscription: {
     badgeMonthInvalid: "구독 개월 수를 입력해주세요.",
-    badgeImageRequired: "퍼스나콘 이미지를 선택해주세요.",
-    emoteTitleRequired: "이모티콘 제목을 입력해주세요.",
-    emoteImagesRequired: "PC 이미지와 모바일 이미지를 모두 선택해주세요.",
+    badgeImageRequired: "구독뱃지 이미지를 선택해주세요.",
     copyrightAgreementRequired: "저작권 동의가 필요합니다.",
   },
 } as const;

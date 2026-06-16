@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { LIVE_LABEL } from "@/constants/live/live";
 import { cn } from "@/lib/utils";
-import type { LiveCreator, LiveSubscriptionEmote } from "@/types/live/live";
+import type { LiveCreator } from "@/types/live/live";
 import { toastAppError, toastAppSuccess } from "@/utils/common/toast-message";
 
 interface Props {
@@ -22,7 +22,6 @@ interface Props {
   subscriptionBadgeCustomMonths: number[];
   subscriptionBadgeVersion: string | null;
   subscriptionBadgeImageSources: Record<number, string>;
-  subscriptionEmotes: LiveSubscriptionEmote[];
   onFollow: () => void;
   onSubscribe: () => void;
 }
@@ -36,7 +35,6 @@ export function LiveCreatorActions({
   subscriptionBadgeCustomMonths,
   subscriptionBadgeVersion,
   subscriptionBadgeImageSources,
-  subscriptionEmotes,
   onFollow,
   onSubscribe,
 }: Props) {
@@ -103,7 +101,6 @@ export function LiveCreatorActions({
           subscriptionBadgeCustomMonths={subscriptionBadgeCustomMonths}
           subscriptionBadgeVersion={subscriptionBadgeVersion}
           subscriptionBadgeImageSources={subscriptionBadgeImageSources}
-          subscriptionEmotes={subscriptionEmotes}
           onOpenChange={setIsSubscribeDialogOpen}
           onConfirm={onSubscribe}
         />

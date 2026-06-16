@@ -44,35 +44,6 @@ export function LargeUploadButton({
   );
 }
 
-export function SquareUploadButton({
-  label,
-  detail,
-  fileName,
-  onClick,
-}: {
-  label: string;
-  detail: string;
-  fileName?: string;
-  onClick: () => void;
-}) {
-  return (
-    <button type="button" className="flex min-w-0 flex-col items-center gap-2" onClick={onClick}>
-      <span
-        className={cn(
-          "border-border hover:border-primary/60 hover:bg-primary/5 flex size-30 items-center justify-center overflow-hidden rounded-lg border border-dashed transition-colors",
-          fileName && "border-primary/40 bg-primary/5",
-        )}
-      >
-        <Plus className="text-muted-foreground size-8" aria-hidden />
-      </span>
-      <span className="text-center text-sm leading-5">
-        <span className="block max-w-28 truncate">{fileName ? fileName : label}</span>
-        <span className="text-muted-foreground block">{detail}</span>
-      </span>
-    </button>
-  );
-}
-
 export function CopyrightAgreement({
   checked,
   onChange,

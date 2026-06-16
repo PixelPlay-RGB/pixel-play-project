@@ -3,7 +3,7 @@
 import { LiveCreatorActions } from "@/components/live/view/live-creator-actions";
 import { LiveCreatorInfo } from "@/components/live/view/live-creator-info";
 import { cn } from "@/lib/utils";
-import type { LiveCreator, LiveSubscriptionEmote } from "@/types/live/live";
+import type { LiveCreator } from "@/types/live/live";
 
 interface Props {
   creator: LiveCreator;
@@ -15,7 +15,6 @@ interface Props {
   subscriptionBadgeCustomMonths: number[];
   subscriptionBadgeVersion: string | null;
   subscriptionBadgeImageSources: Record<number, string>;
-  subscriptionEmotes: LiveSubscriptionEmote[];
   onFollow: () => void;
   onSubscribe: () => void;
   className?: string;
@@ -31,7 +30,6 @@ export function LiveStreamerRow({
   subscriptionBadgeCustomMonths,
   subscriptionBadgeVersion,
   subscriptionBadgeImageSources,
-  subscriptionEmotes,
   onFollow,
   onSubscribe,
   className,
@@ -48,7 +46,6 @@ export function LiveStreamerRow({
         subscriptionBadgeCustomMonths={subscriptionBadgeCustomMonths}
         subscriptionBadgeVersion={subscriptionBadgeVersion}
         subscriptionBadgeImageSources={subscriptionBadgeImageSources}
-        subscriptionEmotes={subscriptionEmotes}
         onFollow={onFollow}
         onSubscribe={onSubscribe}
       />

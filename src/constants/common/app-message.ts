@@ -82,10 +82,6 @@ export const APP_MESSAGE = {
         title: "구독 배지 기본값 적용",
         description: "커스텀 배지를 제거했어요.",
       },
-      subscriptionEmoteSaved: {
-        title: "구독 이모티콘 신청 완료",
-        description: "시그니처 이모티콘 이미지가 저장됐어요.",
-      },
       channelProfileSaved: {
         title: "채널 정보 저장 완료",
         description: "변경한 채널 소개와 링크가 적용되었어요.",
@@ -470,27 +466,11 @@ export const APP_MESSAGE = {
       },
       subscriptionBadgeImageInvalid: {
         title: "구독 배지 이미지 확인 필요",
-        description: "가로세로 36px인 PNG 파일을 올려주세요.",
+        description: "가로세로 60px인 PNG 파일을 올려주세요.",
       },
       subscriptionBadgeImageTooLarge: {
         title: "구독 배지 용량 초과",
-        description: "50KB 이하의 PNG 파일을 올려주세요.",
-      },
-      subscriptionEmoteSaveFailed: {
-        title: "구독 이모티콘 저장 실패",
-        description: "잠시 후 다시 시도해주세요.",
-      },
-      subscriptionEmoteImageInvalid: {
-        title: "구독 이모티콘 이미지 확인 필요",
-        description: "jpg, png, webp, gif 형식의 이미지를 올려주세요.",
-      },
-      subscriptionEmoteTitleInvalid: {
-        title: "이모티콘 제목 확인 필요",
-        description: "한글은 최대 6자, 영어와 숫자는 최대 12자까지 입력할 수 있어요.",
-      },
-      subscriptionEmoteLimitReached: {
-        title: "이모티콘 개수 초과",
-        description: "공통과 플러스 이모티콘은 각각 최대 6개까지 등록할 수 있어요.",
+        description: "1MB 이하의 PNG 파일을 올려주세요.",
       },
       channelProfileSaveFailed: {
         title: "채널 정보 저장 실패",

@@ -34,5 +34,5 @@ test("isValidSubscriptionBadgePng accepts only the configured square size", () =
     ),
     true,
   );
-  assert.equal(isValidSubscriptionBadgePng(makePngHeader(60, 60)), false);
+  assert.equal(isValidSubscriptionBadgePng(makePngHeader(36, 36)), false);
 });

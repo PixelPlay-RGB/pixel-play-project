@@ -51,7 +51,6 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     subscriptionBadgeCustomMonths,
     subscriptionBadgeVersion,
     subscriptionBadgeImageSources,
-    subscriptionEmotes,
     loadOlderMessages,
     isLoadingOlderMessages,
     hasMoreChatHistory,
@@ -402,7 +401,6 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
                   subscriptionBadgeCustomMonths={subscriptionBadgeCustomMonths}
                   subscriptionBadgeVersion={subscriptionBadgeVersion}
                   subscriptionBadgeImageSources={subscriptionBadgeImageSources}
-                  subscriptionEmotes={subscriptionEmotes}
                   onFollow={handleFollow}
                   onSubscribe={handleSubscribe}
                   className="px-4 py-3"

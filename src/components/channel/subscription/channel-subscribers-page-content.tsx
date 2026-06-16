@@ -183,8 +183,6 @@ export function ChannelSubscribersPageContent({ snapshot }: Props) {
       <ChannelSubscriptionPerkSettings
         creatorId={snapshot.creatorId}
         customMonths={snapshot.customBadgeMonths}
-        subscriptionEmoteCommonCount={snapshot.subscriptionEmoteCommonCount}
-        subscriptionEmotePlusCount={snapshot.subscriptionEmotePlusCount}
       />
     </SettingsPage>
   );

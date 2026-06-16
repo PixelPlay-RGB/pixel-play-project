@@ -1,4 +1,4 @@
-// 사용자 구독 관리 페이지에 필요한 구독, 배지, 이모티콘 데이터를 조회합니다.
+// 사용자 구독 관리 페이지에 필요한 구독과 배지 데이터를 조회합니다.
 import "server-only";
 
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
@@ -17,10 +17,6 @@ import {
   getLiveSubscriptionBadgeSourcesByMonth,
   readLiveSubscriptionBadgeAssetInfo,
 } from "@/utils/live/live-subscription-badge";
-import {
-  LIVE_SUBSCRIPTION_EMOTE_STORAGE_FOLDER,
-  readLiveSubscriptionEmotes,
-} from "@/utils/live/live-subscription-emote";
 
 type CreatorSubscriptionRow = Pick<
   GenericTables<"creator_subscription">,
@@ -117,26 +113,16 @@ export async function getUserSubscriptionSnapshot(): Promise<
 async function readCreatorSubscriptionAssets(
   supabase: AdminClient,
   creatorId: string,
-): Promise<Pick<UserSubscriptionItem, "badge" | "emotes">> {
-  const [badgeFilesResult, emoteFilesResult] = await Promise.all([
-    supabase.storage.from(USER_MEDIA_BUCKET).list(`${creatorId}/subscription`, {
+): Promise<Pick<UserSubscriptionItem, "badge">> {
+  const badgeFilesResult = await supabase.storage
+    .from(USER_MEDIA_BUCKET)
+    .list(`${creatorId}/subscription`, {
       limit: 120,
       sortBy: { column: "name", order: "asc" },
-    }),
-    supabase.storage
-      .from(USER_MEDIA_BUCKET)
-      .list(`${creatorId}/${LIVE_SUBSCRIPTION_EMOTE_STORAGE_FOLDER}`, {
-        limit: 80,
-        sortBy: { column: "name", order: "asc" },
-      }),
-  ]);
+    });
 
   if (badgeFilesResult.error) {
     console.error("사용자 구독 배지 목록 조회 실패", badgeFilesResult.error);
-  }
-
-  if (emoteFilesResult.error) {
-    console.error("사용자 구독 이모티콘 목록 조회 실패", emoteFilesResult.error);
   }
 
   const badgeInfo = readLiveSubscriptionBadgeAssetInfo(badgeFilesResult.data ?? null);
@@ -147,11 +133,10 @@ async function readCreatorSubscriptionAssets(
 
   return {
     badge,
-    emotes: readLiveSubscriptionEmotes(creatorId, emoteFilesResult.data ?? null),
   };
 }
 
-function createEmptySubscriptionAssets(): Pick<UserSubscriptionItem, "badge" | "emotes"> {
+function createEmptySubscriptionAssets(): Pick<UserSubscriptionItem, "badge"> {
   const badgeInfo = readLiveSubscriptionBadgeAssetInfo(null);
 
   return {
@@ -159,7 +144,6 @@ function createEmptySubscriptionAssets(): Pick<UserSubscriptionItem, "badge" | "
       ...badgeInfo,
       imageSourcesByMonth: {},
     },
-    emotes: [],
   };
 }
 
@@ -171,7 +155,7 @@ function createUserSubscriptionItem({
 }: {
   subscription: CreatorSubscriptionRow;
   profile: CreatorProfileRow | null;
-  assets: Pick<UserSubscriptionItem, "badge" | "emotes">;
+  assets: Pick<UserSubscriptionItem, "badge">;
   now: Date;
 }): UserSubscriptionItem {
   return {
@@ -185,7 +169,6 @@ function createUserSubscriptionItem({
     status: subscription.status,
     isActive: isSubscriptionActive(subscription, now),
     badge: assets.badge,
-    emotes: assets.emotes,
   };
 }
 
