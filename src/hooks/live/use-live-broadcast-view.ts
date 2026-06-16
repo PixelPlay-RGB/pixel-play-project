@@ -103,6 +103,33 @@ export function useLiveBroadcastView(creatorId: string) {
       });
   }
 
+  function onSubscriptionCanceled() {
+    const watchKey = QUERY_KEYS.live.watch(creatorId, user?.id);
+
+    queryClient.setQueryData<LiveWatchData | null>(watchKey, (prev) => {
+      if (!prev?.viewerRelation) return prev;
+
+      return {
+        ...prev,
+        viewerRelation: {
+          ...prev.viewerRelation,
+          isSubscribed: true,
+          subscriptionStatus: "canceled",
+        },
+      };
+    });
+
+    void refetch()
+      .then((refetchResult) => {
+        if (refetchResult.data?.viewerRelation?.subscriptionStatus !== "canceled") {
+          console.error("구독 해지 상태 refetch 결과가 optimistic 상태와 다름");
+        }
+      })
+      .catch((error) => {
+        console.error("subscription cancel state refetch failed", error);
+      });
+  }
+
   // 시청 중 방송이 종료되면 broadcast가 null이 된다(realtime/refetch). 이때도 마지막 방송 정보
   // (제목·태그·참여자 수)와 채팅 메시지를 그대로 보여주기 위해 마지막 라이브 스냅샷을 유지한다.
   // 라이브 동안 의미 있는 필드(참여자 수·제목)가 바뀔 때만 갱신해(렌더 중 가드된 setState)
@@ -316,6 +343,7 @@ export function useLiveBroadcastView(creatorId: string) {
     isSubscribed,
     subscriptionStatus,
     onSubscribed,
+    onSubscriptionCanceled,
     chatRuleText: watchData?.settings.chatRuleText,
     // 팔로워 전용 대기 시간 안내용 설정값(초).
     followerWaitSeconds: watchData?.settings.followerWaitSeconds ?? 0,

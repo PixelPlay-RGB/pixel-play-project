@@ -18,6 +18,7 @@ interface Props {
   subscriptionBadgeImageSources: Record<number, string>;
   onFollow: () => void;
   onSubscribe: () => void;
+  onCancelSubscription: () => void;
   className?: string;
 }
 
@@ -34,6 +35,7 @@ export function LiveStreamerRow({
   subscriptionBadgeImageSources,
   onFollow,
   onSubscribe,
+  onCancelSubscription,
   className,
 }: Props) {
   return (
@@ -51,6 +53,7 @@ export function LiveStreamerRow({
         subscriptionBadgeImageSources={subscriptionBadgeImageSources}
         onFollow={onFollow}
         onSubscribe={onSubscribe}
+        onCancelSubscription={onCancelSubscription}
       />
     </div>
   );

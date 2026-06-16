@@ -12,6 +12,15 @@ interface SubscriptionStartInput {
   status: CreatorSubscriptionStatus | null;
 }
 
+interface LiveSubscriptionButtonActionInput extends SubscriptionStartInput {
+  isPending: boolean;
+}
+
+export type LiveSubscriptionButtonAction =
+  | "open_subscribe_dialog"
+  | "open_cancel_dialog"
+  | "disabled";
+
 export function isSubscriptionBenefitActive(
   subscription: SubscriptionBenefitInput,
   now: Date = new Date(),
@@ -27,4 +36,24 @@ export function isSubscriptionBenefitActive(
 
 export function canStartCreatorSubscription({ isSubscribed, status }: SubscriptionStartInput) {
   return !isSubscribed || status === "canceled";
+}
+
+export function getLiveSubscriptionButtonAction({
+  isSubscribed,
+  status,
+  isPending,
+}: LiveSubscriptionButtonActionInput): LiveSubscriptionButtonAction {
+  if (isPending) {
+    return "disabled";
+  }
+
+  if (isSubscribed && status === "active") {
+    return "open_cancel_dialog";
+  }
+
+  if (canStartCreatorSubscription({ isSubscribed, status })) {
+    return "open_subscribe_dialog";
+  }
+
+  return "disabled";
 }

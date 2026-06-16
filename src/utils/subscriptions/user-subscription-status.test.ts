@@ -4,6 +4,7 @@ import { test } from "node:test";
 
 import {
   canStartCreatorSubscription,
+  getLiveSubscriptionButtonAction,
   isSubscriptionBenefitActive,
 } from "./user-subscription-status.ts";
 
@@ -24,4 +25,39 @@ test("canStartCreatorSubscription allows reactivation for canceled subscriptions
   assert.equal(canStartCreatorSubscription({ isSubscribed: true, status: "active" }), false);
   assert.equal(canStartCreatorSubscription({ isSubscribed: true, status: "canceled" }), true);
   assert.equal(canStartCreatorSubscription({ isSubscribed: false, status: "expired" }), true);
+});
+
+test("getLiveSubscriptionButtonAction asks for cancellation confirmation for active subscriptions", () => {
+  assert.equal(
+    getLiveSubscriptionButtonAction({
+      isSubscribed: true,
+      status: "active",
+      isPending: false,
+    }),
+    "open_cancel_dialog",
+  );
+  assert.equal(
+    getLiveSubscriptionButtonAction({
+      isSubscribed: true,
+      status: "canceled",
+      isPending: false,
+    }),
+    "open_subscribe_dialog",
+  );
+  assert.equal(
+    getLiveSubscriptionButtonAction({
+      isSubscribed: false,
+      status: null,
+      isPending: false,
+    }),
+    "open_subscribe_dialog",
+  );
+  assert.equal(
+    getLiveSubscriptionButtonAction({
+      isSubscribed: true,
+      status: "active",
+      isPending: true,
+    }),
+    "disabled",
+  );
 });

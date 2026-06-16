@@ -75,6 +75,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     isSubscribed,
     subscriptionStatus,
     onSubscribed,
+    onSubscriptionCanceled,
     chatRuleText,
     isLoggedIn,
     isAuthLoading,
@@ -92,12 +93,13 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     onFollowToggled,
     onUnauthenticated: openLoginPrompt,
   });
-  const { handleSubscribe, isSubscribePending } = useLiveSubscribeAction({
+  const { handleSubscribe, handleCancelSubscription, isSubscribePending } = useLiveSubscribeAction({
     creatorId,
     isSubscribed,
     subscriptionStatus,
     isLoggedIn,
     onSubscribed,
+    onSubscriptionCanceled,
     onUnauthenticated: openLoginPrompt,
   });
 
@@ -406,6 +408,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
                   subscriptionBadgeImageSources={subscriptionBadgeImageSources}
                   onFollow={handleFollow}
                   onSubscribe={handleSubscribe}
+                  onCancelSubscription={handleCancelSubscription}
                   className="px-4 py-3"
                 />
               ) : null}
