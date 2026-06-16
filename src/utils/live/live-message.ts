@@ -76,6 +76,15 @@ export function mapLiveMessageRowToMessage(
   // 서버 LLM 판정 결과("flagged"|"clean"|키 없음=null). 도착 전엔 클라 사전이 1차로 가린다.
   const cleanbotStatus = readString(metadata.cleanbotStatus);
 
+  // 동시에 보유한 역할들을 합성한다(여러 뱃지 가로 나열). manager 는 sender_role 에서(크리에이터만
+  // 매니저보다 위인데 크리에이터는 매니저가 아니라 절대 가려지지 않음), donor·subscriber 는 전송
+  // 시점 metadata 스냅샷에서, creator 는 sender_id 매칭(isHost)에서 읽는다.
+  const senderRoles: Exclude<LiveSenderRole, "viewer">[] = [];
+  if (isHost) senderRoles.push("creator");
+  else if (row.sender_role === "manager") senderRoles.push("manager");
+  if (metadata.isDonor === true) senderRoles.push("donor");
+  if (metadata.isSubscriber === true) senderRoles.push("subscriber");
+
   return {
     id: row.id,
     type: "text",
@@ -84,6 +93,7 @@ export function mapLiveMessageRowToMessage(
     content: row.content,
     createdAt: row.created_at,
     senderRole: isHost ? "creator" : row.sender_role,
+    senderRoles,
     isHost,
     // 하이브리드 클린봇(#120): 서버 LLM 판정이 도착하면 그 결과(flagged/clean)를 신뢰하고,
     // 판정 전(키 없음)에는 클라이언트 시드 사전으로 명백한 욕설만 즉시 가린다(0초). 두 신호 모두

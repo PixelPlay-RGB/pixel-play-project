@@ -210,9 +210,8 @@ function TextMessage({ message, isMasked }: { message: LiveChatMessage; isMasked
   // 채널 이모지(:pp-<uuid>:)도 이미지로 렌더한다 — context는 memo된 MessageItem을 건너뛰고
   // 소비처(여기)만 다시 그리므로 가상화 목록에서도 안전하다.
   const { stickers: channelStickers } = useChannelStickers();
-  // 역할 마크는 DB가 전송 시점에 스냅샷한 sender_role을 그대로 쓴다(viewer는 마크 없음).
-  const role: LiveChatRole | null =
-    message.senderRole && message.senderRole !== "viewer" ? message.senderRole : null;
+  // 동시 보유 역할들(매핑 단계에서 sender_role + metadata 로 합성). 여러 뱃지를 가로로 나열한다.
+  const roles: LiveChatRole[] = message.senderRoles ?? [];
   // OBS 채팅 오버레이와 같은 규칙으로 닉네임별 랜덤(해시) 컬러를 적용한다.
   const nicknameColor = getLiveChatOverlayNicknameColor(
     message.author ?? "",
@@ -220,10 +219,16 @@ function TextMessage({ message, isMasked }: { message: LiveChatMessage; isMasked
   );
 
   return (
-    // line-height(leading-5=20px)를 마크 높이(size-5)와 일치시켜 마크가 라인박스를 정확히 채우고,
-    // 닉네임·본문은 같은 인라인 텍스트라 베이스라인이 자동으로 맞는다(마크·닉네임·본문 모두 동일 정렬).
+    // 뱃지(20px)·이모지(28px)·닉네임·본문이 한 줄에 섞여도 같은 축에 세로 중앙 정렬되게 한다 —
+    // 이모지(align-middle)가 라인을 늘려도 뱃지 묶음을 align-middle로 같은 중심에 맞춘다.
     <p className="min-w-0 text-sm leading-5 wrap-break-word">
-      {role ? <LiveChatRoleBadge role={role} withTooltip className="mr-1.5 align-bottom" /> : null}
+      {roles.length > 0 ? (
+        <span className="mr-1.5 inline-flex items-center gap-0.5 align-middle">
+          {roles.map((badgeRole) => (
+            <LiveChatRoleBadge key={badgeRole} role={badgeRole} withTooltip />
+          ))}
+        </span>
+      ) : null}
       <span className="mr-1.5 font-medium" style={{ color: nicknameColor }}>
         {message.author}
       </span>

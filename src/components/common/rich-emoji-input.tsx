@@ -4,7 +4,7 @@
 // children을 렌더하면 한글 IME 조합 중 DOM이 갈려 조합이 깨지므로, 외부 value 변경(초기값·피커
 // 삽입·전송 후 초기화)만 DOM에 반영하고 타이핑은 브라우저에 맡긴 뒤 읽어서 onChange로 흘린다.
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { STICKER_PX } from "@/constants/sticker/sticker";
 import { cn } from "@/lib/utils";
@@ -114,6 +114,9 @@ export default function RichEmojiInput({
   const composingRef = useRef(false);
   // 우리가 마지막으로 onChange로 내보낸 값 — 외부 변경과 자가 변경을 구분해 타이핑 중 DOM 재작성을 막는다.
   const lastEmittedRef = useRef<string | null>(null);
+  // IME 조합 중에는 onInput이 스킵돼 value가 ""로 남아 placeholder가 잔상으로 남는다 —
+  // 조합이 시작되면 즉시 placeholder를 숨겨, value 갱신(부모 라운드트립)을 기다리지 않게 한다.
+  const [isComposing, setIsComposing] = useState(false);
 
   const editable = !disabled && !readOnly;
 
@@ -208,9 +211,11 @@ export default function RichEmojiInput({
       }}
       onCompositionStart={() => {
         composingRef.current = true;
+        setIsComposing(true);
       }}
       onCompositionEnd={() => {
         composingRef.current = false;
+        setIsComposing(false);
         emit();
       }}
       onKeyDown={handleKeyDown}
@@ -218,7 +223,7 @@ export default function RichEmojiInput({
       onClick={onClick}
       className={cn(
         "rich-emoji-input outline-none",
-        value === "" && "is-empty",
+        value === "" && !isComposing && "is-empty",
         allowNewline ? "wrap-break-word whitespace-pre-wrap" : "overflow-x-auto whitespace-nowrap",
         className,
       )}
