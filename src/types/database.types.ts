@@ -618,6 +618,91 @@ export type Database = {
           },
         ]
       }
+      creator_subscription_payment: {
+        Row: {
+          amount: number
+          approved_at: string | null
+          canceled_at: string | null
+          created_at: string
+          creator_id: string
+          failed_at: string | null
+          failure_code: string | null
+          failure_message: string | null
+          id: string
+          idempotency_key: string
+          metadata: Json
+          order_id: string
+          payment_key: string | null
+          payment_status: Database["public"]["Enums"]["creator_subscription_payment_status"]
+          provider: string
+          requested_at: string
+          subscriber_id: string
+          subscription_id: string | null
+        }
+        Insert: {
+          amount: number
+          approved_at?: string | null
+          canceled_at?: string | null
+          created_at?: string
+          creator_id: string
+          failed_at?: string | null
+          failure_code?: string | null
+          failure_message?: string | null
+          id?: string
+          idempotency_key: string
+          metadata?: Json
+          order_id: string
+          payment_key?: string | null
+          payment_status?: Database["public"]["Enums"]["creator_subscription_payment_status"]
+          provider?: string
+          requested_at?: string
+          subscriber_id: string
+          subscription_id?: string | null
+        }
+        Update: {
+          amount?: number
+          approved_at?: string | null
+          canceled_at?: string | null
+          created_at?: string
+          creator_id?: string
+          failed_at?: string | null
+          failure_code?: string | null
+          failure_message?: string | null
+          id?: string
+          idempotency_key?: string
+          metadata?: Json
+          order_id?: string
+          payment_key?: string | null
+          payment_status?: Database["public"]["Enums"]["creator_subscription_payment_status"]
+          provider?: string
+          requested_at?: string
+          subscriber_id?: string
+          subscription_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_subscription_payment_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_subscription_payment_subscriber_id_fkey"
+            columns: ["subscriber_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_subscription_payment_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "creator_subscription"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       donation: {
         Row: {
           amount: number
@@ -1893,6 +1978,11 @@ export type Database = {
       }
     }
     Enums: {
+      creator_subscription_payment_status:
+        | "pending"
+        | "succeeded"
+        | "failed"
+        | "canceled"
       creator_subscription_status: "active" | "expired" | "canceled"
       gender: "male" | "female" | "none"
       live_chat_scope: "authenticated" | "follower" | "manager"
@@ -2035,6 +2125,12 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      creator_subscription_payment_status: [
+        "pending",
+        "succeeded",
+        "failed",
+        "canceled",
+      ],
       creator_subscription_status: ["active", "expired", "canceled"],
       gender: ["male", "female", "none"],
       live_chat_scope: ["authenticated", "follower", "manager"],

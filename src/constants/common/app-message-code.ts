@@ -228,6 +228,7 @@ export const APP_MESSAGE_CODE = {
     },
     live: {
       broadcastEnded: "info.live.broadcastEnded",
+      subscriptionPaymentCanceled: "info.live.subscriptionPaymentCanceled",
     },
   },
 } as const satisfies AppMessageCodeSchema<typeof APP_MESSAGE>;

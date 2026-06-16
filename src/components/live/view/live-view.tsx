@@ -2,7 +2,7 @@
 // 라이브 시청 메인 화면 — 비디오, 방송 정보, 채팅 패널을 조합합니다.
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { motion, useReducedMotion } from "motion/react";
 import { Timer, Users } from "lucide-react";
 import { ClipSection } from "@/components/clip/clip-section";
@@ -24,7 +24,9 @@ import { formatCount } from "@/utils/live/live-chat";
 import { useClipEditorStore } from "@/stores/clip-editor";
 import { useLiveTheaterStore } from "@/stores/live-theater";
 import { useLiveWatchSessionStore } from "@/stores/live-watch-session";
+import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { LIVE_LABEL } from "@/constants/live/live";
+import { toastAppError, toastAppInfo, toastAppSuccess } from "@/utils/common/toast-message";
 
 interface Props {
   creatorId: string;
@@ -106,6 +108,8 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
   const [isLoginPromptOpen, setIsLoginPromptOpen] = useState(false);
   const [isDesktopChatCollapsed, setIsDesktopChatCollapsed] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   // 클립 생성은 별도 라우트(/clip/editor)에서 진행한다 — 가위 클릭 시점의 스냅샷·제목을
   // store로 넘기고 이동한다(형제 라우트라 prop으로 못 잇는다).
   const setClipHandoff = useClipEditorStore((state) => state.setHandoff);
@@ -193,6 +197,28 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
 
   // 시청 화면을 떠나면 와이드 모드를 해제해, 목록 등 다른 라이브 화면에서 사이드바가 다시 보이게 한다.
   useEffect(() => () => setWideMode(false), [setWideMode]);
+
+  useEffect(() => {
+    const paymentStatus = searchParams.get("subscriptionPaymentStatus");
+
+    if (!paymentStatus) {
+      return;
+    }
+
+    if (paymentStatus === "subscription_succeeded") {
+      toastAppSuccess(APP_MESSAGE_CODE.success.live.subscribed);
+    } else if (paymentStatus === "subscription_canceled") {
+      toastAppInfo(APP_MESSAGE_CODE.info.live.subscriptionPaymentCanceled);
+    } else {
+      toastAppError(APP_MESSAGE_CODE.error.live.subscriptionFailed);
+    }
+
+    const nextParams = new URLSearchParams(searchParams.toString());
+    nextParams.delete("subscriptionPaymentStatus");
+    const nextQuery = nextParams.toString();
+
+    router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, { scroll: false });
+  }, [pathname, router, searchParams]);
 
   // 방송이 종료(시청 중 ended 포함)되면 와이드 모드를 풀어, 사이드바와 스트리머 정보 행이 다시 보이게 한다.
   const hasLiveBroadcast = !!broadcast;

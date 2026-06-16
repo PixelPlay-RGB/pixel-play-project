@@ -686,6 +686,10 @@ export const APP_MESSAGE = {
         title: "방송 종료",
         description: "방송이 종료되었습니다.",
       },
+      subscriptionPaymentCanceled: {
+        title: "구독 결제 취소",
+        description: "결제가 취소되어 구독이 시작되지 않았습니다.",
+      },
     },
   },
 } as const satisfies {
