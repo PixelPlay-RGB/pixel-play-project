@@ -311,7 +311,7 @@ function UserSubscriptionManagementDialog({
                         <div
                           key={month}
                           className={cn(
-                            "flex min-w-0 flex-col items-center gap-1.5 rounded-xl px-2 py-2 ring-1 transition-colors",
+                            "flex min-w-14 flex-col items-center gap-1.5 rounded-xl px-2 py-2 ring-1 transition-colors",
                             isCurrentBadge ? "bg-brand/10 ring-brand/30" : "ring-transparent",
                           )}
                         >
@@ -334,7 +334,7 @@ function UserSubscriptionManagementDialog({
                           </div>
                           <span
                             className={cn(
-                              "text-xs font-medium",
+                              "text-xs leading-none font-medium whitespace-nowrap",
                               isCurrentBadge ? "text-brand font-black" : "text-muted-foreground",
                             )}
                           >
