@@ -35,6 +35,7 @@ export function useLiveBroadcastView(creatorId: string) {
   const {
     data: watchData,
     isLoading,
+    isWatchSettled,
     error: watchError,
     refetch,
     endedElapsedSeconds,
@@ -46,6 +47,11 @@ export function useLiveBroadcastView(creatorId: string) {
 
   const [optimisticFollowing, setOptimisticFollowing] = useState<boolean | null>(null);
   const isFollowing = optimisticFollowing ?? watchData?.viewerRelation?.isFollowing ?? false;
+
+  // 매니저/강퇴 여부와 강퇴 권한(크리에이터 본인 또는 활성 매니저). 닉네임 팝업·차단 화면 분기에 쓴다(#118/#119).
+  const isManager = watchData?.viewerRelation?.isManager ?? false;
+  const isBanned = watchData?.viewerRelation?.isBanned ?? false;
+  const canModerate = (!!user?.id && user.id === creatorId) || isManager;
 
   // 채팅 규칙 게이트 통과 여부(메뉴 동의 칩 표시용) — 두 신호의 합집합.
   function onFollowToggled() {
@@ -246,6 +252,12 @@ export function useLiveBroadcastView(creatorId: string) {
     lastBroadcast,
     endedElapsedSeconds,
     creator,
+    // 강퇴/매니저 상태 — 차단 화면(isBanned)·닉네임 팝업 강퇴 게이트(canModerate).
+    isBanned,
+    // 서버 응답 확정 여부 — stale 캐시만으로 차단 다이얼로그가 깜빡이지 않게 하는 게이트(#119).
+    isWatchSettled,
+    canModerate,
+    viewerId: user?.id ?? null,
     messages,
     // 과거 채팅 적재(무한 스크롤) — 초기 50건 이후 위로 스크롤 시 50건씩, 누적 300건에서 중단.
     loadOlderMessages: messagesQuery.loadOlderMessages,

@@ -90,6 +90,8 @@ function getChatPlaceholder({
     // 규칙 미동의는 일반 채팅 placeholder를 유지하고, 클릭하면 동의 popover로 안내한다.
     case "chat_rule_acceptance_required":
       return LIVE_LABEL.chatPlaceholder;
+    case "banned":
+      return LIVE_LABEL.bannedChatPlaceholder;
     case "follower_required":
       return LIVE_LABEL.chatFollowerPlaceholder;
     case "follower_wait_required":

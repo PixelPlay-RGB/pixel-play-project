@@ -11,6 +11,7 @@ import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { toastAppInfo } from "@/utils/common/toast-message";
 import { normalizeLiveViewData } from "@/utils/live/live-view-data";
 import { isUuid } from "@/utils/common/uuid";
+import { useLiveBanEviction } from "@/hooks/live/use-live-ban-eviction";
 import type { LiveWatchData } from "@/types/live/live";
 
 export function useLiveViewData(creatorId: string) {
@@ -27,6 +28,10 @@ export function useLiveViewData(creatorId: string) {
     queryKey: QUERY_KEYS.live.watch(creatorId, user?.id),
     enabled: !isAuthLoading && isValidCreatorId,
     staleTime: 1000 * 30,
+    // 시청 화면 재진입 시 항상 서버 상태를 다시 확인한다 — 강퇴 캐시(setQueryData로 isBanned=true)가
+    // 해제 후에도 stale 로 남아, 백그라운드 refetch 동안 차단 다이얼로그가 0.5초 깜빡이는 문제를 막는다.
+    // (밴 상태는 입장마다 서버로 확정해야 하므로 always 가 정책적으로도 옳다.)
+    refetchOnMount: "always",
     queryFn: async () => {
       const [watchResult, countResult] = await Promise.all([
         supabase.rpc("get_live_watch", {
@@ -56,6 +61,14 @@ export function useLiveViewData(creatorId: string) {
 
   const broadcastId = query.data?.broadcast?.id;
   const watchKey = QUERY_KEYS.live.watch(creatorId, user?.id);
+
+  // 강퇴/해제 realtime 단독 소유 — 당사자에게만 전달되며, watch 캐시를 통해 메인+팝아웃이 함께 반응한다(#119).
+  useLiveBanEviction({
+    supabase,
+    queryClient,
+    creatorId,
+    viewerId: user?.id ?? null,
+  });
 
   // 방송 종료 처리: broadcast만 null로 비우고 creator는 남겨 종료 화면에서 채널 정보를 보여준다.
   // 멈춘 경과 시간은 ended_at(payload) − started_at(캐시)로 정확히 계산해 둔다(감지 지연 영향 없음).
@@ -123,6 +136,9 @@ export function useLiveViewData(creatorId: string) {
   return {
     data: query.data,
     isLoading: query.isLoading,
+    // 이번 마운트에서 서버 응답을 한 번이라도 받았는지 — stale 캐시(밴 해제 전 상태)만으로
+    // 차단 다이얼로그를 띄우지 않도록, 차단 표시 게이트로 쓴다(refetchOnMount:"always" 와 짝).
+    isWatchSettled: query.isFetchedAfterMount,
     error: query.error,
     refetch: query.refetch,
     endedElapsedSeconds,
