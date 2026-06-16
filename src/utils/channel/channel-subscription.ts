@@ -16,6 +16,7 @@ export interface ChannelSubscriberItem {
   id: string;
   subscriberId: string;
   nickname: string;
+  photoUrl: string | null;
   startedAt: string;
   endAt: string;
   totalMonths: number;

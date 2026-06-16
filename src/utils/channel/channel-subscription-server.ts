@@ -23,7 +23,7 @@ type CreatorSubscriptionRow = Pick<
   "id" | "subscriber_id" | "started_at" | "end_at" | "total_months" | "status"
 >;
 
-type SubscriberProfileRow = Pick<GenericTables<"user">, "id" | "nickname">;
+type SubscriberProfileRow = Pick<GenericTables<"user">, "id" | "nickname" | "photo_url">;
 
 const UNKNOWN_SUBSCRIBER_NICKNAME = "알 수 없음";
 
@@ -89,7 +89,7 @@ export async function getChannelSubscriptionSnapshot(): Promise<
 
   const { data: profiles, error: profileError } = await supabase
     .from("user")
-    .select("id, nickname")
+    .select("id, nickname, photo_url")
     .in("id", subscriberIds);
 
   if (profileError) {
@@ -97,19 +97,24 @@ export async function getChannelSubscriptionSnapshot(): Promise<
     return { success: false, code: APP_MESSAGE_CODE.error.channel.subscriptionLoadFailed };
   }
 
-  const nicknameById = new Map(
-    ((profiles ?? []) as SubscriberProfileRow[]).map((profile) => [profile.id, profile.nickname]),
+  const profileById = new Map(
+    ((profiles ?? []) as SubscriberProfileRow[]).map((profile) => [profile.id, profile]),
   );
 
-  const items: ChannelSubscriberItem[] = subscriptionRows.map((subscription) => ({
-    id: subscription.id,
-    subscriberId: subscription.subscriber_id,
-    nickname: nicknameById.get(subscription.subscriber_id) ?? UNKNOWN_SUBSCRIBER_NICKNAME,
-    startedAt: subscription.started_at,
-    endAt: subscription.end_at,
-    totalMonths: subscription.total_months,
-    status: subscription.status,
-  }));
+  const items: ChannelSubscriberItem[] = subscriptionRows.map((subscription) => {
+    const profile = profileById.get(subscription.subscriber_id);
+
+    return {
+      id: subscription.id,
+      subscriberId: subscription.subscriber_id,
+      nickname: profile?.nickname ?? UNKNOWN_SUBSCRIBER_NICKNAME,
+      photoUrl: profile?.photo_url ?? null,
+      startedAt: subscription.started_at,
+      endAt: subscription.end_at,
+      totalMonths: subscription.total_months,
+      status: subscription.status,
+    };
+  });
 
   return {
     success: true,

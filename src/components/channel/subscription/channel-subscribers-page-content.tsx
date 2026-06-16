@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 
 import { SettingsCard } from "@/components/common/settings-card";
 import { SettingsPage } from "@/components/common/settings-page";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -16,14 +17,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import type {
+  ChannelSubscriberItem,
   ChannelSubscriberSort,
   ChannelSubscriptionSnapshot,
   ChannelSubscriptionStatus,
 } from "@/utils/channel/channel-subscription";
 import { filterAndSortChannelSubscribers } from "@/utils/channel/channel-subscription";
 import { formatKstDateTimeNumeric } from "@/utils/common/date";
+import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
 
 const SORT_OPTIONS: { value: ChannelSubscriberSort; label: string }[] = [
   { value: "started_desc", label: "최근 시작순" },
@@ -39,11 +50,40 @@ const STATUS_BADGE: Record<ChannelSubscriptionStatus, { label: string; className
   canceled: { label: "해지 예약", className: "bg-warning/15 text-warning" },
 };
 
-const TH_CLASS = "text-muted-foreground px-4 py-3 text-xs font-semibold";
-const TD_CLASS = "px-4 py-3.5 align-middle";
-
 interface Props {
   snapshot: ChannelSubscriptionSnapshot;
+}
+
+function SubscriberIdentity({ subscriber }: { subscriber: ChannelSubscriberItem }) {
+  return (
+    <div className="flex min-w-0 items-center gap-3">
+      <Avatar className="size-9 shrink-0">
+        <AvatarImage src={getAvatarImageSrc(subscriber.photoUrl)} alt="" />
+        <AvatarFallback>{getAvatarFallbackText(subscriber.nickname)}</AvatarFallback>
+      </Avatar>
+      <div className="min-w-0">
+        <p className="text-foreground truncate font-medium">{subscriber.nickname}</p>
+        <p className="text-muted-foreground truncate font-mono text-xs">
+          {subscriber.subscriberId}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function SubscriptionStatusBadge({ status }: { status: ChannelSubscriptionStatus }) {
+  const badge = STATUS_BADGE[status];
+
+  return (
+    <span
+      className={cn(
+        "inline-flex rounded-full px-2.5 py-0.5 text-xs font-bold whitespace-nowrap",
+        badge.className,
+      )}
+    >
+      {badge.label}
+    </span>
+  );
 }
 
 export function ChannelSubscribersPageContent({ snapshot }: Props) {
@@ -145,59 +185,64 @@ export function ChannelSubscribersPageContent({ snapshot }: Props) {
             <p className="text-muted-foreground text-sm">{emptyMessage}</p>
           </div>
         ) : (
-          <div className="ring-foreground/10 overflow-hidden rounded-xl ring-1">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-160 text-sm">
-                <thead className="bg-muted/40">
-                  <tr>
-                    <th className={cn(TH_CLASS, "text-left")}>닉네임</th>
-                    <th className={cn(TH_CLASS, "text-right")}>구독 시작일</th>
-                    <th className={cn(TH_CLASS, "text-right")}>구독 기간</th>
-                    <th className={cn(TH_CLASS, "text-right")}>상태</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {subscribers.map((subscriber) => {
-                    const badge = STATUS_BADGE[subscriber.status];
-
-                    return (
-                      <tr key={subscriber.id} className="border-border/60 border-t">
-                        <td className={cn(TD_CLASS, "max-w-0 truncate font-bold")}>
-                          {subscriber.nickname}
-                        </td>
-                        <td
-                          className={cn(
-                            TD_CLASS,
-                            "text-muted-foreground text-right whitespace-nowrap",
-                          )}
-                        >
-                          {formatKstDateTimeNumeric(subscriber.startedAt)}
-                        </td>
-                        <td
-                          className={cn(
-                            TD_CLASS,
-                            "text-right font-black whitespace-nowrap tabular-nums",
-                          )}
-                        >
-                          {subscriber.totalMonths.toLocaleString("ko-KR")}개월
-                        </td>
-                        <td className={cn(TD_CLASS, "text-right")}>
-                          <span
-                            className={cn(
-                              "inline-flex rounded-full px-2.5 py-0.5 text-xs font-bold whitespace-nowrap",
-                              badge.className,
-                            )}
-                          >
-                            {badge.label}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+          <>
+            <div className="ring-foreground/10 bg-card hidden overflow-hidden rounded-xl shadow-sm ring-1 md:block">
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead scope="col">닉네임</TableHead>
+                    <TableHead scope="col" className="text-center">
+                      구독 시작일
+                    </TableHead>
+                    <TableHead scope="col" className="text-center">
+                      구독 기간
+                    </TableHead>
+                    <TableHead scope="col" className="text-center">
+                      상태
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {subscribers.map((subscriber) => (
+                    <TableRow key={subscriber.id} className="hover:bg-transparent">
+                      <TableCell>
+                        <SubscriberIdentity subscriber={subscriber} />
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-center tabular-nums">
+                        {formatKstDateTimeNumeric(subscriber.startedAt)}
+                      </TableCell>
+                      <TableCell className="text-center font-black tabular-nums">
+                        {subscriber.totalMonths.toLocaleString("ko-KR")}개월
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <SubscriptionStatusBadge status={subscriber.status} />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
-          </div>
+
+            <ul className="flex flex-col gap-3 md:hidden">
+              {subscribers.map((subscriber) => (
+                <li
+                  key={subscriber.id}
+                  className="ring-foreground/10 bg-card flex flex-col gap-3 rounded-xl p-4 shadow-sm ring-1"
+                >
+                  <SubscriberIdentity subscriber={subscriber} />
+                  <div className="text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+                    <span className="tabular-nums">
+                      시작 {formatKstDateTimeNumeric(subscriber.startedAt)}
+                    </span>
+                    <span className="text-foreground font-black tabular-nums">
+                      {subscriber.totalMonths.toLocaleString("ko-KR")}개월
+                    </span>
+                    <SubscriptionStatusBadge status={subscriber.status} />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </>
         )}
       </SettingsCard>
     </SettingsPage>
