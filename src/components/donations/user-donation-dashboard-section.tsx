@@ -19,7 +19,6 @@ const GRAPH_CARD_TITLE: Record<DonationHistoryTab, string> = {
   all: "전체 그래프",
   charge: "충전 내역 그래프",
   donation: "후원 내역 그래프",
-  subscription: "구독 결제 그래프",
 };
 
 export function UserDonationDashboardSection({ snapshot }: Props) {

@@ -27,8 +27,6 @@ interface DonationDailyChartItem {
   chargeCount: number;
   donationAmount: number;
   donationCount: number;
-  subscriptionAmount: number;
-  subscriptionCount: number;
 }
 
 const DONATION_DAILY_CHART_CONFIG = {
@@ -40,17 +38,12 @@ const DONATION_DAILY_CHART_CONFIG = {
     label: "방송후원",
     color: "var(--live)",
   },
-  subscriptionAmount: {
-    label: "구독 결제",
-    color: "var(--warning)",
-  },
 } satisfies ChartConfig;
 
 const CHART_HEADER_LABEL: Record<DonationHistoryTab, string> = {
   all: "전체 내역",
   charge: "후원금 충전",
   donation: "방송후원",
-  subscription: "구독 결제",
 };
 
 const KST_DATE_FORMATTER = new Intl.DateTimeFormat("en-US", {
@@ -65,10 +58,8 @@ export function UserDonationDailyChart({ snapshot, activeTab }: Props) {
   const chartData = useMemo(() => buildDonationDailyChartData(snapshot), [snapshot]);
   const chargeTotal = chartData.reduce((total, item) => total + item.chargeAmount, 0);
   const donationTotal = chartData.reduce((total, item) => total + item.donationAmount, 0);
-  const subscriptionTotal = chartData.reduce((total, item) => total + item.subscriptionAmount, 0);
   const chargeCount = chartData.reduce((total, item) => total + item.chargeCount, 0);
   const donationCount = chartData.reduce((total, item) => total + item.donationCount, 0);
-  const subscriptionCount = chartData.reduce((total, item) => total + item.subscriptionCount, 0);
   const chartWidth = Math.max(chartData.length * getChartDayWidth(activeTab), 360);
   const periodLabel = `${snapshot.historyPeriod.year}년 ${snapshot.historyPeriod.month}월`;
 
@@ -125,11 +116,10 @@ export function UserDonationDailyChart({ snapshot, activeTab }: Props) {
             activeTab={activeTab}
             chargeTotal={chargeTotal}
             donationTotal={donationTotal}
-            subscriptionTotal={subscriptionTotal}
           />
         </div>
         <p className="text-muted-foreground shrink-0 text-xs font-semibold">
-          {formatChartCount(activeTab, chargeCount, donationCount, subscriptionCount)}
+          {formatChartCount(activeTab, chargeCount, donationCount)}
         </p>
       </div>
 
@@ -188,14 +178,6 @@ export function UserDonationDailyChart({ snapshot, activeTab }: Props) {
                   maxBarSize={30}
                 />
               ) : null}
-              {activeTab === "all" || activeTab === "subscription" ? (
-                <Bar
-                  dataKey="subscriptionAmount"
-                  fill="var(--color-subscriptionAmount)"
-                  radius={[6, 6, 0, 0]}
-                  maxBarSize={30}
-                />
-              ) : null}
             </BarChart>
           </ChartContainer>
         </div>
@@ -207,9 +189,6 @@ export function UserDonationDailyChart({ snapshot, activeTab }: Props) {
         ) : null}
         {activeTab === "all" || activeTab === "donation" ? (
           <ChartLegendItem label="방송후원" className="bg-live" />
-        ) : null}
-        {activeTab === "all" || activeTab === "subscription" ? (
-          <ChartLegendItem label="구독 결제" className="bg-warning" />
         ) : null}
       </div>
     </div>
@@ -230,8 +209,6 @@ function buildDonationDailyChartData(snapshot: UserDonationSnapshot): DonationDa
     chargeCount: 0,
     donationAmount: 0,
     donationCount: 0,
-    subscriptionAmount: 0,
-    subscriptionCount: 0,
   }));
 
   snapshot.chargeHistories
@@ -297,8 +274,8 @@ function buildDonationDailyChartData(snapshot: UserDonationSnapshot): DonationDa
         return;
       }
 
-      dayItem.subscriptionAmount += subscription.amount;
-      dayItem.subscriptionCount += 1;
+      dayItem.donationAmount += subscription.amount;
+      dayItem.donationCount += 1;
     });
 
   return chartData;
@@ -336,12 +313,7 @@ function formatTooltipValue(value: TooltipValueType | undefined, item: TooltipPa
   const chartItem = item.payload as DonationDailyChartItem | undefined;
   const amount = readTooltipNumber(value);
   const key = String(item.dataKey ?? "");
-  const count =
-    key === "chargeAmount"
-      ? chartItem?.chargeCount
-      : key === "subscriptionAmount"
-        ? chartItem?.subscriptionCount
-        : chartItem?.donationCount;
+  const count = key === "chargeAmount" ? chartItem?.chargeCount : chartItem?.donationCount;
 
   return `${formatPoint(amount)} (${count ?? 0}건)`;
 }
@@ -374,12 +346,10 @@ function ChartTotalSummary({
   activeTab,
   chargeTotal,
   donationTotal,
-  subscriptionTotal,
 }: {
   activeTab: DonationHistoryTab;
   chargeTotal: number;
   donationTotal: number;
-  subscriptionTotal: number;
 }) {
   if (activeTab === "charge") {
     return (
@@ -397,19 +367,10 @@ function ChartTotalSummary({
     );
   }
 
-  if (activeTab === "subscription") {
-    return (
-      <p className="text-warning mt-1 text-2xl leading-tight font-black">
-        {formatPoint(subscriptionTotal)}
-      </p>
-    );
-  }
-
   return (
     <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
       <p className="text-brand text-sm font-black">충전 {formatPoint(chargeTotal)}</p>
       <p className="text-live text-sm font-black">후원 {formatPoint(donationTotal)}</p>
-      <p className="text-warning text-sm font-black">구독 {formatPoint(subscriptionTotal)}</p>
     </div>
   );
 }
@@ -427,7 +388,6 @@ function formatChartCount(
   activeTab: DonationHistoryTab,
   chargeCount: number,
   donationCount: number,
-  subscriptionCount: number,
 ) {
   if (activeTab === "charge") {
     return `${chargeCount}건`;
@@ -437,9 +397,5 @@ function formatChartCount(
     return `${donationCount}건`;
   }
 
-  if (activeTab === "subscription") {
-    return `${subscriptionCount}건`;
-  }
-
-  return `${chargeCount + donationCount + subscriptionCount}건`;
+  return `${chargeCount + donationCount}건`;
 }
