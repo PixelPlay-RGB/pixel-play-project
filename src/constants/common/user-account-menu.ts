@@ -56,6 +56,14 @@ export const createMyChannelMenuItem = (userId: string): UserAccountLinkMenuItem
   icon: Tv,
 });
 
+export const USER_ACCOUNT_CHANNEL_SUBSCRIPTION_MENU_ITEM: UserAccountLinkMenuItem = {
+  type: "link",
+  id: "channelSubscriptions",
+  label: "구독",
+  href: "/channel/subscribers",
+  icon: BadgeCheck,
+};
+
 export const USER_ACCOUNT_DONATION_MENU_ITEM: UserAccountLinkMenuItem = {
   type: "link",
   id: "donations",
