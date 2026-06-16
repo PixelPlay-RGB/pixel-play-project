@@ -4,7 +4,7 @@
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import { useMemo, useState, useTransition } from "react";
-import { BadgeCheck, CalendarDays, Gift, Sparkles } from "lucide-react";
+import { BadgeCheck, CalendarDays, Sparkles } from "lucide-react";
 
 import { subscribeCreatorAction } from "@/actions/live/live";
 import { cancelCreatorSubscriptionAction } from "@/actions/user/subscription";
@@ -39,7 +39,7 @@ import {
 import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
 import { canStartCreatorSubscription } from "@/utils/subscriptions/user-subscription-status";
 
-type UserSubscriptionTab = "active" | "expired" | "gift";
+type UserSubscriptionTab = "active" | "expired";
 
 interface Props {
   snapshot: UserSubscriptionSnapshot | null;
@@ -55,7 +55,6 @@ const PAGE_HEADER = {
 const TAB_ITEMS: Array<{ value: UserSubscriptionTab; label: string }> = [
   { value: "active", label: "구독중인 채널" },
   { value: "expired", label: "만료된 구독" },
-  { value: "gift", label: "선물 내역" },
 ];
 
 const STATUS_META: Record<
@@ -87,19 +86,13 @@ export function UserSubscriptionsPage({ snapshot, errorCode }: Props) {
   }
 
   const currentItems =
-    tab === "active"
-      ? snapshot.activeSubscriptions
-      : tab === "expired"
-        ? snapshot.expiredSubscriptions
-        : [];
+    tab === "active" ? snapshot.activeSubscriptions : snapshot.expiredSubscriptions;
 
   return (
     <SettingsPage {...PAGE_HEADER}>
-      <SubscriptionGiftBanner />
-
       <SettingsCard contentClassName="gap-6">
         <Tabs value={tab} onValueChange={(value) => setTab(value as UserSubscriptionTab)}>
-          <TabsList className="grid w-full grid-cols-3 sm:w-fit">
+          <TabsList className="grid w-full grid-cols-2 sm:w-fit">
             {TAB_ITEMS.map((item) => (
               <TabsTrigger key={item.value} value={item.value} className="min-w-0 px-2 sm:px-4">
                 <span className="truncate">{item.label}</span>
@@ -131,27 +124,6 @@ export function UserSubscriptionsPage({ snapshot, errorCode }: Props) {
   );
 }
 
-function SubscriptionGiftBanner() {
-  return (
-    <section className="border-border bg-card flex flex-col gap-4 rounded-xl border p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex min-w-0 items-center gap-4">
-        <div className="bg-brand/10 text-brand flex size-12 shrink-0 items-center justify-center rounded-xl">
-          <Gift className="size-6" />
-        </div>
-        <div className="min-w-0">
-          <h2 className="text-foreground text-base font-black">
-            좋아하는 스트리머의 구독권을 선물해 보세요.
-          </h2>
-          <p className="text-brand mt-1 text-sm font-bold">내 마음이 더 소중하게 전달됩니다.</p>
-        </div>
-      </div>
-      <Button type="button" variant="secondary" disabled className="w-full sm:w-auto">
-        선물하기 준비 중
-      </Button>
-    </section>
-  );
-}
-
 function SubscriptionList({
   tab,
   items,
@@ -161,10 +133,6 @@ function SubscriptionList({
   items: UserSubscriptionItem[];
   onManage: (subscription: UserSubscriptionItem) => void;
 }) {
-  if (tab === "gift") {
-    return <SubscriptionEmptyState title="아직 선물 내역이 없습니다." />;
-  }
-
   if (items.length === 0) {
     return (
       <SubscriptionEmptyState
@@ -481,8 +449,8 @@ function SubscriptionPolicyNotice() {
 
 function getTabCount(snapshot: UserSubscriptionSnapshot, value: UserSubscriptionTab) {
   if (value === "active") return snapshot.activeSubscriptions.length;
-  if (value === "expired") return snapshot.expiredSubscriptions.length;
-  return 0;
+
+  return snapshot.expiredSubscriptions.length;
 }
 
 function getSubscriptionStatusMeta(subscription: UserSubscriptionItem) {
