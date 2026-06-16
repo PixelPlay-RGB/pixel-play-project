@@ -284,7 +284,11 @@ export function SubscriptionBadgeRegistrationDialog({ open, onOpenChange }: Prop
             >
               취소
             </Button>
-            <Button type="submit" className="h-10 min-w-28 font-black" disabled={isPending}>
+            <Button
+              type="submit"
+              className="bg-brand hover:bg-brand/90 text-brand-foreground hover:text-brand-foreground shadow-brand/20 h-10 min-w-28 rounded-xl font-black shadow-sm"
+              disabled={isPending}
+            >
               <Upload className="size-4" />
               {isPending ? "등록 중" : "등록하기"}
             </Button>
