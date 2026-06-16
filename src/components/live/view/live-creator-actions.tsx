@@ -62,7 +62,7 @@ export function LiveCreatorActions({
   const isSubscriptionButtonDisabled = subscriptionButtonAction === "disabled";
   const isRenewalCanceled = isSubscribed && subscriptionStatus === "canceled";
   const subscribeLabel = isRenewalCanceled
-    ? "다시 구독"
+    ? LIVE_LABEL.subscribe
     : isSubscribed
       ? LIVE_LABEL.subscribed
       : LIVE_LABEL.subscribe;
