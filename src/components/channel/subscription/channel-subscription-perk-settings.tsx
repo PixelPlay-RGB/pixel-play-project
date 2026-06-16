@@ -7,14 +7,23 @@ import { useState } from "react";
 import { SubscriptionBadgeRegistrationDialog } from "@/components/channel/subscription/channel-subscription-badge-registration-dialog";
 import { LiveSubscriptionBadge } from "@/components/live/chat/live-subscription-badge";
 import { Button } from "@/components/ui/button";
+import { buildLiveSubscriptionBadgeMonths } from "@/utils/live/live-subscription-badge";
 
 interface Props {
   creatorId: string;
   customMonths: number[];
+  subscriptionBadgeVersion: string | null;
+  subscriptionBadgeImageSources: Record<number, string>;
 }
 
-export function ChannelSubscriptionPerkSettings({ creatorId, customMonths }: Props) {
+export function ChannelSubscriptionPerkSettings({
+  creatorId,
+  customMonths,
+  subscriptionBadgeVersion,
+  subscriptionBadgeImageSources,
+}: Props) {
   const [badgeDialogOpen, setBadgeDialogOpen] = useState(false);
+  const badgeMonths = buildLiveSubscriptionBadgeMonths(customMonths);
 
   return (
     <div className="flex flex-col gap-10">
@@ -29,17 +38,25 @@ export function ChannelSubscriptionPerkSettings({ creatorId, customMonths }: Pro
         <div className="bg-card min-h-48 rounded-xl p-5 shadow-sm ring-1 ring-black/5 sm:p-7">
           <h3 className="text-foreground text-base font-black">사용중인 구독뱃지</h3>
 
-          <div className="mt-8 flex w-fit flex-col items-center gap-2 px-4">
-            <LiveSubscriptionBadge
-              creatorId={creatorId}
-              totalMonths={1}
-              customMonths={customMonths}
-              size="lg"
-            />
-            <div className="text-center leading-5">
-              <p className="text-foreground text-sm font-bold">기본</p>
-              <p className="text-muted-foreground text-xs">(1개월)</p>
-            </div>
+          <div className="mt-8 grid grid-cols-3 gap-x-5 gap-y-6 sm:grid-cols-5 lg:grid-cols-7">
+            {badgeMonths.map((month) => (
+              <div key={month} className="flex min-w-0 flex-col items-center gap-2">
+                <LiveSubscriptionBadge
+                  creatorId={creatorId}
+                  totalMonths={month}
+                  customMonths={customMonths}
+                  version={subscriptionBadgeVersion}
+                  imageSourcesByMonth={subscriptionBadgeImageSources}
+                  size="lg"
+                />
+                <div className="text-center leading-5">
+                  <p className="text-foreground text-sm font-bold">
+                    {month === 1 ? "기본" : `${month}개월`}
+                  </p>
+                  <p className="text-muted-foreground text-xs">({month}개월)</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>

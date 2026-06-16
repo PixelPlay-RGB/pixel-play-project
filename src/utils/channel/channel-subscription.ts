@@ -24,6 +24,8 @@ export interface ChannelSubscriptionSnapshot {
   activeCount: number;
   subscribers: ChannelSubscriberItem[];
   customBadgeMonths: number[];
+  subscriptionBadgeVersion: string | null;
+  subscriptionBadgeImageSources: Record<number, string>;
 }
 
 interface FilterAndSortOptions {
@@ -89,6 +91,8 @@ export function buildChannelSubscriptionSnapshot(
   options: {
     creatorId?: string;
     customBadgeMonths?: readonly number[];
+    subscriptionBadgeVersion?: string | null;
+    subscriptionBadgeImageSources?: Record<number, string>;
   } = {},
 ): ChannelSubscriptionSnapshot {
   return {
@@ -99,5 +103,7 @@ export function buildChannelSubscriptionSnapshot(
       sort: "started_desc",
     }),
     customBadgeMonths: [...(options.customBadgeMonths ?? [])],
+    subscriptionBadgeVersion: options.subscriptionBadgeVersion ?? null,
+    subscriptionBadgeImageSources: { ...(options.subscriptionBadgeImageSources ?? {}) },
   };
 }

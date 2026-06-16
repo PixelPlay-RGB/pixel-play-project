@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import {
+  buildChannelSubscriptionSnapshot,
   filterAndSortChannelSubscribers,
   getActiveChannelSubscriberCount,
   type ChannelSubscriberItem,
@@ -79,4 +80,22 @@ test("filterAndSortChannelSubscribers sorts without mutating the source list", (
     SUBSCRIBERS.map((item) => item.id),
     ["sub-1", "sub-2", "sub-3", "sub-4"],
   );
+});
+
+test("buildChannelSubscriptionSnapshot keeps subscription badge image cache data", () => {
+  const snapshot = buildChannelSubscriptionSnapshot([], NOW, {
+    creatorId: "creator-1",
+    customBadgeMonths: [24],
+    subscriptionBadgeVersion: "2026-06-15T03:00:00.000Z",
+    subscriptionBadgeImageSources: {
+      1: "/subscription-badges/1.png",
+      2: "https://example.supabase.co/storage/v1/object/public/user-media/creator-1/subscription/2.png",
+    },
+  });
+
+  assert.equal(snapshot.subscriptionBadgeVersion, "2026-06-15T03:00:00.000Z");
+  assert.deepEqual(snapshot.subscriptionBadgeImageSources, {
+    1: "/subscription-badges/1.png",
+    2: "https://example.supabase.co/storage/v1/object/public/user-media/creator-1/subscription/2.png",
+  });
 });

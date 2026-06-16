@@ -2,6 +2,7 @@
 // 구독 리워드 이미지 업로드 모달에서 공통으로 쓰는 입력 컨트롤을 렌더링합니다.
 
 import { Info, Plus } from "lucide-react";
+import Image from "next/image";
 import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -19,23 +20,39 @@ export function LargeUploadButton({
   label,
   detail,
   fileName,
+  previewSrc,
   onClick,
 }: {
   label: string;
   detail: string;
   fileName?: string;
+  previewSrc?: string | null;
   onClick: () => void;
 }) {
+  const hasFile = Boolean(fileName || previewSrc);
+
   return (
     <button
       type="button"
       className={cn(
         "border-border hover:border-primary/60 hover:bg-primary/5 flex min-h-30 w-full flex-col items-center justify-center gap-2 rounded-lg border border-dashed p-4 transition-colors",
-        fileName && "border-primary/40 bg-primary/5",
+        hasFile && "border-primary/40 bg-primary/5",
       )}
       onClick={onClick}
     >
-      <Plus className="text-muted-foreground size-9" aria-hidden />
+      {previewSrc ? (
+        <Image
+          src={previewSrc}
+          alt=""
+          aria-hidden
+          width={60}
+          height={60}
+          unoptimized
+          className="border-border bg-background size-15 rounded-md border object-cover"
+        />
+      ) : (
+        <Plus className="text-muted-foreground size-9" aria-hidden />
+      )}
       <span className="text-muted-foreground max-w-full truncate text-sm font-black">
         {fileName ? fileName : label}
       </span>

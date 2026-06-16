@@ -3,7 +3,7 @@
 
 import { useRouter } from "next/navigation";
 import { Upload } from "lucide-react";
-import { useRef, useState, useTransition, type FormEvent } from "react";
+import { useEffect, useRef, useState, useTransition, type FormEvent } from "react";
 
 import { uploadChannelSubscriptionBadgeAction } from "@/actions/channel/subscription-badge";
 import {
@@ -21,6 +21,15 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectIcon,
+  SelectItem,
+  SelectList,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { FORM_MESSAGE } from "@/constants/common/form-message";
 import { toastAppError, toastAppSuccess } from "@/utils/common/toast-message";
@@ -34,14 +43,74 @@ interface Props {
   onOpenChange: (open: boolean) => void;
 }
 
+const DEFAULT_BADGE_MONTH = "1";
+const CUSTOM_MONTH_OPTION_VALUE = "custom";
+
+const BADGE_MONTH_OPTIONS = [
+  { value: "1", label: "1개월" },
+  { value: "2", label: "2개월" },
+  { value: "3", label: "3개월" },
+  { value: "6", label: "6개월" },
+  { value: "9", label: "9개월" },
+  { value: "12", label: "12개월" },
+  { value: "18", label: "18개월" },
+  { value: CUSTOM_MONTH_OPTION_VALUE, label: "직접 입력" },
+] as const;
+
 export function SubscriptionBadgeRegistrationDialog({ open, onOpenChange }: Props) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [month, setMonth] = useState("1");
+  const [month, setMonth] = useState(DEFAULT_BADGE_MONTH);
+  const [monthSelectValue, setMonthSelectValue] = useState(DEFAULT_BADGE_MONTH);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewSrc, setPreviewSrc] = useState<string | null>(null);
   const [agreed, setAgreed] = useState(false);
   const [fieldError, setFieldError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const isCustomMonth = monthSelectValue === CUSTOM_MONTH_OPTION_VALUE;
+
+  useEffect(() => {
+    if (!previewSrc) return;
+
+    return () => URL.revokeObjectURL(previewSrc);
+  }, [previewSrc]);
+
+  function resetForm() {
+    setMonth(DEFAULT_BADGE_MONTH);
+    setMonthSelectValue(DEFAULT_BADGE_MONTH);
+    setSelectedFile(null);
+    setPreviewSrc(null);
+    setAgreed(false);
+    setFieldError(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  }
+
+  function handleOpenChange(nextOpen: boolean) {
+    if (!nextOpen) {
+      resetForm();
+    }
+    onOpenChange(nextOpen);
+  }
+
+  function handleMonthSelect(nextValue: string) {
+    setMonthSelectValue(nextValue);
+    setFieldError(null);
+
+    if (nextValue === CUSTOM_MONTH_OPTION_VALUE) {
+      setMonth("");
+      return;
+    }
+
+    setMonth(nextValue);
+  }
+
+  function handleFileChange(file: File | null) {
+    setSelectedFile(file);
+    setPreviewSrc(file ? URL.createObjectURL(file) : null);
+    setFieldError(null);
+  }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -74,7 +143,7 @@ export function SubscriptionBadgeRegistrationDialog({ open, onOpenChange }: Prop
         }
 
         toastAppSuccess(result.code ?? APP_MESSAGE_CODE.success.channel.subscriptionBadgeSaved);
-        onOpenChange(false);
+        handleOpenChange(false);
         router.refresh();
       } catch (error) {
         console.error("구독뱃지 등록 실패", error);
@@ -84,7 +153,7 @@ export function SubscriptionBadgeRegistrationDialog({ open, onOpenChange }: Prop
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-h-[calc(100vh-2rem)] gap-0 overflow-y-auto p-0 sm:max-w-md">
         <DialogHeader className="px-7 pt-8 pb-4">
           <DialogTitle className="text-xl font-black">구독뱃지 등록</DialogTitle>
@@ -98,21 +167,47 @@ export function SubscriptionBadgeRegistrationDialog({ open, onOpenChange }: Prop
             <label htmlFor="subscription-badge-month" className="text-sm font-black">
               구독뱃지 개월 수
             </label>
-            <div className="flex items-center gap-2">
-              <Input
+            <Select
+              value={monthSelectValue}
+              items={BADGE_MONTH_OPTIONS}
+              onValueChange={(nextValue) => handleMonthSelect(String(nextValue))}
+            >
+              <SelectTrigger
                 id="subscription-badge-month"
-                type="number"
-                min={1}
-                max={120}
-                value={month}
-                onChange={(event) => {
-                  setMonth(event.target.value);
-                  setFieldError(null);
-                }}
-                className="h-11 w-20"
-              />
-              <span className="text-sm">개월</span>
-            </div>
+                aria-label="구독뱃지 개월 수"
+                className="h-11 w-full sm:w-40"
+              >
+                <SelectValue />
+                <SelectIcon />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectList>
+                  {BADGE_MONTH_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value} label={option.label}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectList>
+              </SelectContent>
+            </Select>
+            {isCustomMonth ? (
+              <div className="flex items-center gap-2">
+                <Input
+                  id="subscription-badge-custom-month"
+                  type="number"
+                  min={19}
+                  max={120}
+                  value={month}
+                  onChange={(event) => {
+                    setMonth(event.target.value);
+                    setFieldError(null);
+                  }}
+                  placeholder="예: 24"
+                  className="h-11 w-28"
+                />
+                <span className="text-sm">개월</span>
+              </div>
+            ) : null}
           </div>
 
           <div className="flex flex-col gap-2">
@@ -137,14 +232,14 @@ export function SubscriptionBadgeRegistrationDialog({ open, onOpenChange }: Prop
               accept="image/png"
               className="hidden"
               onChange={(event) => {
-                setSelectedFile(event.target.files?.[0] ?? null);
-                setFieldError(null);
+                handleFileChange(event.target.files?.[0] ?? null);
               }}
             />
             <LargeUploadButton
               label="이미지 업로드"
               detail={`(${CHANNEL_SUBSCRIPTION_BADGE_IMAGE_SIZE}*${CHANNEL_SUBSCRIPTION_BADGE_IMAGE_SIZE}px)`}
               fileName={selectedFile?.name}
+              previewSrc={previewSrc}
               onClick={() => fileInputRef.current?.click()}
             />
           </div>
