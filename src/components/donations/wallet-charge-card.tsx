@@ -22,13 +22,19 @@ import {
   WALLET_CHARGE_STEP_AMOUNT,
 } from "@/constants/payments/wallet-charge";
 import { cn } from "@/lib/utils";
-import type { TossPaymentPrepareResponse } from "@/types/payments/toss-payment-api";
 import type {
   TossPaymentsPaymentWindow,
   TossPaymentsWidgets,
 } from "@/types/payments/toss-payments";
 import { getAppMessage } from "@/utils/common/app-message";
+import { toastAppError, toastAppInfo } from "@/utils/common/toast-message";
 import { formatPoint } from "@/utils/donations/format";
+import { TOSS_PAYMENTS_SDK_URL } from "@/utils/payments/toss-sdk";
+import {
+  isTossPaymentCancelError,
+  isValidChargeAmount,
+  prepareTossWalletCharge,
+} from "@/utils/payments/toss-wallet-charge-client";
 import { CreditCard, Loader2 } from "lucide-react";
 import Script from "next/script";
 import { FormEvent, useEffect, useId, useMemo, useRef, useState } from "react";
@@ -44,8 +50,6 @@ interface WalletChargeDialogProps {
 }
 
 type PaymentWindowState = "idle" | "initializing" | "ready" | "opening" | "failed";
-
-const TOSS_PAYMENTS_SDK_URL = "https://js.tosspayments.com/v2/standard";
 
 export function WalletChargeDialog({ customerKey, className }: WalletChargeDialogProps) {
   const trigger = (
@@ -213,9 +217,17 @@ export function WalletChargeCard({ customerKey, variant = "card" }: Props) {
             failUrl: `${window.location.origin}/user/donations/toss/fail`,
           });
         } catch (error) {
-          console.error("Toss Payments 결제위젯 결제 요청 실패", error);
+          // 사용자가 결제창을 닫으면(취소) requestPayment가 reject한다 — 에러가 아니므로
+          // 콘솔 에러/실패 상태 대신 안내 토스트만 띄우고 다시 결제할 수 있게 ready로 되돌린다.
           hasRequestedPayment = false;
+          if (isTossPaymentCancelError(error)) {
+            toastAppInfo(APP_MESSAGE_CODE.error.donation.chargeCanceled);
+            setPaymentWindowState("ready");
+            return;
+          }
+          console.error("Toss Payments 결제위젯 결제 요청 실패", error);
           setPaymentWindowState("failed");
+          toastAppError(APP_MESSAGE_CODE.error.donation.chargeFailed);
         }
       });
 
@@ -223,6 +235,7 @@ export function WalletChargeCard({ customerKey, variant = "card" }: Props) {
     } catch (error) {
       console.error("Toss Payments 결제창 요청 실패", error);
       setPaymentWindowState("failed");
+      toastAppError(APP_MESSAGE_CODE.error.donation.chargeFailed);
     }
   };
 
@@ -375,50 +388,4 @@ function getPaymentStateMessage(clientKey: string | undefined, state: PaymentWin
   }
 
   return "";
-}
-
-async function prepareTossWalletCharge(amount: number) {
-  const response = await fetch("/api/payments/toss/prepare", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ amount }),
-  });
-
-  if (!response.ok) {
-    throw new Error("Toss 결제 준비 실패");
-  }
-
-  const data = (await response.json()) as unknown;
-
-  if (!isTossPaymentPrepareResponse(data)) {
-    throw new Error("Toss 결제 준비 응답 형식 오류");
-  }
-
-  return data;
-}
-
-function isTossPaymentPrepareResponse(value: unknown): value is TossPaymentPrepareResponse {
-  if (!value || typeof value !== "object") {
-    return false;
-  }
-
-  const response = value as Partial<TossPaymentPrepareResponse>;
-
-  return (
-    typeof response.orderId === "string" &&
-    typeof response.orderName === "string" &&
-    isValidChargeAmount(response.amount)
-  );
-}
-
-function isValidChargeAmount(value: number | undefined) {
-  return (
-    typeof value === "number" &&
-    Number.isInteger(value) &&
-    value >= WALLET_CHARGE_MIN_AMOUNT &&
-    value <= WALLET_CHARGE_MAX_AMOUNT &&
-    value % WALLET_CHARGE_STEP_AMOUNT === 0
-  );
 }

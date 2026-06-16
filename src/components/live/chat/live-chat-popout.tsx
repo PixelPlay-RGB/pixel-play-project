@@ -34,6 +34,7 @@ export function LiveChatPopout({ creatorId }: Props) {
     walletBalance,
     isWalletLoading,
     isWalletError,
+    viewerId,
     donationEnabled,
     donationMinAmount,
     chatState,
@@ -98,6 +99,8 @@ export function LiveChatPopout({ creatorId }: Props) {
         walletBalance={walletBalance}
         isWalletLoading={isWalletLoading}
         isWalletError={isWalletError}
+        customerKey={viewerId ?? undefined}
+        chargeReturnTo={`/live/${creatorId}`}
         donationEnabled={donationEnabled}
         donationMinAmount={donationMinAmount}
         onLoginPrompt={moveToLogin}

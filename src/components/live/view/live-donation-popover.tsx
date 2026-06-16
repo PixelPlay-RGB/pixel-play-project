@@ -3,7 +3,7 @@
 // 전체화면 후원 버튼은 openRequested로 외부에서 열기를 요청하고, 닫힐 때 사유(donated/dismissed)를 돌려받는다.
 
 import { useEffect, useRef, useState, type RefObject } from "react";
-import { HandCoins } from "lucide-react";
+import { CreditCard, HandCoins, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -22,8 +22,15 @@ import {
   LIVE_DONATION_MIN_AMOUNT,
   LIVE_LABEL,
 } from "@/constants/live/live";
+import {
+  WALLET_CHARGE_MAX_AMOUNT,
+  WALLET_CHARGE_MIN_AMOUNT,
+  WALLET_CHARGE_STEP_AMOUNT,
+} from "@/constants/payments/wallet-charge";
+import { useTossWalletCharge } from "@/hooks/donations/use-toss-wallet-charge";
 import { cn } from "@/lib/utils";
 import { formatDonationAmount } from "@/utils/live/live-chat";
+import { isValidChargeAmount } from "@/utils/payments/toss-wallet-charge-client";
 
 export type LiveDonationCloseReason = "donated" | "dismissed";
 
@@ -33,6 +40,9 @@ interface Props {
   walletBalance: number;
   isWalletLoading?: boolean;
   isWalletError?: boolean;
+  // 후원금 충전(TossPayments) — customerKey는 로그인 유저 id, chargeReturnTo는 결제 후 복귀 경로.
+  customerKey?: string;
+  chargeReturnTo?: string;
   donationEnabled: boolean;
   donationMinAmount: number;
   onDonate: (params: {
@@ -59,6 +69,8 @@ export function LiveDonationPopover({
   walletBalance,
   isWalletLoading,
   isWalletError,
+  customerKey,
+  chargeReturnTo,
   donationEnabled,
   donationMinAmount,
   onDonate,
@@ -70,6 +82,20 @@ export function LiveDonationPopover({
 }: Props) {
   const minimumAmount = donationMinAmount > 0 ? donationMinAmount : LIVE_DONATION_MIN_AMOUNT;
   const [open, setOpen] = useState(false);
+  // 충전 결제창 때문에 popover가 닫히는 동안 입력값(후원 금액·메시지)을 보존하기 위한 플래그.
+  // 사용자가 직접 닫은 게 아니므로 이 동안엔 resetForm/외부 정산을 보류한다.
+  const isChargeFlowActiveRef = useRef(false);
+  // TossPayments 충전(PC=Promise·리로드 없음 / 모바일=리다이렉트 폴백). 성공 시 잔액은 훅이 재조회한다.
+  const { requestCharge, isCharging, isConfigured } = useTossWalletCharge({
+    customerKey,
+    returnTo: chargeReturnTo,
+    // 충전 승인되면 후원 모달을 다시 띄워(또는 유지) 갱신된 잔액을 보여준다.
+    onChargeSuccess: () => setOpen(true),
+    // 결제가 끝나면(성공/취소/실패) 보존 플래그를 해제해 이후 사용자 닫기 시 입력값이 정상 초기화되게 한다.
+    onChargeSettled: () => {
+      isChargeFlowActiveRef.current = false;
+    },
+  });
   // 후원 금액은 직접 입력값(숫자 문자열) 하나를 단일 소스로 둔다. 금액 버튼은 이 값에 더한다.
   const [amountInput, setAmountInput] = useState("");
   const [isAnonymous, setIsAnonymous] = useState(false);
@@ -83,6 +109,13 @@ export function LiveDonationPopover({
 
   const amount = Number(amountInput) || 0;
 
+  function handleCharge(chargeValue: number) {
+    // 결제창이 뜨면서 popover가 닫혀도 입력값을 보존하도록 플래그를 세운다(결제 성공 시 다시 연다).
+    // 충전만 자동 처리하고, 잔액이 채워지면 버튼이 후원하기로 바뀌어 사용자가 후원을 확정한다.
+    isChargeFlowActiveRef.current = true;
+    void requestCharge(chargeValue);
+  }
+
   function resetForm() {
     setAmountInput("");
     setIsAnonymous(false);
@@ -91,6 +124,10 @@ export function LiveDonationPopover({
 
   function closeWith(reason: LiveDonationCloseReason) {
     setOpen(false);
+    // 충전 결제창 때문에 닫히는 경우엔 입력값을 보존하고 외부 정산도 보류한다(결제 성공 시 다시 연다).
+    if (isChargeFlowActiveRef.current) {
+      return;
+    }
     resetForm();
     if (isExternallyOpenedRef.current) {
       isExternallyOpenedRef.current = false;
@@ -104,6 +141,10 @@ export function LiveDonationPopover({
 
   function handleOpenChange(next: boolean) {
     if (!next) {
+      // 충전 결제창이 떠 있는 동안엔 popover를 닫지 않는다(결제 후 갱신된 잔액을 그대로 보여주기 위함).
+      if (isCharging) {
+        return;
+      }
       closeWith("dismissed");
       return;
     }
@@ -116,6 +157,8 @@ export function LiveDonationPopover({
       onLoginPrompt();
       return;
     }
+    // 사용자가 직접 새로 여는 경우이므로 충전 보존 플래그를 초기화한다.
+    isChargeFlowActiveRef.current = false;
     setOpen(true);
   }
 
@@ -131,6 +174,7 @@ export function LiveDonationPopover({
       return;
     }
     isExternallyOpenedRef.current = true;
+    isChargeFlowActiveRef.current = false;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setOpen(true);
   }, [openRequested, disabled, donationEnabled, isLoggedIn, onLoginPrompt, onOpenRequestSettled]);
@@ -138,6 +182,20 @@ export function LiveDonationPopover({
   const remaining = walletBalance - amount;
   const isBelowMin = amount < minimumAmount;
   const minAmountLabel = `${formatDonationAmount(minimumAmount)}${LIVE_DONATION_LABEL.unit}`;
+  const hasBalanceInfo = !isWalletLoading && !isWalletError;
+  // 잔액이 부족할 때만(유효 금액·조회 완료 전제) 하단 버튼을 후원하기 대신 자동 충전으로 전환한다.
+  const needsCharge = hasBalanceInfo && !isBelowMin && amount > 0 && remaining < 0;
+  // 충전액 = 부족분을 1,000P 단위로 올림(치지직식). 최소/최대 한도로 클램프한다.
+  const requiredCharge = Math.min(
+    Math.max(
+      Math.ceil(Math.max(amount - walletBalance, 0) / WALLET_CHARGE_STEP_AMOUNT) *
+        WALLET_CHARGE_STEP_AMOUNT,
+      WALLET_CHARGE_MIN_AMOUNT,
+    ),
+    WALLET_CHARGE_MAX_AMOUNT,
+  );
+  // 미로그인(customerKey 없음)·키 미설정이면 충전 불가 → 후원하기(비활성)로 폴백한다.
+  const canCharge = needsCharge && Boolean(customerKey) && isConfigured;
 
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
@@ -169,8 +227,13 @@ export function LiveDonationPopover({
         sideOffset={0}
         // 기본 collisionPadding(5px)이 popover를 패널 밖으로 밀어내므로 0으로 고정해 패널 안에 둔다.
         collisionPadding={0}
+        // 메시지 입력 등으로 popover가 길어져 위아래 공간이 부족하면 base-ui가 좌/우 축으로
+        // 뒤집어(fallbackAxisSide) 채팅 패널 밖(비디오 위)으로 튀어나간다. 이를 막아 입력바 위/아래에만
+        // 고정하고, 높이는 아래 max-h(--available-height)로 줄여 내부 스크롤로 처리한다.
+        collisionAvoidance={{ fallbackAxisSide: "none" }}
         // 입력바(anchor) 풀폭 + 하단 직각으로 입력 섹션과 한 덩어리처럼 이어 붙인다.
-        className="max-h-[calc(100vh-1rem)] w-(--anchor-width) overflow-y-auto rounded-b-none"
+        // 높이는 base-ui가 계산한 가용 높이로 캡해, 길어져도 패널을 벗어나지 않고 내부 스크롤된다.
+        className="max-h-(--available-height) w-(--anchor-width) overflow-y-auto rounded-b-none"
       >
         {/* 브랜드 무드 — 마크·후원 카드와 같은 brand→live 그라디언트 라인으로 후원 영역임을 드러낸다. */}
         <div className="from-brand to-live h-1 shrink-0 rounded-full bg-linear-to-r" />
@@ -277,49 +340,76 @@ export function LiveDonationPopover({
           </div>
         </div>
 
-        <div className="flex justify-end gap-2">
+        {/* 잔액이 부족하면 후원은 사용자 확인이 필요하므로, 충전 후 동작을 한 줄로 안내한다. */}
+        {canCharge ? (
+          <p className="text-muted-foreground text-xs">{LIVE_DONATION_LABEL.chargeNotice}</p>
+        ) : null}
+
+        <div className="flex items-center justify-end gap-2">
           <Button
             size="sm"
             variant="outline"
-            disabled={isSubmitting}
+            disabled={isSubmitting || isCharging}
             onClick={() => closeWith("dismissed")}
           >
             {LIVE_DONATION_LABEL.cancel}
           </Button>
-          <Button
-            type="button"
-            size="sm"
-            disabled={
-              disabled ||
-              !donationEnabled ||
-              isBelowMin ||
-              remaining < 0 ||
-              isSubmitting ||
-              !!isWalletLoading ||
-              !!isWalletError
-            }
-            className="bg-live hover:bg-live/90 text-live-foreground"
-            onClick={() => {
-              void (async () => {
-                setIsSubmitting(true);
-                try {
-                  const success = await onDonate({
-                    amount,
-                    message,
-                    isAnonymous,
-                    idempotencyKey: crypto.randomUUID(),
-                  });
-                  if (success) {
-                    closeWith("donated");
+          {/* 잔액이 모자라면(로그인·키 설정 전제) 후원하기 대신 부족분 자동 충전 버튼으로 전환한다.
+              충전만 자동 처리하고, 잔액이 채워지면 다시 후원하기로 바뀌어 사용자가 후원을 확정한다. */}
+          {canCharge ? (
+            <Button
+              type="button"
+              size="sm"
+              disabled={isCharging || isSubmitting || !isValidChargeAmount(requiredCharge)}
+              className="bg-live hover:bg-live/90 text-live-foreground"
+              onClick={() => handleCharge(requiredCharge)}
+            >
+              {isCharging ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <CreditCard className="size-4" />
+              )}
+              {LIVE_DONATION_LABEL.chargeSubmit.replace(
+                "{amount}",
+                `${formatDonationAmount(requiredCharge)}${LIVE_DONATION_LABEL.unit}`,
+              )}
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              size="sm"
+              disabled={
+                disabled ||
+                !donationEnabled ||
+                isBelowMin ||
+                remaining < 0 ||
+                isSubmitting ||
+                !!isWalletLoading ||
+                !!isWalletError
+              }
+              className="bg-live hover:bg-live/90 text-live-foreground"
+              onClick={() => {
+                void (async () => {
+                  setIsSubmitting(true);
+                  try {
+                    const success = await onDonate({
+                      amount,
+                      message,
+                      isAnonymous,
+                      idempotencyKey: crypto.randomUUID(),
+                    });
+                    if (success) {
+                      closeWith("donated");
+                    }
+                  } finally {
+                    setIsSubmitting(false);
                   }
-                } finally {
-                  setIsSubmitting(false);
-                }
-              })();
-            }}
-          >
-            {LIVE_DONATION_LABEL.submit}
-          </Button>
+                })();
+              }}
+            >
+              {LIVE_DONATION_LABEL.submit}
+            </Button>
+          )}
         </div>
       </PopoverContent>
     </Popover>

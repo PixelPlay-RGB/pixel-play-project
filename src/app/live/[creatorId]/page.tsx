@@ -3,18 +3,26 @@
 
 import { getLivePlaybackUrl } from "@/app/live/[creatorId]/_data/live-playback-data";
 import LiveShell from "@/components/live/live-shell";
+import { PaymentResultToast } from "@/components/donations/payment-result-toast";
 import { LiveView } from "@/components/live/view/live-view";
+import { getPaymentResultCode } from "@/utils/payments/payment-result-code";
 
 interface Props {
   params: Promise<{ creatorId: string }>;
+  // 후원금 충전 결제 후 라이브 화면으로 복귀할 때 결과 토스트를 띄우기 위한 쿼리.
+  searchParams: Promise<{ paymentStatus?: string | string[] }>;
 }
 
-export default async function LiveWatchPage({ params }: Props) {
+export default async function LiveWatchPage({ params, searchParams }: Props) {
   const { creatorId } = await params;
+  const { paymentStatus } = await searchParams;
   const hlsSrc = await getLivePlaybackUrl(creatorId);
+  const paymentResultCode = getPaymentResultCode(paymentStatus);
 
   return (
     <LiveShell contentClassName="overflow-y-auto md:overflow-hidden">
+      {/* 충전 결제 후 복귀 시 결과 토스트(후원 지갑 화면과 동일 컴포넌트 재사용) — 표시 후 쿼리를 정리한다. */}
+      {paymentResultCode ? <PaymentResultToast code={paymentResultCode} /> : null}
       {/*
         key로 creatorId를 묶어, 같은 라우트(/live/[creatorId]) 안에서 다른 크리에이터로
         소프트 내비게이션할 때 LiveView를 재마운트해 시청 상태(sticky broadcastId·optimistic

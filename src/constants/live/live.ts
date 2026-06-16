@@ -150,6 +150,10 @@ export const LIVE_DONATION_LABEL = {
   balanceError: "조회 실패",
   submit: "후원하기",
   cancel: "취소",
+  // 보유 후원금이 모자랄 때 하단 버튼이 후원하기 대신 부족분(1,000P 단위 올림) 자동 충전으로 바뀐다.
+  chargeSubmit: "{amount} 충전",
+  // 충전만 자동 처리하고 후원은 사용자가 한 번 더 확인하므로, 충전 후 동작을 안내한다.
+  chargeNotice: "충전 후 후원하기 버튼으로 후원을 완료해 주세요.",
   disabled: "후원이 비활성화된 방송입니다.",
   unit: "P",
 } as const;
