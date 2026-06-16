@@ -1743,6 +1743,10 @@ export type Database = {
         Args: { p_actor_user_id: string; p_target_user_id: string }
         Returns: undefined
       }
+      renew_due_creator_subscriptions: {
+        Args: { p_limit?: number }
+        Returns: Json
+      }
       reorder_channel_banners: {
         Args: { p_actor_user_id: string; p_banner_ids: string[] }
         Returns: Json
