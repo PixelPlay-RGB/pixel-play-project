@@ -1,7 +1,7 @@
 "use client";
 // 채널 구독자 목록의 검색·정렬 UI와 구독자 요약 배너를 렌더링합니다.
 
-import { Search, UsersRound } from "lucide-react";
+import { CalendarPlus, Search, UsersRound } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { SettingsCard } from "@/components/common/settings-card";
@@ -55,9 +55,8 @@ export function ChannelSubscribersPageContent({ snapshot }: Props) {
     [snapshot.subscribers, query, sort],
   );
 
-  const totalHistoryCount = snapshot.subscribers.length;
   const emptyMessage =
-    totalHistoryCount === 0
+    snapshot.subscribers.length === 0
       ? "아직 내 채널을 구독한 사람이 없어요."
       : "검색 조건에 맞는 구독자가 없어요.";
 
@@ -67,17 +66,40 @@ export function ChannelSubscribersPageContent({ snapshot }: Props) {
       title="내 채널 구독을 관리해요"
       description="구독 시작일과 누적 구독 기간을 기준으로 구독자 목록을 살펴볼 수 있어요."
     >
-      <section className="border-border bg-card flex flex-col gap-4 rounded-xl border p-5 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-col gap-2">
-          <span className="text-muted-foreground text-sm font-bold">현재 활성 구독자</span>
-          <strong className="text-foreground text-4xl leading-none font-black tabular-nums">
-            {snapshot.activeCount.toLocaleString("ko-KR")}명
-          </strong>
+      <section
+        className={cn(
+          "side-tip-card text-card-foreground grid gap-5 rounded-xl border p-5",
+          "sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:p-6",
+        )}
+      >
+        <div className="flex min-w-0 items-center gap-4">
+          <div className="bg-brand/10 text-brand flex size-12 shrink-0 items-center justify-center rounded-xl">
+            <UsersRound className="size-6" aria-hidden />
+          </div>
+
+          <div className="min-w-0 space-y-2">
+            <span className="text-brand text-sm font-extrabold">현재 활성 구독자</span>
+            <strong className="text-foreground block text-4xl leading-none font-black tabular-nums">
+              {snapshot.activeCount.toLocaleString("ko-KR")}명
+            </strong>
+          </div>
         </div>
 
-        <div className="bg-muted/60 text-muted-foreground flex w-fit items-center gap-2 rounded-full px-3 py-2 text-sm font-bold">
-          <UsersRound className="size-4" />
-          <span>총 구독 이력 {totalHistoryCount.toLocaleString("ko-KR")}건</span>
+        <div
+          className={cn(
+            "border-brand/15 flex items-center gap-3 border-t pt-4",
+            "sm:border-t-0 sm:border-l sm:pt-0 sm:pl-6",
+          )}
+        >
+          <div className="bg-brand/10 text-brand flex size-9 shrink-0 items-center justify-center rounded-xl">
+            <CalendarPlus className="size-4" aria-hidden />
+          </div>
+          <div className="min-w-0">
+            <span className="text-muted-foreground block text-xs font-bold">이번 달 신규</span>
+            <strong className="text-foreground text-xl leading-tight font-black whitespace-nowrap tabular-nums">
+              {snapshot.monthlyNewCount.toLocaleString("ko-KR")}명
+            </strong>
+          </div>
         </div>
       </section>
 

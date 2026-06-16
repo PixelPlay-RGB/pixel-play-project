@@ -6,6 +6,7 @@ import {
   buildChannelSubscriptionSnapshot,
   filterAndSortChannelSubscribers,
   getActiveChannelSubscriberCount,
+  getMonthlyNewChannelSubscriberCount,
   type ChannelSubscriberItem,
 } from "./channel-subscription.ts";
 
@@ -63,6 +64,10 @@ test("getActiveChannelSubscriberCount counts subscriptions with benefits until e
   assert.equal(getActiveChannelSubscriberCount(SUBSCRIBERS, NOW), 3);
 });
 
+test("getMonthlyNewChannelSubscriberCount counts active subscriptions started this month", () => {
+  assert.equal(getMonthlyNewChannelSubscriberCount(SUBSCRIBERS, NOW), 2);
+});
+
 test("filterAndSortChannelSubscribers filters by nickname", () => {
   const result = filterAndSortChannelSubscribers(SUBSCRIBERS, {
     query: "주",
@@ -103,6 +108,7 @@ test("buildChannelSubscriptionSnapshot keeps subscription badge image cache data
   });
 
   assert.equal(snapshot.subscriptionBadgeVersion, "2026-06-15T03:00:00.000Z");
+  assert.equal(snapshot.monthlyNewCount, 0);
   assert.deepEqual(snapshot.subscriptionBadgeImageSources, {
     1: "/subscription-badges/1.png",
     2: "https://example.supabase.co/storage/v1/object/public/user-media/creator-1/subscription/2.png",

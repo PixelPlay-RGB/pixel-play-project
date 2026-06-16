@@ -1,5 +1,6 @@
 // 채널 구독자 관리 목록의 활성 카운트와 검색·정렬 값을 계산합니다.
 
+import { getKstDateParts } from "../common/kst.ts";
 import { isSubscriptionBenefitActive } from "../subscriptions/user-subscription-status.ts";
 
 export type ChannelSubscriptionStatus = "active" | "expired" | "canceled";
@@ -24,6 +25,7 @@ export interface ChannelSubscriberItem {
 export interface ChannelSubscriptionSnapshot {
   creatorId: string;
   activeCount: number;
+  monthlyNewCount: number;
   subscribers: ChannelSubscriberItem[];
   customBadgeMonths: number[];
   subscriptionBadgeVersion: string | null;
@@ -48,6 +50,19 @@ export function getActiveChannelSubscriberCount(
   now: Date = new Date(),
 ) {
   return subscribers.filter((subscriber) => isSubscriptionBenefitActive(subscriber, now)).length;
+}
+
+export function getMonthlyNewChannelSubscriberCount(
+  subscribers: readonly ChannelSubscriberItem[],
+  now: Date = new Date(),
+) {
+  const currentMonth = getKstMonthKey(now);
+
+  return subscribers.filter(
+    (subscriber) =>
+      isSubscriptionBenefitActive(subscriber, now) &&
+      getKstMonthKey(new Date(subscriber.startedAt)) === currentMonth,
+  ).length;
 }
 
 export function filterAndSortChannelSubscribers(
@@ -95,6 +110,7 @@ export function buildChannelSubscriptionSnapshot(
   return {
     creatorId: options.creatorId ?? "",
     activeCount: getActiveChannelSubscriberCount(subscribers, now),
+    monthlyNewCount: getMonthlyNewChannelSubscriberCount(subscribers, now),
     subscribers: filterAndSortChannelSubscribers(subscribers, {
       query: "",
       sort: "started_desc",
@@ -103,4 +119,9 @@ export function buildChannelSubscriptionSnapshot(
     subscriptionBadgeVersion: options.subscriptionBadgeVersion ?? null,
     subscriptionBadgeImageSources: { ...(options.subscriptionBadgeImageSources ?? {}) },
   };
+}
+
+function getKstMonthKey(date: Date) {
+  const { year, month } = getKstDateParts(date);
+  return `${year}-${String(month).padStart(2, "0")}`;
 }
