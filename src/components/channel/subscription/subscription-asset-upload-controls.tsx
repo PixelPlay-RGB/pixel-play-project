@@ -35,8 +35,8 @@ export function LargeUploadButton({
     <button
       type="button"
       className={cn(
-        "border-border hover:border-primary/60 hover:bg-primary/5 flex min-h-30 w-full flex-col items-center justify-center gap-2 rounded-lg border border-dashed p-4 transition-colors",
-        hasFile && "border-primary/40 bg-primary/5",
+        "border-border bg-background hover:border-brand/50 hover:bg-brand/5 flex min-h-32 w-full flex-col items-center justify-center gap-2 rounded-lg border border-dashed p-4 transition-colors",
+        hasFile && "border-brand/40 bg-brand/5",
       )}
       onClick={onClick}
     >
@@ -48,12 +48,14 @@ export function LargeUploadButton({
           width={60}
           height={60}
           unoptimized
-          className="border-border bg-background size-15 rounded-md border object-cover"
+          className="border-border bg-card size-15 rounded-md border object-cover shadow-sm"
         />
       ) : (
-        <Plus className="text-muted-foreground size-9" aria-hidden />
+        <span className="bg-muted text-muted-foreground flex size-11 items-center justify-center rounded-xl">
+          <Plus className="size-7" aria-hidden />
+        </span>
       )}
-      <span className="text-muted-foreground max-w-full truncate text-sm font-black">
+      <span className="text-foreground max-w-full truncate text-sm font-black">
         {fileName ? fileName : label}
       </span>
       <span className="text-muted-foreground text-sm">{detail}</span>
@@ -69,17 +71,22 @@ export function CopyrightAgreement({
   onChange: (checked: boolean) => void;
 }) {
   return (
-    <div className="flex flex-col gap-2">
-      <label className="text-muted-foreground flex items-start gap-2 text-sm">
+    <div className="border-border/70 bg-muted/30 flex flex-col gap-2 rounded-lg border p-4">
+      <label className="text-muted-foreground flex items-start gap-2 text-sm leading-5">
         <input
           type="checkbox"
           checked={checked}
           onChange={(event) => onChange(event.target.checked)}
-          className="border-border mt-0.5 size-4 rounded"
+          className="border-border accent-brand mt-0.5 size-4 rounded"
         />
         저작권법에 위반되는 이미지를 사용하지 않았음에 동의
       </label>
-      <Button type="button" variant="ghost" size="sm" className="h-auto w-fit px-0 text-xs">
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        className="text-muted-foreground hover:text-foreground h-7 w-fit px-0 text-xs"
+      >
         자세히보기
         <span aria-hidden>›</span>
       </Button>
@@ -89,7 +96,7 @@ export function CopyrightAgreement({
 
 export function InfoNotice({ children }: { children: ReactNode }) {
   return (
-    <div className="bg-primary/10 text-primary flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm">
+    <div className="bg-brand/10 text-brand border-brand/20 flex items-center gap-2 rounded-lg border px-3 py-2.5 text-sm">
       <Info className="size-4 shrink-0" aria-hidden />
       <span>{children}</span>
     </div>

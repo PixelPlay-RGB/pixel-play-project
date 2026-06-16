@@ -2,7 +2,7 @@
 // 구독뱃지 개월 수와 이미지를 등록하는 Dialog를 렌더링합니다.
 
 import { useRouter } from "next/navigation";
-import { Upload } from "lucide-react";
+import { ImagePlus, Upload } from "lucide-react";
 import { useEffect, useRef, useState, useTransition, type FormEvent } from "react";
 
 import { uploadChannelSubscriptionBadgeAction } from "@/actions/channel/subscription-badge";
@@ -17,6 +17,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -154,115 +155,140 @@ export function SubscriptionBadgeRegistrationDialog({ open, onOpenChange }: Prop
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-h-[calc(100vh-2rem)] gap-0 overflow-y-auto p-0 sm:max-w-md">
-        <DialogHeader className="px-7 pt-8 pb-4">
-          <DialogTitle className="text-xl font-black">구독뱃지 등록</DialogTitle>
+      <DialogContent className="max-h-[calc(100vh-2rem)] gap-0 overflow-hidden rounded-2xl p-0 shadow-xl sm:max-w-xl">
+        <DialogHeader className="border-brand/10 bg-brand/5 flex-row items-start gap-4 border-b px-5 pt-5 pr-12 pb-4 text-left sm:px-6">
+          <div className="bg-brand/10 text-brand ring-brand/20 flex size-12 shrink-0 items-center justify-center rounded-xl ring-1">
+            <ImagePlus className="size-6" aria-hidden />
+          </div>
+          <div className="min-w-0 space-y-1.5">
+            <DialogTitle className="text-xl leading-7 font-bold">구독뱃지 등록</DialogTitle>
+          </div>
           <DialogDescription className="sr-only">
             구독 개월 수와 구독뱃지 이미지를 등록합니다.
           </DialogDescription>
         </DialogHeader>
 
-        <form className="flex flex-col gap-5 px-7 pb-8" onSubmit={handleSubmit}>
-          <div className="flex flex-col gap-2">
-            <label htmlFor="subscription-badge-month" className="text-sm font-black">
-              구독뱃지 개월 수
-            </label>
-            <Select
-              value={monthSelectValue}
-              items={BADGE_MONTH_OPTIONS}
-              onValueChange={(nextValue) => handleMonthSelect(String(nextValue))}
-            >
-              <SelectTrigger
-                id="subscription-badge-month"
-                aria-label="구독뱃지 개월 수"
-                className="h-11 w-full sm:w-40"
+        <form className="flex min-h-0 flex-col" onSubmit={handleSubmit}>
+          <div className="flex max-h-[calc(100vh-13rem)] flex-col gap-4 overflow-y-auto px-5 py-5 sm:px-6">
+            <section className="border-border/70 bg-muted/30 flex flex-col gap-3 rounded-lg border p-4">
+              <label htmlFor="subscription-badge-month" className="text-sm font-black">
+                구독뱃지 개월 수
+              </label>
+              <Select
+                value={monthSelectValue}
+                items={BADGE_MONTH_OPTIONS}
+                onValueChange={(nextValue) => handleMonthSelect(String(nextValue))}
               >
-                <SelectValue />
-                <SelectIcon />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectList>
-                  {BADGE_MONTH_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value} label={option.label}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectList>
-              </SelectContent>
-            </Select>
-            {isCustomMonth ? (
-              <div className="flex items-center gap-2">
-                <Input
-                  id="subscription-badge-custom-month"
-                  type="number"
-                  min={19}
-                  max={120}
-                  value={month}
-                  onChange={(event) => {
-                    setMonth(event.target.value);
-                    setFieldError(null);
-                  }}
-                  placeholder="예: 24"
-                  className="h-11 w-28"
-                />
-                <span className="text-sm">개월</span>
+                <SelectTrigger
+                  id="subscription-badge-month"
+                  aria-label="구독뱃지 개월 수"
+                  className="bg-background h-11 w-full sm:w-40"
+                >
+                  <SelectValue />
+                  <SelectIcon />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectList>
+                    {BADGE_MONTH_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value} label={option.label}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectList>
+                </SelectContent>
+              </Select>
+              {isCustomMonth ? (
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="subscription-badge-custom-month"
+                    type="number"
+                    min={19}
+                    max={120}
+                    value={month}
+                    onChange={(event) => {
+                      setMonth(event.target.value);
+                      setFieldError(null);
+                    }}
+                    placeholder="예: 24"
+                    className="bg-background h-11 w-28"
+                  />
+                  <span className="text-sm">개월</span>
+                </div>
+              ) : null}
+            </section>
+
+            <section className="border-border/70 bg-muted/30 flex flex-col gap-3 rounded-lg border p-4">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-sm font-black">이미지 업로드</span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="text-brand hover:bg-brand/10 hover:text-brand h-8 px-2 text-xs"
+                >
+                  제작가이드
+                </Button>
               </div>
+              <ul className="text-muted-foreground list-disc space-y-1 pl-5 text-xs leading-5">
+                <li>
+                  사이즈: {CHANNEL_SUBSCRIPTION_BADGE_IMAGE_SIZE}*
+                  {CHANNEL_SUBSCRIPTION_BADGE_IMAGE_SIZE}px / 파일크기:{" "}
+                  {formatUploadFileSize(CHANNEL_SUBSCRIPTION_BADGE_MAX_FILE_SIZE)} 내
+                </li>
+                <li>png 형식의 이미지 파일</li>
+                <li>이미지 파일명: 영문, 숫자로 구성</li>
+              </ul>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/png"
+                className="hidden"
+                onChange={(event) => {
+                  handleFileChange(event.target.files?.[0] ?? null);
+                }}
+              />
+              <LargeUploadButton
+                label="이미지 업로드"
+                detail={`(${CHANNEL_SUBSCRIPTION_BADGE_IMAGE_SIZE}*${CHANNEL_SUBSCRIPTION_BADGE_IMAGE_SIZE}px)`}
+                fileName={selectedFile?.name}
+                previewSrc={previewSrc}
+                onClick={() => fileInputRef.current?.click()}
+              />
+            </section>
+
+            <CopyrightAgreement checked={agreed} onChange={setAgreed} />
+
+            <ul className="text-muted-foreground list-disc space-y-2 pl-5 text-xs leading-5">
+              <li>신청한 구독뱃지는 기본적인 검수 진행 후 1일 1회 일괄 등록 예정입니다.</li>
+              <li>기본 구독뱃지 슬롯은 1개월과 동일하며 이미지 등록 및 수정, 삭제가 가능합니다.</li>
+              <li>개월 수는 직접 선택 및 입력이 가능합니다.</li>
+            </ul>
+
+            <InfoNotice>
+              {CHANNEL_SUBSCRIPTION_BADGE_IMAGE_SIZE}*{CHANNEL_SUBSCRIPTION_BADGE_IMAGE_SIZE}px PNG
+              파일로 등록해주시면 이미지가 선명해요.
+            </InfoNotice>
+
+            {fieldError ? (
+              <p className="text-destructive text-sm font-medium">{fieldError}</p>
             ) : null}
           </div>
 
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-sm font-black">이미지 업로드</span>
-              <Button type="button" variant="link" size="sm" className="h-auto px-0 text-xs">
-                제작가이드
-              </Button>
-            </div>
-            <ul className="text-muted-foreground list-disc space-y-1 pl-5 text-xs leading-5">
-              <li>
-                사이즈: {CHANNEL_SUBSCRIPTION_BADGE_IMAGE_SIZE}*
-                {CHANNEL_SUBSCRIPTION_BADGE_IMAGE_SIZE}px / 파일크기:{" "}
-                {formatUploadFileSize(CHANNEL_SUBSCRIPTION_BADGE_MAX_FILE_SIZE)} 내
-              </li>
-              <li>png 형식의 이미지 파일</li>
-              <li>이미지 파일명: 영문, 숫자로 구성</li>
-            </ul>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/png"
-              className="hidden"
-              onChange={(event) => {
-                handleFileChange(event.target.files?.[0] ?? null);
-              }}
-            />
-            <LargeUploadButton
-              label="이미지 업로드"
-              detail={`(${CHANNEL_SUBSCRIPTION_BADGE_IMAGE_SIZE}*${CHANNEL_SUBSCRIPTION_BADGE_IMAGE_SIZE}px)`}
-              fileName={selectedFile?.name}
-              previewSrc={previewSrc}
-              onClick={() => fileInputRef.current?.click()}
-            />
-          </div>
-
-          <CopyrightAgreement checked={agreed} onChange={setAgreed} />
-
-          <ul className="text-muted-foreground list-disc space-y-2 pl-5 text-xs leading-5">
-            <li>신청한 구독뱃지는 기본적인 검수 진행 후 1일 1회 일괄 등록 예정입니다.</li>
-            <li>기본 구독뱃지 슬롯은 1개월과 동일하며 이미지 등록 및 수정, 삭제가 가능합니다.</li>
-            <li>개월 수는 직접 선택 및 입력이 가능합니다.</li>
-          </ul>
-
-          <InfoNotice>
-            {CHANNEL_SUBSCRIPTION_BADGE_IMAGE_SIZE}*{CHANNEL_SUBSCRIPTION_BADGE_IMAGE_SIZE}px PNG
-            파일로 등록해주시면 이미지가 선명해요.
-          </InfoNotice>
-
-          {fieldError ? <p className="text-destructive text-sm font-medium">{fieldError}</p> : null}
-
-          <Button type="submit" size="lg" className="h-11 w-full font-black" disabled={isPending}>
-            <Upload className="size-4" />
-            {isPending ? "등록 중" : "등록하기"}
-          </Button>
+          <DialogFooter className="m-0 flex-row justify-end gap-2 rounded-none border-t bg-transparent px-5 pt-4 pb-5 sm:px-6">
+            <Button
+              type="button"
+              variant="outline"
+              className="h-10 min-w-24"
+              disabled={isPending}
+              onClick={() => handleOpenChange(false)}
+            >
+              취소
+            </Button>
+            <Button type="submit" className="h-10 min-w-28 font-black" disabled={isPending}>
+              <Upload className="size-4" />
+              {isPending ? "등록 중" : "등록하기"}
+            </Button>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
