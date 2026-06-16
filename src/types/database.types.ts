@@ -52,6 +52,41 @@ export type Database = {
           },
         ]
       }
+      channel_emoji: {
+        Row: {
+          created_at: string
+          creator_id: string
+          id: string
+          image_path: string
+          name: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          creator_id: string
+          id?: string
+          image_path: string
+          name: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          creator_id?: string
+          id?: string
+          image_path?: string
+          name?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "channel_emoji_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       channel_manager: {
         Row: {
           created_at: string
@@ -1387,6 +1422,10 @@ export type Database = {
         Args: { p_actor_user_id: string; p_banner_id: string }
         Returns: Json
       }
+      delete_channel_emoji: {
+        Args: { p_actor_user_id: string; p_emoji_id: string }
+        Returns: Json
+      }
       delete_community_comment: {
         Args: { p_actor_user_id: string; p_comment_id: string }
         Returns: boolean
@@ -1436,6 +1475,7 @@ export type Database = {
         }
         Returns: Json
       }
+      get_channel_emojis: { Args: { p_creator_id: string }; Returns: Json }
       get_channel_live_hero: {
         Args: { p_creator_id: string; p_viewer_id?: string }
         Returns: Json
@@ -1617,6 +1657,10 @@ export type Database = {
         }
         Returns: Json
       }
+      insert_channel_emoji: {
+        Args: { p_actor_user_id: string; p_image_path: string; p_name: string }
+        Returns: Json
+      }
       is_channel_moderator: {
         Args: { p_actor_user_id: string; p_creator_id: string }
         Returns: boolean
@@ -1660,6 +1704,10 @@ export type Database = {
       }
       reorder_channel_banners: {
         Args: { p_actor_user_id: string; p_banner_ids: string[] }
+        Returns: Json
+      }
+      reorder_channel_emojis: {
+        Args: { p_actor_user_id: string; p_emoji_ids: string[] }
         Returns: Json
       }
       rotate_live_security_token_version: {
@@ -1833,6 +1881,15 @@ export type Database = {
       unfollow_creator: {
         Args: { p_actor_user_id: string; p_creator_id: string }
         Returns: undefined
+      }
+      update_channel_emoji: {
+        Args: {
+          p_actor_user_id: string
+          p_emoji_id: string
+          p_image_path?: string
+          p_name: string
+        }
+        Returns: Json
       }
       update_channel_profile: {
         Args: { p_actor_user_id: string; p_channel_bio: string }

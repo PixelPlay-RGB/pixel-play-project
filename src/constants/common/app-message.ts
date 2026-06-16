@@ -78,6 +78,15 @@ export const APP_MESSAGE = {
       bannerDeleted: {
         title: "배너 삭제 완료",
       },
+      emojiSaved: {
+        title: "이모지 등록 완료",
+      },
+      emojiUpdated: {
+        title: "이모지 수정 완료",
+      },
+      emojiDeleted: {
+        title: "이모지 삭제 완료",
+      },
       managerAdded: {
         title: "매니저 추가 완료",
       },
@@ -443,6 +452,22 @@ export const APP_MESSAGE = {
       bannerLimitReached: {
         title: "배너 개수 초과",
         description: "배너는 최대 5개까지 등록할 수 있어요.",
+      },
+      emojiSaveFailed: {
+        title: "이모지 저장 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      emojiDeleteFailed: {
+        title: "이모지 삭제 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      emojiImageTooLarge: {
+        title: "이미지 용량 초과",
+        description: "5MB 이하의 PNG를 선택해주세요.",
+      },
+      emojiLimitReached: {
+        title: "이모지 개수 초과",
+        description: "이모지는 최대 10개까지 등록할 수 있어요.",
       },
       managerListLoadFailed: {
         title: "매니저 목록 조회 실패",
