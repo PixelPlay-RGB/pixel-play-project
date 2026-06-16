@@ -1,10 +1,10 @@
-// 채널 구독자 관리 페이지를 렌더링합니다.
-import { ChannelSubscribersPageContent } from "@/components/channel/subscription/channel-subscribers-page-content";
+// 채널 구독 혜택 관리 페이지를 렌더링합니다.
+import { ChannelSubscriptionBenefitsPageContent } from "@/components/channel/subscription/channel-subscription-benefits-page-content";
 import { LoadFailedState } from "@/components/common/load-failed-state";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { getChannelSubscriptionSnapshot } from "@/utils/channel/channel-subscription-server";
 
-export default async function ChannelSubscribersPage() {
+export default async function ChannelSubscriptionBenefitsPage() {
   const result = await getChannelSubscriptionSnapshot();
 
   if (!result.success || !result.data) {
@@ -15,5 +15,5 @@ export default async function ChannelSubscribersPage() {
     );
   }
 
-  return <ChannelSubscribersPageContent snapshot={result.data} />;
+  return <ChannelSubscriptionBenefitsPageContent snapshot={result.data} />;
 }

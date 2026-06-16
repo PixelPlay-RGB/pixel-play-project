@@ -1,4 +1,4 @@
-// 채널 구독자 관리 페이지에서 사용할 구독자 스냅샷을 조회합니다.
+// 채널 구독 관리 화면에서 사용할 구독자와 혜택 스냅샷을 조회합니다.
 import "server-only";
 
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";

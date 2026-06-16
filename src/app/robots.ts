@@ -14,6 +14,8 @@ export default function robots(): MetadataRoute.Robots {
         "/channel/live",
         "/channel/chat",
         "/channel/donation",
+        "/channel/subscribers",
+        "/channel/subscription-benefits",
         "/channel/security",
         "/channel/settlement",
         "/channel/analytics",
