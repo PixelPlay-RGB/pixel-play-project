@@ -4,7 +4,7 @@
 import { Search, UsersRound } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import { ChannelSubscriptionBadgeSettingsCard } from "@/components/channel/subscription/channel-subscription-badge-settings-card";
+import { ChannelSubscriptionPerkSettings } from "@/components/channel/subscription/channel-subscription-perk-settings";
 import { SettingsCard } from "@/components/common/settings-card";
 import { SettingsPage } from "@/components/common/settings-page";
 import { Input } from "@/components/ui/input";
@@ -180,9 +180,11 @@ export function ChannelSubscribersPageContent({ snapshot }: Props) {
         )}
       </SettingsCard>
 
-      <ChannelSubscriptionBadgeSettingsCard
+      <ChannelSubscriptionPerkSettings
         creatorId={snapshot.creatorId}
         customMonths={snapshot.customBadgeMonths}
+        subscriptionEmoteCommonCount={snapshot.subscriptionEmoteCommonCount}
+        subscriptionEmotePlusCount={snapshot.subscriptionEmotePlusCount}
       />
     </SettingsPage>
   );

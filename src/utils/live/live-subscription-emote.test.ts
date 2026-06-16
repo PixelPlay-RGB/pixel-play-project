@@ -34,3 +34,25 @@ test("readLiveSubscriptionEmotes keeps image files and builds versioned public U
     process.env.NEXT_PUBLIC_SUPABASE_URL = previousUrl;
   }
 });
+
+test("readLiveSubscriptionEmotes hides the storage plus prefix from labels", () => {
+  const previousUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  process.env.NEXT_PUBLIC_SUPABASE_URL = "https://example.supabase.co";
+
+  try {
+    assert.deepEqual(
+      readLiveSubscriptionEmotes(CREATOR_ID, [
+        { name: "plus-wow.png", updated_at: "2026-06-16T01:00:00.000Z" },
+      ]),
+      [
+        {
+          name: "wow",
+          src: "https://example.supabase.co/storage/v1/object/public/user-media/89dac974-c64f-431f-b593-dd71882c0d33/emoticon/plus-wow.png?v=2026-06-16T01%3A00%3A00.000Z",
+          updatedAt: "2026-06-16T01:00:00.000Z",
+        },
+      ],
+    );
+  } finally {
+    process.env.NEXT_PUBLIC_SUPABASE_URL = previousUrl;
+  }
+});

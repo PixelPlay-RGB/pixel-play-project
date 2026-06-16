@@ -40,7 +40,7 @@ function getSubscriptionEmotePublicUrl(path: string) {
 }
 
 function readEmoteLabel(fileName: string) {
-  return fileName.replace(LIVE_SUBSCRIPTION_EMOTE_FILE_PATTERN, "");
+  return fileName.replace(LIVE_SUBSCRIPTION_EMOTE_FILE_PATTERN, "").replace(/^plus-/, "");
 }
 
 export function readLiveSubscriptionEmotes(

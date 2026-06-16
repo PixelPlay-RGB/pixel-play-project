@@ -67,4 +67,11 @@ export const FORM_MESSAGE = {
     bannerLinkInvalid: "http(s)로 시작하는 올바른 링크를 입력해주세요.",
     bannerLinkMax: (max: number) => `배너 링크는 ${max}자 이하여야 합니다.`,
   },
+  channelSubscription: {
+    badgeMonthInvalid: "구독 개월 수를 입력해주세요.",
+    badgeImageRequired: "퍼스나콘 이미지를 선택해주세요.",
+    emoteTitleRequired: "이모티콘 제목을 입력해주세요.",
+    emoteImagesRequired: "PC 이미지와 모바일 이미지를 모두 선택해주세요.",
+    copyrightAgreementRequired: "저작권 동의가 필요합니다.",
+  },
 } as const;

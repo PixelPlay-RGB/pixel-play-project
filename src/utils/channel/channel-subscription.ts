@@ -24,6 +24,8 @@ export interface ChannelSubscriptionSnapshot {
   activeCount: number;
   subscribers: ChannelSubscriberItem[];
   customBadgeMonths: number[];
+  subscriptionEmoteCommonCount: number;
+  subscriptionEmotePlusCount: number;
 }
 
 interface FilterAndSortOptions {
@@ -86,7 +88,12 @@ export function filterAndSortChannelSubscribers(
 export function buildChannelSubscriptionSnapshot(
   subscribers: readonly ChannelSubscriberItem[],
   now: Date = new Date(),
-  options: { creatorId?: string; customBadgeMonths?: readonly number[] } = {},
+  options: {
+    creatorId?: string;
+    customBadgeMonths?: readonly number[];
+    subscriptionEmoteCommonCount?: number;
+    subscriptionEmotePlusCount?: number;
+  } = {},
 ): ChannelSubscriptionSnapshot {
   return {
     creatorId: options.creatorId ?? "",
@@ -96,5 +103,7 @@ export function buildChannelSubscriptionSnapshot(
       sort: "started_desc",
     }),
     customBadgeMonths: [...(options.customBadgeMonths ?? [])],
+    subscriptionEmoteCommonCount: options.subscriptionEmoteCommonCount ?? 0,
+    subscriptionEmotePlusCount: options.subscriptionEmotePlusCount ?? 0,
   };
 }

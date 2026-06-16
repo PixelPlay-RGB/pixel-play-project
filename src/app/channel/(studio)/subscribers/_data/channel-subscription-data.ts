@@ -12,6 +12,10 @@ import {
   type ChannelSubscriberItem,
   type ChannelSubscriptionSnapshot,
 } from "@/utils/channel/channel-subscription";
+import {
+  isChannelSubscriptionEmoteStorageFileName,
+  isPlusChannelSubscriptionEmoteStorageFileName,
+} from "@/utils/channel/channel-subscription-emote-upload";
 import { isAuthSessionMissingError } from "@/utils/auth/auth-error";
 import { LIVE_SUBSCRIPTION_BADGE_MIN_CUSTOM_MONTH } from "@/utils/live/live-subscription-badge";
 
@@ -34,6 +38,25 @@ function readCustomBadgeMonths(files: { name: string }[] | null) {
         month <= 120,
     )
     .sort((a, b) => a - b);
+}
+
+function readSubscriptionEmoteCounts(files: { name: string }[] | null) {
+  return (files ?? []).reduce(
+    (counts, file) => {
+      if (!isChannelSubscriptionEmoteStorageFileName(file.name)) {
+        return counts;
+      }
+
+      if (isPlusChannelSubscriptionEmoteStorageFileName(file.name)) {
+        counts.plus += 1;
+      } else {
+        counts.common += 1;
+      }
+
+      return counts;
+    },
+    { common: 0, plus: 0 },
+  );
 }
 
 export async function getChannelSubscriptionSnapshot(): Promise<
@@ -77,7 +100,19 @@ export async function getChannelSubscriptionSnapshot(): Promise<
     console.error("구독 배지 목록 조회 실패", badgeListError);
   }
 
+  const { data: emoteFiles, error: emoteListError } = await supabase.storage
+    .from(USER_MEDIA_BUCKET)
+    .list(`${user.id}/emoticon`, {
+      limit: 100,
+      sortBy: { column: "name", order: "asc" },
+    });
+
+  if (emoteListError) {
+    console.error("구독 이모티콘 목록 조회 실패", emoteListError);
+  }
+
   const customBadgeMonths = readCustomBadgeMonths(badgeFiles ?? null);
+  const emoteCounts = readSubscriptionEmoteCounts(emoteFiles ?? null);
   const subscriberIds = Array.from(new Set(subscriptionRows.map((row) => row.subscriber_id)));
 
   if (subscriberIds.length === 0) {
@@ -86,6 +121,8 @@ export async function getChannelSubscriptionSnapshot(): Promise<
       data: buildChannelSubscriptionSnapshot([], new Date(), {
         creatorId: user.id,
         customBadgeMonths,
+        subscriptionEmoteCommonCount: emoteCounts.common,
+        subscriptionEmotePlusCount: emoteCounts.plus,
       }),
     };
   }
@@ -119,6 +156,8 @@ export async function getChannelSubscriptionSnapshot(): Promise<
     data: buildChannelSubscriptionSnapshot(items, new Date(), {
       creatorId: user.id,
       customBadgeMonths,
+      subscriptionEmoteCommonCount: emoteCounts.common,
+      subscriptionEmotePlusCount: emoteCounts.plus,
     }),
   };
 }
