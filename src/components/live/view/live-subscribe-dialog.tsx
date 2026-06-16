@@ -60,7 +60,7 @@ export function LiveSubscribeDialog({
     !canSubscribe && isSubscribed
       ? "이미 구독 중"
       : isRenewalCanceled
-        ? `매월 ${formatPrice(LIVE_SUBSCRIPTION_PRICE)}원으로 다시 구독하기`
+        ? "다시 구독하기"
         : `매월 ${formatPrice(LIVE_SUBSCRIPTION_PRICE)}원 결제하고 구독하기`;
 
   return (
