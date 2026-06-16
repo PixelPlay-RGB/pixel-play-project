@@ -4,8 +4,10 @@
 import { useEffect, useState } from "react";
 import { Share2, Star } from "lucide-react";
 import CreatorUnfollowDialog from "@/components/creator/creator-unfollow-dialog";
+import { WalletChargeDialog } from "@/components/donations/wallet-charge-card";
 import CreatorFollowingButton from "@/components/following/creator-following-button";
 import { LiveSubscribeDialog } from "@/components/live/view/live-subscribe-dialog";
+import { LiveSubscriptionInsufficientBalanceDialog } from "@/components/live/view/live-subscription-insufficient-balance-dialog";
 import { LiveSubscriptionCancelDialog } from "@/components/live/view/live-subscription-cancel-dialog";
 import { Button } from "@/components/ui/button";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
@@ -25,12 +27,18 @@ interface Props {
   subscriptionStatus: CreatorSubscriptionStatus | null;
   isPending: boolean;
   isSubscribePending: boolean;
+  isInsufficientBalanceDialogOpen: boolean;
+  walletChargeCustomerKey: string | null;
+  walletBalance: number;
+  isWalletLoading: boolean;
+  isWalletError: boolean;
   subscriptionBadgeCustomMonths: number[];
   subscriptionBadgeVersion: string | null;
   subscriptionBadgeImageSources: Record<number, string>;
   onFollow: () => void;
   onSubscribe: () => void;
   onCancelSubscription: () => void;
+  onInsufficientBalanceDialogOpenChange: (open: boolean) => void;
 }
 
 export function LiveCreatorActions({
@@ -40,16 +48,23 @@ export function LiveCreatorActions({
   subscriptionStatus,
   isPending,
   isSubscribePending,
+  isInsufficientBalanceDialogOpen,
+  walletChargeCustomerKey,
+  walletBalance,
+  isWalletLoading,
+  isWalletError,
   subscriptionBadgeCustomMonths,
   subscriptionBadgeVersion,
   subscriptionBadgeImageSources,
   onFollow,
   onSubscribe,
   onCancelSubscription,
+  onInsufficientBalanceDialogOpenChange,
 }: Props) {
   const [isUnfollowDialogOpen, setIsUnfollowDialogOpen] = useState(false);
   const [isSubscribeDialogOpen, setIsSubscribeDialogOpen] = useState(false);
   const [isCancelSubscriptionDialogOpen, setIsCancelSubscriptionDialogOpen] = useState(false);
+  const [isWalletChargeDialogOpen, setIsWalletChargeDialogOpen] = useState(false);
   const canSubscribe = canStartCreatorSubscription({
     isSubscribed,
     status: subscriptionStatus,
@@ -74,6 +89,13 @@ export function LiveCreatorActions({
     }
   }, [isRenewalCanceled, isSubscribed]);
 
+  useEffect(() => {
+    if (isInsufficientBalanceDialogOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setIsSubscribeDialogOpen(false);
+    }
+  }, [isInsufficientBalanceDialogOpen]);
+
   function handleFollowClick() {
     if (isFollowing) {
       setIsUnfollowDialogOpen(true);
@@ -90,6 +112,18 @@ export function LiveCreatorActions({
   function handleConfirmCancelSubscription() {
     setIsCancelSubscriptionDialogOpen(false);
     onCancelSubscription();
+  }
+
+  function handleOpenWalletChargeDialog() {
+    onInsufficientBalanceDialogOpenChange(false);
+    setIsSubscribeDialogOpen(false);
+
+    if (!walletChargeCustomerKey) {
+      toastAppError(APP_MESSAGE_CODE.error.auth.authInfoNotFound);
+      return;
+    }
+
+    setIsWalletChargeDialogOpen(true);
   }
 
   async function handleShare() {
@@ -149,6 +183,9 @@ export function LiveCreatorActions({
             canSubscribe={canSubscribe}
             isRenewalCanceled={isRenewalCanceled}
             isPending={isSubscribePending}
+            walletBalance={walletBalance}
+            isWalletLoading={isWalletLoading}
+            isWalletError={isWalletError}
             subscriptionBadgeCustomMonths={subscriptionBadgeCustomMonths}
             subscriptionBadgeVersion={subscriptionBadgeVersion}
             subscriptionBadgeImageSources={subscriptionBadgeImageSources}
@@ -190,6 +227,20 @@ export function LiveCreatorActions({
         isPending={isSubscribePending}
         onConfirm={handleConfirmCancelSubscription}
       />
+      <LiveSubscriptionInsufficientBalanceDialog
+        open={isInsufficientBalanceDialogOpen}
+        onOpenChange={onInsufficientBalanceDialogOpenChange}
+        creatorNickname={creator.name}
+        onConfirm={handleOpenWalletChargeDialog}
+      />
+      {walletChargeCustomerKey ? (
+        <WalletChargeDialog
+          customerKey={walletChargeCustomerKey}
+          open={isWalletChargeDialogOpen}
+          onOpenChange={setIsWalletChargeDialogOpen}
+          trigger={null}
+        />
+      ) : null}
     </>
   );
 }

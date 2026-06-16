@@ -11,6 +11,7 @@ export function useSubscribeCreator(
   creatorId: string,
   canSubscribe: boolean,
   onSuccess: (result: CreatorSubscriptionActionResult) => void,
+  onInsufficientBalance?: () => void,
 ) {
   const [isPending, setIsPending] = useState(false);
 
@@ -22,6 +23,11 @@ export function useSubscribeCreator(
       const result = await subscribeCreatorAction({ creatorId });
 
       if (!result.success || !result.data) {
+        if (result.code === APP_MESSAGE_CODE.error.live.subscriptionInsufficientBalance) {
+          onInsufficientBalance?.();
+          return;
+        }
+
         toastAppError(result.code ?? APP_MESSAGE_CODE.error.live.subscriptionFailed);
         return;
       }

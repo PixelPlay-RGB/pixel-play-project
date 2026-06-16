@@ -13,12 +13,18 @@ interface Props {
   subscriptionStatus: CreatorSubscriptionStatus | null;
   isPending: boolean;
   isSubscribePending: boolean;
+  isInsufficientBalanceDialogOpen: boolean;
+  walletChargeCustomerKey: string | null;
+  walletBalance: number;
+  isWalletLoading: boolean;
+  isWalletError: boolean;
   subscriptionBadgeCustomMonths: number[];
   subscriptionBadgeVersion: string | null;
   subscriptionBadgeImageSources: Record<number, string>;
   onFollow: () => void;
   onSubscribe: () => void;
   onCancelSubscription: () => void;
+  onInsufficientBalanceDialogOpenChange: (open: boolean) => void;
   className?: string;
 }
 
@@ -30,12 +36,18 @@ export function LiveStreamerRow({
   subscriptionStatus,
   isPending,
   isSubscribePending,
+  isInsufficientBalanceDialogOpen,
+  walletChargeCustomerKey,
+  walletBalance,
+  isWalletLoading,
+  isWalletError,
   subscriptionBadgeCustomMonths,
   subscriptionBadgeVersion,
   subscriptionBadgeImageSources,
   onFollow,
   onSubscribe,
   onCancelSubscription,
+  onInsufficientBalanceDialogOpenChange,
   className,
 }: Props) {
   return (
@@ -48,12 +60,18 @@ export function LiveStreamerRow({
         subscriptionStatus={subscriptionStatus}
         isPending={isPending}
         isSubscribePending={isSubscribePending}
+        isInsufficientBalanceDialogOpen={isInsufficientBalanceDialogOpen}
+        walletChargeCustomerKey={walletChargeCustomerKey}
+        walletBalance={walletBalance}
+        isWalletLoading={isWalletLoading}
+        isWalletError={isWalletError}
         subscriptionBadgeCustomMonths={subscriptionBadgeCustomMonths}
         subscriptionBadgeVersion={subscriptionBadgeVersion}
         subscriptionBadgeImageSources={subscriptionBadgeImageSources}
         onFollow={onFollow}
         onSubscribe={onSubscribe}
         onCancelSubscription={onCancelSubscription}
+        onInsufficientBalanceDialogOpenChange={onInsufficientBalanceDialogOpenChange}
       />
     </div>
   );

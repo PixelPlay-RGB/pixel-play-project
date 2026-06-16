@@ -1891,7 +1891,7 @@ export type Database = {
         Returns: string
       }
       subscribe_creator: {
-        Args: { p_actor_user_id: string; p_creator_id: string }
+        Args: { p_actor_user_id: string; p_creator_id: string; p_idempotency_key?: string }
         Returns: Json
       }
       sweep_live_viewer_counts: { Args: never; Returns: undefined }
@@ -1997,7 +1997,7 @@ export type Database = {
       message_type: "text" | "system"
       oauth_provider: "google" | "github" | "email"
       wallet_transaction_status: "pending" | "succeeded" | "failed" | "canceled"
-      wallet_transaction_type: "charge" | "donation_spend" | "refund"
+      wallet_transaction_type: "charge" | "donation_spend" | "refund" | "subscription_spend"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2140,7 +2140,7 @@ export const Constants = {
       message_type: ["text", "system"],
       oauth_provider: ["google", "github", "email"],
       wallet_transaction_status: ["pending", "succeeded", "failed", "canceled"],
-      wallet_transaction_type: ["charge", "donation_spend", "refund"],
+      wallet_transaction_type: ["charge", "donation_spend", "refund", "subscription_spend"],
     },
   },
 } as const

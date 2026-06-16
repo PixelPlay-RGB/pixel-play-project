@@ -34,6 +34,10 @@ import {
   readLiveSubscriptionBadgeAssetInfo,
   type LiveSubscriptionBadgeAssetInfo,
 } from "@/utils/live/live-subscription-badge";
+import {
+  isKnownLiveSubscriptionRpcError,
+  resolveLiveSubscriptionRpcErrorCode,
+} from "@/utils/live/live-subscription-rpc-error";
 import { signAnonViewerKey, verifyAnonViewerKey } from "@/utils/live/live-security";
 
 // send_live_message_v4의 jsonb 응답({ messageId, moderated })을 앱 타입으로 정규화한다.
@@ -189,11 +193,18 @@ export async function subscribeCreatorAction({
   const { data, error } = await client.supabase.rpc("subscribe_creator", {
     p_actor_user_id: actor.userId,
     p_creator_id: creatorId,
+    p_idempotency_key: randomUUID(),
   });
 
   if (error) {
-    console.error("라이브 구독 RPC 실패", error);
-    return { success: false, code: APP_MESSAGE_CODE.error.live.subscriptionFailed };
+    if (!isKnownLiveSubscriptionRpcError(error)) {
+      console.error("라이브 구독 RPC 실패", error);
+    }
+
+    return {
+      success: false,
+      code: resolveLiveSubscriptionRpcErrorCode(error),
+    };
   }
 
   const result = normalizeCreatorSubscriptionResult(data);

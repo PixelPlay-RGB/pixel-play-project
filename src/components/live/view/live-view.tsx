@@ -65,6 +65,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     isInteractionNoticesLoading,
     isInteractionNoticesError,
     walletBalance,
+    walletChargeCustomerKey,
     isWalletLoading,
     isWalletError,
     donationEnabled,
@@ -95,7 +96,13 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     onFollowToggled,
     onUnauthenticated: openLoginPrompt,
   });
-  const { handleSubscribe, handleCancelSubscription, isSubscribePending } = useLiveSubscribeAction({
+  const {
+    handleSubscribe,
+    handleCancelSubscription,
+    isSubscribePending,
+    isInsufficientBalanceDialogOpen,
+    setIsInsufficientBalanceDialogOpen,
+  } = useLiveSubscribeAction({
     creatorId,
     isSubscribed,
     subscriptionStatus,
@@ -429,12 +436,18 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
                   subscriptionStatus={subscriptionStatus}
                   isPending={isFollowPending}
                   isSubscribePending={isSubscribePending}
+                  isInsufficientBalanceDialogOpen={isInsufficientBalanceDialogOpen}
+                  walletChargeCustomerKey={walletChargeCustomerKey}
+                  walletBalance={walletBalance}
+                  isWalletLoading={isWalletLoading}
+                  isWalletError={isWalletError}
                   subscriptionBadgeCustomMonths={subscriptionBadgeCustomMonths}
                   subscriptionBadgeVersion={subscriptionBadgeVersion}
                   subscriptionBadgeImageSources={subscriptionBadgeImageSources}
                   onFollow={handleFollow}
                   onSubscribe={handleSubscribe}
                   onCancelSubscription={handleCancelSubscription}
+                  onInsufficientBalanceDialogOpenChange={setIsInsufficientBalanceDialogOpen}
                   className="px-4 py-3"
                 />
               ) : null}

@@ -26,12 +26,13 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import type {
   UserDonationSnapshot,
+  UserSubscriptionSpendHistoryItem,
   UserSentDonationItem,
   UserWalletChargeHistoryItem,
 } from "@/types/donations/user-donations";
 import { getPageItems } from "@/utils/common/pagination";
 import { formatPoint } from "@/utils/donations/format";
-import { CreditCard, Gift, Inbox } from "lucide-react";
+import { CreditCard, Gift, Inbox, Star } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState, type MouseEvent } from "react";
 
@@ -41,7 +42,7 @@ interface Props {
   onActiveTabChange: (tab: DonationHistoryTab) => void;
 }
 
-export type DonationHistoryTab = "all" | "charge" | "donation";
+export type DonationHistoryTab = "all" | "charge" | "donation" | "subscription";
 
 type DonationHistoryItem =
   | {
@@ -59,12 +60,21 @@ type DonationHistoryItem =
       description: string;
       amount: number;
       createdAt: string;
+    }
+  | {
+      kind: "subscription";
+      id: string;
+      title: string;
+      description: string;
+      amount: number;
+      createdAt: string;
     };
 
 const DONATION_HISTORY_TABS: Array<{ value: DonationHistoryTab; label: string }> = [
   { value: "all", label: "전체" },
   { value: "charge", label: "충전" },
   { value: "donation", label: "후원" },
+  { value: "subscription", label: "구독" },
 ];
 const HISTORY_ITEMS_PER_PAGE = 9;
 
@@ -115,8 +125,14 @@ export function UserDonationHistoryTable({ snapshot, activeTab, onActiveTabChang
       all: historyItems.length,
       charge: succeededChargeHistories.length,
       donation: snapshot.sentDonations.length,
+      subscription: snapshot.subscriptionSpendHistories.length,
     }),
-    [historyItems.length, succeededChargeHistories.length, snapshot.sentDonations.length],
+    [
+      historyItems.length,
+      succeededChargeHistories.length,
+      snapshot.sentDonations.length,
+      snapshot.subscriptionSpendHistories.length,
+    ],
   );
 
   const handlePeriodChange = (nextPeriod: { year?: number; month?: number }) => {
@@ -137,7 +153,7 @@ export function UserDonationHistoryTable({ snapshot, activeTab, onActiveTabChang
       >
         <TabsList
           className={cn(
-            "grid h-auto w-full grid-cols-3 gap-1 rounded-xl border p-1 shadow-sm",
+            "grid h-auto w-full grid-cols-4 gap-1 rounded-xl border p-1 shadow-sm",
             "bg-background/80 dark:bg-card/70",
           )}
         >
@@ -394,16 +410,27 @@ function HistoryPeriodSelect({
 
 function HistoryListItem({ item }: { item: DonationHistoryItem }) {
   const isCharge = item.kind === "charge";
+  const isSubscription = item.kind === "subscription";
 
   return (
     <li className="flex h-16 items-center gap-3">
       <div
         className={cn(
           "flex size-10 shrink-0 items-center justify-center rounded-lg",
-          isCharge ? "bg-brand/10 text-brand" : "bg-live/10 text-live",
+          isCharge
+            ? "bg-brand/10 text-brand"
+            : isSubscription
+              ? "bg-warning/10 text-warning"
+              : "bg-live/10 text-live",
         )}
       >
-        {isCharge ? <CreditCard className="size-5" /> : <Gift className="size-5" />}
+        {isCharge ? (
+          <CreditCard className="size-5" />
+        ) : isSubscription ? (
+          <Star className="size-5" />
+        ) : (
+          <Gift className="size-5" />
+        )}
       </div>
 
       <div className="min-w-0 flex-1">
@@ -412,7 +439,12 @@ function HistoryListItem({ item }: { item: DonationHistoryItem }) {
       </div>
 
       <div className="shrink-0 text-right">
-        <p className={cn("text-sm font-black", isCharge ? "text-brand" : "text-live")}>
+        <p
+          className={cn(
+            "text-sm font-black",
+            isCharge ? "text-brand" : isSubscription ? "text-warning" : "text-live",
+          )}
+        >
           {isCharge ? "+" : "-"}
           {formatPoint(item.amount)}
         </p>
@@ -441,8 +473,9 @@ function EmptyList({ activeTab }: { activeTab: DonationHistoryTab }) {
 function buildHistoryItems(snapshot: UserDonationSnapshot): DonationHistoryItem[] {
   const chargeItems = getSucceededChargeHistories(snapshot).map(readChargeHistoryItem);
   const donationItems = snapshot.sentDonations.map(readSentDonationItem);
+  const subscriptionItems = snapshot.subscriptionSpendHistories.map(readSubscriptionSpendItem);
 
-  return [...chargeItems, ...donationItems].sort(
+  return [...chargeItems, ...donationItems, ...subscriptionItems].sort(
     (left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
   );
 }
@@ -490,6 +523,19 @@ function readSentDonationItem(donation: UserSentDonationItem): DonationHistoryIt
     description: donation.message || "방송 후원을 보냈습니다.",
     amount: donation.amount,
     createdAt: donation.createdAt,
+  };
+}
+
+function readSubscriptionSpendItem(
+  subscription: UserSubscriptionSpendHistoryItem,
+): DonationHistoryItem {
+  return {
+    kind: "subscription",
+    id: subscription.id,
+    title: `${subscription.creatorNickname} 채널 구독`,
+    description: "정기구독 포인트 결제",
+    amount: subscription.amount,
+    createdAt: subscription.createdAt,
   };
 }
 

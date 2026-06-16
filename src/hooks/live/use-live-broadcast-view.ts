@@ -89,6 +89,9 @@ export function useLiveBroadcastView(creatorId: string) {
         },
       };
     });
+    void queryClient.invalidateQueries({
+      queryKey: QUERY_KEYS.donations.walletBalance(user?.id ?? undefined),
+    });
 
     void refetch()
       .then((refetchResult) => {
@@ -328,6 +331,7 @@ export function useLiveBroadcastView(creatorId: string) {
     isInteractionNoticesLoading: interactionNoticesQuery.isLoading,
     isInteractionNoticesError: Boolean(interactionNoticesQuery.error),
     walletBalance,
+    walletChargeCustomerKey: user?.id ?? null,
     isWalletLoading,
     isWalletError,
     donationEnabled,

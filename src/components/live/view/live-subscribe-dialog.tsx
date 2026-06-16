@@ -1,34 +1,19 @@
 "use client";
-// 라이브 시청자가 방송인 구독 혜택을 확인하고 구독 결제를 시작하는 Popover입니다.
+// 라이브 시청자가 방송인 구독 혜택을 확인하고 포인트 결제로 구독을 시작하는 Popover입니다.
 
 import type { ReactElement } from "react";
-import { useEffect, useRef, useState } from "react";
-import Script from "next/script";
-import { BadgeCheck, CreditCard, Heart, Star } from "lucide-react";
+import { BadgeCheck, Heart, Star, WalletCards } from "lucide-react";
 
 import { LiveSubscriptionBadge } from "@/components/live/chat/live-subscription-badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import type { LiveCreator } from "@/types/live/live";
-import type {
-  TossPaymentsPaymentWindow,
-  TossPaymentsWidgets,
-} from "@/types/payments/toss-payments";
-import { getAppMessage } from "@/utils/common/app-message";
-import { toastAppError } from "@/utils/common/toast-message";
+import { CREATOR_SUBSCRIPTION_PAYMENT_AMOUNT } from "@/constants/subscriptions/creator-subscription";
+import { formatPoint } from "@/utils/donations/format";
 import { buildLiveSubscriptionBadgeMonths } from "@/utils/live/live-subscription-badge";
-import {
-  CREATOR_SUBSCRIPTION_PAYMENT_AMOUNT,
-  isTossCreatorSubscriptionPrepareResponse,
-} from "@/utils/payments/toss-creator-subscription-order";
 import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
-
-const TOSS_PAYMENTS_SDK_URL = "https://js.tosspayments.com/v2/standard";
-
-type PaymentWindowState = "idle" | "ready" | "opening" | "failed";
 
 interface Props {
   open: boolean;
@@ -38,6 +23,9 @@ interface Props {
   canSubscribe: boolean;
   isRenewalCanceled: boolean;
   isPending: boolean;
+  walletBalance: number;
+  isWalletLoading: boolean;
+  isWalletError: boolean;
   subscriptionBadgeCustomMonths: number[];
   subscriptionBadgeVersion: string | null;
   subscriptionBadgeImageSources: Record<number, string>;
@@ -46,13 +34,9 @@ interface Props {
 }
 
 const BENEFITS = [
-  { icon: Heart, label: "이 채널의 스트리머 자동 후원" },
+  { icon: Heart, label: "후원 지갑 포인트로 매월 정기 구독" },
   { icon: BadgeCheck, label: "구독 기간에 맞는 전용 배지" },
 ] as const;
-
-function formatPrice(value: number) {
-  return value.toLocaleString("ko-KR");
-}
 
 export function LiveSubscribeDialog({
   open,
@@ -62,126 +46,27 @@ export function LiveSubscribeDialog({
   canSubscribe,
   isRenewalCanceled,
   isPending,
+  walletBalance,
+  isWalletLoading,
+  isWalletError,
   subscriptionBadgeCustomMonths,
   subscriptionBadgeVersion,
   subscriptionBadgeImageSources,
   onOpenChange,
   onConfirm,
 }: Props) {
-  const clientKey = process.env.NEXT_PUBLIC_TOSS_PAYMENTS_CLIENT_KEY;
-  const [isSdkLoaded, setIsSdkLoaded] = useState(false);
-  const [paymentWindowState, setPaymentWindowState] = useState<PaymentWindowState>("idle");
-  const widgetsRef = useRef<TossPaymentsWidgets | null>(null);
-  const paymentWindowRef = useRef<TossPaymentsPaymentWindow | null>(null);
   const fallback = getAvatarFallbackText(creator.name);
   const avatarSrc = getAvatarImageSrc(creator.avatarUrl);
   const badgeMonths = buildLiveSubscriptionBadgeMonths(subscriptionBadgeCustomMonths);
-  const isPaymentBusy = paymentWindowState === "opening";
-  const canRequestPayment =
-    Boolean(clientKey) && isSdkLoaded && paymentWindowState !== "opening" && !isRenewalCanceled;
   const submitLabel =
     !canSubscribe && isSubscribed
       ? "이미 구독 중"
       : isRenewalCanceled
-        ? "다시 구독하기"
-        : `매월 ${formatPrice(CREATOR_SUBSCRIPTION_PAYMENT_AMOUNT)}원 결제하고 구독하기`;
-  const paymentStateMessage = getPaymentStateMessage(clientKey, paymentWindowState);
-
-  useEffect(() => {
-    return () => {
-      destroyTossPaymentWindow(paymentWindowRef.current);
-      paymentWindowRef.current = null;
-      widgetsRef.current = null;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (open) {
-      return;
-    }
-
-    destroyTossPaymentWindow(paymentWindowRef.current);
-    paymentWindowRef.current = null;
-    widgetsRef.current = null;
-  }, [open]);
-
-  const handleSdkReady = () => {
-    setIsSdkLoaded(true);
-    setPaymentWindowState("ready");
-  };
-
-  const handleConfirm = () => {
-    if (isRenewalCanceled) {
-      onConfirm();
-      return;
-    }
-
-    void openTossSubscriptionPayment();
-  };
-
-  async function openTossSubscriptionPayment() {
-    if (!clientKey || !isSdkLoaded || !window.TossPayments) {
-      setPaymentWindowState("failed");
-      toastAppError(APP_MESSAGE_CODE.error.donation.paymentWindowLoadFailed);
-      return;
-    }
-
-    try {
-      setPaymentWindowState("opening");
-      const preparedPayment = await prepareTossCreatorSubscriptionPayment(creator.id);
-      const tossPayments = window.TossPayments(clientKey);
-      const widgets = tossPayments.widgets({ customerKey: preparedPayment.customerKey });
-
-      widgetsRef.current = widgets;
-      await widgets.setAmount({ currency: "KRW", value: preparedPayment.amount });
-      destroyTossPaymentWindow(paymentWindowRef.current);
-
-      const paymentWindow = await widgets.renderPaymentWindow();
-      let hasRequestedPayment = false;
-
-      paymentWindowRef.current = paymentWindow;
-      paymentWindow.on("paymentRequest", async () => {
-        if (hasRequestedPayment) {
-          return;
-        }
-
-        try {
-          hasRequestedPayment = true;
-          setPaymentWindowState("opening");
-          await widgets.requestPayment({
-            orderId: preparedPayment.orderId,
-            orderName: preparedPayment.orderName,
-            successUrl: `${window.location.origin}/live/${creator.id}/subscription/toss/success`,
-            failUrl: `${window.location.origin}/live/${creator.id}/subscription/toss/fail`,
-          });
-        } catch (error) {
-          console.error("Toss 구독 결제 요청 실패", error);
-          hasRequestedPayment = false;
-          setPaymentWindowState("failed");
-        }
-      });
-
-      setPaymentWindowState("ready");
-    } catch (error) {
-      console.error("Toss 구독 결제창 요청 실패", error);
-      setPaymentWindowState("failed");
-      toastAppError(APP_MESSAGE_CODE.error.live.subscriptionFailed);
-    }
-  }
+        ? "구독 다시 시작"
+        : `${formatPoint(CREATOR_SUBSCRIPTION_PAYMENT_AMOUNT)}로 구독하기`;
 
   return (
     <Popover open={open} onOpenChange={onOpenChange}>
-      {!isRenewalCanceled && clientKey ? (
-        <Script
-          src={TOSS_PAYMENTS_SDK_URL}
-          strategy="afterInteractive"
-          onReady={handleSdkReady}
-          onError={() => {
-            setIsSdkLoaded(false);
-            setPaymentWindowState("failed");
-          }}
-        />
-      ) : null}
       <PopoverTrigger render={trigger} />
       <PopoverContent
         align="center"
@@ -199,7 +84,7 @@ export function LiveSubscribeDialog({
             <div className="min-w-0 flex-1">
               <h2 className="truncate text-lg font-black">{creator.name}</h2>
               <p className="text-muted-foreground mt-1 text-xs leading-5">
-                매월 정기구독으로 채널을 후원하고 구독 배지를 사용할 수 있어요.
+                후원 지갑 포인트로 채널을 구독하고 구독 배지를 사용할 수 있어요.
               </p>
             </div>
           </div>
@@ -222,6 +107,20 @@ export function LiveSubscribeDialog({
                   </div>
                 ))}
               </div>
+            </section>
+
+            <section className="bg-muted/35 border-border flex items-center justify-between gap-3 rounded-lg border px-4 py-3">
+              <div className="flex min-w-0 items-center gap-2">
+                <WalletCards className="text-brand size-4 shrink-0" />
+                <span className="text-sm font-black">보유 포인트</span>
+              </div>
+              <strong className="text-sm font-black">
+                {isWalletLoading
+                  ? "조회 중"
+                  : isWalletError
+                    ? "조회 실패"
+                    : formatPoint(walletBalance)}
+              </strong>
             </section>
 
             <section className="flex flex-col gap-3">
@@ -253,7 +152,7 @@ export function LiveSubscribeDialog({
             <div className="min-w-0">
               <p className="text-sm font-black">정기 구독 설명</p>
               <p className="text-muted-foreground mt-1 text-xs leading-5">
-                매월 자동 결제되는 구독 상품입니다.
+                매월 후원 지갑에서 {formatPoint(CREATOR_SUBSCRIPTION_PAYMENT_AMOUNT)}가 사용됩니다.
               </p>
             </div>
             <Button type="button" variant="ghost" size="sm" className="h-8 shrink-0 text-xs">
@@ -264,74 +163,14 @@ export function LiveSubscribeDialog({
             type="button"
             size="lg"
             className="bg-brand text-brand-foreground hover:bg-brand/90 h-11 w-full font-black"
-            disabled={
-              !canSubscribe ||
-              isPending ||
-              isPaymentBusy ||
-              (!isRenewalCanceled && !canRequestPayment)
-            }
-            onClick={handleConfirm}
+            disabled={!canSubscribe || isPending}
+            onClick={onConfirm}
           >
-            <CreditCard className="size-4" />
-            {isPending || isPaymentBusy ? "구독 처리 중" : submitLabel}
+            <WalletCards className="size-4" />
+            {isPending ? "구독 처리 중" : submitLabel}
           </Button>
-          {paymentStateMessage ? (
-            <p className="text-muted-foreground text-center text-xs">{paymentStateMessage}</p>
-          ) : null}
         </footer>
       </PopoverContent>
     </Popover>
   );
-}
-
-function destroyTossPaymentWindow(paymentWindow: TossPaymentsPaymentWindow | null) {
-  if (!paymentWindow) {
-    return;
-  }
-
-  try {
-    const result = paymentWindow.destroy();
-
-    if (result instanceof Promise) {
-      void result.catch(() => undefined);
-    }
-  } catch {
-    return;
-  }
-}
-
-function getPaymentStateMessage(clientKey: string | undefined, state: PaymentWindowState) {
-  if (!clientKey) {
-    return (
-      getAppMessage(APP_MESSAGE_CODE.error.donation.paymentWindowConfigMissing).description ?? ""
-    );
-  }
-
-  if (state === "failed") {
-    return getAppMessage(APP_MESSAGE_CODE.error.donation.paymentWindowLoadFailed).description ?? "";
-  }
-
-  return "";
-}
-
-async function prepareTossCreatorSubscriptionPayment(creatorId: string) {
-  const response = await fetch("/api/payments/toss/subscription/prepare", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ creatorId }),
-  });
-
-  if (!response.ok) {
-    throw new Error("Toss 구독 결제 준비 실패");
-  }
-
-  const data = (await response.json()) as unknown;
-
-  if (!isTossCreatorSubscriptionPrepareResponse(data)) {
-    throw new Error("Toss 구독 결제 준비 응답 형식 오류");
-  }
-
-  return data;
 }

@@ -29,11 +29,14 @@ export function useLiveSubscribeAction({
   onUnauthenticated,
 }: Params) {
   const [isCancelPending, setIsCancelPending] = useState(false);
+  const [isInsufficientBalanceDialogOpen, setIsInsufficientBalanceDialogOpen] = useState(false);
   const canSubscribe = canStartCreatorSubscription({
     isSubscribed,
     status: subscriptionStatus,
   });
-  const { subscribe, isPending } = useSubscribeCreator(creatorId, canSubscribe, onSubscribed);
+  const { subscribe, isPending } = useSubscribeCreator(creatorId, canSubscribe, onSubscribed, () =>
+    setIsInsufficientBalanceDialogOpen(true),
+  );
   const isSubscriptionActionPending = isPending || isCancelPending;
 
   function handleSubscribe() {
@@ -79,5 +82,7 @@ export function useLiveSubscribeAction({
     handleSubscribe,
     handleCancelSubscription,
     isSubscribePending: isSubscriptionActionPending,
+    isInsufficientBalanceDialogOpen,
+    setIsInsufficientBalanceDialogOpen,
   };
 }

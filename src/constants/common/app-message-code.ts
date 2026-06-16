@@ -188,6 +188,7 @@ export const APP_MESSAGE_CODE = {
       voteNoActivePoll: "error.live.voteNoActivePoll",
       voteInvalidOption: "error.live.voteInvalidOption",
       subscriptionFailed: "error.live.subscriptionFailed",
+      subscriptionInsufficientBalance: "error.live.subscriptionInsufficientBalance",
     },
     community: {
       postCreateFailed: "error.community.postCreateFailed",

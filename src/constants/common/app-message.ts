@@ -572,6 +572,10 @@ export const APP_MESSAGE = {
         title: "구독 실패",
         description: "구독 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
       },
+      subscriptionInsufficientBalance: {
+        title: "포인트 부족",
+        description: "구독에 필요한 포인트가 부족해요. 포인트를 충전한 뒤 다시 시도해주세요.",
+      },
     },
     community: {
       postCreateFailed: {
