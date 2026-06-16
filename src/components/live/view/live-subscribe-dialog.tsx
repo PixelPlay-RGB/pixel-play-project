@@ -1,27 +1,13 @@
 "use client";
-// 라이브 시청자가 방송인 구독 혜택을 확인하고 구독 결제를 시작하는 Dialog입니다.
+// 라이브 시청자가 방송인 구독 선택을 확인하고 구독 결제를 시작하는 Popover입니다.
 
 import Image from "next/image";
-import {
-  BadgeCheck,
-  CreditCard,
-  Heart,
-  MessageCircle,
-  ShieldCheck,
-  SmilePlus,
-  Star,
-} from "lucide-react";
+import type { ReactElement } from "react";
+import { BadgeCheck, CreditCard, Heart, MessageCircle, SmilePlus, Star } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { LiveSubscriptionBadge } from "@/components/live/chat/live-subscription-badge";
 import { cn } from "@/lib/utils";
@@ -33,6 +19,7 @@ const LIVE_SUBSCRIPTION_PRICE = 4900;
 
 interface Props {
   open: boolean;
+  trigger: ReactElement;
   creator: LiveCreator;
   isSubscribed: boolean;
   isPending: boolean;
@@ -46,8 +33,7 @@ interface Props {
 
 const BENEFITS = [
   { icon: Heart, label: "이 채널의 스트리머 자동 후원" },
-  { icon: ShieldCheck, label: "이 채널의 방송 시청 시 광고 제거" },
-  { icon: MessageCircle, label: "구독자 전용 채팅" },
+  { icon: MessageCircle, label: "구독자 전용 이모티콘" },
   { icon: BadgeCheck, label: "구독 기간에 맞는 전용 배지" },
 ] as const;
 
@@ -57,6 +43,7 @@ function formatPrice(value: number) {
 
 export function LiveSubscribeDialog({
   open,
+  trigger,
   creator,
   isSubscribed,
   isPending,
@@ -75,22 +62,29 @@ export function LiveSubscribeDialog({
     : `매월 ${formatPrice(LIVE_SUBSCRIPTION_PRICE)}원 결제하고 구독하기`;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-dvh gap-0 overflow-hidden p-0 sm:max-w-md">
-        <DialogHeader className="border-border border-b p-5 pb-4">
+    <Popover open={open} onOpenChange={onOpenChange}>
+      <PopoverTrigger render={trigger} />
+      <PopoverContent
+        align="center"
+        side="top"
+        sideOffset={8}
+        collisionPadding={8}
+        className="max-h-[calc(100vh-1rem)] w-88 max-w-[calc(100vw-1rem)] gap-0 overflow-hidden p-0 sm:w-112"
+      >
+        <header className="border-border border-b p-5 pb-4">
           <div className="flex items-center gap-3">
             <Avatar size="lg" className="ring-brand/70 ring-2">
               <AvatarImage src={avatarSrc} alt={`${creator.name} 프로필`} />
               <AvatarFallback>{fallback}</AvatarFallback>
             </Avatar>
             <div className="min-w-0 flex-1">
-              <DialogTitle className="truncate text-lg font-black">{creator.name}</DialogTitle>
-              <DialogDescription className="text-muted-foreground mt-1 text-xs">
-                구독 혜택을 확인하고 결제를 진행합니다.
-              </DialogDescription>
+              <h2 className="truncate text-lg font-black">{creator.name}</h2>
+              <p className="text-muted-foreground mt-1 text-xs">
+                구독 선택을 확인하고 결제를 진행합니다.
+              </p>
             </div>
           </div>
-        </DialogHeader>
+        </header>
 
         <ScrollArea className="max-h-120">
           <div className="flex flex-col gap-5 p-5">
@@ -169,9 +163,9 @@ export function LiveSubscribeDialog({
           </div>
         </ScrollArea>
 
-        <DialogFooter className="mx-0 mb-0 flex-col items-stretch gap-3 p-5 sm:flex-col sm:items-stretch sm:justify-start">
+        <footer className="border-border mx-0 mb-0 flex flex-col items-stretch gap-3 border-t p-5">
           <p className="text-muted-foreground w-full text-xs">
-            정기구독 자동결제에 동의합니다. 토스 결제 연동 전까지는 버튼을 누르면 바로 구독됩니다.
+            정기구독 자동결제에 동의합니다. 토스 결제 연동 전까지는 버튼을 누르면 바로 구독합니다.
           </p>
           <Button
             type="button"
@@ -183,8 +177,8 @@ export function LiveSubscribeDialog({
             <CreditCard className="size-4" />
             {isPending ? "구독 처리 중" : submitLabel}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </footer>
+      </PopoverContent>
+    </Popover>
   );
 }
