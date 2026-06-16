@@ -75,7 +75,7 @@ export const USER_ACCOUNT_FOLLOWING_MENU_ITEM: UserAccountLinkMenuItem = {
 export const USER_ACCOUNT_SUBSCRIPTION_MENU_ITEM: UserAccountLinkMenuItem = {
   type: "link",
   id: "subscriptions",
-  label: "구독",
+  label: "내 구독",
   href: "/user/subscriptions",
   icon: BadgeCheck,
 };
