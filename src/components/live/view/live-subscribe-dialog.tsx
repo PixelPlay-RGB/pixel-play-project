@@ -1,0 +1,190 @@
+"use client";
+// 라이브 시청자가 방송인 구독 혜택을 확인하고 구독 결제를 시작하는 Dialog입니다.
+
+import Image from "next/image";
+import {
+  BadgeCheck,
+  CreditCard,
+  Heart,
+  MessageCircle,
+  ShieldCheck,
+  SmilePlus,
+  Star,
+} from "lucide-react";
+
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { LiveSubscriptionBadge } from "@/components/live/chat/live-subscription-badge";
+import { cn } from "@/lib/utils";
+import type { LiveCreator, LiveSubscriptionEmote } from "@/types/live/live";
+import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
+import { buildLiveSubscriptionBadgeMonths } from "@/utils/live/live-subscription-badge";
+
+const LIVE_SUBSCRIPTION_PRICE = 4900;
+
+interface Props {
+  open: boolean;
+  creator: LiveCreator;
+  isSubscribed: boolean;
+  isPending: boolean;
+  subscriptionBadgeCustomMonths: number[];
+  subscriptionBadgeVersion: string | null;
+  subscriptionBadgeImageSources: Record<number, string>;
+  subscriptionEmotes: LiveSubscriptionEmote[];
+  onOpenChange: (open: boolean) => void;
+  onConfirm: () => void;
+}
+
+const BENEFITS = [
+  { icon: Heart, label: "이 채널의 스트리머 자동 후원" },
+  { icon: ShieldCheck, label: "이 채널의 방송 시청 시 광고 제거" },
+  { icon: MessageCircle, label: "구독자 전용 채팅" },
+  { icon: BadgeCheck, label: "구독 기간에 맞는 전용 배지" },
+] as const;
+
+function formatPrice(value: number) {
+  return value.toLocaleString("ko-KR");
+}
+
+export function LiveSubscribeDialog({
+  open,
+  creator,
+  isSubscribed,
+  isPending,
+  subscriptionBadgeCustomMonths,
+  subscriptionBadgeVersion,
+  subscriptionBadgeImageSources,
+  subscriptionEmotes,
+  onOpenChange,
+  onConfirm,
+}: Props) {
+  const fallback = getAvatarFallbackText(creator.name);
+  const avatarSrc = getAvatarImageSrc(creator.avatarUrl);
+  const badgeMonths = buildLiveSubscriptionBadgeMonths(subscriptionBadgeCustomMonths);
+  const submitLabel = isSubscribed
+    ? "이미 구독 중"
+    : `매월 ${formatPrice(LIVE_SUBSCRIPTION_PRICE)}원 결제하고 구독하기`;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-dvh gap-0 overflow-hidden p-0 sm:max-w-md">
+        <DialogHeader className="border-border border-b p-5 pb-4">
+          <div className="flex items-center gap-3">
+            <Avatar size="lg" className="ring-brand/70 ring-2">
+              <AvatarImage src={avatarSrc} alt={`${creator.name} 프로필`} />
+              <AvatarFallback>{fallback}</AvatarFallback>
+            </Avatar>
+            <div className="min-w-0 flex-1">
+              <DialogTitle className="truncate text-lg font-black">{creator.name}</DialogTitle>
+              <DialogDescription className="text-muted-foreground mt-1 text-xs">
+                구독 혜택을 확인하고 결제를 진행합니다.
+              </DialogDescription>
+            </div>
+          </div>
+        </DialogHeader>
+
+        <ScrollArea className="max-h-120">
+          <div className="flex flex-col gap-5 p-5">
+            <section className="flex flex-col gap-3">
+              <h3 className="text-sm font-black">
+                <span className="text-brand">{creator.name}</span> 구독 혜택
+              </h3>
+              <div className="border-border overflow-hidden rounded-lg border">
+                {BENEFITS.map((benefit) => (
+                  <div
+                    key={benefit.label}
+                    className="border-border flex items-center gap-3 border-b px-3 py-3 last:border-b-0"
+                  >
+                    <benefit.icon className="text-muted-foreground size-4 shrink-0" />
+                    <span className="text-sm font-medium">{benefit.label}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="flex flex-col gap-3">
+              <div className="flex items-center gap-2">
+                <Star className="text-brand size-4 fill-current" />
+                <h3 className="text-sm font-black">구독자 전용 배지</h3>
+              </div>
+              <div className="grid grid-cols-4 gap-3 sm:grid-cols-7">
+                {badgeMonths.map((month) => (
+                  <div key={month} className="flex min-w-0 flex-col items-center gap-1.5">
+                    <LiveSubscriptionBadge
+                      creatorId={creator.id}
+                      totalMonths={month}
+                      customMonths={subscriptionBadgeCustomMonths}
+                      version={subscriptionBadgeVersion}
+                      imageSourcesByMonth={subscriptionBadgeImageSources}
+                      size="lg"
+                    />
+                    <span className="text-muted-foreground text-xs">{month}개월</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="flex flex-col gap-3">
+              <div className="flex items-center gap-2">
+                <SmilePlus className="text-brand size-4" />
+                <h3 className="text-sm font-black">구독 이모티콘</h3>
+              </div>
+              {subscriptionEmotes.length > 0 ? (
+                <div className="grid grid-cols-6 gap-3 sm:grid-cols-8">
+                  {subscriptionEmotes.map((emote) => (
+                    <div
+                      key={emote.src}
+                      className={cn(
+                        "border-border bg-background flex aspect-square items-center justify-center overflow-hidden rounded-md border",
+                        "hover:bg-muted/60 transition-colors",
+                      )}
+                      title={emote.name}
+                    >
+                      <Image
+                        src={emote.src}
+                        alt={emote.name}
+                        width={40}
+                        height={40}
+                        className="size-8 object-contain"
+                        unoptimized={emote.src.toLowerCase().includes(".gif")}
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="border-border bg-muted/30 text-muted-foreground rounded-lg border px-3 py-4 text-center text-sm">
+                  아직 등록된 구독 이모티콘이 없습니다.
+                </div>
+              )}
+            </section>
+          </div>
+        </ScrollArea>
+
+        <DialogFooter className="mx-0 mb-0 flex-col items-stretch gap-3 p-5 sm:flex-col sm:items-stretch sm:justify-start">
+          <p className="text-muted-foreground w-full text-xs">
+            정기구독 자동결제에 동의합니다. 토스 결제 연동 전까지는 버튼을 누르면 바로 구독됩니다.
+          </p>
+          <Button
+            type="button"
+            size="lg"
+            className="bg-brand text-brand-foreground hover:bg-brand/90 h-11 w-full font-black"
+            disabled={isSubscribed || isPending}
+            onClick={onConfirm}
+          >
+            <CreditCard className="size-4" />
+            {isPending ? "구독 처리 중" : submitLabel}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

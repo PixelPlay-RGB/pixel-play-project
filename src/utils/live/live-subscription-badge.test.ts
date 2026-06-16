@@ -67,6 +67,7 @@ test("readLiveSubscriptionBadgeAssetInfo keeps custom months and newest storage 
     ]),
     {
       customMonths: [24],
+      availableMonths: [1, 24],
       version: "2026-06-15T03:00:00.000Z",
     },
   );

@@ -3,8 +3,16 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getLiveSubscriptionBadgeAssetsAction } from "@/actions/live/live";
+import {
+  getLiveSubscriptionBadgeAssetsAction,
+  getLiveSubscriptionEmotesAction,
+} from "@/actions/live/live";
 import { createClient } from "@/lib/supabase/client";
+import {
+  clearLiveSubscriptionBadgeSourceCache,
+  getLiveSubscriptionBadgeSourcesByMonth,
+  preloadLiveSubscriptionBadgeSources,
+} from "@/utils/live/live-subscription-badge";
 import { useAuthStore } from "@/stores/auth";
 import { QUERY_KEYS } from "@/constants/common/query-keys";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
@@ -28,7 +36,7 @@ export function useLiveViewData(creatorId: string) {
     enabled: !isAuthLoading && isValidCreatorId,
     staleTime: 1000 * 30,
     queryFn: async () => {
-      const [watchResult, countResult, badgeAssetsResult] = await Promise.all([
+      const [watchResult, countResult, badgeAssetsResult, emotesResult] = await Promise.all([
         supabase.rpc("get_live_watch", {
           p_creator_id: creatorId,
           ...(user?.id ? { p_viewer_id: user.id } : {}),
@@ -37,6 +45,7 @@ export function useLiveViewData(creatorId: string) {
           p_creator_id: creatorId,
         }),
         getLiveSubscriptionBadgeAssetsAction(creatorId),
+        getLiveSubscriptionEmotesAction(creatorId),
       ]);
 
       if (watchResult.error) {
@@ -52,14 +61,36 @@ export function useLiveViewData(creatorId: string) {
       if (!watchData) return null;
 
       const badgeAssets = badgeAssetsResult.success ? badgeAssetsResult.data : null;
+      const subscriptionEmotes = emotesResult.success ? (emotesResult.data ?? []) : [];
 
       return {
         ...watchData,
         subscriptionBadgeCustomMonths: badgeAssets?.customMonths ?? [],
         subscriptionBadgeVersion: badgeAssets?.version ?? null,
+        subscriptionBadgeImageSources: getLiveSubscriptionBadgeSourcesByMonth(creatorId, {
+          customMonths: badgeAssets?.customMonths ?? [],
+          availableMonths: badgeAssets?.availableMonths ?? [],
+          version: badgeAssets?.version ?? null,
+        }),
+        subscriptionEmotes,
       };
     },
   });
+
+  useEffect(() => {
+    const data = query.data;
+    if (!data?.subscriptionBadgeImageSources) return;
+
+    preloadLiveSubscriptionBadgeSources(Object.values(data.subscriptionBadgeImageSources));
+  }, [query.data]);
+
+  useEffect(() => {
+    return () => {
+      const watchQueryKey = QUERY_KEYS.live.watch(creatorId, user?.id);
+      queryClient.removeQueries({ queryKey: watchQueryKey, exact: true });
+      clearLiveSubscriptionBadgeSourceCache();
+    };
+  }, [creatorId, queryClient, user?.id]);
 
   const broadcastId = query.data?.broadcast?.id;
 

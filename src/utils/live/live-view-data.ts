@@ -15,6 +15,8 @@ type RawLiveWatchData = Omit<
   | "viewerChatState"
   | "subscriptionBadgeCustomMonths"
   | "subscriptionBadgeVersion"
+  | "subscriptionBadgeImageSources"
+  | "subscriptionEmotes"
 > & {
   creator: Omit<LiveWatchData["creator"], "followerCount" | "broadcastCount">;
   viewerRelation:
@@ -97,5 +99,7 @@ export function normalizeLiveViewData(
     viewerRelation,
     subscriptionBadgeCustomMonths: [],
     subscriptionBadgeVersion: null,
+    subscriptionBadgeImageSources: {},
+    subscriptionEmotes: [],
   };
 }

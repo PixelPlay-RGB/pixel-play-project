@@ -1,10 +1,11 @@
 "use client";
 // 크리에이터 팔로우/언팔로우와 공유 버튼을 담당하는 액션 영역입니다.
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Share2, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import CreatorFollowingButton from "@/components/following/creator-following-button";
+import { LiveSubscribeDialog } from "@/components/live/view/live-subscribe-dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,28 +20,45 @@ import { LIVE_LABEL } from "@/constants/live/live";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { toastAppSuccess, toastAppError } from "@/utils/common/toast-message";
 import { cn } from "@/lib/utils";
+import type { LiveCreator, LiveSubscriptionEmote } from "@/types/live/live";
 
 interface Props {
-  creatorNickname: string;
+  creator: LiveCreator;
   isFollowing: boolean;
   isSubscribed: boolean;
   isPending: boolean;
   isSubscribePending: boolean;
+  subscriptionBadgeCustomMonths: number[];
+  subscriptionBadgeVersion: string | null;
+  subscriptionBadgeImageSources: Record<number, string>;
+  subscriptionEmotes: LiveSubscriptionEmote[];
   onFollow: () => void;
   onSubscribe: () => void;
 }
 
 export function LiveCreatorActions({
-  creatorNickname,
+  creator,
   isFollowing,
   isSubscribed,
   isPending,
   isSubscribePending,
+  subscriptionBadgeCustomMonths,
+  subscriptionBadgeVersion,
+  subscriptionBadgeImageSources,
+  subscriptionEmotes,
   onFollow,
   onSubscribe,
 }: Props) {
   const [isUnfollowDialogOpen, setIsUnfollowDialogOpen] = useState(false);
+  const [isSubscribeDialogOpen, setIsSubscribeDialogOpen] = useState(false);
   const subscribeLabel = isSubscribed ? LIVE_LABEL.subscribed : LIVE_LABEL.subscribe;
+
+  useEffect(() => {
+    if (isSubscribed) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setIsSubscribeDialogOpen(false);
+    }
+  }, [isSubscribed]);
 
   function handleFollowClick() {
     if (isFollowing) {
@@ -79,15 +97,15 @@ export function LiveCreatorActions({
               : "bg-live hover:bg-live/85 shadow-live/25 text-live-foreground shadow-sm hover:shadow-md",
           )}
           disabled={isSubscribed || isSubscribePending}
-          aria-label={`${creatorNickname} ${subscribeLabel}`}
-          onClick={onSubscribe}
+          aria-label={`${creator.name} ${subscribeLabel}`}
+          onClick={() => setIsSubscribeDialogOpen(true)}
         >
           <Star className={cn("size-3.5", isSubscribed && "fill-current")} />
           {subscribeLabel}
         </Button>
 
         <CreatorFollowingButton
-          creatorNickname={creatorNickname}
+          creatorNickname={creator.name}
           isFollowing={isFollowing}
           isOwnChannel={false}
           isPending={isPending}
@@ -120,6 +138,19 @@ export function LiveCreatorActions({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <LiveSubscribeDialog
+        open={isSubscribeDialogOpen}
+        creator={creator}
+        isSubscribed={isSubscribed}
+        isPending={isSubscribePending}
+        subscriptionBadgeCustomMonths={subscriptionBadgeCustomMonths}
+        subscriptionBadgeVersion={subscriptionBadgeVersion}
+        subscriptionBadgeImageSources={subscriptionBadgeImageSources}
+        subscriptionEmotes={subscriptionEmotes}
+        onOpenChange={setIsSubscribeDialogOpen}
+        onConfirm={onSubscribe}
+      />
     </>
   );
 }

@@ -15,6 +15,7 @@ import type { Json } from "@/types/database.types";
 import type {
   CreatorSubscriptionActionResult,
   CreatorSubscriptionStatus,
+  LiveSubscriptionEmote,
   SendLiveMessageResult,
 } from "@/types/live/live";
 import {
@@ -29,6 +30,10 @@ import {
   readLiveSubscriptionBadgeAssetInfo,
   type LiveSubscriptionBadgeAssetInfo,
 } from "@/utils/live/live-subscription-badge";
+import {
+  LIVE_SUBSCRIPTION_EMOTE_STORAGE_FOLDER,
+  readLiveSubscriptionEmotes,
+} from "@/utils/live/live-subscription-emote";
 
 // send_live_message_v2의 jsonb 응답({ messageId, moderated })을 앱 타입으로 정규화한다.
 // 금칙어로 가려진 경우 messageId는 null, moderated는 true다.
@@ -222,6 +227,29 @@ export async function getLiveSubscriptionBadgeAssetsAction(
   }
 
   return { success: true, data: readLiveSubscriptionBadgeAssetInfo(data ?? null) };
+}
+
+export async function getLiveSubscriptionEmotesAction(
+  creatorId: string,
+): Promise<AppActionResult<LiveSubscriptionEmote[]>> {
+  if (!creatorId || !isUuid(creatorId)) {
+    return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
+  }
+
+  const supabase = createAdminClient();
+  const { data, error } = await supabase.storage
+    .from(USER_MEDIA_BUCKET)
+    .list(`${creatorId}/${LIVE_SUBSCRIPTION_EMOTE_STORAGE_FOLDER}`, {
+      limit: 60,
+      sortBy: { column: "name", order: "asc" },
+    });
+
+  if (error) {
+    console.error("라이브 구독 이모티콘 목록 조회 실패", error);
+    return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
+  }
+
+  return { success: true, data: readLiveSubscriptionEmotes(creatorId, data ?? null) };
 }
 
 export async function voteLivePollAction(pollId: string, optionId: string): Promise<boolean> {

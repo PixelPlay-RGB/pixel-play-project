@@ -124,6 +124,12 @@ export interface CreatorSubscriptionActionResult {
   status: CreatorSubscriptionStatus;
 }
 
+export interface LiveSubscriptionEmote {
+  name: string;
+  src: string;
+  updatedAt: string | null;
+}
+
 export interface LiveDonation {
   id: string;
   author: string;
@@ -257,6 +263,8 @@ export interface LiveWatchData {
   viewerChatState: LiveViewerChatState;
   subscriptionBadgeCustomMonths: number[];
   subscriptionBadgeVersion: string | null;
+  subscriptionBadgeImageSources: Record<number, string>;
+  subscriptionEmotes: LiveSubscriptionEmote[];
 }
 
 // RPC의 크리에이터 응답을 UI에서 쓰는 LiveCreator로 정규화한다.

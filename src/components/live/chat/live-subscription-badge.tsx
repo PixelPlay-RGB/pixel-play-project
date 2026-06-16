@@ -1,5 +1,4 @@
 "use client";
-// 구독 개월 수에 맞는 구독 배지 이미지를 채팅에 표시합니다.
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { LIVE_LABEL } from "@/constants/live/live";
@@ -17,6 +16,7 @@ interface Props {
   totalMonths?: number | null;
   customMonths?: number[];
   version?: string | null;
+  imageSourcesByMonth?: Record<number, string>;
   size?: "sm" | "lg";
   withTooltip?: boolean;
   className?: string;
@@ -27,16 +27,19 @@ export function LiveSubscriptionBadge({
   totalMonths,
   customMonths = [],
   version,
+  imageSourcesByMonth,
   size = "sm",
   withTooltip = false,
   className,
 }: Props) {
   const month = resolveLiveSubscriptionBadgeMonth(totalMonths, customMonths);
-  const label = `${LIVE_LABEL.subscriberBadge} ${month}개월`;
+  const label = `${LIVE_LABEL.subscriberBadge} ${month} 개월`;
   const storageSrc = getLiveSubscriptionBadgePublicUrl(creatorId, month, customMonths, version);
   const fallbackSrc = getLiveDefaultSubscriptionBadgeSrc(month);
+  const candidateSrc = imageSourcesByMonth?.[month] ?? storageSrc;
+  const isStorageSource = candidateSrc === storageSrc;
   const [failedStorageSrc, setFailedStorageSrc] = useState<string | null>(null);
-  const imageSrc = failedStorageSrc === storageSrc ? fallbackSrc : storageSrc;
+  const imageSrc = failedStorageSrc === candidateSrc ? fallbackSrc : candidateSrc;
 
   const badge = (
     <span
@@ -56,8 +59,8 @@ export function LiveSubscriptionBadge({
         width={size === "sm" ? 20 : 32}
         height={size === "sm" ? 20 : 32}
         onError={() => {
-          if (imageSrc === storageSrc) {
-            setFailedStorageSrc(storageSrc);
+          if (isStorageSource) {
+            setFailedStorageSrc(candidateSrc);
           }
         }}
       />

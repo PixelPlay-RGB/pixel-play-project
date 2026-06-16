@@ -22,6 +22,7 @@ interface Props {
   messages: LiveChatMessage[];
   subscriptionBadgeCustomMonths?: number[];
   subscriptionBadgeVersion?: string | null;
+  subscriptionBadgeImageSources?: Record<number, string>;
   // 클린봇 토글 상태. ON이면 비속어로 걸린 메시지를 가린다. 기본 ON.
   cleanbotEnabled?: boolean;
   // 후원 랭킹 배너(absolute 오버레이)가 덮는 실측 높이(px). 접고 펼칠 때마다 호출부가 갱신해 넘긴다.
@@ -35,6 +36,7 @@ export function LiveChatMessageList({
   messages,
   subscriptionBadgeCustomMonths = [],
   subscriptionBadgeVersion = null,
+  subscriptionBadgeImageSources,
   cleanbotEnabled = true,
   topInsetPx = 0,
   scrollRef,
@@ -109,6 +111,7 @@ export function LiveChatMessageList({
                 message={messages[item.index - 1]}
                 subscriptionBadgeCustomMonths={subscriptionBadgeCustomMonths}
                 subscriptionBadgeVersion={subscriptionBadgeVersion}
+                subscriptionBadgeImageSources={subscriptionBadgeImageSources}
                 cleanbotEnabled={cleanbotEnabled}
               />
             )}
@@ -124,6 +127,7 @@ interface MessageItemProps {
   message: LiveChatMessage;
   subscriptionBadgeCustomMonths: number[];
   subscriptionBadgeVersion: string | null;
+  subscriptionBadgeImageSources?: Record<number, string>;
   cleanbotEnabled: boolean;
 }
 
@@ -134,6 +138,7 @@ const MessageItem = memo(function MessageItem({
   message,
   subscriptionBadgeCustomMonths,
   subscriptionBadgeVersion,
+  subscriptionBadgeImageSources,
   cleanbotEnabled,
 }: MessageItemProps) {
   if (message.type === "system") {
@@ -182,6 +187,7 @@ const MessageItem = memo(function MessageItem({
       message={message}
       subscriptionBadgeCustomMonths={subscriptionBadgeCustomMonths}
       subscriptionBadgeVersion={subscriptionBadgeVersion}
+      subscriptionBadgeImageSources={subscriptionBadgeImageSources}
       isMasked={isMasked}
     />
   );
@@ -192,12 +198,14 @@ function TextMessage({
   message,
   subscriptionBadgeCustomMonths,
   subscriptionBadgeVersion,
+  subscriptionBadgeImageSources,
   isMasked,
 }: {
   creatorId: string;
   message: LiveChatMessage;
   subscriptionBadgeCustomMonths: number[];
   subscriptionBadgeVersion: string | null;
+  subscriptionBadgeImageSources?: Record<number, string>;
   isMasked: boolean;
 }) {
   // 역할 마크는 DB가 전송 시점에 스냅샷한 sender_role을 그대로 쓴다(viewer는 마크 없음).
@@ -227,6 +235,7 @@ function TextMessage({
               totalMonths={message.subscriptionTotalMonths}
               customMonths={subscriptionBadgeCustomMonths}
               version={subscriptionBadgeVersion}
+              imageSourcesByMonth={subscriptionBadgeImageSources}
               withTooltip
             />
           ) : null}
@@ -237,6 +246,7 @@ function TextMessage({
           totalMonths={message.subscriptionTotalMonths}
           customMonths={subscriptionBadgeCustomMonths}
           version={subscriptionBadgeVersion}
+          imageSourcesByMonth={subscriptionBadgeImageSources}
           withTooltip
           className="mr-1.5"
         />

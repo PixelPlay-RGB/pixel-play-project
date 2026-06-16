@@ -44,6 +44,8 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     messages,
     subscriptionBadgeCustomMonths,
     subscriptionBadgeVersion,
+    subscriptionBadgeImageSources,
+    subscriptionEmotes,
     donations,
     polls,
     isPollsLoading,
@@ -194,6 +196,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
                       creatorId={creatorId}
                       subscriptionBadgeCustomMonths={subscriptionBadgeCustomMonths}
                       subscriptionBadgeVersion={subscriptionBadgeVersion}
+                      subscriptionBadgeImageSources={subscriptionBadgeImageSources}
                       donationOpenRequested={isDonationRequested}
                       onDonationOpenSettled={onDonationSettled}
                       messages={messages}
@@ -285,6 +288,10 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
                   isSubscribed={isSubscribed}
                   isPending={isFollowPending}
                   isSubscribePending={isSubscribePending}
+                  subscriptionBadgeCustomMonths={subscriptionBadgeCustomMonths}
+                  subscriptionBadgeVersion={subscriptionBadgeVersion}
+                  subscriptionBadgeImageSources={subscriptionBadgeImageSources}
+                  subscriptionEmotes={subscriptionEmotes}
                   onFollow={handleFollow}
                   onSubscribe={handleSubscribe}
                   className="px-4 py-4"
@@ -307,6 +314,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
               messages={messages}
               subscriptionBadgeCustomMonths={subscriptionBadgeCustomMonths}
               subscriptionBadgeVersion={subscriptionBadgeVersion}
+              subscriptionBadgeImageSources={subscriptionBadgeImageSources}
               donations={donations}
               polls={polls}
               isPollsLoading={isPollsLoading}

@@ -10,6 +10,7 @@ export const LIVE_SUBSCRIPTION_BADGE_MIN_CUSTOM_MONTH = 19;
 
 export interface LiveSubscriptionBadgeAssetInfo {
   customMonths: number[];
+  availableMonths: number[];
   version: string | null;
 }
 
@@ -88,6 +89,7 @@ export function readLiveSubscriptionBadgeAssetInfo(
   files: readonly LiveSubscriptionBadgeStorageFile[] | null,
 ): LiveSubscriptionBadgeAssetInfo {
   const customMonths: number[] = [];
+  const availableMonths: number[] = [];
   let newestVersion: string | null = null;
   let newestVersionMs = -1;
 
@@ -101,6 +103,9 @@ export function readLiveSubscriptionBadgeAssetInfo(
 
     if (badgeMonth !== null && badgeMonth >= LIVE_SUBSCRIPTION_BADGE_MIN_CUSTOM_MONTH) {
       customMonths.push(badgeMonth);
+    }
+    if (badgeMonth !== null) {
+      availableMonths.push(badgeMonth);
     }
 
     const version = readStorageFileVersion(file);
@@ -117,8 +122,53 @@ export function readLiveSubscriptionBadgeAssetInfo(
 
   return {
     customMonths: Array.from(new Set(customMonths)).sort((a, b) => a - b),
+    availableMonths: Array.from(new Set(availableMonths)).sort((a, b) => a - b),
     version: newestVersion,
   };
+}
+
+export function getLiveSubscriptionBadgeSourcesByMonth(
+  creatorId: string,
+  {
+    customMonths,
+    availableMonths,
+    version,
+  }: {
+    customMonths: readonly number[];
+    availableMonths: readonly number[];
+    version: string | null;
+  },
+) {
+  const available = new Set(availableMonths);
+  const sourceByMonth: Record<number, string> = {};
+  const configuredMonths = buildLiveSubscriptionBadgeMonths(customMonths);
+
+  for (const month of configuredMonths) {
+    const storageSrc = getLiveSubscriptionBadgePublicUrl(creatorId, month, [month], version);
+    const fallbackSrc = getLiveDefaultSubscriptionBadgeSrc(month);
+
+    sourceByMonth[month] = available.has(month) ? storageSrc : fallbackSrc;
+  }
+
+  return sourceByMonth;
+}
+
+const preloadedLiveSubscriptionBadgeUrls = new Set<string>();
+
+export function preloadLiveSubscriptionBadgeSources(sources: readonly string[]) {
+  if (typeof window === "undefined") return;
+
+  for (const src of sources) {
+    if (preloadedLiveSubscriptionBadgeUrls.has(src)) continue;
+    preloadedLiveSubscriptionBadgeUrls.add(src);
+
+    const image = new Image();
+    image.src = src;
+  }
+}
+
+export function clearLiveSubscriptionBadgeSourceCache() {
+  preloadedLiveSubscriptionBadgeUrls.clear();
 }
 
 export function getLiveSubscriptionBadgePublicUrl(
