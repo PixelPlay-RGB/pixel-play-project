@@ -27,6 +27,9 @@ export const STICKER_LABEL = {
   tabRecent: "최근 사용",
   tabDefault: "기본",
   tabChannel: "내 채널",
+  // 본문 섹션 헤더(치지직 "최근 사용한 이모티콘"식 — 그리드 위 작은 제목).
+  sectionRecent: "최근 사용한 이모지",
+  sectionDefault: "기본 이모지",
   emptyRecent: "최근 사용한 이모지가 여기 표시돼요.",
   emptyChannel: "등록된 채널 이모지가 없어요.",
 } as const;

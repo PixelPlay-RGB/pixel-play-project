@@ -16,7 +16,7 @@ interface ChannelStickerContextValue {
   // 채널 이모지 최초 로딩 여부 — 피커 채널 탭 로딩 인디케이터에 쓴다.
   isLoading: boolean;
   canUseInPicker: boolean;
-  // 피커 채널 탭 아이콘(아바타)·라벨용 채널 표시 정보. 표면이 안 주면 null(이니셜 폴백).
+  // 피커 채널 탭 아이콘(아바타)·라벨용 채널 표시 정보(크리에이터 본인 프로필에서 채운다).
   channelName: string | null;
   channelAvatarUrl: string | null;
 }
@@ -31,31 +31,29 @@ const ChannelStickerContext = createContext<ChannelStickerContextValue>({
 
 export function ChannelStickerProvider({
   creatorId,
-  channelName = null,
-  channelAvatarUrl = null,
   children,
 }: {
   // 운영 콘솔 등 creatorId가 아직 없을 수 있는 표면도 안전하게 감싸도록 undefined 허용.
   creatorId: string | undefined;
-  // 피커 채널 탭 아바타·라벨용(시청 화면이 creator에서 넘긴다). 없으면 이니셜 폴백.
-  channelName?: string | null;
-  channelAvatarUrl?: string | null;
   children: ReactNode;
 }) {
   const { data: stickers, isLoading } = useChannelEmojiStickers(creatorId);
-  const { data: user } = useNullableUser();
+  // 본인 프로필 — 채널 탭은 본인(크리에이터)만 뜨므로, 본인 프로필이 곧 채널 탭 표시 정보다.
+  // (user 테이블은 authenticated 읽기라 비로그인은 못 읽지만, 그 경우 채널 탭 자체가 안 뜬다.)
+  const { data: profile } = useNullableUser();
 
-  const value = useMemo<ChannelStickerContextValue>(
-    () => ({
+  const value = useMemo<ChannelStickerContextValue>(() => {
+    // 지금은 크리에이터 본인만 채널 이모지를 보낼 수 있다(구독자 허용은 구독 연동 시 추가).
+    const canUseInPicker = Boolean(creatorId) && profile?.id === creatorId;
+    return {
       stickers: stickers ?? [],
       isLoading,
-      // 지금은 크리에이터 본인만 채널 이모지를 보낼 수 있다(구독자 허용은 구독 연동 시 추가).
-      canUseInPicker: Boolean(creatorId) && Boolean(user) && user?.id === creatorId,
-      channelName,
-      channelAvatarUrl,
-    }),
-    [stickers, isLoading, user, creatorId, channelName, channelAvatarUrl],
-  );
+      canUseInPicker,
+      // 채널 탭 아바타·라벨 = 본인 프로필(닉네임·사진). 표면별 prop 전달 없이 모든 채팅 표면에서 동작한다.
+      channelName: canUseInPicker ? (profile?.nickname ?? null) : null,
+      channelAvatarUrl: canUseInPicker ? (profile?.photo_url ?? null) : null,
+    };
+  }, [stickers, isLoading, profile, creatorId]);
 
   return <ChannelStickerContext.Provider value={value}>{children}</ChannelStickerContext.Provider>;
 }
