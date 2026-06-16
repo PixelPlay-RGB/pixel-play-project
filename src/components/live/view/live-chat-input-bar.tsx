@@ -310,7 +310,7 @@ export function LiveChatInputBar({
             }
             disabled={!isEditable}
             channelStickers={canUseInPicker ? channelStickers : undefined}
-            channelLoading={canUseInPicker ? channelLoading : undefined}
+            channelLoading={channelLoading}
             channelName={channelName}
             channelAvatarUrl={channelAvatarUrl}
             // 팝오버를 입력바 전체 폭에 맞춰 채팅창 위에 띄운다(후원·규칙 popover와 같은 anchor 기준).

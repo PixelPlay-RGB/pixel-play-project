@@ -9,6 +9,7 @@ import { createContext, useContext, useMemo, type ReactNode } from "react";
 
 import { useChannelEmojiStickers } from "@/hooks/channel/use-channel-emoji-stickers";
 import { useNullableUser } from "@/hooks/profile/use-profile";
+import { useAuthStore } from "@/stores/auth";
 import type { Sticker } from "@/types/sticker/sticker";
 
 interface ChannelStickerContextValue {
@@ -39,8 +40,9 @@ export function ChannelStickerProvider({
 }) {
   const { data: stickers, isLoading } = useChannelEmojiStickers(creatorId);
   // 본인 프로필 — 채널 탭은 본인(크리에이터)만 뜨므로, 본인 프로필이 곧 채널 탭 표시 정보다.
-  // (user 테이블은 authenticated 읽기라 비로그인은 못 읽지만, 그 경우 채널 탭 자체가 안 뜬다.)
-  const { data: profile } = useNullableUser();
+  // 비로그인 시청자(대다수)는 채널 탭이 안 떠 프로필이 불필요하므로, 로그인 상태에서만 조회한다.
+  const authUser = useAuthStore((state) => state.user);
+  const { data: profile } = useNullableUser(Boolean(authUser));
 
   const value = useMemo<ChannelStickerContextValue>(() => {
     // 지금은 크리에이터 본인만 채널 이모지를 보낼 수 있다(구독자 허용은 구독 연동 시 추가).

@@ -24,6 +24,7 @@ import { DEFAULT_STICKERS, STICKER_LABEL, STICKER_PX } from "@/constants/sticker
 import { useRecentStickers } from "@/hooks/sticker/use-recent-stickers";
 import { cn } from "@/lib/utils";
 import type { Sticker } from "@/types/sticker/sticker";
+import { getAvatarFallbackText } from "@/utils/profile/avatar";
 import { buildStickerToken } from "@/utils/sticker/sticker-token";
 
 interface Props {
@@ -45,6 +46,7 @@ interface Props {
 }
 
 type StickerTabKey = "recent" | "default" | "channel";
+type StickerTab = { key: StickerTabKey; label: string; icon: ReactNode };
 
 // PixelPlay 정사각 브랜드마크(favicon /icon.svg 인라인) — 기본 탭 아이콘. SVG에 라운드(rx)가 내장돼 있다.
 function PixelPlayMark({ className }: { className?: string }) {
@@ -147,6 +149,15 @@ export default function StickerPicker({
   const hasChannelTab = channelStickers !== undefined;
   const channel = useMemo(() => channelStickers ?? [], [channelStickers]);
 
+  // disabled로 강제로 닫힌 동안 내부 open도 함께 내려, 다시 enabled가 됐을 때 사용자 동작 없이
+  // 팝오버가 저절로 재등장하는 것을 막는다(저속 모드·게이트 진입 등 disabled 토글 대비).
+  if (disabled && open) setOpen(false);
+  // 채널 탭이 사라졌는데(권한 변화 등) 거기 머물러 있으면 기본 탭으로 되돌린다.
+  if (activeTab === "channel" && !hasChannelTab) setActiveTab("default");
+
+  // 채널 탭 라벨 — 닉네임이 비면 "내 채널"로 폴백(?? 는 빈 문자열을 못 걸러 직접 처리).
+  const channelLabel = channelName?.trim() ? channelName : STICKER_LABEL.tabChannel;
+
   // 최근 id → Sticker 해석(기본 + 현재 채널). 못 찾는 id(다른 채널·삭제됨)는 자연 제외한다.
   const recentStickers = useMemo(() => {
     const byId = new Map<string, Sticker>();
@@ -159,8 +170,8 @@ export default function StickerPicker({
   const hasRecent = recentStickers.length > 0;
 
   // 탭 목록 — 최근·기본은 항상, 채널은 채널 이모지를 쓸 수 있을 때만(가로 캐러셀로 스크롤).
-  const tabs = useMemo<{ key: StickerTabKey; label: string; icon: ReactNode }[]>(() => {
-    const list: { key: StickerTabKey; label: string; icon: ReactNode }[] = [
+  const tabs = useMemo<StickerTab[]>(() => {
+    const list: StickerTab[] = [
       { key: "recent", label: STICKER_LABEL.tabRecent, icon: <Clock className="size-5" /> },
       {
         key: "default",
@@ -171,19 +182,19 @@ export default function StickerPicker({
     if (hasChannelTab) {
       list.push({
         key: "channel",
-        label: channelName ?? STICKER_LABEL.tabChannel,
+        label: channelLabel,
         icon: (
           <Avatar className="size-6">
             <AvatarImage src={channelAvatarUrl ?? undefined} alt="" />
             <AvatarFallback className="text-xs">
-              {channelName?.trim().charAt(0) ?? ""}
+              {getAvatarFallbackText(channelLabel, 1)}
             </AvatarFallback>
           </Avatar>
         ),
       });
     }
     return list;
-  }, [hasChannelTab, channelName, channelAvatarUrl]);
+  }, [hasChannelTab, channelLabel, channelAvatarUrl]);
 
   function handleOpenChange(next: boolean) {
     if (disabled) return;
@@ -199,12 +210,12 @@ export default function StickerPicker({
     // 피커는 닫지 않는다 — 여러 개를 연속으로 선택할 수 있게 한다.
   }
 
-  // 현재 탭의 섹션 헤더 텍스트(채널 탭은 채널 이름, 없으면 "내 채널").
+  // 현재 탭의 섹션 헤더 텍스트(채널 탭은 채널 라벨 재사용).
   const sectionLabel =
     activeTab === "recent"
       ? STICKER_LABEL.sectionRecent
       : activeTab === "channel"
-        ? (channelName ?? STICKER_LABEL.tabChannel)
+        ? channelLabel
         : STICKER_LABEL.sectionDefault;
 
   function renderBody() {
