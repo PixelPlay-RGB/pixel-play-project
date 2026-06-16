@@ -157,6 +157,8 @@ export const APP_MESSAGE_CODE = {
       emojiDeleteFailed: "error.channel.emojiDeleteFailed",
       emojiImageTooLarge: "error.channel.emojiImageTooLarge",
       emojiLimitReached: "error.channel.emojiLimitReached",
+      emojiInvalidType: "error.channel.emojiInvalidType",
+      emojiSingleFileOnly: "error.channel.emojiSingleFileOnly",
       managerListLoadFailed: "error.channel.managerListLoadFailed",
       managerAddFailed: "error.channel.managerAddFailed",
       managerRemoveFailed: "error.channel.managerRemoveFailed",

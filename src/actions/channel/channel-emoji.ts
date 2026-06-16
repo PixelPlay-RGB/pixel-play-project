@@ -32,14 +32,11 @@ export async function addChannelEmojiAction(
   const file = formData.get("file") as File | null;
   const name = ((formData.get("name") as string | null) ?? "").trim();
 
-  if (
-    !file ||
-    file.size === 0 ||
-    !CHANNEL_EMOJI_ALLOWED_TYPES.includes(file.type) ||
-    name.length === 0 ||
-    name.length > CHANNEL_EMOJI_NAME_MAX
-  ) {
+  if (!file || file.size === 0 || name.length === 0 || name.length > CHANNEL_EMOJI_NAME_MAX) {
     return { success: false, code: APP_MESSAGE_CODE.error.channel.emojiSaveFailed };
+  }
+  if (!CHANNEL_EMOJI_ALLOWED_TYPES.includes(file.type)) {
+    return { success: false, code: APP_MESSAGE_CODE.error.channel.emojiInvalidType };
   }
   if (file.size > CHANNEL_EMOJI_MAX_SIZE) {
     return { success: false, code: APP_MESSAGE_CODE.error.channel.emojiImageTooLarge };
@@ -103,7 +100,7 @@ export async function updateChannelEmojiAction(
     return { success: false, code: APP_MESSAGE_CODE.error.channel.emojiSaveFailed };
   }
   if (hasNewImage && !CHANNEL_EMOJI_ALLOWED_TYPES.includes(file.type)) {
-    return { success: false, code: APP_MESSAGE_CODE.error.channel.emojiSaveFailed };
+    return { success: false, code: APP_MESSAGE_CODE.error.channel.emojiInvalidType };
   }
   if (hasNewImage && file.size > CHANNEL_EMOJI_MAX_SIZE) {
     return { success: false, code: APP_MESSAGE_CODE.error.channel.emojiImageTooLarge };

@@ -28,6 +28,7 @@ import {
 } from "@/constants/channel/channel-emoji";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { STICKER_PX } from "@/constants/sticker/sticker";
+import { cn } from "@/lib/utils";
 import type { ChannelEmoji } from "@/types/channel/channel-emoji";
 import { toastAppError } from "@/utils/common/toast-message";
 
@@ -44,6 +45,7 @@ export function ChannelEmojiFormDialog({ target, onClose, onSubmit, isPending }:
   // 새로 고른 이미지의 blob URL(있을 때만). 기존(remote) URL은 revoke 대상이 아니다.
   const [objectUrl, setObjectUrl] = useState<string | null>(null);
   const [name, setName] = useState("");
+  const [isDragOver, setIsDragOver] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // target이 바뀌면(열림/수정 대상 변경) 폼 상태를 초기화한다 — 렌더 중 직접 조정(effect 불필요).
@@ -78,7 +80,7 @@ export function ChannelEmojiFormDialog({ target, onClose, onSubmit, isPending }:
   const handleSelectFile = (next: File | null) => {
     if (!next) return;
     if (!CHANNEL_EMOJI_ALLOWED_TYPES.includes(next.type)) {
-      toastAppError(APP_MESSAGE_CODE.error.channel.emojiSaveFailed);
+      toastAppError(APP_MESSAGE_CODE.error.channel.emojiInvalidType);
       return;
     }
     if (next.size > CHANNEL_EMOJI_MAX_SIZE) {
@@ -90,6 +92,16 @@ export function ChannelEmojiFormDialog({ target, onClose, onSubmit, isPending }:
       return URL.createObjectURL(next);
     });
     setFile(next);
+  };
+
+  // 파일 선택(클릭)·드롭 공통 진입점 — 여러 개면 막아 한 번에 하나만 등록한다(나머지는 무시하지 않고 거부).
+  const handleFiles = (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    if (files.length > 1) {
+      toastAppError(APP_MESSAGE_CODE.error.channel.emojiSingleFileOnly);
+      return;
+    }
+    handleSelectFile(files[0]);
   };
 
   // 추가는 이미지 필수, 수정은 이미지 선택(미선택 시 기존 유지).
@@ -125,8 +137,21 @@ export function ChannelEmojiFormDialog({ target, onClose, onSubmit, isPending }:
             type="button"
             disabled={isPending}
             onClick={() => inputRef.current?.click()}
+            onDragOver={(event) => {
+              event.preventDefault();
+              if (!isPending) setIsDragOver(true);
+            }}
+            onDragLeave={() => setIsDragOver(false)}
+            onDrop={(event) => {
+              event.preventDefault();
+              setIsDragOver(false);
+              if (!isPending) handleFiles(event.dataTransfer.files);
+            }}
             aria-label={isEdit ? CHANNEL_EMOJI_LABEL.changeImage : CHANNEL_EMOJI_LABEL.uploadTitle}
-            className="border-border hover:border-brand/60 hover:bg-brand/5 bg-muted/30 group relative flex h-36 flex-col items-center justify-center gap-2 rounded-2xl border border-dashed transition-colors disabled:opacity-60"
+            className={cn(
+              "border-border bg-muted/30 group relative flex h-36 flex-col items-center justify-center gap-2 rounded-2xl border border-dashed transition-colors disabled:opacity-60",
+              isDragOver ? "border-brand bg-brand/10" : "hover:border-brand/60 hover:bg-brand/5",
+            )}
           >
             {previewSrc ? (
               <>
@@ -218,7 +243,7 @@ export function ChannelEmojiFormDialog({ target, onClose, onSubmit, isPending }:
           accept={CHANNEL_EMOJI_ACCEPT}
           className="hidden"
           onChange={(event) => {
-            handleSelectFile(event.target.files?.[0] ?? null);
+            handleFiles(event.target.files);
             event.target.value = "";
           }}
         />

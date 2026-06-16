@@ -48,7 +48,7 @@ export const CHANNEL_EMOJI_LABEL = {
   editTitle: "이모지 수정",
   addDescription: "투명 배경 PNG 이미지를 올리고 짧은 이름을 붙여 주세요.",
   uploadTitle: "이미지 업로드",
-  uploadHint: "클릭해서 PNG 파일을 선택해요",
+  uploadHint: "PNG를 끌어다 놓거나 클릭해서 선택해요",
   changeImage: "이미지 변경",
   inChatPreviewLabel: "채팅에서",
   pickerPreviewLabel: "이모지 목록에서",

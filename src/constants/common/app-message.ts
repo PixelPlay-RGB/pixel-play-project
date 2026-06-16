@@ -469,6 +469,14 @@ export const APP_MESSAGE = {
         title: "이모지 개수 초과",
         description: "이모지는 최대 10개까지 등록할 수 있어요.",
       },
+      emojiInvalidType: {
+        title: "지원하지 않는 형식",
+        description: "투명 배경 PNG 이미지만 등록할 수 있어요.",
+      },
+      emojiSingleFileOnly: {
+        title: "한 개만 등록할 수 있어요",
+        description: "이모지는 한 번에 하나씩 등록해요.",
+      },
       managerListLoadFailed: {
         title: "매니저 목록 조회 실패",
         description: "다시 로그인하거나 잠시 후 새로고침해주세요.",
