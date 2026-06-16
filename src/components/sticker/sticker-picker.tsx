@@ -1,16 +1,24 @@
 "use client";
 // 스티커(이모지) 선택 팝오버(공용). 라이브 채팅 입력바·커뮤니티 작성/댓글에서 재사용.
-// 치지직 이모티콘 피커식 — 상단 가로 스크롤 아이콘 탭 행 + 고정 높이 본문(섹션 헤더 + 그리드).
+// 치지직 이모티콘 피커식 — 가로 캐러셀 아이콘 탭 + 구분선 + 고정 높이 본문(섹션 헤더 + 그리드).
 // 탭: [최근(시계)] [기본(PixelPlay 마크)] [채널(크리에이터 아바타)]. 채널 탭은 채널 이모지를
-// 보낼 수 있을 때만(channelStickers 전달) 나온다. 팝오버 높이·구조를 고정해, 탭 전환·선택 시에도
-// 팝오버가 재배치(순간이동)되지 않게 한다.
+// 보낼 수 있을 때만(channelStickers 전달) 나온다. 팝오버 높이·구조를 고정해 탭 전환·선택 시에도
+// 재배치(순간이동)되지 않게 하고, anchor가 주어지면 그 요소(채팅 입력바) 기준으로 채팅창 위에 띄운다.
 import { Clock, Smile } from "lucide-react";
 import { useMemo, useState, type ReactNode } from "react";
 
 import StickerImage from "@/components/sticker/sticker-image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { DEFAULT_STICKERS, STICKER_LABEL, STICKER_PX } from "@/constants/sticker/sticker";
 import { useRecentStickers } from "@/hooks/sticker/use-recent-stickers";
@@ -30,6 +38,10 @@ interface Props {
   // 채널 탭 아바타·라벨(아바타 없으면 이름 이니셜 폴백).
   channelName?: string | null;
   channelAvatarUrl?: string | null;
+  // 팝오버를 이 요소(채팅 입력바 등) 기준으로 띄운다 — 있으면 그 폭(--anchor-width)에 맞춰 채팅창 위를 덮는다.
+  anchor?: () => HTMLElement | null;
+  // 전체화면 등 포털 컨테이너(미지정=body).
+  portalContainer?: HTMLElement | null;
 }
 
 type StickerTabKey = "recent" | "default" | "channel";
@@ -52,7 +64,7 @@ function PixelPlayMark({ className }: { className?: string }) {
   );
 }
 
-// 상단 아이콘 탭 — 고정 정사각. 가로 스크롤 행 안에서 줄어들지 않게 shrink-0.
+// 상단 아이콘 탭 — 고정 정사각(캐러셀 아이템 안에서 줄지 않게 shrink-0).
 function TabButton({
   active,
   label,
@@ -125,6 +137,8 @@ export default function StickerPicker({
   channelLoading = false,
   channelName,
   channelAvatarUrl,
+  anchor,
+  portalContainer,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<StickerTabKey>("default");
@@ -143,6 +157,33 @@ export default function StickerPicker({
       .filter((sticker): sticker is Sticker => sticker !== undefined);
   }, [recentIds, channel]);
   const hasRecent = recentStickers.length > 0;
+
+  // 탭 목록 — 최근·기본은 항상, 채널은 채널 이모지를 쓸 수 있을 때만(가로 캐러셀로 스크롤).
+  const tabs = useMemo<{ key: StickerTabKey; label: string; icon: ReactNode }[]>(() => {
+    const list: { key: StickerTabKey; label: string; icon: ReactNode }[] = [
+      { key: "recent", label: STICKER_LABEL.tabRecent, icon: <Clock className="size-5" /> },
+      {
+        key: "default",
+        label: STICKER_LABEL.tabDefault,
+        icon: <PixelPlayMark className="size-5" />,
+      },
+    ];
+    if (hasChannelTab) {
+      list.push({
+        key: "channel",
+        label: channelName ?? STICKER_LABEL.tabChannel,
+        icon: (
+          <Avatar className="size-6">
+            <AvatarImage src={channelAvatarUrl ?? undefined} alt="" />
+            <AvatarFallback className="text-xs">
+              {channelName?.trim().charAt(0) ?? ""}
+            </AvatarFallback>
+          </Avatar>
+        ),
+      });
+    }
+    return list;
+  }, [hasChannelTab, channelName, channelAvatarUrl]);
 
   function handleOpenChange(next: boolean) {
     if (disabled) return;
@@ -202,46 +243,54 @@ export default function StickerPicker({
           </Button>
         )}
       />
-      {/* 입력칸(채팅) 위로 채팅을 가리며 뜬다 — 트리거가 입력바 오른쪽 끝이라 align="end"로 안쪽(왼쪽)으로 펼친다. */}
-      <PopoverContent align="end" side={side} sideOffset={8} className="w-84 p-2">
+      {/* anchor(채팅 입력바)가 있으면 그 폭에 맞춰 채팅창 위를 덮고, 없으면(커뮤니티) 트리거 기준 고정폭. */}
+      <PopoverContent
+        anchor={anchor}
+        container={portalContainer}
+        align={anchor ? "start" : "end"}
+        side={side}
+        sideOffset={8}
+        collisionPadding={8}
+        className={cn("p-2", anchor ? "w-(--anchor-width)" : "w-84")}
+      >
         <div className="flex flex-col gap-2">
-          {/* 가로 스크롤 아이콘 탭 행 — 채널이 많아져도 스크롤로 수용한다(숨김 스크롤바). */}
-          <div className="no-scrollbar flex items-center gap-1 overflow-x-auto">
-            <TabButton
-              active={activeTab === "recent"}
-              label={STICKER_LABEL.tabRecent}
-              onClick={() => setActiveTab("recent")}
-            >
-              <Clock className="size-5" />
-            </TabButton>
-            <TabButton
-              active={activeTab === "default"}
-              label={STICKER_LABEL.tabDefault}
-              onClick={() => setActiveTab("default")}
-            >
-              <PixelPlayMark className="size-5" />
-            </TabButton>
-            {hasChannelTab ? (
-              <TabButton
-                active={activeTab === "channel"}
-                label={channelName ?? STICKER_LABEL.tabChannel}
-                onClick={() => setActiveTab("channel")}
-              >
-                <Avatar className="size-6">
-                  <AvatarImage src={channelAvatarUrl ?? undefined} alt="" />
-                  <AvatarFallback className="text-xs">
-                    {channelName?.trim().charAt(0) ?? ""}
-                  </AvatarFallback>
-                </Avatar>
-              </TabButton>
-            ) : null}
+          {/* 가로 캐러셀 아이콘 탭 — 채널이 많아지면 드래그·화살표로 스크롤(탭이 적으면 화살표 자동 숨김). */}
+          <Carousel opts={{ align: "start", dragFree: true }} className="relative">
+            <CarouselContent className="-ml-1">
+              {tabs.map((tab) => (
+                <CarouselItem key={tab.key} className="basis-auto pl-1">
+                  <TabButton
+                    active={activeTab === tab.key}
+                    label={tab.label}
+                    onClick={() => setActiveTab(tab.key)}
+                  >
+                    {tab.icon}
+                  </TabButton>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious
+              hideWhenDisabled
+              variant="secondary"
+              className="bg-popover/90 left-0 size-6 backdrop-blur"
+            />
+            <CarouselNext
+              hideWhenDisabled
+              variant="secondary"
+              className="bg-popover/90 right-0 size-6 backdrop-blur"
+            />
+          </Carousel>
+
+          <Separator />
+
+          <div className="flex flex-col gap-1.5">
+            {/* 섹션 헤더(현재 탭 이름) */}
+            <p className="text-muted-foreground truncate px-1 text-xs font-medium">
+              {sectionLabel}
+            </p>
+            {/* 고정 높이 본문 — 내용이 바뀌어도 팝오버 크기가 안 변해 재배치(순간이동)가 없다. */}
+            <div className="no-scrollbar h-44 overflow-y-auto">{renderBody()}</div>
           </div>
-
-          {/* 섹션 헤더(현재 탭 이름) */}
-          <p className="text-muted-foreground truncate px-1 text-xs font-medium">{sectionLabel}</p>
-
-          {/* 고정 높이 본문 — 내용이 바뀌어도 팝오버 크기가 안 변해 재배치(순간이동)가 없다. */}
-          <div className="no-scrollbar h-44 overflow-y-auto">{renderBody()}</div>
         </div>
       </PopoverContent>
     </Popover>
