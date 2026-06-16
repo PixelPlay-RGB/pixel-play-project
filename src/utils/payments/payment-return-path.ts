@@ -17,3 +17,17 @@ export function resolvePaymentReturnPath(value: string | string[] | undefined): 
 
   return value;
 }
+
+// 정규화한 복귀 경로에 paymentStatus 쿼리를 안전하게 병합한다.
+// resolvePaymentReturnPath는 현재 쿼리(?)를 허용하지 않지만, 계약이 바뀌어
+// 경로에 쿼리가 섞여도 깨지지 않도록 URL로 병합한다(문자열 결합 회피).
+export function buildPaymentReturnRedirect(
+  value: string | string[] | undefined,
+  paymentStatus: string,
+): string {
+  const returnPath = resolvePaymentReturnPath(value);
+  const nextUrl = new URL(returnPath, "http://localhost");
+  nextUrl.searchParams.set("paymentStatus", paymentStatus);
+
+  return `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`;
+}
