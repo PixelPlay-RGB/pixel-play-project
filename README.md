@@ -113,24 +113,24 @@ npm run dev
 
 ## 라우터 구조
 
-| 라우트                                                        | 접근       | 설명                                                      |
-| ------------------------------------------------------------- | ---------- | --------------------------------------------------------- |
-| `/`                                                           | 공개       | 라이브 목록(홈). 필터·정렬·사이드바(팔로잉·트렌딩·키워드) |
-| `/live`                                                       | 공개       | 구 목록 경로. `/`로 redirect                              |
-| `/live/search?query=`                                         | 공개       | 라이브 검색 결과                                          |
-| `/live/[creatorId]`                                           | 공개       | 라이브 시청 화면                                          |
-| `/live/[creatorId]/chat[/overlayKey]`                         | 공개(읽기) | OBS 채팅 오버레이                                         |
-| `/live/[creatorId]/alerts/donation[/overlayKey]`              | 공개(읽기) | OBS 후원 알림 오버레이                                    |
-| `/chat`                                                       | 보호       | 채팅방 목록                                               |
-| `/chat/room/[roomId]`                                         | 혼합       | 채팅방 상세(비로그인은 공유 preview, 로그인은 상세)       |
-| `/chat/search?query=`                                         | 보호       | 채팅방 검색 결과                                          |
-| `/channel/{live,chat,security,donation,settlement,analytics}` | 보호       | 크리에이터 채널 관리(스튜디오)                            |
-| `/channel/[creatorId]`                                        | 공개       | 공개 채널 홈. 라이브 Hero, 배너, 커뮤니티 미리보기        |
-| `/channel/[creatorId]/community[/[postId]\|/write]`           | 혼합       | 채널 커뮤니티(게시판) 목록·상세·작성                      |
-| `/channel/[creatorId]/setting`                                | 보호       | 채널 공개 프로필·소개·배너 관리(본인만)                   |
-| `/user` → `/user/profile`                                     | 보호       | 프로필 설정                                               |
-| `/user/following`                                             | 보호       | 팔로잉한 채널 목록                                        |
-| `/user/donations`                                             | 보호       | 후원 내역과 포인트 충전                                   |
+| 라우트                                                                          | 접근       | 설명                                                                                                                |
+| ------------------------------------------------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------- |
+| `/`                                                                             | 공개       | 라이브 목록(홈). 필터·정렬·사이드바(팔로잉·트렌딩·키워드)                                                           |
+| `/live`                                                                         | 공개       | 구 목록 경로. `/`로 redirect                                                                                        |
+| `/live/search?query=`                                                           | 공개       | 라이브 검색 결과                                                                                                    |
+| `/live/[creatorId]`                                                             | 공개       | 라이브 시청 화면                                                                                                    |
+| `/live/[creatorId]/chat[/overlayKey]`                                           | 공개(읽기) | OBS 채팅 오버레이                                                                                                   |
+| `/live/[creatorId]/alerts/donation[/overlayKey]`                                | 공개(읽기) | OBS 후원 알림 오버레이                                                                                              |
+| `/chat`                                                                         | 보호       | 채팅방 목록                                                                                                         |
+| `/chat/room/[roomId]`                                                           | 혼합       | 채팅방 상세(비로그인은 공유 preview, 로그인은 상세)                                                                 |
+| `/chat/search?query=`                                                           | 보호       | 채팅방 검색 결과                                                                                                    |
+| `/channel/{live,chat,security,donation,settlement,analytics,emoji,permissions}` | 보호       | 크리에이터 채널 관리(스튜디오). 구독 메뉴의 채널 이모지(`/channel/emoji`), 매니저 관리(`/channel/permissions`) 포함 |
+| `/channel/[creatorId]`                                                          | 공개       | 공개 채널 홈. 라이브 Hero, 배너, 커뮤니티 미리보기                                                                  |
+| `/channel/[creatorId]/community[/[postId]\|/write]`                             | 혼합       | 채널 커뮤니티(게시판) 목록·상세·작성                                                                                |
+| `/channel/[creatorId]/setting`                                                  | 보호       | 채널 공개 프로필·소개·배너 관리(본인만)                                                                             |
+| `/user` → `/user/profile`                                                       | 보호       | 프로필 설정                                                                                                         |
+| `/user/following`                                                               | 보호       | 팔로잉한 채널 목록                                                                                                  |
+| `/user/donations`                                                               | 보호       | 후원 내역과 포인트 충전                                                                                             |
 
 - 보호 라우트는 비로그인 접근 시 `/auth/login?next=<현재경로>`로 이동하고, 로그인 성공 후 원래 경로로 돌아갑니다.
 - `/live`, `/channel/*`, `/user/*`는 사이드바 셸 레이아웃을 사용하며 공용 Footer 대신 사이드바 하단 크레딧을 표시합니다.
@@ -207,6 +207,13 @@ npm run dev
 - `/channel/[creatorId]/setting`은 본인만 접근하며(비소유자는 not-found), 채널 소개(`channel_bio`, 최대 500자)와 홈 배너를 관리합니다. 프로필 사진·닉네임은 프로필 설정과 공유합니다.
 - 소개 저장은 `update_channel_profile` RPC로 처리합니다.
 - 배너는 이미지(300×300)·제목·링크로 구성하며 최대 5개까지 등록하고 순서 변경(드래그 후 저장)과 삭제를 지원합니다. 이미지는 storage RLS를 우회하지 않도록 user-context client로 `user-media` 버킷에 업로드하고, 행 메타데이터(추가·삭제·순서)는 `insert_channel_banner`, `delete_channel_banner`, `reorder_channel_banners` RPC로 처리합니다. 추가는 advisory lock과 개수 가드로 동시성을 막고, 삭제는 RPC가 반환한 경로로 storage 파일을 정리합니다.
+
+### 채널 이모지 (구독티콘)
+
+- 크리에이터는 스튜디오 구독 메뉴의 `/channel/emoji`에서 구독자용 채널 이모지를 등록·관리합니다. 투명 배경 PNG로 최대 10개까지, 파일 드래그 앤 드롭/클릭 업로드(다중 파일·비PNG·5MB 초과는 거부), 연필로 이미지·이름 수정, 드래그 핸들로 순서 변경, 삭제를 지원합니다. 등록 화면은 좌측 관리 리스트 + 구독자 미리보기, 우측 사용 팁(`SideTipCard`)의 2단 구조입니다.
+- 메시지 본문은 `:pp-<id>:` 토큰으로 저장·전송하고, 채팅·OBS 채팅 오버레이·게시글·댓글에서 인라인 이미지로 렌더합니다. 기본 스티커 10종은 정적 에셋(`public/stickers/`), 채널 이모지는 `channel_emoji` 행(id=UUID)이며 토큰이 미등록이면 평문으로 안전하게 남습니다. 입력은 contentEditable 리치 입력기(`RichEmojiInput`)가 토큰을 이미지로 그리되 한글 IME 조합을 보존합니다.
+- 채팅 이모지 피커는 `기본 / 내 채널` 탭으로 나뉩니다. 채널 이모지는 공개 RLS라 모든 시청자가 렌더는 보지만, **보내기는 현재 크리에이터 본인만** 가능합니다(구독자 게이팅은 구독 시스템 연동 시 추가). 렌더용 채널 이모지는 LiveView·운영 콘솔·팝아웃·OBS 오버레이에 `ChannelStickerProvider`(또는 공개 조회)로 주입합니다.
+- 등록·조회는 `get_channel_emojis`, `insert/update/delete/reorder_channel_emoji` RPC + `service_role` 경계로 처리하고, 이미지는 storage RLS를 지키도록 user-context client로 `user-media` 버킷(`{user.id}/emoji/{uuid}.png`)에 업로드하며, 추가는 advisory lock·개수 가드로 동시성을, 순서 변경은 desired-state 검증으로 무결성을 막습니다.
 
 ### 커뮤니티 (게시판)
 
@@ -332,6 +339,7 @@ src/
 | `community_post_like`         | 게시글 좋아요                                                  |
 | `community_comment_like`      | 댓글 좋아요                                                    |
 | `channel_banner`              | 채널 홈 배너(이미지·제목·링크·정렬 순서)                       |
+| `channel_emoji`               | 채널 구독자용 이모지(이미지 경로·이름·정렬 순서, 채널당 ≤10)   |
 | `creator_follow_event`        | 크리에이터 통계용 팔로우/언팔로우 상호작용 이벤트 로그         |
 
 ### Enum
@@ -361,6 +369,7 @@ src/
 | 동기화/인프라 | `get_live_sync_cron_secret`, `get_mediamtx_api_password`, `get_live_thumbnail_ingest_secret`, `get_live_clip_worker_secret` (모두 Vault 조회 · `service_role` 전용 — 방송 자동 종료·자동 썸네일·클립 워커 Edge Function과 송출 상태 라우트가 사용), `set_live_message_cleanbot_status` (클린봇 판정 결과를 metadata에 기록 · `service_role` 전용)                      |
 | 정산          | `get_creator_settlement_donations`, `get_creator_settlement_yearly_summary`                                                                                                                                                                                                                                                                                            |
 | 채널(공개)    | `get_channel_profile`, `update_channel_profile`, `get_channel_live_hero`, `get_channel_banners`, `insert_channel_banner`, `delete_channel_banner`, `reorder_channel_banners`                                                                                                                                                                                           |
+| 채널 이모지   | `get_channel_emojis`, `insert_channel_emoji`, `update_channel_emoji`, `delete_channel_emoji`, `reorder_channel_emojis` (`service_role` 전용 · advisory lock·개수 가드·desired-state reorder)                                                                                                                                                                           |
 | 커뮤니티      | `get_channel_community_posts`, `get_community_post`, `get_community_adjacent_posts`, `get_community_comments`, `get_community_comment_replies`, `create_community_post`, `update_community_post`, `delete_community_post`, `create_community_comment`, `update_community_comment`, `delete_community_comment`, `set_community_post_like`, `set_community_comment_like` |
 | 팔로잉        | `follow_creator`, `unfollow_creator`, `get_following_channel_list`, `get_following_channel_page`                                                                                                                                                                                                                                                                       |
 | 후원/지갑     | `send_live_donation`, `confirm_wallet_charge`, `get_user_donation_snapshot`                                                                                                                                                                                                                                                                                            |
@@ -373,6 +382,7 @@ src/
 | ------------ | ------------------------------- | ----------------------------- |
 | `user-media` | `{user.id}/avatar/avatar.{ext}` | 유저 프로필 사진              |
 | `user-media` | `{user.id}/banner/{name}.{ext}` | 채널 홈 배너                  |
+| `user-media` | `{user.id}/emoji/{uuid}.png`    | 채널 이모지(구독티콘)         |
 | `user-media` | `{user.id}/live-thumbnail/...`  | 라이브 썸네일                 |
 | `user-media` | `{user.id}/clip/{clipId}.{ext}` | 라이브 클립(mp4 + jpg 썸네일) |
 
@@ -424,7 +434,7 @@ npm run db:types
 ```
 
 - migration 파일명은 `YYYYMMDDHHMMSS_작업_내용.sql` 형식이며, 파일의 version 접두사는 원격 `schema_migrations` 이력과 일치해야 합니다.
-- 마이그레이션은 도메인별로 채팅(`~20260519`), 라이브·후원·정산(`20260527~`), 커뮤니티 게시판·채널 프로필/배너·통계 이벤트 로그(`20260602~20260605`)로 누적되어 있습니다. 전체 목록과 최신 version은 `supabase/migrations/`를 기준으로 확인합니다.
+- 마이그레이션은 도메인별로 채팅(`~20260519`), 라이브·후원·정산(`20260527~`), 커뮤니티 게시판·채널 프로필/배너·통계 이벤트 로그(`20260602~20260605`), 라이브 클립(`20260612~`), 채널 이모지(`20260616`)로 누적되어 있습니다. 전체 목록과 최신 version은 `supabase/migrations/`를 기준으로 확인합니다.
 - 적용·기록 규칙의 상세는 `.agents/supabase-convention/SKILLS.md`를 참고합니다.
 
 ---
