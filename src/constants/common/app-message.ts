@@ -474,7 +474,7 @@ export const APP_MESSAGE = {
         description: "투명 배경 PNG 이미지만 등록할 수 있어요.",
       },
       emojiSingleFileOnly: {
-        title: "한 개만 등록할 수 있어요",
+        title: "다중 등록 불가",
         description: "이모지는 한 번에 하나씩 등록해요.",
       },
       managerListLoadFailed: {

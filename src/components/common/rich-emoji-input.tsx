@@ -219,7 +219,7 @@ export default function RichEmojiInput({
       className={cn(
         "rich-emoji-input outline-none",
         value === "" && "is-empty",
-        allowNewline ? "break-words whitespace-pre-wrap" : "overflow-x-auto whitespace-nowrap",
+        allowNewline ? "wrap-break-word whitespace-pre-wrap" : "overflow-x-auto whitespace-nowrap",
         className,
       )}
     />

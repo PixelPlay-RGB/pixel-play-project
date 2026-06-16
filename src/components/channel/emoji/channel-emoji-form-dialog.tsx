@@ -120,7 +120,8 @@ export function ChannelEmojiFormDialog({ target, onClose, onSubmit, isPending }:
     <Dialog
       open={target !== null}
       onOpenChange={(open) => {
-        if (!open) onClose();
+        // 제출(isPending) 중에는 X·Esc·바깥클릭으로 닫히지 않게 막는다(잠금 일관성).
+        if (!open && !isPending) onClose();
       }}
     >
       <DialogContent className="sm:max-w-md">
@@ -141,7 +142,12 @@ export function ChannelEmojiFormDialog({ target, onClose, onSubmit, isPending }:
               event.preventDefault();
               if (!isPending) setIsDragOver(true);
             }}
-            onDragLeave={() => setIsDragOver(false)}
+            onDragLeave={(event) => {
+              // 드롭존 내부 자식으로 이동하며 버블링되는 dragleave는 무시(하이라이트 깜빡임 방지).
+              if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+                setIsDragOver(false);
+              }
+            }}
             onDrop={(event) => {
               event.preventDefault();
               setIsDragOver(false);
@@ -191,7 +197,7 @@ export function ChannelEmojiFormDialog({ target, onClose, onSubmit, isPending }:
             <div className="grid grid-cols-2 gap-2">
               <div className="border-border bg-muted/30 flex flex-col items-center justify-center gap-1.5 rounded-xl border p-3">
                 <StickerImage sticker={previewSticker} px={STICKER_PX.overlay} />
-                <span className="text-muted-foreground text-[11px]">
+                <span className="text-muted-foreground text-xs">
                   {CHANNEL_EMOJI_LABEL.pickerPreviewLabel}
                 </span>
               </div>
@@ -202,7 +208,7 @@ export function ChannelEmojiFormDialog({ target, onClose, onSubmit, isPending }:
                   </span>
                   <StickerImage sticker={previewSticker} px={STICKER_PX.inline} />
                 </span>
-                <span className="text-muted-foreground text-[11px]">
+                <span className="text-muted-foreground text-xs">
                   {CHANNEL_EMOJI_LABEL.inChatPreviewLabel}
                 </span>
               </div>

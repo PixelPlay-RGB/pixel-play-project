@@ -29,7 +29,8 @@ function readPayload(data: Json | null): Record<string, Json | undefined> | null
 export async function addChannelEmojiAction(
   formData: FormData,
 ): Promise<AppActionResult<ChannelEmoji[]>> {
-  const file = formData.get("file") as File | null;
+  const fileEntry = formData.get("file");
+  const file = fileEntry instanceof File ? fileEntry : null;
   const name = ((formData.get("name") as string | null) ?? "").trim();
 
   if (!file || file.size === 0 || name.length === 0 || name.length > CHANNEL_EMOJI_NAME_MAX) {
@@ -93,16 +94,17 @@ export async function updateChannelEmojiAction(
 ): Promise<AppActionResult<ChannelEmoji[]>> {
   const emojiId = (formData.get("emojiId") as string | null) ?? "";
   const name = ((formData.get("name") as string | null) ?? "").trim();
-  const file = formData.get("file") as File | null;
-  const hasNewImage = !!file && file.size > 0;
+  const fileEntry = formData.get("file");
+  // 새 이미지(File이고 비어있지 않을 때만). 비-File·빈 파일은 이미지 미교체로 본다.
+  const file = fileEntry instanceof File && fileEntry.size > 0 ? fileEntry : null;
 
   if (!emojiId || name.length === 0 || name.length > CHANNEL_EMOJI_NAME_MAX) {
     return { success: false, code: APP_MESSAGE_CODE.error.channel.emojiSaveFailed };
   }
-  if (hasNewImage && !CHANNEL_EMOJI_ALLOWED_TYPES.includes(file.type)) {
+  if (file && !CHANNEL_EMOJI_ALLOWED_TYPES.includes(file.type)) {
     return { success: false, code: APP_MESSAGE_CODE.error.channel.emojiInvalidType };
   }
-  if (hasNewImage && file.size > CHANNEL_EMOJI_MAX_SIZE) {
+  if (file && file.size > CHANNEL_EMOJI_MAX_SIZE) {
     return { success: false, code: APP_MESSAGE_CODE.error.channel.emojiImageTooLarge };
   }
 
@@ -121,7 +123,7 @@ export async function updateChannelEmojiAction(
 
   // 새 이미지가 있으면 먼저 업로드한 뒤 경로를 RPC로 넘긴다(옛 경로는 RPC가 반환해 아래에서 정리).
   let newImagePath: string | null = null;
-  if (hasNewImage) {
+  if (file) {
     newImagePath = `${user.id}/emoji/${buildEmojiObjectName(file.type)}`;
     const { error: uploadError } = await userClient.storage
       .from(USER_MEDIA_BUCKET)
