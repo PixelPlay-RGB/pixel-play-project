@@ -52,6 +52,10 @@ const MESSAGE_RPC_ERROR_CODE_MAP: Array<{
     code: APP_MESSAGE_CODE.error.message.slowMode,
   },
   {
+    errorCode: "PX451",
+    code: APP_MESSAGE_CODE.error.message.banned,
+  },
+  {
     errorCode: "PX461",
     code: APP_MESSAGE_CODE.error.message.sendForbidden,
   },

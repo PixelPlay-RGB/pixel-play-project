@@ -1,7 +1,7 @@
 "use client";
 // 라이브 시청 메인 화면 — 비디오, 방송 정보, 채팅 패널을 조합합니다.
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "motion/react";
 import { Timer, Users } from "lucide-react";
@@ -12,6 +12,7 @@ import { LiveBroadcastInfo } from "@/components/live/view/live-broadcast-info";
 import { LiveStreamerRow } from "@/components/live/view/live-streamer-row";
 import { LiveChatPanel } from "@/components/live/view/live-chat-panel";
 import { LiveEndedScreen } from "@/components/live/view/live-ended-screen";
+import { LiveBannedDialog } from "@/components/live/view/live-banned-dialog";
 import { LiveLoginPromptDialog } from "@/components/live/view/live-login-prompt-dialog";
 import { useIsMobile } from "@/hooks/common/use-mobile";
 import { useLiveBroadcastView } from "@/hooks/live/use-live-broadcast-view";
@@ -78,7 +79,18 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     refreshChatState,
     followerWaitSeconds,
     slowModeSeconds,
+    isBanned,
+    isWatchSettled,
+    canModerate,
+    viewerId,
   } = useLiveBroadcastView(creatorId);
+
+  // 닉네임 클릭 팝업(프로필/강퇴) 컨텍스트 — 채팅 패널·전체화면 오버레이로 관통시킨다(#119).
+  // 메시지 목록의 memo 보존을 위해 안정적인 참조가 되도록 useMemo로 묶는다.
+  const profileContext = useMemo(
+    () => ({ creatorId, viewerId, canModerate, broadcastId: broadcast?.id ?? null }),
+    [creatorId, viewerId, canModerate, broadcast?.id],
+  );
   const { handleFollow, isFollowPending } = useLiveFollowAction({
     creatorId,
     isFollowing,
@@ -112,6 +124,18 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     !!broadcast,
   );
 
+  // 시청 중 강퇴(즉시 퇴장) vs 강퇴 상태로 재진입(입장 차단)을 구분하기 위해, 한 번이라도
+  // 강퇴 아닌 상태로 방송을 봤는지 기억한다(렌더 중 가드된 setState — 라치 패턴).
+  const [hasViewedUnbanned, setHasViewedUnbanned] = useState(false);
+  if (!isBanned && !isLoading && creator && !hasViewedUnbanned) {
+    setHasViewedUnbanned(true);
+  }
+  const wasEvicted = isBanned && hasViewedUnbanned;
+  // 강퇴 다이얼로그는 "서버로 확정된 밴"일 때만 띄운다 — 해제 후 재진입 시 stale 캐시의 isBanned=true 가
+  // 백그라운드 refetch 동안 다이얼로그를 깜빡이게 하던 문제를 막는다(#119). 단, 영상/검은 프레임 차단은
+  // raw isBanned 로 즉시 처리해(아래), 강퇴자가 재입장할 때 확정 전 0.5초간 스트림이 노출되는 누출을 막는다.
+  const isConfirmedBanned = isBanned && isWatchSettled;
+
   // 시청 세션을 루트 미니플레이어 호스트와 공유한다 — 시청자 presence(하트비트)도 호스트가
   // 세션 기준으로 단독 호출해, 페이지를 떠나도(미니 전환) 퇴장 처리되지 않는다.
   // 라이브면 최신 스냅샷으로 시작/갱신하고, 종료·오프라인이 확정되면 세션도 끝낸다.
@@ -125,6 +149,11 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
   const liveBroadcastId = broadcast?.id;
   useEffect(() => {
     if (isAuthLoading || isLoading) return;
+    // 강퇴(밴)되면 세션을 끝내 호스트의 하트비트를 멈춘다 — 시청자 수에서 즉시 빠진다(#119).
+    if (isBanned) {
+      endSession();
+      return;
+    }
     // 쿼리 오류(재시도 소진)는 '오프라인 확정'이 아니다 — 같은 크리에이터의 일시 장애면 판단을
     // 보류해 활성 세션(미니 연속성)을 끊지 않는다. 단, store에 남은 세션이 '다른 크리에이터'면
     // 정리한다: 이 방송 조회가 실패한 채 화면을 떠나면 LiveMiniPlayerHost가 그 이전 방송 PiP를
@@ -141,6 +170,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
   }, [
     isAuthLoading,
     isLoading,
+    isBanned,
     isWatchError,
     liveBroadcastId,
     creatorId,
@@ -233,6 +263,9 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     );
   }
 
+  // 강퇴(밴)된 시청자에겐 시청 화면을 그대로 두고 그 위에 차단 다이얼로그(모달)를 띄운다(아래 LiveBannedDialog).
+  // 모달은 닫기/바깥 클릭이 막혀 있어 시청을 계속할 수 없고, 해제되면 isBanned 가 false 로 돌아와 자동으로 닫힌다.
+
   // 채널 자체가 없는 경우(broadcast·creator 모두 없음)에만 단순 안내로 끝낸다.
   if (!broadcast && !creator) {
     return (
@@ -258,7 +291,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
           >
             {/* 일반 모드는 shrink-0 — 칼럼이 넘칠 때 눌리는 대신 스크롤로 넘어가야 한다. */}
             <div className={cn(isTheater ? "md:min-h-0 md:flex-1" : "md:shrink-0")}>
-              {broadcast ? (
+              {broadcast && !isBanned ? (
                 <LiveVideoPlayer
                   broadcast={broadcast}
                   hlsSrc={hlsSrc}
@@ -318,9 +351,14 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
                       onRefreshChatState={refreshChatState}
                       followerWaitSeconds={followerWaitSeconds}
                       slowModeSeconds={slowModeSeconds}
+                      profileContext={profileContext}
                     />
                   )}
                 />
+              ) : isBanned && broadcast ? (
+                // 강퇴 상태에선 플레이어를 언마운트해 영상/오디오를 즉시 끊고, 같은 16:9 자리에 검은 프레임만
+                // 남겨 레이아웃(채팅 입력 높이 동기화)을 유지한다. 위에는 LiveBannedDialog 모달이 덮인다.
+                <div aria-hidden className="aspect-video w-full bg-black" />
               ) : (
                 <LiveEndedScreen creator={creator} />
               )}
@@ -383,6 +421,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
                   isFollowing={isFollowing}
                   isPending={isFollowPending}
                   onFollow={handleFollow}
+                  canModerate={canModerate}
                   className="px-4 py-3"
                 />
               ) : null}
@@ -441,6 +480,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
               followerWaitSeconds={followerWaitSeconds}
               slowModeSeconds={slowModeSeconds}
               inputMinHeightPx={chatInputMinHeight}
+              profileContext={profileContext}
             />
           </aside>
         </div>
@@ -450,6 +490,12 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
         open={isLoginPromptOpen}
         onOpenChange={setIsLoginPromptOpen}
         onLogin={moveToLogin}
+      />
+
+      <LiveBannedDialog
+        open={isConfirmedBanned}
+        wasEvicted={wasEvicted}
+        creatorNickname={creator?.name}
       />
     </>
   );

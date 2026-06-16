@@ -14,6 +14,7 @@ import { LIVE_FULLSCREEN_CHAT_PANEL_WIDTH, LIVE_LABEL } from "@/constants/live/l
 import { cn } from "@/lib/utils";
 import type {
   LiveChatMessage,
+  LiveChatProfileContext,
   LiveDonation,
   LiveInteractionNotice,
   LivePoll,
@@ -70,6 +71,8 @@ interface Props {
   // 플레이어 우상단 후원 버튼의 후원 popover 열기 요청(채팅 본문 입력바로 전달).
   donationOpenRequested?: boolean;
   onDonationOpenSettled?: (reason: "donated" | "dismissed") => void;
+  // 닉네임 클릭 팝업(프로필/강퇴) 컨텍스트 — 채팅 본문으로 그대로 전달한다(#119).
+  profileContext?: LiveChatProfileContext;
 }
 
 export function LiveFullscreenChatOverlay({
@@ -112,6 +115,7 @@ export function LiveFullscreenChatOverlay({
   slowModeSeconds,
   donationOpenRequested,
   onDonationOpenSettled,
+  profileContext,
 }: Props) {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const prevChatOpenRef = useRef(isChatOpen);
@@ -190,6 +194,7 @@ export function LiveFullscreenChatOverlay({
         portalContainer={container}
         donationOpenRequested={donationOpenRequested}
         onDonationOpenSettled={onDonationOpenSettled}
+        profileContext={profileContext}
       />
     </aside>
   );

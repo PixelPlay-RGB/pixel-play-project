@@ -167,7 +167,8 @@ export function ChannelManagerTable({ creator, managers, onRemove, isRemoving }:
                     {removableManager ? (
                       <Button
                         variant="destructive"
-                        size="sm"
+                        size="default"
+                        className="min-w-12"
                         onClick={() => setRemoveTarget(removableManager)}
                       >
                         해제
@@ -204,8 +205,8 @@ export function ChannelManagerTable({ creator, managers, onRemove, isRemoving }:
               {removableManager && (
                 <Button
                   variant="destructive"
-                  size="sm"
-                  className="self-end"
+                  size="default"
+                  className="min-w-12 self-end"
                   onClick={() => setRemoveTarget(removableManager)}
                 >
                   해제
