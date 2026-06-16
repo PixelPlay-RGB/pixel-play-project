@@ -149,7 +149,13 @@ export function LiveChatInputBar({
   const inputBarRef = useRef<HTMLDivElement>(null);
 
   // 채널 이모지 — 피커 "내 채널" 탭. 지금은 크리에이터 본인만 보내기 가능(canUseInPicker).
-  const { stickers: channelStickers, canUseInPicker } = useChannelStickers();
+  const {
+    stickers: channelStickers,
+    isLoading: channelLoading,
+    canUseInPicker,
+    channelName,
+    channelAvatarUrl,
+  } = useChannelStickers();
 
   // 메뉴의 "채팅 규칙" 요청(id 변경)마다 규칙 popover를 연다 — 렌더 중 가드된 setState(조정 패턴).
   const [handledRuleRequestId, setHandledRuleRequestId] = useState(ruleOpenRequestId);
@@ -304,6 +310,9 @@ export function LiveChatInputBar({
             }
             disabled={!isEditable}
             channelStickers={canUseInPicker ? channelStickers : undefined}
+            channelLoading={canUseInPicker ? channelLoading : undefined}
+            channelName={channelName}
+            channelAvatarUrl={channelAvatarUrl}
           />
           <Button
             type="button"
