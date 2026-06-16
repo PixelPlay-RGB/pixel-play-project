@@ -46,7 +46,7 @@ export function useClipShorts(initialClip: LiveClip) {
   useEffect(() => {
     if (countedClipIdsRef.current.has(currentClip.id)) return;
     countedClipIdsRef.current.add(currentClip.id);
-    void incrementLiveClipViewCountAction(currentClip.id);
+    void incrementLiveClipViewCountAction(currentClip.id).catch(() => {});
   }, [currentClip.id]);
 
   return {

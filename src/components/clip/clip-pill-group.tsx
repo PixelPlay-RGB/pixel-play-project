@@ -23,7 +23,7 @@ export function ClipPillGroup<T extends string>({ options, value, onChange, aria
       role="group"
       aria-label={ariaLabel}
       // 동일 너비 칸: grid + 옵션 수만큼 1fr. 트랙 radius(rounded-lg) 안에 칸 radius(rounded-md)를 중첩.
-      className="bg-muted grid w-full shrink-0 items-center gap-0.5 rounded-lg p-[3px] sm:w-auto"
+      className="bg-muted grid w-full shrink-0 items-center gap-0.5 rounded-lg p-0.5 sm:w-auto"
       style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` } as CSSProperties}
     >
       {options.map((option) => {

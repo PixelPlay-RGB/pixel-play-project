@@ -406,7 +406,7 @@ src/
 | `sync-live-broadcast-status` | pg_cron(1분)                | MediaMTX 송출이 끊긴 활성 방송을 자동 종료(운영 페이지 폴링은 보조 수단)    |
 | `sweep_live_viewer_counts`   | pg_cron(30초)               | 라이브 시청자 수 정리(DB 함수 직접 호출)                                    |
 | `ingest-live-thumbnail`      | EC2 systemd 타이머(1분)     | EC2가 push한 송출 프레임(JPEG)을 활성 방송에 매핑해 자동 썸네일로 저장      |
-| `moderate-live-messages`     | pg_cron(20초)               | 미판정 채팅을 모아 Gemini 배치 판정 후 클린봇 플래그 기록(비동기·fail-open) |
+| `moderate-live-messages`     | pg_cron(10초)               | 미판정 채팅을 모아 Gemini 배치 판정 후 클린봇 플래그 기록(비동기·fail-open) |
 | `clip-worker`                | EC2 상주 워커(4초 폴링)     | 클립 작업 클레임·서명 업로드 URL 발급·완료/실패 보고 수신(#124)             |
 
 `sync-live-broadcast-status`는 Vault의 `service_role_key`(cron 인증)·`mediamtx_api_password`(Control API Basic 인증, EC2 `mediamtx.yml`의 `pixelplay-api` 계정과 동일 값)와 Edge Function secrets의 `LIVE_OVERLAY_TOKEN_SECRET`(스트림 키 HMAC)이 등록되어야 동작하며, 미등록 시 401/503으로 안전 실패합니다. MediaMTX Control API(`:9997`)는 인증 필수라 스트림 키가 외부에 노출되지 않습니다(송출 상태 라우트도 같은 계정으로 호출).

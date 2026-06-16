@@ -179,7 +179,10 @@ export function useLiveBroadcastView(creatorId: string) {
       if (result.success) {
         // 후원 성공 즉시 내 역할 스냅샷을 donor로 승격한다(#120) — 서버는 전송 시점에
         // 후원 이력을 직접 조회하므로 이미 정확하고, 낙관적 메시지의 뱃지만 이 신호로 따라온다.
-        queryClient.setQueryData<LiveSenderRole>(QUERY_KEYS.live.viewerRole(creatorId), "donor");
+        queryClient.setQueryData<LiveSenderRole>(
+          QUERY_KEYS.live.viewerRole(creatorId, user?.id ?? undefined),
+          "donor",
+        );
         void queryClient.invalidateQueries({
           queryKey: QUERY_KEYS.donations.walletBalance(user?.id ?? undefined),
         });
