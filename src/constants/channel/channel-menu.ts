@@ -2,11 +2,11 @@
 import type { ChannelMenuItem } from "@/types/channel/channel-menu";
 import {
   BarChart3,
+  Crown,
   HandCoins,
   MessageSquareText,
   ShieldCheck,
   SlidersHorizontal,
-  Sticker,
   Users,
 } from "lucide-react";
 
@@ -15,7 +15,7 @@ export interface ChannelMenuGroup {
   items: ChannelMenuItem[];
 }
 
-// 성격별 섹션: 방송(운영·채팅·연결) / 수익(후원) / 구독(이모지) / 관리(통계·권한).
+// 성격별 섹션: 방송(운영·채팅·연결) / 수익(후원·구독) / 관리(통계·권한). 구독 아코디언 하위에 이모지.
 export const CHANNEL_MENU_GROUPS: ChannelMenuGroup[] = [
   {
     label: "방송",
@@ -37,11 +37,13 @@ export const CHANNEL_MENU_GROUPS: ChannelMenuGroup[] = [
           { id: "settlement", label: "정산", href: "/channel/settlement" },
         ],
       },
+      {
+        id: "subscription",
+        label: "구독",
+        icon: Crown,
+        children: [{ id: "subscription-emoji", label: "이모지", href: "/channel/emoji" }],
+      },
     ],
-  },
-  {
-    label: "구독",
-    items: [{ id: "emoji", label: "이모지", href: "/channel/emoji", icon: Sticker }],
   },
   {
     label: "관리",

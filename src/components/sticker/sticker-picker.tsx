@@ -1,7 +1,7 @@
 "use client";
 // 스티커(이모지) 선택 팝오버(공용). 라이브 채팅 입력바·커뮤니티 작성/댓글에서 재사용.
 // 선택 시 본문에 삽입할 토큰 문자열(:pp-<id>:)을 onStickerSelect로 넘긴다(기존 이모지 피커 대체).
-import { Sticker as StickerIcon } from "lucide-react";
+import { Smile } from "lucide-react";
 import { useState } from "react";
 
 import StickerImage from "@/components/sticker/sticker-image";
@@ -39,7 +39,7 @@ export default function StickerPicker({ onStickerSelect, disabled = false, side 
             disabled={disabled}
             className="text-muted-foreground hover:text-foreground shrink-0"
           >
-            <StickerIcon className="size-5" />
+            <Smile className="size-5" />
           </Button>
         )}
       />
