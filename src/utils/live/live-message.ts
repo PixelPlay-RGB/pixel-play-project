@@ -1,32 +1,52 @@
-// live_message 조인 조회 결과를 라이브 채팅 메시지 도메인 타입으로 변환합니다.
+// live_message 조회 결과를 라이브 채팅 메시지 도메인 타입으로 변환합니다.
+// 닉네임·후원 금액은 전송 시점에 metadata로 스냅샷되어 join 없이 매핑한다
+// (user·donation join을 빼야 anon RLS만으로 비로그인 시청자도 채팅을 볼 수 있다).
 
 import { LIVE_LABEL } from "@/constants/live/live";
-import { isCleanbotFlagged } from "@/utils/live/live-chat";
+import { containsSeedProfanity } from "@/utils/live/live-chat";
 import { readJsonObject, readNumber, readString } from "@/utils/common/json";
-import type { LiveChatMessage } from "@/types/live/live";
+import type { LiveChatMessage, LiveSenderRole } from "@/types/live/live";
 import type { Json } from "@/types/database.types";
 
-export interface LiveMessageJoinedRow {
+const LIVE_SENDER_ROLES: readonly LiveSenderRole[] = [
+  "creator",
+  "manager",
+  "donor",
+  "subscriber",
+  "viewer",
+];
+
+function parseSenderRole(value: unknown): LiveSenderRole {
+  return LIVE_SENDER_ROLES.includes(value as LiveSenderRole) ? (value as LiveSenderRole) : "viewer";
+}
+
+export interface LiveMessageRow {
   id: string;
+  created_at: string;
   sender_id: string | null;
   message_type: "chat" | "moderation_notice" | "donation";
   content: string;
+  is_chat_visible?: boolean;
+  sender_role: LiveSenderRole;
   metadata: Json;
-  sender: { nickname: string; photo_url: string | null } | null;
-  donation: { amount: number } | null;
 }
 
 // creatorId(크리에이터 user UUID)와 sender_id가 같으면 호스트 메시지로 표시한다.
 // creatorId가 user UUID가 아니게 되면(예: 핸들) 매칭이 빗나가 호스트 강조만 사라지고 동작은 안전하게 유지된다.
-// viewerId(보는 사람 user UUID)와 sender_id가 같으면 본인 메시지이므로 클린봇으로 가리지 않는다.
 export function mapLiveMessageRowToMessage(
-  row: LiveMessageJoinedRow,
+  row: LiveMessageRow,
   creatorId?: string,
-  viewerId?: string,
-): LiveChatMessage {
-  const isHost = !!creatorId && row.sender_id !== null && row.sender_id === creatorId;
-  const isOwnMessage = !!viewerId && row.sender_id !== null && row.sender_id === viewerId;
+): LiveChatMessage | null {
+  const isHost =
+    row.sender_role === "creator" ||
+    (!!creatorId && row.sender_id !== null && row.sender_id === creatorId);
   const metadata = readJsonObject(row.metadata);
+
+  const metadataSource = readString(metadata.source);
+
+  if (row.is_chat_visible === false || metadataSource === "live_draw_participation") {
+    return null;
+  }
 
   if (row.message_type === "donation") {
     const metadataAmount = readNumber(metadata.amount);
@@ -35,9 +55,12 @@ export function mapLiveMessageRowToMessage(
     return {
       id: row.id,
       type: "donation",
-      author: row.sender?.nickname ?? metadataAuthor ?? LIVE_LABEL.anonymousAuthor,
+      // 익명 후원은 sender_id가 null로 저장돼 후원자 집합에서 자연 제외된다.
+      senderId: row.sender_id ?? undefined,
+      author: metadataAuthor ?? LIVE_LABEL.anonymousAuthor,
       content: row.content,
-      donationAmount: row.donation?.amount ?? metadataAmount ?? undefined,
+      createdAt: row.created_at,
+      donationAmount: metadataAmount ?? undefined,
     };
   }
 
@@ -46,18 +69,28 @@ export function mapLiveMessageRowToMessage(
       id: row.id,
       type: "system",
       content: row.content,
+      createdAt: row.created_at,
     };
   }
+
+  // 서버 LLM 판정 결과("flagged"|"clean"|키 없음=null). 도착 전엔 클라 사전이 1차로 가린다.
+  const cleanbotStatus = readString(metadata.cleanbotStatus);
 
   return {
     id: row.id,
     type: "text",
-    author:
-      row.sender?.nickname ?? readString(metadata.senderNickname) ?? LIVE_LABEL.anonymousAuthor,
+    senderId: row.sender_id ?? undefined,
+    author: readString(metadata.senderNickname) ?? LIVE_LABEL.anonymousAuthor,
     content: row.content,
+    createdAt: row.created_at,
+    senderRole: isHost ? "creator" : row.sender_role,
     isHost,
-    // 본인 메시지는 본인 화면에서 안 가린다. refetch 재매핑 시에도 일관 유지된다.
-    isCleanbotFlagged: !isOwnMessage && isCleanbotFlagged(row.content),
+    // 하이브리드 클린봇(#120): 서버 LLM 판정이 도착하면 그 결과(flagged/clean)를 신뢰하고,
+    // 판정 전(키 없음)에는 클라이언트 시드 사전으로 명백한 욕설만 즉시 가린다(0초). 두 신호 모두
+    // viewer에 무관한 순수 사실이라 로그인 로딩 타이밍에 가림이 뒤집히지 않는다(본인 메시지도 동일).
+    isCleanbotFlagged:
+      cleanbotStatus === "flagged" ||
+      (cleanbotStatus === null && containsSeedProfanity(row.content)),
   };
 }
 
@@ -66,7 +99,6 @@ export function mapLiveMessageRowToMessage(
 export function mapLiveMessageRealtimePayload(
   raw: unknown,
   creatorId?: string,
-  viewerId?: string,
 ): LiveChatMessage | null {
   if (!raw || typeof raw !== "object") return null;
   const record = raw as Record<string, unknown>;
@@ -83,14 +115,15 @@ export function mapLiveMessageRealtimePayload(
   return mapLiveMessageRowToMessage(
     {
       id,
+      created_at: typeof record.created_at === "string" ? record.created_at : "",
       sender_id: typeof record.sender_id === "string" ? record.sender_id : null,
       message_type: messageType,
       content: typeof record.content === "string" ? record.content : "",
+      is_chat_visible:
+        typeof record.is_chat_visible === "boolean" ? record.is_chat_visible : undefined,
+      sender_role: parseSenderRole(record.sender_role),
       metadata: (record.metadata ?? null) as Json,
-      sender: null,
-      donation: null,
     },
     creatorId,
-    viewerId,
   );
 }

@@ -16,11 +16,12 @@ export interface LiveHeroItem {
   thumbnailUrl: string | null;
   currentViewerCount: number;
   startedAt: string;
+  // 현재 시청자(로그인 유저)의 팔로우 여부. Hero 아바타 팝오버에 쓴다.
+  isFollowing: boolean;
 }
 
 export interface LiveListItem extends LiveHeroItem {
   recentChatCount: number;
-  isFollowing: boolean;
 }
 
 export interface LiveListSnapshot {
@@ -80,12 +81,22 @@ export interface LiveOverlayRouteParams {
 
 export type LiveChatMessageType = "text" | "donation" | "system";
 
+// live_message.sender_role enum과 동일 — 전송 시점에 DB가 스냅샷한 발신자 역할.
+// manager·subscriber는 추후 기능(매니저 지정·구독) 대비로 미리 둔 값이다.
+export type LiveSenderRole = "creator" | "manager" | "donor" | "subscriber" | "viewer";
+
 export interface LiveChatMessage {
   id: string;
   type: LiveChatMessageType;
   author?: string;
   content: string;
+  createdAt?: string;
   donationAmount?: number;
+  // 작성자 user UUID(있을 때). 발신자 신원 기반 표식에 쓴다.
+  // 익명 후원·시스템 메시지에는 없다(익명 후원은 sender_id가 null로 저장됨).
+  senderId?: string;
+  // 전송 시점 발신자 역할 스냅샷(text 메시지). 역할 마크 표시에 쓴다.
+  senderRole?: LiveSenderRole;
   // 작성자가 방송 진행자(크리에이터) 본인인지 여부. 채팅에서 호스트 메시지를 강조하는 데 쓴다.
   isHost?: boolean;
   // 클린봇 자동 비속어 사전에 걸린 text 메시지. 클린봇 토글 ON이면 가리고 펼쳐볼 수 있다.
@@ -114,13 +125,35 @@ export interface LivePollOption {
 }
 
 export interface LivePoll {
+  createdAt: string;
   id: string;
   title: string;
   options: LivePollOption[];
   status: LivePollStatus;
   endsAt: string | null;
+  endedAt: string | null;
   totalCount: number;
   userVotedOptionId: string | null;
+}
+
+export type LiveInteractionNoticeType = "draw" | "roulette";
+export type LiveInteractionNoticeStatus = "active" | "ended";
+
+export interface LiveInteractionNotice {
+  content: string;
+  createdAt: string;
+  drawNoticeId?: string;
+  hasJoined?: boolean;
+  id: string;
+  participantCount?: number;
+  participantNames?: string[];
+  resultLabel?: string;
+  rouletteDurationSeconds?: number;
+  rouletteItems?: string[];
+  rouletteRotationKeyframes?: number[];
+  status: LiveInteractionNoticeStatus;
+  type: LiveInteractionNoticeType;
+  winnerNames?: string[];
 }
 
 export interface LiveCreator {
@@ -208,6 +241,18 @@ export interface LiveWatchData {
   viewerChatState: LiveViewerChatState;
 }
 
+// RPC의 크리에이터 응답을 UI에서 쓰는 LiveCreator로 정규화한다.
+// 방송이 종료/오프라인이라 broadcast가 null이어도 크리에이터 정보는 살아 있어 종료 화면에서 쓴다.
+export function mapLiveWatchCreator(creator: LiveWatchCreator): LiveCreator {
+  return {
+    id: creator.id,
+    name: creator.nickname,
+    avatarUrl: creator.photoUrl,
+    followerCount: creator.followerCount,
+    broadcastCount: creator.broadcastCount,
+  };
+}
+
 export function mapLiveWatchToBroadcast(
   data: LiveWatchData | null | undefined,
 ): LiveBroadcast | null {
@@ -225,12 +270,6 @@ export function mapLiveWatchToBroadcast(
     tags: data.broadcast.tags,
     viewerCount: data.broadcast.currentViewerCount,
     elapsedSeconds,
-    creator: {
-      id: data.creator.id,
-      name: data.creator.nickname,
-      avatarUrl: data.creator.photoUrl,
-      followerCount: data.creator.followerCount,
-      broadcastCount: data.creator.broadcastCount,
-    },
+    creator: mapLiveWatchCreator(data.creator),
   };
 }

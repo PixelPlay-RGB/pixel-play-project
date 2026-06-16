@@ -18,7 +18,7 @@ export default function NotFound() {
         href="/"
         className={cn(
           buttonVariants({ variant: "ghost" }),
-          "bg-brand hover:bg-brand/90 px-6 py-2 font-bold text-white hover:text-white",
+          "bg-brand hover:bg-brand/90 text-brand-foreground hover:text-brand-foreground px-6 py-2 font-bold",
         )}
       >
         채팅방 목록으로 돌아가기

@@ -12,7 +12,7 @@ export default function BroadcastButton() {
       aria-label="방송하기"
       className={cn(
         "inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-full px-2.5 sm:px-4",
-        "bg-live text-sm font-bold whitespace-nowrap text-white",
+        "bg-live text-live-foreground text-sm font-bold whitespace-nowrap",
         "shadow-sm transition-all duration-200",
         "hover:shadow-live/35 hover:shadow-lg hover:brightness-105",
         "focus-visible:ring-live/40 focus-visible:ring-2 focus-visible:outline-none",

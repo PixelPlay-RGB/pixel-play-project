@@ -2,30 +2,22 @@
 // 크리에이터 팔로우/언팔로우와 공유 버튼을 담당하는 액션 영역입니다.
 
 import { useState } from "react";
-import { Check, Share2, UserPlus } from "lucide-react";
+import { Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import CreatorFollowingButton from "@/components/following/creator-following-button";
+import CreatorUnfollowDialog from "@/components/creator/creator-unfollow-dialog";
 import { LIVE_LABEL } from "@/constants/live/live";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { toastAppSuccess, toastAppError } from "@/utils/common/toast-message";
-import { cn } from "@/lib/utils";
 
 interface Props {
+  creatorNickname: string;
   isFollowing: boolean;
   isPending: boolean;
   onFollow: () => void;
 }
 
-export function LiveCreatorActions({ isFollowing, isPending, onFollow }: Props) {
+export function LiveCreatorActions({ creatorNickname, isFollowing, isPending, onFollow }: Props) {
   const [isUnfollowDialogOpen, setIsUnfollowDialogOpen] = useState(false);
 
   function handleFollowClick() {
@@ -51,54 +43,37 @@ export function LiveCreatorActions({ isFollowing, isPending, onFollow }: Props) 
     }
   }
 
-  function getFollowLabel() {
-    if (!isFollowing) return LIVE_LABEL.follow;
-    return LIVE_LABEL.following;
-  }
-
   return (
     <>
       <div className="flex shrink-0 items-center gap-2">
-        <Button
-          size="sm"
-          disabled={isPending}
+        <CreatorFollowingButton
+          creatorNickname={creatorNickname}
+          isFollowing={isFollowing}
+          isOwnChannel={false}
+          isPending={isPending}
           onClick={handleFollowClick}
-          className={cn(
-            "min-w-20 gap-1.5 rounded-full text-xs font-semibold transition-colors",
-            isFollowing
-              ? "bg-muted text-foreground hover:bg-muted/80"
-              : "bg-brand text-brand-foreground hover:bg-brand/90",
-          )}
-        >
-          {isFollowing ? <Check className="size-3.5" /> : <UserPlus className="size-3.5" />}
-          {getFollowLabel()}
-        </Button>
+        />
 
         <Button
           size="sm"
           variant="outline"
           aria-label={LIVE_LABEL.share}
           onClick={handleShare}
-          className="gap-1.5 text-xs font-semibold"
+          // 옆 팔로우 버튼(rounded-full)과 라운드 톤을 맞춘다.
+          className="h-8 gap-1.5 rounded-full text-xs font-semibold"
         >
           <Share2 className="size-4" />
         </Button>
       </div>
 
-      <AlertDialog open={isUnfollowDialogOpen} onOpenChange={setIsUnfollowDialogOpen}>
-        <AlertDialogContent size="sm" showCloseButton={false}>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{LIVE_LABEL.unfollowConfirmTitle}</AlertDialogTitle>
-            <AlertDialogDescription>{LIVE_LABEL.unfollowConfirmDescription}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{LIVE_LABEL.cancel}</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={handleConfirmUnfollow}>
-              {LIVE_LABEL.confirm}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* 다른 surface(팔로잉 목록·아바타 팝오버)와 같은 공용 언팔 확인 다이얼로그를 재사용한다. */}
+      <CreatorUnfollowDialog
+        open={isUnfollowDialogOpen}
+        onOpenChange={setIsUnfollowDialogOpen}
+        creatorNickname={creatorNickname}
+        isPending={isPending}
+        onConfirm={handleConfirmUnfollow}
+      />
     </>
   );
 }

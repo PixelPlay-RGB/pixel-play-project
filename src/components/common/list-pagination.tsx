@@ -92,8 +92,8 @@ export default function ListPagination({
                 onClick={(e) => handlePageClick(e, item)}
                 className={cn(
                   item === currentPage && [
-                    "bg-brand shadow-brand/20 rounded-xl font-bold text-white shadow-sm",
-                    "hover:bg-brand/90 hover:text-white",
+                    "bg-brand shadow-brand/20 text-brand-foreground rounded-xl font-bold shadow-sm",
+                    "hover:bg-brand/90 hover:text-brand-foreground",
                     "dark:hover:bg-brand/90",
                   ],
                   item !== currentPage && [

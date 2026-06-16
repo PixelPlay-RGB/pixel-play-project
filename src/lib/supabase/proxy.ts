@@ -21,6 +21,9 @@ function isPublicRoute(pathname: string) {
   return (
     pathname === "/" ||
     pathname.startsWith("/live/") ||
+    // 클립 디테일은 공유 링크·OG 크롤러가 비로그인으로 접근한다(#124).
+    // 단 에디터(/clip/editor)는 생성 화면이라 로그인 보호를 유지한다.
+    (pathname.startsWith("/clip/") && !pathname.startsWith("/clip/editor")) ||
     PUBLIC_CHANNEL_PATTERN.test(pathname)
   );
 }

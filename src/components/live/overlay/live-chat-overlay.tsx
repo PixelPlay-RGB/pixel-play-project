@@ -1,18 +1,29 @@
 "use client";
 // OBS 브라우저 소스에 붙이는 라이브 채팅 출력 화면을 렌더링합니다.
-import { Crown, HandCoins, Heart } from "lucide-react";
-
+import { LiveChatOverlayDonationCard } from "@/components/live/overlay/live-chat-overlay-donation-card";
+import { LiveChatRoleBadge } from "@/components/live/chat/live-chat-role-badge";
+import { LIVE_CHAT_OVERLAY_PREVIEW_ITEMS } from "@/constants/live/live-overlay";
 import { useLiveChatOverlay } from "@/hooks/live/use-live-chat-overlay";
 import { cn } from "@/lib/utils";
 import type {
   LiveChatOverlayMessage,
   LiveChatOverlaySnapshot,
 } from "@/types/live/live-chat-overlay";
-import { formatNumber } from "@/utils/common/format";
 import { getLiveChatOverlayNicknameColor } from "@/utils/live/live-chat-overlay-style";
 
-export function LiveChatOverlay({ initialSnapshot }: { initialSnapshot: LiveChatOverlaySnapshot }) {
-  const { chatStackRef, visibleItems } = useLiveChatOverlay(initialSnapshot);
+export function LiveChatOverlay({
+  creatorId,
+  initialSnapshot,
+  isPreview = false,
+}: {
+  creatorId: string;
+  initialSnapshot: LiveChatOverlaySnapshot;
+  isPreview?: boolean;
+}) {
+  const { chatStackRef, visibleItems } = useLiveChatOverlay(creatorId, initialSnapshot);
+  // 미리보기는 방송·채팅 이력이 없어도 화면 구성을 보여줘야 하므로 샘플로 채운다(실데이터가 있으면 그대로).
+  const items =
+    isPreview && visibleItems.length === 0 ? LIVE_CHAT_OVERLAY_PREVIEW_ITEMS : visibleItems;
 
   return (
     <main className="live-overlay-root min-h-screen overflow-hidden bg-transparent p-0 text-white">
@@ -25,15 +36,23 @@ export function LiveChatOverlay({ initialSnapshot }: { initialSnapshot: LiveChat
         <div
           ref={chatStackRef}
           className={cn(
-            "flex h-full min-h-0 flex-col items-start justify-end gap-2 overflow-hidden",
+            "flex h-full min-h-min flex-col items-start justify-end gap-2 overflow-hidden",
             "live-chat-overlay-stack",
           )}
         >
-          {visibleItems.map((item) => (
+          {items.map((item) => (
             <ChatMessageItem key={item.message.id} message={item.message} />
           ))}
         </div>
       </section>
+
+      {isPreview && (
+        <div className="pointer-events-none fixed inset-x-0 bottom-5 flex justify-center px-4">
+          <span className="rounded-full bg-black/75 px-4 py-2 text-center text-sm font-medium text-white/85 ring-1 ring-white/10">
+            미리보기예요. 실제 방송 채팅이 이 모습으로 표시돼요.
+          </span>
+        </div>
+      )}
     </main>
   );
 }
@@ -46,9 +65,11 @@ function ChatMessageItem({ message }: { message: LiveChatOverlayMessage }) {
   const nicknameColor = getLiveChatOverlayNicknameColor(message.author, message.role);
 
   return (
-    <div className="inline-flex max-w-130 items-start gap-1.5 rounded-xl bg-black/50 px-3.5 py-2">
+    // OBS 송출 화면 위에서 글자가 묻히지 않도록 배경은 완전 불투명으로 깐다.
+    // shrink-0: 스택 공간이 부족해도 박스가 세로로 눌리지 않게 한다(후원 카드와 동일 보호).
+    <div className="inline-flex max-w-130 shrink-0 items-start gap-1.5 rounded-xl bg-zinc-950 px-3.5 py-2 drop-shadow">
       <MessagePrefix role={message.role} />
-      <p className="min-w-0 text-3xl leading-9 font-normal wrap-break-word">
+      <p className="min-w-0 text-3xl leading-9 font-semibold wrap-break-word drop-shadow-sm">
         <span
           className={cn("mr-1.5 font-medium", message.tone === "muted" && "text-white/55")}
           style={message.tone === "muted" ? undefined : { color: nicknameColor }}
@@ -63,54 +84,19 @@ function ChatMessageItem({ message }: { message: LiveChatOverlayMessage }) {
 
 function DonationMessageItem({ message }: { message: LiveChatOverlayMessage }) {
   return (
-    <p
-      className={cn(
-        "inline-block max-w-130 rounded-xl px-3.5 py-2 wrap-break-word",
-        "bg-live/15 ring-live/35 ring-1",
-        "text-3xl leading-9 font-normal",
-      )}
-    >
-      <HandCoins className="text-live mr-1.5 inline size-[1em] align-[-0.12em]" aria-hidden />
-      <span className="text-live mr-1.5 font-medium">{message.author}</span>
-      {typeof message.amount === "number" && (
-        <span className="text-live mr-1.5 font-medium">
-          {formatNumber(message.amount)}P
-        </span>
-      )}
-      <span className="mr-1.5 text-white/70">후원</span>
-      {message.content && <span className="text-white">{message.content}</span>}
-    </p>
+    <LiveChatOverlayDonationCard
+      author={message.author}
+      amount={message.amount}
+      content={message.content}
+    />
   );
 }
 
+// 시청 채팅과 같은 마크 컴포넌트를 쓰되, OBS 출력용이라 tooltip은 끈다.
 function MessagePrefix({ role }: { role?: LiveChatOverlayMessage["role"] }) {
-  if (role === "creator") {
-    return (
-      <span
-        className={cn(
-          "mt-0.5 inline-flex size-8 shrink-0 items-center justify-center rounded-md",
-          "text-brand ring-brand/30 bg-black/50 shadow-md ring-1",
-        )}
-        aria-label="방장"
-        title="방장"
-      >
-        <Crown className="size-4.5" aria-hidden />
-      </span>
-    );
+  if (role !== "creator" && role !== "donor") {
+    return null;
   }
-  if (role === "donor") {
-    return (
-      <span
-        className={cn(
-          "mt-0.5 inline-flex size-8 shrink-0 items-center justify-center rounded-md",
-          "bg-live/80 ring-live/40 text-white shadow-md ring-1",
-        )}
-        aria-label="후원자"
-        title="후원자"
-      >
-        <Heart className="size-4.5 fill-current" aria-hidden />
-      </span>
-    );
-  }
-  return null;
+
+  return <LiveChatRoleBadge role={role} size="lg" />;
 }

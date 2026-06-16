@@ -63,7 +63,7 @@ export default function LoginForm({ disabled, isPending, onLogin }: LoginFormPro
         disabled={isSubmitting || disabled}
         className={cn(
           "w-full cursor-pointer py-5 font-bold tracking-widest uppercase",
-          "bg-brand hover:bg-brand/85 text-white",
+          "bg-brand hover:bg-brand/85 text-brand-foreground",
           "transition-all active:scale-95 disabled:opacity-40",
         )}
       >

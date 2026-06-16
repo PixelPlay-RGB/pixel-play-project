@@ -4,10 +4,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ChevronRight, Tv } from "lucide-react";
 
 import CreatorFollowingButton from "@/components/following/creator-following-button";
 import CreatorUnfollowDialog from "@/components/creator/creator-unfollow-dialog";
+import {
+  CREATOR_AVATAR_TRIGGER_AVATAR_CLASS,
+  CREATOR_AVATAR_TRIGGER_CLASS,
+} from "@/constants/creator/creator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { buttonVariants } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -28,6 +33,9 @@ interface CreatorAvatarPopoverProps {
   showLivePill?: boolean;
   // 언팔로우 시 확인 다이얼로그를 띄울지 (팔로잉 관리 화면 등)
   confirmUnfollow?: boolean;
+  // 라이브 목록 캐시가 없는 화면(클립 디테일 등)에서 토글 후 서버 데이터를 다시 받아
+  // isFollowing prop을 갱신하기 위해 router.refresh를 호출할지.
+  refreshOnToggle?: boolean;
   avatarClassName?: string;
   avatarSize?: "default" | "sm" | "lg";
   triggerClassName?: string;
@@ -42,10 +50,12 @@ export default function CreatorAvatarPopover({
   showLiveRing = false,
   showLivePill = false,
   confirmUnfollow = false,
+  refreshOnToggle = false,
   avatarClassName,
   avatarSize = "lg",
   triggerClassName,
 }: CreatorAvatarPopoverProps) {
+  const router = useRouter();
   const currentUserId = useAuthStore((state) => state.user?.id);
   const toggleCreatorFollowing = useToggleCreatorFollowing();
   const [isUnfollowDialogOpen, setIsUnfollowDialogOpen] = useState(false);
@@ -58,7 +68,11 @@ export default function CreatorAvatarPopover({
 
   const runToggle = (nextFollowing: boolean) => {
     if (isOwnChannel || isPending) return;
-    toggleCreatorFollowing.mutate({ creatorId, nextFollowing });
+    toggleCreatorFollowing.mutate(
+      { creatorId, nextFollowing },
+      // 라이브 목록 캐시가 없는 화면에선 settle 후 서버 데이터를 다시 받아 버튼 상태를 갱신한다.
+      refreshOnToggle ? { onSettled: () => router.refresh() } : undefined,
+    );
   };
 
   const handleFollowingClick = () => {
@@ -85,16 +99,14 @@ export default function CreatorAvatarPopover({
           type="button"
           aria-label={`${creatorNickname} 프로필 요약 열기`}
           className={cn(
-            "group/avatar-trigger focus-visible:ring-ring relative z-20 shrink-0 cursor-pointer rounded-full outline-none focus-visible:ring-3",
+            CREATOR_AVATAR_TRIGGER_CLASS,
+            "relative z-20 cursor-pointer",
             triggerClassName,
           )}
         >
           <Avatar
             className={cn(
-              "transition-[box-shadow,opacity]",
-              "group-hover/avatar-trigger:ring-live/70 group-focus-visible/avatar-trigger:ring-live/70 group-hover/avatar-trigger:ring-2 group-focus-visible/avatar-trigger:ring-2",
-              // 라이브 링이 잘 안 보이는 사이드바에서도 hover 피드백을 주기 위해 투명도도 함께 변화.
-              "group-hover/avatar-trigger:opacity-60 group-focus-visible/avatar-trigger:opacity-60",
+              CREATOR_AVATAR_TRIGGER_AVATAR_CLASS,
               showLiveRing && "ring-live/80 ring-2",
               avatarClassName,
             )}

@@ -279,8 +279,8 @@ function HistoryPagination({
                 className={cn(
                   "rounded-lg font-semibold",
                   item === currentPage && [
-                    "bg-brand text-white shadow-sm",
-                    "hover:bg-brand/90 hover:text-white",
+                    "bg-brand text-brand-foreground shadow-sm",
+                    "hover:bg-brand/90 hover:text-brand-foreground",
                     "dark:hover:bg-brand/90",
                   ],
                   item !== currentPage && [

@@ -1,15 +1,22 @@
 "use server";
 // 방송 운영 페이지에서 사용하는 라이브 방송 RPC Server Action입니다.
 
+import { randomUUID } from "crypto";
 import { getAuthenticatedActorId } from "@/actions/common/authenticated-actor";
 import { getChannelLiveStreamPath } from "@/constants/channel/channel-live-media";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { createAdminClient } from "@/lib/supabase/admin-client";
 import {
+  createChannelLivePollSchema,
+  endChannelLivePollSchema,
   getChannelLiveDrawParticipantsSchema,
+  sendChannelLiveInteractionNoticeSchema,
+  sendChannelLiveRouletteNoticeSchema,
+  type CreateChannelLivePollInput,
+  type EndChannelLivePollInput,
   type GetChannelLiveDrawParticipantsInput,
-  sendChannelLiveChatMessageSchema,
-  type SendChannelLiveChatMessageInput,
+  type SendChannelLiveInteractionNoticeInput,
+  type SendChannelLiveRouletteNoticeInput,
   startLiveBroadcastSchema,
   type StartLiveBroadcastInput,
   updateChannelLiveSettingsSchema,
@@ -17,8 +24,15 @@ import {
 } from "@/lib/zod/channel-live";
 import type { AppActionResult } from "@/types/common/action";
 import type { Database, Json } from "@/types/database.types";
-import { isKnownMessageRpcError, resolveMessageRpcErrorCode } from "@/utils/common/app-message";
+import {
+  isManualLiveThumbnailFileName,
+  LIVE_THUMBNAIL_DIRECTORY,
+} from "@/utils/channel/channel-live-thumbnail";
 import { buildLiveStreamKey } from "@/utils/live/live-security";
+import {
+  createServerStampedLiveRouletteSsePayload,
+  liveRouletteSseStore,
+} from "@/utils/live/live-roulette-sse";
 import { revalidatePath } from "next/cache";
 
 interface EndLiveBroadcastInput {
@@ -31,16 +45,24 @@ interface SaveLiveThumbnailInput {
   shouldRemove: boolean;
 }
 
+interface ChannelLiveDrawParticipationRow {
+  created_at: string;
+  metadata: Json;
+  sender: { nickname: string | null } | null;
+  sender_id: string | null;
+}
+
 const LIVE_THUMBNAIL_BUCKET = "user-media";
-const LIVE_THUMBNAIL_DIRECTORY = "live-thumbnail";
 const LIVE_THUMBNAIL_MAX_BYTES = 5 * 1024 * 1024;
+const LIVE_DRAW_PARTICIPATION_SOURCE = "live_draw_participation";
 const LIVE_THUMBNAIL_EXTENSION_BY_TYPE: Record<string, string> = {
   "image/jpeg": "jpg",
   "image/png": "png",
   "image/webp": "webp",
 };
-const CHANNEL_LIVE_CHAT_MESSAGE_LIMIT = 50;
 const CHANNEL_LIVE_DRAW_PARTICIPANT_PAGE_SIZE = 1000;
+const ACTIVE_LIVE_BROADCAST_NOT_FOUND_CODE = "PX404";
+const ACTIVE_LIVE_BROADCAST_NOT_FOUND_MESSAGE = "active live broadcast not found";
 
 type UpsertCreatorStudioSettingArgs =
   Database["public"]["Functions"]["upsert_creator_studio_setting"]["Args"];
@@ -60,9 +82,18 @@ export interface ChannelLiveActiveBroadcast {
 
 export interface ChannelLiveStudioSnapshot {
   activeBroadcast: ChannelLiveActiveBroadcast | null;
-  chatMessages: ChannelLiveChatMessage[];
+  creatorId: string;
+  recentDonations: ChannelLiveRecentDonation[];
   settings: ChannelLiveStudioSettings;
   streamPath: string;
+}
+
+export interface ChannelLiveRecentDonation {
+  amount: number;
+  broadcastId: string | null;
+  createdAt: string;
+  donorNickname: string;
+  id: string;
 }
 
 export interface ChannelLiveChatMessage {
@@ -75,6 +106,7 @@ export interface ChannelLiveChatMessage {
 
 export interface ChannelLiveDrawParticipant {
   firstMessageAt: string;
+  isFollower: boolean;
   nickname: string;
   userId: string;
 }
@@ -111,6 +143,15 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+function isActiveLiveBroadcastNotFoundError(error: unknown) {
+  if (!isRecord(error)) return false;
+
+  return (
+    error.code === ACTIVE_LIVE_BROADCAST_NOT_FOUND_CODE &&
+    error.message === ACTIVE_LIVE_BROADCAST_NOT_FOUND_MESSAGE
+  );
+}
+
 function readString(value: unknown) {
   return typeof value === "string" ? value : "";
 }
@@ -139,6 +180,10 @@ function readStringArray(value: unknown) {
     : [];
 }
 
+function readRecordArray(value: unknown) {
+  return Array.isArray(value) ? value.filter(isRecord) : [];
+}
+
 function readJsonObject(value: Json): Record<string, Json | undefined> {
   return value && typeof value === "object" && !Array.isArray(value)
     ? (value as Record<string, Json | undefined>)
@@ -149,6 +194,10 @@ function readMetadataString(value: Json | undefined) {
   const trimmed = typeof value === "string" ? value.trim() : "";
 
   return trimmed.length > 0 ? trimmed : null;
+}
+
+function toJsonMetadata(value: Record<string, unknown> | undefined): Json {
+  return value ? (JSON.parse(JSON.stringify(value)) as Json) : {};
 }
 
 function getLiveThumbnailExtension(file: File) {
@@ -191,7 +240,7 @@ async function removeLiveThumbnailFiles(
   }
 
   const filePaths = (files ?? [])
-    .filter((file) => file.name)
+    .filter((file) => file.name && isManualLiveThumbnailFileName(file.name))
     .map((file) => `${directoryPath}/${file.name}`);
 
   if (filePaths.length === 0) {
@@ -312,13 +361,42 @@ function createChannelLiveStreamPath(creatorId: string, settings: ChannelLiveStu
   return getChannelLiveStreamPath(buildLiveStreamKey(creatorId, settings.streamKeyVersion));
 }
 
+function createRecentDonationFromRecord(
+  value: Record<string, unknown>,
+): ChannelLiveRecentDonation | null {
+  const id = readString(value.id);
+  const amount = readNumber(value.amount);
+  const createdAt = readString(value.createdAt);
+
+  if (!id || !createdAt || amount <= 0) {
+    return null;
+  }
+
+  return {
+    amount,
+    broadcastId: typeof value.broadcastId === "string" ? value.broadcastId : null,
+    createdAt,
+    donorNickname: readString(value.donorNickname) || "익명",
+    id,
+  };
+}
+
+function createRecentDonations(value: unknown) {
+  return readRecordArray(value).flatMap((item) => {
+    const donation = createRecentDonationFromRecord(item);
+
+    return donation ? [donation] : [];
+  });
+}
+
 function toChannelLiveStudioSnapshot(value: Json, creatorId: string): ChannelLiveStudioSnapshot {
   if (!isRecord(value)) {
     const settings = createDefaultSettings();
 
     return {
       activeBroadcast: null,
-      chatMessages: [],
+      creatorId,
+      recentDonations: [],
       settings,
       streamPath: createChannelLiveStreamPath(creatorId, settings),
     };
@@ -326,11 +404,13 @@ function toChannelLiveStudioSnapshot(value: Json, creatorId: string): ChannelLiv
 
   const activeBroadcast = value.activeBroadcast;
   const settings = createSettingsFromRecord(value.settings);
+  const recentDonations = createRecentDonations(value.recentDonations);
 
   if (!isRecord(activeBroadcast)) {
     return {
       activeBroadcast: null,
-      chatMessages: [],
+      creatorId,
+      recentDonations,
       settings,
       streamPath: createChannelLiveStreamPath(creatorId, settings),
     };
@@ -350,66 +430,27 @@ function toChannelLiveStudioSnapshot(value: Json, creatorId: string): ChannelLiv
         typeof activeBroadcast.thumbnailUrl === "string" ? activeBroadcast.thumbnailUrl : null,
       title: readString(activeBroadcast.title),
     },
-    chatMessages: [],
+    creatorId,
+    recentDonations,
     settings,
     streamPath: createChannelLiveStreamPath(creatorId, settings),
   };
 }
 
-function toChannelLiveChatMessage(
-  message: {
-    content: string;
-    created_at: string;
-    id: string;
-    metadata: Json;
-    sender_id: string | null;
-  },
-  creatorId: string,
-): ChannelLiveChatMessage {
-  const metadata = readJsonObject(message.metadata);
-
-  return {
-    authorName: readMetadataString(metadata.senderNickname) ?? "시청자",
-    content: message.content,
-    createdAt: message.created_at,
-    id: message.id,
-    isCreator: message.sender_id === creatorId,
-  };
-}
-
-async function getChannelLiveChatMessagesByBroadcastId(
-  supabase: ReturnType<typeof createAdminClient>,
-  broadcastId: string,
-  creatorId: string,
-) {
-  const { data, error } = await supabase
-    .from("live_message")
-    .select("content, created_at, id, metadata, sender_id")
-    .eq("broadcast_id", broadcastId)
-    .eq("message_type", "chat")
-    .order("created_at", { ascending: false })
-    .limit(CHANNEL_LIVE_CHAT_MESSAGE_LIMIT);
-
-  if (error) {
-    console.error("방송 운영 채팅 메시지 조회 실패", error);
-    return [];
-  }
-
-  return [...(data ?? [])].reverse().map((message) => toChannelLiveChatMessage(message, creatorId));
-}
-
 async function getChannelLiveDrawParticipantsByPeriod({
   broadcastId,
+  creatorId,
   endedAt,
   startedAt,
   supabase,
 }: {
   broadcastId: string;
+  creatorId: string;
   endedAt: string;
   startedAt: string;
   supabase: ReturnType<typeof createAdminClient>;
 }) {
-  const participantsByUserId = new Map<string, ChannelLiveDrawParticipant>();
+  const participantBaseByUserId = new Map<string, Omit<ChannelLiveDrawParticipant, "isFollower">>();
   let offset = 0;
 
   while (true) {
@@ -430,13 +471,13 @@ async function getChannelLiveDrawParticipantsByPeriod({
     }
 
     (data ?? []).forEach((message) => {
-      if (!message.sender_id || participantsByUserId.has(message.sender_id)) {
+      if (!message.sender_id || participantBaseByUserId.has(message.sender_id)) {
         return;
       }
 
       const metadata = readJsonObject(message.metadata);
 
-      participantsByUserId.set(message.sender_id, {
+      participantBaseByUserId.set(message.sender_id, {
         firstMessageAt: message.created_at,
         nickname: readMetadataString(metadata.senderNickname) ?? "시청자",
         userId: message.sender_id,
@@ -450,7 +491,118 @@ async function getChannelLiveDrawParticipantsByPeriod({
     offset += CHANNEL_LIVE_DRAW_PARTICIPANT_PAGE_SIZE;
   }
 
-  return Array.from(participantsByUserId.values());
+  const participantUserIds = Array.from(participantBaseByUserId.keys());
+  const followerUserIdSet = new Set<string>();
+
+  if (participantUserIds.length > 0) {
+    const { data: relations, error: relationError } = await supabase
+      .from("viewer_creator_relation")
+      .select("viewer_id")
+      .eq("creator_id", creatorId)
+      .in("viewer_id", participantUserIds)
+      .not("followed_at", "is", null);
+
+    if (relationError) {
+      console.error("방송 추첨 팔로우 관계 조회 실패", relationError);
+      return null;
+    }
+
+    (relations ?? []).forEach((relation) => {
+      followerUserIdSet.add(relation.viewer_id);
+    });
+  }
+
+  return Array.from(participantBaseByUserId.values()).map<ChannelLiveDrawParticipant>(
+    (participant) => ({
+      ...participant,
+      isFollower: followerUserIdSet.has(participant.userId),
+    }),
+  );
+}
+
+async function getChannelLiveDrawParticipantsByNotice({
+  broadcastId,
+  creatorId,
+  drawNoticeId,
+  supabase,
+}: {
+  broadcastId: string;
+  creatorId: string;
+  drawNoticeId: string;
+  supabase: ReturnType<typeof createAdminClient>;
+}) {
+  const participantBaseByUserId = new Map<string, Omit<ChannelLiveDrawParticipant, "isFollower">>();
+  let offset = 0;
+
+  while (true) {
+    const { data, error } = await supabase
+      .from("live_message")
+      .select("created_at, metadata, sender_id, sender:sender_id(nickname)")
+      .eq("broadcast_id", broadcastId)
+      .eq("message_type", "moderation_notice")
+      .contains("metadata", {
+        drawNoticeId,
+        source: LIVE_DRAW_PARTICIPATION_SOURCE,
+      })
+      .not("sender_id", "is", null)
+      .order("created_at", { ascending: true })
+      .range(offset, offset + CHANNEL_LIVE_DRAW_PARTICIPANT_PAGE_SIZE - 1)
+      .returns<ChannelLiveDrawParticipationRow[]>();
+
+    if (error) {
+      console.error("방송 추첨 UI 참여자 조회 실패", error);
+      return null;
+    }
+
+    (data ?? []).forEach((message) => {
+      if (!message.sender_id || participantBaseByUserId.has(message.sender_id)) {
+        return;
+      }
+
+      const metadata = readJsonObject(message.metadata);
+
+      participantBaseByUserId.set(message.sender_id, {
+        firstMessageAt: message.created_at,
+        nickname:
+          message.sender?.nickname ?? readMetadataString(metadata.senderNickname) ?? "시청자",
+        userId: message.sender_id,
+      });
+    });
+
+    if (!data || data.length < CHANNEL_LIVE_DRAW_PARTICIPANT_PAGE_SIZE) {
+      break;
+    }
+
+    offset += CHANNEL_LIVE_DRAW_PARTICIPANT_PAGE_SIZE;
+  }
+
+  const participantUserIds = Array.from(participantBaseByUserId.keys());
+  const followerUserIdSet = new Set<string>();
+
+  if (participantUserIds.length > 0) {
+    const { data: relations, error: relationError } = await supabase
+      .from("viewer_creator_relation")
+      .select("viewer_id")
+      .eq("creator_id", creatorId)
+      .in("viewer_id", participantUserIds)
+      .not("followed_at", "is", null);
+
+    if (relationError) {
+      console.error("방송 추첨 UI 참여자 팔로우 관계 조회 실패", relationError);
+      return null;
+    }
+
+    (relations ?? []).forEach((relation) => {
+      followerUserIdSet.add(relation.viewer_id);
+    });
+  }
+
+  return Array.from(participantBaseByUserId.values()).map<ChannelLiveDrawParticipant>(
+    (participant) => ({
+      ...participant,
+      isFollower: followerUserIdSet.has(participant.userId),
+    }),
+  );
 }
 
 export async function getChannelLiveStudioSnapshotAction(): Promise<
@@ -474,19 +626,9 @@ export async function getChannelLiveStudioSnapshotAction(): Promise<
     return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
   }
 
-  const snapshot = toChannelLiveStudioSnapshot(data, actor.userId);
-
-  if (snapshot.activeBroadcast) {
-    snapshot.chatMessages = await getChannelLiveChatMessagesByBroadcastId(
-      supabase,
-      snapshot.activeBroadcast.id,
-      actor.userId,
-    );
-  }
-
   return {
     success: true,
-    data: snapshot,
+    data: toChannelLiveStudioSnapshot(data, actor.userId),
   };
 }
 
@@ -681,17 +823,59 @@ export async function saveChannelLiveThumbnailAction({
   };
 }
 
-export async function sendChannelLiveChatMessageAction(
-  input: SendChannelLiveChatMessageInput,
-): Promise<AppActionResult<{ message: ChannelLiveChatMessage }>> {
-  const parsed = sendChannelLiveChatMessageSchema.safeParse(input);
+export async function createChannelLivePollAction(
+  input: CreateChannelLivePollInput,
+): Promise<AppActionResult<{ pollId: string }>> {
+  const parsed = createChannelLivePollSchema.safeParse(input);
 
   if (!parsed.success) {
-    return { success: false, code: APP_MESSAGE_CODE.error.message.invalidInput };
+    return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
   }
 
   const actor = await getAuthenticatedActorId({
-    logLabel: "방송 채팅 전송 중 인증 사용자 조회 실패",
+    logLabel: "방송 투표 생성 중 인증 사용자 조회 실패",
+  });
+
+  if (!actor.success) {
+    return { success: false, code: actor.result.code };
+  }
+
+  const pollOptions: Json = parsed.data.options.map((option) => ({
+    count: 0,
+    id: randomUUID(),
+    label: option.trim(),
+  }));
+  const supabase = createAdminClient();
+  const { data: pollId, error } = await supabase.rpc("create_live_poll", {
+    p_actor_user_id: actor.userId,
+    p_broadcast_id: parsed.data.broadcastId,
+    p_ends_at: parsed.data.endsAt ?? undefined,
+    p_options: pollOptions,
+    p_title: parsed.data.title.trim(),
+  });
+
+  if (error || !pollId) {
+    console.error("방송 투표 생성 RPC 실패", error);
+    return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
+  }
+
+  return {
+    success: true,
+    data: { pollId },
+  };
+}
+
+export async function endChannelLivePollAction(
+  input: EndChannelLivePollInput,
+): Promise<AppActionResult> {
+  const parsed = endChannelLivePollSchema.safeParse(input);
+
+  if (!parsed.success) {
+    return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
+  }
+
+  const actor = await getAuthenticatedActorId({
+    logLabel: "방송 투표 종료 중 인증 사용자 조회 실패",
   });
 
   if (!actor.success) {
@@ -699,43 +883,93 @@ export async function sendChannelLiveChatMessageAction(
   }
 
   const supabase = createAdminClient();
-  const { data: messageId, error } = await supabase.rpc("send_live_message", {
+  const { error } = await supabase.rpc("end_live_poll", {
     p_actor_user_id: actor.userId,
-    p_broadcast_id: parsed.data.broadcastId,
-    p_content: parsed.data.content,
+    p_poll_id: parsed.data.pollId,
   });
 
   if (error) {
-    if (!isKnownMessageRpcError(error)) {
-      console.error("방송 채팅 전송 RPC 실패", error);
-    }
-
-    return {
-      success: false,
-      code: resolveMessageRpcErrorCode(error, APP_MESSAGE_CODE.error.message.sendFailed),
-    };
+    console.error("방송 투표 종료 RPC 실패", error);
+    return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
   }
 
-  if (!messageId) {
-    console.error("방송 채팅 전송 RPC가 생성 메시지 id를 반환하지 않음");
-    return { success: false, code: APP_MESSAGE_CODE.error.message.sendFailed };
+  return { success: true };
+}
+
+export async function sendChannelLiveInteractionNoticeAction(
+  input: SendChannelLiveInteractionNoticeInput,
+): Promise<AppActionResult<{ messageId: string }>> {
+  const parsed = sendChannelLiveInteractionNoticeSchema.safeParse(input);
+
+  if (!parsed.success) {
+    return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
   }
 
-  const { data: message, error: messageError } = await supabase
-    .from("live_message")
-    .select("content, created_at, id, metadata, sender_id")
-    .eq("id", messageId)
-    .single();
+  const actor = await getAuthenticatedActorId({
+    logLabel: "라이브 상호작용 결과 공지 중 인증 사용자 조회 실패",
+  });
 
-  if (messageError || !message) {
-    console.error("방송 채팅 전송 메시지 조회 실패", messageError);
-    return { success: false, code: APP_MESSAGE_CODE.error.message.sendFailed };
+  if (!actor.success) {
+    return { success: false, code: actor.result.code };
+  }
+
+  const supabase = createAdminClient();
+  const { data: messageId, error } = await supabase.rpc("send_live_interaction_notice", {
+    p_actor_user_id: actor.userId,
+    p_broadcast_id: parsed.data.broadcastId,
+    p_content: parsed.data.content.trim(),
+    p_interaction_type: parsed.data.interactionType,
+    p_metadata: toJsonMetadata(parsed.data.metadata),
+  });
+
+  if (error || !messageId) {
+    console.error("라이브 상호작용 결과 공지 RPC 실패", error);
+    return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
   }
 
   return {
     success: true,
-    data: { message: toChannelLiveChatMessage(message, actor.userId) },
+    data: { messageId },
   };
+}
+
+export async function sendChannelLiveRouletteNoticeAction(
+  input: SendChannelLiveRouletteNoticeInput,
+): Promise<AppActionResult> {
+  const parsed = sendChannelLiveRouletteNoticeSchema.safeParse(input);
+
+  if (!parsed.success) {
+    return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
+  }
+
+  const actor = await getAuthenticatedActorId({
+    logLabel: "방송 룰렛 SSE 공지 전송 중 인증 사용자 조회 실패",
+  });
+
+  if (!actor.success) {
+    return { success: false, code: actor.result.code };
+  }
+
+  const supabase = createAdminClient();
+  const { data: broadcast, error } = await supabase
+    .from("live_broadcast")
+    .select("id")
+    .eq("id", parsed.data.broadcastId)
+    .eq("creator_id", actor.userId)
+    .is("ended_at", null)
+    .maybeSingle();
+
+  if (error || !broadcast) {
+    console.error("방송 룰렛 SSE 공지 대상 방송 조회 실패", error);
+    return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
+  }
+
+  liveRouletteSseStore.publish(
+    parsed.data.broadcastId,
+    createServerStampedLiveRouletteSsePayload(parsed.data.payload),
+  );
+
+  return { success: true };
 }
 
 export async function getChannelLiveDrawParticipantsAction(
@@ -768,12 +1002,20 @@ export async function getChannelLiveDrawParticipantsAction(
     return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
   }
 
-  const participants = await getChannelLiveDrawParticipantsByPeriod({
-    broadcastId: parsed.data.broadcastId,
-    endedAt: parsed.data.endedAt,
-    startedAt: parsed.data.startedAt,
-    supabase,
-  });
+  const participants = parsed.data.drawNoticeId
+    ? await getChannelLiveDrawParticipantsByNotice({
+        broadcastId: parsed.data.broadcastId,
+        creatorId: actor.userId,
+        drawNoticeId: parsed.data.drawNoticeId,
+        supabase,
+      })
+    : await getChannelLiveDrawParticipantsByPeriod({
+        broadcastId: parsed.data.broadcastId,
+        creatorId: actor.userId,
+        endedAt: parsed.data.endedAt,
+        startedAt: parsed.data.startedAt,
+        supabase,
+      });
 
   if (!participants) {
     return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
@@ -807,6 +1049,12 @@ export async function endLiveBroadcastAction({
   });
 
   if (error) {
+    if (isActiveLiveBroadcastNotFoundError(error)) {
+      revalidatePath("/channel/live");
+
+      return { success: true };
+    }
+
     console.error("방송 종료 RPC 실패", error);
     return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
   }

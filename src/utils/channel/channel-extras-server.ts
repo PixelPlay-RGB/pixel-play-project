@@ -7,9 +7,15 @@ import type { LiveHeroItem } from "@/types/live/live";
 import { parseChannelBanners } from "@/utils/channel/channel-parser";
 import { parseLiveHeroItem } from "@/utils/live/live-list";
 
-export async function getChannelLiveHero(creatorId: string): Promise<LiveHeroItem | null> {
+export async function getChannelLiveHero(
+  creatorId: string,
+  viewerId?: string | null,
+): Promise<LiveHeroItem | null> {
   const supabase = createAdminClient();
-  const { data, error } = await supabase.rpc("get_channel_live_hero", { p_creator_id: creatorId });
+  const { data, error } = await supabase.rpc("get_channel_live_hero", {
+    p_creator_id: creatorId,
+    ...(viewerId ? { p_viewer_id: viewerId } : {}),
+  });
 
   if (error) {
     console.error("채널 Live Hero 조회 실패", error);

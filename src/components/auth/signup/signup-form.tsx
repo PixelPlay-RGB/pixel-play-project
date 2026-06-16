@@ -17,22 +17,17 @@ import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { SIGNUP_FORM_DEFAULTS } from "@/constants/auth/auth";
-import { FORM_MESSAGE } from "@/constants/common/form-message";
-import {
-  useCompleteSignupMutation,
-  useSendOtpMutation,
-  useVerifyOtpMutation,
-} from "@/hooks/auth/use-signup-mutations";
+import { useOtpVerification } from "@/hooks/auth/use-otp-verification";
+import { useCompleteSignupMutation } from "@/hooks/auth/use-signup-mutations";
 import { useNicknameAvailability } from "@/hooks/profile/use-nickname-availability";
 import { cn } from "@/lib/utils";
 import { signUpSchema } from "@/lib/zod/auth";
-import type { OtpStatus, SignUpFormValues } from "@/types/auth/auth";
+import type { SignUpFormValues } from "@/types/auth/auth";
 import { getTodayDateInputValue } from "@/utils/common/date";
 import { formatPhone } from "@/utils/common/format";
 import { toastAppError } from "@/utils/common/toast-message";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CalendarDays, LockKeyhole, Mail, Smartphone, User, UserStar } from "lucide-react";
-import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 
 interface Props {
@@ -40,16 +35,7 @@ interface Props {
 }
 
 export default function SignupForm({ next }: Props) {
-  const [otpStatus, setOtpStatus] = useState<OtpStatus>("idle");
-  const [otpCode, setOtpCode] = useState("");
-  const [otpError, setOtpError] = useState("");
-
-  const sendOtpMutation = useSendOtpMutation();
-  const verifyOtpMutation = useVerifyOtpMutation();
   const completeSignupMutation = useCompleteSignupMutation(next);
-
-  const emailVerified = otpStatus === "verified";
-  const otpSent = otpStatus !== "idle" && otpStatus !== "sending";
 
   const {
     register,
@@ -65,11 +51,26 @@ export default function SignupForm({ next }: Props) {
     defaultValues: SIGNUP_FORM_DEFAULTS,
   });
 
-  const isFormBusy =
-    sendOtpMutation.isPending ||
-    verifyOtpMutation.isPending ||
-    completeSignupMutation.isPending ||
-    isSubmitting;
+  const {
+    emailVerified,
+    handleOtpCodeChange,
+    handleSendOtp,
+    handleVerifyOtp,
+    isOtpMutationPending,
+    isSendingOtp,
+    isVerifyingOtp,
+    otpCode,
+    otpError,
+    otpSent,
+  } = useOtpVerification({
+    getEmail: () => getValues("email"),
+    hasEmailError: () => !!errors.email,
+    isBlocked: () => isBusy,
+    onEmailFieldError: (message) => setError("email", { type: "server", message }),
+    onClearEmailError: () => clearErrors("email"),
+  });
+
+  const isFormBusy = isOtpMutationPending || completeSignupMutation.isPending || isSubmitting;
 
   const {
     nicknameStatus,
@@ -88,56 +89,6 @@ export default function SignupForm({ next }: Props) {
 
   const handleCheckNickname = async () => {
     await checkNickname();
-  };
-
-  const handleSendOtp = async () => {
-    const email = getValues("email");
-    if (isBusy || emailVerified || !email || errors.email) {
-      return;
-    }
-
-    setOtpStatus("sending");
-    setOtpError("");
-    clearErrors("email");
-
-    const result = await sendOtpMutation.mutateAsync(email).catch(() => ({
-      success: false,
-      fieldMessage: FORM_MESSAGE.auth.emailCheckFailed,
-    }));
-
-    if (result.success) {
-      setOtpStatus("sent");
-      return;
-    }
-
-    setOtpStatus("idle");
-    setError("email", {
-      type: "server",
-      message: result.fieldMessage ?? FORM_MESSAGE.auth.emailCheckFailed,
-    });
-  };
-
-  const handleVerifyOtp = async () => {
-    const email = getValues("email");
-    if (isBusy || !email || !otpCode || otpCode.length < 6) {
-      return;
-    }
-
-    setOtpStatus("verifying");
-    setOtpError("");
-
-    const result = await verifyOtpMutation.mutateAsync({ email, token: otpCode }).catch(() => ({
-      success: false,
-      fieldMessage: FORM_MESSAGE.auth.otpInvalid,
-    }));
-
-    if (result.success) {
-      setOtpStatus("verified");
-      return;
-    }
-
-    setOtpStatus("sent");
-    setOtpError(result.fieldMessage ?? FORM_MESSAGE.auth.otpInvalid);
   };
 
   const onSubmit = async (data: SignUpFormValues) => {
@@ -187,9 +138,9 @@ export default function SignupForm({ next }: Props) {
                 variant="outline"
                 onClick={handleSendOtp}
                 disabled={isBusy || emailVerified || !!errors.email || !dirtyFields.email}
-                className="border-brand/40 text-brand hover:bg-brand cursor-pointer hover:text-white"
+                className="border-brand/40 text-brand hover:bg-brand hover:text-brand-foreground cursor-pointer"
               >
-                {sendOtpMutation.isPending ? (
+                {isSendingOtp ? (
                   <Spinner />
                 ) : emailVerified ? (
                   "인증완료"
@@ -214,8 +165,8 @@ export default function SignupForm({ next }: Props) {
                 maxLength={6}
                 placeholder="인증 코드 6자리"
                 value={otpCode}
-                disabled={isBusy && !verifyOtpMutation.isPending}
-                onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                disabled={isBusy && !isVerifyingOtp}
+                onChange={(e) => handleOtpCodeChange(e.target.value)}
               />
               <InputGroupAddon align="inline-end">
                 <InputGroupButton
@@ -224,9 +175,9 @@ export default function SignupForm({ next }: Props) {
                   variant="outline"
                   onClick={handleVerifyOtp}
                   disabled={isBusy || otpCode.length < 6}
-                  className="border-brand/40 text-brand hover:bg-brand hover:cursor-pointer hover:text-white"
+                  className="border-brand/40 text-brand hover:bg-brand hover:text-brand-foreground hover:cursor-pointer"
                 >
-                  {verifyOtpMutation.isPending ? <Spinner /> : "확인"}
+                  {isVerifyingOtp ? <Spinner /> : "확인"}
                 </InputGroupButton>
               </InputGroupAddon>
             </InputGroup>
@@ -310,7 +261,7 @@ export default function SignupForm({ next }: Props) {
                 variant="outline"
                 onClick={handleCheckNickname}
                 disabled={isBusy || !!errors.nickname || !dirtyFields.nickname}
-                className="border-brand/40 text-brand hover:bg-brand cursor-pointer hover:text-white"
+                className="border-brand/40 text-brand hover:bg-brand hover:text-brand-foreground cursor-pointer"
               >
                 {isCheckingNickname ? (
                   <Spinner />
@@ -397,7 +348,7 @@ export default function SignupForm({ next }: Props) {
         type="submit"
         disabled={!canSubmit}
         className={cn(
-          "bg-brand hover:bg-brand/85 w-full cursor-pointer py-5 font-bold tracking-widest text-white uppercase",
+          "bg-brand hover:bg-brand/85 text-brand-foreground w-full cursor-pointer py-5 font-bold tracking-widest uppercase",
           "transition-all active:scale-95 disabled:opacity-40",
         )}
       >

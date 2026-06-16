@@ -1,7 +1,6 @@
 "use client";
 // 방송 상태, 방송 시간, 해상도와 비트레이트 정보를 표시합니다.
 
-import type { ChannelLiveState } from "@/components/channel/live/channel-live-operation-page";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { ChannelLiveStreamStatusResponse } from "@/types/channel/channel-live-stream";
 import { Radio } from "lucide-react";
@@ -9,7 +8,7 @@ import { useEffect, useRef, useState } from "react";
 
 interface Props {
   activeBroadcastStartedAt?: string | null;
-  liveState: ChannelLiveState;
+  onStatusChange?: (status: ChannelLiveStreamStatusResponse) => void;
   streamPath: string;
   variant?: "card" | "embedded";
 }
@@ -19,7 +18,7 @@ interface BitrateSample {
   inboundBytes: number;
 }
 
-const STREAM_STATUS_POLL_INTERVAL_MS = 3000;
+const STREAM_STATUS_POLL_INTERVAL_MS = 10000;
 const STREAM_DURATION_TICK_INTERVAL_MS = 1000;
 const DEFAULT_STREAM_DURATION = "00:00:00";
 
@@ -112,6 +111,7 @@ function StreamStatusContent({
 
 export default function ChannelLiveStreamStatusPanel({
   activeBroadcastStartedAt,
+  onStatusChange,
   streamPath,
   variant = "card",
 }: Props) {
@@ -126,13 +126,11 @@ export default function ChannelLiveStreamStatusPanel({
 
     const loadStreamStatus = async () => {
       try {
-        const response = await fetch(
-          `/api/channel/live/stream-status?path=${encodeURIComponent(streamPath)}`,
-          {
-            cache: "no-store",
-            signal: abortController.signal,
-          },
-        );
+        const params = new URLSearchParams({ path: streamPath });
+        const response = await fetch(`/api/channel/live/stream-status?${params.toString()}`, {
+          cache: "no-store",
+          signal: abortController.signal,
+        });
 
         if (!response.ok) return;
 
@@ -161,6 +159,7 @@ export default function ChannelLiveStreamStatusPanel({
         }
 
         setStreamStatus(nextStatus);
+        onStatusChange?.(nextStatus);
       } catch (error) {
         if (!abortController.signal.aborted) {
           console.error("방송 송출 상태 조회 실패", error);
@@ -176,7 +175,7 @@ export default function ChannelLiveStreamStatusPanel({
       abortController.abort();
       clearInterval(interval);
     };
-  }, [streamPath]);
+  }, [onStatusChange, streamPath]);
 
   useEffect(() => {
     const startedAt = streamStatus?.onlineTime ?? activeBroadcastStartedAt;

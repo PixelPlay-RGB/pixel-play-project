@@ -17,7 +17,7 @@ export default function LiveSearchTagLink({ tag }: LiveSearchTagLinkProps) {
       className={cn(
         "bg-live/10 text-live dark:bg-live/15",
         "rounded-md px-2 py-0.5 text-xs font-black transition-colors",
-        "hover:bg-live focus-visible:ring-ring outline-none hover:text-white focus-visible:ring-3",
+        "hover:bg-live focus-visible:ring-ring hover:text-live-foreground outline-none focus-visible:ring-3",
       )}
       aria-label={`${tag} 태그 검색`}
     >

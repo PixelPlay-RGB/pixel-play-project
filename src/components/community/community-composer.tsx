@@ -201,8 +201,7 @@ export default function CommunityComposer({
               content.length > COMMUNITY_POST_CONTENT_MAX && "text-destructive",
             )}
           >
-            {formatNumber(content.length)} /{" "}
-            {formatNumber(COMMUNITY_POST_CONTENT_MAX)}
+            {formatNumber(content.length)} / {formatNumber(COMMUNITY_POST_CONTENT_MAX)}
           </span>
 
           <Button
@@ -224,7 +223,7 @@ export default function CommunityComposer({
           <Button
             type="submit"
             disabled={!isSubmittable || isPending}
-            className="bg-brand hover:bg-brand/85 h-9 rounded-xl px-5 text-sm font-bold text-white"
+            className="bg-brand hover:bg-brand/85 text-brand-foreground h-9 rounded-xl px-5 text-sm font-bold"
           >
             {isPending ? <Spinner className="size-4" /> : isEdit ? "수정 완료" : "등록"}
           </Button>

@@ -1,6 +1,8 @@
 // 커뮤니티 게시판 서버 조회 로직입니다. (SSR 페이지와 Server Action이 공유)
 import "server-only";
 
+import { cache } from "react";
+
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import {
   COMMUNITY_COMMENT_PAGE_SIZE,
@@ -56,7 +58,8 @@ export async function getChannelCommunityPosts(
   return { success: true, data: parsed };
 }
 
-export async function getCommunityPostDetail(
+// 같은 요청 안에서 페이지 본문과 generateMetadata가 함께 호출하므로 React cache로 중복 조회를 막는다.
+export const getCommunityPostDetail = cache(async function getCommunityPostDetail(
   postId: string,
 ): Promise<AppActionResult<CommunityPostDetail>> {
   const viewerId = await resolveViewerId();
@@ -79,7 +82,7 @@ export async function getCommunityPostDetail(
   }
 
   return { success: true, data: parsed };
-}
+});
 
 export async function getCommunityComments(
   postId: string,

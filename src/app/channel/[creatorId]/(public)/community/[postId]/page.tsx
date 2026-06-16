@@ -1,4 +1,5 @@
 // 커뮤니티 게시글 상세 페이지입니다.
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import CommunityPostDetailView from "@/components/community/community-post-detail-view";
@@ -12,6 +13,30 @@ import {
 } from "@/utils/community/community-server";
 
 const EMPTY_COMMENTS: CommunityCommentsResult = { bestComment: null, items: [], totalCount: 0 };
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ creatorId: string; postId: string }>;
+}): Promise<Metadata> {
+  const { creatorId, postId } = await params;
+  const [profileResult, postResult] = await Promise.all([
+    getChannelProfile(creatorId),
+    getCommunityPostDetail(postId),
+  ]);
+
+  const nickname = profileResult.success ? profileResult.data?.nickname : null;
+  const content = postResult.success ? postResult.data?.content : null;
+
+  if (!nickname || !content) {
+    return { title: "커뮤니티" };
+  }
+
+  return {
+    title: `${nickname} 채널 커뮤니티`,
+    description: content.replace(/\s+/g, " ").slice(0, 80),
+  };
+}
 
 export default async function CommunityPostDetailPage({
   params,

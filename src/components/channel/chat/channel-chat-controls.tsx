@@ -56,7 +56,7 @@ export function ChannelChatControls({ initialSnapshot }: Props) {
           disabled={isSaving || !isDirty}
           className={cn(
             "h-11 shrink-0 rounded-xl px-7 font-bold lg:w-auto",
-            "bg-brand hover:bg-brand/90 text-white",
+            "bg-brand hover:bg-brand/90 text-brand-foreground",
             "shadow-brand/20 shadow-sm transition-all active:scale-95",
           )}
         >

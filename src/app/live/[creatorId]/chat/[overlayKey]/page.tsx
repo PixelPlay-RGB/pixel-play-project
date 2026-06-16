@@ -11,15 +11,20 @@ export const metadata = {
 
 export default async function LiveChatOverlayPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ creatorId: string; overlayKey: string }>;
+  searchParams: Promise<{ preview?: string }>;
 }) {
   const { creatorId, overlayKey } = await params;
+  const { preview } = await searchParams;
   const snapshot = await getLiveChatOverlaySnapshot({ creatorId, overlayKey });
 
   if (!snapshot) {
     notFound();
   }
 
-  return <LiveChatOverlay initialSnapshot={snapshot} />;
+  return (
+    <LiveChatOverlay creatorId={creatorId} initialSnapshot={snapshot} isPreview={preview === "1"} />
+  );
 }

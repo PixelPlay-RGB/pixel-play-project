@@ -42,7 +42,8 @@ export default function ChannelShell({ children, profile }: Props) {
         <div
           className={cn(
             "h-full min-w-0 [scrollbar-gutter:stable] overflow-auto p-6 md:p-10",
-            isLiveOperationRoute && "xl:overflow-hidden",
+            // 방송 운영은 시청 화면과 같은 풀블리드 레이아웃(섹션은 border로 구분)이라 패딩을 없앤다.
+            isLiveOperationRoute && "p-0 md:p-0 xl:overflow-hidden",
           )}
         >
           {children}

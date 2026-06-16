@@ -34,7 +34,7 @@ function TabsTrigger({ className, ...props }: TabsPrimitive.Tab.Props) {
       className={(state) =>
         cn(
           "inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-md px-3 py-1 text-sm font-medium whitespace-nowrap transition-all outline-none",
-          "data-active:bg-brand disabled:pointer-events-none disabled:opacity-50 data-active:text-white data-active:shadow-sm",
+          "data-active:bg-brand data-active:text-brand-foreground disabled:pointer-events-none disabled:opacity-50 data-active:shadow-sm",
           "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-3",
           typeof className === "function" ? className(state) : className,
         )

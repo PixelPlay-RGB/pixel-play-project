@@ -71,7 +71,7 @@ export default function LiveCreatorResultCard({ result }: Props) {
                 "inline-flex shrink-0 items-center gap-1 rounded-md",
                 "px-2 py-0.5 text-xs font-black",
                 result.is_live
-                  ? "bg-live text-white"
+                  ? "bg-live text-live-foreground"
                   : "bg-muted text-muted-foreground dark:bg-muted/70",
               )}
             >

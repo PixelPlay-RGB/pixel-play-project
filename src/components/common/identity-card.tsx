@@ -55,7 +55,7 @@ export default function IdentityCard({
         <span className="text-brand text-[10px] font-extrabold tracking-wide uppercase">
           {badgeLabel}
         </span>
-        <span className="text-foreground truncate text-sm font-bold leading-tight">{title}</span>
+        <span className="text-foreground truncate text-sm leading-tight font-bold">{title}</span>
       </div>
 
       <ChevronRight

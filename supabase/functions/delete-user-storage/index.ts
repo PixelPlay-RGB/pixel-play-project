@@ -62,9 +62,7 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  const { error: deleteError } = await supabase.storage
-    .from(USER_MEDIA_BUCKET)
-    .remove(filePaths);
+  const { error: deleteError } = await supabase.storage.from(USER_MEDIA_BUCKET).remove(filePaths);
 
   if (deleteError) {
     console.error("[delete-user-storage] delete error:", deleteError.message);

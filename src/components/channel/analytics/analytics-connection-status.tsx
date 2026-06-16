@@ -9,19 +9,24 @@ interface Props {
   state: AnalyticsConnectionState;
 }
 
-const STATE_STYLE: Record<AnalyticsConnectionState, { label: string; dot: string; text: string }> = {
-  connected: { label: ANALYTICS_LABEL.connectionConnected, dot: "bg-success", text: "text-success" },
-  connecting: {
-    label: ANALYTICS_LABEL.connectionConnecting,
-    dot: "bg-muted-foreground",
-    text: "text-muted-foreground",
-  },
-  reconnecting: {
-    label: ANALYTICS_LABEL.connectionReconnecting,
-    dot: "bg-error animate-pulse",
-    text: "text-error",
-  },
-};
+const STATE_STYLE: Record<AnalyticsConnectionState, { label: string; dot: string; text: string }> =
+  {
+    connected: {
+      label: ANALYTICS_LABEL.connectionConnected,
+      dot: "bg-success",
+      text: "text-success",
+    },
+    connecting: {
+      label: ANALYTICS_LABEL.connectionConnecting,
+      dot: "bg-muted-foreground",
+      text: "text-muted-foreground",
+    },
+    reconnecting: {
+      label: ANALYTICS_LABEL.connectionReconnecting,
+      dot: "bg-error animate-pulse",
+      text: "text-error",
+    },
+  };
 
 export function AnalyticsConnectionStatus({ state }: Props) {
   const style = STATE_STYLE[state];

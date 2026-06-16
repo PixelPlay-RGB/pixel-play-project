@@ -117,7 +117,8 @@ export default function LinkedOAuthAlertDialog({
             title={isDisableUnlink ? "기본 계정은 해제할 수 없습니다." : undefined}
             className={cn(
               "font-semibold",
-              !isLinked && "bg-brand/40 text-brand hover:bg-brand cursor-pointer hover:text-white",
+              !isLinked &&
+                "bg-brand/40 text-brand hover:bg-brand hover:text-brand-foreground cursor-pointer",
             )}
           >
             {isLinked ? (
@@ -190,7 +191,7 @@ export default function LinkedOAuthAlertDialog({
               "h-10 min-w-24 rounded-xl px-4 font-bold shadow-sm",
               isLinked
                 ? "shadow-destructive/10"
-                : "bg-brand shadow-brand/20 hover:bg-brand/90 text-white",
+                : "bg-brand shadow-brand/20 hover:bg-brand/90 text-brand-foreground",
             )}
             onClick={() => handleToggle(provider)}
           >

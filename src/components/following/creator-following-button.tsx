@@ -34,7 +34,7 @@ export default function CreatorFollowingButton({
         "h-8 shrink-0 rounded-full px-3 text-xs font-black transition-all active:scale-95",
         isFollowing || isOwnChannel
           ? "border-brand/25 bg-brand/10 text-brand hover:border-brand/50 hover:bg-brand/18 dark:border-brand/25 dark:bg-brand/15 dark:text-brand"
-          : "bg-brand hover:bg-brand/85 shadow-brand/25 text-white shadow-sm hover:shadow-md",
+          : "bg-brand hover:bg-brand/85 shadow-brand/25 text-brand-foreground shadow-sm hover:shadow-md",
         className,
       )}
       disabled={isOwnChannel || isPending}

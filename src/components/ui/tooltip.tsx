@@ -9,7 +9,13 @@ function TooltipProvider({ delay = 0, ...props }: TooltipPrimitive.Provider.Prop
 }
 
 function Tooltip({ ...props }: TooltipPrimitive.Root.Props) {
-  return <TooltipPrimitive.Root data-slot="tooltip" {...props} />;
+  // Provider 없이 단독 사용하면 기본 delay(600ms)로 늦게 떠서, Provider(delay 0)를 내장해
+  // hover 즉시 표시를 프로젝트 기본 톤으로 둔다(플레이어 컨트롤·채팅 마크 등).
+  return (
+    <TooltipProvider>
+      <TooltipPrimitive.Root data-slot="tooltip" {...props} />
+    </TooltipProvider>
+  );
 }
 
 function TooltipTrigger({ ...props }: TooltipPrimitive.Trigger.Props) {

@@ -18,18 +18,31 @@ export function SecurityActionGroup({
   onCopy: () => Promise<void>;
   onPreview?: () => void;
 }) {
+  // 비활성 사유(보안 값 재발급 진행 중)를 hover로 알 수 있게 한다.
+  const disabledTitle = disabled ? "보안 값을 새로 발급하는 동안에는 사용할 수 없어요." : undefined;
+
   return (
     <div className="flex shrink-0 flex-wrap gap-2">
-      <Button variant="outline" disabled={disabled} onClick={() => onToggleVisible(tokenKind)}>
+      <Button
+        variant="outline"
+        disabled={disabled}
+        title={disabledTitle}
+        onClick={() => onToggleVisible(tokenKind)}
+      >
         {isVisible ? <EyeOff /> : <Eye />}
         {isVisible ? "숨기기" : "보기"}
       </Button>
-      <Button variant="outline" disabled={disabled} onClick={() => void onCopy()}>
+      <Button
+        variant="outline"
+        disabled={disabled}
+        title={disabledTitle}
+        onClick={() => void onCopy()}
+      >
         <Copy />
         복사
       </Button>
       {onPreview && (
-        <Button variant="outline" disabled={disabled} onClick={onPreview}>
+        <Button variant="outline" disabled={disabled} title={disabledTitle} onClick={onPreview}>
           <ExternalLink />
           미리보기
         </Button>

@@ -1,10 +1,8 @@
 "use client";
-// profile-form 컴포넌트를 제공합니다.
+// 프로필 설정 화면 — 폼 훅과 공개 프로필·계정 정보 카드를 조합합니다.
 
-import { zodResolver } from "@hookform/resolvers/zod";
 import { Lock, Mail, UserRound, UserStar } from "lucide-react";
-import { useEffect, useState } from "react";
-import { Controller, useForm, useWatch } from "react-hook-form";
+import { Controller } from "react-hook-form";
 
 import { SettingsCard } from "@/components/common/settings-card";
 import { SettingsPage } from "@/components/common/settings-page";
@@ -23,13 +21,9 @@ import {
 } from "@/components/ui/input-group";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
-
-import { useNicknameAvailability } from "@/hooks/profile/use-nickname-availability";
-import { useUpdateProfileMutation } from "@/hooks/profile/use-profile-mutations";
-import { resolveProfileQueryErrorCode, useUser } from "@/hooks/profile/use-profile";
-import { useStickyActionBar } from "@/hooks/common/use-sticky-action-bar";
+import { resolveProfileQueryErrorCode } from "@/hooks/profile/use-profile";
+import { useProfileForm } from "@/hooks/profile/use-profile-form";
 import { cn } from "@/lib/utils";
-import { ProfileFormValues, profileSchema } from "@/lib/zod/auth";
 import { formatDate } from "@/utils/common/format";
 import { getAppMessage } from "@/utils/common/app-message";
 
@@ -40,125 +34,35 @@ const PROFILE_PAGE_HEADER = {
 } as const;
 
 export default function ProfileForm() {
-  const { data: user, error: userError, isError: isUserError, isLoading } = useUser();
-
-  const [pendingFile, setPendingFile] = useState<File | null>(null);
-  const updateProfileMutation = useUpdateProfileMutation();
-
   const {
+    canSubmit,
     control,
-    getValues,
-    setValue,
-    reset,
-    formState: { errors, isDirty, dirtyFields },
-    handleSubmit,
-  } = useForm<ProfileFormValues>({
-    resolver: zodResolver(profileSchema),
-    mode: "onChange",
-    values: {
-      nickname: user?.nickname ?? "",
-      photoUrl: user?.photo_url ?? null,
-    },
-  });
-
-  const isSaving = updateProfileMutation.isPending;
-  const nicknameAvailability = useNicknameAvailability({
-    getNickname: () => getValues("nickname"),
-    hasNicknameError: () => !!errors.nickname,
-    isBlocked: isSaving,
-    currentNickname: user?.nickname,
-  });
-
-  // blob URL 메모리 누수 방지: photoUrl 이 blob: 으로 바뀔 때마다 이전 blob revoke + unmount cleanup
-  const photoUrl = useWatch({ control, name: "photoUrl" });
-  const nicknameValue = useWatch({ control, name: "nickname" });
-  useEffect(() => {
-    return () => {
-      if (photoUrl?.startsWith("blob:")) URL.revokeObjectURL(photoUrl);
-    };
-  }, [photoUrl]);
-
-  // 파생 상태 계산 (user 없을 때도 안전하도록 guard)
-  const nicknameChanged = !!user && nicknameValue !== user.nickname;
-  const isBusy = isSaving || nicknameAvailability.isCheckingNickname;
-  const canSave =
-    Object.keys(errors).length === 0 &&
-    (!nicknameChanged || nicknameAvailability.isNicknameAvailable);
-
-  const { sentinelRef, show } = useStickyActionBar(!!user && isDirty);
-
-  const handleCheckNickname = async () => {
-    await nicknameAvailability.checkNickname();
-  };
-
-  const handleFileChange = (file: File | null) => {
-    if (isSaving) return;
-
-    if (!file) {
-      setPendingFile(null);
-      setValue("photoUrl", null, { shouldDirty: true });
-      return;
-    }
-
-    // 1. 일단 서버에 저장하지 않고 로컬 미리보기용 URL만 생성
-    const previewUrl = URL.createObjectURL(file);
-    setPendingFile(file);
-    setValue("photoUrl", previewUrl, { shouldDirty: true });
-  };
-
-  const handleReset = () => {
-    if (!user || isBusy) return;
-
-    reset({
-      nickname: user.nickname,
-      photoUrl: user.photo_url ?? null,
-    });
-    nicknameAvailability.resetNicknameAvailability();
-    setPendingFile(null);
-  };
-
-  const handleSave = async (data: ProfileFormValues) => {
-    if (!canSave || isBusy) return;
-
-    const formData = new FormData();
-    formData.append("nickname", data.nickname);
-
-    if (pendingFile) {
-      // 파일이 새로 선택된 경우에만 FormData에 추가하기
-      formData.append("file", pendingFile);
-    } else if (dirtyFields.photoUrl && data.photoUrl === null) {
-      // 유저가 이미지 파일을 지운경우
-      formData.append("shouldDeleteImage", "true");
-    } else {
-      // 기존 사진 유지인 경우에는 URL 전달
-      formData.append("photoUrl", data.photoUrl || "");
-    }
-
-    const result = await updateProfileMutation.mutateAsync(formData).catch(() => null);
-
-    if (!result?.success) {
-      return;
-    }
-
-    reset({
-      ...data,
-      photoUrl: result.photoUrl,
-    });
-
-    nicknameAvailability.markNicknameAvailable(data.nickname);
-    setPendingFile(null);
-  };
-
-  const canSubmit = isDirty && canSave && !isBusy;
+    errors,
+    handleCheckNickname,
+    handleFileChange,
+    handleReset,
+    isBusy,
+    isLoading,
+    isSaving,
+    isUserError,
+    nicknameAvailability,
+    nicknameChanged,
+    nicknameValue,
+    sentinelRef,
+    show,
+    submitForm,
+    user,
+    userError,
+  } = useProfileForm();
 
   const headerAction = user ? (
     <Button
       type="button"
-      onClick={handleSubmit(handleSave)}
+      onClick={submitForm}
       disabled={!canSubmit}
       className={cn(
         "h-11 shrink-0 rounded-xl px-7 font-bold lg:w-auto",
-        "bg-brand hover:bg-brand/90 text-white",
+        "bg-brand hover:bg-brand/90 text-brand-foreground",
         "shadow-brand/20 shadow-sm transition-all active:scale-95",
       )}
     >
@@ -205,7 +109,7 @@ export default function ProfileForm() {
           show={show}
           isSaving={isSaving}
           canSave={canSubmit}
-          onSave={handleSubmit(handleSave)}
+          onSave={submitForm}
           onReset={handleReset}
         />
       )}
@@ -228,7 +132,7 @@ export default function ProfileForm() {
     }
 
     return (
-      <form onSubmit={handleSubmit(handleSave)} className="flex w-full flex-col gap-5">
+      <form onSubmit={submitForm} className="flex w-full flex-col gap-5">
         <SettingsCard
           title="공개 프로필"
           description="다른 사용자에게 보여지는 프로필이에요."
