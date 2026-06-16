@@ -17,6 +17,9 @@ export const APP_MESSAGE_CODE = {
     profile: {
       updated: "success.profile.updated",
     },
+    user: {
+      subscriptionCanceled: "success.user.subscriptionCanceled",
+    },
     oauth: {
       unlinked: "success.oauth.unlinked",
     },
@@ -87,6 +90,10 @@ export const APP_MESSAGE_CODE = {
       accountDeleteFailed: "error.auth.accountDeleteFailed",
       oauthInfoLoadFailed: "error.auth.oauthInfoLoadFailed",
       oauthSyncFailed: "error.auth.oauthSyncFailed",
+    },
+    user: {
+      subscriptionLoadFailed: "error.user.subscriptionLoadFailed",
+      subscriptionCancelFailed: "error.user.subscriptionCancelFailed",
     },
     // 라이브 메시지 RPC 에러 매핑(MESSAGE_RPC_ERROR_CODE_MAP)에서 사용.
     chatRoom: {

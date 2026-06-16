@@ -24,6 +24,7 @@ import {
   USER_ACCOUNT_PASSWORD_MENU_ITEM,
   USER_ACCOUNT_PRIMARY_MENU_ITEMS,
   USER_ACCOUNT_PROFILE_MENU_ITEM,
+  USER_ACCOUNT_SUBSCRIPTION_MENU_ITEM,
 } from "@/constants/common/user-account-menu";
 import type { UserAccountMenuItem } from "@/constants/common/user-account-menu";
 import { useLogout } from "@/hooks/auth/use-logout";
@@ -54,7 +55,11 @@ export default function SettingSidebar({ isMobile, profile }: Props) {
     ? [
         {
           label: "활동",
-          items: [USER_ACCOUNT_FOLLOWING_MENU_ITEM, USER_ACCOUNT_DONATION_MENU_ITEM],
+          items: [
+            USER_ACCOUNT_FOLLOWING_MENU_ITEM,
+            USER_ACCOUNT_SUBSCRIPTION_MENU_ITEM,
+            USER_ACCOUNT_DONATION_MENU_ITEM,
+          ],
         },
         {
           label: "내 채널",
@@ -64,7 +69,11 @@ export default function SettingSidebar({ isMobile, profile }: Props) {
     : [
         {
           label: "활동",
-          items: [USER_ACCOUNT_FOLLOWING_MENU_ITEM, USER_ACCOUNT_DONATION_MENU_ITEM],
+          items: [
+            USER_ACCOUNT_FOLLOWING_MENU_ITEM,
+            USER_ACCOUNT_SUBSCRIPTION_MENU_ITEM,
+            USER_ACCOUNT_DONATION_MENU_ITEM,
+          ],
         },
       ];
 

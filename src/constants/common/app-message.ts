@@ -38,6 +38,12 @@ export const APP_MESSAGE = {
         description: "변경한 프로필 정보가 저장되었습니다.",
       },
     },
+    user: {
+      subscriptionCanceled: {
+        title: "구독 해지 완료",
+        description: "내 구독 목록에 변경 내용이 반영됐습니다.",
+      },
+    },
     oauth: {
       unlinked: {
         title: "연동 해제 완료",
@@ -242,6 +248,16 @@ export const APP_MESSAGE = {
       oauthSyncFailed: {
         title: "OAuth 동기화 실패",
         description: "소셜 로그인 정보를 동기화하지 못했습니다.",
+      },
+    },
+    user: {
+      subscriptionLoadFailed: {
+        title: "구독 조회 실패",
+        description: "내 구독 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.",
+      },
+      subscriptionCancelFailed: {
+        title: "구독 해지 실패",
+        description: "구독 해지를 처리하지 못했습니다. 잠시 후 다시 시도해주세요.",
       },
     },
     // 라이브 메시지 RPC 에러 매핑(MESSAGE_RPC_ERROR_CODE_MAP)에서 사용.
