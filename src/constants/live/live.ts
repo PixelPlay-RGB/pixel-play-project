@@ -154,6 +154,8 @@ export const LIVE_DONATION_LABEL = {
   chargeSubmit: "{amount} 충전",
   // 충전만 자동 처리하고 후원은 사용자가 한 번 더 확인하므로, 충전 후 동작을 안내한다.
   chargeNotice: "충전 후 후원하기 버튼으로 후원을 완료해 주세요.",
+  // 부족분이 1회 충전 한도를 넘으면 충전으로 한 번에 못 메우므로 금액을 낮추도록 안내한다.
+  chargeLimitExceeded: "1회 최대 {amount}까지 충전할 수 있어요. 후원 금액을 낮춰 주세요.",
   disabled: "후원이 비활성화된 방송입니다.",
   unit: "P",
 } as const;

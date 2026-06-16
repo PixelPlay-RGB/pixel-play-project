@@ -86,7 +86,7 @@ export function LiveDonationPopover({
   // 사용자가 직접 닫은 게 아니므로 이 동안엔 resetForm/외부 정산을 보류한다.
   const isChargeFlowActiveRef = useRef(false);
   // TossPayments 충전(PC=Promise·리로드 없음 / 모바일=리다이렉트 폴백). 성공 시 잔액은 훅이 재조회한다.
-  const { requestCharge, isCharging, isConfigured } = useTossWalletCharge({
+  const { requestCharge, cancelCharge, isCharging, isConfigured } = useTossWalletCharge({
     customerKey,
     returnTo: chargeReturnTo,
     // 충전 승인되면 후원 모달을 다시 띄워(또는 유지) 갱신된 잔액을 보여준다.
@@ -124,10 +124,11 @@ export function LiveDonationPopover({
 
   function closeWith(reason: LiveDonationCloseReason) {
     setOpen(false);
-    // 충전 결제창 때문에 닫히는 경우엔 입력값을 보존하고 외부 정산도 보류한다(결제 성공 시 다시 연다).
-    if (isChargeFlowActiveRef.current) {
-      return;
-    }
+    // 충전 플로우를 정리한다(보존 플래그 해제 + 떠 있는 결제창 닫기). 결제 진행 중(isCharging) 닫기는
+    // handleOpenChange/취소 버튼에서 막으므로 여기 도달하면 진행 중이 아니어서 안전하게 정산한다.
+    // (보류만 하면 결제수단 선택 전에 결제창을 닫았을 때 외부 열기 latch가 고착돼 전체화면 후원 버튼이 죽는다.)
+    isChargeFlowActiveRef.current = false;
+    cancelCharge();
     resetForm();
     if (isExternallyOpenedRef.current) {
       isExternallyOpenedRef.current = false;
@@ -141,8 +142,9 @@ export function LiveDonationPopover({
 
   function handleOpenChange(next: boolean) {
     if (!next) {
-      // 충전 결제창이 떠 있는 동안엔 popover를 닫지 않는다(결제 후 갱신된 잔액을 그대로 보여주기 위함).
-      if (isCharging) {
+      // 결제 진행 중이거나 충전 플로우가 떠 있는 동안엔 바깥클릭/ESC로 닫지 않는다(결제 후 갱신 잔액·입력값 유지).
+      // 닫으려면 취소 버튼을 쓴다 — 취소 버튼의 closeWith가 충전 플로우(결제창·플래그)를 명시적으로 정리한다.
+      if (isCharging || isChargeFlowActiveRef.current) {
         return;
       }
       closeWith("dismissed");
@@ -180,22 +182,35 @@ export function LiveDonationPopover({
   }, [openRequested, disabled, donationEnabled, isLoggedIn, onLoginPrompt, onOpenRequestSettled]);
 
   const remaining = walletBalance - amount;
+  // 부족분(후원액 − 잔액). needsCharge/requiredCharge가 모두 이 값을 기준으로 삼는 단일 소스.
+  const shortfall = Math.max(amount - walletBalance, 0);
   const isBelowMin = amount < minimumAmount;
   const minAmountLabel = `${formatDonationAmount(minimumAmount)}${LIVE_DONATION_LABEL.unit}`;
+  const maxChargeLabel = `${formatDonationAmount(WALLET_CHARGE_MAX_AMOUNT)}${LIVE_DONATION_LABEL.unit}`;
   const hasBalanceInfo = !isWalletLoading && !isWalletError;
-  // 잔액이 부족할 때만(유효 금액·조회 완료 전제) 하단 버튼을 후원하기 대신 자동 충전으로 전환한다.
-  const needsCharge = hasBalanceInfo && !isBelowMin && amount > 0 && remaining < 0;
+  // 부족분이 1회 충전 한도를 넘으면 충전해도 한 번에 못 메워(클램프) 무한 충전 루프가 되므로, 충전을 제안하지 않는다.
+  const exceedsChargeLimit = shortfall > WALLET_CHARGE_MAX_AMOUNT;
+  // 잔액이 부족할 때만(유효 금액·조회 완료·한도 내 전제) 하단 버튼을 후원하기 대신 자동 충전으로 전환한다.
+  const needsCharge = hasBalanceInfo && !isBelowMin && amount > 0 && remaining < 0 && !exceedsChargeLimit;
   // 충전액 = 부족분을 1,000P 단위로 올림(치지직식). 최소/최대 한도로 클램프한다.
   const requiredCharge = Math.min(
     Math.max(
-      Math.ceil(Math.max(amount - walletBalance, 0) / WALLET_CHARGE_STEP_AMOUNT) *
-        WALLET_CHARGE_STEP_AMOUNT,
+      Math.ceil(shortfall / WALLET_CHARGE_STEP_AMOUNT) * WALLET_CHARGE_STEP_AMOUNT,
       WALLET_CHARGE_MIN_AMOUNT,
     ),
     WALLET_CHARGE_MAX_AMOUNT,
   );
   // 미로그인(customerKey 없음)·키 미설정이면 충전 불가 → 후원하기(비활성)로 폴백한다.
   const canCharge = needsCharge && Boolean(customerKey) && isConfigured;
+  // 충전 자체는 가능한 상태지만 부족분이 1회 한도를 초과해 충전으로 못 메우는 경우 안내한다.
+  const showChargeLimitNotice =
+    hasBalanceInfo &&
+    !isBelowMin &&
+    amount > 0 &&
+    remaining < 0 &&
+    exceedsChargeLimit &&
+    Boolean(customerKey) &&
+    isConfigured;
 
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
@@ -340,9 +355,14 @@ export function LiveDonationPopover({
           </div>
         </div>
 
-        {/* 잔액이 부족하면 후원은 사용자 확인이 필요하므로, 충전 후 동작을 한 줄로 안내한다. */}
+        {/* 잔액이 부족하면 후원은 사용자 확인이 필요하므로 충전 후 동작을 안내하고,
+            부족분이 1회 충전 한도를 넘으면 금액을 낮추도록 안내한다. */}
         {canCharge ? (
           <p className="text-muted-foreground text-xs">{LIVE_DONATION_LABEL.chargeNotice}</p>
+        ) : showChargeLimitNotice ? (
+          <p className="text-destructive text-xs">
+            {LIVE_DONATION_LABEL.chargeLimitExceeded.replace("{amount}", maxChargeLabel)}
+          </p>
         ) : null}
 
         <div className="flex items-center justify-end gap-2">

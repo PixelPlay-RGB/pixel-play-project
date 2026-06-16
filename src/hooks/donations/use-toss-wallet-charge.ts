@@ -50,6 +50,9 @@ export function useTossWalletCharge({
   const queryClient = useQueryClient();
   const [isCharging, setIsCharging] = useState(false);
   const paymentWindowRef = useRef<TossPaymentsPaymentWindow | null>(null);
+  // 결제창을 여는 중(prepare→render)인지 추적한다. isCharging은 결제수단 선택(requestPayment) 후에야
+  // true가 되므로, 그 전 구간의 더블클릭으로 prepare가 중복 호출돼 고아 거래가 쌓이는 것을 막는다.
+  const isOpeningRef = useRef(false);
 
   // 언마운트 시 떠 있던 결제창을 정리한다(닫힘 이벤트가 없어 직접 destroy해야 한다).
   useEffect(
@@ -62,7 +65,7 @@ export function useTossWalletCharge({
 
   // 결제창만 열고 즉시 반환한다. 결제수단 선택(paymentRequest) 시 confirmCharge가 실제 승인을 진행한다.
   async function requestCharge(amount: number) {
-    if (isCharging) {
+    if (isCharging || isOpeningRef.current) {
       return;
     }
     if (!clientKey) {
@@ -74,6 +77,7 @@ export function useTossWalletCharge({
       return;
     }
 
+    isOpeningRef.current = true;
     try {
       const prepared = await prepareTossWalletCharge(amount);
       // 지갑 충전 카드와 동일하게 결제위젯(widgets) 키를 사용한다. payment()(API 개별 연동)는 다른 키를
@@ -98,7 +102,15 @@ export function useTossWalletCharge({
     } catch (error) {
       console.error("라이브 후원 충전 결제창 생성 실패", error);
       toastAppError(APP_MESSAGE_CODE.error.donation.chargeFailed);
+    } finally {
+      isOpeningRef.current = false;
     }
+  }
+
+  // 결제수단 선택 전에 후원 모달을 닫을 때 떠 있는 결제창을 정리한다(닫힘 이벤트가 없어 직접 destroy).
+  function cancelCharge() {
+    destroyPaymentWindow(paymentWindowRef.current);
+    paymentWindowRef.current = null;
   }
 
   // 결제수단 선택 후 실제 승인. PC는 Promise로 결과를 받아 직접 confirm, 모바일은 리다이렉트로 폴백한다.
@@ -165,7 +177,7 @@ export function useTossWalletCharge({
     }
   }
 
-  return { requestCharge, isCharging, isConfigured: Boolean(clientKey) };
+  return { requestCharge, cancelCharge, isCharging, isConfigured: Boolean(clientKey) };
 }
 
 function destroyPaymentWindow(paymentWindow: TossPaymentsPaymentWindow | null) {
