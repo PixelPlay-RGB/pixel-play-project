@@ -27,10 +27,9 @@ import {
 
 interface Props {
   profile: ChannelProfile;
-  className?: string;
 }
 
-export function ChannelSubscribeAction({ profile, className }: Props) {
+export function ChannelSubscribeAction({ profile }: Props) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const moveToLogin = useMoveToLogin();
@@ -87,15 +86,12 @@ export function ChannelSubscribeAction({ profile, className }: Props) {
     followerCount: profile.followerCount,
     broadcastCount: 0,
   };
-  const buttonClassName = cn(
-    "h-9 shrink-0 rounded-full px-4 text-sm font-black transition-all active:scale-95",
-    className,
-  );
+  const buttonClassName =
+    "h-9 shrink-0 rounded-full px-4 text-sm font-black transition-all active:scale-95";
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsSubscribed(profile.subscription.isSubscribed);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSubscriptionStatus(profile.subscription.status);
   }, [profile.subscription.isSubscribed, profile.subscription.status]);
 

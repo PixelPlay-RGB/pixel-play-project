@@ -1,7 +1,6 @@
 "use client";
 // 후원 지갑 충전 결제창을 열기 위한 금액 입력 UI를 제공합니다.
 
-import { SettingsCard } from "@/components/common/settings-card";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -41,7 +40,6 @@ import { FormEvent, useEffect, useId, useMemo, useRef, useState, type ReactEleme
 
 interface Props {
   customerKey: string;
-  variant?: "card" | "plain";
 }
 
 interface WalletChargeDialogProps {
@@ -98,14 +96,14 @@ export function WalletChargeDialog({
           </div>
         </DialogHeader>
         <div className="px-5 pt-1 pb-5">
-          <WalletChargeCard customerKey={customerKey} variant="plain" />
+          <WalletChargeCard customerKey={customerKey} />
         </div>
       </DialogContent>
     </Dialog>
   );
 }
 
-export function WalletChargeCard({ customerKey, variant = "card" }: Props) {
+export function WalletChargeCard({ customerKey }: Props) {
   const amountInputId = useId();
   const clientKey = process.env.NEXT_PUBLIC_TOSS_PAYMENTS_CLIENT_KEY;
   const [amount, setAmount] = useState(String(WALLET_CHARGE_DEFAULT_AMOUNT));
@@ -330,19 +328,7 @@ export function WalletChargeCard({ customerKey, variant = "card" }: Props) {
     </>
   );
 
-  if (variant === "plain") {
-    return <div className="flex flex-col gap-4">{content}</div>;
-  }
-
-  return (
-    <SettingsCard
-      title="지갑 충전"
-      description="충전 금액을 선택하거나 직접 입력할 수 있습니다."
-      contentClassName="gap-4"
-    >
-      {content}
-    </SettingsCard>
-  );
+  return <div className="flex flex-col gap-4">{content}</div>;
 }
 
 function queueActiveUpdate(isActive: () => boolean, update: () => void) {

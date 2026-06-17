@@ -1,7 +1,6 @@
 "use client";
 // 방송 운영 화면에서 실제 라이브 시청 채팅과 같은 외형의 채팅 패널을 렌더링합니다.
 
-import type { ChannelLiveChatMessage } from "@/actions/channel/live";
 import { getLiveSubscriptionBadgeAssetsAction } from "@/actions/live/live";
 import { ChannelStickerProvider } from "@/components/live/chat/channel-sticker-context";
 import { LiveChatBody } from "@/components/live/chat/live-chat-body";
@@ -12,11 +11,7 @@ import { useLiveChatSession } from "@/hooks/live/use-live-chat-session";
 import { useLiveDonationRanking } from "@/hooks/live/use-live-donation-ranking";
 import { useLiveMessages } from "@/hooks/live/use-live-messages";
 import { useAuthStore } from "@/stores/auth";
-import type {
-  LiveChatMessage,
-  LiveChatProfileContext,
-  LiveViewerChatState,
-} from "@/types/live/live";
+import type { LiveChatProfileContext, LiveViewerChatState } from "@/types/live/live";
 import type { LiveSubscriptionBadgeAssetInfo } from "@/utils/live/live-subscription-badge";
 import { useQuery } from "@tanstack/react-query";
 import { ExternalLink } from "lucide-react";
@@ -25,7 +20,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 interface Props {
   creatorId?: string;
   chatRuleText?: string;
-  onMessagesChange?: (messages: ChannelLiveChatMessage[]) => void;
 }
 
 // 운영(스튜디오) 화면은 크리에이터 본인 — 시청 화면과 동일하게 입력을 막지 않는다.
@@ -37,25 +31,7 @@ const STUDIO_CHAT_STATE: LiveViewerChatState = {
   remainingSlowModeSeconds: 0,
 };
 
-function toChannelLiveChatMessages(messages: LiveChatMessage[]): ChannelLiveChatMessage[] {
-  return messages.flatMap((message) => {
-    if (message.type !== "text" || !message.createdAt) {
-      return [];
-    }
-
-    return [
-      {
-        authorName: message.author ?? LIVE_LABEL.anonymousAuthor,
-        content: message.content,
-        createdAt: message.createdAt,
-        id: message.id,
-        isCreator: Boolean(message.isHost),
-      },
-    ];
-  });
-}
-
-export default function ChannelLiveChatPanel({ creatorId, chatRuleText, onMessagesChange }: Props) {
+export default function ChannelLiveChatPanel({ creatorId, chatRuleText }: Props) {
   const [cleanbot, setCleanbot] = useState(true);
   const [isPopoutOpen, setIsPopoutOpen] = useState(false);
   // 메뉴의 "채팅 규칙" 클릭마다 증가 — 입력바 위 규칙 popover를 여는 요청 id.
@@ -84,7 +60,6 @@ export default function ChannelLiveChatPanel({ creatorId, chatRuleText, onMessag
     creatorId: creatorId ?? "",
     viewerChatState: chatState,
   });
-  const channelLiveChatMessages = useMemo(() => toChannelLiveChatMessages(messages), [messages]);
 
   // 닉네임 클릭 팝업(프로필/강퇴) — 운영 콘솔은 크리에이터 본인 화면이라 본인이면 강퇴 권한자다.
   // 채널 단위 강퇴라 broadcastId는 없다(채널 전체 차단). 시청·팝아웃 표면과 동일하게 동작하게 한다.
@@ -100,10 +75,6 @@ export default function ChannelLiveChatPanel({ creatorId, chatRuleText, onMessag
     popoutWindowRef.current = win;
     setIsPopoutOpen(true);
   }
-
-  useEffect(() => {
-    onMessagesChange?.(channelLiveChatMessages);
-  }, [channelLiveChatMessages, onMessagesChange]);
 
   useEffect(() => {
     if (!isPopoutOpen) return;

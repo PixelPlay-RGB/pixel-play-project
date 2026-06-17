@@ -51,16 +51,3 @@ export const CHANNEL_CHAT_SLOW_MODE_OPTIONS = [
   { value: 120, label: "2분" },
   { value: 300, label: "5분" },
 ] as const;
-
-export const CHANNEL_CHAT_LINK_BLOCK_OPTIONS = [
-  {
-    value: true,
-    label: "차단",
-    description: "외부 URL이 포함된 채팅을 막아요.",
-  },
-  {
-    value: false,
-    label: "허용",
-    description: "시청자가 링크를 보낼 수 있어요.",
-  },
-] as const;
