@@ -4,7 +4,7 @@ import { test } from "node:test";
 
 import { CHANNEL_MENU_GROUPS } from "./channel-menu.ts";
 
-test("subscription menu opens subscriber and benefit pages", () => {
+test("subscription menu opens subscriber, benefit, and emoji pages", () => {
   const revenueGroup = CHANNEL_MENU_GROUPS.find((group) => group.label === "수익");
   const subscriptionMenu = revenueGroup?.items.find((item) => item.id === "subscription");
 
@@ -23,6 +23,7 @@ test("subscription menu opens subscriber and benefit pages", () => {
         label: "구독 혜택",
         href: "/channel/subscription-benefits",
       },
+      { id: "subscription-emoji", label: "이모지", href: "/channel/emoji" },
     ],
   );
 });
