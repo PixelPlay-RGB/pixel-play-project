@@ -51,7 +51,7 @@ export const LIVE_CHAT_OVERLAY_PREVIEW_ITEMS: LiveChatOverlayItem[] = [
       author: "크리에이터",
       content: "와주셔서 감사합니다 🙌",
       createdAt: "2026-01-01T00:00:01.000Z",
-      role: "creator",
+      roles: ["creator"],
     },
   },
   {
@@ -62,7 +62,7 @@ export const LIVE_CHAT_OVERLAY_PREVIEW_ITEMS: LiveChatOverlayItem[] = [
       author: "픽셀팬",
       content: "오늘도 화이팅!",
       createdAt: "2026-01-01T00:00:02.000Z",
-      role: "donor",
+      roles: ["donor"],
     },
   },
   {

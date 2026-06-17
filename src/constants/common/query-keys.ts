@@ -137,6 +137,10 @@ export const QUERY_KEYS = {
     managersAll: () => [...QUERY_KEYS.channel.all, "managers"],
     managers: (creatorId?: string) =>
       [...QUERY_KEYS.channel.managersAll(), creatorId].filter((v) => v !== undefined),
+    emojis: (creatorId?: string) =>
+      [...QUERY_KEYS.channel.all, "emojis", creatorId].filter((v) => v !== undefined),
+    profile: (creatorId?: string) =>
+      [...QUERY_KEYS.channel.all, "profile", creatorId].filter((v) => v !== undefined),
     viewerBansAll: () => [...QUERY_KEYS.channel.all, "viewer-bans"],
     viewerBans: (creatorId?: string, page?: number) =>
       [...QUERY_KEYS.channel.viewerBansAll(), creatorId, page].filter((v) => v !== undefined),

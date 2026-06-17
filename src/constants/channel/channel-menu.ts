@@ -2,6 +2,7 @@
 import type { ChannelMenuItem } from "@/types/channel/channel-menu";
 import {
   BarChart3,
+  Crown,
   HandCoins,
   MessageSquareText,
   ShieldCheck,
@@ -15,13 +16,14 @@ export interface ChannelMenuGroup {
   items: ChannelMenuItem[];
 }
 
-// 성격별 섹션: 방송(운영·채팅) / 수익(후원) / 관리(통계·보안).
+// 성격별 섹션: 방송(운영·채팅·연결) / 수익(후원·구독) / 관리(통계·권한). 구독 아코디언 하위에 이모지.
 export const CHANNEL_MENU_GROUPS: ChannelMenuGroup[] = [
   {
     label: "방송",
     items: [
       { id: "live", label: "방송 운영", href: "/channel/live", icon: SlidersHorizontal },
       { id: "chat", label: "채팅 설정", href: "/channel/chat", icon: MessageSquareText },
+      { id: "security", label: "방송 연결", href: "/channel/security", icon: ShieldCheck },
     ],
   },
   {
@@ -35,6 +37,12 @@ export const CHANNEL_MENU_GROUPS: ChannelMenuGroup[] = [
           { id: "donation-settings", label: "설정", href: "/channel/donation" },
           { id: "settlement", label: "정산", href: "/channel/settlement" },
         ],
+      },
+      {
+        id: "subscription",
+        label: "구독",
+        icon: Crown,
+        children: [{ id: "subscription-emoji", label: "이모지", href: "/channel/emoji" }],
       },
     ],
   },
@@ -50,7 +58,7 @@ export const CHANNEL_MENU_GROUPS: ChannelMenuGroup[] = [
           { id: "analytics-report", label: "지난 방송 분석", href: "/channel/analytics/report" },
         ],
       },
-      { id: "permissions", label: "권한 관리", href: "/channel/permissions", icon: Users },
+      { id: "permissions", label: "매니저 관리", href: "/channel/permissions", icon: Users },
       { id: "viewers", label: "시청자 관리", href: "/channel/viewers", icon: UserX },
       { id: "security", label: "방송 연결", href: "/channel/security", icon: ShieldCheck },
     ],

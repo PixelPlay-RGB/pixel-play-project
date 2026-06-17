@@ -5,7 +5,7 @@ import {
   LIVE_OVERLAY_DEFAULT_CREATOR_NAME,
 } from "@/constants/live/live-overlay";
 import type { Json } from "@/types/database.types";
-import type { LiveBroadcastSummary } from "@/types/live/live";
+import type { LiveBroadcastSummary, LiveSenderRole } from "@/types/live/live";
 import type {
   LiveChatOverlayItem,
   LiveChatOverlayMessage,
@@ -149,8 +149,12 @@ function parseLiveChatOverlayMessage(value: Json | undefined): LiveChatOverlayMe
   const createdAt = readString(object.createdAt);
   const kind = object.kind === "donation" ? "donation" : "chat";
   const amount = readNumber(object.amount);
-  const role =
-    object.role === "creator" ? "creator" : object.role === "donor" ? "donor" : undefined;
+  const roles = Array.isArray(object.roles)
+    ? object.roles.filter(
+        (value): value is Exclude<LiveSenderRole, "viewer"> =>
+          value === "creator" || value === "manager" || value === "donor" || value === "subscriber",
+      )
+    : undefined;
   const tone = readMessageTone(object.tone);
 
   if (!id || !author || content === null || !createdAt) {
@@ -164,7 +168,7 @@ function parseLiveChatOverlayMessage(value: Json | undefined): LiveChatOverlayMe
     content,
     createdAt,
     amount,
-    role,
+    roles,
     tone,
   };
 }

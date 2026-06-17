@@ -55,6 +55,12 @@ export function useLiveChatSession({
     const lastOwnRole = queryClient
       .getQueryData<LiveChatMessage[]>(messagesKey)
       ?.findLast((message) => message.senderId === user?.id && message.senderRole)?.senderRole;
+    // 다중 뱃지 즉시 표시: 내 직전 확정 메시지의 합성 역할들을 재사용한다(첫 메시지는 echo가 채운다).
+    const lastOwnRoles = queryClient
+      .getQueryData<LiveChatMessage[]>(messagesKey)
+      ?.findLast(
+        (message) => message.senderId === user?.id && message.senderRoles?.length,
+      )?.senderRoles;
     // 후원 직후엔 직전 메시지 스냅샷이 후원 전 역할(viewer)이라 뱃지가 realtime echo 시점에야
     // 붙는다(#120) — 후원 성공 시 승격해둔 역할이 있으면 viewer 스냅샷보다 우선한다.
     // manager 등 상위 역할 스냅샷은 그대로 둔다(승격 신호는 donor 한정).
@@ -63,6 +69,11 @@ export function useLiveChatSession({
     );
     const optimisticViewerRole =
       lastOwnRole && lastOwnRole !== "viewer" ? lastOwnRole : (promotedRole ?? lastOwnRole);
+    // 호스트도 후원 이력이 있으면 직전 합성이 ['creator','donor']라, 그 스냅샷을 우선해 뱃지 깜빡임을 막는다.
+    const optimisticRoles: Exclude<LiveSenderRole, "viewer">[] = isHost
+      ? (lastOwnRoles ?? ["creator"])
+      : (lastOwnRoles ??
+        (optimisticViewerRole && optimisticViewerRole !== "viewer" ? [optimisticViewerRole] : []));
     // 본인이 보낸 메시지는 클린봇으로 가리지 않는다(isCleanbotFlagged 미부여).
     // 자기 메시지는 본인 화면에서 항상 보이는 게 자연스럽다.
     const optimisticMessage: LiveChatMessage = {
@@ -75,6 +86,7 @@ export function useLiveChatSession({
       content: trimmed,
       isHost,
       senderRole: isHost ? "creator" : optimisticViewerRole,
+      senderRoles: optimisticRoles,
     };
 
     const removeOptimistic = () =>

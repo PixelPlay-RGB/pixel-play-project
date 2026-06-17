@@ -14,7 +14,9 @@ import type { ChannelManagerItem } from "@/types/channel/moderation";
 import { parseChannelManagers } from "@/utils/channel/channel-moderation";
 import { toastAppError, toastAppSuccess } from "@/utils/common/toast-message";
 
-export function useChannelManagers(creatorId: string) {
+// listEnabled=false 면 매니저 목록 조회는 끄고 추가/해제 mutation 만 쓴다 — 닉네임 팝오버처럼
+// 권한 없는 시청자가 마운트해도 get_channel_managers(크리에이터 본인 전용) 권한 에러가 나지 않게.
+export function useChannelManagers(creatorId: string, options?: { listEnabled?: boolean }) {
   const supabase = useMemo(() => createClient(), []);
   const queryClient = useQueryClient();
 
@@ -32,7 +34,7 @@ export function useChannelManagers(creatorId: string) {
 
       return parseChannelManagers(data);
     },
-    enabled: Boolean(creatorId),
+    enabled: Boolean(creatorId) && (options?.listEnabled ?? true),
   });
 
   const invalidateManagers = () =>

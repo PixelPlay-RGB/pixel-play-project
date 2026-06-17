@@ -33,6 +33,16 @@ const ROLE_ICON: Record<LiveChatRole, LucideIcon> = {
   subscriber: Star,
 };
 
+// 역할별 배경색 — 여러 뱃지를 한 줄에 나열할 때 서로 구분되도록 색을 다르게 둔다.
+// 브랜드 컬러(민트 --brand / 코랄 --live) 기반: 크리에이터=코랄(라이브 액센트),
+// 매니저=민트(브랜드 메인). 후원자·구독자는 기존 브랜드 그라데이션을 그대로 유지한다.
+const ROLE_BG: Record<LiveChatRole, string> = {
+  creator: "bg-live",
+  manager: "bg-brand",
+  donor: "from-brand to-live bg-linear-to-br",
+  subscriber: "from-brand to-live bg-linear-to-br",
+};
+
 export function LiveChatRoleBadge({ role, size = "sm", withTooltip = false, className }: Props) {
   const Icon = ROLE_ICON[role];
   const label = ROLE_LABEL[role];
@@ -40,8 +50,9 @@ export function LiveChatRoleBadge({ role, size = "sm", withTooltip = false, clas
   const badge = (
     <span
       className={cn(
-        "from-brand to-live inline-flex shrink-0 items-center justify-center bg-linear-to-br text-white shadow-sm",
-        size === "sm" ? "size-5 rounded-sm" : "mt-0.5 size-8 rounded-md",
+        "inline-flex shrink-0 items-center justify-center text-white shadow-sm",
+        ROLE_BG[role],
+        size === "sm" ? "size-5 rounded-sm" : "size-8 rounded-md",
         className,
       )}
       aria-label={withTooltip ? undefined : label}

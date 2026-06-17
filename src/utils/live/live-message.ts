@@ -20,6 +20,23 @@ function parseSenderRole(value: unknown): LiveSenderRole {
   return LIVE_SENDER_ROLES.includes(value as LiveSenderRole) ? (value as LiveSenderRole) : "viewer";
 }
 
+// 동시에 보유한 역할들을 합성한다(여러 뱃지 가로 나열) — 시청 채팅·OBS 오버레이 공용 진실 소스.
+// manager 는 sender_role(크리에이터만 위라 매니저는 절대 안 가려짐), donor·subscriber 는 전송 시점
+// metadata 스냅샷, creator 는 sender_id 매칭(isHost)에서 온다.
+export function deriveSenderRoles(params: {
+  isHost: boolean;
+  senderRole: LiveSenderRole;
+  isDonor: boolean;
+  isSubscriber: boolean;
+}): Exclude<LiveSenderRole, "viewer">[] {
+  const roles: Exclude<LiveSenderRole, "viewer">[] = [];
+  if (params.isHost) roles.push("creator");
+  else if (params.senderRole === "manager") roles.push("manager");
+  if (params.isDonor) roles.push("donor");
+  if (params.isSubscriber) roles.push("subscriber");
+  return roles;
+}
+
 export interface LiveMessageRow {
   id: string;
   created_at: string;
@@ -76,6 +93,13 @@ export function mapLiveMessageRowToMessage(
   // 서버 LLM 판정 결과("flagged"|"clean"|키 없음=null). 도착 전엔 클라 사전이 1차로 가린다.
   const cleanbotStatus = readString(metadata.cleanbotStatus);
 
+  const senderRoles = deriveSenderRoles({
+    isHost,
+    senderRole: row.sender_role,
+    isDonor: metadata.isDonor === true,
+    isSubscriber: metadata.isSubscriber === true,
+  });
+
   return {
     id: row.id,
     type: "text",
@@ -84,6 +108,7 @@ export function mapLiveMessageRowToMessage(
     content: row.content,
     createdAt: row.created_at,
     senderRole: isHost ? "creator" : row.sender_role,
+    senderRoles,
     isHost,
     // 하이브리드 클린봇(#120): 서버 LLM 판정이 도착하면 그 결과(flagged/clean)를 신뢰하고,
     // 판정 전(키 없음)에는 클라이언트 시드 사전으로 명백한 욕설만 즉시 가린다(0초). 두 신호 모두

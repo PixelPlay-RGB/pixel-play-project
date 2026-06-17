@@ -4,6 +4,7 @@
 import { useMemo } from "react";
 
 import { Radio } from "lucide-react";
+import { ChannelStickerProvider } from "@/components/live/chat/channel-sticker-context";
 import { LiveChatBody } from "@/components/live/chat/live-chat-body";
 import { LIVE_LABEL } from "@/constants/live/live";
 import { useLiveBroadcastView } from "@/hooks/live/use-live-broadcast-view";
@@ -50,7 +51,6 @@ export function LiveChatPopout({ creatorId }: Props) {
     followerWaitSeconds,
     slowModeSeconds,
     canModerate,
-    viewerId,
     isBanned,
   } = useLiveBroadcastView(creatorId);
 
@@ -98,54 +98,56 @@ export function LiveChatPopout({ creatorId }: Props) {
   }
 
   return (
-    <div className="live-overlay-root live-popout-root bg-background flex h-dvh min-h-0 w-full flex-col overflow-hidden">
-      <div className="border-border flex h-11 shrink-0 items-center gap-2 border-b px-3">
-        {broadcast ? (
-          <span className="bg-live text-live-foreground flex items-center gap-1 rounded-full px-1.5 py-0.5 text-xs font-bold">
-            <Radio className="size-2.5" />
-            {LIVE_LABEL.live}
+    <ChannelStickerProvider creatorId={creatorId}>
+      <div className="live-overlay-root live-popout-root bg-background flex h-dvh min-h-0 w-full flex-col overflow-hidden">
+        <div className="border-border flex h-11 shrink-0 items-center gap-2 border-b px-3">
+          {broadcast ? (
+            <span className="bg-live text-live-foreground flex items-center gap-1 rounded-full px-1.5 py-0.5 text-xs font-bold">
+              <Radio className="size-2.5" />
+              {LIVE_LABEL.live}
+            </span>
+          ) : null}
+          <span className="text-foreground min-w-0 flex-1 truncate text-sm font-medium">
+            {broadcast?.title ?? creator?.name}
           </span>
-        ) : null}
-        <span className="text-foreground min-w-0 flex-1 truncate text-sm font-medium">
-          {broadcast?.title ?? creator?.name}
-        </span>
-      </div>
+        </div>
 
-      <LiveChatBody
-        messages={messages}
-        donations={donations}
-        polls={polls}
-        isPollsLoading={isPollsLoading}
-        isPollsError={isPollsError}
-        chatState={chatState}
-        isLoggedIn={isLoggedIn}
-        walletBalance={walletBalance}
-        isWalletLoading={isWalletLoading}
-        isWalletError={isWalletError}
-        customerKey={viewerId ?? undefined}
-        chargeReturnTo={`/live/${creatorId}`}
-        donationEnabled={donationEnabled}
-        donationMinAmount={donationMinAmount}
-        onLoginPrompt={moveToLogin}
-        onSendMessage={sendMessage}
-        onVote={votePoll}
-        onDonate={sendDonation}
-        votePresentation="dialog"
-        chatRuleText={chatRuleText}
-        onAcceptChatRule={acceptChatRule}
-        onFollow={handleFollow}
-        isFollowing={isFollowing}
-        isFollowPending={isFollowPending}
-        inputClassName="shrink-0"
-        onLoadOlderMessages={loadOlderMessages}
-        isLoadingOlderMessages={isLoadingOlderMessages}
-        hasMoreChatHistory={hasMoreChatHistory}
-        entryNoticeAnchorId={entryNoticeAnchorId}
-        onRefreshChatState={refreshChatState}
-        followerWaitSeconds={followerWaitSeconds}
-        slowModeSeconds={slowModeSeconds}
-        profileContext={profileContext}
-      />
-    </div>
+        <LiveChatBody
+          messages={messages}
+          donations={donations}
+          polls={polls}
+          isPollsLoading={isPollsLoading}
+          isPollsError={isPollsError}
+          chatState={chatState}
+          isLoggedIn={isLoggedIn}
+          walletBalance={walletBalance}
+          isWalletLoading={isWalletLoading}
+          isWalletError={isWalletError}
+          customerKey={viewerId ?? undefined}
+          chargeReturnTo={`/live/${creatorId}`}
+          donationEnabled={donationEnabled}
+          donationMinAmount={donationMinAmount}
+          onLoginPrompt={moveToLogin}
+          onSendMessage={sendMessage}
+          onVote={votePoll}
+          onDonate={sendDonation}
+          votePresentation="dialog"
+          chatRuleText={chatRuleText}
+          onAcceptChatRule={acceptChatRule}
+          onFollow={handleFollow}
+          isFollowing={isFollowing}
+          isFollowPending={isFollowPending}
+          inputClassName="shrink-0"
+          onLoadOlderMessages={loadOlderMessages}
+          isLoadingOlderMessages={isLoadingOlderMessages}
+          hasMoreChatHistory={hasMoreChatHistory}
+          entryNoticeAnchorId={entryNoticeAnchorId}
+          onRefreshChatState={refreshChatState}
+          followerWaitSeconds={followerWaitSeconds}
+          slowModeSeconds={slowModeSeconds}
+          profileContext={profileContext}
+        />
+      </div>
+    </ChannelStickerProvider>
   );
 }

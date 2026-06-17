@@ -1,30 +1,33 @@
 "use client";
-// 채팅 닉네임 클릭 팝업 — 아바타·닉네임·이 채널 팔로우 시작일 + 채널 보기 / (강퇴 또는 팔로우) 버튼.
-// 강퇴 권한자(크리에이터/매니저)가 일반 시청자를 볼 때만 [채널 보기][강퇴], 그 외(일반 시청자가 보거나
-// 권한자가 스트리머/매니저/본인을 볼 때)엔 [채널 보기][팔로우]. 강퇴 가드는 메시지 스냅샷이 아니라
-// 현재 역할(profile.role)로 판정하고, 권한자는 역할 확정 전까지 두 번째 버튼을 비워 깜빡임을 막는다.
+// 채팅 닉네임 클릭 팝업 — 공통 카드(치지직식: 아바타 + 닉네임/뱃지 헤더, full-width 팔로우 정보 줄,
+// 하단 액션)로 권한에 따라 채널 이동 / 매니저 임명·해제 / 강퇴를 노출한다.
+// 본인 닉네임은 트리거를 클릭 불가 평문으로 렌더한다(자기 자신 팝오버는 열리지 않는다, #127).
+// 강퇴·매니저 노출은 메시지 스냅샷이 아니라 대상의 "현재" 역할(profile.role)로 판정한다.
 
 import { useState } from "react";
 
+import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
-import { Ban, Tv, UserX } from "lucide-react";
+import { Ban, Heart, ShieldCheck, ShieldOff, Tv, UserX } from "lucide-react";
 
 import { DestructiveAlertDialog } from "@/components/common/destructive-alert-dialog";
 import CreatorFollowingButton from "@/components/following/creator-following-button";
+import { LiveChatRoleBadge, type LiveChatRole } from "@/components/live/chat/live-chat-role-badge";
+import { UserProfilePopoverCard } from "@/components/user/user-profile-popover-card";
 import { AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Spinner } from "@/components/ui/spinner";
+import { QUERY_KEYS } from "@/constants/common/query-keys";
 import { useBanChannelViewer } from "@/hooks/channel/use-ban-channel-viewer";
+import { useChannelManagers } from "@/hooks/channel/use-channel-managers";
 import { useToggleCreatorFollowing } from "@/hooks/following/use-toggle-creator-following";
 import { useLiveViewerProfile } from "@/hooks/live/use-live-viewer-profile";
 import { useMoveToLogin } from "@/hooks/live/use-move-to-login";
 import { useViewerFollowStatus } from "@/hooks/live/use-viewer-follow-status";
 import { cn } from "@/lib/utils";
 import type { LiveChatProfileContext } from "@/types/live/live";
-import { formatKstDateTimeNumeric } from "@/utils/common/date";
-import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
+import { formatKstDateKorean } from "@/utils/common/date";
 
 interface Props {
   context: LiveChatProfileContext;
@@ -32,6 +35,8 @@ interface Props {
   // 메시지 스냅샷 닉네임 — 프로필 로딩 전/실패 시 표시에 쓴다.
   fallbackNickname: string;
   nicknameColor: string;
+  // 닉네임 아래 역할 뱃지 — 채팅 라인의 senderRoles 를 그대로 받아 카드 헤더를 채팅과 일치시킨다.
+  senderRoles?: LiveChatRole[];
 }
 
 export function LiveChatProfilePopover({
@@ -39,49 +44,44 @@ export function LiveChatProfilePopover({
   targetUserId,
   fallbackNickname,
   nicknameColor,
+  senderRoles = [],
 }: Props) {
   const { creatorId, viewerId, canModerate, broadcastId } = context;
+  const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
-  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [isBanConfirmOpen, setIsBanConfirmOpen] = useState(false);
 
   const moveToLogin = useMoveToLogin();
   const { profile, isLoading } = useLiveViewerProfile(creatorId, targetUserId, isOpen);
   const { ban, isBanning } = useBanChannelViewer(creatorId);
+  // 매니저 임명/해제 — 목록 조회는 끄고 mutation 만 쓴다(채널 주인일 때만 실제 호출된다).
+  const { addManager, isAdding, removeManager, isRemoving } = useChannelManagers(creatorId, {
+    listEnabled: false,
+  });
 
   const isLoggedIn = Boolean(viewerId);
   const isSelf = targetUserId === viewerId;
+  // 채널 주인 본인만 매니저를 임명/해제할 수 있다(매니저는 다른 매니저를 만들지 못한다).
+  const isOwner = isLoggedIn && viewerId === creatorId;
 
-  // 강퇴 버튼은 권한자이면서 대상이 "현재" 일반 시청자이고 본인이 아닐 때만 노출한다.
-  const canBan = canModerate && !isSelf && profile?.role === "viewer";
-  // 팔로우 버튼은 강퇴를 노출하지 않는 모든 경우. 단 권한자는 역할 확정 전엔 강퇴/팔로우가 뒤바뀔 수 있어,
-  // 프로필 조회가 "끝난" 뒤에만 그린다(로딩 중에만 빈 슬롯). 에러로 역할 미확정이어도 팔로우로 폴백한다.
-  const showFollow = canModerate ? !canBan && !isLoading : true;
+  // 강퇴/매니저 노출은 대상의 "현재" 역할로 판정한다.
+  const role = profile?.role;
+  const canBan = canModerate && !isSelf && role === "viewer";
+  const canAppointManager = isOwner && !isSelf && role === "viewer";
+  const canDismissManager = isOwner && role === "manager";
 
-  // 팔로우 상태가 로딩되기 전엔 isFollowing 이 기본 false 라, 그 사이 클릭하면 토글 방향이 반대로
-  // 나갈 수 있다(이미 팔로우 중인데 다시 팔로우). 로딩 동안 버튼을 비활성화해 막는다.
   const { isFollowing, isLoading: isFollowStatusLoading } = useViewerFollowStatus(
     viewerId,
     targetUserId,
-    isOpen && showFollow && !isSelf,
+    isOpen && !isSelf,
   );
   const toggleFollowing = useToggleCreatorFollowing();
   const isFollowPending =
     toggleFollowing.isPending && toggleFollowing.variables?.creatorId === targetUserId;
 
   const displayNickname = profile?.nickname ?? fallbackNickname;
-
-  // 팔로우 시작일 문구는 버튼과 같은 진실 소스(isFollowing)에 묶는다 — profile.followedAt(별도 RPC)에
-  // 묶으면 즉시 언팔 후 프로필 refetch 전까지 "팔로우 …"가 남아 버튼과 어긋난다(#119). 권한자가 강퇴
-  // 대상을 보는(팔로우 미조회) 경우엔 isFollowing 을 받지 않으므로 profile.followedAt 으로 폴백한다.
-  const isFollowingForDisplay = showFollow ? isFollowing : profile?.followedAt != null;
-  const followStatusText =
-    isLoading || (showFollow && isFollowStatusLoading)
-      ? "불러오는 중…"
-      : isFollowingForDisplay
-        ? profile?.followedAt
-          ? `팔로우 ${formatKstDateTimeNumeric(profile.followedAt)}`
-          : "팔로잉"
-        : "팔로우 안 함";
+  // 팔로우 정보 줄은 프로필·팔로우 상태가 모두 확정된 뒤에만 그린다(로딩 중 깜빡임/오방향 방지).
+  const isFollowInfoReady = !isLoading && !isFollowStatusLoading;
 
   function handleFollow() {
     if (!isLoggedIn) {
@@ -91,21 +91,52 @@ export function LiveChatProfilePopover({
     }
     // 팔로우 상태가 아직 안 들어왔으면(방향을 알 수 없으면) 무시한다.
     if (isFollowPending || isFollowStatusLoading) return;
-    // viewerFollowStatus 는 QUERY_KEYS.live.all 하위라, 토글 onSettled 의 live.all 무효화로 함께 갱신된다.
     toggleFollowing.mutate({ creatorId: targetUserId, nextFollowing: !isFollowing });
+  }
+
+  // 매니저 임명/해제는 토글이라 즉시 실행한다 — 성공 시 프로필을 무효화해 버튼이 임명↔해제로 뒤집힌다.
+  async function handleAppointManager() {
+    if (isAdding) return;
+    const ok = await addManager(targetUserId);
+    if (ok) {
+      void queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.live.viewerProfile(creatorId, targetUserId),
+      });
+    }
+  }
+
+  async function handleDismissManager() {
+    if (isRemoving) return;
+    const ok = await removeManager(targetUserId);
+    if (ok) {
+      void queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.live.viewerProfile(creatorId, targetUserId),
+      });
+    }
   }
 
   function openBanConfirm() {
     setIsOpen(false);
-    setIsConfirmOpen(true);
+    setIsBanConfirmOpen(true);
   }
 
   async function handleConfirmBan() {
     const success = await ban(targetUserId, broadcastId ?? undefined);
     if (success) {
-      setIsConfirmOpen(false);
+      setIsBanConfirmOpen(false);
     }
   }
+
+  // 본인 닉네임은 클릭 불가 — 팝오버를 열지 않고 채팅 라인과 같은 평문으로 렌더한다.
+  if (isSelf) {
+    return (
+      <span className="mr-1.5 align-middle font-medium" style={{ color: nicknameColor }}>
+        {fallbackNickname}
+      </span>
+    );
+  }
+
+  const hasModerationRow = canAppointManager || canDismissManager || canBan;
 
   return (
     <>
@@ -113,31 +144,45 @@ export function LiveChatProfilePopover({
         <PopoverTrigger
           type="button"
           aria-label={`${fallbackNickname} 프로필 열기`}
-          className="mr-1.5 cursor-pointer font-medium hover:underline"
+          className="mr-1.5 cursor-pointer align-middle font-medium hover:underline"
           style={{ color: nicknameColor }}
         >
           {fallbackNickname}
         </PopoverTrigger>
 
-        <PopoverContent className="w-64 gap-0 overflow-hidden p-0" align="start" sideOffset={6}>
-          <div className="flex min-w-0 items-center gap-3 px-4 pt-4 pb-3.5">
-            <Avatar className="size-11 shrink-0" size="lg">
-              <AvatarImage
-                src={getAvatarImageSrc(profile?.photoUrl ?? null)}
-                alt={`${displayNickname} 프로필 이미지`}
+        <PopoverContent className="w-72 gap-0 overflow-hidden p-0" align="start" sideOffset={6}>
+          <UserProfilePopoverCard
+            nickname={displayNickname}
+            photoUrl={profile?.photoUrl ?? null}
+            subHeader={
+              senderRoles.length > 0
+                ? senderRoles.map((badgeRole) => (
+                    <LiveChatRoleBadge key={badgeRole} role={badgeRole} withTooltip />
+                  ))
+                : undefined
+            }
+            headerAction={
+              <CreatorFollowingButton
+                creatorNickname={displayNickname}
+                isFollowing={isFollowing}
+                isOwnChannel={false}
+                isPending={isFollowPending || isFollowStatusLoading}
+                onClick={handleFollow}
               />
-              <AvatarFallback>{getAvatarFallbackText(displayNickname)}</AvatarFallback>
-            </Avatar>
-            <div className="min-w-0 flex-1">
-              <p className="text-foreground truncate text-sm font-black">{displayNickname}</p>
-              <p className="text-muted-foreground mt-1 truncate text-xs font-medium">
-                {followStatusText}
-              </p>
-            </div>
-          </div>
-
-          {/* 두 버튼은 grid 로 정확히 50:50 — flex-1 은 min-width:auto 때문에 "채널 보기"가 더 넓어진다. */}
-          <div className="border-border/60 bg-muted/30 grid grid-cols-2 items-center gap-2 border-t px-3 py-3">
+            }
+            infoRows={
+              isFollowInfoReady && isFollowing ? (
+                <div className="text-muted-foreground flex items-center gap-1.5 text-xs font-medium">
+                  <Heart className="text-brand size-3.5 shrink-0 fill-current" />
+                  <span>
+                    {profile?.followedAt
+                      ? `${formatKstDateKorean(profile.followedAt)}부터 팔로우`
+                      : "팔로잉 중"}
+                  </span>
+                </div>
+              ) : undefined
+            }
+          >
             <Link
               href={`/channel/${targetUserId}`}
               className={cn(
@@ -150,39 +195,66 @@ export function LiveChatProfilePopover({
               채널 보기
             </Link>
 
-            {canBan ? (
-              <Button
-                type="button"
-                variant="destructive"
-                size="sm"
-                className="h-8 w-full min-w-0 justify-center gap-1.5 rounded-full px-3 text-xs font-bold"
-                onClick={openBanConfirm}
-              >
-                <UserX className="size-3.5" />
-                강퇴하기
-              </Button>
-            ) : showFollow ? (
-              <CreatorFollowingButton
-                creatorNickname={displayNickname}
-                isFollowing={isFollowing}
-                isOwnChannel={isSelf}
-                // 팔로우 상태 로딩 중에도 비활성화해 방향이 정해지기 전 클릭을 막는다.
-                isPending={isFollowPending || isFollowStatusLoading}
-                onClick={handleFollow}
-                className="w-full min-w-0"
-              />
-            ) : (
-              // 권한자 역할 로딩 중 — 자리만 유지해 강퇴/팔로우 버튼이 뒤늦게 끼어드는 깜빡임을 막는다.
-              <div />
-            )}
-          </div>
+            {hasModerationRow ? (
+              <div className="flex gap-2">
+                {canAppointManager ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={isAdding}
+                    onClick={handleAppointManager}
+                    className="h-8 min-w-0 flex-1 justify-center gap-1.5 rounded-full px-3 text-xs font-bold"
+                  >
+                    {isAdding ? (
+                      <Spinner className="size-3.5" />
+                    ) : (
+                      <ShieldCheck className="size-3.5" />
+                    )}
+                    매니저 임명
+                  </Button>
+                ) : null}
+
+                {canDismissManager ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={isRemoving}
+                    onClick={handleDismissManager}
+                    className="h-8 min-w-0 flex-1 justify-center gap-1.5 rounded-full px-3 text-xs font-bold"
+                  >
+                    {isRemoving ? (
+                      <Spinner className="size-3.5" />
+                    ) : (
+                      <ShieldOff className="size-3.5" />
+                    )}
+                    매니저 해제
+                  </Button>
+                ) : null}
+
+                {canBan ? (
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    onClick={openBanConfirm}
+                    className="h-8 min-w-0 flex-1 justify-center gap-1.5 rounded-full px-3 text-xs font-bold"
+                  >
+                    <UserX className="size-3.5" />
+                    강퇴하기
+                  </Button>
+                ) : null}
+              </div>
+            ) : null}
+          </UserProfilePopoverCard>
         </PopoverContent>
       </Popover>
 
       <DestructiveAlertDialog
-        open={isConfirmOpen}
+        open={isBanConfirmOpen}
         onOpenChange={(open) => {
-          if (!isBanning && !open) setIsConfirmOpen(false);
+          if (!isBanning && !open) setIsBanConfirmOpen(false);
         }}
         icon={<Ban />}
         title="시청자 강퇴"

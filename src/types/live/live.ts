@@ -97,6 +97,9 @@ export interface LiveChatMessage {
   senderId?: string;
   // 전송 시점 발신자 역할 스냅샷(text 메시지). 역할 마크 표시에 쓴다.
   senderRole?: LiveSenderRole;
+  // 동시에 보유한 역할들(크리에이터/매니저/후원자/구독자) — 여러 뱃지를 가로로 나열한다.
+  // sender_role(precedence) + metadata(isDonor/isSubscriber)에서 매핑 단계가 합성한다.
+  senderRoles?: Exclude<LiveSenderRole, "viewer">[];
   // 작성자가 방송 진행자(크리에이터) 본인인지 여부. 채팅에서 호스트 메시지를 강조하는 데 쓴다.
   isHost?: boolean;
   // 클린봇 자동 비속어 사전에 걸린 text 메시지. 클린봇 토글 ON이면 가리고 펼쳐볼 수 있다.

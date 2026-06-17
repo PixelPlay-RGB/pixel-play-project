@@ -3,6 +3,7 @@ import {
   LIVE_OVERLAY_DEFAULT_CREATOR_NAME,
   LIVE_OVERLAY_DEFAULT_VIEWER_NAME,
 } from "@/constants/live/live-overlay";
+import { deriveSenderRoles } from "@/utils/live/live-message";
 import type { Json } from "@/types/database.types";
 import type { LiveMessageRow } from "@/types/live/live";
 import type { LiveChatOverlayItem, LiveChatOverlayMessage } from "@/types/live/live-chat-overlay";
@@ -27,19 +28,21 @@ export function mapLiveMessageToChatOverlayItem(
       options.authorFallback ??
       LIVE_OVERLAY_DEFAULT_VIEWER_NAME;
 
+    const isHost = message.sender_role === "creator" || message.sender_id === options.creatorId;
     const overlayMessage: LiveChatOverlayMessage = {
       id: message.id,
       kind: "chat",
       author,
       content: message.content,
       createdAt: message.created_at,
-      role:
-        message.sender_id === options.creatorId
-          ? "creator"
-          : metadata.isDonor === true
-            ? "donor"
-            : undefined,
-      tone: message.sender_id === options.creatorId ? "brand" : undefined,
+      // 시청 채팅과 동일 규칙으로 동시 보유 역할을 모두 뱃지로(공용 deriveSenderRoles).
+      roles: deriveSenderRoles({
+        isHost,
+        senderRole: message.sender_role,
+        isDonor: metadata.isDonor === true,
+        isSubscriber: metadata.isSubscriber === true,
+      }),
+      tone: isHost ? "brand" : undefined,
     };
 
     return {

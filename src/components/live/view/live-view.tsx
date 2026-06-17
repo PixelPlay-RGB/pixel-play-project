@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "motion/react";
 import { Timer, Users } from "lucide-react";
 import { ClipSection } from "@/components/clip/clip-section";
+import { ChannelStickerProvider } from "@/components/live/chat/channel-sticker-context";
 import { LiveVideoPlayer } from "@/components/live/view/live-video-player";
 import { LiveFullscreenChatOverlay } from "@/components/live/view/live-fullscreen-chat-overlay";
 import { LiveBroadcastInfo } from "@/components/live/view/live-broadcast-info";
@@ -36,9 +37,6 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
   const isMobile = useIsMobile();
   const openChatButtonRef = useRef<HTMLButtonElement>(null);
   const collapseChatButtonRef = useRef<HTMLButtonElement>(null);
-  // 좌측 플레이어 칼럼 실측 — 채팅 입력 섹션 높이를 "칼럼 높이 - 비디오(폭 100%·16:9) 높이"로
-  // 동기화해, 입력 섹션 상단 separator가 비디오 하단 라인과 정확히 일직선이 되게 한다.
-  const playerColumnRef = useRef<HTMLDivElement>(null);
 
   const {
     isLoading,
@@ -82,7 +80,6 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     isBanned,
     isWatchSettled,
     canModerate,
-    viewerId,
   } = useLiveBroadcastView(creatorId);
 
   // 닉네임 클릭 팝업(프로필/강퇴) 컨텍스트 — 채팅 패널·전체화면 오버레이로 관통시킨다(#119).
@@ -180,31 +177,6 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     endSession,
   ]);
 
-  // 채팅 입력 섹션의 동기화 높이(px). 송출/종료 프레임이 16:9로 폭을 꽉 채우는 일반 모드에서만 계산하고,
-  // 화면이 낮아 자연 높이보다 작아지면 입력바가 자체 콘텐츠 높이로 버틴다(min-height라 안전).
-  const [chatInputMinHeight, setChatInputMinHeight] = useState<number | null>(null);
-  const hasPlayerFrameForSync = !!creator;
-  useEffect(() => {
-    const column = playerColumnRef.current;
-
-    if (!column || isMobile || isTheater || !hasPlayerFrameForSync) {
-      setChatInputMinHeight(null);
-      return;
-    }
-
-    const sync = () => {
-      const rect = column.getBoundingClientRect();
-      const remaining = Math.round(rect.height - (rect.width * 9) / 16);
-      setChatInputMinHeight(remaining > 0 ? remaining : null);
-    };
-
-    sync();
-    const observer = new ResizeObserver(sync);
-    observer.observe(column);
-
-    return () => observer.disconnect();
-  }, [isMobile, isTheater, hasPlayerFrameForSync]);
-
   // 시청 화면을 떠나면 와이드 모드를 해제해, 목록 등 다른 라이브 화면에서 사이드바가 다시 보이게 한다.
   useEffect(() => () => setWideMode(false), [setWideMode]);
 
@@ -276,19 +248,17 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
   }
 
   return (
-    <>
+    <ChannelStickerProvider creatorId={creatorId}>
       <div
         className={cn("bg-background overflow-hidden", "min-h-app-content", "md:h-full md:min-h-0")}
       >
-        {/* 치지직형 Box 레이아웃: 섹션 사이 여백·라운드 없이 보더로만 구분하고, 텍스트 행에만 자체 패딩을 준다. */}
+        {/* 치지직형 Box 레이아웃: 섹션 사이 여백·라운드 없이 보더로만 구분하고, 텍스트 행에만 자체 패딩을 준다.
+            초고해상도에서도 치지직처럼 비디오가 폭을 꽉 채운다(캡 없음) — 칼럼이 넘치면 세로 스크롤. */}
         <div className={cn("h-full", "w-full", "md:flex md:flex-row")}>
           {/* 플레이어는 항상 폭 100%+16:9(유튜브식) — 화면이 낮아 정보 행이 넘치면 이 칼럼만
               세로 스크롤된다(스크롤바는 숨김, 채팅 패널은 우측 고정 유지). 극장 모드는 스크롤이 없다.
               추후 정보 섹션 아래에 클립 섹션이 들어올 예정이라 칼럼 스크롤 구조를 전제로 한다. */}
-          <div
-            ref={playerColumnRef}
-            className={cn("flex min-w-0 flex-1 flex-col", "no-scrollbar md:overflow-y-auto")}
-          >
+          <div className={cn("flex min-w-0 flex-1 flex-col", "no-scrollbar md:overflow-y-auto")}>
             {/* 일반 모드는 shrink-0 — 칼럼이 넘칠 때 눌리는 대신 스크롤로 넘어가야 한다. */}
             <div className={cn(isTheater ? "md:min-h-0 md:flex-1" : "md:shrink-0")}>
               {broadcast && !isBanned ? (
@@ -385,9 +355,9 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
               }
             >
               {displayBroadcast ? (
-                <div className="flex items-start justify-between gap-3 px-4 pt-4">
+                <div className="flex flex-col gap-1.5 px-4 pt-4">
                   <LiveBroadcastInfo broadcast={displayBroadcast} />
-                  <div className="text-muted-foreground flex shrink-0 flex-col items-end gap-1 pt-0.5 text-xs">
+                  <div className="text-muted-foreground flex items-center gap-3 text-xs">
                     <span className="flex items-center gap-1">
                       <Timer className="size-3.5" />
                       {elapsedText}
@@ -479,7 +449,6 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
               onRefreshChatState={refreshChatState}
               followerWaitSeconds={followerWaitSeconds}
               slowModeSeconds={slowModeSeconds}
-              inputMinHeightPx={chatInputMinHeight}
               profileContext={profileContext}
             />
           </aside>
@@ -497,6 +466,6 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
         wasEvicted={wasEvicted}
         creatorNickname={creator?.name}
       />
-    </>
+    </ChannelStickerProvider>
   );
 }

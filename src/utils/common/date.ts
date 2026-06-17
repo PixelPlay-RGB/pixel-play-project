@@ -30,6 +30,18 @@ export function formatKstDateTimeNumeric(at: number | string | Date) {
   return `${KST_NUMERIC_DATE_FORMATTER.format(date)} ${formatKstTime(date)}`;
 }
 
+// "2025년 3월 15일" (KST 날짜, 한글 표기) — 팔로우 시작일 등 사람이 읽는 날짜.
+const KST_KOREAN_DATE_FORMATTER = new Intl.DateTimeFormat("ko-KR", {
+  timeZone: "Asia/Seoul",
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+});
+
+export function formatKstDateKorean(at: number | string | Date) {
+  return KST_KOREAN_DATE_FORMATTER.format(new Date(at));
+}
+
 // 경과 시간을 "N시간 M분"(1시간 미만이면 "M분")으로 표기한다.
 export function formatDurationKo(ms: number) {
   const totalMinutes = Math.max(0, Math.round(ms / 60_000));

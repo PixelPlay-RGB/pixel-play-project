@@ -62,8 +62,6 @@ interface Props {
   onRefreshChatState?: () => void;
   followerWaitSeconds?: number;
   slowModeSeconds?: number;
-  // 입력 섹션 동기화 높이(px) — separator가 좌측 비디오 하단 라인과 일직선이 되게 한다.
-  inputMinHeightPx?: number | null;
   // 닉네임 클릭 팝업(프로필/강퇴) 컨텍스트 — 채팅 본문으로 그대로 전달한다(#119).
   profileContext?: LiveChatProfileContext;
 }
@@ -106,7 +104,6 @@ export function LiveChatPanel({
   onRefreshChatState,
   followerWaitSeconds,
   slowModeSeconds,
-  inputMinHeightPx,
   profileContext,
 }: Props) {
   const [cleanbot, setCleanbot] = useState(true);
@@ -217,7 +214,6 @@ export function LiveChatPanel({
           followerWaitSeconds={followerWaitSeconds}
           slowModeSeconds={slowModeSeconds}
           ruleOpenRequestId={ruleOpenRequestId}
-          inputMinHeightPx={inputMinHeightPx}
           profileContext={profileContext}
         />
       )}
