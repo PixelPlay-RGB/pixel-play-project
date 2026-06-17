@@ -51,10 +51,7 @@ export function ChannelSubscriptionPerkSettings({
                   size="lg"
                 />
                 <div className="text-center leading-5">
-                  <p className="text-foreground text-sm font-bold">
-                    {month === 1 ? "기본" : `${month}개월`}
-                  </p>
-                  <p className="text-muted-foreground text-xs">({month}개월)</p>
+                  <p className="text-foreground text-sm font-bold">{month}개월</p>
                 </div>
               </div>
             ))}
