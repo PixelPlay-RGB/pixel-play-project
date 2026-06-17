@@ -5,12 +5,13 @@
 import { memo, useEffect, useLayoutEffect, useRef, type RefObject } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { LiveChatDonationMessageCard } from "@/components/live/chat/live-chat-donation-message-card";
+import { LiveChatProfilePopover } from "@/components/live/chat/live-chat-profile-popover";
 import { LiveChatRoleBadge, type LiveChatRole } from "@/components/live/chat/live-chat-role-badge";
 import { useChannelStickers } from "@/components/live/chat/channel-sticker-context";
 import RichMessageText from "@/components/common/rich-message-text";
 import { LIVE_LABEL } from "@/constants/live/live";
 import { getLiveChatOverlayNicknameColor } from "@/utils/live/live-chat-overlay-style";
-import type { LiveChatMessage } from "@/types/live/live";
+import type { LiveChatMessage, LiveChatProfileContext } from "@/types/live/live";
 
 // 한 줄 텍스트 채팅 기준 추정 높이(px). 실제 높이는 measureElement가 행마다 보정한다.
 const ESTIMATED_ROW_HEIGHT = 32;
@@ -34,6 +35,9 @@ interface Props {
   // 진입 시점의 마지막 메시지 id — 필터링 안내를 이 메시지 바로 뒤(바닥)에 끼워 넣는다.
   // null = 진입 시점에 메시지가 없었음(안내가 첫 행), undefined = 미지정(안내 맨 앞 폴백).
   entryNoticeAnchorId?: string | null;
+  // 닉네임 클릭 팝업(프로필/강퇴) 컨텍스트. 미지정 시 닉네임은 클릭 불가 텍스트로 렌더한다(#119).
+  // memo 보존을 위해 목록에서 원시값으로 펼쳐 각 메시지에 넘긴다.
+  profileContext?: LiveChatProfileContext;
 }
 
 export function LiveChatMessageList({
@@ -45,6 +49,7 @@ export function LiveChatMessageList({
   isLoadingOlderMessages = false,
   hasMoreChatHistory = false,
   entryNoticeAnchorId,
+  profileContext,
 }: Props) {
   // 바닥 고정 모드 — 사용자가 위로 스크롤하면 풀리고, 바닥 근처로 돌아오면 다시 걸린다.
   // 진입·새 메시지·행 실측으로 우리가 일으키는 프로그램 스크롤은 이 판정에서 제외해야 한다
@@ -165,6 +170,10 @@ export function LiveChatMessageList({
               <MessageItem
                 message={getMessageAtRow(item.index)}
                 cleanbotEnabled={cleanbotEnabled}
+                profileCreatorId={profileContext?.creatorId}
+                profileViewerId={profileContext?.viewerId ?? null}
+                profileCanModerate={profileContext?.canModerate ?? false}
+                profileBroadcastId={profileContext?.broadcastId ?? null}
               />
             )}
           </div>
@@ -177,11 +186,23 @@ export function LiveChatMessageList({
 interface MessageItemProps {
   message: LiveChatMessage;
   cleanbotEnabled: boolean;
+  // 닉네임 클릭 팝업 컨텍스트(원시값) — creatorId 가 있고 senderId 가 있을 때만 닉네임을 클릭 가능하게 한다.
+  profileCreatorId?: string;
+  profileViewerId?: string | null;
+  profileCanModerate?: boolean;
+  profileBroadcastId?: string | null;
 }
 
 // 메시지가 바뀌지 않은 기존 항목은 새 메시지 도착마다 재렌더되지 않게 memo로 감싼다.
 // props가 모두 원시값/안정 ref(message 객체는 캐시에서 ref 유지)라 얕은 비교로 충분하다.
-const MessageItem = memo(function MessageItem({ message, cleanbotEnabled }: MessageItemProps) {
+const MessageItem = memo(function MessageItem({
+  message,
+  cleanbotEnabled,
+  profileCreatorId,
+  profileViewerId = null,
+  profileCanModerate = false,
+  profileBroadcastId = null,
+}: MessageItemProps) {
   if (message.type === "system") {
     return (
       <p className="text-muted-foreground my-1 text-center text-sm wrap-break-word">
@@ -203,10 +224,30 @@ const MessageItem = memo(function MessageItem({ message, cleanbotEnabled }: Mess
   // 클린봇에 걸린 메시지: 토글 ON이면 닉네임·마크는 그대로 두고 본문만 안내 문구로 가린다.
   const isMasked = !!message.isCleanbotFlagged && cleanbotEnabled;
 
-  return <TextMessage message={message} isMasked={isMasked} />;
+  // 닉네임 클릭 팝업은 발신자 신원(senderId)이 있고 시청 컨텍스트(creatorId)가 주어졌을 때만 연다.
+  // 익명 후원·시스템 메시지는 senderId 가 없어 클릭 불가 텍스트로 렌더된다.
+  const profileContext: LiveChatProfileContext | null =
+    profileCreatorId && message.senderId
+      ? {
+          creatorId: profileCreatorId,
+          viewerId: profileViewerId,
+          canModerate: profileCanModerate,
+          broadcastId: profileBroadcastId,
+        }
+      : null;
+
+  return <TextMessage message={message} isMasked={isMasked} profileContext={profileContext} />;
 });
 
-function TextMessage({ message, isMasked }: { message: LiveChatMessage; isMasked: boolean }) {
+function TextMessage({
+  message,
+  isMasked,
+  profileContext,
+}: {
+  message: LiveChatMessage;
+  isMasked: boolean;
+  profileContext: LiveChatProfileContext | null;
+}) {
   // 채널 이모지(:pp-<uuid>:)도 이미지로 렌더한다 — context는 memo된 MessageItem을 건너뛰고
   // 소비처(여기)만 다시 그리므로 가상화 목록에서도 안전하다.
   const { stickers: channelStickers } = useChannelStickers();
@@ -229,9 +270,18 @@ function TextMessage({ message, isMasked }: { message: LiveChatMessage; isMasked
           ))}
         </span>
       ) : null}
-      <span className="mr-1.5 font-medium" style={{ color: nicknameColor }}>
-        {message.author}
-      </span>
+      {profileContext && message.senderId ? (
+        <LiveChatProfilePopover
+          context={profileContext}
+          targetUserId={message.senderId}
+          fallbackNickname={message.author ?? ""}
+          nicknameColor={nicknameColor}
+        />
+      ) : (
+        <span className="mr-1.5 font-medium" style={{ color: nicknameColor }}>
+          {message.author}
+        </span>
+      )}
       {isMasked ? (
         <span className="text-muted-foreground">{LIVE_LABEL.cleanbotHidden}</span>
       ) : (

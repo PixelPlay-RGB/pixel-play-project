@@ -34,6 +34,15 @@ export const QUERY_KEYS = {
       [...QUERY_KEYS.live.all, "polls", broadcastId].filter((v) => v !== undefined),
     pollsForViewer: (broadcastId?: string, userId?: string | null) =>
       [...QUERY_KEYS.live.polls(broadcastId), userId ?? "public"].filter((v) => v !== undefined),
+    viewerProfile: (creatorId?: string, targetUserId?: string) =>
+      [...QUERY_KEYS.live.all, "viewer-profile", creatorId, targetUserId].filter(
+        (v) => v !== undefined,
+      ),
+    // 닉네임 팝업의 팔로우 버튼 — "현재 시청자가 대상 채널을 팔로우 중인지".
+    viewerFollowStatus: (viewerId?: string, targetUserId?: string) =>
+      [...QUERY_KEYS.live.all, "viewer-follow-status", viewerId, targetUserId].filter(
+        (v) => v !== undefined,
+      ),
     interactionNotices: (broadcastId?: string, userId?: string | null) =>
       [...QUERY_KEYS.live.all, "interaction-notices", broadcastId, userId ?? "public"].filter(
         (v) => v !== undefined,
@@ -132,6 +141,9 @@ export const QUERY_KEYS = {
       [...QUERY_KEYS.channel.all, "emojis", creatorId].filter((v) => v !== undefined),
     profile: (creatorId?: string) =>
       [...QUERY_KEYS.channel.all, "profile", creatorId].filter((v) => v !== undefined),
+    viewerBansAll: () => [...QUERY_KEYS.channel.all, "viewer-bans"],
+    viewerBans: (creatorId?: string, page?: number) =>
+      [...QUERY_KEYS.channel.viewerBansAll(), creatorId, page].filter((v) => v !== undefined),
   },
   notification: {
     all: ["notification"] as const,

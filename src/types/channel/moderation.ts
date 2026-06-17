@@ -25,3 +25,33 @@ export interface ChannelOwnerIdentity {
   nickname: string;
   photoUrl: string | null;
 }
+
+// get_channel_viewer_bans 의 item — 강퇴/밴 이력 1건. 닉네임은 사건 시점 스냅샷이다(#119).
+export interface ChannelViewerBanItem {
+  banId: string;
+  bannedUserId: string;
+  bannedUserNickname: string;
+  bannedByNickname: string | null;
+  bannedAt: string;
+  unbannedAt: string | null;
+  // 활성 밴 여부(unbanned_at is null). 해제 버튼은 활성 행에만 노출한다.
+  isActive: boolean;
+}
+
+// get_channel_viewer_bans 응답 — 페이지네이션용 items + 전체 개수.
+export interface ChannelViewerBanList {
+  items: ChannelViewerBanItem[];
+  totalCount: number;
+}
+
+export type LiveViewerRole = "creator" | "manager" | "viewer";
+
+// get_live_viewer_profile — 닉네임 팝업용 시청자 프로필(#119).
+// role 은 메시지 스냅샷이 아니라 "현재" 역할이라 강퇴 버튼 가드 판정에 쓴다.
+export interface LiveViewerProfile {
+  userId: string;
+  nickname: string;
+  photoUrl: string | null;
+  followedAt: string | null;
+  role: LiveViewerRole;
+}

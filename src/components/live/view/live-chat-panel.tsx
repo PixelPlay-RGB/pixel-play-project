@@ -10,6 +10,7 @@ import { LiveChatMenu } from "@/components/live/view/live-chat-menu";
 import { LIVE_LABEL } from "@/constants/live/live";
 import type {
   LiveChatMessage,
+  LiveChatProfileContext,
   LiveDonation,
   LiveInteractionNotice,
   LivePoll,
@@ -58,6 +59,8 @@ interface Props {
   onRefreshChatState?: () => void;
   followerWaitSeconds?: number;
   slowModeSeconds?: number;
+  // 닉네임 클릭 팝업(프로필/강퇴) 컨텍스트 — 채팅 본문으로 그대로 전달한다(#119).
+  profileContext?: LiveChatProfileContext;
 }
 
 export function LiveChatPanel({
@@ -96,6 +99,7 @@ export function LiveChatPanel({
   onRefreshChatState,
   followerWaitSeconds,
   slowModeSeconds,
+  profileContext,
 }: Props) {
   const [cleanbot, setCleanbot] = useState(true);
   const [isPopoutOpen, setIsPopoutOpen] = useState(false);
@@ -203,6 +207,7 @@ export function LiveChatPanel({
           followerWaitSeconds={followerWaitSeconds}
           slowModeSeconds={slowModeSeconds}
           ruleOpenRequestId={ruleOpenRequestId}
+          profileContext={profileContext}
         />
       )}
     </div>

@@ -35,6 +35,8 @@ export const APP_MESSAGE_CODE = {
       emojiDeleted: "success.channel.emojiDeleted",
       managerAdded: "success.channel.managerAdded",
       managerRemoved: "success.channel.managerRemoved",
+      viewerBanned: "success.channel.viewerBanned",
+      viewerUnbanned: "success.channel.viewerUnbanned",
     },
     following: {
       followed: "success.following.followed",
@@ -115,6 +117,7 @@ export const APP_MESSAGE_CODE = {
       sendFailed: "error.message.sendFailed",
       slowMode: "error.message.slowMode",
       linkBlocked: "error.message.linkBlocked",
+      banned: "error.message.banned",
     },
     profile: {
       notFound: "error.profile.notFound",
@@ -164,7 +167,12 @@ export const APP_MESSAGE_CODE = {
       managerRemoveFailed: "error.channel.managerRemoveFailed",
       managerAlreadyExists: "error.channel.managerAlreadyExists",
       managerSelfForbidden: "error.channel.managerSelfForbidden",
+      managerBannedForbidden: "error.channel.managerBannedForbidden",
       userSearchFailed: "error.channel.userSearchFailed",
+      viewerBanFailed: "error.channel.viewerBanFailed",
+      viewerUnbanFailed: "error.channel.viewerUnbanFailed",
+      viewerBanForbidden: "error.channel.viewerBanForbidden",
+      viewerBanListLoadFailed: "error.channel.viewerBanListLoadFailed",
     },
     following: {
       failed: "error.following.failed",

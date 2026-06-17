@@ -14,6 +14,7 @@ import { LiveDonationBanner } from "@/components/live/view/live-donation-banner"
 import { LIVE_LABEL } from "@/constants/live/live";
 import type {
   LiveChatMessage,
+  LiveChatProfileContext,
   LiveDonation,
   LiveInteractionNotice,
   LivePoll,
@@ -64,6 +65,8 @@ interface Props {
   hasMoreChatHistory?: boolean;
   // 진입 시점 필터링 안내 위치 기준(마지막 메시지 id) — 메시지 목록으로 그대로 전달한다.
   entryNoticeAnchorId?: string | null;
+  // 닉네임 클릭 팝업(프로필/강퇴) 컨텍스트 — 메시지 목록으로 그대로 전달한다(#119).
+  profileContext?: LiveChatProfileContext;
   // 팔로우 대기 카운트다운 종료 등 게이트가 풀릴 시점에 viewer chat state를 다시 받는다.
   onRefreshChatState?: () => void;
   // 팔로워 전용 대기 시간·슬로우 모드 간격(설정값, 초)과 규칙 popover 열기 요청 — 입력바로 전달한다.
@@ -122,6 +125,7 @@ export function LiveChatBody({
   inputClassName,
   donationOpenRequested,
   onDonationOpenSettled,
+  profileContext,
 }: Props) {
   // 가상화 목록의 스크롤 컨테이너(ScrollArea viewport) ref — 목록 컴포넌트와 공유한다.
   const chatScrollRef = useRef<HTMLDivElement>(null);
@@ -188,6 +192,7 @@ export function LiveChatBody({
             isLoadingOlderMessages={isLoadingOlderMessages}
             hasMoreChatHistory={hasMoreChatHistory}
             entryNoticeAnchorId={entryNoticeAnchorId}
+            profileContext={profileContext}
           />
         </ScrollArea>
         {/* 과거 채팅을 보다가 한 번에 바닥(최신)으로 복귀하는 플로팅 버튼 — 입력바 바로 위에 뜬다. */}

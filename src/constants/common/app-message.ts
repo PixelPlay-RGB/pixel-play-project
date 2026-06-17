@@ -93,6 +93,14 @@ export const APP_MESSAGE = {
       managerRemoved: {
         title: "매니저 해제 완료",
       },
+      viewerBanned: {
+        title: "강퇴 완료",
+        description: "해당 시청자를 채널에서 강퇴했어요.",
+      },
+      viewerUnbanned: {
+        title: "강퇴 해제 완료",
+        description: "다시 채널을 이용할 수 있어요.",
+      },
     },
     following: {
       followed: {
@@ -319,6 +327,10 @@ export const APP_MESSAGE = {
         title: "링크 전송 불가",
         description: "이 방송에서는 링크를 보낼 수 없어요.",
       },
+      banned: {
+        title: "채팅 불가",
+        description: "강퇴되어 이 채널에서 채팅할 수 없어요.",
+      },
     },
     profile: {
       notFound: {
@@ -497,9 +509,29 @@ export const APP_MESSAGE = {
         title: "본인 지정 불가",
         description: "자신을 매니저로 지정할 수 없어요.",
       },
+      managerBannedForbidden: {
+        title: "매니저 지정 불가",
+        description: "강퇴한 유저는 매니저로 지정할 수 없어요. 먼저 강퇴를 해제해주세요.",
+      },
       userSearchFailed: {
         title: "유저 검색 실패",
         description: "잠시 후 다시 검색해 주세요.",
+      },
+      viewerBanFailed: {
+        title: "강퇴 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      viewerUnbanFailed: {
+        title: "강퇴 해제 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      viewerBanForbidden: {
+        title: "강퇴 불가",
+        description: "스트리머, 매니저, 본인은 강퇴할 수 없어요.",
+      },
+      viewerBanListLoadFailed: {
+        title: "제재 이력 조회 실패",
+        description: "잠시 후 다시 시도해주세요.",
       },
     },
     following: {

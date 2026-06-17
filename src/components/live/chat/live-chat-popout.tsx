@@ -1,6 +1,8 @@
 "use client";
 // 별도 탭으로 열리는 채팅 전용 팝아웃 화면입니다.
 
+import { useMemo } from "react";
+
 import { Radio } from "lucide-react";
 import { ChannelStickerProvider } from "@/components/live/chat/channel-sticker-context";
 import { LiveChatBody } from "@/components/live/chat/live-chat-body";
@@ -47,7 +49,16 @@ export function LiveChatPopout({ creatorId }: Props) {
     refreshChatState,
     followerWaitSeconds,
     slowModeSeconds,
+    canModerate,
+    viewerId,
+    isBanned,
   } = useLiveBroadcastView(creatorId);
+
+  // 닉네임 클릭 팝업 컨텍스트 — 팝아웃도 메인과 동일하게 강퇴/프로필을 지원한다(#119).
+  const profileContext = useMemo(
+    () => ({ creatorId, viewerId, canModerate, broadcastId: broadcast?.id ?? null }),
+    [creatorId, viewerId, canModerate, broadcast?.id],
+  );
 
   const { handleFollow, isFollowPending } = useLiveFollowAction({
     creatorId,
@@ -70,6 +81,18 @@ export function LiveChatPopout({ creatorId }: Props) {
     return (
       <div className="live-overlay-root live-popout-root bg-background flex h-dvh min-h-0 w-full items-center justify-center overflow-hidden">
         <p className="text-muted-foreground text-sm">{LIVE_LABEL.broadcastOffline}</p>
+      </div>
+    );
+  }
+
+  // 강퇴(밴)되면 팝아웃도 채팅을 렌더하지 않고 안내로 막는다(메인 차단 화면과 동일 가드, 해제 시 자동 복귀).
+  if (isBanned) {
+    return (
+      <div className="live-overlay-root live-popout-root bg-background flex h-dvh min-h-0 w-full flex-col items-center justify-center gap-2 overflow-hidden px-4 text-center">
+        <p className="text-foreground text-sm font-bold">
+          {LIVE_LABEL.bannedEvictedTitle(creator?.name)}
+        </p>
+        <p className="text-muted-foreground text-sm">{LIVE_LABEL.bannedEvictedDescription}</p>
       </div>
     );
   }
@@ -120,6 +143,7 @@ export function LiveChatPopout({ creatorId }: Props) {
           onRefreshChatState={refreshChatState}
           followerWaitSeconds={followerWaitSeconds}
           slowModeSeconds={slowModeSeconds}
+          profileContext={profileContext}
         />
       </div>
     </ChannelStickerProvider>
