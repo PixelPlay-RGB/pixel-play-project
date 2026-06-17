@@ -87,17 +87,22 @@ function ChatMessageItem({
   return (
     // OBS 송출 화면 위에서 글자가 묻히지 않도록 배경은 완전 불투명으로 깐다.
     // shrink-0: 스택 공간이 부족해도 박스가 세로로 눌리지 않게 한다(후원 카드와 동일 보호).
-    <div className="inline-flex max-w-130 shrink-0 items-start gap-1.5 rounded-xl bg-zinc-950 px-3.5 py-2 drop-shadow">
-      <MessagePrefix roles={message.roles} />
+    <div className="inline-block max-w-130 shrink-0 rounded-xl bg-zinc-950 px-3.5 py-2 drop-shadow">
+      {/* 시청 채팅과 같은 정렬 — 뱃지·닉네임·본문·스티커를 한 줄(인라인) align-middle 로 세로 중앙에 맞춘다. */}
       <p className="min-w-0 text-3xl leading-9 font-semibold wrap-break-word drop-shadow-sm">
+        <MessagePrefix roles={message.roles} />
         <span
-          className={cn("mr-1.5 font-medium", message.tone === "muted" && "text-white/55")}
+          className={cn(
+            "mr-1.5 align-middle font-medium",
+            message.tone === "muted" && "text-white/55",
+          )}
           style={message.tone === "muted" ? undefined : { color: nicknameColor }}
         >
           {message.author}
         </span>
         <RichMessageText
           as="span"
+          className="align-middle"
           text={message.content}
           stickerPx={STICKER_PX.overlay}
           extraStickers={extraStickers}
@@ -124,7 +129,7 @@ function MessagePrefix({ roles }: { roles?: LiveChatOverlayMessage["roles"] }) {
   }
 
   return (
-    <span className="inline-flex shrink-0 items-center gap-0.5">
+    <span className="mr-1.5 inline-flex items-center gap-0.5 align-middle">
       {roles.map((role) => (
         <LiveChatRoleBadge key={role} role={role} size="lg" />
       ))}

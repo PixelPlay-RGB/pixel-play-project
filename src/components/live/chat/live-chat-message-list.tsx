@@ -276,19 +276,20 @@ function TextMessage({
           targetUserId={message.senderId}
           fallbackNickname={message.author ?? ""}
           nicknameColor={nicknameColor}
+          senderRoles={roles}
         />
       ) : (
-        <span className="mr-1.5 font-medium" style={{ color: nicknameColor }}>
+        <span className="mr-1.5 align-middle font-medium" style={{ color: nicknameColor }}>
           {message.author}
         </span>
       )}
       {isMasked ? (
-        <span className="text-muted-foreground">{LIVE_LABEL.cleanbotHidden}</span>
+        <span className="text-muted-foreground align-middle">{LIVE_LABEL.cleanbotHidden}</span>
       ) : (
         <RichMessageText
           as="span"
           text={message.content}
-          className="text-foreground"
+          className="text-foreground align-middle"
           extraStickers={channelStickers}
         />
       )}

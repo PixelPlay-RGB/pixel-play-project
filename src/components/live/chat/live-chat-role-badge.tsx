@@ -52,7 +52,7 @@ export function LiveChatRoleBadge({ role, size = "sm", withTooltip = false, clas
       className={cn(
         "inline-flex shrink-0 items-center justify-center text-white shadow-sm",
         ROLE_BG[role],
-        size === "sm" ? "size-5 rounded-sm" : "mt-0.5 size-8 rounded-md",
+        size === "sm" ? "size-5 rounded-sm" : "size-8 rounded-md",
         className,
       )}
       aria-label={withTooltip ? undefined : label}
