@@ -1,7 +1,7 @@
 "use client";
 // 라이브 시청자가 방송인 구독 혜택을 확인하고 포인트 결제로 구독을 시작하는 Popover입니다.
 
-import type { ReactElement } from "react";
+import { cloneElement, type ComponentProps, type ReactElement } from "react";
 import Link from "next/link";
 import { BadgeCheck, Heart, Star, WalletCards } from "lucide-react";
 
@@ -23,7 +23,7 @@ import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar
 
 interface Props {
   open: boolean;
-  trigger: ReactElement;
+  trigger: ReactElement<SubscribeTriggerProps>;
   creator: LiveCreator;
   isSubscribed: boolean;
   canSubscribe: boolean;
@@ -38,6 +38,13 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
 }
+
+type SubscribeTriggerProps = ComponentProps<typeof Button>;
+type SubscribeTriggerClickEvent = Parameters<NonNullable<SubscribeTriggerProps["onClick"]>>[0];
+type PreventableSubscribeTriggerClickEvent = SubscribeTriggerClickEvent & {
+  baseUIHandlerPrevented?: boolean;
+  preventBaseUIHandler?: () => void;
+};
 
 const BENEFITS = [
   { icon: Heart, label: "후원 지갑 포인트로 매월 정기 구독" },
@@ -73,7 +80,7 @@ export function LiveSubscribeDialog({
 
   return (
     <Popover open={open} onOpenChange={onOpenChange}>
-      <PopoverTrigger render={trigger} />
+      <PopoverTrigger render={renderSubscribeTrigger(trigger)} />
       <PopoverContent
         align="center"
         side="top"
@@ -177,4 +184,29 @@ export function LiveSubscribeDialog({
       </PopoverContent>
     </Popover>
   );
+}
+
+function renderSubscribeTrigger(trigger: ReactElement<SubscribeTriggerProps>) {
+  return function subscribeTrigger(triggerProps: SubscribeTriggerProps) {
+    const triggerOnClick = trigger.props.onClick;
+    const popoverOnClick = triggerProps.onClick;
+
+    return cloneElement(trigger, {
+      ...triggerProps,
+      ...trigger.props,
+      className: cn(triggerProps.className, trigger.props.className),
+      onClick: (event: SubscribeTriggerClickEvent) => {
+        const preventableEvent = event as PreventableSubscribeTriggerClickEvent;
+
+        preventableEvent.preventBaseUIHandler = () => {
+          preventableEvent.baseUIHandlerPrevented = true;
+        };
+
+        triggerOnClick?.(event);
+        if (!preventableEvent.baseUIHandlerPrevented) {
+          popoverOnClick?.(event);
+        }
+      },
+    });
+  };
 }

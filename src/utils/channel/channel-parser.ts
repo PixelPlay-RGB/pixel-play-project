@@ -2,6 +2,7 @@
 import type { ChannelBanner, ChannelProfile } from "@/types/channel/channel";
 import type { Json } from "@/types/database.types";
 import { getChannelBannerSrc } from "@/utils/channel/channel-banner";
+import { createEmptyChannelProfileSubscriptionSnapshot } from "@/utils/channel/channel-profile-subscription";
 
 function readObject(value: Json | undefined): Record<string, Json | undefined> | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
@@ -51,6 +52,7 @@ export function parseChannelProfile(value: Json, viewerId: string | null): Chann
     isOwnChannel: viewerId !== null && viewerId === id,
     bio: readString(object.bio),
     isLive: readBoolean(object.isLive),
+    subscription: createEmptyChannelProfileSubscriptionSnapshot(id),
   };
 }
 
