@@ -1,40 +1,40 @@
 "use client";
 // 사용자 구독 목록과 구독 관리 다이얼로그를 렌더링합니다.
 
-import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
-import { CalendarDays, Sparkles } from "lucide-react";
+import { BadgeCheck, Heart, Sparkles, Star, WalletCards } from "lucide-react";
 
 import { SettingsCard } from "@/components/common/settings-card";
 import { SettingsPage } from "@/components/common/settings-page";
 import { LiveSubscriptionBadge } from "@/components/live/chat/live-subscription-badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { AppMessageCode } from "@/constants/common/app-message-code";
+import { CREATOR_SUBSCRIPTION_PAYMENT_AMOUNT } from "@/constants/subscriptions/creator-subscription";
+import { useUserWalletBalance } from "@/hooks/donations/use-user-wallet-balance";
 import { useUserSubscriptionManagement } from "@/hooks/subscriptions/use-user-subscription-management";
 import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/stores/auth";
 import type { CreatorSubscriptionStatus } from "@/types/live/live";
 import type {
   UserSubscriptionItem,
   UserSubscriptionSnapshot,
 } from "@/types/subscriptions/user-subscriptions";
 import { getAppMessage } from "@/utils/common/app-message";
+import { formatPoint } from "@/utils/donations/format";
 import {
   buildLiveSubscriptionBadgeMonths,
   resolveLiveSubscriptionBadgeMonth,
 } from "@/utils/live/live-subscription-badge";
 import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
 import { canStartCreatorSubscription } from "@/utils/subscriptions/user-subscription-status";
+import {
+  getUserSubscriptionManagementPrimaryActionLabel,
+  isUserSubscriptionRestartAction,
+} from "@/utils/subscriptions/user-subscription-management-action";
 
 type UserSubscriptionTab = "active" | "expired";
 
@@ -63,6 +63,11 @@ const STATUS_META: Record<
   canceled: { label: "해지 예약", className: "bg-warning/15 text-warning" },
   ended: { label: "만료", className: "bg-muted text-muted-foreground" },
 };
+
+const SUBSCRIPTION_BENEFITS = [
+  { icon: Heart, label: "후원 지갑 포인트로 매월 정기 구독" },
+  { icon: BadgeCheck, label: "구독 기간에 맞는 전용 배지" },
+] as const;
 
 export function UserSubscriptionsPage({ snapshot, errorCode }: Props) {
   const [tab, setTab] = useState<UserSubscriptionTab>("active");
@@ -224,6 +229,12 @@ function UserSubscriptionManagementDialog({
     subscription?.totalMonths,
     subscription?.badge.customMonths ?? [],
   );
+  const user = useAuthStore((state) => state.user);
+  const {
+    walletBalance,
+    isLoading: isWalletLoading,
+    isError: isWalletError,
+  } = useUserWalletBalance(user?.id);
   const canSubscribe = subscription
     ? canStartCreatorSubscription({
         isSubscribed: subscription.isActive,
@@ -231,6 +242,7 @@ function UserSubscriptionManagementDialog({
       })
     : false;
   const shouldCancel = Boolean(subscription?.isActive && subscription.status === "active");
+  const isRestartAction = subscription ? isUserSubscriptionRestartAction(subscription) : false;
   const { isPending, handlePrimaryAction } = useUserSubscriptionManagement({
     subscription,
     canSubscribe,
@@ -243,33 +255,49 @@ function UserSubscriptionManagementDialog({
       <DialogContent className="max-h-[calc(100vh-2rem)] gap-0 overflow-hidden p-0 sm:max-w-md">
         {subscription ? (
           <>
-            <DialogHeader className="border-border border-b px-5 py-4 text-center">
-              <DialogTitle className="text-lg font-black">내 정기구독 관리</DialogTitle>
+            <header className="border-border border-b px-5 py-5">
+              <DialogTitle className="sr-only">내 정기구독 관리</DialogTitle>
               <DialogDescription className="sr-only">
                 구독 중인 방송인의 구독 혜택과 해지 버튼을 확인합니다.
               </DialogDescription>
-            </DialogHeader>
+              <DialogCreatorSummary subscription={subscription} />
+            </header>
 
-            <ScrollArea className="max-h-[calc(100vh-10rem)]">
-              <div className="flex flex-col gap-4 p-5">
-                <DialogCreatorSummary subscription={subscription} />
+            <ScrollArea className="max-h-[calc(100vh-14rem)]">
+              <div className="flex flex-col">
+                <section className="border-border flex flex-col gap-3 border-b px-5 py-5">
+                  <h3 className="text-sm font-black">
+                    <span className="text-brand">{subscription.creatorNickname}</span> 구독 혜택
+                  </h3>
+                  <div className="border-border overflow-hidden rounded-lg border">
+                    {SUBSCRIPTION_BENEFITS.map((benefit) => (
+                      <div
+                        key={benefit.label}
+                        className="border-border flex items-center gap-3 border-b px-3 py-3 last:border-b-0"
+                      >
+                        <benefit.icon className="text-muted-foreground size-4 shrink-0" />
+                        <span className="text-sm font-medium">{benefit.label}</span>
+                      </div>
+                    ))}
+                  </div>
 
-                <DialogInfoPanel
-                  icon={<CalendarDays className="size-4" />}
-                  label={getDialogDateLabel(subscription)}
-                  value={
-                    subscription.isActive
-                      ? formatKstDateLabel(subscription.endAt)
-                      : `${formatKstDateLabel(subscription.startedAt)}부터 ${formatKstDateLabel(
-                          subscription.endAt,
-                        )}까지`
-                  }
-                  actionLabel="결제수단 변경"
-                  disabled
-                />
+                  <div className="from-brand/10 to-live/10 border-border/60 text-muted-foreground flex items-center justify-between gap-3 rounded-lg border bg-linear-to-r px-3 py-2.5 text-xs">
+                    <span>보유 포인트</span>
+                    <strong className="text-foreground font-medium">
+                      {isWalletLoading
+                        ? "조회 중"
+                        : isWalletError
+                          ? "조회 실패"
+                          : formatPoint(walletBalance)}
+                    </strong>
+                  </div>
+                </section>
 
-                <section className="border-border flex flex-col gap-3 rounded-xl border p-4">
-                  <h3 className="text-sm font-black">내 구독 배지</h3>
+                <section className="flex flex-col gap-3 px-5 py-5">
+                  <div className="flex items-center gap-2">
+                    <Star className="text-brand size-4 fill-current" />
+                    <h3 className="text-sm font-black">구독자 전용 배지</h3>
+                  </div>
                   <div className="grid grid-cols-4 gap-3 sm:grid-cols-7">
                     {badgeMonths.map((month) => {
                       const isCurrentBadge = month === currentBadgeMonth;
@@ -278,31 +306,22 @@ function UserSubscriptionManagementDialog({
                         <div
                           key={month}
                           className={cn(
-                            "flex min-w-14 flex-col items-center gap-1.5 rounded-xl px-2 py-2 ring-1 transition-colors",
-                            isCurrentBadge ? "bg-brand/10 ring-brand/30" : "ring-transparent",
+                            "flex min-w-0 flex-col items-center gap-1.5",
+                            isCurrentBadge ? "text-brand" : "text-muted-foreground",
                           )}
                         >
-                          <div
-                            className={cn(
-                              "flex size-10 items-center justify-center rounded-lg ring-1",
-                              isCurrentBadge
-                                ? "bg-background/70 ring-brand/20"
-                                : "bg-muted/40 ring-border",
-                            )}
-                          >
-                            <LiveSubscriptionBadge
-                              creatorId={subscription.creatorId}
-                              totalMonths={month}
-                              customMonths={subscription.badge.customMonths}
-                              version={subscription.badge.version}
-                              imageSourcesByMonth={subscription.badge.imageSourcesByMonth}
-                              size="lg"
-                            />
-                          </div>
+                          <LiveSubscriptionBadge
+                            creatorId={subscription.creatorId}
+                            totalMonths={month}
+                            customMonths={subscription.badge.customMonths}
+                            version={subscription.badge.version}
+                            imageSourcesByMonth={subscription.badge.imageSourcesByMonth}
+                            size="lg"
+                          />
                           <span
                             className={cn(
-                              "text-xs leading-none font-medium whitespace-nowrap",
-                              isCurrentBadge ? "text-brand font-black" : "text-muted-foreground",
+                              "text-xs leading-none whitespace-nowrap",
+                              isCurrentBadge ? "font-black" : "font-medium",
                             )}
                           >
                             {month}개월
@@ -315,26 +334,28 @@ function UserSubscriptionManagementDialog({
               </div>
             </ScrollArea>
 
-            <DialogFooter className="border-border m-0 flex-row justify-end gap-2 rounded-none border-t bg-transparent p-5">
-              <Button
-                type="button"
-                variant="outline"
-                className="h-11 min-w-24 font-black"
-                disabled={isPending}
-                onClick={() => onOpenChange(false)}
-              >
-                취소
-              </Button>
+            <footer className="border-border mx-0 mb-0 flex flex-col items-stretch gap-3 border-t p-5">
+              <p className="text-muted-foreground text-xs leading-5">
+                매월 후원 지갑에서 {formatPoint(CREATOR_SUBSCRIPTION_PAYMENT_AMOUNT)}가 사용됩니다.
+              </p>
               <Button
                 type="button"
                 variant={shouldCancel ? "destructive" : "default"}
-                className="h-11 min-w-32 font-black"
+                className={cn(
+                  "h-11 w-full font-black",
+                  isRestartAction && "bg-live hover:bg-live/90 text-white",
+                )}
                 disabled={isPending || (!shouldCancel && !canSubscribe)}
                 onClick={handlePrimaryAction}
               >
-                {getDialogPrimaryActionLabel(subscription, isPending)}
+                <WalletCards className="size-4" />
+                {getUserSubscriptionManagementPrimaryActionLabel({
+                  isActive: subscription.isActive,
+                  status: subscription.status,
+                  isPending,
+                })}
               </Button>
-            </DialogFooter>
+            </footer>
           </>
         ) : null}
       </DialogContent>
@@ -356,37 +377,7 @@ function DialogCreatorSummary({ subscription }: { subscription: UserSubscription
         <div className="flex min-w-0 items-center gap-1.5">
           <h3 className="truncate text-xl font-black">{subscription.creatorNickname}</h3>
         </div>
-        <p className="text-muted-foreground mt-1 text-base font-black">
-          구독기간 {subscription.totalMonths.toLocaleString("ko-KR")}개월
-        </p>
       </div>
-    </section>
-  );
-}
-
-function DialogInfoPanel({
-  icon,
-  label,
-  value,
-  actionLabel,
-  disabled,
-}: {
-  icon: ReactNode;
-  label: string;
-  value: string;
-  actionLabel: string;
-  disabled?: boolean;
-}) {
-  return (
-    <section className="border-border flex flex-col items-center gap-3 rounded-xl border p-4 text-center">
-      <div className="text-muted-foreground flex items-center gap-1.5 text-xs font-medium">
-        {icon}
-        <span>{label}</span>
-      </div>
-      <strong className="text-lg font-black">{value}</strong>
-      <Button type="button" variant="secondary" disabled={disabled} className="h-9 w-full">
-        {actionLabel}
-      </Button>
     </section>
   );
 }
@@ -430,25 +421,6 @@ function getSubscriptionStatusMeta(subscription: UserSubscriptionItem) {
   }
 
   return STATUS_META[subscription.status];
-}
-
-function getDialogDateLabel(subscription: UserSubscriptionItem) {
-  if (!subscription.isActive) return "구독 기간";
-  if (subscription.status === "canceled") return "구독 종료일";
-
-  return "다음 결제일";
-}
-
-function getDialogPrimaryActionLabel(subscription: UserSubscriptionItem, isPending: boolean) {
-  if (subscription.isActive && subscription.status === "active") {
-    return isPending ? "구독 해지 중" : "구독 해지";
-  }
-
-  if (subscription.isActive && subscription.status === "canceled") {
-    return isPending ? "구독 재개 중" : "구독 다시 시작";
-  }
-
-  return isPending ? "구독 처리 중" : "다시 구독";
 }
 
 function formatKstDateLabel(value: string) {
