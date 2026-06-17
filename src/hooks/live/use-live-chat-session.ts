@@ -69,8 +69,9 @@ export function useLiveChatSession({
     );
     const optimisticViewerRole =
       lastOwnRole && lastOwnRole !== "viewer" ? lastOwnRole : (promotedRole ?? lastOwnRole);
+    // 호스트도 후원 이력이 있으면 직전 합성이 ['creator','donor']라, 그 스냅샷을 우선해 뱃지 깜빡임을 막는다.
     const optimisticRoles: Exclude<LiveSenderRole, "viewer">[] = isHost
-      ? ["creator"]
+      ? (lastOwnRoles ?? ["creator"])
       : (lastOwnRoles ??
         (optimisticViewerRole && optimisticViewerRole !== "viewer" ? [optimisticViewerRole] : []));
     // 본인이 보낸 메시지는 클린봇으로 가리지 않는다(isCleanbotFlagged 미부여).
