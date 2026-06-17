@@ -49,10 +49,12 @@ export function ChannelEmojiFormDialog({ target, onClose, onSubmit, isPending }:
   const inputRef = useRef<HTMLInputElement>(null);
 
   // target이 바뀌면(열림/수정 대상 변경) 폼 상태를 초기화한다 — 렌더 중 직접 조정(effect 불필요).
-  // 이전 blob URL 정리는 아래 [objectUrl] cleanup이 objectUrl 변경 시 처리한다.
-  const [renderedTarget, setRenderedTarget] = useState(target);
-  if (target !== renderedTarget) {
-    setRenderedTarget(target);
+  // 비교는 객체 참조가 아니라 안정 키(모드 + id)로 한다 — 부모가 같은 이모지에 새 객체를 넘겨도
+  // 입력 중 폼이 초기화되지 않게. 이전 blob URL 정리는 아래 [objectUrl] cleanup이 처리한다.
+  const targetKey = target === null ? "closed" : target === "add" ? "add" : `edit:${target.id}`;
+  const [renderedTargetKey, setRenderedTargetKey] = useState(targetKey);
+  if (targetKey !== renderedTargetKey) {
+    setRenderedTargetKey(targetKey);
     setFile(null);
     setObjectUrl(null);
     setName(isEdit ? target.name : "");

@@ -60,7 +60,6 @@ export const CHANNEL_MENU_GROUPS: ChannelMenuGroup[] = [
       },
       { id: "permissions", label: "매니저 관리", href: "/channel/permissions", icon: Users },
       { id: "viewers", label: "시청자 관리", href: "/channel/viewers", icon: UserX },
-      { id: "security", label: "방송 연결", href: "/channel/security", icon: ShieldCheck },
     ],
   },
 ];
