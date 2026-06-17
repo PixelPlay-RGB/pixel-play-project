@@ -146,8 +146,7 @@ export function LiveSubscribeDialog({
 
         <footer className="border-border mx-0 mb-0 flex flex-col items-stretch gap-3 border-t p-5">
           <div className="min-w-0">
-            <p className="text-sm font-black">정기 구독 설명</p>
-            <p className="text-muted-foreground mt-1 text-xs leading-5">
+            <p className="text-muted-foreground text-xs leading-5">
               매월 후원 지갑에서 {formatPoint(CREATOR_SUBSCRIPTION_PAYMENT_AMOUNT)}가 사용됩니다.
             </p>
           </div>
