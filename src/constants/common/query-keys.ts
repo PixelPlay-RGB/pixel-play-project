@@ -130,6 +130,8 @@ export const QUERY_KEYS = {
       [...QUERY_KEYS.channel.managersAll(), creatorId].filter((v) => v !== undefined),
     emojis: (creatorId?: string) =>
       [...QUERY_KEYS.channel.all, "emojis", creatorId].filter((v) => v !== undefined),
+    profile: (creatorId?: string) =>
+      [...QUERY_KEYS.channel.all, "profile", creatorId].filter((v) => v !== undefined),
   },
   notification: {
     all: ["notification"] as const,

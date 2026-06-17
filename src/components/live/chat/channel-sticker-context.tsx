@@ -8,7 +8,7 @@
 import { createContext, useContext, useMemo, type ReactNode } from "react";
 
 import { useChannelEmojiStickers } from "@/hooks/channel/use-channel-emoji-stickers";
-import { useNullableUser } from "@/hooks/profile/use-profile";
+import { useChannelProfile } from "@/hooks/channel/use-channel-profile";
 import { useAuthStore } from "@/stores/auth";
 import type { Sticker } from "@/types/sticker/sticker";
 
@@ -17,7 +17,7 @@ interface ChannelStickerContextValue {
   // 채널 이모지 최초 로딩 여부 — 피커 채널 탭 로딩 인디케이터에 쓴다.
   isLoading: boolean;
   canUseInPicker: boolean;
-  // 피커 채널 탭 아이콘(아바타)·라벨용 채널 표시 정보(크리에이터 본인 프로필에서 채운다).
+  // 피커 채널 탭 아이콘(아바타)·라벨용 채널 표시 정보(채널 주인 프로필에서 채운다).
   channelName: string | null;
   channelAvatarUrl: string | null;
 }
@@ -39,23 +39,23 @@ export function ChannelStickerProvider({
   children: ReactNode;
 }) {
   const { data: stickers, isLoading } = useChannelEmojiStickers(creatorId);
-  // 본인 프로필 — 채널 탭은 본인(크리에이터)만 뜨므로, 본인 프로필이 곧 채널 탭 표시 정보다.
-  // 비로그인 시청자(대다수)는 채널 탭이 안 떠 프로필이 불필요하므로, 로그인 상태에서만 조회한다.
   const authUser = useAuthStore((state) => state.user);
-  const { data: profile } = useNullableUser(Boolean(authUser));
+  // 지금은 크리에이터 본인만 채널 이모지를 보낼 수 있다(구독자 허용은 구독 연동 시 canUseInPicker에 구독 체크 추가).
+  const canUseInPicker = Boolean(creatorId) && authUser?.id === creatorId;
+  // 채널 탭 표시정보 = 채널 주인(creatorId) 프로필. 본인이든 (향후) 구독자든 채널 이름이 맞다.
+  // 채널 탭이 뜰 때(canUseInPicker)만 조회해 비로그인·일반 시청자의 불필요한 쿼리를 막는다.
+  const { data: channelProfile } = useChannelProfile(creatorId, canUseInPicker);
 
-  const value = useMemo<ChannelStickerContextValue>(() => {
-    // 지금은 크리에이터 본인만 채널 이모지를 보낼 수 있다(구독자 허용은 구독 연동 시 추가).
-    const canUseInPicker = Boolean(creatorId) && profile?.id === creatorId;
-    return {
+  const value = useMemo<ChannelStickerContextValue>(
+    () => ({
       stickers: stickers ?? [],
       isLoading,
       canUseInPicker,
-      // 채널 탭 아바타·라벨 = 본인 프로필(닉네임·사진). 표면별 prop 전달 없이 모든 채팅 표면에서 동작한다.
-      channelName: canUseInPicker ? (profile?.nickname ?? null) : null,
-      channelAvatarUrl: canUseInPicker ? (profile?.photo_url ?? null) : null,
-    };
-  }, [stickers, isLoading, profile, creatorId]);
+      channelName: channelProfile?.name ?? null,
+      channelAvatarUrl: channelProfile?.avatarUrl ?? null,
+    }),
+    [stickers, isLoading, canUseInPicker, channelProfile],
+  );
 
   return <ChannelStickerContext.Provider value={value}>{children}</ChannelStickerContext.Provider>;
 }

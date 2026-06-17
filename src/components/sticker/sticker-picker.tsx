@@ -7,6 +7,7 @@
 import { Clock, Smile } from "lucide-react";
 import { useMemo, useState, type ReactNode } from "react";
 
+import { PixelPlayMark } from "@/components/common/pixel-play-mark";
 import StickerImage from "@/components/sticker/sticker-image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -47,24 +48,6 @@ interface Props {
 
 type StickerTabKey = "recent" | "default" | "channel";
 type StickerTab = { key: StickerTabKey; label: string; icon: ReactNode };
-
-// PixelPlay 정사각 브랜드마크(favicon /icon.svg 인라인) — 기본 탭 아이콘. SVG에 라운드(rx)가 내장돼 있다.
-function PixelPlayMark({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 32 32" className={className} aria-hidden focusable="false">
-      <defs>
-        <linearGradient id="pp-sticker-mark" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#6ee7b7" />
-          <stop offset="100%" stopColor="#34d399" />
-        </linearGradient>
-      </defs>
-      <rect width="32" height="32" rx="6" fill="#1a1f26" />
-      <path d="M10 8V24L24 16L10 8Z" fill="url(#pp-sticker-mark)" />
-      <rect x="22" y="22" width="4" height="4" fill="#6ee7b7" />
-      <rect x="18" y="22" width="2" height="2" fill="#6ee7b7" opacity="0.6" />
-    </svg>
-  );
-}
 
 // 상단 아이콘 탭 — 고정 정사각(캐러셀 아이템 안에서 줄지 않게 shrink-0).
 function TabButton({
