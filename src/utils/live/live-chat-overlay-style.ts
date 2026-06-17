@@ -3,12 +3,8 @@ import {
   LIVE_CHAT_OVERLAY_CREATOR_NICKNAME_COLOR,
   LIVE_CHAT_OVERLAY_NICKNAME_COLOR_PALETTE,
 } from "@/constants/live/live-overlay";
-import type { LiveChatOverlayMessage } from "@/types/live/live-chat-overlay";
 
-export function getLiveChatOverlayNicknameColor(
-  author: string,
-  role?: LiveChatOverlayMessage["role"],
-) {
+export function getLiveChatOverlayNicknameColor(author: string, role?: "creator" | "donor") {
   if (role === "creator") {
     return LIVE_CHAT_OVERLAY_CREATOR_NICKNAME_COLOR;
   }
