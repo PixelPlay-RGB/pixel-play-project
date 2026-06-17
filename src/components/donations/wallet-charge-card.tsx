@@ -37,7 +37,7 @@ import {
 } from "@/utils/payments/toss-wallet-charge-client";
 import { CreditCard, Loader2 } from "lucide-react";
 import Script from "next/script";
-import { FormEvent, useEffect, useId, useMemo, useRef, useState } from "react";
+import { FormEvent, useEffect, useId, useMemo, useRef, useState, type ReactElement } from "react";
 
 interface Props {
   customerKey: string;
@@ -47,12 +47,21 @@ interface Props {
 interface WalletChargeDialogProps {
   customerKey: string;
   className?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  trigger?: ReactElement | null;
 }
 
 type PaymentWindowState = "idle" | "initializing" | "ready" | "opening" | "failed";
 
-export function WalletChargeDialog({ customerKey, className }: WalletChargeDialogProps) {
-  const trigger = (
+export function WalletChargeDialog({
+  customerKey,
+  className,
+  open,
+  onOpenChange,
+  trigger,
+}: WalletChargeDialogProps) {
+  const defaultTrigger = (
     <Button
       type="button"
       className={cn(
@@ -67,8 +76,8 @@ export function WalletChargeDialog({ customerKey, className }: WalletChargeDialo
   );
 
   return (
-    <Dialog>
-      <DialogTrigger render={trigger} />
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      {trigger !== null ? <DialogTrigger render={trigger ?? defaultTrigger} /> : null}
       <DialogContent
         className={cn(
           "overflow-hidden rounded-2xl p-0 shadow-xl sm:max-w-lg",

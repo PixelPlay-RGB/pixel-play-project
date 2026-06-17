@@ -37,6 +37,16 @@ export interface UserWalletChargeHistoryItem {
   createdAt: string;
 }
 
+export interface UserSubscriptionSpendHistoryItem {
+  id: string;
+  status: WalletTransactionStatus;
+  amount: number;
+  balanceAfter: number | null;
+  creatorId: string;
+  creatorNickname: string;
+  createdAt: string;
+}
+
 export interface UserDonationSnapshot {
   paymentCustomerKey: string;
   summary: UserDonationSummary;
@@ -44,4 +54,5 @@ export interface UserDonationSnapshot {
   historyPeriod: UserDonationHistoryPeriod;
   sentDonations: UserSentDonationItem[];
   chargeHistories: UserWalletChargeHistoryItem[];
+  subscriptionSpendHistories: UserSubscriptionSpendHistoryItem[];
 }

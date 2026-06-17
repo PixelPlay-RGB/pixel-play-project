@@ -24,9 +24,11 @@ import { parseLiveVoteCommand } from "@/utils/live/live-vote-command";
 import {
   mapLiveWatchCreator,
   mapLiveWatchToBroadcast,
+  type CreatorSubscriptionActionResult,
   type LiveBroadcast,
   type LivePoll,
   type LiveSenderRole,
+  type LiveWatchData,
 } from "@/types/live/live";
 
 export function useLiveBroadcastView(creatorId: string) {
@@ -47,6 +49,9 @@ export function useLiveBroadcastView(creatorId: string) {
 
   const [optimisticFollowing, setOptimisticFollowing] = useState<boolean | null>(null);
   const isFollowing = optimisticFollowing ?? watchData?.viewerRelation?.isFollowing ?? false;
+  const [optimisticSubscribed, setOptimisticSubscribed] = useState<boolean | null>(null);
+  const isSubscribed = optimisticSubscribed ?? watchData?.viewerRelation?.isSubscribed ?? false;
+  const subscriptionStatus = watchData?.viewerRelation?.subscriptionStatus ?? null;
 
   // 매니저/강퇴 여부와 강퇴 권한(크리에이터 본인 또는 활성 매니저). 닉네임 팝업·차단 화면 분기에 쓴다(#118/#119).
   const isManager = watchData?.viewerRelation?.isManager ?? false;
@@ -67,6 +72,70 @@ export function useLiveBroadcastView(creatorId: string) {
       })
       .catch((error) => {
         console.error("follow state refetch failed", error);
+      });
+  }
+
+  function onSubscribed(result: CreatorSubscriptionActionResult) {
+    const next = result.isSubscribed;
+    const watchKey = QUERY_KEYS.live.watch(creatorId, user?.id);
+
+    setOptimisticSubscribed(next);
+    queryClient.setQueryData<LiveWatchData | null>(watchKey, (prev) => {
+      if (!prev?.viewerRelation) return prev;
+
+      return {
+        ...prev,
+        viewerRelation: {
+          ...prev.viewerRelation,
+          isSubscribed: next,
+          subscriptionStartedAt: result.startedAt,
+          subscriptionEndAt: result.endAt,
+          subscriptionTotalMonths: result.totalMonths,
+          subscriptionStatus: result.status,
+        },
+      };
+    });
+    void queryClient.invalidateQueries({
+      queryKey: QUERY_KEYS.donations.walletBalance(user?.id ?? undefined),
+    });
+
+    void refetch()
+      .then((refetchResult) => {
+        if ((refetchResult.data?.viewerRelation?.isSubscribed ?? false) !== next) {
+          console.error("구독 상태 refetch 결과가 optimistic 상태와 다름");
+        }
+        setOptimisticSubscribed(null);
+      })
+      .catch((error) => {
+        console.error("subscription state refetch failed", error);
+        setOptimisticSubscribed(null);
+      });
+  }
+
+  function onSubscriptionCanceled() {
+    const watchKey = QUERY_KEYS.live.watch(creatorId, user?.id);
+
+    queryClient.setQueryData<LiveWatchData | null>(watchKey, (prev) => {
+      if (!prev?.viewerRelation) return prev;
+
+      return {
+        ...prev,
+        viewerRelation: {
+          ...prev.viewerRelation,
+          isSubscribed: true,
+          subscriptionStatus: "canceled",
+        },
+      };
+    });
+
+    void refetch()
+      .then((refetchResult) => {
+        if (refetchResult.data?.viewerRelation?.subscriptionStatus !== "canceled") {
+          console.error("구독 해지 상태 refetch 결과가 optimistic 상태와 다름");
+        }
+      })
+      .catch((error) => {
+        console.error("subscription cancel state refetch failed", error);
       });
   }
 
@@ -209,6 +278,8 @@ export function useLiveBroadcastView(creatorId: string) {
   const chatSession = useLiveChatSession({
     creatorId,
     viewerChatState: watchData?.viewerChatState,
+    viewerIsSubscriber: isSubscribed,
+    viewerSubscriptionTotalMonths: watchData?.viewerRelation?.subscriptionTotalMonths,
     onChatRuleAccepted: refetch,
   });
 
@@ -272,15 +343,23 @@ export function useLiveBroadcastView(creatorId: string) {
     isInteractionNoticesLoading: interactionNoticesQuery.isLoading,
     isInteractionNoticesError: Boolean(interactionNoticesQuery.error),
     walletBalance,
+    walletChargeCustomerKey: user?.id ?? null,
     isWalletLoading,
     isWalletError,
     donationEnabled,
     donationMinAmount,
+    subscriptionBadgeCustomMonths: watchData?.subscriptionBadgeCustomMonths ?? [],
+    subscriptionBadgeVersion: watchData?.subscriptionBadgeVersion ?? null,
+    subscriptionBadgeImageSources: watchData?.subscriptionBadgeImageSources ?? {},
     votePoll,
     joinDraw,
     sendDonation,
     isFollowing,
     onFollowToggled,
+    isSubscribed,
+    subscriptionStatus,
+    onSubscribed,
+    onSubscriptionCanceled,
     chatRuleText: watchData?.settings.chatRuleText,
     // 팔로워 전용 대기 시간 안내용 설정값(초).
     followerWaitSeconds: watchData?.settings.followerWaitSeconds ?? 0,

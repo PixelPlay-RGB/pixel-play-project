@@ -27,6 +27,7 @@ import { cn } from "@/lib/utils";
 import type {
   UserDonationSnapshot,
   UserSentDonationItem,
+  UserSubscriptionSpendHistoryItem,
   UserWalletChargeHistoryItem,
 } from "@/types/donations/user-donations";
 import { getPageItems } from "@/utils/common/pagination";
@@ -84,6 +85,10 @@ export function UserDonationHistoryTable({ snapshot, activeTab, onActiveTabChang
   });
   const historyItems = useMemo(() => buildHistoryItems(snapshot), [snapshot]);
   const succeededChargeHistories = useMemo(() => getSucceededChargeHistories(snapshot), [snapshot]);
+  const succeededSubscriptionSpendHistories = useMemo(
+    () => getSucceededSubscriptionSpendHistories(snapshot),
+    [snapshot],
+  );
   const yearOptions = useMemo(
     () => buildYearOptions(snapshot.historyPeriod.year),
     [snapshot.historyPeriod.year],
@@ -114,9 +119,14 @@ export function UserDonationHistoryTable({ snapshot, activeTab, onActiveTabChang
     () => ({
       all: historyItems.length,
       charge: succeededChargeHistories.length,
-      donation: snapshot.sentDonations.length,
+      donation: snapshot.sentDonations.length + succeededSubscriptionSpendHistories.length,
     }),
-    [historyItems.length, succeededChargeHistories.length, snapshot.sentDonations.length],
+    [
+      historyItems.length,
+      succeededChargeHistories.length,
+      snapshot.sentDonations.length,
+      succeededSubscriptionSpendHistories.length,
+    ],
   );
 
   const handlePeriodChange = (nextPeriod: { year?: number; month?: number }) => {
@@ -441,14 +451,22 @@ function EmptyList({ activeTab }: { activeTab: DonationHistoryTab }) {
 function buildHistoryItems(snapshot: UserDonationSnapshot): DonationHistoryItem[] {
   const chargeItems = getSucceededChargeHistories(snapshot).map(readChargeHistoryItem);
   const donationItems = snapshot.sentDonations.map(readSentDonationItem);
+  const subscriptionItems =
+    getSucceededSubscriptionSpendHistories(snapshot).map(readSubscriptionSpendItem);
 
-  return [...chargeItems, ...donationItems].sort(
+  return [...chargeItems, ...donationItems, ...subscriptionItems].sort(
     (left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
   );
 }
 
 function getSucceededChargeHistories(snapshot: UserDonationSnapshot) {
   return snapshot.chargeHistories.filter((charge) => charge.status === "succeeded");
+}
+
+function getSucceededSubscriptionSpendHistories(snapshot: UserDonationSnapshot) {
+  return snapshot.subscriptionSpendHistories.filter(
+    (subscription) => subscription.status === "succeeded",
+  );
 }
 
 function buildYearOptions(selectedYear: number) {
@@ -490,6 +508,19 @@ function readSentDonationItem(donation: UserSentDonationItem): DonationHistoryIt
     description: donation.message || "방송 후원을 보냈습니다.",
     amount: donation.amount,
     createdAt: donation.createdAt,
+  };
+}
+
+function readSubscriptionSpendItem(
+  subscription: UserSubscriptionSpendHistoryItem,
+): DonationHistoryItem {
+  return {
+    kind: "donation",
+    id: subscription.id,
+    title: `${subscription.creatorNickname} 채널 구독`,
+    description: "정기구독 포인트 결제",
+    amount: subscription.amount,
+    createdAt: subscription.createdAt,
   };
 }
 

@@ -14,6 +14,12 @@ const nextConfig: NextConfig = {
     ];
   },
   images: {
+    localPatterns: [
+      {
+        pathname: "/subscription-badges/**",
+        search: "?v=20260615-fixed-slots-v1",
+      },
+    ],
     remotePatterns: [
       {
         protocol: "https",

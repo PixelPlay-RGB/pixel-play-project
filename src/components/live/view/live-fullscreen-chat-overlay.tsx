@@ -27,7 +27,11 @@ interface Props {
   // 채팅 패널 열림 상태는 LiveVideoPlayer가 소유한다(비디오/컨트롤 폭 축소와 공유해야 하므로).
   isChatOpen: boolean;
   onToggleChat: () => void;
+  creatorId: string;
   messages: LiveChatMessage[];
+  subscriptionBadgeCustomMonths?: number[];
+  subscriptionBadgeVersion?: string | null;
+  subscriptionBadgeImageSources?: Record<number, string>;
   donations: LiveDonation[];
   polls: LivePoll[];
   interactionNotices?: LiveInteractionNotice[];
@@ -79,7 +83,11 @@ export function LiveFullscreenChatOverlay({
   container,
   isChatOpen,
   onToggleChat,
+  creatorId,
   messages,
+  subscriptionBadgeCustomMonths,
+  subscriptionBadgeVersion,
+  subscriptionBadgeImageSources,
   donations,
   polls,
   interactionNotices,
@@ -157,7 +165,11 @@ export function LiveFullscreenChatOverlay({
       </div>
 
       <LiveChatBody
+        creatorId={creatorId}
         messages={messages}
+        subscriptionBadgeCustomMonths={subscriptionBadgeCustomMonths}
+        subscriptionBadgeVersion={subscriptionBadgeVersion}
+        subscriptionBadgeImageSources={subscriptionBadgeImageSources}
         donations={donations}
         polls={polls}
         interactionNotices={interactionNotices}

@@ -109,6 +109,8 @@ export function mapLiveMessageRowToMessage(
     createdAt: row.created_at,
     senderRole: isHost ? "creator" : row.sender_role,
     senderRoles,
+    isSubscriber: metadata.isSubscriber === true,
+    subscriptionTotalMonths: readNumber(metadata.subscriptionTotalMonths) ?? undefined,
     isHost,
     // 하이브리드 클린봇(#120): 서버 LLM 판정이 도착하면 그 결과(flagged/clean)를 신뢰하고,
     // 판정 전(키 없음)에는 클라이언트 시드 사전으로 명백한 욕설만 즉시 가린다(0초). 두 신호 모두

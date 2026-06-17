@@ -3,7 +3,13 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { getLiveSubscriptionBadgeAssetsAction } from "@/actions/live/live";
 import { createClient } from "@/lib/supabase/client";
+import {
+  clearLiveSubscriptionBadgeSourceCache,
+  getLiveSubscriptionBadgeSourcesByMonth,
+  preloadLiveSubscriptionBadgeSources,
+} from "@/utils/live/live-subscription-badge";
 import { useLiveBroadcastRealtime } from "@/hooks/live/use-live-broadcast-realtime";
 import { useAuthStore } from "@/stores/auth";
 import { QUERY_KEYS } from "@/constants/common/query-keys";
@@ -33,7 +39,7 @@ export function useLiveViewData(creatorId: string) {
     // (밴 상태는 입장마다 서버로 확정해야 하므로 always 가 정책적으로도 옳다.)
     refetchOnMount: "always",
     queryFn: async () => {
-      const [watchResult, countResult] = await Promise.all([
+      const [watchResult, countResult, badgeAssetsResult] = await Promise.all([
         supabase.rpc("get_live_watch", {
           p_creator_id: creatorId,
           ...(user?.id ? { p_viewer_id: user.id } : {}),
@@ -41,6 +47,7 @@ export function useLiveViewData(creatorId: string) {
         supabase.rpc("get_live_watch_count", {
           p_creator_id: creatorId,
         }),
+        getLiveSubscriptionBadgeAssetsAction(creatorId),
       ]);
 
       if (watchResult.error) {
@@ -55,9 +62,38 @@ export function useLiveViewData(creatorId: string) {
         console.error("get_live_watch_count 실패", countResult.error);
       }
 
-      return normalizeLiveViewData(watchResult.data, countResult.data);
+      const watchData = normalizeLiveViewData(watchResult.data, countResult.data);
+      if (!watchData) return null;
+
+      const badgeAssets = badgeAssetsResult.success ? badgeAssetsResult.data : null;
+
+      return {
+        ...watchData,
+        subscriptionBadgeCustomMonths: badgeAssets?.customMonths ?? [],
+        subscriptionBadgeVersion: badgeAssets?.version ?? null,
+        subscriptionBadgeImageSources: getLiveSubscriptionBadgeSourcesByMonth(creatorId, {
+          customMonths: badgeAssets?.customMonths ?? [],
+          availableMonths: badgeAssets?.availableMonths ?? [],
+          version: badgeAssets?.version ?? null,
+        }),
+      };
     },
   });
+
+  useEffect(() => {
+    const data = query.data;
+    if (!data?.subscriptionBadgeImageSources) return;
+
+    preloadLiveSubscriptionBadgeSources(Object.values(data.subscriptionBadgeImageSources));
+  }, [query.data]);
+
+  useEffect(() => {
+    return () => {
+      const watchQueryKey = QUERY_KEYS.live.watch(creatorId, user?.id);
+      queryClient.removeQueries({ queryKey: watchQueryKey, exact: true });
+      clearLiveSubscriptionBadgeSourceCache();
+    };
+  }, [creatorId, queryClient, user?.id]);
 
   const broadcastId = query.data?.broadcast?.id;
   const watchKey = QUERY_KEYS.live.watch(creatorId, user?.id);

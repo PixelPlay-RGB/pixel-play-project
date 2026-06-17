@@ -2,9 +2,11 @@
 // 방송 운영 화면에서 실제 라이브 시청 채팅과 같은 외형의 채팅 패널을 렌더링합니다.
 
 import type { ChannelLiveChatMessage } from "@/actions/channel/live";
+import { getLiveSubscriptionBadgeAssetsAction } from "@/actions/live/live";
 import { ChannelStickerProvider } from "@/components/live/chat/channel-sticker-context";
 import { LiveChatBody } from "@/components/live/chat/live-chat-body";
 import { LiveChatMenu } from "@/components/live/view/live-chat-menu";
+import { QUERY_KEYS } from "@/constants/common/query-keys";
 import { LIVE_DONATION_MIN_AMOUNT, LIVE_LABEL } from "@/constants/live/live";
 import { useLiveChatSession } from "@/hooks/live/use-live-chat-session";
 import { useLiveDonationRanking } from "@/hooks/live/use-live-donation-ranking";
@@ -15,6 +17,8 @@ import type {
   LiveChatProfileContext,
   LiveViewerChatState,
 } from "@/types/live/live";
+import type { LiveSubscriptionBadgeAssetInfo } from "@/utils/live/live-subscription-badge";
+import { useQuery } from "@tanstack/react-query";
 import { ExternalLink } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -63,6 +67,19 @@ export default function ChannelLiveChatPanel({ creatorId, chatRuleText, onMessag
   const { messages, loadOlderMessages, isLoadingOlder, hasMoreHistory, entryNoticeAnchorId } =
     useLiveMessages(creatorId);
   const { donations } = useLiveDonationRanking(creatorId ?? "");
+  // 구독 N개월 티콘(LiveSubscriptionBadge) 렌더용 에셋 — 채널 단위로 1회 조회(무한 캐싱).
+  const { data: subscriptionBadgeAssets } = useQuery<LiveSubscriptionBadgeAssetInfo | null>({
+    queryKey: QUERY_KEYS.live.subscriptionBadgeAssets(creatorId),
+    enabled: Boolean(creatorId),
+    staleTime: Infinity,
+    queryFn: async () => {
+      if (!creatorId) return null;
+
+      const result = await getLiveSubscriptionBadgeAssetsAction(creatorId);
+
+      return result.success ? (result.data ?? null) : null;
+    },
+  });
   const { isLoggedIn, sendMessage } = useLiveChatSession({
     creatorId: creatorId ?? "",
     viewerChatState: chatState,
@@ -132,7 +149,10 @@ export default function ChannelLiveChatPanel({ creatorId, chatRuleText, onMessag
           // 시청 화면과 같은 채팅 본문(배너 오버레이+동적 inset+바닥 정렬)을 그대로 재사용해
           // 두 화면의 채팅 동작이 항상 함께 움직이게 한다. 운영 화면은 후원·투표 액션만 끈다.
           <LiveChatBody
+            creatorId={creatorId ?? ""}
             messages={messages}
+            subscriptionBadgeCustomMonths={subscriptionBadgeAssets?.customMonths}
+            subscriptionBadgeVersion={subscriptionBadgeAssets?.version}
             donations={donations}
             polls={[]}
             chatState={chatState}

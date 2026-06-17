@@ -17,6 +17,9 @@ export const APP_MESSAGE_CODE = {
     profile: {
       updated: "success.profile.updated",
     },
+    user: {
+      subscriptionCanceled: "success.user.subscriptionCanceled",
+    },
     oauth: {
       unlinked: "success.oauth.unlinked",
     },
@@ -27,6 +30,8 @@ export const APP_MESSAGE_CODE = {
       liveSettingsSaved: "success.channel.liveSettingsSaved",
       donationSettingsSaved: "success.channel.donationSettingsSaved",
       donationTestSent: "success.channel.donationTestSent",
+      subscriptionBadgeSaved: "success.channel.subscriptionBadgeSaved",
+      subscriptionBadgeDeleted: "success.channel.subscriptionBadgeDeleted",
       channelProfileSaved: "success.channel.channelProfileSaved",
       bannerSaved: "success.channel.bannerSaved",
       bannerDeleted: "success.channel.bannerDeleted",
@@ -54,6 +59,7 @@ export const APP_MESSAGE_CODE = {
       commentUpdated: "success.community.commentUpdated",
     },
     live: {
+      subscribed: "success.live.subscribed",
       urlCopied: "success.live.urlCopied",
       voteUnchanged: "success.live.voteUnchanged",
     },
@@ -89,6 +95,10 @@ export const APP_MESSAGE_CODE = {
       accountDeleteFailed: "error.auth.accountDeleteFailed",
       oauthInfoLoadFailed: "error.auth.oauthInfoLoadFailed",
       oauthSyncFailed: "error.auth.oauthSyncFailed",
+    },
+    user: {
+      subscriptionLoadFailed: "error.user.subscriptionLoadFailed",
+      subscriptionCancelFailed: "error.user.subscriptionCancelFailed",
     },
     // 라이브 메시지 RPC 에러 매핑(MESSAGE_RPC_ERROR_CODE_MAP)에서 사용.
     chatRoom: {
@@ -151,6 +161,11 @@ export const APP_MESSAGE_CODE = {
       securityCopyFailed: "error.channel.securityCopyFailed",
       securityTokenRotateFailed: "error.channel.securityTokenRotateFailed",
       analyticsLoadFailed: "error.channel.analyticsLoadFailed",
+      subscriptionLoadFailed: "error.channel.subscriptionLoadFailed",
+      subscriptionBadgeSaveFailed: "error.channel.subscriptionBadgeSaveFailed",
+      subscriptionBadgeDeleteFailed: "error.channel.subscriptionBadgeDeleteFailed",
+      subscriptionBadgeImageInvalid: "error.channel.subscriptionBadgeImageInvalid",
+      subscriptionBadgeImageTooLarge: "error.channel.subscriptionBadgeImageTooLarge",
       channelProfileSaveFailed: "error.channel.channelProfileSaveFailed",
       bannerSaveFailed: "error.channel.bannerSaveFailed",
       bannerDeleteFailed: "error.channel.bannerDeleteFailed",
@@ -189,6 +204,8 @@ export const APP_MESSAGE_CODE = {
       voteFailed: "error.live.voteFailed",
       voteNoActivePoll: "error.live.voteNoActivePoll",
       voteInvalidOption: "error.live.voteInvalidOption",
+      subscriptionFailed: "error.live.subscriptionFailed",
+      subscriptionInsufficientBalance: "error.live.subscriptionInsufficientBalance",
     },
     community: {
       postCreateFailed: "error.community.postCreateFailed",
@@ -229,6 +246,7 @@ export const APP_MESSAGE_CODE = {
     },
     live: {
       broadcastEnded: "info.live.broadcastEnded",
+      subscriptionPaymentCanceled: "info.live.subscriptionPaymentCanceled",
     },
   },
 } as const satisfies AppMessageCodeSchema<typeof APP_MESSAGE>;

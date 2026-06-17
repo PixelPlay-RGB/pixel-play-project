@@ -15,6 +15,8 @@ import type { LiveChatMessage, LiveSenderRole, LiveViewerChatState } from "@/typ
 interface UseLiveChatSessionParams {
   creatorId: string;
   viewerChatState: LiveViewerChatState | null | undefined;
+  viewerIsSubscriber?: boolean;
+  viewerSubscriptionTotalMonths?: number | null;
   onChatRuleAccepted?: () => Promise<unknown>;
 }
 
@@ -28,6 +30,8 @@ const DEFAULT_CHAT_STATE: LiveViewerChatState = {
 export function useLiveChatSession({
   creatorId,
   viewerChatState,
+  viewerIsSubscriber = false,
+  viewerSubscriptionTotalMonths,
   onChatRuleAccepted,
 }: UseLiveChatSessionParams) {
   const user = useAuthStore((state) => state.user);
@@ -74,6 +78,14 @@ export function useLiveChatSession({
       ? (lastOwnRoles ?? ["creator"])
       : (lastOwnRoles ??
         (optimisticViewerRole && optimisticViewerRole !== "viewer" ? [optimisticViewerRole] : []));
+    // 단일 senderRole 스냅샷(구독 기능 호환) — 구독자는 subscriber로 즉시 표시한다.
+    const senderRole: LiveSenderRole | undefined = isHost
+      ? "creator"
+      : optimisticViewerRole && optimisticViewerRole !== "viewer"
+        ? optimisticViewerRole
+        : viewerIsSubscriber
+          ? "subscriber"
+          : optimisticViewerRole;
     // 본인이 보낸 메시지는 클린봇으로 가리지 않는다(isCleanbotFlagged 미부여).
     // 자기 메시지는 본인 화면에서 항상 보이는 게 자연스럽다.
     const optimisticMessage: LiveChatMessage = {
@@ -85,8 +97,11 @@ export function useLiveChatSession({
       author: profile?.nickname ?? LIVE_LABEL.selfAuthorFallback,
       content: trimmed,
       isHost,
-      senderRole: isHost ? "creator" : optimisticViewerRole,
+      senderRole,
       senderRoles: optimisticRoles,
+      isSubscriber: !isHost && viewerIsSubscriber,
+      subscriptionTotalMonths:
+        !isHost && viewerIsSubscriber ? (viewerSubscriptionTotalMonths ?? undefined) : undefined,
     };
 
     const removeOptimistic = () =>

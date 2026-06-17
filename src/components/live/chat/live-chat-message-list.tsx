@@ -7,6 +7,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { LiveChatDonationMessageCard } from "@/components/live/chat/live-chat-donation-message-card";
 import { LiveChatProfilePopover } from "@/components/live/chat/live-chat-profile-popover";
 import { LiveChatRoleBadge, type LiveChatRole } from "@/components/live/chat/live-chat-role-badge";
+import { LiveSubscriptionBadge } from "@/components/live/chat/live-subscription-badge";
 import { useChannelStickers } from "@/components/live/chat/channel-sticker-context";
 import RichMessageText from "@/components/common/rich-message-text";
 import { LIVE_LABEL } from "@/constants/live/live";
@@ -19,9 +20,15 @@ const ESTIMATED_ROW_HEIGHT = 32;
 const ROW_GAP = 12;
 // 상단에서 이 거리(px) 안으로 스크롤하면 과거 페이지 적재를 요청한다.
 const LOAD_OLDER_THRESHOLD_PX = 80;
+const EMPTY_SUBSCRIPTION_BADGE_CUSTOM_MONTHS: number[] = [];
+const EMPTY_SUBSCRIPTION_BADGE_IMAGE_SOURCES: Record<number, string> = {};
 
 interface Props {
+  creatorId: string;
   messages: LiveChatMessage[];
+  subscriptionBadgeCustomMonths?: number[];
+  subscriptionBadgeVersion?: string | null;
+  subscriptionBadgeImageSources?: Record<number, string>;
   // 클린봇 토글 상태. ON이면 비속어로 걸린 메시지를 가린다. 기본 ON.
   cleanbotEnabled?: boolean;
   // 후원 랭킹 배너(absolute 오버레이)가 덮는 실측 높이(px). 접고 펼칠 때마다 호출부가 갱신해 넘긴다.
@@ -41,7 +48,11 @@ interface Props {
 }
 
 export function LiveChatMessageList({
+  creatorId,
   messages,
+  subscriptionBadgeCustomMonths = EMPTY_SUBSCRIPTION_BADGE_CUSTOM_MONTHS,
+  subscriptionBadgeVersion = null,
+  subscriptionBadgeImageSources = EMPTY_SUBSCRIPTION_BADGE_IMAGE_SOURCES,
   cleanbotEnabled = true,
   topInsetPx = 0,
   scrollRef,
@@ -168,7 +179,11 @@ export function LiveChatMessageList({
               </p>
             ) : (
               <MessageItem
+                creatorId={creatorId}
                 message={getMessageAtRow(item.index)}
+                subscriptionBadgeCustomMonths={subscriptionBadgeCustomMonths}
+                subscriptionBadgeVersion={subscriptionBadgeVersion}
+                subscriptionBadgeImageSources={subscriptionBadgeImageSources}
                 cleanbotEnabled={cleanbotEnabled}
                 profileCreatorId={profileContext?.creatorId}
                 profileViewerId={profileContext?.viewerId ?? null}
@@ -184,7 +199,11 @@ export function LiveChatMessageList({
 }
 
 interface MessageItemProps {
+  creatorId: string;
   message: LiveChatMessage;
+  subscriptionBadgeCustomMonths: number[];
+  subscriptionBadgeVersion: string | null;
+  subscriptionBadgeImageSources?: Record<number, string>;
   cleanbotEnabled: boolean;
   // 닉네임 클릭 팝업 컨텍스트(원시값) — creatorId 가 있고 senderId 가 있을 때만 닉네임을 클릭 가능하게 한다.
   profileCreatorId?: string;
@@ -196,7 +215,11 @@ interface MessageItemProps {
 // 메시지가 바뀌지 않은 기존 항목은 새 메시지 도착마다 재렌더되지 않게 memo로 감싼다.
 // props가 모두 원시값/안정 ref(message 객체는 캐시에서 ref 유지)라 얕은 비교로 충분하다.
 const MessageItem = memo(function MessageItem({
+  creatorId,
   message,
+  subscriptionBadgeCustomMonths,
+  subscriptionBadgeVersion,
+  subscriptionBadgeImageSources,
   cleanbotEnabled,
   profileCreatorId,
   profileViewerId = null,
@@ -236,23 +259,45 @@ const MessageItem = memo(function MessageItem({
         }
       : null;
 
-  return <TextMessage message={message} isMasked={isMasked} profileContext={profileContext} />;
+  return (
+    <TextMessage
+      creatorId={creatorId}
+      message={message}
+      subscriptionBadgeCustomMonths={subscriptionBadgeCustomMonths}
+      subscriptionBadgeVersion={subscriptionBadgeVersion}
+      subscriptionBadgeImageSources={subscriptionBadgeImageSources}
+      isMasked={isMasked}
+      profileContext={profileContext}
+    />
+  );
 });
 
 function TextMessage({
+  creatorId,
   message,
+  subscriptionBadgeCustomMonths,
+  subscriptionBadgeVersion,
+  subscriptionBadgeImageSources,
   isMasked,
   profileContext,
 }: {
+  creatorId: string;
   message: LiveChatMessage;
+  subscriptionBadgeCustomMonths: number[];
+  subscriptionBadgeVersion: string | null;
+  subscriptionBadgeImageSources?: Record<number, string>;
   isMasked: boolean;
   profileContext: LiveChatProfileContext | null;
 }) {
   // 채널 이모지(:pp-<uuid>:)도 이미지로 렌더한다 — context는 memo된 MessageItem을 건너뛰고
   // 소비처(여기)만 다시 그리므로 가상화 목록에서도 안전하다.
   const { stickers: channelStickers } = useChannelStickers();
-  // 동시 보유 역할들(매핑 단계에서 sender_role + metadata 로 합성). 여러 뱃지를 가로로 나열한다.
-  const roles: LiveChatRole[] = message.senderRoles ?? [];
+  // 동시 보유 역할들(매핑 단계에서 sender_role + metadata 로 합성). 구독자는 N개월 티콘으로 표시하므로
+  // 역할 아이콘 뱃지에서는 제외한다(중복 방지). 팝오버 카드에는 전체 역할을 그대로 넘긴다.
+  const allRoles: LiveChatRole[] = message.senderRoles ?? [];
+  const roleBadges = allRoles.filter((role) => role !== "subscriber");
+  const showSubscriptionBadge = creatorId.length > 0 && Boolean(message.isSubscriber);
+  const hasPrefix = roleBadges.length > 0 || showSubscriptionBadge;
   // OBS 채팅 오버레이와 같은 규칙으로 닉네임별 랜덤(해시) 컬러를 적용한다.
   const nicknameColor = getLiveChatOverlayNicknameColor(
     message.author ?? "",
@@ -263,11 +308,21 @@ function TextMessage({
     // 뱃지(20px)·이모지(28px)·닉네임·본문이 한 줄에 섞여도 같은 축에 세로 중앙 정렬되게 한다 —
     // 이모지(align-middle)가 라인을 늘려도 뱃지 묶음을 align-middle로 같은 중심에 맞춘다.
     <p className="min-w-0 text-sm leading-5 wrap-break-word">
-      {roles.length > 0 ? (
+      {hasPrefix ? (
         <span className="mr-1.5 inline-flex items-center gap-0.5 align-middle">
-          {roles.map((badgeRole) => (
+          {roleBadges.map((badgeRole) => (
             <LiveChatRoleBadge key={badgeRole} role={badgeRole} withTooltip />
           ))}
+          {showSubscriptionBadge ? (
+            <LiveSubscriptionBadge
+              creatorId={creatorId}
+              totalMonths={message.subscriptionTotalMonths}
+              customMonths={subscriptionBadgeCustomMonths}
+              version={subscriptionBadgeVersion}
+              imageSourcesByMonth={subscriptionBadgeImageSources}
+              withTooltip
+            />
+          ) : null}
         </span>
       ) : null}
       {profileContext && message.senderId ? (
@@ -276,7 +331,7 @@ function TextMessage({
           targetUserId={message.senderId}
           fallbackNickname={message.author ?? ""}
           nicknameColor={nicknameColor}
-          senderRoles={roles}
+          senderRoles={allRoles}
         />
       ) : (
         <span className="mr-1.5 align-middle font-medium" style={{ color: nicknameColor }}>

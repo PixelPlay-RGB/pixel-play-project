@@ -8,14 +8,20 @@ import { cookies } from "next/headers";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { createWriteClientForAction } from "@/actions/common/admin-client-action";
 import { getAuthenticatedActorId } from "@/actions/common/authenticated-actor";
+import { USER_MEDIA_BUCKET } from "@/constants/common/storage";
 import {
   ANON_VIEWER_COOKIE,
   LIVE_CHAT_MESSAGE_MAX_LENGTH,
   LIVE_DONATION_MESSAGE_MAX_LENGTH,
 } from "@/constants/live/live";
+import { createAdminClient } from "@/lib/supabase/admin-client";
 import type { AppActionResult } from "@/types/common/action";
 import type { Json } from "@/types/database.types";
-import type { SendLiveMessageResult } from "@/types/live/live";
+import type {
+  CreatorSubscriptionActionResult,
+  CreatorSubscriptionStatus,
+  SendLiveMessageResult,
+} from "@/types/live/live";
 import {
   isKnownDonationRpcError,
   isKnownMessageRpcError,
@@ -24,6 +30,15 @@ import {
 } from "@/utils/common/app-message";
 import { isRecord } from "@/utils/common/json";
 import { isUuid } from "@/utils/common/uuid";
+import {
+  LIVE_SUBSCRIPTION_BADGE_STORAGE_LIST_LIMIT,
+  readLiveSubscriptionBadgeAssetInfo,
+  type LiveSubscriptionBadgeAssetInfo,
+} from "@/utils/live/live-subscription-badge";
+import {
+  isKnownLiveSubscriptionRpcError,
+  resolveLiveSubscriptionRpcErrorCode,
+} from "@/utils/live/live-subscription-rpc-error";
 import { signAnonViewerKey, verifyAnonViewerKey } from "@/utils/live/live-security";
 
 // send_live_message_v4의 jsonb 응답({ messageId, moderated })을 앱 타입으로 정규화한다.
@@ -40,6 +55,46 @@ function normalizeSendLiveMessageResult(data: unknown): SendLiveMessageResult | 
   if (!moderated && !messageId) return null;
 
   return { messageId: messageId ?? null, moderated };
+}
+
+const CREATOR_SUBSCRIPTION_STATUSES: readonly CreatorSubscriptionStatus[] = [
+  "active",
+  "expired",
+  "canceled",
+];
+
+function isCreatorSubscriptionStatus(value: unknown): value is CreatorSubscriptionStatus {
+  return CREATOR_SUBSCRIPTION_STATUSES.includes(value as CreatorSubscriptionStatus);
+}
+
+function normalizeCreatorSubscriptionResult(data: unknown): CreatorSubscriptionActionResult | null {
+  if (!isRecord(data)) return null;
+
+  const id = data.id;
+  const isSubscribed = data.isSubscribed;
+  const alreadySubscribed = data.alreadySubscribed;
+  const startedAt = data.startedAt;
+  const endAt = data.endAt;
+  const totalMonths = data.totalMonths;
+  const status = data.status;
+
+  if (typeof id !== "string") return null;
+  if (typeof isSubscribed !== "boolean") return null;
+  if (typeof alreadySubscribed !== "boolean") return null;
+  if (typeof startedAt !== "string") return null;
+  if (typeof endAt !== "string") return null;
+  if (typeof totalMonths !== "number") return null;
+  if (!isCreatorSubscriptionStatus(status)) return null;
+
+  return {
+    id,
+    isSubscribed,
+    alreadySubscribed,
+    startedAt,
+    endAt,
+    totalMonths,
+    status,
+  };
 }
 
 const LIVE_DRAW_PARTICIPATION_SOURCE = "live_draw_participation";
@@ -108,6 +163,86 @@ export async function sendLiveMessageAction(
   }
 
   return { success: true, data: result };
+}
+
+export async function subscribeCreatorAction({
+  creatorId,
+}: {
+  creatorId: string;
+}): Promise<AppActionResult<CreatorSubscriptionActionResult>> {
+  if (!creatorId || !isUuid(creatorId)) {
+    return { success: false, code: APP_MESSAGE_CODE.error.live.subscriptionFailed };
+  }
+
+  const actor = await getAuthenticatedActorId({
+    logLabel: "라이브 구독 중 인증 사용자 조회 실패",
+  });
+
+  if (!actor.success) {
+    return { success: false, code: actor.result.code };
+  }
+
+  const client = await createWriteClientForAction<CreatorSubscriptionActionResult>(
+    "라이브 구독 Admin Client 생성 실패",
+    APP_MESSAGE_CODE.error.live.subscriptionFailed,
+  );
+
+  if (!client.success) {
+    return client.result;
+  }
+
+  const { data, error } = await client.supabase.rpc("subscribe_creator", {
+    p_actor_user_id: actor.userId,
+    p_creator_id: creatorId,
+    p_idempotency_key: randomUUID(),
+  });
+
+  if (error) {
+    if (!isKnownLiveSubscriptionRpcError(error)) {
+      console.error("라이브 구독 RPC 실패", error);
+    }
+
+    return {
+      success: false,
+      code: resolveLiveSubscriptionRpcErrorCode(error),
+    };
+  }
+
+  const result = normalizeCreatorSubscriptionResult(data);
+
+  if (!result) {
+    console.error("라이브 구독 RPC 응답 형식 오류", data);
+    return { success: false, code: APP_MESSAGE_CODE.error.live.subscriptionFailed };
+  }
+
+  return {
+    success: true,
+    code: APP_MESSAGE_CODE.success.live.subscribed,
+    data: result,
+  };
+}
+
+export async function getLiveSubscriptionBadgeAssetsAction(
+  creatorId: string,
+): Promise<AppActionResult<LiveSubscriptionBadgeAssetInfo>> {
+  if (!creatorId || !isUuid(creatorId)) {
+    return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
+  }
+
+  const supabase = createAdminClient();
+  const { data, error } = await supabase.storage
+    .from(USER_MEDIA_BUCKET)
+    .list(`${creatorId}/subscription`, {
+      limit: LIVE_SUBSCRIPTION_BADGE_STORAGE_LIST_LIMIT,
+      sortBy: { column: "name", order: "asc" },
+    });
+
+  if (error) {
+    console.error("라이브 구독 배지 목록 조회 실패", error);
+    return { success: false, code: APP_MESSAGE_CODE.error.common.unknown };
+  }
+
+  return { success: true, data: readLiveSubscriptionBadgeAssetInfo(data ?? null) };
 }
 
 export async function voteLivePollAction(pollId: string, optionId: string): Promise<boolean> {

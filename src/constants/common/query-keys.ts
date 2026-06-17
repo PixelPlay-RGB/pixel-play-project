@@ -24,6 +24,10 @@ export const QUERY_KEYS = {
       [...QUERY_KEYS.live.all, "watch", creatorId, userId].filter((v) => v !== undefined),
     messages: (broadcastId?: string) =>
       [...QUERY_KEYS.live.all, "messages", broadcastId].filter((v) => v !== undefined),
+    subscriptionBadgeAssets: (creatorId?: string) =>
+      [...QUERY_KEYS.live.all, "subscription-badge-assets", creatorId].filter(
+        (v) => v !== undefined,
+      ),
     // 시청자 본인의 채팅 역할 스냅샷(후원 성공 시 donor로 즉시 승격) — 낙관적 메시지 뱃지용.
     // userId까지 키에 포함해 같은 브라우저에서 계정이 바뀌어도 이전 유저 역할 캐시가 재사용되지 않게 한다.
     viewerRole: (creatorId?: string, userId?: string) =>

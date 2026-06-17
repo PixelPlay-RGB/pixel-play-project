@@ -8,6 +8,7 @@ import type { AppActionResult } from "@/types/common/action";
 import type { Json } from "@/types/database.types";
 import type {
   UserDonationSnapshot,
+  UserSubscriptionSpendHistoryItem,
   UserSentDonationItem,
   UserWalletChargeHistoryItem,
   WalletTransactionStatus,
@@ -96,6 +97,9 @@ function buildUserDonationSnapshot(
   const chargeHistories = readArray(snapshotObject?.chargeHistories)
     .map(readChargeHistory)
     .filter((item): item is UserWalletChargeHistoryItem => item !== null);
+  const subscriptionSpendHistories = readArray(snapshotObject?.subscriptionSpendHistories)
+    .map(readSubscriptionSpendHistory)
+    .filter((item): item is UserSubscriptionSpendHistoryItem => item !== null);
 
   return {
     paymentCustomerKey,
@@ -114,6 +118,7 @@ function buildUserDonationSnapshot(
     },
     sentDonations,
     chargeHistories,
+    subscriptionSpendHistories,
   };
 }
 
@@ -197,6 +202,28 @@ function readChargeHistory(value: Json): UserWalletChargeHistoryItem | null {
     status: readTransactionStatus(item.status),
     amount,
     balanceAfter: readNullableNumber(item.balanceAfter),
+    createdAt,
+  };
+}
+
+function readSubscriptionSpendHistory(value: Json): UserSubscriptionSpendHistoryItem | null {
+  const item = readObject(value);
+  const id = readText(item?.id);
+  const createdAt = readText(item?.createdAt);
+  const creatorId = readText(item?.creatorId);
+  const amount = readNumber(item?.amount, readNumber(item?.amountDelta, 0));
+
+  if (!item || !id || !createdAt || !creatorId || amount <= 0) {
+    return null;
+  }
+
+  return {
+    id,
+    status: readTransactionStatus(item.status),
+    amount,
+    balanceAfter: readNullableNumber(item.balanceAfter),
+    creatorId,
+    creatorNickname: readText(item.creatorNickname) || "알 수 없음",
     createdAt,
   };
 }

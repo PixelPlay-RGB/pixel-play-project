@@ -281,6 +281,7 @@ export function LiveVideoPlayer({
   const [isStreamOffline, setIsStreamOffline] = useState(false);
   useEffect(() => {
     if (playbackState === "playing") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsStreamOffline(false);
       return;
     }

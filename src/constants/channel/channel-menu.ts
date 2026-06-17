@@ -2,12 +2,12 @@
 import type { ChannelMenuItem } from "@/types/channel/channel-menu";
 import {
   BarChart3,
-  Crown,
   HandCoins,
   MessageSquareText,
   ShieldCheck,
   SlidersHorizontal,
   UserX,
+  UsersRound,
   Users,
 } from "lucide-react";
 
@@ -41,8 +41,16 @@ export const CHANNEL_MENU_GROUPS: ChannelMenuGroup[] = [
       {
         id: "subscription",
         label: "구독",
-        icon: Crown,
-        children: [{ id: "subscription-emoji", label: "이모지", href: "/channel/emoji" }],
+        icon: UsersRound,
+        children: [
+          { id: "subscribers", label: "구독자", href: "/channel/subscribers" },
+          {
+            id: "subscription-benefits",
+            label: "구독 혜택",
+            href: "/channel/subscription-benefits",
+          },
+          { id: "subscription-emoji", label: "이모지", href: "/channel/emoji" },
+        ],
       },
     ],
   },

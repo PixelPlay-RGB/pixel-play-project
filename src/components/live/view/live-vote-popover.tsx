@@ -1,7 +1,7 @@
 "use client";
 // 투표 참여와 라이브 상호작용 결과를 채팅 패널 액션 팝오버로 제공합니다.
 
-import { useId, useMemo, useRef, useState, type RefObject } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type RefObject } from "react";
 import { Check, Crown, FerrisWheel, Sparkles, Trophy, X } from "lucide-react";
 import { motion } from "motion/react";
 
@@ -832,25 +832,31 @@ export function LiveVotePopover({
 
   // 열어둔 채 방송이 종료되면(disabled 전환) 즉시 닫는다.
   // effect 내 setState는 lint 에러(set-state-in-effect)라 렌더 중 가드된 setState 패턴을 쓴다.
-  if (disabled && open) {
-    setOpen(false);
-  }
-
   const currentInteraction = selectCurrentInteraction(polls, interactionNotices);
   // 진행 중·종료 기록이 모두 없으면 열어도 보여줄 것이 없으므로 트리거를 비활성화한다.
   const hasInteraction = currentInteraction.type !== "empty";
   const triggerLabel = getTriggerLabel(currentInteraction);
+  const rouletteNoticeId =
+    !disabled && currentInteraction.type === "roulette" && currentInteraction.mode === "active"
+      ? currentInteraction.notice.id
+      : null;
+  const visibleOpen = disabled ? false : open;
 
-  if (
-    !disabled &&
-    currentInteraction.type === "roulette" &&
-    currentInteraction.mode === "active" &&
-    autoOpenedRouletteNoticeIdRef.current !== currentInteraction.notice.id &&
-    !open
-  ) {
-    autoOpenedRouletteNoticeIdRef.current = currentInteraction.notice.id;
-    setOpen(true);
-  }
+  useEffect(() => {
+    if (!disabled || !open) return;
+
+    const timer = window.setTimeout(() => setOpen(false), 0);
+    return () => window.clearTimeout(timer);
+  }, [disabled, open]);
+
+  useEffect(() => {
+    if (!rouletteNoticeId || open) return;
+    if (autoOpenedRouletteNoticeIdRef.current === rouletteNoticeId) return;
+
+    autoOpenedRouletteNoticeIdRef.current = rouletteNoticeId;
+    const timer = window.setTimeout(() => setOpen(true), 0);
+    return () => window.clearTimeout(timer);
+  }, [rouletteNoticeId, open]);
 
   function handleOpenChange(next: boolean) {
     if (next && !isLoggedIn && shouldPromptLoginOnOpen(currentInteraction)) {
@@ -894,7 +900,7 @@ export function LiveVotePopover({
           <Sparkles className="size-4" />
           {triggerLabel}
         </Button>
-        <Dialog open={open} onOpenChange={handleOpenChange}>
+        <Dialog open={visibleOpen} onOpenChange={handleOpenChange}>
           <DialogContent
             container={portalContainer}
             className="max-h-[calc(100vh-1rem)] gap-4 overflow-y-auto"
@@ -908,7 +914,7 @@ export function LiveVotePopover({
   }
 
   return (
-    <Popover open={open} onOpenChange={handleOpenChange}>
+    <Popover open={visibleOpen} onOpenChange={handleOpenChange}>
       <PopoverTrigger
         render={
           <Button

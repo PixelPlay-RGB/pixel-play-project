@@ -27,7 +27,11 @@ const DONATION_BANNER_TOP_INSET_PX = 88;
 const SCROLL_TO_LATEST_VISIBLE_THRESHOLD_PX = 150;
 
 interface Props {
+  creatorId: string;
   messages: LiveChatMessage[];
+  subscriptionBadgeCustomMonths?: number[];
+  subscriptionBadgeVersion?: string | null;
+  subscriptionBadgeImageSources?: Record<number, string>;
   donations: LiveDonation[];
   polls: LivePoll[];
   interactionNotices?: LiveInteractionNotice[];
@@ -88,7 +92,11 @@ interface Props {
 }
 
 export function LiveChatBody({
+  creatorId,
   messages,
+  subscriptionBadgeCustomMonths,
+  subscriptionBadgeVersion,
+  subscriptionBadgeImageSources,
   donations,
   polls,
   interactionNotices,
@@ -189,7 +197,11 @@ export function LiveChatBody({
           viewportClassName="overscroll-contain"
         >
           <LiveChatMessageList
+            creatorId={creatorId}
             messages={messages}
+            subscriptionBadgeCustomMonths={subscriptionBadgeCustomMonths}
+            subscriptionBadgeVersion={subscriptionBadgeVersion}
+            subscriptionBadgeImageSources={subscriptionBadgeImageSources}
             cleanbotEnabled={cleanbotEnabled}
             topInsetPx={DONATION_BANNER_TOP_INSET_PX}
             scrollRef={chatScrollRef}

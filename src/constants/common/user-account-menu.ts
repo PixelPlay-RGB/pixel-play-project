@@ -1,6 +1,6 @@
 // 사용자 계정 메뉴의 공통 항목 상수를 정의합니다.
 import type { LucideIcon } from "lucide-react";
-import { Heart, Key, LogOut, Radio, Tv, User, UserRoundCheck } from "lucide-react";
+import { BadgeCheck, Heart, Key, LogOut, Radio, Tv, User, UserRoundCheck } from "lucide-react";
 
 export type UserAccountLinkMenuItem = {
   type: "link";
@@ -72,6 +72,14 @@ export const USER_ACCOUNT_FOLLOWING_MENU_ITEM: UserAccountLinkMenuItem = {
   icon: UserRoundCheck,
 };
 
+export const USER_ACCOUNT_SUBSCRIPTION_MENU_ITEM: UserAccountLinkMenuItem = {
+  type: "link",
+  id: "subscriptions",
+  label: "내 구독",
+  href: "/user/subscriptions",
+  icon: BadgeCheck,
+};
+
 export const USER_ACCOUNT_PASSWORD_MENU_ITEM: UserAccountDialogMenuItem = {
   type: "changePassword",
   id: "changePassword",
@@ -106,5 +114,6 @@ export const USER_ACCOUNT_SIDEBAR_MENU_ITEMS: UserAccountMenuItem[] = [
   USER_ACCOUNT_PROFILE_MENU_ITEM,
   ...USER_ACCOUNT_PRIMARY_MENU_ITEMS,
   USER_ACCOUNT_FOLLOWING_MENU_ITEM,
+  USER_ACCOUNT_SUBSCRIPTION_MENU_ITEM,
   USER_ACCOUNT_DONATION_MENU_ITEM,
 ];

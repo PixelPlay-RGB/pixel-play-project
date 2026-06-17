@@ -8,6 +8,8 @@ export const LIVE_LABEL = {
   chatRuleAccept: "규칙 확인하고 채팅하기",
   live: "LIVE",
   chat: "라이브 채팅",
+  subscribe: "구독",
+  subscribed: "구독중",
   follow: "팔로우",
   confirm: "확인",
   close: "닫기",

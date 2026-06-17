@@ -1,4 +1,4 @@
-export type Json =
+﻿export type Json =
   | string
   | number
   | boolean
@@ -649,6 +649,91 @@ export type Database = {
             columns: ["subscriber_id"]
             isOneToOne: false
             referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      creator_subscription_payment: {
+        Row: {
+          amount: number
+          approved_at: string | null
+          canceled_at: string | null
+          created_at: string
+          creator_id: string
+          failed_at: string | null
+          failure_code: string | null
+          failure_message: string | null
+          id: string
+          idempotency_key: string
+          metadata: Json
+          order_id: string
+          payment_key: string | null
+          payment_status: Database["public"]["Enums"]["creator_subscription_payment_status"]
+          provider: string
+          requested_at: string
+          subscriber_id: string
+          subscription_id: string | null
+        }
+        Insert: {
+          amount: number
+          approved_at?: string | null
+          canceled_at?: string | null
+          created_at?: string
+          creator_id: string
+          failed_at?: string | null
+          failure_code?: string | null
+          failure_message?: string | null
+          id?: string
+          idempotency_key: string
+          metadata?: Json
+          order_id: string
+          payment_key?: string | null
+          payment_status?: Database["public"]["Enums"]["creator_subscription_payment_status"]
+          provider?: string
+          requested_at?: string
+          subscriber_id: string
+          subscription_id?: string | null
+        }
+        Update: {
+          amount?: number
+          approved_at?: string | null
+          canceled_at?: string | null
+          created_at?: string
+          creator_id?: string
+          failed_at?: string | null
+          failure_code?: string | null
+          failure_message?: string | null
+          id?: string
+          idempotency_key?: string
+          metadata?: Json
+          order_id?: string
+          payment_key?: string | null
+          payment_status?: Database["public"]["Enums"]["creator_subscription_payment_status"]
+          provider?: string
+          requested_at?: string
+          subscriber_id?: string
+          subscription_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_subscription_payment_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_subscription_payment_subscriber_id_fkey"
+            columns: ["subscriber_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_subscription_payment_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "creator_subscription"
             referencedColumns: ["id"]
           },
         ]
@@ -1352,6 +1437,14 @@ export type Database = {
       }
       check_email_exists: { Args: { target_email: string }; Returns: boolean }
       claim_live_clip_jobs: { Args: { p_limit?: number }; Returns: Json }
+      cancel_creator_subscription: {
+        Args: {
+          p_actor_user_id: string
+          p_creator_id?: string
+          p_subscription_id?: string
+        }
+        Returns: Json
+      }
       community_comment_to_json: {
         Args: { p_comment_id: string; p_viewer_id: string }
         Returns: Json
@@ -1702,6 +1795,10 @@ export type Database = {
         Args: { p_actor_user_id: string; p_target_user_id: string }
         Returns: undefined
       }
+      renew_due_creator_subscriptions: {
+        Args: { p_limit?: number }
+        Returns: Json
+      }
       reorder_channel_banners: {
         Args: { p_actor_user_id: string; p_banner_ids: string[] }
         Returns: Json
@@ -1854,7 +1951,7 @@ export type Database = {
         Returns: string
       }
       subscribe_creator: {
-        Args: { p_actor_user_id: string; p_creator_id: string }
+        Args: { p_actor_user_id: string; p_creator_id: string; p_idempotency_key?: string }
         Returns: Json
       }
       sweep_live_viewer_counts: { Args: never; Returns: undefined }
@@ -1950,6 +2047,11 @@ export type Database = {
       }
     }
     Enums: {
+      creator_subscription_payment_status:
+        | "pending"
+        | "succeeded"
+        | "failed"
+        | "canceled"
       creator_subscription_status: "active" | "expired" | "canceled"
       gender: "male" | "female" | "none"
       live_chat_scope: "authenticated" | "follower" | "manager"
@@ -1964,7 +2066,7 @@ export type Database = {
       message_type: "text" | "system"
       oauth_provider: "google" | "github" | "email"
       wallet_transaction_status: "pending" | "succeeded" | "failed" | "canceled"
-      wallet_transaction_type: "charge" | "donation_spend" | "refund"
+      wallet_transaction_type: "charge" | "donation_spend" | "refund" | "subscription_spend"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2092,6 +2194,12 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      creator_subscription_payment_status: [
+        "pending",
+        "succeeded",
+        "failed",
+        "canceled",
+      ],
       creator_subscription_status: ["active", "expired", "canceled"],
       gender: ["male", "female", "none"],
       live_chat_scope: ["authenticated", "follower", "manager"],
@@ -2101,7 +2209,7 @@ export const Constants = {
       message_type: ["text", "system"],
       oauth_provider: ["google", "github", "email"],
       wallet_transaction_status: ["pending", "succeeded", "failed", "canceled"],
-      wallet_transaction_type: ["charge", "donation_spend", "refund"],
+      wallet_transaction_type: ["charge", "donation_spend", "refund", "subscription_spend"],
     },
   },
 } as const

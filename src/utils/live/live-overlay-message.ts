@@ -27,10 +27,14 @@ export function mapLiveMessageToChatOverlayItem(
       readString(metadata.senderNickname) ??
       options.authorFallback ??
       LIVE_OVERLAY_DEFAULT_VIEWER_NAME;
+    const isCreator = message.sender_id === options.creatorId;
+    const isDonor = metadata.isDonor === true;
+    const isSubscriber = metadata.isSubscriber === true;
 
     const isHost = message.sender_role === "creator" || message.sender_id === options.creatorId;
     const overlayMessage: LiveChatOverlayMessage = {
       id: message.id,
+      creatorId: options.creatorId,
       kind: "chat",
       author,
       content: message.content,
@@ -42,6 +46,10 @@ export function mapLiveMessageToChatOverlayItem(
         isDonor: metadata.isDonor === true,
         isSubscriber: metadata.isSubscriber === true,
       }),
+      // 구독 N개월 티콘(LiveSubscriptionBadge)용 데이터 — 구독 기능 보존.
+      isSubscriber,
+      subscriptionTotalMonths: readNumber(metadata.subscriptionTotalMonths),
+      role: isCreator ? "creator" : isDonor ? "donor" : isSubscriber ? "subscriber" : undefined,
       tone: isHost ? "brand" : undefined,
     };
 
@@ -62,6 +70,7 @@ export function mapLiveMessageToChatOverlayItem(
 
     const overlayMessage: LiveChatOverlayMessage = {
       id: message.id,
+      creatorId: options.creatorId,
       kind: "donation",
       author,
       content: message.content,
