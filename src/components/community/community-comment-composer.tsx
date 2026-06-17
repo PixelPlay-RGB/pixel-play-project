@@ -73,7 +73,8 @@ export default function CommunityCommentComposer({
     if (result.success) {
       onSubmitted?.();
     } else {
-      setContent(value);
+      // 전송 사이 사용자가 새로 입력했다면 덮어쓰지 않고, 입력칸이 여전히 비어있을 때만 복원한다.
+      setContent((current) => (current === "" ? value : current));
     }
   };
 

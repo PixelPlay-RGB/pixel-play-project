@@ -27,13 +27,13 @@ import { Dispatch, SetStateAction } from "react";
 interface Props {
   isCancelling: boolean;
   setIsCancelling: Dispatch<SetStateAction<boolean>>;
-  isSubmitting: boolean;
+  isDisabled: boolean;
 }
 
 export default function CompleteProfileAbandonAlert({
   isCancelling,
   setIsCancelling,
-  isSubmitting,
+  isDisabled,
 }: Props) {
   const router = useRouter();
   const setUser = useAuthStore((s) => s.setUser);
@@ -72,7 +72,7 @@ export default function CompleteProfileAbandonAlert({
           <Button
             type="button"
             variant="outline"
-            disabled={isSubmitting || isCancelling}
+            disabled={isDisabled || isCancelling}
             className="w-full cursor-pointer py-5 tracking-widest uppercase"
           >
             {isCancelling ? <Spinner /> : "취소"}

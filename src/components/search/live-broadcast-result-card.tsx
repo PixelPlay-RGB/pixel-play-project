@@ -28,28 +28,13 @@ function getFallbackTone(creatorId: string) {
   return "from-live/35 via-slate-900 to-brand/25 dark:from-live/45 dark:to-brand/20";
 }
 
-function formatLiveDuration(startedAt: string | null) {
-  if (!startedAt) {
-    return "방송 중";
-  }
-
-  const startedTime = new Date(startedAt).getTime();
-  const diffMinutes = Math.max(1, Math.floor((Date.now() - startedTime) / 60000));
-
-  if (diffMinutes < 60) {
-    return `${diffMinutes}분째 방송 중`;
-  }
-
-  const hours = Math.floor(diffMinutes / 60);
-  const minutes = diffMinutes % 60;
-
-  return minutes > 0 ? `${hours}시간 ${minutes}분째 방송 중` : `${hours}시간째 방송 중`;
-}
+// 경과 시간을 Date.now()로 한 번 계산하면 멈춘 시계처럼 보여, 라이브 여부만 단순 표기한다.
+const LIVE_DURATION_LABEL = "방송 중";
 
 export default function LiveBroadcastResultCard({ result }: Props) {
   const avatarSrc = getAvatarImageSrc(result.creator_photo_url);
   const fallbackText = getAvatarFallbackText(result.creator_nickname, 1);
-  const liveDuration = formatLiveDuration(result.started_at);
+  const liveDuration = LIVE_DURATION_LABEL;
   const tagLabels = getLiveSearchTagLabels(result.tags);
 
   return (

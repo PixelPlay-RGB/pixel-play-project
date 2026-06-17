@@ -230,6 +230,10 @@ export const APP_MESSAGE = {
         title: "인증 정보 조회 실패",
         description: "잠시 후 다시 시도해주세요.",
       },
+      authInfoUpdateFailed: {
+        title: "인증 정보 수정 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
       sessionNotFound: {
         title: "인증 정보 없음",
         description: "다시 로그인한 뒤 시도해주세요.",
@@ -320,10 +324,6 @@ export const APP_MESSAGE = {
       chargeFailed: {
         title: "충전 실패",
         description: "결제가 완료되지 않았습니다. 다시 충전해 주세요.",
-      },
-      chargeCanceled: {
-        title: "충전 취소",
-        description: "결제가 취소되어 후원 지갑에 반영되지 않았습니다.",
       },
       paymentWindowConfigMissing: {
         title: "결제 키 필요",
@@ -748,6 +748,12 @@ export const APP_MESSAGE = {
       featureNotReady: {
         title: "기능 준비 중",
         description: "조금만 기다려주세요. 곧 제공될 예정이에요.",
+      },
+    },
+    donation: {
+      chargeCanceled: {
+        title: "충전 취소",
+        description: "결제가 취소되어 후원 지갑에 반영되지 않았습니다.",
       },
     },
     live: {

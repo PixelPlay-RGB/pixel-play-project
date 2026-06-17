@@ -82,7 +82,7 @@ export function LiveDonationBanner({ donations }: Props) {
                       {top3[0]?.author ?? "-"}
                     </span>
                     <span className="text-live shrink-0 text-sm font-bold">
-                      {top3[0] ? `${formatDonationAmount(top3[0].amount)}P` : ""}
+                      {top3[0] && `${formatDonationAmount(top3[0].amount)}P`}
                     </span>
                   </div>
 
@@ -100,7 +100,7 @@ export function LiveDonationBanner({ donations }: Props) {
                           {top3[idx]?.author ?? "-"}
                         </span>
                         <span className="text-live shrink-0 text-xs font-semibold">
-                          {top3[idx] ? `${formatDonationAmount(top3[idx].amount)}P` : ""}
+                          {top3[idx] && `${formatDonationAmount(top3[idx].amount)}P`}
                         </span>
                       </div>
                     ))}

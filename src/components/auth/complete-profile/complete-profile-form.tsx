@@ -209,7 +209,7 @@ export default function CompleteProfileForm({ next }: Props) {
       </Button>
       <CompleteProfileAbandonAlert
         isCancelling={isCancelling}
-        isSubmitting={isBusy}
+        isDisabled={isFormBusy}
         setIsCancelling={setIsCancelling}
       />
     </form>

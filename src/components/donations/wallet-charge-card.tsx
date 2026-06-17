@@ -228,7 +228,7 @@ export function WalletChargeCard({ customerKey }: Props) {
           // 콘솔 에러/실패 상태 대신 안내 토스트만 띄우고 다시 결제할 수 있게 ready로 되돌린다.
           hasRequestedPayment = false;
           if (isTossPaymentCancelError(error)) {
-            toastAppInfo(APP_MESSAGE_CODE.error.donation.chargeCanceled);
+            toastAppInfo(APP_MESSAGE_CODE.info.donation.chargeCanceled);
             setPaymentWindowState("ready");
             return;
           }

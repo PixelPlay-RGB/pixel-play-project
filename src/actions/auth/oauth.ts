@@ -39,13 +39,14 @@ export async function completeOAuthProfileAction(
   // auth.users.user_metadata에도 display_name 반영 (어드민 대시보드 + 세션 일관성)
   const { error: authError } = await supabase.auth.updateUser({
     data: {
+      display_name: nickname,
       name,
     },
   });
 
   if (authError) {
     console.error("OAuth 프로필 완성 중 인증 정보 업데이트 실패", authError);
-    return { success: false, code: APP_MESSAGE_CODE.error.auth.authInfoLoadFailed };
+    return { success: false, code: APP_MESSAGE_CODE.error.auth.authInfoUpdateFailed };
   }
 
   const nicknameCheck = await checkNicknameExists(nickname);

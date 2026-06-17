@@ -99,7 +99,7 @@ export async function updateSession(request: NextRequest) {
     const isEmailSignupInProgress =
       !profile?.nickname && hasEmailProvider(user.app_metadata?.providers);
 
-    if (!profile?.nickname && isEmailSignupInProgress && isPublicRoute(pathname)) {
+    if (isEmailSignupInProgress && isPublicRoute(pathname)) {
       return supabaseResponse;
     }
 

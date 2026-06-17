@@ -98,7 +98,7 @@ export async function completeSignupAction(data: CompleteSignupInput): Promise<A
 
   if (authError) {
     console.error("회원가입 완료 중 인증 정보 업데이트 실패", authError);
-    return { success: false, code: APP_MESSAGE_CODE.error.auth.authInfoLoadFailed };
+    return { success: false, code: APP_MESSAGE_CODE.error.auth.authInfoUpdateFailed };
   }
 
   const nicknameCheck = await checkNicknameExists(nickname);

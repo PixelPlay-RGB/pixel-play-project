@@ -5,14 +5,20 @@ import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { useNullableUser } from "@/hooks/profile/use-profile";
 import { toastAppSuccess } from "@/utils/common/toast-message";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useRef } from "react";
 
 function AuthToastInner({ nickname }: { nickname: string }) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
+  // searchParams 변경으로 effect가 재실행돼도 토스트는 1회만 띄운다.
+  const hasHandledRef = useRef(false);
 
   useEffect(() => {
+    if (hasHandledRef.current) {
+      return;
+    }
+
     const isLinked = searchParams.get("linked");
     const isLogin = searchParams.get("login");
     const isWelcome = searchParams.get("welcome");
@@ -20,6 +26,8 @@ function AuthToastInner({ nickname }: { nickname: string }) {
     if (!isLinked && !isLogin && !isWelcome) {
       return;
     }
+
+    hasHandledRef.current = true;
 
     const params = new URLSearchParams(searchParams.toString());
 

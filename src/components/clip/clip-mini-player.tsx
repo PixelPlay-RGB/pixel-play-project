@@ -83,7 +83,11 @@ export const ClipMiniPlayer = forwardRef<ClipMiniPlayerHandle, Props>(function C
         onPause={() => setIsPlaying(false)}
         onEnded={() => onRequestNext?.()}
         onTimeUpdate={(event) => setProgress(event.currentTarget.currentTime)}
-        onLoadedMetadata={(event) => setDuration(event.currentTarget.duration)}
+        onLoadedMetadata={(event) => {
+          setDuration(event.currentTarget.duration);
+          // autoplay 거부 시 onPause만 의존하면 1프레임 동안 재생 중으로 오표시된다 — 실제 상태로 동기화.
+          setIsPlaying(!event.currentTarget.paused);
+        }}
       />
 
       {/* 일시정지 중에는 중앙에 큰 재생 아이콘을 띄운다(방송 시청 뷰와 동일) */}

@@ -3,7 +3,6 @@
 // 탐색하고, URL은 history.replaceState로 동기화합니다(서버 리렌더·히스토리 오염 없음).
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { incrementLiveClipViewCountAction } from "@/actions/clip/clip";
 import { CLIP_SHORTS_LIST_LIMIT } from "@/constants/clip/clip";
 import { useChannelClips } from "@/hooks/clip/use-channel-clips";
 import type { LiveClip } from "@/types/clip/clip";
@@ -42,11 +41,14 @@ export function useClipShorts(initialClip: LiveClip) {
   const goNext = useCallback(() => navigate(nextClip, 1), [navigate, nextClip]);
 
   // 조회수: 세션 내 클립당 1회만 증가(fire-and-forget, 위/아래로 되돌아와도 중복 없음).
+  // 익명 뷰어 쿠키 set이 라우터 캐시를 무효화하지 않도록 Server Action 대신 라우트 핸들러로 보낸다.
   const countedClipIdsRef = useRef(new Set<string>());
   useEffect(() => {
     if (countedClipIdsRef.current.has(currentClip.id)) return;
     countedClipIdsRef.current.add(currentClip.id);
-    void incrementLiveClipViewCountAction(currentClip.id).catch(() => {});
+    void fetch(`/api/clip/${currentClip.id}/view`, { method: "POST", keepalive: true }).catch(
+      () => {},
+    );
   }, [currentClip.id]);
 
   return {

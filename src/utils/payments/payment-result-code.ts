@@ -7,7 +7,7 @@ import type { AppMessageCode } from "@/constants/common/app-message-code";
 const PAYMENT_STATUS_MESSAGE_CODE: Record<string, AppMessageCode> = {
   charge_success: APP_MESSAGE_CODE.success.donation.chargeConfirmed,
   charge_failed: APP_MESSAGE_CODE.error.donation.chargeFailed,
-  charge_canceled: APP_MESSAGE_CODE.error.donation.chargeCanceled,
+  charge_canceled: APP_MESSAGE_CODE.info.donation.chargeCanceled,
 };
 
 export function getPaymentResultCode(

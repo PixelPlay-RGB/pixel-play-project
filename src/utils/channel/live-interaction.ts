@@ -57,12 +57,12 @@ export function getValidRouletteItems(items: RouletteItem[]) {
 }
 
 export function getRouletteSegments(items: RouletteItem[]) {
-  const itemPercent = 100 / items.length;
-  let currentPercent = 0;
-
   if (items.length === 0) {
     return [];
   }
+
+  const itemPercent = 100 / items.length;
+  let currentPercent = 0;
 
   return items.map<RouletteSegment>((item, index) => {
     const startPercent = currentPercent;
