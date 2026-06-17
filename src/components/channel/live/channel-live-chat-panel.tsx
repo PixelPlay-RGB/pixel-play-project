@@ -9,7 +9,12 @@ import { LIVE_DONATION_MIN_AMOUNT, LIVE_LABEL } from "@/constants/live/live";
 import { useLiveChatSession } from "@/hooks/live/use-live-chat-session";
 import { useLiveDonationRanking } from "@/hooks/live/use-live-donation-ranking";
 import { useLiveMessages } from "@/hooks/live/use-live-messages";
-import type { LiveChatMessage, LiveViewerChatState } from "@/types/live/live";
+import { useAuthStore } from "@/stores/auth";
+import type {
+  LiveChatMessage,
+  LiveChatProfileContext,
+  LiveViewerChatState,
+} from "@/types/live/live";
 import { ExternalLink } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -54,6 +59,7 @@ export default function ChannelLiveChatPanel({ creatorId, chatRuleText, onMessag
   const popoutWindowRef = useRef<Window | null>(null);
   const popoutCheckIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const chatState = STUDIO_CHAT_STATE;
+  const viewerId = useAuthStore((state) => state.user?.id) ?? null;
   const { messages, loadOlderMessages, isLoadingOlder, hasMoreHistory, entryNoticeAnchorId } =
     useLiveMessages(creatorId);
   const { donations } = useLiveDonationRanking(creatorId ?? "");
@@ -62,6 +68,16 @@ export default function ChannelLiveChatPanel({ creatorId, chatRuleText, onMessag
     viewerChatState: chatState,
   });
   const channelLiveChatMessages = useMemo(() => toChannelLiveChatMessages(messages), [messages]);
+
+  // 닉네임 클릭 팝업(프로필/강퇴) — 운영 콘솔은 크리에이터 본인 화면이라 본인이면 강퇴 권한자다.
+  // 채널 단위 강퇴라 broadcastId는 없다(채널 전체 차단). 시청·팝아웃 표면과 동일하게 동작하게 한다.
+  const profileContext = useMemo<LiveChatProfileContext | undefined>(
+    () =>
+      creatorId
+        ? { creatorId, viewerId, canModerate: viewerId === creatorId, broadcastId: null }
+        : undefined,
+    [creatorId, viewerId],
+  );
 
   function handlePopoutOpen(win: Window) {
     popoutWindowRef.current = win;
@@ -134,6 +150,7 @@ export default function ChannelLiveChatPanel({ creatorId, chatRuleText, onMessag
             hasMoreChatHistory={hasMoreHistory}
             entryNoticeAnchorId={entryNoticeAnchorId}
             ruleOpenRequestId={ruleOpenRequestId}
+            profileContext={profileContext}
           />
         )}
       </div>
