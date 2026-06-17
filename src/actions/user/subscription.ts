@@ -34,16 +34,10 @@ export async function cancelCreatorSubscriptionAction(
     return client.result;
   }
 
-  const { data, error } = await client.supabase
-    .from("creator_subscription")
-    .update({
-      status: "canceled",
-    })
-    .eq("id", subscriptionId)
-    .eq("subscriber_id", actor.userId)
-    .eq("status", "active")
-    .select("id")
-    .maybeSingle();
+  const { data, error } = await client.supabase.rpc("cancel_creator_subscription", {
+    p_actor_user_id: actor.userId,
+    p_subscription_id: subscriptionId,
+  });
 
   if (error) {
     console.error("구독 해지 실패", error);
@@ -90,16 +84,10 @@ export async function cancelCreatorSubscriptionByCreatorAction(
     return client.result;
   }
 
-  const { data, error } = await client.supabase
-    .from("creator_subscription")
-    .update({
-      status: "canceled",
-    })
-    .eq("creator_id", creatorId)
-    .eq("subscriber_id", actor.userId)
-    .eq("status", "active")
-    .select("id")
-    .maybeSingle();
+  const { data, error } = await client.supabase.rpc("cancel_creator_subscription", {
+    p_actor_user_id: actor.userId,
+    p_creator_id: creatorId,
+  });
 
   if (error) {
     console.error("구독 해지 실패", error);

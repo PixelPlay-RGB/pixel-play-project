@@ -1,4 +1,5 @@
 "use client";
+// 라이브 채팅과 구독 화면에서 사용하는 구독 개월별 배지 이미지를 렌더링합니다.
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { LIVE_LABEL } from "@/constants/live/live";

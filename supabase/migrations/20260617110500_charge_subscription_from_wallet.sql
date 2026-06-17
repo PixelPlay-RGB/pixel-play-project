@@ -410,16 +410,29 @@ begin
         wallet_subscription.transaction_status,
         wallet_subscription.amount_delta,
         wallet_subscription.balance_after,
-        (wallet_subscription.metadata ->> 'creatorId')::uuid as creator_id,
+        wallet_subscription.metadata_creator_id as creator_id,
         coalesce(creator.nickname, '알 수 없음') as creator_nickname,
         wallet_subscription.created_at
-      from public.wallet_transaction as wallet_subscription
+      from (
+        select
+          wallet_subscription.id,
+          wallet_subscription.transaction_status,
+          wallet_subscription.amount_delta,
+          wallet_subscription.balance_after,
+          case
+            when (wallet_subscription.metadata ->> 'creatorId') ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+              then (wallet_subscription.metadata ->> 'creatorId')::uuid
+            else null
+          end as metadata_creator_id,
+          wallet_subscription.created_at
+        from public.wallet_transaction as wallet_subscription
+        where wallet_subscription.user_id = target_user.id
+          and wallet_subscription.transaction_type = 'subscription_spend'::public.wallet_transaction_type
+          and wallet_subscription.created_at >= v_history_start
+          and wallet_subscription.created_at < v_history_end
+      ) as wallet_subscription
       left join public."user" as creator
-        on creator.id = (wallet_subscription.metadata ->> 'creatorId')::uuid
-      where wallet_subscription.user_id = target_user.id
-        and wallet_subscription.transaction_type = 'subscription_spend'::public.wallet_transaction_type
-        and wallet_subscription.created_at >= v_history_start
-        and wallet_subscription.created_at < v_history_end
+        on creator.id = wallet_subscription.metadata_creator_id
       order by wallet_subscription.created_at desc
     ) as ranked
   ) as subscription_spend_history on true

@@ -280,10 +280,13 @@ export function LiveVideoPlayer({
   // 짧은 버퍼링(waiting↔playing 토글)은 타이머가 매번 리셋돼 오프라인으로 넘어가지 않는다.
   const [isStreamOffline, setIsStreamOffline] = useState(false);
   useEffect(() => {
-    const timer = setTimeout(
-      () => setIsStreamOffline(playbackState !== "playing"),
-      playbackState === "playing" ? 0 : STREAM_OFFLINE_GRACE_MS,
-    );
+    if (playbackState === "playing") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setIsStreamOffline(false);
+      return;
+    }
+
+    const timer = setTimeout(() => setIsStreamOffline(true), STREAM_OFFLINE_GRACE_MS);
     return () => clearTimeout(timer);
   }, [playbackState]);
 

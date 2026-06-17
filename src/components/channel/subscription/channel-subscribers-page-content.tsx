@@ -2,7 +2,8 @@
 // 채널 구독자 목록의 검색·정렬 UI와 구독자 요약 배너를 렌더링합니다.
 
 import { CalendarPlus, Search, UsersRound } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useRef, useTransition } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { SettingsCard } from "@/components/common/settings-card";
 import { SettingsPage } from "@/components/common/settings-page";
@@ -32,7 +33,6 @@ import type {
   ChannelSubscriptionSnapshot,
   ChannelSubscriptionStatus,
 } from "@/utils/channel/channel-subscription";
-import { filterAndSortChannelSubscribers } from "@/utils/channel/channel-subscription";
 import { formatKstDateTimeNumeric } from "@/utils/common/date";
 import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
 
@@ -52,6 +52,8 @@ const STATUS_BADGE: Record<ChannelSubscriptionStatus, { label: string; className
 
 interface Props {
   snapshot: ChannelSubscriptionSnapshot;
+  query: string;
+  sort: ChannelSubscriberSort;
 }
 
 function SubscriberIdentity({ subscriber }: { subscriber: ChannelSubscriberItem }) {
@@ -86,19 +88,42 @@ function SubscriptionStatusBadge({ status }: { status: ChannelSubscriptionStatus
   );
 }
 
-export function ChannelSubscribersPageContent({ snapshot }: Props) {
-  const [query, setQuery] = useState("");
-  const [sort, setSort] = useState<ChannelSubscriberSort>("started_desc");
-
-  const subscribers = useMemo(
-    () => filterAndSortChannelSubscribers(snapshot.subscribers, { query, sort }),
-    [snapshot.subscribers, query, sort],
-  );
+export function ChannelSubscribersPageContent({ snapshot, query, sort }: Props) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const [, startTransition] = useTransition();
+  const subscribers = snapshot.subscribers;
 
   const emptyMessage =
-    snapshot.subscribers.length === 0
+    subscribers.length === 0 && !query
       ? "아직 내 채널을 구독한 사람이 없어요."
       : "검색 조건에 맞는 구독자가 없어요.";
+
+  function replaceSearchParams(next: { query?: string; sort?: ChannelSubscriberSort }) {
+    const params = new URLSearchParams(searchParams.toString());
+    const nextQuery = next.query ?? query;
+    const nextSort = next.sort ?? sort;
+
+    if (nextQuery.trim()) {
+      params.set("query", nextQuery.trim());
+    } else {
+      params.delete("query");
+    }
+
+    if (nextSort === "started_desc") {
+      params.delete("sort");
+    } else {
+      params.set("sort", nextSort);
+    }
+
+    const nextUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
+
+    startTransition(() => {
+      router.replace(nextUrl, { scroll: false });
+    });
+  }
 
   return (
     <SettingsPage
@@ -152,8 +177,13 @@ export function ChannelSubscribersPageContent({ snapshot }: Props) {
             <span className="sr-only">닉네임 검색</span>
             <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
             <Input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
+              key={query}
+              ref={searchInputRef}
+              defaultValue={query}
+              onChange={(event) => {
+                const nextQuery = event.target.value;
+                replaceSearchParams({ query: nextQuery });
+              }}
               placeholder="닉네임 검색"
               className="h-10 pl-9"
             />
@@ -162,7 +192,12 @@ export function ChannelSubscribersPageContent({ snapshot }: Props) {
           <Select
             value={sort}
             items={SORT_OPTIONS}
-            onValueChange={(nextValue) => setSort(nextValue as ChannelSubscriberSort)}
+            onValueChange={(nextValue) =>
+              replaceSearchParams({
+                query: searchInputRef.current?.value ?? query,
+                sort: nextValue as ChannelSubscriberSort,
+              })
+            }
           >
             <SelectTrigger aria-label="구독자 정렬 기준" className="h-10 w-full sm:w-40">
               <SelectValue />

@@ -14,7 +14,10 @@ import {
   parseLiveChatOverlaySnapshot,
   parseLiveDonationAlertOverlaySnapshot,
 } from "@/utils/live/live-overlay-parser";
-import { readLiveSubscriptionBadgeAssetInfo } from "@/utils/live/live-subscription-badge";
+import {
+  LIVE_SUBSCRIPTION_BADGE_STORAGE_LIST_LIMIT,
+  readLiveSubscriptionBadgeAssetInfo,
+} from "@/utils/live/live-subscription-badge";
 import { buildLiveOverlayKey } from "@/utils/live/live-security";
 
 export async function getLiveChatOverlaySnapshot({
@@ -34,7 +37,7 @@ export async function getLiveChatOverlaySnapshot({
       p_limit: LIVE_CHAT_OVERLAY_MESSAGE_LIMIT,
     }),
     supabase.storage.from(USER_MEDIA_BUCKET).list(`${creatorId}/subscription`, {
-      limit: 120,
+      limit: LIVE_SUBSCRIPTION_BADGE_STORAGE_LIST_LIMIT,
       sortBy: { column: "name", order: "asc" },
     }),
   ]);

@@ -6,6 +6,13 @@ import { APP_MESSAGE_CODE } from "../../constants/common/app-message-code.ts";
 
 import { resolveLiveSubscriptionRpcErrorCode } from "./live-subscription-rpc-error.ts";
 
+test("resolveLiveSubscriptionRpcErrorCode maps missing auth", () => {
+  assert.equal(
+    resolveLiveSubscriptionRpcErrorCode({ code: "PX401" }),
+    APP_MESSAGE_CODE.error.auth.authInfoNotFound,
+  );
+});
+
 test("resolveLiveSubscriptionRpcErrorCode maps insufficient wallet balance", () => {
   assert.equal(
     resolveLiveSubscriptionRpcErrorCode({ code: "PX402" }),

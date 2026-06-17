@@ -106,15 +106,19 @@ export function buildChannelSubscriptionSnapshot(
     customBadgeMonths?: readonly number[];
     subscriptionBadgeVersion?: string | null;
     subscriptionBadgeImageSources?: Record<number, string>;
+    summarySubscribers?: readonly ChannelSubscriberItem[];
+    sort?: ChannelSubscriberSort;
   } = {},
 ): ChannelSubscriptionSnapshot {
+  const summarySubscribers = options.summarySubscribers ?? subscribers;
+
   return {
     creatorId: options.creatorId ?? "",
-    activeCount: getActiveChannelSubscriberCount(subscribers, now),
-    monthlyNewCount: getMonthlyNewChannelSubscriberCount(subscribers, now),
+    activeCount: getActiveChannelSubscriberCount(summarySubscribers, now),
+    monthlyNewCount: getMonthlyNewChannelSubscriberCount(summarySubscribers, now),
     subscribers: filterAndSortChannelSubscribers(subscribers, {
       query: "",
-      sort: "started_desc",
+      sort: options.sort ?? "started_desc",
     }),
     customBadgeMonths: [...(options.customBadgeMonths ?? [])],
     subscriptionBadgeVersion: options.subscriptionBadgeVersion ?? null,

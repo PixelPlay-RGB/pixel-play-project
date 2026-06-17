@@ -66,9 +66,16 @@ export async function POST(request: Request) {
     );
   }
 
-  const alreadyActive = await hasActiveCreatorSubscription(creatorId, user.id);
+  const activeSubscriptionResult = await hasActiveCreatorSubscription(creatorId, user.id);
 
-  if (alreadyActive) {
+  if (!activeSubscriptionResult.success) {
+    return NextResponse.json(
+      { code: APP_MESSAGE_CODE.error.live.subscriptionFailed },
+      { status: 500 },
+    );
+  }
+
+  if (activeSubscriptionResult.alreadyActive) {
     return NextResponse.json(
       { code: APP_MESSAGE_CODE.error.live.subscriptionFailed },
       { status: 409 },
@@ -129,8 +136,8 @@ async function hasActiveCreatorSubscription(creatorId: string, subscriberId: str
 
   if (error) {
     console.error("Toss 구독 결제 준비 중 기존 구독 조회 실패", error);
-    return false;
+    return { success: false as const };
   }
 
-  return (data ?? []).length > 0;
+  return { success: true as const, alreadyActive: (data ?? []).length > 0 };
 }

@@ -1,4 +1,4 @@
-export type Json =
+﻿export type Json =
   | string
   | number
   | boolean
@@ -1402,6 +1402,14 @@ export type Database = {
       }
       check_email_exists: { Args: { target_email: string }; Returns: boolean }
       claim_live_clip_jobs: { Args: { p_limit?: number }; Returns: Json }
+      cancel_creator_subscription: {
+        Args: {
+          p_actor_user_id: string
+          p_creator_id?: string
+          p_subscription_id?: string
+        }
+        Returns: Json
+      }
       community_comment_to_json: {
         Args: { p_comment_id: string; p_viewer_id: string }
         Returns: Json

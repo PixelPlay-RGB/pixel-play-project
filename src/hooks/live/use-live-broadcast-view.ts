@@ -97,12 +97,12 @@ export function useLiveBroadcastView(creatorId: string) {
       .then((refetchResult) => {
         if ((refetchResult.data?.viewerRelation?.isSubscribed ?? false) !== next) {
           console.error("구독 상태 refetch 결과가 optimistic 상태와 다름");
-          return;
         }
         setOptimisticSubscribed(null);
       })
       .catch((error) => {
         console.error("subscription state refetch failed", error);
+        setOptimisticSubscribed(null);
       });
   }
 

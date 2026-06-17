@@ -148,12 +148,16 @@ export async function confirmTossCreatorSubscriptionPayment(
     return createConfirmFailure(subscriptionResult.code, subscriptionResult.status);
   }
 
-  await markSubscriptionPaymentSucceeded(
+  const paymentSucceeded = await markSubscriptionPaymentSucceeded(
     subscriptionPayment,
     parsedInput,
     subscriptionResult.subscription,
     tossConfirmResult.data,
   );
+
+  if (!paymentSucceeded) {
+    return createConfirmFailure(APP_MESSAGE_CODE.error.live.subscriptionFailed, 500);
+  }
 
   return {
     success: true,
@@ -415,7 +419,7 @@ async function markSubscriptionPaymentSucceeded(
     approvedAt,
     confirmedAt: new Date().toISOString(),
   };
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("creator_subscription_payment")
     .update({
       payment_status: "succeeded",
@@ -425,11 +429,24 @@ async function markSubscriptionPaymentSucceeded(
       metadata,
     })
     .eq("id", subscriptionPayment.id)
-    .eq("payment_status", "pending");
+    .eq("payment_status", "pending")
+    .select("id")
+    .maybeSingle();
 
   if (error) {
     console.error("Toss 구독 결제 성공 상태 저장 실패", error);
+    return false;
   }
+
+  if (!data) {
+    console.error("Toss 구독 결제 성공 상태 저장 대상 없음", {
+      orderId: subscriptionPayment.order_id,
+      subscriptionPaymentId: subscriptionPayment.id,
+    });
+    return false;
+  }
+
+  return true;
 }
 
 async function markSubscriptionPaymentStatus(

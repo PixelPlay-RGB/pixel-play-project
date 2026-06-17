@@ -31,6 +31,7 @@ import {
 import { isRecord } from "@/utils/common/json";
 import { isUuid } from "@/utils/common/uuid";
 import {
+  LIVE_SUBSCRIPTION_BADGE_STORAGE_LIST_LIMIT,
   readLiveSubscriptionBadgeAssetInfo,
   type LiveSubscriptionBadgeAssetInfo,
 } from "@/utils/live/live-subscription-badge";
@@ -232,7 +233,7 @@ export async function getLiveSubscriptionBadgeAssetsAction(
   const { data, error } = await supabase.storage
     .from(USER_MEDIA_BUCKET)
     .list(`${creatorId}/subscription`, {
-      limit: 120,
+      limit: LIVE_SUBSCRIPTION_BADGE_STORAGE_LIST_LIMIT,
       sortBy: { column: "name", order: "asc" },
     });
 

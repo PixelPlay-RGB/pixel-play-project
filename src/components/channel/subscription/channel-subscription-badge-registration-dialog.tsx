@@ -38,6 +38,10 @@ import {
   CHANNEL_SUBSCRIPTION_BADGE_IMAGE_SIZE,
   CHANNEL_SUBSCRIPTION_BADGE_MAX_FILE_SIZE,
 } from "@/utils/channel/channel-subscription-badge-upload";
+import {
+  isValidLiveSubscriptionBadgeMonth,
+  LIVE_SUBSCRIPTION_BADGE_MIN_CUSTOM_MONTH,
+} from "@/utils/live/live-subscription-badge";
 
 interface Props {
   open: boolean;
@@ -116,7 +120,9 @@ export function SubscriptionBadgeRegistrationDialog({ open, onOpenChange }: Prop
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!month.trim()) {
+    const validMonth = readValidBadgeMonth(month, isCustomMonth);
+
+    if (!validMonth) {
       setFieldError(FORM_MESSAGE.channelSubscription.badgeMonthInvalid);
       return;
     }
@@ -132,7 +138,7 @@ export function SubscriptionBadgeRegistrationDialog({ open, onOpenChange }: Prop
     }
 
     const formData = new FormData();
-    formData.append("month", month);
+    formData.append("month", validMonth);
     formData.append("file", selectedFile);
 
     startTransition(async () => {
@@ -155,7 +161,7 @@ export function SubscriptionBadgeRegistrationDialog({ open, onOpenChange }: Prop
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-h-[calc(100vh-2rem)] gap-0 overflow-hidden rounded-2xl p-0 shadow-xl sm:max-w-xl">
+      <DialogContent className="max-h-dvh gap-0 overflow-hidden rounded-2xl p-0 shadow-xl sm:max-w-xl">
         <DialogHeader className="border-brand/10 bg-brand/5 flex-row items-start gap-4 border-b px-5 pt-5 pr-12 pb-4 text-left sm:px-6">
           <div className="bg-brand/10 text-brand ring-brand/20 flex size-12 shrink-0 items-center justify-center rounded-xl ring-1">
             <ImagePlus className="size-6" aria-hidden />
@@ -169,7 +175,7 @@ export function SubscriptionBadgeRegistrationDialog({ open, onOpenChange }: Prop
         </DialogHeader>
 
         <form className="flex min-h-0 flex-col" onSubmit={handleSubmit}>
-          <div className="flex max-h-[calc(100vh-13rem)] flex-col gap-4 overflow-y-auto px-5 py-5 sm:px-6">
+          <div className="flex max-h-120 flex-col gap-4 overflow-y-auto px-5 py-5 sm:px-6">
             <section className="border-border/70 bg-muted/30 flex flex-col gap-3 rounded-lg border p-4">
               <label htmlFor="subscription-badge-month" className="text-sm font-black">
                 구독뱃지 개월 수
@@ -297,4 +303,22 @@ export function SubscriptionBadgeRegistrationDialog({ open, onOpenChange }: Prop
       </DialogContent>
     </Dialog>
   );
+}
+
+function readValidBadgeMonth(value: string, isCustomMonth: boolean) {
+  const month = Number(value.trim());
+
+  if (!isValidLiveSubscriptionBadgeMonth(month)) {
+    return null;
+  }
+
+  if (isCustomMonth && month < LIVE_SUBSCRIPTION_BADGE_MIN_CUSTOM_MONTH) {
+    return null;
+  }
+
+  if (!isCustomMonth && !BADGE_MONTH_OPTIONS.some((option) => option.value === String(month))) {
+    return null;
+  }
+
+  return String(month);
 }

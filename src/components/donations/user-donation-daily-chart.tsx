@@ -1,5 +1,5 @@
 "use client";
-// 선택한 월의 충전과 방송후원 금액을 일자별 차트로 표시합니다.
+// 선택한 월의 충전과 후원·구독 지출 금액을 일자별 차트로 표시합니다.
 
 import type { DonationHistoryTab } from "@/components/donations/user-donation-history-table";
 import {
@@ -35,7 +35,7 @@ const DONATION_DAILY_CHART_CONFIG = {
     color: "var(--brand)",
   },
   donationAmount: {
-    label: "방송후원",
+    label: "후원·구독",
     color: "var(--live)",
   },
 } satisfies ChartConfig;
@@ -43,7 +43,7 @@ const DONATION_DAILY_CHART_CONFIG = {
 const CHART_HEADER_LABEL: Record<DonationHistoryTab, string> = {
   all: "전체 내역",
   charge: "후원금 충전",
-  donation: "방송후원",
+  donation: "후원·구독",
 };
 
 const KST_DATE_FORMATTER = new Intl.DateTimeFormat("en-US", {
@@ -188,7 +188,7 @@ export function UserDonationDailyChart({ snapshot, activeTab }: Props) {
           <ChartLegendItem label="후원금 충전" className="bg-brand" />
         ) : null}
         {activeTab === "all" || activeTab === "donation" ? (
-          <ChartLegendItem label="방송후원" className="bg-live" />
+          <ChartLegendItem label="후원·구독" className="bg-live" />
         ) : null}
       </div>
     </div>
@@ -370,7 +370,7 @@ function ChartTotalSummary({
   return (
     <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
       <p className="text-brand text-sm font-black">충전 {formatPoint(chargeTotal)}</p>
-      <p className="text-live text-sm font-black">후원 {formatPoint(donationTotal)}</p>
+      <p className="text-live text-sm font-black">후원·구독 {formatPoint(donationTotal)}</p>
     </div>
   );
 }

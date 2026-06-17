@@ -15,6 +15,7 @@ import type {
 import { isAuthSessionMissingError } from "@/utils/auth/auth-error";
 import {
   getLiveSubscriptionBadgeSourcesByMonth,
+  LIVE_SUBSCRIPTION_BADGE_STORAGE_LIST_LIMIT,
   readLiveSubscriptionBadgeAssetInfo,
 } from "@/utils/live/live-subscription-badge";
 import { isSubscriptionBenefitActive } from "@/utils/subscriptions/user-subscription-status";
@@ -118,7 +119,7 @@ async function readCreatorSubscriptionAssets(
   const badgeFilesResult = await supabase.storage
     .from(USER_MEDIA_BUCKET)
     .list(`${creatorId}/subscription`, {
-      limit: 120,
+      limit: LIVE_SUBSCRIPTION_BADGE_STORAGE_LIST_LIMIT,
       sortBy: { column: "name", order: "asc" },
     });
 

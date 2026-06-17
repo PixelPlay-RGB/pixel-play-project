@@ -17,6 +17,8 @@ const ESTIMATED_ROW_HEIGHT = 32;
 const ROW_GAP = 12;
 // 상단에서 이 거리(px) 안으로 스크롤하면 과거 페이지 적재를 요청한다.
 const LOAD_OLDER_THRESHOLD_PX = 80;
+const EMPTY_SUBSCRIPTION_BADGE_CUSTOM_MONTHS: number[] = [];
+const EMPTY_SUBSCRIPTION_BADGE_IMAGE_SOURCES: Record<number, string> = {};
 
 interface Props {
   creatorId: string;
@@ -42,9 +44,9 @@ interface Props {
 export function LiveChatMessageList({
   creatorId,
   messages,
-  subscriptionBadgeCustomMonths = [],
+  subscriptionBadgeCustomMonths = EMPTY_SUBSCRIPTION_BADGE_CUSTOM_MONTHS,
   subscriptionBadgeVersion = null,
-  subscriptionBadgeImageSources,
+  subscriptionBadgeImageSources = EMPTY_SUBSCRIPTION_BADGE_IMAGE_SOURCES,
   cleanbotEnabled = true,
   topInsetPx = 0,
   scrollRef,

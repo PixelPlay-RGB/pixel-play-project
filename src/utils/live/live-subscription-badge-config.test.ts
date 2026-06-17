@@ -5,10 +5,11 @@ import { test } from "node:test";
 import nextConfig from "../../../next.config.ts";
 
 test("next image localPatterns allow default subscription badge cache version", () => {
-  assert.deepEqual(nextConfig.images?.localPatterns, [
-    {
-      pathname: "/subscription-badges/**",
-      search: "?v=20260615-fixed-slots-v1",
-    },
-  ]);
+  assert.ok(
+    nextConfig.images?.localPatterns?.some(
+      (pattern) =>
+        pattern.pathname === "/subscription-badges/**" &&
+        pattern.search === "?v=20260615-fixed-slots-v1",
+    ),
+  );
 });

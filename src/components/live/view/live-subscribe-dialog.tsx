@@ -162,7 +162,7 @@ export function LiveSubscribeDialog({
           <Button
             type="button"
             size="lg"
-            className="bg-brand text-brand-foreground hover:bg-brand/90 h-11 w-full font-black"
+            className="bg-live hover:bg-live/90 h-11 w-full font-black text-white"
             disabled={!canSubscribe || isPending}
             onClick={onConfirm}
           >

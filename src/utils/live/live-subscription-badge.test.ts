@@ -6,6 +6,7 @@ import {
   buildLiveSubscriptionBadgeMonths,
   getLiveDefaultSubscriptionBadgeSrc,
   getLiveSubscriptionBadgePublicUrl,
+  LIVE_SUBSCRIPTION_BADGE_STORAGE_LIST_LIMIT,
   readLiveSubscriptionBadgeAssetInfo,
   resolveLiveSubscriptionBadgeMonth,
 } from "./live-subscription-badge.ts";
@@ -27,6 +28,10 @@ test("buildLiveSubscriptionBadgeMonths keeps fixed months and valid custom month
     buildLiveSubscriptionBadgeMonths([18, 24, 120, 121, 2, 36]),
     [1, 2, 3, 6, 9, 12, 18, 24, 36, 120],
   );
+});
+
+test("LIVE_SUBSCRIPTION_BADGE_STORAGE_LIST_LIMIT includes all badge images and version file", () => {
+  assert.equal(LIVE_SUBSCRIPTION_BADGE_STORAGE_LIST_LIMIT, 121);
 });
 
 test("getLiveSubscriptionBadgePublicUrl builds the creator scoped storage URL", () => {

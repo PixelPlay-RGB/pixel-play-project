@@ -79,7 +79,7 @@ export const APP_MESSAGE = {
         description: "채팅에 표시되는 구독 배지가 변경됐어요.",
       },
       subscriptionBadgeDeleted: {
-        title: "구독 배지 기본값 적용",
+        title: "구독 배지 기본값 적용 완료",
         description: "커스텀 배지를 제거했어요.",
       },
       channelProfileSaved: {

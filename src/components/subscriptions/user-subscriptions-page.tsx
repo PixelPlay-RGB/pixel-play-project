@@ -1,13 +1,10 @@
 "use client";
 // 사용자 구독 목록과 구독 관리 다이얼로그를 렌더링합니다.
 
-import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useState } from "react";
 import { CalendarDays, Sparkles } from "lucide-react";
 
-import { subscribeCreatorAction } from "@/actions/live/live";
-import { cancelCreatorSubscriptionAction } from "@/actions/user/subscription";
 import { SettingsCard } from "@/components/common/settings-card";
 import { SettingsPage } from "@/components/common/settings-page";
 import { LiveSubscriptionBadge } from "@/components/live/chat/live-subscription-badge";
@@ -17,13 +14,14 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import type { AppMessageCode } from "@/constants/common/app-message-code";
+import { useUserSubscriptionManagement } from "@/hooks/subscriptions/use-user-subscription-management";
 import { cn } from "@/lib/utils";
 import type { CreatorSubscriptionStatus } from "@/types/live/live";
 import type {
@@ -31,7 +29,6 @@ import type {
   UserSubscriptionSnapshot,
 } from "@/types/subscriptions/user-subscriptions";
 import { getAppMessage } from "@/utils/common/app-message";
-import { toastAppError, toastAppSuccess } from "@/utils/common/toast-message";
 import {
   buildLiveSubscriptionBadgeMonths,
   resolveLiveSubscriptionBadgeMonth,
@@ -219,8 +216,6 @@ function UserSubscriptionManagementDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
   const badgeMonths = useMemo(
     () => buildLiveSubscriptionBadgeMonths(subscription?.badge.customMonths ?? []),
     [subscription?.badge.customMonths],
@@ -236,40 +231,12 @@ function UserSubscriptionManagementDialog({
       })
     : false;
   const shouldCancel = Boolean(subscription?.isActive && subscription.status === "active");
-
-  const handleCancel = () => {
-    if (!subscription || isPending) return;
-
-    startTransition(async () => {
-      const result = await cancelCreatorSubscriptionAction(subscription.id);
-
-      if (!result.success) {
-        toastAppError(result.code ?? APP_MESSAGE_CODE.error.user.subscriptionCancelFailed);
-        return;
-      }
-
-      toastAppSuccess(result.code ?? APP_MESSAGE_CODE.success.user.subscriptionCanceled);
-      onOpenChange(false);
-      router.refresh();
-    });
-  };
-
-  const handleSubscribe = () => {
-    if (!subscription || isPending || !canSubscribe) return;
-
-    startTransition(async () => {
-      const result = await subscribeCreatorAction({ creatorId: subscription.creatorId });
-
-      if (!result.success || !result.data) {
-        toastAppError(result.code ?? APP_MESSAGE_CODE.error.live.subscriptionFailed);
-        return;
-      }
-
-      toastAppSuccess(result.code ?? APP_MESSAGE_CODE.success.live.subscribed);
-      onOpenChange(false);
-      router.refresh();
-    });
-  };
+  const { isPending, handlePrimaryAction } = useUserSubscriptionManagement({
+    subscription,
+    canSubscribe,
+    shouldCancel,
+    onOpenChange,
+  });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -348,17 +315,26 @@ function UserSubscriptionManagementDialog({
               </div>
             </ScrollArea>
 
-            <footer className="border-border border-t p-5">
+            <DialogFooter className="border-border m-0 flex-row justify-end gap-2 rounded-none border-t bg-transparent p-5">
+              <Button
+                type="button"
+                variant="outline"
+                className="h-11 min-w-24 font-black"
+                disabled={isPending}
+                onClick={() => onOpenChange(false)}
+              >
+                취소
+              </Button>
               <Button
                 type="button"
                 variant={shouldCancel ? "destructive" : "default"}
-                className="h-11 w-full font-black"
+                className="h-11 min-w-32 font-black"
                 disabled={isPending || (!shouldCancel && !canSubscribe)}
-                onClick={shouldCancel ? handleCancel : handleSubscribe}
+                onClick={handlePrimaryAction}
               >
                 {getDialogPrimaryActionLabel(subscription, isPending)}
               </Button>
-            </footer>
+            </DialogFooter>
           </>
         ) : null}
       </DialogContent>

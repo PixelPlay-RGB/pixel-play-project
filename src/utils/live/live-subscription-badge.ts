@@ -1,12 +1,14 @@
 // 라이브 구독 뱃지의 방송인별 storage 경로와 public URL을 생성합니다.
 
-const LIVE_SUBSCRIPTION_BADGE_BUCKET = "user-media";
+import { USER_MEDIA_BUCKET } from "../../constants/common/storage.ts";
+
 const LIVE_DEFAULT_SUBSCRIPTION_BADGE_VERSION = "20260615-fixed-slots-v1";
 export const LIVE_SUBSCRIPTION_BADGE_VERSION_FILE = ".version";
 export const LIVE_SUBSCRIPTION_BADGE_FIXED_MONTHS = [1, 2, 3, 6, 9, 12, 18] as const;
 export const LIVE_SUBSCRIPTION_BADGE_MAX_MONTH = 120;
 export const LIVE_SUBSCRIPTION_BADGE_MAX_DEFAULT_MONTH = 18;
 export const LIVE_SUBSCRIPTION_BADGE_MIN_CUSTOM_MONTH = 19;
+export const LIVE_SUBSCRIPTION_BADGE_STORAGE_LIST_LIMIT = LIVE_SUBSCRIPTION_BADGE_MAX_MONTH + 1;
 
 export interface LiveSubscriptionBadgeAssetInfo {
   customMonths: number[];
@@ -183,7 +185,7 @@ export function getLiveSubscriptionBadgePublicUrl(
     .split("/")
     .map((segment) => encodeURIComponent(segment))
     .join("/");
-  const url = `${supabaseUrl}/storage/v1/object/public/${LIVE_SUBSCRIPTION_BADGE_BUCKET}/${encodedPath}`;
+  const url = `${supabaseUrl}/storage/v1/object/public/${USER_MEDIA_BUCKET}/${encodedPath}`;
   const normalizedVersion = typeof version === "string" ? version.trim() : "";
 
   return normalizedVersion ? `${url}?v=${encodeURIComponent(normalizedVersion)}` : url;
