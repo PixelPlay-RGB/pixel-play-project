@@ -109,12 +109,9 @@ export function LiveSubscribeDialog({
               </div>
             </section>
 
-            <section className="bg-muted/35 border-border flex items-center justify-between gap-3 rounded-lg border px-4 py-3">
-              <div className="flex min-w-0 items-center gap-2">
-                <WalletCards className="text-brand size-4 shrink-0" />
-                <span className="text-sm font-black">보유 포인트</span>
-              </div>
-              <strong className="text-sm font-black">
+            <section className="from-brand/10 to-live/10 border-border/60 text-muted-foreground flex items-center justify-between gap-3 rounded-lg border bg-linear-to-r px-3 py-2.5 text-xs">
+              <span>보유 포인트</span>
+              <strong className="text-foreground font-medium">
                 {isWalletLoading
                   ? "조회 중"
                   : isWalletError
