@@ -224,17 +224,7 @@ export function SubscriptionBadgeRegistrationDialog({ open, onOpenChange }: Prop
             </section>
 
             <section className="border-border/70 bg-muted/30 flex flex-col gap-3 rounded-lg border p-4">
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-sm font-black">이미지 업로드</span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="text-brand hover:bg-brand/10 hover:text-brand h-8 px-2 text-xs"
-                >
-                  제작가이드
-                </Button>
-              </div>
+              <span className="text-sm font-black">이미지 업로드</span>
               <ul className="text-muted-foreground list-disc space-y-1 pl-5 text-xs leading-5">
                 <li>
                   사이즈: {CHANNEL_SUBSCRIPTION_BADGE_IMAGE_SIZE}*
