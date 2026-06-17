@@ -95,6 +95,18 @@ function insertTextAtCaret(root: HTMLElement, text: string) {
   }
 }
 
+// 현재 선택 영역이 차지하는 "값" 길이(스티커 토큰 포함) — 삽입/붙여넣기 시 교체될 분량을 maxLength
+// 계산에서 빼는 데 쓴다. cloneContents를 readValue로 다시 읽어 토큰(img→:pp-id:)까지 정확히 센다.
+function getSelectionValueLength(root: HTMLElement): number {
+  const selection = window.getSelection();
+  if (!selection || !selection.rangeCount) return 0;
+  const range = selection.getRangeAt(0);
+  if (range.collapsed || !root.contains(range.commonAncestorContainer)) return 0;
+  const fragment = document.createElement("div");
+  fragment.appendChild(range.cloneContents());
+  return readValue(fragment).length;
+}
+
 export default function RichEmojiInput({
   value,
   onChange,
@@ -138,7 +150,10 @@ export default function RichEmojiInput({
       const inputType = (event as InputEvent).inputType ?? "";
       if (inputType === "insertCompositionText") return; // 조합은 막지 않는다(IME 깨짐 방지).
       if (!inputType.startsWith("insert")) return;
-      if (readValue(root).length >= maxLength) event.preventDefault();
+      // "삽입 후 길이"로 판정한다 — 선택 교체(선택분 제거)를 반영해야 한도 도달 상태에서도 교체 입력이 막히지 않는다.
+      const insertedLength = ((event as InputEvent).data ?? "").length;
+      const nextLength = readValue(root).length - getSelectionValueLength(root) + insertedLength;
+      if (nextLength > maxLength) event.preventDefault();
     };
     root.addEventListener("beforeinput", onBeforeInput);
     return () => root.removeEventListener("beforeinput", onBeforeInput);
@@ -189,7 +204,18 @@ export default function RichEmojiInput({
     if (!root) return;
     const text = event.clipboardData.getData("text/plain");
     if (!text) return;
-    insertTextAtCaret(root, allowNewline ? text : text.replace(/\s*\n\s*/g, " "));
+    const normalized = allowNewline ? text : text.replace(/\s*\n\s*/g, " ");
+    // maxLength가 있으면 선택분(토큰 포함)을 뺀 잔여 한도까지만 잘라 넣는다 — 붙여넣기로 한도를 우회하지 못하게.
+    if (maxLength) {
+      const remain = Math.max(
+        maxLength - (readValue(root).length - getSelectionValueLength(root)),
+        0,
+      );
+      if (remain === 0) return;
+      insertTextAtCaret(root, normalized.slice(0, remain));
+    } else {
+      insertTextAtCaret(root, normalized);
+    }
     emit();
   }
 
