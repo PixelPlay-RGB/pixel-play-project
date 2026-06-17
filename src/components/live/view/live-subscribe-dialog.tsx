@@ -2,6 +2,7 @@
 // 라이브 시청자가 방송인 구독 혜택을 확인하고 포인트 결제로 구독을 시작하는 Popover입니다.
 
 import type { ReactElement } from "react";
+import Link from "next/link";
 import { BadgeCheck, Heart, Star, WalletCards } from "lucide-react";
 
 import { LiveSubscriptionBadge } from "@/components/live/chat/live-subscription-badge";
@@ -9,8 +10,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import type { LiveCreator } from "@/types/live/live";
+import {
+  CREATOR_AVATAR_TRIGGER_AVATAR_CLASS,
+  CREATOR_AVATAR_TRIGGER_CLASS,
+} from "@/constants/creator/creator";
 import { CREATOR_SUBSCRIPTION_PAYMENT_AMOUNT } from "@/constants/subscriptions/creator-subscription";
+import { cn } from "@/lib/utils";
+import type { LiveCreator } from "@/types/live/live";
 import { formatPoint } from "@/utils/donations/format";
 import { buildLiveSubscriptionBadgeMonths } from "@/utils/live/live-subscription-badge";
 import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
@@ -77,15 +83,22 @@ export function LiveSubscribeDialog({
       >
         <header className="border-border border-b p-5 pb-4">
           <div className="flex items-center gap-3">
-            <Avatar size="lg" className="ring-brand/70 ring-2">
-              <AvatarImage src={avatarSrc} alt={`${creator.name} 프로필`} />
-              <AvatarFallback>{fallback}</AvatarFallback>
-            </Avatar>
+            <Link
+              href={`/channel/${creator.id}`}
+              prefetch={false}
+              aria-label={`${creator.name} 채널 보기`}
+              className={CREATOR_AVATAR_TRIGGER_CLASS}
+            >
+              <Avatar
+                size="lg"
+                className={cn("ring-brand/70 ring-2", CREATOR_AVATAR_TRIGGER_AVATAR_CLASS)}
+              >
+                <AvatarImage src={avatarSrc} alt={`${creator.name} 프로필`} />
+                <AvatarFallback>{fallback}</AvatarFallback>
+              </Avatar>
+            </Link>
             <div className="min-w-0 flex-1">
               <h2 className="truncate text-lg font-black">{creator.name}</h2>
-              <p className="text-muted-foreground mt-1 text-xs leading-5">
-                후원 지갑 포인트로 채널을 구독하고 구독 배지를 사용할 수 있어요.
-              </p>
             </div>
           </div>
         </header>
