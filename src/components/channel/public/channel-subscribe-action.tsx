@@ -117,7 +117,7 @@ export function ChannelSubscribeAction({ profile, className }: Props) {
     setIsSubscribed(result.isSubscribed);
     setSubscriptionStatus(result.status);
     void queryClient.invalidateQueries({
-      queryKey: QUERY_KEYS.donations.walletBalance(user?.id ?? undefined),
+      queryKey: QUERY_KEYS.donations.walletBalance(user?.id),
     });
     router.refresh();
   }

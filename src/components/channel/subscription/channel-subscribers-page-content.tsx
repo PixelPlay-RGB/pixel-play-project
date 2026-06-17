@@ -2,7 +2,7 @@
 // 채널 구독자 목록의 검색·정렬 UI와 구독자 요약 배너를 렌더링합니다.
 
 import { CalendarPlus, Search, UsersRound } from "lucide-react";
-import { useRef, useTransition } from "react";
+import { useEffect, useRef, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { SettingsCard } from "@/components/common/settings-card";
@@ -93,6 +93,7 @@ export function ChannelSubscribersPageContent({ snapshot, query, sort }: Props) 
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [, startTransition] = useTransition();
   const subscribers = snapshot.subscribers;
 
@@ -100,6 +101,29 @@ export function ChannelSubscribersPageContent({ snapshot, query, sort }: Props) 
     subscribers.length === 0 && !query
       ? "아직 내 채널을 구독한 사람이 없어요."
       : "검색 조건에 맞는 구독자가 없어요.";
+
+  useEffect(() => {
+    return () => {
+      if (searchDebounceRef.current) {
+        clearTimeout(searchDebounceRef.current);
+      }
+    };
+  }, []);
+
+  function clearSearchDebounce() {
+    if (!searchDebounceRef.current) return;
+
+    clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = null;
+  }
+
+  function scheduleSearchParamReplace(nextQuery: string) {
+    clearSearchDebounce();
+
+    searchDebounceRef.current = setTimeout(() => {
+      replaceSearchParams({ query: nextQuery });
+    }, 300);
+  }
 
   function replaceSearchParams(next: { query?: string; sort?: ChannelSubscriberSort }) {
     const params = new URLSearchParams(searchParams.toString());
@@ -182,7 +206,7 @@ export function ChannelSubscribersPageContent({ snapshot, query, sort }: Props) 
               defaultValue={query}
               onChange={(event) => {
                 const nextQuery = event.target.value;
-                replaceSearchParams({ query: nextQuery });
+                scheduleSearchParamReplace(nextQuery);
               }}
               placeholder="닉네임 검색"
               className="h-10 pl-9"
@@ -192,12 +216,13 @@ export function ChannelSubscribersPageContent({ snapshot, query, sort }: Props) 
           <Select
             value={sort}
             items={SORT_OPTIONS}
-            onValueChange={(nextValue) =>
+            onValueChange={(nextValue) => {
+              clearSearchDebounce();
               replaceSearchParams({
                 query: searchInputRef.current?.value ?? query,
                 sort: nextValue as ChannelSubscriberSort,
-              })
-            }
+              });
+            }}
           >
             <SelectTrigger aria-label="구독자 정렬 기준" className="h-10 w-full sm:w-40">
               <SelectValue />

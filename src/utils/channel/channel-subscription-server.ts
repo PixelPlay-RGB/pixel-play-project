@@ -77,7 +77,7 @@ export async function getChannelSubscriptionSnapshot({
     subscriptionQuery = subscriptionQuery
       .order("total_months", { ascending: true })
       .order("started_at", { ascending: false });
-  } else {
+  } else if (normalizedSort !== "nickname_asc") {
     subscriptionQuery = subscriptionQuery.order("started_at", { ascending: false });
   }
 
@@ -152,6 +152,10 @@ export async function getChannelSubscriptionSnapshot({
 
     return [createChannelSubscriberItem(subscription, profile ?? null)];
   });
+
+  if (normalizedSort === "nickname_asc") {
+    items.sort((a, b) => a.nickname.localeCompare(b.nickname, "ko-KR"));
+  }
 
   return {
     success: true,

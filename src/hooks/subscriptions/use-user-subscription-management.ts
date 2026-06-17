@@ -30,16 +30,21 @@ export function useUserSubscriptionManagement({
     if (!subscription || isPending) return;
 
     startTransition(async () => {
-      const result = await cancelCreatorSubscriptionAction(subscription.id);
+      try {
+        const result = await cancelCreatorSubscriptionAction(subscription.id);
 
-      if (!result.success) {
-        toastAppError(result.code ?? APP_MESSAGE_CODE.error.user.subscriptionCancelFailed);
-        return;
+        if (!result.success) {
+          toastAppError(result.code ?? APP_MESSAGE_CODE.error.user.subscriptionCancelFailed);
+          return;
+        }
+
+        toastAppSuccess(result.code ?? APP_MESSAGE_CODE.success.user.subscriptionCanceled);
+        onOpenChange(false);
+        router.refresh();
+      } catch (error) {
+        console.error("사용자 구독 해지 요청 실패", error);
+        toastAppError(APP_MESSAGE_CODE.error.user.subscriptionCancelFailed);
       }
-
-      toastAppSuccess(result.code ?? APP_MESSAGE_CODE.success.user.subscriptionCanceled);
-      onOpenChange(false);
-      router.refresh();
     });
   }
 
@@ -47,16 +52,21 @@ export function useUserSubscriptionManagement({
     if (!subscription || isPending || !canSubscribe) return;
 
     startTransition(async () => {
-      const result = await subscribeCreatorAction({ creatorId: subscription.creatorId });
+      try {
+        const result = await subscribeCreatorAction({ creatorId: subscription.creatorId });
 
-      if (!result.success || !result.data) {
-        toastAppError(result.code ?? APP_MESSAGE_CODE.error.live.subscriptionFailed);
-        return;
+        if (!result.success || !result.data) {
+          toastAppError(result.code ?? APP_MESSAGE_CODE.error.live.subscriptionFailed);
+          return;
+        }
+
+        toastAppSuccess(result.code ?? APP_MESSAGE_CODE.success.live.subscribed);
+        onOpenChange(false);
+        router.refresh();
+      } catch (error) {
+        console.error("사용자 구독 재시작 요청 실패", error);
+        toastAppError(APP_MESSAGE_CODE.error.live.subscriptionFailed);
       }
-
-      toastAppSuccess(result.code ?? APP_MESSAGE_CODE.success.live.subscribed);
-      onOpenChange(false);
-      router.refresh();
     });
   }
 

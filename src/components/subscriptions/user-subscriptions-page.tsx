@@ -191,7 +191,9 @@ function SubscriptionCard({
           </div>
 
           <p className="text-brand mt-1 text-sm font-bold">
-            {subscription.totalMonths.toLocaleString("ko-KR")}개월 동안 정기구독 중
+            {subscription.isActive
+              ? `${subscription.totalMonths.toLocaleString("ko-KR")}개월 동안 정기구독 중`
+              : `${subscription.totalMonths.toLocaleString("ko-KR")}개월 구독`}
           </p>
           <p className="text-muted-foreground mt-1 text-sm">
             {subscription.isActive && subscription.status === "active"

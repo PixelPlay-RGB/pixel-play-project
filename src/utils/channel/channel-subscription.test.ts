@@ -101,6 +101,17 @@ test("filterAndSortChannelSubscribers sorts without mutating the source list", (
   );
 });
 
+test("buildChannelSubscriptionSnapshot sorts subscribers by nickname when requested", () => {
+  const snapshot = buildChannelSubscriptionSnapshot(SUBSCRIBERS, NOW, {
+    sort: "nickname_asc",
+  });
+
+  assert.deepEqual(
+    snapshot.subscribers.map((item) => item.id),
+    ["sub-2", "sub-5", "sub-4", "sub-1", "sub-3"],
+  );
+});
+
 test("buildChannelSubscriptionSnapshot keeps subscription badge image cache data", () => {
   const snapshot = buildChannelSubscriptionSnapshot([], NOW, {
     creatorId: "creator-1",
