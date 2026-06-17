@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { completeOAuthProfileSchema } from "@/lib/zod/auth";
 import type { CompleteOAuthProfileInput, LoginProvider, OAuthProvider } from "@/types/auth/auth";
 import { isAuthSessionMissingError } from "@/utils/auth/auth-error";
+import { getAuthProviders } from "@/utils/auth/auth-provider";
 import { revalidatePath } from "next/cache";
 
 export async function completeOAuthProfileAction(
@@ -59,7 +60,7 @@ export async function completeOAuthProfileAction(
   }
 
   const VALID_PROVIDERS: LoginProvider[] = ["google", "github"];
-  const linkedProviders = ((user.app_metadata?.providers ?? []) as string[]).filter(
+  const linkedProviders = getAuthProviders(user.app_metadata?.providers).filter(
     (p): p is LoginProvider => VALID_PROVIDERS.includes(p as LoginProvider),
   );
 

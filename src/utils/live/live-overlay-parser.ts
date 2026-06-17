@@ -4,6 +4,7 @@ import {
   LIVE_DONATION_ALERT_DEFAULT_VISIBLE_MS,
   LIVE_OVERLAY_DEFAULT_CREATOR_NAME,
 } from "@/constants/live/live-overlay";
+import { readJsonRecord as readObject, readNumber, readString } from "@/utils/common/json";
 import type { Json } from "@/types/database.types";
 import type { LiveBroadcastSummary, LiveSenderRole } from "@/types/live/live";
 import type {
@@ -227,30 +228,12 @@ function parseLiveDonationAlertOverlayData(
   };
 }
 
-function readObject(value: Json | undefined): Record<string, Json | undefined> | null {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    return null;
-  }
-
-  return value as Record<string, Json | undefined>;
-}
-
 function readArray(value: Json | undefined): Json[] {
   return Array.isArray(value) ? value : [];
 }
 
-function readString(value: Json | undefined) {
-  const trimmed = typeof value === "string" ? value.trim() : "";
-
-  return trimmed.length > 0 ? trimmed : null;
-}
-
 function readText(value: Json | undefined) {
   return typeof value === "string" ? value : null;
-}
-
-function readNumber(value: Json | undefined) {
-  return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
 function readPositiveNumber(value: Json | undefined) {

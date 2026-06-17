@@ -1,5 +1,6 @@
 // 라이브 룰렛 이벤트를 Server-Sent Events 스트림으로 전달합니다.
 import { createAdminClient } from "@/lib/supabase/admin-client";
+import { isUuid } from "@/utils/common/uuid";
 import { liveRouletteSseStore } from "@/utils/live/live-roulette-sse";
 
 export const dynamic = "force-dynamic";
@@ -9,12 +10,10 @@ interface RouteContext {
   params: Promise<{ broadcastId: string }>;
 }
 
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
 export async function GET(_request: Request, context: RouteContext) {
   const { broadcastId } = await context.params;
 
-  if (!UUID_PATTERN.test(broadcastId)) {
+  if (!isUuid(broadcastId)) {
     return new Response(null, { status: 404 });
   }
 

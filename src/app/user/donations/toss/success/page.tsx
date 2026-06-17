@@ -1,4 +1,5 @@
 // Toss Payments 결제 성공 리다이렉트에서 서버 승인 처리를 수행합니다.
+import { readSingleSearchParam } from "@/utils/common/search-params";
 import { buildPaymentReturnRedirect } from "@/utils/payments/payment-return-path";
 import { confirmTossWalletCharge } from "@/utils/payments/toss-wallet-charge";
 import { redirect } from "next/navigation";
@@ -18,14 +19,10 @@ export default async function TossPaymentSuccessRedirectPage({ searchParams }: P
   const params = await searchParams;
   const paymentStatus = await getTossSuccessRedirectPaymentStatus(() =>
     confirmTossWalletCharge({
-      amount: readSingleValue(params.amount),
-      orderId: readSingleValue(params.orderId),
-      paymentKey: readSingleValue(params.paymentKey),
+      amount: readSingleSearchParam(params.amount),
+      orderId: readSingleSearchParam(params.orderId),
+      paymentKey: readSingleSearchParam(params.paymentKey),
     }),
   );
   redirect(buildPaymentReturnRedirect(params.returnTo, paymentStatus));
-}
-
-function readSingleValue(value: string | string[] | undefined) {
-  return typeof value === "string" ? value : "";
 }

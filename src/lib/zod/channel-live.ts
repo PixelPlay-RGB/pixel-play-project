@@ -1,21 +1,30 @@
 // 방송 운영 입력값 검증 스키마를 정의합니다.
 
+import {
+  CHANNEL_CHAT_FOLLOWER_WAIT_OPTIONS,
+  CHANNEL_CHAT_FORBIDDEN_WORD_MAX_COUNT,
+  CHANNEL_CHAT_RULE_MAX_LENGTH,
+  CHANNEL_CHAT_SLOW_MODE_OPTIONS,
+} from "@/constants/channel/chat";
 import { z } from "zod";
 
-const FOLLOWER_WAIT_SECONDS = [
-  0, 300, 600, 1800, 3600, 86400, 604800, 2592000, 5184000, 7776000, 10368000, 12960000, 15552000,
-];
-const SLOW_MODE_SECONDS = [3, 5, 10, 30, 60, 120, 300];
+// 클라(channel-chat.ts)와 동일한 옵션 상수에서 파생해 클라 통과/서버 거절 드리프트를 막는다.
+const followerWaitValueSet = new Set<number>(
+  CHANNEL_CHAT_FOLLOWER_WAIT_OPTIONS.map((option) => option.value),
+);
+const slowModeValueSet = new Set<number>(
+  CHANNEL_CHAT_SLOW_MODE_OPTIONS.map((option) => option.value),
+);
 
 const followerWaitSecondsSchema = z
   .number()
   .int()
-  .refine((value) => FOLLOWER_WAIT_SECONDS.includes(value));
+  .refine((value) => followerWaitValueSet.has(value));
 
 const slowModeSecondsSchema = z
   .number()
   .int()
-  .refine((value) => SLOW_MODE_SECONDS.includes(value));
+  .refine((value) => slowModeValueSet.has(value));
 
 export const startLiveBroadcastSchema = z.object({
   tags: z.array(z.string().trim().min(1).max(12)).max(5),
@@ -27,13 +36,16 @@ export const updateChannelLiveSettingsSchema = z.object({
   alertSoundEnabled: z.boolean(),
   alertVolume: z.number().int().min(0).max(100),
   chatDonationMessageEnabled: z.boolean(),
-  chatRuleText: z.string().max(300),
+  chatRuleText: z.string().max(CHANNEL_CHAT_RULE_MAX_LENGTH),
   chatScope: z.enum(["authenticated", "follower", "manager"]),
   donationAlertDurationSeconds: z.number().int().min(3).max(30),
   donationAmountVisible: z.boolean(),
   donationEnabled: z.boolean(),
   donationMinAmount: z.number().int().min(1000).max(1000000),
-  forbiddenWords: z.array(z.string().trim().min(1).max(30)).max(100),
+  // 단어 길이 한도(30)는 채팅 설정 상수(100)와 의도적으로 다르므로 인라인 유지.
+  forbiddenWords: z
+    .array(z.string().trim().min(1).max(30))
+    .max(CHANNEL_CHAT_FORBIDDEN_WORD_MAX_COUNT),
   defaultTags: z.array(z.string().trim().min(1).max(12)).max(5),
   defaultTitle: z.string().trim().max(100),
   followerWaitSeconds: followerWaitSecondsSchema,

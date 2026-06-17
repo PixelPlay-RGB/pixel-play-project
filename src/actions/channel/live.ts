@@ -28,6 +28,7 @@ import {
   isManualLiveThumbnailFileName,
   LIVE_THUMBNAIL_DIRECTORY,
 } from "@/utils/channel/channel-live-thumbnail";
+import { isRecord, readJsonObject } from "@/utils/common/json";
 import { buildLiveStreamKey } from "@/utils/live/live-security";
 import {
   createServerStampedLiveRouletteSsePayload,
@@ -139,10 +140,6 @@ export interface ChannelLiveStudioSettings {
   ttsVolume: number;
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
 function isActiveLiveBroadcastNotFoundError(error: unknown) {
   if (!isRecord(error)) return false;
 
@@ -182,12 +179,6 @@ function readStringArray(value: unknown) {
 
 function readRecordArray(value: unknown) {
   return Array.isArray(value) ? value.filter(isRecord) : [];
-}
-
-function readJsonObject(value: Json): Record<string, Json | undefined> {
-  return value && typeof value === "object" && !Array.isArray(value)
-    ? (value as Record<string, Json | undefined>)
-    : {};
 }
 
 function readMetadataString(value: Json | undefined) {

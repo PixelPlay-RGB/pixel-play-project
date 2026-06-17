@@ -3,6 +3,7 @@
 import { LIVE_THUMBNAIL_FALLBACK_URLS } from "@/constants/live/live-list";
 import type { LiveHeroItem, LiveListItem, LiveListSnapshot } from "@/types/live/live";
 import { formatNumber } from "@/utils/common/format";
+import { hashStringToIndex } from "@/utils/common/hash";
 
 // Supabase 스토리지 호스트는 프로젝트 URL에서 도출해 환경이 바뀌어도 썸네일이 깨지지 않게 한다.
 // env가 비었거나 비URL이면 모듈 로드 시 throw가 나서 이 모듈을 import하는 모든 화면(라이브 목록·Hero·
@@ -148,16 +149,6 @@ export function parseLiveListSnapshot(value: unknown): LiveListSnapshot {
   };
 }
 
-function getFallbackThumbnailIndex(seed: string) {
-  let hash = 0;
-
-  for (const char of seed) {
-    hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
-  }
-
-  return hash % LIVE_THUMBNAIL_FALLBACK_URLS.length;
-}
-
 function isSafeThumbnailUrl(value: string) {
   if (value.startsWith("/") && !value.startsWith("//")) {
     return true;
@@ -178,7 +169,9 @@ export function getLiveThumbnailSrc(liveId: string, thumbnailUrl?: string | null
     return trimmedThumbnailUrl;
   }
 
-  return LIVE_THUMBNAIL_FALLBACK_URLS[getFallbackThumbnailIndex(liveId)];
+  return LIVE_THUMBNAIL_FALLBACK_URLS[
+    hashStringToIndex(liveId, LIVE_THUMBNAIL_FALLBACK_URLS.length)
+  ];
 }
 
 export function getLiveTagLabels(tags: string[], limit = 2) {

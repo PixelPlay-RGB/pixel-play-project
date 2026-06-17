@@ -2,6 +2,7 @@
 // 방송 운영 화면에서 현재 방송의 핵심 실시간 지표를 요약합니다.
 
 import { useCreatorLiveStats } from "@/hooks/channel/use-creator-live-stats";
+import { formatPoint } from "@/utils/channel/donation-format";
 import { formatNumber } from "@/utils/common/format";
 
 interface LiveMetricsBroadcast {
@@ -39,7 +40,7 @@ function buildMetricItems({
     { label: "현재 시청자", value: formatNumber(currentViewers) },
     { label: "최고 시청자", value: formatNumber(peakViewers) },
     { label: "분당 채팅", value: formatNumber(messagesPerMinute ?? 0) },
-    { label: "후원 누적", value: `${formatNumber(donationAmountTotal)}P` },
+    { label: "후원 누적", value: formatPoint(donationAmountTotal) },
   ];
 }
 

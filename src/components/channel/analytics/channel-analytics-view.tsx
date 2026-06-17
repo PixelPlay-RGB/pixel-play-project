@@ -34,13 +34,10 @@ import {
   deriveTopSupporter,
 } from "@/utils/channel/channel-analytics-metrics";
 import { resolveConnectionState } from "@/utils/channel/realtime-reconnect";
+import { formatNumber } from "@/utils/common/format";
 
 interface Props {
   snapshot: ChannelAnalyticsSnapshot & { broadcast: AnalyticsBroadcast };
-}
-
-function formatNumber(value: number) {
-  return value.toLocaleString("ko-KR");
 }
 
 // 여러 보조 정보를 가운뎃점으로 합치되 비어 있는 조각은 버린다.
@@ -187,7 +184,7 @@ export function ChannelAnalyticsView({ snapshot }: Props) {
 
 // 현재 시청자 카드 보조 텍스트: 최고 동접 + 최고 대비 위치(모멘텀)를 함께 보여준다.
 function buildViewersHint(peakViewers: number, peakRatio: number | null): string {
-  const peakLabel = `${ANALYTICS_LABEL.peakViewersPrefix} ${peakViewers.toLocaleString("ko-KR")}${ANALYTICS_UNIT.viewers}`;
+  const peakLabel = `${ANALYTICS_LABEL.peakViewersPrefix} ${formatNumber(peakViewers)}${ANALYTICS_UNIT.viewers}`;
 
   const ratioLabel =
     peakRatio === null

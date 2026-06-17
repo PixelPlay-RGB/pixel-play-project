@@ -3,8 +3,8 @@ import {
   LIVE_OVERLAY_DEFAULT_CREATOR_NAME,
   LIVE_OVERLAY_DEFAULT_VIEWER_NAME,
 } from "@/constants/live/live-overlay";
+import { readJsonObject, readNumber, readString } from "@/utils/common/json";
 import { deriveSenderRoles } from "@/utils/live/live-message";
-import type { Json } from "@/types/database.types";
 import type { LiveMessageRow } from "@/types/live/live";
 import type { LiveChatOverlayItem, LiveChatOverlayMessage } from "@/types/live/live-chat-overlay";
 import type { LiveDonationAlertOverlayData } from "@/types/live/live-donation-alert-overlay";
@@ -113,22 +113,4 @@ export function mapLiveMessageToDonationAlert(
     message: message.content,
     createdAt: message.created_at,
   };
-}
-
-function readJsonObject(value: Json): Record<string, Json | undefined> {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    return {};
-  }
-
-  return value as Record<string, Json | undefined>;
-}
-
-function readString(value: Json | undefined) {
-  const trimmed = typeof value === "string" ? value.trim() : "";
-
-  return trimmed.length > 0 ? trimmed : null;
-}
-
-function readNumber(value: Json | undefined) {
-  return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
