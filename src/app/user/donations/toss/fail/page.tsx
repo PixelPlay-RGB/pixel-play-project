@@ -1,4 +1,5 @@
 // Toss Payments 결제 실패 리다이렉트를 안전한 후원 지갑 상태 메시지로 변환합니다.
+import { buildPaymentReturnRedirect } from "@/utils/payments/payment-return-path";
 import { markTossWalletChargeFailure } from "@/utils/payments/toss-wallet-charge";
 import { redirect } from "next/navigation";
 
@@ -9,6 +10,7 @@ interface Props {
     code?: string | string[];
     message?: string | string[];
     orderId?: string | string[];
+    returnTo?: string | string[];
   }>;
 }
 
@@ -35,7 +37,7 @@ export default async function TossPaymentFailRedirectPage({ searchParams }: Prop
       }),
   });
 
-  redirect(`/user/donations?paymentStatus=${paymentStatus}`);
+  redirect(buildPaymentReturnRedirect(params.returnTo, paymentStatus));
 }
 
 function readSingleValue(value: string | string[] | undefined) {

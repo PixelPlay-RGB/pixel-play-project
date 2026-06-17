@@ -274,6 +274,8 @@ export function useLiveBroadcastView(creatorId: string) {
     walletBalance,
     isWalletLoading,
     isWalletError,
+    // 후원금 충전(TossPayments)의 customerKey로 쓰는 로그인 유저 id.
+    viewerId: user?.id ?? null,
     donationEnabled,
     donationMinAmount,
     votePoll,

@@ -40,6 +40,9 @@ interface Props {
   walletBalance: number;
   isWalletLoading?: boolean;
   isWalletError?: boolean;
+  // 후원금 충전(TossPayments) — 로그인 유저 id와 결제 후 복귀 경로.
+  customerKey?: string;
+  chargeReturnTo?: string;
   donationEnabled: boolean;
   donationMinAmount: number;
   onLoginPrompt: () => void;
@@ -100,6 +103,8 @@ export function LiveChatBody({
   walletBalance,
   isWalletLoading,
   isWalletError,
+  customerKey,
+  chargeReturnTo,
   donationEnabled,
   donationMinAmount,
   onLoginPrompt,
@@ -226,6 +231,8 @@ export function LiveChatBody({
         walletBalance={walletBalance}
         isWalletLoading={isWalletLoading}
         isWalletError={isWalletError}
+        customerKey={customerKey}
+        chargeReturnTo={chargeReturnTo}
         donationEnabled={donationEnabled}
         donationMinAmount={donationMinAmount}
         onLoginPrompt={onLoginPrompt}

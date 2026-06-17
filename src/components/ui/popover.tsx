@@ -21,12 +21,19 @@ function PopoverContent({
   sideOffset = 4,
   anchor,
   collisionPadding,
+  collisionAvoidance,
   container,
   ...props
 }: PopoverPrimitive.Popup.Props &
   Pick<
     PopoverPrimitive.Positioner.Props,
-    "align" | "alignOffset" | "side" | "sideOffset" | "anchor" | "collisionPadding"
+    | "align"
+    | "alignOffset"
+    | "side"
+    | "sideOffset"
+    | "anchor"
+    | "collisionPadding"
+    | "collisionAvoidance"
   > & {
     // 포털 대상 컨테이너. 미지정 시 기본 body. 전체화면 요소 안에 띄울 때만 지정한다.
     container?: PopoverPrimitive.Portal.Props["container"];
@@ -40,6 +47,7 @@ function PopoverContent({
         side={side}
         sideOffset={sideOffset}
         collisionPadding={collisionPadding}
+        collisionAvoidance={collisionAvoidance}
         className="isolate z-50"
       >
         <PopoverPrimitive.Popup

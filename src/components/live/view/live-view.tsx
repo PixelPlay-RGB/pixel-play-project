@@ -62,6 +62,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     walletBalance,
     isWalletLoading,
     isWalletError,
+    viewerId,
     donationEnabled,
     donationMinAmount,
     votePoll,
@@ -329,6 +330,8 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
                       walletBalance={walletBalance}
                       isWalletLoading={isWalletLoading}
                       isWalletError={isWalletError}
+                      customerKey={viewerId ?? undefined}
+                      chargeReturnTo={`/live/${creatorId}`}
                       donationEnabled={donationEnabled}
                       donationMinAmount={donationMinAmount}
                       onLoginPrompt={openLoginPrompt}
@@ -453,6 +456,8 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
               walletBalance={walletBalance}
               isWalletLoading={isWalletLoading}
               isWalletError={isWalletError}
+              customerKey={viewerId ?? undefined}
+              chargeReturnTo={`/live/${creatorId}`}
               donationEnabled={donationEnabled}
               donationMinAmount={donationMinAmount}
               onLoginPrompt={openLoginPrompt}
