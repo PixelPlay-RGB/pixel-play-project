@@ -6,6 +6,7 @@ import { BadgeCheck, Heart, Smile, Sparkles, Star, WalletCards } from "lucide-re
 
 import { EmptyState } from "@/components/common/empty-state";
 import { Note } from "@/components/common/note";
+import { RetryRefreshButton } from "@/components/common/retry-refresh-button";
 import { SettingsCard } from "@/components/common/settings-card";
 import { SettingsPage } from "@/components/common/settings-page";
 import { LiveSubscriptionBadge } from "@/components/live/chat/live-subscription-badge";
@@ -84,7 +85,10 @@ export function UserSubscriptionsPage({ snapshot, errorCode }: Props) {
     return (
       <SettingsPage {...PAGE_HEADER}>
         <SettingsCard title={message.title}>
-          <p className="text-muted-foreground text-sm">{message.description}</p>
+          <div className="flex flex-col items-start gap-3">
+            <p className="text-muted-foreground text-sm">{message.description}</p>
+            <RetryRefreshButton />
+          </div>
         </SettingsCard>
       </SettingsPage>
     );

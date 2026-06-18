@@ -203,21 +203,26 @@ export function SubscriptionBadgeRegistrationDialog({ open, onOpenChange }: Prop
                 </SelectContent>
               </Select>
               {isCustomMonth ? (
-                <div className="flex items-center gap-2">
-                  <Input
-                    id="subscription-badge-custom-month"
-                    type="number"
-                    min={19}
-                    max={120}
-                    value={month}
-                    onChange={(event) => {
-                      setMonth(event.target.value);
-                      setFieldError(null);
-                    }}
-                    placeholder="예: 24"
-                    className="bg-background h-11 w-28"
-                  />
-                  <span className="text-sm">개월</span>
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="subscription-badge-custom-month"
+                      type="number"
+                      min={19}
+                      max={120}
+                      value={month}
+                      onChange={(event) => {
+                        setMonth(event.target.value);
+                        setFieldError(null);
+                      }}
+                      placeholder="예: 24"
+                      className="bg-background h-11 w-28"
+                    />
+                    <span className="text-sm">개월</span>
+                  </div>
+                  <p className="text-muted-foreground text-xs">
+                    고정 슬롯과 겹치지 않도록 19개월 이상부터 입력할 수 있어요.
+                  </p>
                 </div>
               ) : null}
             </section>

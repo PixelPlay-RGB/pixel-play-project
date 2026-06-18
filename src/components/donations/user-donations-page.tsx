@@ -1,4 +1,5 @@
 // 사용자 후원 지갑 페이지의 전체 레이아웃을 구성합니다.
+import { RetryRefreshButton } from "@/components/common/retry-refresh-button";
 import { SettingsCard } from "@/components/common/settings-card";
 import { SettingsPage } from "@/components/common/settings-page";
 import { PaymentResultToast } from "@/components/donations/payment-result-toast";
@@ -29,7 +30,10 @@ export function UserDonationsPage({ snapshot, errorCode, paymentResultCode }: Pr
       <SettingsPage {...USER_DONATIONS_PAGE_HEADER}>
         {paymentResultCode ? <PaymentResultToast code={paymentResultCode} /> : null}
         <SettingsCard title={message.title}>
-          <p className="text-muted-foreground text-sm">{message.description}</p>
+          <div className="flex flex-col items-start gap-3">
+            <p className="text-muted-foreground text-sm">{message.description}</p>
+            <RetryRefreshButton />
+          </div>
         </SettingsCard>
       </SettingsPage>
     );
