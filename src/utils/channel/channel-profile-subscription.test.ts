@@ -7,6 +7,7 @@ import { createChannelProfileSubscriptionSnapshot } from "./channel-profile-subs
 const NOW = new Date("2026-06-17T00:00:00.000Z");
 const FUTURE_END_AT = "2026-07-17T00:00:00.000Z";
 const PAST_END_AT = "2026-06-16T00:00:00.000Z";
+const EMOJIS = [{ id: "emoji-1", imageUrl: "/emoji-1.png", name: "나비", sortOrder: 1 }];
 
 test("createChannelProfileSubscriptionSnapshot keeps canceled subscriptions subscribed until end_at", () => {
   const snapshot = createChannelProfileSubscriptionSnapshot({
@@ -20,6 +21,7 @@ test("createChannelProfileSubscriptionSnapshot keeps canceled subscriptions subs
       availableMonths: [1, 24],
       version: "2026-06-17T00:00:00.000Z",
     },
+    emojis: EMOJIS,
     now: NOW,
   });
 
@@ -28,6 +30,7 @@ test("createChannelProfileSubscriptionSnapshot keeps canceled subscriptions subs
   assert.deepEqual(snapshot.customMonths, [24]);
   assert.equal(snapshot.version, "2026-06-17T00:00:00.000Z");
   assert.match(snapshot.imageSourcesByMonth[24], /creator-1\/subscription\/24\.png/);
+  assert.deepEqual(snapshot.emojis, EMOJIS);
 });
 
 test("createChannelProfileSubscriptionSnapshot treats expired rows as unsubscribed", () => {

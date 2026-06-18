@@ -2,11 +2,12 @@
 // 사용자 구독 목록과 구독 관리 다이얼로그를 렌더링합니다.
 
 import { useMemo, useState } from "react";
-import { BadgeCheck, Heart, Sparkles, Star, WalletCards } from "lucide-react";
+import { BadgeCheck, Heart, Smile, Sparkles, Star, WalletCards } from "lucide-react";
 
 import { SettingsCard } from "@/components/common/settings-card";
 import { SettingsPage } from "@/components/common/settings-page";
 import { LiveSubscriptionBadge } from "@/components/live/chat/live-subscription-badge";
+import { SubscriptionChannelEmojiPreview } from "@/components/subscriptions/subscription-channel-emoji-preview";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -333,6 +334,16 @@ function UserSubscriptionManagementDialog({
                     })}
                   </div>
                 </section>
+
+                {subscription.emojis.length > 0 ? (
+                  <section className="border-border flex flex-col gap-3 border-t px-5 py-5">
+                    <div className="flex items-center gap-2">
+                      <Smile className="text-brand size-4" />
+                      <h3 className="text-sm font-black">구독자 전용 이모티콘</h3>
+                    </div>
+                    <SubscriptionChannelEmojiPreview emojis={subscription.emojis} />
+                  </section>
+                ) : null}
               </div>
             </ScrollArea>
 

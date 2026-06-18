@@ -95,7 +95,6 @@ export function ChannelSubscribeAction({ profile, className }: Props) {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsSubscribed(profile.subscription.isSubscribed);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSubscriptionStatus(profile.subscription.status);
   }, [profile.subscription.isSubscribed, profile.subscription.status]);
 
@@ -119,12 +118,18 @@ export function ChannelSubscribeAction({ profile, className }: Props) {
     void queryClient.invalidateQueries({
       queryKey: QUERY_KEYS.donations.walletBalance(user?.id),
     });
+    void queryClient.invalidateQueries({
+      queryKey: QUERY_KEYS.channel.subscribedEmojis(user?.id ?? undefined),
+    });
     router.refresh();
   }
 
   function handleSubscriptionCanceled() {
     setIsSubscribed(true);
     setSubscriptionStatus("canceled");
+    void queryClient.invalidateQueries({
+      queryKey: QUERY_KEYS.channel.subscribedEmojis(user?.id ?? undefined),
+    });
     router.refresh();
   }
 
@@ -205,6 +210,7 @@ export function ChannelSubscribeAction({ profile, className }: Props) {
           subscriptionBadgeCustomMonths={profile.subscription.customMonths}
           subscriptionBadgeVersion={profile.subscription.version}
           subscriptionBadgeImageSources={profile.subscription.imageSourcesByMonth}
+          subscriptionEmojis={profile.subscription.emojis}
           onOpenChange={setIsSubscribeDialogOpen}
           onConfirm={handleSubscribe}
         />

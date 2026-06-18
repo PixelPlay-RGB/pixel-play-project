@@ -1,6 +1,7 @@
 // 공개 채널 페이지(치지직형)의 크리에이터 프로필/배너 타입을 정의합니다.
 
 import type { CreatorSubscriptionStatus } from "@/types/live/live";
+import type { ChannelEmoji } from "@/types/channel/channel-emoji";
 
 export interface ChannelProfileSubscription {
   isSubscribed: boolean;
@@ -8,6 +9,7 @@ export interface ChannelProfileSubscription {
   customMonths: number[];
   version: string | null;
   imageSourcesByMonth: Record<number, string>;
+  emojis: ChannelEmoji[];
 }
 
 export interface ChannelProfile {

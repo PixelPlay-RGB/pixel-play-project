@@ -19,6 +19,7 @@ import { normalizeLiveViewData } from "@/utils/live/live-view-data";
 import { isUuid } from "@/utils/common/uuid";
 import { useLiveBanEviction } from "@/hooks/live/use-live-ban-eviction";
 import type { LiveWatchData } from "@/types/live/live";
+import { mapChannelEmojiRows, type ChannelEmojiPreviewRow } from "@/utils/channel/channel-emoji";
 
 export function useLiveViewData(creatorId: string) {
   const supabase = useMemo(() => createClient(), []);
@@ -39,7 +40,7 @@ export function useLiveViewData(creatorId: string) {
     // (밴 상태는 입장마다 서버로 확정해야 하므로 always 가 정책적으로도 옳다.)
     refetchOnMount: "always",
     queryFn: async () => {
-      const [watchResult, countResult, badgeAssetsResult] = await Promise.all([
+      const [watchResult, countResult, badgeAssetsResult, emojiResult] = await Promise.all([
         supabase.rpc("get_live_watch", {
           p_creator_id: creatorId,
           ...(user?.id ? { p_viewer_id: user.id } : {}),
@@ -48,6 +49,12 @@ export function useLiveViewData(creatorId: string) {
           p_creator_id: creatorId,
         }),
         getLiveSubscriptionBadgeAssetsAction(creatorId),
+        supabase
+          .from("channel_emoji")
+          .select("id, image_path, name, sort_order")
+          .eq("creator_id", creatorId)
+          .order("sort_order", { ascending: true })
+          .order("created_at", { ascending: true }),
       ]);
 
       if (watchResult.error) {
@@ -66,6 +73,9 @@ export function useLiveViewData(creatorId: string) {
       if (!watchData) return null;
 
       const badgeAssets = badgeAssetsResult.success ? badgeAssetsResult.data : null;
+      if (emojiResult.error) {
+        console.error("라이브 구독 이모티콘 조회 실패", emojiResult.error);
+      }
 
       return {
         ...watchData,
@@ -76,6 +86,9 @@ export function useLiveViewData(creatorId: string) {
           availableMonths: badgeAssets?.availableMonths ?? [],
           version: badgeAssets?.version ?? null,
         }),
+        subscriptionEmojis: emojiResult.error
+          ? []
+          : mapChannelEmojiRows((emojiResult.data ?? []) as ChannelEmojiPreviewRow[]),
       };
     },
   });

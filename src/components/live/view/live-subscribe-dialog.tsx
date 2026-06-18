@@ -3,9 +3,10 @@
 
 import { cloneElement, type ComponentProps, type ReactElement } from "react";
 import Link from "next/link";
-import { BadgeCheck, Heart, Star, WalletCards } from "lucide-react";
+import { BadgeCheck, Heart, Smile, Star, WalletCards } from "lucide-react";
 
 import { LiveSubscriptionBadge } from "@/components/live/chat/live-subscription-badge";
+import { SubscriptionChannelEmojiPreview } from "@/components/subscriptions/subscription-channel-emoji-preview";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -16,6 +17,7 @@ import {
 } from "@/constants/creator/creator";
 import { CREATOR_SUBSCRIPTION_PAYMENT_AMOUNT } from "@/constants/subscriptions/creator-subscription";
 import { cn } from "@/lib/utils";
+import type { ChannelEmoji } from "@/types/channel/channel-emoji";
 import type { LiveCreator } from "@/types/live/live";
 import { formatPoint } from "@/utils/donations/format";
 import { buildLiveSubscriptionBadgeMonths } from "@/utils/live/live-subscription-badge";
@@ -35,6 +37,7 @@ interface Props {
   subscriptionBadgeCustomMonths: number[];
   subscriptionBadgeVersion: string | null;
   subscriptionBadgeImageSources: Record<number, string>;
+  subscriptionEmojis: ChannelEmoji[];
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
 }
@@ -65,6 +68,7 @@ export function LiveSubscribeDialog({
   subscriptionBadgeCustomMonths,
   subscriptionBadgeVersion,
   subscriptionBadgeImageSources,
+  subscriptionEmojis,
   onOpenChange,
   onConfirm,
 }: Props) {
@@ -161,6 +165,16 @@ export function LiveSubscribeDialog({
                 ))}
               </div>
             </section>
+
+            {subscriptionEmojis.length > 0 ? (
+              <section className="flex flex-col gap-3">
+                <div className="flex items-center gap-2">
+                  <Smile className="text-brand size-4" />
+                  <h3 className="text-sm font-black">구독자 전용 이모티콘</h3>
+                </div>
+                <SubscriptionChannelEmojiPreview emojis={subscriptionEmojis} />
+              </section>
+            ) : null}
           </div>
         </ScrollArea>
 
