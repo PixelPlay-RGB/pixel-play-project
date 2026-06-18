@@ -42,7 +42,12 @@ interface Props {
 
 type ChannelStickerTabKey = `channel:${string}`;
 type StickerTabKey = "recent" | "default" | ChannelStickerTabKey;
-type StickerTab = { key: StickerTabKey; label: string; icon: ReactNode };
+
+interface StickerTab {
+  key: StickerTabKey;
+  label: string;
+  icon: ReactNode;
+}
 
 function createChannelTabKey(creatorId: string): ChannelStickerTabKey {
   return `channel:${creatorId}`;

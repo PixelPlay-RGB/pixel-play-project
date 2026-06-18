@@ -1,6 +1,6 @@
 "use client";
 // 채널 이모지를 클라이언트에서 조회해 채팅 피커와 렌더러용 데이터로 돌려준다.
-// channel_emoji는 읽기 공개(RLS using true)라 RPC 없이 테이블을 바로 SELECT한다.
+// channel_emoji는 직접 읽고, 구독 권한 creator 목록은 DB now() 기준 RPC로 조회한다.
 
 import { useQuery } from "@tanstack/react-query";
 
@@ -17,6 +17,10 @@ interface ChannelEmojiStickerRow {
 }
 
 interface ChannelEmojiStickerWithCreatorRow extends ChannelEmojiStickerRow {
+  creator_id: string;
+}
+
+interface AvailableChannelEmojiCreatorRow {
   creator_id: string;
 }
 
@@ -46,25 +50,24 @@ async function fetchChannelEmojiStickers(creatorId: string): Promise<Sticker[]> 
   return (data ?? []).map(toSticker);
 }
 
-async function fetchAvailableChannelEmojiStickerGroups(
-  userId: string,
-): Promise<ChannelStickerGroup[]> {
+async function fetchAvailableChannelEmojiStickerGroups(): Promise<ChannelStickerGroup[]> {
   const supabase = createClient();
-  const { data: subscriptionRows, error: subscriptionError } = await supabase
-    .from("creator_subscription")
-    .select("creator_id")
-    .eq("subscriber_id", userId)
-    .in("status", ["active", "canceled"])
-    .gt("end_at", new Date().toISOString());
+  const { data: creatorRows, error: creatorError } = await supabase.rpc(
+    "get_available_channel_emoji_creator_ids",
+  );
 
-  if (subscriptionError) {
-    console.error("구독 채널 이모지 권한 조회 실패", subscriptionError);
-    throw subscriptionError;
+  if (creatorError) {
+    console.error("구독 채널 이모지 권한 조회 실패", creatorError);
+    throw creatorError;
   }
 
   const creatorIds = [
-    ...new Set([userId, ...(subscriptionRows ?? []).map((row) => row.creator_id)]),
+    ...new Set((creatorRows ?? []).map((row: AvailableChannelEmojiCreatorRow) => row.creator_id)),
   ];
+
+  if (creatorIds.length === 0) {
+    return [];
+  }
 
   const { data: emojiRows, error: emojiError } = await supabase
     .from("channel_emoji")
@@ -145,7 +148,7 @@ export function useChannelEmojiStickers(creatorId: string | undefined) {
 export function useAvailableChannelEmojiStickerGroups(userId: string | undefined) {
   return useQuery({
     queryKey: QUERY_KEYS.channel.subscribedEmojis(userId),
-    queryFn: () => fetchAvailableChannelEmojiStickerGroups(userId as string),
+    queryFn: fetchAvailableChannelEmojiStickerGroups,
     enabled: Boolean(userId),
     staleTime: 1000 * 60 * 5,
   });

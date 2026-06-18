@@ -1,5 +1,5 @@
 // user-media 통합 버킷 storage 유틸. 경로(상대) → public URL, MIME → 확장자.
-import { USER_MEDIA_BUCKET } from "../../constants/common/storage.ts";
+import { USER_MEDIA_BUCKET } from "@/constants/common/storage";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 

@@ -1558,6 +1558,12 @@ export type Database = {
         Args: { p_actor_user_id: string; p_creator_id: string }
         Returns: undefined
       }
+      get_available_channel_emoji_creator_ids: {
+        Args: never
+        Returns: {
+          creator_id: string
+        }[]
+      }
       get_channel_banners: { Args: { p_creator_id: string }; Returns: Json }
       get_channel_community_posts: {
         Args: {

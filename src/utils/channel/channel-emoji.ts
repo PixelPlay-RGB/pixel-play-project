@@ -1,7 +1,7 @@
 // 채널 이모지 storage 경로·URL·jsonb 파싱 유틸(배너 패턴 미러).
-import type { ChannelEmoji, ChannelEmojiRow } from "../../types/channel/channel-emoji.ts";
-import type { Json } from "../../types/database.types.ts";
-import { getUserMediaPublicUrl, pickImageExtension } from "../storage/user-media.ts";
+import type { ChannelEmoji, ChannelEmojiRow } from "@/types/channel/channel-emoji";
+import type { Json } from "@/types/database.types";
+import { getUserMediaPublicUrl, pickImageExtension } from "@/utils/storage/user-media";
 
 // user-media/{creatorId}/emoji/{uuid}.{ext}의 객체명(uuid.ext) 생성.
 export function buildEmojiObjectName(mimeType: string): string {

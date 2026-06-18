@@ -90,7 +90,7 @@ export function LiveSubscribeDialog({
         side="top"
         sideOffset={8}
         collisionPadding={8}
-        className="flex max-h-[calc(100vh-1rem)] w-88 max-w-[calc(100vw-1rem)] flex-col gap-0 overflow-hidden p-0 sm:w-112"
+        className="flex max-h-dvh w-88 max-w-dvw flex-col gap-0 overflow-hidden p-0 sm:w-112"
       >
         <header className="border-border shrink-0 border-b p-5 pb-4">
           <div className="flex items-center gap-3">
