@@ -21,14 +21,13 @@ import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { toastAppError, toastAppInfo } from "@/utils/common/toast-message";
 import { LIVE_DONATION_MIN_AMOUNT } from "@/constants/live/live";
 import { parseLiveVoteCommand } from "@/utils/live/live-vote-command";
-import {
-  mapLiveWatchCreator,
-  mapLiveWatchToBroadcast,
-  type CreatorSubscriptionActionResult,
-  type LiveBroadcast,
-  type LivePoll,
-  type LiveSenderRole,
-  type LiveWatchData,
+import { mapLiveWatchCreator, mapLiveWatchToBroadcast } from "@/utils/live/live-watch-mapper";
+import type {
+  CreatorSubscriptionActionResult,
+  LiveBroadcast,
+  LivePoll,
+  LiveSenderRole,
+  LiveWatchData,
 } from "@/types/live/live";
 
 export function useLiveBroadcastView(creatorId: string) {

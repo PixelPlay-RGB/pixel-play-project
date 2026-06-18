@@ -22,6 +22,7 @@ import {
   updateChannelLiveSettingsSchema,
   type UpdateChannelLiveSettingsInput,
 } from "@/lib/zod/channel-live";
+import type { ChannelLiveDrawParticipant } from "@/types/channel/live-interaction";
 import type { AppActionResult } from "@/types/common/action";
 import type { Database, Json } from "@/types/database.types";
 import {
@@ -103,13 +104,6 @@ export interface ChannelLiveChatMessage {
   createdAt: string;
   id: string;
   isCreator: boolean;
-}
-
-export interface ChannelLiveDrawParticipant {
-  firstMessageAt: string;
-  isFollower: boolean;
-  nickname: string;
-  userId: string;
 }
 
 export interface ChannelLiveStudioSettings {

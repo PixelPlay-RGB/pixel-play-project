@@ -1,7 +1,11 @@
 // 방송 운영 상호작용 도구(투표·추첨·룰렛)의 집계·기하 계산 순수 함수를 제공합니다.
-import type { ChannelLiveDrawParticipant } from "@/actions/channel/live";
 import { ROULETTE_POINTER_DEGREE, ROULETTE_SPIN_TURNS } from "@/constants/channel/live-interaction";
-import type { PollResult, RouletteItem, RouletteSegment } from "@/types/channel/live-interaction";
+import type {
+  ChannelLiveDrawParticipant,
+  PollResult,
+  RouletteItem,
+  RouletteSegment,
+} from "@/types/channel/live-interaction";
 import type { LivePoll } from "@/types/live/live";
 
 export function getPollResults(poll: LivePoll | null) {

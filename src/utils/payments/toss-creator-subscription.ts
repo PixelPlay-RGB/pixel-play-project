@@ -3,13 +3,13 @@ import "server-only";
 
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import type { AppMessageCode } from "@/constants/common/app-message-code";
+import { CREATOR_SUBSCRIPTION_PAYMENT_AMOUNT } from "@/constants/subscriptions/creator-subscription";
 import { createAdminClient } from "@/lib/supabase/admin-client";
 import { createClient } from "@/lib/supabase/server";
 import type { AppActionResult } from "@/types/common/action";
 import type { Json } from "@/types/database.types";
 import type { CreatorSubscriptionActionResult, CreatorSubscriptionStatus } from "@/types/live/live";
 import {
-  CREATOR_SUBSCRIPTION_PAYMENT_AMOUNT,
   isCreatorSubscriptionPaymentAmount,
   type TossCreatorSubscriptionPrepareResponse,
 } from "@/utils/payments/toss-creator-subscription-order";

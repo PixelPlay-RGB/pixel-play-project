@@ -4,9 +4,9 @@ import { createAdminClient } from "@/lib/supabase/admin-client";
 import { createClient } from "@/lib/supabase/server";
 import { isAuthSessionMissingError } from "@/utils/auth/auth-error";
 import { isUuid } from "@/utils/common/uuid";
+import { CREATOR_SUBSCRIPTION_PAYMENT_AMOUNT } from "@/constants/subscriptions/creator-subscription";
 import { buildTossCreatorSubscriptionPrepareResponse } from "@/utils/payments/toss-creator-subscription";
 import {
-  CREATOR_SUBSCRIPTION_PAYMENT_AMOUNT,
   createCreatorSubscriptionOrderId,
   createCreatorSubscriptionOrderName,
 } from "@/utils/payments/toss-creator-subscription-order";

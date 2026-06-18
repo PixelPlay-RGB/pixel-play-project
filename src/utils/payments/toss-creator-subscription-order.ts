@@ -2,8 +2,6 @@
 
 import { CREATOR_SUBSCRIPTION_PAYMENT_AMOUNT } from "../../constants/subscriptions/creator-subscription.ts";
 
-export { CREATOR_SUBSCRIPTION_PAYMENT_AMOUNT };
-
 export interface TossCreatorSubscriptionPrepareResponse {
   orderId: string;
   orderName: string;

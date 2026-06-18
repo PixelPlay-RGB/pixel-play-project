@@ -1,4 +1,4 @@
-// 라이브 페이지의 Server Component 데이터 조회를 담당합니다.
+// 라이브 Hero 항목의 서버 사이드 조회를 담당합니다(홈·라이브 Server Component 공용).
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";

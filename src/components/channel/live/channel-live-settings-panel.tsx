@@ -1,7 +1,6 @@
 "use client";
 // 방송 제목, 태그, 미리보기 이미지와 방송 시작 제어를 렌더링합니다.
 
-import type { ChannelLiveState } from "@/components/channel/live/channel-live-operation-page";
 import { DestructiveAlertDialog } from "@/components/common/destructive-alert-dialog";
 import { AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
@@ -9,6 +8,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import type { ChannelLiveState } from "@/types/channel/channel-live";
 import { CircleStop, Play, Save, Tag, Upload, X } from "lucide-react";
 import { type ChangeEvent, type DragEvent, type ReactNode, useRef, useState } from "react";
 

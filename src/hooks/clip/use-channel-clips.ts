@@ -5,14 +5,9 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { QUERY_KEYS } from "@/constants/common/query-keys";
-import {
-  LIVE_CLIP_LIST_COLUMNS,
-  mapLiveClipRowToLiveClip,
-  type ClipPeriod,
-  type ClipSort,
-  type LiveClip,
-  type LiveClipRow,
-} from "@/types/clip/clip";
+import type { ClipPeriod, ClipSort, LiveClip, LiveClipRow } from "@/types/clip/clip";
+import { LIVE_CLIP_LIST_COLUMNS, mapLiveClipRowToLiveClip } from "@/utils/clip/clip-row";
+
 const EMPTY_CLIPS: LiveClip[] = [];
 
 const PERIOD_HOURS: Record<Exclude<ClipPeriod, "all">, number> = {

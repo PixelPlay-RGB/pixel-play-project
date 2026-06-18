@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { Star } from "lucide-react";
 
-import { WalletChargeDialog } from "@/components/donations/wallet-charge-card";
+import { WalletChargeDialog } from "@/components/donations/wallet-charge-dialog";
 import { LiveSubscribeDialog } from "@/components/live/view/live-subscribe-dialog";
 import { LiveSubscriptionCancelDialog } from "@/components/live/view/live-subscription-cancel-dialog";
 import { LiveSubscriptionInsufficientBalanceDialog } from "@/components/live/view/live-subscription-insufficient-balance-dialog";

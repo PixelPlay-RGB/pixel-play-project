@@ -1,7 +1,7 @@
 // 채널 보안 설정 페이지를 렌더링합니다.
 import { ChannelSecurityPageContent } from "@/components/channel/security/channel-security-page-content";
 
-import { getChannelSecuritySnapshot } from "./data";
+import { getChannelSecuritySnapshot } from "./_data/channel-security-data";
 
 export default async function ChannelSecurityPage() {
   const result = await getChannelSecuritySnapshot();

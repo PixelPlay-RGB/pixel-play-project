@@ -6,5 +6,6 @@ import { leaveLiveViewerPresenceAction } from "@/actions/live/live";
 import { createViewerPresenceRouteHandler } from "@/utils/live/live-viewer-presence-route";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 export const POST = createViewerPresenceRouteHandler(leaveLiveViewerPresenceAction);

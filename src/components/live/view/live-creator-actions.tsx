@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { Share2, Star } from "lucide-react";
 import CreatorUnfollowDialog from "@/components/creator/creator-unfollow-dialog";
 import CreatorFollowingButton from "@/components/following/creator-following-button";
-import { WalletChargeDialog } from "@/components/donations/wallet-charge-card";
+import { WalletChargeDialog } from "@/components/donations/wallet-charge-dialog";
 import { LiveUserManageDialog } from "@/components/live/view/live-user-manage-dialog";
 import { LiveSubscribeDialog } from "@/components/live/view/live-subscribe-dialog";
 import { LiveSubscriptionInsufficientBalanceDialog } from "@/components/live/view/live-subscription-insufficient-balance-dialog";
