@@ -1,4 +1,3 @@
-"use client";
 // 실시간 통계 KPI 카드 한 개(아이콘·라벨·값·보조 텍스트·추세)를 렌더링합니다.
 
 import type { LucideIcon } from "lucide-react";

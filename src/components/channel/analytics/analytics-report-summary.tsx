@@ -1,6 +1,4 @@
-"use client";
 // 지난 방송 분석 상단: 선택 기간 내 종료 방송들의 누적 합계를 KPI 카드로 보여줍니다.
-// 클라이언트 컴포넌트인 AnalyticsStatCard에 lucide 아이콘을 넘기므로 클라이언트 경계로 둔다.
 
 import { Clock, Coins, MessagesSquare, Radio, Users } from "lucide-react";
 
