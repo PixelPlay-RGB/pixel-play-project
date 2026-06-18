@@ -11,7 +11,7 @@ interface Props {
 }
 
 export default function ChannelPublicShell({ profile, children }: Props) {
-  // 라이브 목록과 동일한 사이드바/콘텐츠 컨테이너(LiveShell) 안에서 렌더되며,
+  // 공개 채널은 전역 사이드바(LiveShell) 없이 독립 레이아웃으로 렌더된다.
   // 초고해상도(>1920)에서 헤더·탭·피드가 과하게 늘어나지 않도록 1920(max-w-480)로 캡+중앙정렬한다.
   return (
     <div className="mx-auto w-full max-w-480">
