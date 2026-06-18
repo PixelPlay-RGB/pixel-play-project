@@ -1,14 +1,13 @@
 "use client";
-// 채널 채팅에서 쓰는 채널 이모지(스티커) 컨텍스트. LiveView 루트에서 한 번 provide하면
+// 구독한 방송인의 채널 이모지(스티커) 컨텍스트. LiveView 루트에서 한 번 provide하면
 // 그 아래 채팅 메시지 렌더러·입력바 피커가 prop 드릴 없이 꺼내 쓴다(memo 메시지에도 안전 — context).
 //
-// - stickers: 렌더링용(누가 보냈든 모두가 채널 이모지를 이미지로 본다)
-// - canUseInPicker: 피커에서 보내기 가능 여부. 크리에이터 본인 또는 활성 구독자에게만 열린다.
+// - stickers: 로그인 사용자가 활성 구독 중인 방송인의 채널 이모지
+// - canUseInPicker: 피커에서 구독 이모지 탭을 열 수 있는지 여부.
 
 import { createContext, useContext, useMemo, type ReactNode } from "react";
 
-import { useChannelEmojiStickers } from "@/hooks/channel/use-channel-emoji-stickers";
-import { useChannelProfile } from "@/hooks/channel/use-channel-profile";
+import { useSubscribedChannelEmojiStickers } from "@/hooks/channel/use-channel-emoji-stickers";
 import { useAuthStore } from "@/stores/auth";
 import type { Sticker } from "@/types/sticker/sticker";
 
@@ -30,33 +29,22 @@ const ChannelStickerContext = createContext<ChannelStickerContextValue>({
   channelAvatarUrl: null,
 });
 
-export function ChannelStickerProvider({
-  creatorId,
-  canUseChannelStickers = false,
-  children,
-}: {
-  // 운영 콘솔 등 creatorId가 아직 없을 수 있는 표면도 안전하게 감싸도록 undefined 허용.
-  creatorId: string | undefined;
-  canUseChannelStickers?: boolean;
-  children: ReactNode;
-}) {
-  const { data: stickers, isLoading } = useChannelEmojiStickers(creatorId);
+const SUBSCRIBED_CHANNEL_STICKER_LABEL = "구독 이모지";
+
+export function ChannelStickerProvider({ children }: { children: ReactNode }) {
   const authUser = useAuthStore((state) => state.user);
-  const canUseInPicker =
-    Boolean(creatorId) && (authUser?.id === creatorId || canUseChannelStickers);
-  // 채널 탭 표시정보 = 채널 주인(creatorId) 프로필. 본인이든 구독자든 채널 이름이 맞다.
-  // 채널 탭이 뜰 때(canUseInPicker)만 조회해 비로그인·일반 시청자의 불필요한 쿼리를 막는다.
-  const { data: channelProfile } = useChannelProfile(creatorId, canUseInPicker);
+  const { data: stickers, isLoading } = useSubscribedChannelEmojiStickers(authUser?.id);
+  const canUseInPicker = (stickers?.length ?? 0) > 0;
 
   const value = useMemo<ChannelStickerContextValue>(
     () => ({
       stickers: stickers ?? [],
       isLoading,
       canUseInPicker,
-      channelName: channelProfile?.name ?? null,
-      channelAvatarUrl: channelProfile?.avatarUrl ?? null,
+      channelName: canUseInPicker ? SUBSCRIBED_CHANNEL_STICKER_LABEL : null,
+      channelAvatarUrl: null,
     }),
-    [stickers, isLoading, canUseInPicker, channelProfile],
+    [stickers, isLoading, canUseInPicker],
   );
 
   return <ChannelStickerContext.Provider value={value}>{children}</ChannelStickerContext.Provider>;

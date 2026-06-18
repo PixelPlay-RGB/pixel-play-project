@@ -9,6 +9,21 @@ import { createClient } from "@/lib/supabase/client";
 import type { Sticker } from "@/types/sticker/sticker";
 import { getChannelEmojiSrc } from "@/utils/channel/channel-emoji";
 
+interface ChannelEmojiStickerRow {
+  id: string;
+  image_path: string;
+  name: string;
+}
+
+function toSticker(row: ChannelEmojiStickerRow): Sticker {
+  return {
+    id: row.id,
+    label: row.name,
+    src: getChannelEmojiSrc(row.image_path),
+    isAnimated: false,
+  };
+}
+
 async function fetchChannelEmojiStickers(creatorId: string): Promise<Sticker[]> {
   const supabase = createClient();
   const { data, error } = await supabase
@@ -23,12 +38,64 @@ async function fetchChannelEmojiStickers(creatorId: string): Promise<Sticker[]> 
     throw error;
   }
 
-  return (data ?? []).map((row) => ({
-    id: row.id,
-    label: row.name,
-    src: getChannelEmojiSrc(row.image_path),
-    isAnimated: false,
-  }));
+  return (data ?? []).map(toSticker);
+}
+
+async function fetchSubscribedChannelEmojiStickers(userId: string): Promise<Sticker[]> {
+  const supabase = createClient();
+  const { data: subscriptionRows, error: subscriptionError } = await supabase
+    .from("creator_subscription")
+    .select("creator_id")
+    .eq("subscriber_id", userId)
+    .in("status", ["active", "canceled"])
+    .gt("end_at", new Date().toISOString());
+
+  if (subscriptionError) {
+    console.error("구독 채널 이모지 권한 조회 실패", subscriptionError);
+    throw subscriptionError;
+  }
+
+  const creatorIds = [...new Set((subscriptionRows ?? []).map((row) => row.creator_id))];
+
+  if (creatorIds.length === 0) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from("channel_emoji")
+    .select("id, image_path, name, sort_order, creator_id")
+    .in("creator_id", creatorIds)
+    .order("creator_id", { ascending: true })
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    console.error("구독 채널 이모지 조회 실패", error);
+    throw error;
+  }
+
+  return (data ?? []).map(toSticker);
+}
+
+async function fetchChannelEmojiStickersByIds(emojiIds: readonly string[]): Promise<Sticker[]> {
+  const uniqueEmojiIds = [...new Set(emojiIds)];
+
+  if (uniqueEmojiIds.length === 0) {
+    return [];
+  }
+
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("channel_emoji")
+    .select("id, image_path, name, sort_order")
+    .in("id", uniqueEmojiIds);
+
+  if (error) {
+    console.error("채널 이모지 토큰 렌더 조회 실패", error);
+    throw error;
+  }
+
+  return (data ?? []).map(toSticker);
 }
 
 // creatorId가 없으면 비활성(공개 페이지 등). 5분 캐싱 — 등록/수정은 설정 페이지에서만 일어난다.
@@ -37,6 +104,26 @@ export function useChannelEmojiStickers(creatorId: string | undefined) {
     queryKey: QUERY_KEYS.channel.emojis(creatorId),
     queryFn: () => fetchChannelEmojiStickers(creatorId as string),
     enabled: Boolean(creatorId),
+    staleTime: 1000 * 60 * 5,
+  });
+}
+
+export function useSubscribedChannelEmojiStickers(userId: string | undefined) {
+  return useQuery({
+    queryKey: QUERY_KEYS.channel.subscribedEmojis(userId),
+    queryFn: () => fetchSubscribedChannelEmojiStickers(userId as string),
+    enabled: Boolean(userId),
+    staleTime: 1000 * 60 * 5,
+  });
+}
+
+export function useChannelEmojiStickersByIds(emojiIds: readonly string[]) {
+  const normalizedEmojiIds = [...new Set(emojiIds)].sort();
+
+  return useQuery({
+    queryKey: QUERY_KEYS.channel.emojiByIds(normalizedEmojiIds),
+    queryFn: () => fetchChannelEmojiStickersByIds(normalizedEmojiIds),
+    enabled: normalizedEmojiIds.length > 0,
     staleTime: 1000 * 60 * 5,
   });
 }

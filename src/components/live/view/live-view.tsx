@@ -3,6 +3,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { motion, useReducedMotion } from "motion/react";
 import { Timer, Users } from "lucide-react";
 import { ClipSection } from "@/components/clip/clip-section";
@@ -27,6 +28,7 @@ import { useClipEditorStore } from "@/stores/clip-editor";
 import { useLiveTheaterStore } from "@/stores/live-theater";
 import { useLiveWatchSessionStore } from "@/stores/live-watch-session";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
+import { QUERY_KEYS } from "@/constants/common/query-keys";
 import { LIVE_LABEL } from "@/constants/live/live";
 import { toastAppError, toastAppInfo, toastAppSuccess } from "@/utils/common/toast-message";
 
@@ -125,6 +127,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
   const [isLoginPromptOpen, setIsLoginPromptOpen] = useState(false);
   const [isDesktopChatCollapsed, setIsDesktopChatCollapsed] = useState(false);
   const router = useRouter();
+  const queryClient = useQueryClient();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   // 클립 생성은 별도 라우트(/clip/editor)에서 진행한다 — 가위 클릭 시점의 스냅샷·제목을
@@ -217,6 +220,9 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
 
     if (paymentStatus === "subscription_succeeded") {
       toastAppSuccess(APP_MESSAGE_CODE.success.live.subscribed);
+      void queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.channel.subscribedEmojis(viewerId ?? undefined),
+      });
     } else if (paymentStatus === "subscription_canceled") {
       toastAppInfo(APP_MESSAGE_CODE.info.live.subscriptionPaymentCanceled);
     } else {
@@ -228,7 +234,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     const nextQuery = nextParams.toString();
 
     router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, { scroll: false });
-  }, [pathname, router, searchParams]);
+  }, [pathname, queryClient, router, searchParams, viewerId]);
 
   // 방송이 종료(시청 중 ended 포함)되면 와이드 모드를 풀어, 사이드바와 스트리머 정보 행이 다시 보이게 한다.
   const hasLiveBroadcast = !!broadcast;
@@ -298,7 +304,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
   }
 
   return (
-    <ChannelStickerProvider creatorId={creatorId} canUseChannelStickers={isSubscribed}>
+    <ChannelStickerProvider>
       <div
         className={cn("bg-background overflow-hidden", "min-h-app-content", "md:h-full md:min-h-0")}
       >

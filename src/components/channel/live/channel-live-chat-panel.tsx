@@ -124,7 +124,7 @@ export default function ChannelLiveChatPanel({ creatorId, chatRuleText, onMessag
   }, [isPopoutOpen]);
 
   return (
-    <ChannelStickerProvider creatorId={creatorId}>
+    <ChannelStickerProvider>
       {/* 시청 화면 채팅 패널과 같은 풀블리드 — 칼럼 구분은 부모(border-x)가 담당한다. */}
       <div className="bg-card flex h-full min-h-96 flex-col overflow-hidden md:min-h-0">
         <div className="border-border flex items-center justify-between border-b px-4 py-3">

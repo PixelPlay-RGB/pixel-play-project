@@ -11,3 +11,20 @@ test("live subscription badge assets query key is creator scoped", () => {
     "creator-id",
   ]);
 });
+
+test("subscribed channel emoji query key is viewer scoped", () => {
+  assert.deepEqual(QUERY_KEYS.channel.subscribedEmojis("viewer-id"), [
+    "channel",
+    "subscribed-emojis",
+    "viewer-id",
+  ]);
+});
+
+test("channel emoji by ids query key is token scoped", () => {
+  assert.deepEqual(QUERY_KEYS.channel.emojiByIds(["emoji-b", "emoji-a"]), [
+    "channel",
+    "emoji-by-ids",
+    "emoji-b",
+    "emoji-a",
+  ]);
+});

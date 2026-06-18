@@ -2,7 +2,7 @@
 // 라이브 채팅 메시지 목록 — TanStack Virtual로 보이는 구간만 렌더링하고 하단 근접 시 자동 스크롤한다.
 // 위로 스크롤해 상단에 닿으면 과거 채팅을 한 페이지씩 적재한다(가상화 덕에 DOM은 화면 분량 유지).
 
-import { memo, useEffect, useLayoutEffect, useRef, type RefObject } from "react";
+import { memo, useEffect, useLayoutEffect, useMemo, useRef, type RefObject } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { LiveChatDonationMessageCard } from "@/components/live/chat/live-chat-donation-message-card";
 import { LiveChatProfilePopover } from "@/components/live/chat/live-chat-profile-popover";
@@ -11,8 +11,12 @@ import { LiveSubscriptionBadge } from "@/components/live/chat/live-subscription-
 import { useChannelStickers } from "@/components/live/chat/channel-sticker-context";
 import RichMessageText from "@/components/common/rich-message-text";
 import { LIVE_LABEL } from "@/constants/live/live";
+import { useChannelEmojiStickersByIds } from "@/hooks/channel/use-channel-emoji-stickers";
 import { getLiveChatOverlayNicknameColor } from "@/utils/live/live-chat-overlay-style";
+import { isUuid } from "@/utils/common/uuid";
+import { extractStickerTokenIds } from "@/utils/sticker/sticker-token";
 import type { LiveChatMessage, LiveChatProfileContext } from "@/types/live/live";
+import type { Sticker } from "@/types/sticker/sticker";
 
 // 한 줄 텍스트 채팅 기준 추정 높이(px). 실제 높이는 measureElement가 행마다 보정한다.
 const ESTIMATED_ROW_HEIGHT = 32;
@@ -22,6 +26,34 @@ const ROW_GAP = 12;
 const LOAD_OLDER_THRESHOLD_PX = 80;
 const EMPTY_SUBSCRIPTION_BADGE_CUSTOM_MONTHS: number[] = [];
 const EMPTY_SUBSCRIPTION_BADGE_IMAGE_SOURCES: Record<number, string> = {};
+
+function mergeStickersById(...stickerGroups: readonly Sticker[][]): Sticker[] {
+  const seen = new Set<string>();
+  const merged: Sticker[] = [];
+
+  for (const stickers of stickerGroups) {
+    for (const sticker of stickers) {
+      if (seen.has(sticker.id)) continue;
+      seen.add(sticker.id);
+      merged.push(sticker);
+    }
+  }
+
+  return merged;
+}
+
+function extractChannelEmojiTokenIds(messages: readonly LiveChatMessage[]): string[] {
+  const tokenIds = new Set<string>();
+
+  for (const message of messages) {
+    if (message.type !== "text") continue;
+    for (const tokenId of extractStickerTokenIds(message.content)) {
+      if (isUuid(tokenId)) tokenIds.add(tokenId);
+    }
+  }
+
+  return [...tokenIds].sort();
+}
 
 interface Props {
   creatorId: string;
@@ -80,6 +112,18 @@ export function LiveChatMessageList({
   const rowCount = messages.length + 1;
   const getMessageAtRow = (rowIndex: number) =>
     messages[rowIndex < noticeRowIndex ? rowIndex : rowIndex - 1];
+  const { stickers: pickerStickers } = useChannelStickers();
+  const messageChannelEmojiTokenIds = useMemo(
+    () => extractChannelEmojiTokenIds(messages),
+    [messages],
+  );
+  const { data: messageChannelStickers } = useChannelEmojiStickersByIds(
+    messageChannelEmojiTokenIds,
+  );
+  const renderStickers = useMemo(
+    () => mergeStickersById(pickerStickers, messageChannelStickers ?? []),
+    [pickerStickers, messageChannelStickers],
+  );
 
   const virtualizer = useVirtualizer({
     count: rowCount,
@@ -189,6 +233,7 @@ export function LiveChatMessageList({
                 profileViewerId={profileContext?.viewerId ?? null}
                 profileCanModerate={profileContext?.canModerate ?? false}
                 profileBroadcastId={profileContext?.broadcastId ?? null}
+                extraStickers={renderStickers}
               />
             )}
           </div>
@@ -210,6 +255,7 @@ interface MessageItemProps {
   profileViewerId?: string | null;
   profileCanModerate?: boolean;
   profileBroadcastId?: string | null;
+  extraStickers: Sticker[];
 }
 
 // 메시지가 바뀌지 않은 기존 항목은 새 메시지 도착마다 재렌더되지 않게 memo로 감싼다.
@@ -225,6 +271,7 @@ const MessageItem = memo(function MessageItem({
   profileViewerId = null,
   profileCanModerate = false,
   profileBroadcastId = null,
+  extraStickers,
 }: MessageItemProps) {
   if (message.type === "system") {
     return (
@@ -268,6 +315,7 @@ const MessageItem = memo(function MessageItem({
       subscriptionBadgeImageSources={subscriptionBadgeImageSources}
       isMasked={isMasked}
       profileContext={profileContext}
+      extraStickers={extraStickers}
     />
   );
 });
@@ -280,6 +328,7 @@ function TextMessage({
   subscriptionBadgeImageSources,
   isMasked,
   profileContext,
+  extraStickers,
 }: {
   creatorId: string;
   message: LiveChatMessage;
@@ -288,10 +337,8 @@ function TextMessage({
   subscriptionBadgeImageSources?: Record<number, string>;
   isMasked: boolean;
   profileContext: LiveChatProfileContext | null;
+  extraStickers: Sticker[];
 }) {
-  // 채널 이모지(:pp-<uuid>:)도 이미지로 렌더한다 — context는 memo된 MessageItem을 건너뛰고
-  // 소비처(여기)만 다시 그리므로 가상화 목록에서도 안전하다.
-  const { stickers: channelStickers } = useChannelStickers();
   // 동시 보유 역할들(매핑 단계에서 sender_role + metadata 로 합성). 구독자는 N개월 티콘으로 표시하므로
   // 역할 아이콘 뱃지에서는 제외한다(중복 방지). 팝오버 카드에는 전체 역할을 그대로 넘긴다.
   const allRoles: LiveChatRole[] = message.senderRoles ?? [];
@@ -345,7 +392,7 @@ function TextMessage({
           as="span"
           text={message.content}
           className="text-foreground align-middle"
-          extraStickers={channelStickers}
+          extraStickers={extraStickers}
         />
       )}
     </p>

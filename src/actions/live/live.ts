@@ -39,6 +39,7 @@ import {
   isKnownLiveSubscriptionRpcError,
   resolveLiveSubscriptionRpcErrorCode,
 } from "@/utils/live/live-subscription-rpc-error";
+import { getMissingChannelEmojiSubscriptionCreatorIds } from "@/utils/sticker/channel-emoji-access";
 import { signAnonViewerKey, verifyAnonViewerKey } from "@/utils/live/live-security";
 import { extractStickerTokenIds } from "@/utils/sticker/sticker-token";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -65,18 +66,12 @@ function normalizeSendLiveMessageResult(data: unknown): SendLiveMessageResult | 
 async function validateChannelEmojiTokenAccess({
   supabase,
   actorUserId,
-  creatorId,
   content,
 }: {
   supabase: WriteClient;
   actorUserId: string;
-  creatorId: string;
   content: string;
 }): Promise<AppActionResult<SendLiveMessageResult>> {
-  if (actorUserId === creatorId) {
-    return { success: true };
-  }
-
   const tokenIds = extractStickerTokenIds(content).filter(isUuid);
   if (tokenIds.length === 0) {
     return { success: true };
@@ -84,8 +79,7 @@ async function validateChannelEmojiTokenAccess({
 
   const { data: channelEmojiRows, error: channelEmojiError } = await supabase
     .from("channel_emoji")
-    .select("id")
-    .eq("creator_id", creatorId)
+    .select("id, creator_id")
     .in("id", tokenIds);
 
   if (channelEmojiError) {
@@ -97,21 +91,31 @@ async function validateChannelEmojiTokenAccess({
     return { success: true };
   }
 
+  const creatorIds = [...new Set((channelEmojiRows ?? []).map((row) => row.creator_id))];
+
   const { data: subscriptionRows, error: subscriptionError } = await supabase
     .from("creator_subscription")
-    .select("id")
-    .eq("creator_id", creatorId)
+    .select("creator_id")
     .eq("subscriber_id", actorUserId)
+    .in("creator_id", creatorIds)
     .in("status", ["active", "canceled"])
-    .gt("end_at", new Date().toISOString())
-    .limit(1);
+    .gt("end_at", new Date().toISOString());
 
   if (subscriptionError) {
     console.error("채널 이모지 구독 권한 조회 실패", subscriptionError);
     return { success: false, code: APP_MESSAGE_CODE.error.message.sendFailed };
   }
 
-  if ((subscriptionRows ?? []).length === 0) {
+  const missingCreatorIds = getMissingChannelEmojiSubscriptionCreatorIds({
+    tokenIds,
+    emojiOwners: (channelEmojiRows ?? []).map((row) => ({
+      id: row.id,
+      creatorId: row.creator_id,
+    })),
+    subscribedCreatorIds: (subscriptionRows ?? []).map((row) => row.creator_id),
+  });
+
+  if (missingCreatorIds.length > 0) {
     return { success: false, code: APP_MESSAGE_CODE.error.message.sendForbidden };
   }
 
@@ -202,7 +206,6 @@ export async function sendLiveMessageAction(
   const emojiAccess = await validateChannelEmojiTokenAccess({
     supabase: client.supabase,
     actorUserId: actor.userId,
-    creatorId,
     content: trimmed,
   });
 
