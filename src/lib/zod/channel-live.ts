@@ -28,7 +28,7 @@ const slowModeSecondsSchema = z
 
 export const startLiveBroadcastSchema = z.object({
   tags: z.array(z.string().trim().min(1).max(12)).max(5),
-  thumbnailUrl: z.string().url().nullable().optional(),
+  thumbnailUrl: z.url().nullable().optional(),
   title: z.string().trim().min(1).max(100),
 });
 
@@ -58,37 +58,37 @@ export const updateChannelLiveSettingsSchema = z.object({
 
 export const getChannelLiveDrawParticipantsSchema = z
   .object({
-    broadcastId: z.string().uuid(),
-    drawNoticeId: z.string().uuid().nullable().optional(),
-    endedAt: z.string().datetime(),
-    startedAt: z.string().datetime(),
+    broadcastId: z.uuid(),
+    drawNoticeId: z.uuid().nullable().optional(),
+    endedAt: z.iso.datetime(),
+    startedAt: z.iso.datetime(),
   })
   .refine((value) => new Date(value.startedAt).getTime() <= new Date(value.endedAt).getTime());
 
 export const createChannelLivePollSchema = z.object({
-  broadcastId: z.string().uuid(),
-  endsAt: z.string().datetime().nullable().optional(),
+  broadcastId: z.uuid(),
+  endsAt: z.iso.datetime().nullable().optional(),
   options: z.array(z.string().trim().min(1).max(24)).min(2),
   title: z.string().trim().min(1).max(80),
 });
 
 export const endChannelLivePollSchema = z.object({
-  pollId: z.string().uuid(),
+  pollId: z.uuid(),
 });
 
 export const sendChannelLiveInteractionNoticeSchema = z.object({
-  broadcastId: z.string().uuid(),
+  broadcastId: z.uuid(),
   content: z.string().trim().min(1).max(300),
   interactionType: z.enum(["poll", "draw"]),
   metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 export const sendChannelLiveRouletteNoticeSchema = z.object({
-  broadcastId: z.string().uuid(),
+  broadcastId: z.uuid(),
   payload: z.object({
-    createdAt: z.string().datetime().optional(),
+    createdAt: z.iso.datetime().optional(),
     durationSeconds: z.number().positive().max(30).optional(),
-    id: z.string().uuid(),
+    id: z.uuid(),
     items: z.array(z.string().trim().min(1).max(24)).min(2).max(24),
     resultLabel: z.string().trim().min(1).max(24),
     rotationKeyframes: z.array(z.number().finite()).min(1).max(8),

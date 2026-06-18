@@ -8,7 +8,7 @@ interface LiveListSkeletonProps {
 
 export default function LiveListSkeleton({ count = 8 }: LiveListSkeletonProps) {
   return (
-    <div className="grid grid-cols-1 gap-x-4 gap-y-7 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+    <div className="grid grid-cols-1 gap-x-4 gap-y-7 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
       {Array.from({ length: count }).map((_, index) => (
         <div key={index} className="overflow-hidden">
           <Skeleton className="aspect-video rounded-lg" />

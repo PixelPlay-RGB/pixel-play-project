@@ -1,6 +1,6 @@
 // 라이브 크리에이터 구독 Toss 결제 주문 값을 생성하고 검증합니다.
 
-import { CREATOR_SUBSCRIPTION_PAYMENT_AMOUNT } from "../../constants/subscriptions/creator-subscription.ts";
+import { CREATOR_SUBSCRIPTION_PAYMENT_AMOUNT } from "@/constants/subscriptions/creator-subscription";
 
 export interface TossCreatorSubscriptionPrepareResponse {
   orderId: string;

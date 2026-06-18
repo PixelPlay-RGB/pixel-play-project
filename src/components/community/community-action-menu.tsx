@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -50,18 +51,20 @@ export default function CommunityActionMenu({
         )}
       />
       <DropdownMenuContent align="end" side="bottom" sideOffset={4} className="min-w-32">
-        {canEdit && (
-          <DropdownMenuItem onClick={onEdit}>
-            <Pencil />
-            수정
-          </DropdownMenuItem>
-        )}
-        {canDelete && (
-          <DropdownMenuItem variant="destructive" onClick={onDelete}>
-            <Trash2 />
-            삭제
-          </DropdownMenuItem>
-        )}
+        <DropdownMenuGroup>
+          {canEdit && (
+            <DropdownMenuItem onClick={onEdit}>
+              <Pencil />
+              수정
+            </DropdownMenuItem>
+          )}
+          {canDelete && (
+            <DropdownMenuItem variant="destructive" onClick={onDelete}>
+              <Trash2 />
+              삭제
+            </DropdownMenuItem>
+          )}
+        </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   );

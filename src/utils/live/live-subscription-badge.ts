@@ -1,6 +1,6 @@
 // 라이브 구독 뱃지의 방송인별 storage 경로와 public URL을 생성합니다.
 
-import { USER_MEDIA_BUCKET } from "../../constants/common/storage.ts";
+import { USER_MEDIA_BUCKET } from "@/constants/common/storage";
 
 const LIVE_DEFAULT_SUBSCRIPTION_BADGE_VERSION = "20260615-fixed-slots-v1";
 export const LIVE_SUBSCRIPTION_BADGE_VERSION_FILE = ".version";

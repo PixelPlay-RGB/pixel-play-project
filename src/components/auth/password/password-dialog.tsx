@@ -4,8 +4,10 @@
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -98,6 +100,11 @@ export default function PasswordDialog({ className, icon, label, trigger }: Prop
               onOpenChange={() => handleOpenChange(false)}
             />
           )}
+          <DialogFooter className="mx-0 mb-0 border-t-0 bg-transparent p-0">
+            <DialogClose render={<Button variant="outline" className="h-11 w-full rounded-xl" />}>
+              취소
+            </DialogClose>
+          </DialogFooter>
         </div>
       </DialogContent>
     </Dialog>

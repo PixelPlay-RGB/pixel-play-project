@@ -1,6 +1,6 @@
 // 사용자 구독 관리 다이얼로그의 기본 액션 표시 정책을 제공합니다.
 
-import type { CreatorSubscriptionStatus } from "../../types/live/live.ts";
+import type { CreatorSubscriptionStatus } from "@/types/live/live";
 
 interface UserSubscriptionManagementActionInput {
   isActive: boolean;

@@ -35,7 +35,7 @@ export default function IdentityCard({
       className={cn(
         "group/identity relative flex items-center gap-3.5 overflow-hidden rounded-xl border py-4 pr-4 pl-5 transition-all duration-200",
         "border-border/60 bg-card/40",
-        "hover:border-brand/35 hover:bg-brand/[0.06]",
+        "hover:border-brand/35 hover:bg-brand/5",
         className,
       )}
     >

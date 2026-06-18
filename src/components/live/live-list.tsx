@@ -66,7 +66,7 @@ export default function LiveList({ heroSlot, heroId }: LiveListProps) {
         ) : isEmpty ? (
           <LiveListEmptyState filter={query.effectiveFilter} />
         ) : visibleItems.length > 0 ? (
-          <div className="grid grid-cols-1 gap-x-4 gap-y-7 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-x-4 gap-y-7 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
             {visibleItems.map((item) => (
               <LiveCard key={item.id} item={item} />
             ))}

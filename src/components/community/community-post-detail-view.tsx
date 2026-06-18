@@ -137,7 +137,7 @@ export default function CommunityPostDetailView({
                 })
               }
               unoptimized
-              className="border-border/60 mt-4 h-auto max-h-[32rem] w-auto max-w-full rounded-xl border"
+              className="border-border/60 mt-4 h-auto max-h-128 w-auto max-w-full rounded-xl border"
             />
           )}
 

@@ -120,6 +120,13 @@ export default function ChannelLiveStreamStatusPanel({
   const [durationLabel, setDurationLabel] = useState(DEFAULT_STREAM_DURATION);
   const previousSampleRef = useRef<BitrateSample | null>(null);
 
+  // 부모 콜백이 매 렌더 새 참조로 와도 폴링 effect가 재시작(abort+재fetch)되지 않도록 ref로 고정한다.
+  // ref 갱신은 렌더 중이 아닌 effect에서 수행한다(react-hooks: 렌더 중 ref 접근 금지).
+  const onStatusChangeRef = useRef(onStatusChange);
+  useEffect(() => {
+    onStatusChangeRef.current = onStatusChange;
+  }, [onStatusChange]);
+
   useEffect(() => {
     let isMounted = true;
     const abortController = new AbortController();
@@ -159,7 +166,7 @@ export default function ChannelLiveStreamStatusPanel({
         }
 
         setStreamStatus(nextStatus);
-        onStatusChange?.(nextStatus);
+        onStatusChangeRef.current?.(nextStatus);
       } catch (error) {
         if (!abortController.signal.aborted) {
           console.error("방송 송출 상태 조회 실패", error);
@@ -175,7 +182,7 @@ export default function ChannelLiveStreamStatusPanel({
       abortController.abort();
       clearInterval(interval);
     };
-  }, [onStatusChange, streamPath]);
+  }, [streamPath]);
 
   useEffect(() => {
     const startedAt = streamStatus?.onlineTime ?? activeBroadcastStartedAt;

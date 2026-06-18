@@ -1,6 +1,6 @@
 // 라이브 구독 RPC 오류 코드를 앱 메시지 코드로 변환합니다.
-import { APP_MESSAGE_CODE } from "../../constants/common/app-message-code.ts";
-import type { AppMessageCode } from "../../constants/common/app-message-code.ts";
+import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
+import type { AppMessageCode } from "@/constants/common/app-message-code";
 
 interface SupabaseLikeError {
   code?: string;

@@ -1,7 +1,7 @@
 // 채널 구독자 관리 목록의 활성 카운트와 검색·정렬 값을 계산합니다.
 
-import { getKstDateParts } from "../common/kst.ts";
-import { isSubscriptionBenefitActive } from "../subscriptions/user-subscription-status.ts";
+import { getKstDateParts } from "@/utils/common/kst";
+import { isSubscriptionBenefitActive } from "@/utils/subscriptions/user-subscription-status";
 
 export type ChannelSubscriptionStatus = "active" | "expired" | "canceled";
 

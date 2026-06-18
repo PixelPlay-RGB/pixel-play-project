@@ -43,7 +43,7 @@ export default function ChannelTabs({ creatorId }: Props) {
   };
 
   return (
-    <nav className="border-border/60 flex items-center gap-6 border-b">
+    <nav className="border-border/60 no-scrollbar flex items-center gap-6 overflow-x-auto border-b">
       {TABS.map((tab) => {
         const isActive = isTabActive(tab);
 

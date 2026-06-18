@@ -48,7 +48,7 @@ export function LiveCreatorInfo({ creator, isLive = false }: Props) {
       </Link>
 
       <div className="flex min-w-0 flex-col gap-0.5">
-        <span className="text-foreground text-base font-bold">{creator.name}</span>
+        <span className="text-foreground min-w-0 truncate text-base font-bold">{creator.name}</span>
         <div className="text-muted-foreground flex items-center gap-2 text-xs">
           <span>
             {formatCount(creator.followerCount)} {LIVE_LABEL.followers}
