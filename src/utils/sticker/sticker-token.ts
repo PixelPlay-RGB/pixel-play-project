@@ -5,8 +5,8 @@ import {
   STICKER_TOKEN_GLOBAL_PATTERN,
   STICKER_TOKEN_PREFIX,
   STICKER_TOKEN_SPLIT_PATTERN,
-} from "@/constants/sticker/sticker";
-import type { Sticker } from "@/types/sticker/sticker";
+} from "../../constants/sticker/sticker.ts";
+import type { Sticker } from "../../types/sticker/sticker.ts";
 
 const STICKER_BY_ID = new Map<string, Sticker>(
   DEFAULT_STICKERS.map((sticker) => [sticker.id, sticker]),
@@ -19,6 +19,17 @@ export function getStickerById(id: string): Sticker | undefined {
 // 피커 삽입용 토큰 문자열 :pp-<id>: 생성.
 export function buildStickerToken(id: string): string {
   return `${STICKER_TOKEN_PREFIX}${id}:`;
+}
+
+export function extractStickerTokenIds(text: string): string[] {
+  const ids = new Set<string>();
+
+  for (const match of text.matchAll(STICKER_TOKEN_GLOBAL_PATTERN)) {
+    const [token] = match;
+    ids.add(token.slice(STICKER_TOKEN_PREFIX.length, -1));
+  }
+
+  return [...ids];
 }
 
 // 토큰 매치 문자열(:pp-xxx:)에서 등록 스티커를 찾는다. 미등록이면 undefined(평문 취급).

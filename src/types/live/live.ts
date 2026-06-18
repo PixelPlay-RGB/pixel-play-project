@@ -1,6 +1,7 @@
 // 라이브 목록·시청 화면에서 사용하는 도메인 타입을 정의합니다.
 
 import type { GenericTables } from "@/types/common/supabase.types";
+import type { ChannelEmoji } from "@/types/channel/channel-emoji";
 
 export type LiveListFilter = "ALL" | "FOLLOWING" | "RECENT" | "ACTIVE_CHAT";
 
@@ -282,4 +283,5 @@ export interface LiveWatchData {
   subscriptionBadgeCustomMonths: number[];
   subscriptionBadgeVersion: string | null;
   subscriptionBadgeImageSources: Record<number, string>;
+  subscriptionEmojis: ChannelEmoji[];
 }

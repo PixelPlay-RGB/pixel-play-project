@@ -18,6 +18,7 @@ import {
   LIVE_SUBSCRIPTION_BADGE_STORAGE_LIST_LIMIT,
   readLiveSubscriptionBadgeAssetInfo,
 } from "@/utils/live/live-subscription-badge";
+import { mapChannelEmojiRows } from "@/utils/channel/channel-emoji";
 import { isSubscriptionBenefitActive } from "@/utils/subscriptions/user-subscription-status";
 
 type CreatorSubscriptionRow = Pick<
@@ -26,7 +27,12 @@ type CreatorSubscriptionRow = Pick<
 >;
 
 type CreatorProfileRow = Pick<GenericTables<"user">, "id" | "nickname" | "photo_url">;
+type ChannelEmojiSubscriptionRow = Pick<
+  GenericTables<"channel_emoji">,
+  "id" | "creator_id" | "image_path" | "name" | "sort_order"
+>;
 type AdminClient = ReturnType<typeof createAdminClient>;
+type UserSubscriptionAssets = Pick<UserSubscriptionItem, "badge" | "emojis">;
 
 const UNKNOWN_CREATOR_NICKNAME = "알 수 없음";
 
@@ -93,12 +99,16 @@ export async function getUserSubscriptionSnapshot(): Promise<
       ),
     ),
   );
+  const emojisByCreatorId = await readCreatorChannelEmojiMap(supabase, creatorIds);
   const now = new Date();
   const items = subscriptionRows.map((subscription) =>
     createUserSubscriptionItem({
       subscription,
       profile: profileById.get(subscription.creator_id) ?? null,
-      assets: assetByCreatorId.get(subscription.creator_id) ?? createEmptySubscriptionAssets(),
+      assets: {
+        ...(assetByCreatorId.get(subscription.creator_id) ?? createEmptySubscriptionAssets()),
+        emojis: emojisByCreatorId.get(subscription.creator_id) ?? [],
+      },
       now,
     }),
   );
@@ -110,6 +120,39 @@ export async function getUserSubscriptionSnapshot(): Promise<
       expiredSubscriptions: items.filter((item) => !item.isActive),
     },
   };
+}
+
+async function readCreatorChannelEmojiMap(
+  supabase: AdminClient,
+  creatorIds: readonly string[],
+): Promise<Map<string, UserSubscriptionItem["emojis"]>> {
+  const { data, error } = await supabase
+    .from("channel_emoji")
+    .select("id, creator_id, image_path, name, sort_order")
+    .in("creator_id", creatorIds)
+    .order("creator_id", { ascending: true })
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    console.error("사용자 구독 이모티콘 목록 조회 실패", error);
+    return new Map();
+  }
+
+  const rowsByCreatorId = new Map<string, ChannelEmojiSubscriptionRow[]>();
+
+  for (const row of (data ?? []) as ChannelEmojiSubscriptionRow[]) {
+    const rows = rowsByCreatorId.get(row.creator_id) ?? [];
+    rows.push(row);
+    rowsByCreatorId.set(row.creator_id, rows);
+  }
+
+  return new Map(
+    Array.from(rowsByCreatorId.entries()).map(([creatorId, rows]) => [
+      creatorId,
+      mapChannelEmojiRows(rows),
+    ]),
+  );
 }
 
 async function readCreatorSubscriptionAssets(
@@ -157,7 +200,7 @@ function createUserSubscriptionItem({
 }: {
   subscription: CreatorSubscriptionRow;
   profile: CreatorProfileRow | null;
-  assets: Pick<UserSubscriptionItem, "badge">;
+  assets: UserSubscriptionAssets;
   now: Date;
 }): UserSubscriptionItem {
   return {
@@ -171,6 +214,7 @@ function createUserSubscriptionItem({
     status: subscription.status,
     isActive: isSubscriptionActive(subscription, now),
     badge: assets.badge,
+    emojis: assets.emojis,
   };
 }
 

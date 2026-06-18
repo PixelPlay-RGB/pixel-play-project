@@ -10,3 +10,10 @@ export interface Sticker {
   // GIF 등 애니메이션 여부(추후 채널 스티커). next/image unoptimized로 렌더해 애니메이션을 보존한다.
   isAnimated?: boolean;
 }
+
+export interface ChannelStickerGroup {
+  creatorId: string;
+  label: string;
+  avatarUrl: string | null;
+  stickers: Sticker[];
+}

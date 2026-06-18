@@ -14,6 +14,7 @@ import {
   createChannelProfileSubscriptionSnapshot,
   type ChannelProfileSubscriptionRow,
 } from "@/utils/channel/channel-profile-subscription";
+import { mapChannelEmojiRows, type ChannelEmojiPreviewRow } from "@/utils/channel/channel-emoji";
 import { readChannelSubscriptionBadgeAssetsFromStorage } from "@/utils/channel/channel-subscription-badge-storage";
 
 type CreatorSubscriptionRow = Pick<GenericTables<"creator_subscription">, "status" | "end_at">;
@@ -63,7 +64,7 @@ async function readChannelProfileSubscription(
   creatorId: string,
   viewerId: string | null,
 ): Promise<AppActionResult<ChannelProfile["subscription"]>> {
-  const [subscriptionResult, badgeAssets] = await Promise.all([
+  const [subscriptionResult, badgeAssets, emojis] = await Promise.all([
     viewerId && viewerId !== creatorId
       ? readViewerSubscription(supabase, creatorId, viewerId)
       : Promise.resolve({
@@ -71,6 +72,7 @@ async function readChannelProfileSubscription(
           data: null,
         } satisfies AppActionResult<CreatorSubscriptionRow | null>),
     readChannelSubscriptionBadgeAssetsFromStorage(supabase, creatorId),
+    readChannelSubscriptionEmojis(supabase, creatorId),
   ]);
 
   if (!subscriptionResult.success) {
@@ -86,6 +88,7 @@ async function readChannelProfileSubscription(
       creatorId,
       subscription: subscriptionResult.data ?? null,
       badgeAssets,
+      emojis,
     }),
   };
 }
@@ -108,4 +111,20 @@ async function readViewerSubscription(
   }
 
   return { success: true, data: data ?? null };
+}
+
+async function readChannelSubscriptionEmojis(supabase: AdminClient, creatorId: string) {
+  const { data, error } = await supabase
+    .from("channel_emoji")
+    .select("id, image_path, name, sort_order")
+    .eq("creator_id", creatorId)
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    console.error("채널 프로필 구독 이모티콘 목록 조회 실패", error);
+    return [];
+  }
+
+  return mapChannelEmojiRows((data ?? []) as ChannelEmojiPreviewRow[]);
 }

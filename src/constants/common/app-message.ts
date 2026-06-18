@@ -156,7 +156,7 @@ export const APP_MESSAGE = {
     live: {
       subscribed: {
         title: "구독 완료",
-        description: "구독자 뱃지가 채팅에 표시됩니다.",
+        description: "구독자 배지가 채팅에 표시됩니다.",
       },
       urlCopied: {
         title: "링크 복사 완료",

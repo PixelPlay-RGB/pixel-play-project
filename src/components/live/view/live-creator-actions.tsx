@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { LIVE_LABEL } from "@/constants/live/live";
 import { cn } from "@/lib/utils";
+import type { ChannelEmoji } from "@/types/channel/channel-emoji";
 import type { CreatorSubscriptionStatus, LiveCreator } from "@/types/live/live";
 import { toastAppError, toastAppSuccess } from "@/utils/common/toast-message";
 import {
@@ -36,6 +37,7 @@ interface Props {
   subscriptionBadgeCustomMonths: number[];
   subscriptionBadgeVersion: string | null;
   subscriptionBadgeImageSources: Record<number, string>;
+  subscriptionEmojis: ChannelEmoji[];
   onFollow: () => void;
   onSubscribe: () => void;
   onCancelSubscription: () => void;
@@ -59,6 +61,7 @@ export function LiveCreatorActions({
   subscriptionBadgeCustomMonths,
   subscriptionBadgeVersion,
   subscriptionBadgeImageSources,
+  subscriptionEmojis,
   onFollow,
   onSubscribe,
   onCancelSubscription,
@@ -196,6 +199,7 @@ export function LiveCreatorActions({
             subscriptionBadgeCustomMonths={subscriptionBadgeCustomMonths}
             subscriptionBadgeVersion={subscriptionBadgeVersion}
             subscriptionBadgeImageSources={subscriptionBadgeImageSources}
+            subscriptionEmojis={subscriptionEmojis}
             onOpenChange={setIsSubscribeDialogOpen}
             onConfirm={onSubscribe}
           />

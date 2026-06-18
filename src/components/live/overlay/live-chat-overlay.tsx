@@ -1,13 +1,15 @@
 "use client";
 // OBS 브라우저 소스에 붙이는 라이브 채팅 출력 화면을 렌더링합니다.
 
+import { useMemo } from "react";
+
 import { LiveChatRoleBadge } from "@/components/live/chat/live-chat-role-badge";
 import { LiveSubscriptionBadge } from "@/components/live/chat/live-subscription-badge";
 import RichMessageText from "@/components/common/rich-message-text";
 import { LiveChatOverlayDonationCard } from "@/components/live/overlay/live-chat-overlay-donation-card";
 import { LIVE_CHAT_OVERLAY_PREVIEW_ITEMS } from "@/constants/live/live-overlay";
 import { STICKER_PX } from "@/constants/sticker/sticker";
-import { useChannelEmojiStickers } from "@/hooks/channel/use-channel-emoji-stickers";
+import { useChannelEmojiStickersByIds } from "@/hooks/channel/use-channel-emoji-stickers";
 import { useLiveChatOverlay } from "@/hooks/live/use-live-chat-overlay";
 import { cn } from "@/lib/utils";
 import type {
@@ -15,7 +17,24 @@ import type {
   LiveChatOverlaySnapshot,
 } from "@/types/live/live-chat-overlay";
 import type { Sticker } from "@/types/sticker/sticker";
+import { isUuid } from "@/utils/common/uuid";
 import { getLiveChatOverlayNicknameColor } from "@/utils/live/live-chat-overlay-style";
+import { extractStickerTokenIds } from "@/utils/sticker/sticker-token";
+
+function extractOverlayChannelEmojiTokenIds(
+  items: readonly { message: LiveChatOverlayMessage }[],
+): string[] {
+  const tokenIds = new Set<string>();
+
+  for (const item of items) {
+    if (item.message.kind === "donation") continue;
+    for (const tokenId of extractStickerTokenIds(item.message.content)) {
+      if (isUuid(tokenId)) tokenIds.add(tokenId);
+    }
+  }
+
+  return [...tokenIds].sort();
+}
 
 export function LiveChatOverlay({
   creatorId,
@@ -27,15 +46,14 @@ export function LiveChatOverlay({
   isPreview?: boolean;
 }) {
   const { chatStackRef, visibleItems } = useLiveChatOverlay(creatorId, initialSnapshot);
-  // 채널 이모지(:pp-<uuid>:)도 이미지로 출력한다 — OBS는 비로그인이라 피커는 없고 렌더만 필요해
-  // provider 없이 공개 조회로 가져온다(채널 이모지는 읽기 공개 RLS).
-  const { data: channelStickers } = useChannelEmojiStickers(creatorId);
   // 구독 N개월 티콘(LiveSubscriptionBadge) 렌더용 — 스냅샷에서 커스텀 개월·버전을 받는다.
   const subscriptionBadgeCustomMonths = initialSnapshot.subscriptionBadgeCustomMonths;
   const subscriptionBadgeVersion = initialSnapshot.subscriptionBadgeVersion;
   // 미리보기는 방송·채팅 이력이 없어도 화면 구성을 보여줘야 하므로 샘플로 채운다(실데이터가 있으면 그대로).
   const items =
     isPreview && visibleItems.length === 0 ? LIVE_CHAT_OVERLAY_PREVIEW_ITEMS : visibleItems;
+  const channelEmojiTokenIds = useMemo(() => extractOverlayChannelEmojiTokenIds(items), [items]);
+  const { data: channelStickers } = useChannelEmojiStickersByIds(channelEmojiTokenIds);
 
   return (
     <main className="live-overlay-root min-h-screen overflow-hidden bg-transparent p-0 text-white">

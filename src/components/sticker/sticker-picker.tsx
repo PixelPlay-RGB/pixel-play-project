@@ -1,8 +1,8 @@
 "use client";
 // 스티커(이모지) 선택 팝오버(공용). 라이브 채팅 입력바·커뮤니티 작성/댓글에서 재사용.
 // 치지직 이모티콘 피커식 — 가로 캐러셀 아이콘 탭 + 구분선 + 고정 높이 본문(섹션 헤더 + 그리드).
-// 탭: [최근(시계)] [기본(PixelPlay 마크)] [채널(크리에이터 아바타)]. 채널 탭은 채널 이모지를
-// 보낼 수 있을 때만(channelStickers 전달) 나온다. 팝오버 높이·구조를 고정해 탭 전환·선택 시에도
+// 탭: [최근(시계)] [기본(PixelPlay 마크)] [채널(크리에이터 아바타들)]. 채널 탭은 채널 이모지를
+// 보낼 수 있을 때만(channelGroups 전달) 나온다. 팝오버 높이·구조를 고정해 탭 전환·선택 시에도
 // 재배치(순간이동)되지 않게 하고, anchor가 주어지면 그 요소(채팅 입력바) 기준으로 채팅창 위에 띄운다.
 import { Clock, Smile } from "lucide-react";
 import { useMemo, useState, type ReactNode } from "react";
@@ -20,11 +20,10 @@ import {
 } from "@/components/ui/carousel";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
-import { Spinner } from "@/components/ui/spinner";
 import { DEFAULT_STICKERS, STICKER_LABEL, STICKER_PX } from "@/constants/sticker/sticker";
 import { useRecentStickers } from "@/hooks/sticker/use-recent-stickers";
 import { cn } from "@/lib/utils";
-import type { Sticker } from "@/types/sticker/sticker";
+import type { ChannelStickerGroup, Sticker } from "@/types/sticker/sticker";
 import { getAvatarFallbackText } from "@/utils/profile/avatar";
 import { buildStickerToken } from "@/utils/sticker/sticker-token";
 
@@ -33,21 +32,30 @@ interface Props {
   disabled?: boolean;
   // 팝오버 열림 방향 — 입력칸이 아래(채팅)면 "top", 위(커뮤니티 작성/댓글)면 "bottom".
   side?: "top" | "bottom";
-  // 채널 이모지 사용 가능 시 전달(있으면 채널 탭 노출). 비어 있어도 로딩/빈 상태를 채널 탭에서 안내한다.
-  channelStickers?: Sticker[];
-  // 채널 이모지 최초 로딩 중 — 채널 탭에 스피너를 띄운다.
-  channelLoading?: boolean;
-  // 채널 탭 아바타·라벨(아바타 없으면 이름 이니셜 폴백).
-  channelName?: string | null;
-  channelAvatarUrl?: string | null;
+  // 채널 이모지 사용 가능 시 방송인 프로필별 그룹으로 전달한다.
+  channelGroups?: ChannelStickerGroup[];
   // 팝오버를 이 요소(채팅 입력바 등) 기준으로 띄운다 — 있으면 그 폭(--anchor-width)에 맞춰 채팅창 위를 덮는다.
   anchor?: () => HTMLElement | null;
   // 전체화면 등 포털 컨테이너(미지정=body).
   portalContainer?: HTMLElement | null;
 }
 
-type StickerTabKey = "recent" | "default" | "channel";
-type StickerTab = { key: StickerTabKey; label: string; icon: ReactNode };
+type ChannelStickerTabKey = `channel:${string}`;
+type StickerTabKey = "recent" | "default" | ChannelStickerTabKey;
+
+interface StickerTab {
+  key: StickerTabKey;
+  label: string;
+  icon: ReactNode;
+}
+
+function createChannelTabKey(creatorId: string): ChannelStickerTabKey {
+  return `channel:${creatorId}`;
+}
+
+function isChannelTabKey(key: StickerTabKey): key is ChannelStickerTabKey {
+  return key.startsWith("channel:");
+}
 
 // 상단 아이콘 탭 — 고정 정사각(캐러셀 아이템 안에서 줄지 않게 shrink-0).
 function TabButton({
@@ -105,7 +113,7 @@ function StickerGrid({
   );
 }
 
-// 본문 빈/로딩 안내 — 고정 높이 영역을 꽉 채워 중앙 정렬(높이 변동 없음).
+// 본문 빈 안내 — 고정 높이 영역을 꽉 채워 중앙 정렬(높이 변동 없음).
 function PickerNotice({ children }: { children: ReactNode }) {
   return (
     <div className="text-muted-foreground flex h-full items-center justify-center px-6 text-center text-xs">
@@ -118,10 +126,7 @@ export default function StickerPicker({
   onStickerSelect,
   disabled = false,
   side = "top",
-  channelStickers,
-  channelLoading = false,
-  channelName,
-  channelAvatarUrl,
+  channelGroups,
   anchor,
   portalContainer,
 }: Props) {
@@ -129,30 +134,30 @@ export default function StickerPicker({
   const [activeTab, setActiveTab] = useState<StickerTabKey>("default");
   const { recentIds, addRecent } = useRecentStickers();
 
-  const hasChannelTab = channelStickers !== undefined;
-  const channel = useMemo(() => channelStickers ?? [], [channelStickers]);
+  const groups = useMemo(() => channelGroups ?? [], [channelGroups]);
+  const channelStickers = useMemo(() => groups.flatMap((group) => group.stickers), [groups]);
+  const activeChannelGroup = isChannelTabKey(activeTab)
+    ? groups.find((group) => createChannelTabKey(group.creatorId) === activeTab)
+    : undefined;
 
   // disabled로 강제로 닫힌 동안 내부 open도 함께 내려, 다시 enabled가 됐을 때 사용자 동작 없이
   // 팝오버가 저절로 재등장하는 것을 막는다(저속 모드·게이트 진입 등 disabled 토글 대비).
   if (disabled && open) setOpen(false);
   // 채널 탭이 사라졌는데(권한 변화 등) 거기 머물러 있으면 기본 탭으로 되돌린다.
-  if (activeTab === "channel" && !hasChannelTab) setActiveTab("default");
+  if (isChannelTabKey(activeTab) && !activeChannelGroup) setActiveTab("default");
 
-  // 채널 탭 라벨 — 닉네임이 비면 "내 채널"로 폴백(?? 는 빈 문자열을 못 걸러 직접 처리).
-  const channelLabel = channelName?.trim() ? channelName : STICKER_LABEL.tabChannel;
-
-  // 최근 id → Sticker 해석(기본 + 현재 채널). 못 찾는 id(다른 채널·삭제됨)는 자연 제외한다.
+  // 최근 id → Sticker 해석(기본 + 현재 사용할 수 있는 채널 이모지). 못 찾는 id(삭제됨)는 자연 제외한다.
   const recentStickers = useMemo(() => {
     const byId = new Map<string, Sticker>();
     for (const sticker of DEFAULT_STICKERS) byId.set(sticker.id, sticker);
-    for (const sticker of channel) byId.set(sticker.id, sticker);
+    for (const sticker of channelStickers) byId.set(sticker.id, sticker);
     return recentIds
       .map((id) => byId.get(id))
       .filter((sticker): sticker is Sticker => sticker !== undefined);
-  }, [recentIds, channel]);
+  }, [recentIds, channelStickers]);
   const hasRecent = recentStickers.length > 0;
 
-  // 탭 목록 — 최근·기본은 항상, 채널은 채널 이모지를 쓸 수 있을 때만(가로 캐러셀로 스크롤).
+  // 탭 목록 — 최근·기본은 항상, 채널은 이모지를 가진 방송인마다 하나씩 만든다.
   const tabs = useMemo<StickerTab[]>(() => {
     const list: StickerTab[] = [
       { key: "recent", label: STICKER_LABEL.tabRecent, icon: <Clock className="size-5" /> },
@@ -162,22 +167,22 @@ export default function StickerPicker({
         icon: <PixelPlayMark className="size-5" />,
       },
     ];
-    if (hasChannelTab) {
+    for (const group of groups) {
       list.push({
-        key: "channel",
-        label: channelLabel,
+        key: createChannelTabKey(group.creatorId),
+        label: group.label,
         icon: (
           <Avatar className="size-6">
-            <AvatarImage src={channelAvatarUrl ?? undefined} alt="" />
+            <AvatarImage src={group.avatarUrl ?? undefined} alt="" />
             <AvatarFallback className="text-xs">
-              {getAvatarFallbackText(channelLabel, 1)}
+              {getAvatarFallbackText(group.label, 1)}
             </AvatarFallback>
           </Avatar>
         ),
       });
     }
     return list;
-  }, [hasChannelTab, channelLabel, channelAvatarUrl]);
+  }, [groups]);
 
   function handleOpenChange(next: boolean) {
     if (disabled) return;
@@ -197,8 +202,8 @@ export default function StickerPicker({
   const sectionLabel =
     activeTab === "recent"
       ? STICKER_LABEL.sectionRecent
-      : activeTab === "channel"
-        ? channelLabel
+      : activeChannelGroup
+        ? activeChannelGroup.label
         : STICKER_LABEL.sectionDefault;
 
   function renderBody() {
@@ -206,16 +211,15 @@ export default function StickerPicker({
       if (!hasRecent) return <PickerNotice>{STICKER_LABEL.emptyRecent}</PickerNotice>;
       return <StickerGrid stickers={recentStickers} disabled={disabled} onSelect={handleSelect} />;
     }
-    if (activeTab === "channel") {
-      if (channelLoading) {
-        return (
-          <PickerNotice>
-            <Spinner className="size-5" />
-          </PickerNotice>
-        );
-      }
-      if (channel.length === 0) return <PickerNotice>{STICKER_LABEL.emptyChannel}</PickerNotice>;
-      return <StickerGrid stickers={channel} disabled={disabled} onSelect={handleSelect} />;
+    if (isChannelTabKey(activeTab)) {
+      if (!activeChannelGroup) return <PickerNotice>{STICKER_LABEL.emptyChannel}</PickerNotice>;
+      return (
+        <StickerGrid
+          stickers={activeChannelGroup.stickers}
+          disabled={disabled}
+          onSelect={handleSelect}
+        />
+      );
     }
     return <StickerGrid stickers={DEFAULT_STICKERS} disabled={disabled} onSelect={handleSelect} />;
   }

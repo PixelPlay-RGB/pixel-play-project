@@ -46,7 +46,7 @@ export const CHANNEL_MENU_GROUPS: ChannelMenuGroup[] = [
           { id: "subscribers", label: "구독자", href: "/channel/subscribers" },
           {
             id: "subscription-benefits",
-            label: "구독 혜택",
+            label: "배지",
             href: "/channel/subscription-benefits",
           },
           { id: "subscription-emoji", label: "이모지", href: "/channel/emoji" },

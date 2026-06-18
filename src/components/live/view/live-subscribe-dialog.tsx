@@ -3,9 +3,10 @@
 
 import { cloneElement, type ComponentProps, type ReactElement } from "react";
 import Link from "next/link";
-import { BadgeCheck, Heart, Star, WalletCards } from "lucide-react";
+import { BadgeCheck, Heart, Smile, Star, WalletCards } from "lucide-react";
 
 import { LiveSubscriptionBadge } from "@/components/live/chat/live-subscription-badge";
+import { SubscriptionChannelEmojiPreview } from "@/components/subscriptions/subscription-channel-emoji-preview";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -16,6 +17,7 @@ import {
 } from "@/constants/creator/creator";
 import { CREATOR_SUBSCRIPTION_PAYMENT_AMOUNT } from "@/constants/subscriptions/creator-subscription";
 import { cn } from "@/lib/utils";
+import type { ChannelEmoji } from "@/types/channel/channel-emoji";
 import type { LiveCreator } from "@/types/live/live";
 import { formatPoint } from "@/utils/donations/format";
 import { buildLiveSubscriptionBadgeMonths } from "@/utils/live/live-subscription-badge";
@@ -35,6 +37,7 @@ interface Props {
   subscriptionBadgeCustomMonths: number[];
   subscriptionBadgeVersion: string | null;
   subscriptionBadgeImageSources: Record<number, string>;
+  subscriptionEmojis: ChannelEmoji[];
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
 }
@@ -65,6 +68,7 @@ export function LiveSubscribeDialog({
   subscriptionBadgeCustomMonths,
   subscriptionBadgeVersion,
   subscriptionBadgeImageSources,
+  subscriptionEmojis,
   onOpenChange,
   onConfirm,
 }: Props) {
@@ -86,9 +90,9 @@ export function LiveSubscribeDialog({
         side="top"
         sideOffset={8}
         collisionPadding={8}
-        className="max-h-[calc(100vh-1rem)] w-88 max-w-[calc(100vw-1rem)] gap-0 overflow-hidden p-0 sm:w-112"
+        className="flex max-h-dvh w-88 max-w-dvw flex-col gap-0 overflow-hidden p-0 sm:w-112"
       >
-        <header className="border-border border-b p-5 pb-4">
+        <header className="border-border shrink-0 border-b p-5 pb-4">
           <div className="flex items-center gap-3">
             <Link
               href={`/channel/${creator.id}`}
@@ -110,7 +114,7 @@ export function LiveSubscribeDialog({
           </div>
         </header>
 
-        <ScrollArea className="max-h-120">
+        <ScrollArea className="min-h-0 flex-1">
           <div className="flex flex-col gap-5 p-5">
             <section className="flex flex-col gap-3">
               <h3 className="text-sm font-black">
@@ -161,10 +165,20 @@ export function LiveSubscribeDialog({
                 ))}
               </div>
             </section>
+
+            {subscriptionEmojis.length > 0 ? (
+              <section className="flex flex-col gap-3">
+                <div className="flex items-center gap-2">
+                  <Smile className="text-brand size-4" />
+                  <h3 className="text-sm font-black">구독자 전용 이모티콘</h3>
+                </div>
+                <SubscriptionChannelEmojiPreview emojis={subscriptionEmojis} />
+              </section>
+            ) : null}
           </div>
         </ScrollArea>
 
-        <footer className="border-border mx-0 mb-0 flex flex-col items-stretch gap-3 border-t p-5">
+        <footer className="border-border mx-0 mb-0 flex shrink-0 flex-col items-stretch gap-3 border-t p-5">
           <div className="min-w-0">
             <p className="text-muted-foreground text-xs leading-5">
               매월 후원 지갑에서 {formatPoint(CREATOR_SUBSCRIPTION_PAYMENT_AMOUNT)}가 사용됩니다.

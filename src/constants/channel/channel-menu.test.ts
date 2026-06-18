@@ -20,7 +20,7 @@ test("subscription menu opens subscriber, benefit, and emoji pages", () => {
       { id: "subscribers", label: "구독자", href: "/channel/subscribers" },
       {
         id: "subscription-benefits",
-        label: "구독 혜택",
+        label: "배지",
         href: "/channel/subscription-benefits",
       },
       { id: "subscription-emoji", label: "이모지", href: "/channel/emoji" },

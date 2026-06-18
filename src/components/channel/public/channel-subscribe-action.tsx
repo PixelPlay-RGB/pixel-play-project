@@ -115,12 +115,18 @@ export function ChannelSubscribeAction({ profile }: Props) {
     void queryClient.invalidateQueries({
       queryKey: QUERY_KEYS.donations.walletBalance(user?.id),
     });
+    void queryClient.invalidateQueries({
+      queryKey: QUERY_KEYS.channel.subscribedEmojis(user?.id ?? undefined),
+    });
     router.refresh();
   }
 
   function handleSubscriptionCanceled() {
     setIsSubscribed(true);
     setSubscriptionStatus("canceled");
+    void queryClient.invalidateQueries({
+      queryKey: QUERY_KEYS.channel.subscribedEmojis(user?.id ?? undefined),
+    });
     router.refresh();
   }
 
@@ -201,6 +207,7 @@ export function ChannelSubscribeAction({ profile }: Props) {
           subscriptionBadgeCustomMonths={profile.subscription.customMonths}
           subscriptionBadgeVersion={profile.subscription.version}
           subscriptionBadgeImageSources={profile.subscription.imageSourcesByMonth}
+          subscriptionEmojis={profile.subscription.emojis}
           onOpenChange={setIsSubscribeDialogOpen}
           onConfirm={handleSubscribe}
         />

@@ -1,5 +1,5 @@
 "use client";
-// 구독뱃지 개월 수와 이미지를 등록하는 Dialog를 렌더링합니다.
+// 구독 배지 개월 수와 이미지를 등록하는 Dialog를 렌더링합니다.
 
 import { useRouter } from "next/navigation";
 import { ImagePlus, Upload } from "lucide-react";
@@ -9,7 +9,6 @@ import { uploadChannelSubscriptionBadgeAction } from "@/actions/channel/subscrip
 import {
   CopyrightAgreement,
   formatUploadFileSize,
-  InfoNotice,
   LargeUploadButton,
 } from "@/components/channel/subscription/subscription-asset-upload-controls";
 import { Button } from "@/components/ui/button";
@@ -153,7 +152,7 @@ export function SubscriptionBadgeRegistrationDialog({ open, onOpenChange }: Prop
         handleOpenChange(false);
         router.refresh();
       } catch (error) {
-        console.error("구독뱃지 등록 실패", error);
+        console.error("구독 배지 등록 실패", error);
         toastAppError(APP_MESSAGE_CODE.error.channel.subscriptionBadgeSaveFailed);
       }
     });
@@ -167,10 +166,10 @@ export function SubscriptionBadgeRegistrationDialog({ open, onOpenChange }: Prop
             <ImagePlus className="size-6" aria-hidden />
           </div>
           <div className="min-w-0 space-y-1.5">
-            <DialogTitle className="text-xl leading-7 font-bold">구독뱃지 등록</DialogTitle>
+            <DialogTitle className="text-xl leading-7 font-bold">구독 배지 등록</DialogTitle>
           </div>
           <DialogDescription className="sr-only">
-            구독 개월 수와 구독뱃지 이미지를 등록합니다.
+            구독 개월 수와 구독 배지 이미지를 등록합니다.
           </DialogDescription>
         </DialogHeader>
 
@@ -178,7 +177,7 @@ export function SubscriptionBadgeRegistrationDialog({ open, onOpenChange }: Prop
           <div className="flex max-h-120 flex-col gap-4 overflow-y-auto px-5 py-5 sm:px-6">
             <section className="border-border/70 bg-muted/30 flex flex-col gap-3 rounded-lg border p-4">
               <label htmlFor="subscription-badge-month" className="text-sm font-black">
-                구독뱃지 개월 수
+                구독 배지 개월 수
               </label>
               <Select
                 value={monthSelectValue}
@@ -187,7 +186,7 @@ export function SubscriptionBadgeRegistrationDialog({ open, onOpenChange }: Prop
               >
                 <SelectTrigger
                   id="subscription-badge-month"
-                  aria-label="구독뱃지 개월 수"
+                  aria-label="구독 배지 개월 수"
                   className="bg-background h-11 w-full sm:w-40"
                 >
                   <SelectValue />
@@ -255,15 +254,12 @@ export function SubscriptionBadgeRegistrationDialog({ open, onOpenChange }: Prop
             <CopyrightAgreement checked={agreed} onChange={setAgreed} />
 
             <ul className="text-muted-foreground list-disc space-y-2 pl-5 text-xs leading-5">
-              <li>신청한 구독뱃지는 기본적인 검수 진행 후 1일 1회 일괄 등록 예정입니다.</li>
-              <li>기본 구독뱃지 슬롯은 1개월과 동일하며 이미지 등록 및 수정, 삭제가 가능합니다.</li>
+              <li>신청한 구독 배지는 기본적인 검수 진행 후 1일 1회 일괄 등록 예정입니다.</li>
+              <li>
+                기본 구독 배지 슬롯은 1개월과 동일하며 이미지 등록 및 수정, 삭제가 가능합니다.
+              </li>
               <li>개월 수는 직접 선택 및 입력이 가능합니다.</li>
             </ul>
-
-            <InfoNotice>
-              {CHANNEL_SUBSCRIPTION_BADGE_IMAGE_SIZE}*{CHANNEL_SUBSCRIPTION_BADGE_IMAGE_SIZE}px PNG
-              파일로 등록해주시면 이미지가 선명해요.
-            </InfoNotice>
 
             {fieldError ? (
               <p className="text-destructive text-sm font-medium">{fieldError}</p>

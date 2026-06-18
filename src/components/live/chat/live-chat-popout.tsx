@@ -104,7 +104,7 @@ export function LiveChatPopout({ creatorId }: Props) {
   }
 
   return (
-    <ChannelStickerProvider creatorId={creatorId}>
+    <ChannelStickerProvider>
       <div className="live-overlay-root live-popout-root bg-background flex h-dvh min-h-0 w-full flex-col overflow-hidden">
         <div className="border-border flex h-11 shrink-0 items-center gap-2 border-b px-3">
           {broadcast ? (

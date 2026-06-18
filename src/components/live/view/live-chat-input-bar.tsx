@@ -155,14 +155,8 @@ export function LiveChatInputBar({
   // 채팅 패널 테두리 안쪽 폭에 꽉 맞춘다(입력칸·버튼행보다 좌우 패딩만큼 더 넓게 테두리까지).
   const inputBarRef = useRef<HTMLDivElement>(null);
 
-  // 채널 이모지 — 피커 "내 채널" 탭. 지금은 크리에이터 본인만 보내기 가능(canUseInPicker).
-  const {
-    stickers: channelStickers,
-    isLoading: channelLoading,
-    canUseInPicker,
-    channelName,
-    channelAvatarUrl,
-  } = useChannelStickers();
+  // 채널 이모지 — 본인 채널과 활성 구독 중인 방송인의 채널 이모지만 피커에 노출한다.
+  const { groups: channelGroups, stickers: channelStickers, canUseInPicker } = useChannelStickers();
 
   // 메뉴의 "채팅 규칙" 요청(id 변경)마다 규칙 popover를 연다 — 렌더 중 가드된 setState(조정 패턴).
   const [handledRuleRequestId, setHandledRuleRequestId] = useState(ruleOpenRequestId);
@@ -316,10 +310,7 @@ export function LiveChatInputBar({
               setDraftValue(appendStickerToken(draftValue, token, LIVE_CHAT_MESSAGE_MAX_LENGTH))
             }
             disabled={!isEditable}
-            channelStickers={canUseInPicker ? channelStickers : undefined}
-            channelLoading={channelLoading}
-            channelName={channelName}
-            channelAvatarUrl={channelAvatarUrl}
+            channelGroups={canUseInPicker ? channelGroups : undefined}
             // 팝오버를 입력바 전체 폭에 맞춰 채팅창 위에 띄운다(후원·규칙 popover와 같은 anchor 기준).
             anchor={() => inputBarRef.current}
             portalContainer={portalContainer}

@@ -1,5 +1,6 @@
 // 채널 이모지 storage 경로·URL·jsonb 파싱 유틸(배너 패턴 미러).
 import type { ChannelEmoji } from "@/types/channel/channel-emoji";
+import type { GenericTables } from "@/types/common/supabase.types";
 import type { Json } from "@/types/database.types";
 import { getUserMediaPublicUrl, pickImageExtension } from "@/utils/storage/user-media";
 
@@ -10,6 +11,20 @@ export function buildEmojiObjectName(mimeType: string): string {
 
 export function getChannelEmojiSrc(imagePath: string): string {
   return getUserMediaPublicUrl(imagePath);
+}
+
+export type ChannelEmojiPreviewRow = Pick<
+  GenericTables<"channel_emoji">,
+  "id" | "image_path" | "name" | "sort_order"
+>;
+
+export function mapChannelEmojiRows(rows: readonly ChannelEmojiPreviewRow[]): ChannelEmoji[] {
+  return rows.map((row) => ({
+    id: row.id,
+    imageUrl: getChannelEmojiSrc(row.image_path),
+    name: row.name,
+    sortOrder: row.sort_order,
+  }));
 }
 
 function readObject(value: Json | undefined): Record<string, Json | undefined> | null {

@@ -97,6 +97,9 @@ export function useLiveBroadcastView(creatorId: string) {
     void queryClient.invalidateQueries({
       queryKey: QUERY_KEYS.donations.walletBalance(user?.id ?? undefined),
     });
+    void queryClient.invalidateQueries({
+      queryKey: QUERY_KEYS.channel.subscribedEmojis(user?.id ?? undefined),
+    });
 
     void refetch()
       .then((refetchResult) => {
@@ -125,6 +128,9 @@ export function useLiveBroadcastView(creatorId: string) {
           subscriptionStatus: "canceled",
         },
       };
+    });
+    void queryClient.invalidateQueries({
+      queryKey: QUERY_KEYS.channel.subscribedEmojis(user?.id ?? undefined),
     });
 
     void refetch()
@@ -350,6 +356,7 @@ export function useLiveBroadcastView(creatorId: string) {
     subscriptionBadgeCustomMonths: watchData?.subscriptionBadgeCustomMonths ?? [],
     subscriptionBadgeVersion: watchData?.subscriptionBadgeVersion ?? null,
     subscriptionBadgeImageSources: watchData?.subscriptionBadgeImageSources ?? {},
+    subscriptionEmojis: watchData?.subscriptionEmojis ?? [],
     votePoll,
     joinDraw,
     sendDonation,
