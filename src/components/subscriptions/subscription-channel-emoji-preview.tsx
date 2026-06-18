@@ -2,7 +2,6 @@
 // 구독자 전용 채널 이모티콘 미리보기 목록을 렌더링합니다.
 
 import StickerImage from "@/components/sticker/sticker-image";
-import { STICKER_PX } from "@/constants/sticker/sticker";
 import { cn } from "@/lib/utils";
 import type { ChannelEmoji } from "@/types/channel/channel-emoji";
 import type { Sticker } from "@/types/sticker/sticker";
@@ -11,6 +10,8 @@ interface Props {
   emojis: ChannelEmoji[];
   className?: string;
 }
+
+const SUBSCRIPTION_PREVIEW_EMOJI_PX = 32;
 
 function toSticker(emoji: ChannelEmoji): Sticker {
   return { id: emoji.id, label: emoji.name, src: emoji.imageUrl, isAnimated: false };
@@ -26,7 +27,7 @@ export function SubscriptionChannelEmojiPreview({ emojis, className }: Props) {
   return (
     <div
       className={cn(
-        "bg-muted/30 flex flex-wrap items-center gap-2 rounded-lg px-3 py-2.5",
+        "bg-muted/30 grid grid-cols-4 gap-3 rounded-lg px-3 py-3 sm:grid-cols-7",
         className,
       )}
     >
@@ -34,9 +35,11 @@ export function SubscriptionChannelEmojiPreview({ emojis, className }: Props) {
         <span
           key={sticker.id}
           title={sticker.label}
-          className="bg-background/70 flex size-12 shrink-0 items-center justify-center rounded-md"
+          role="img"
+          aria-label={sticker.label}
+          className="flex size-8 shrink-0 items-center justify-center justify-self-center"
         >
-          <StickerImage sticker={sticker} px={STICKER_PX.overlay} />
+          <StickerImage sticker={sticker} px={SUBSCRIPTION_PREVIEW_EMOJI_PX} />
         </span>
       ))}
     </div>
