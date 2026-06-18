@@ -11,12 +11,6 @@ interface SideTipCardProps {
   className?: string;
 }
 
-interface SideTipStepProps {
-  number: string;
-  title: string;
-  description: string;
-}
-
 export function SideTipCard({ icon, title, description, children, className }: SideTipCardProps) {
   return (
     <aside
@@ -39,21 +33,5 @@ export function SideTipCard({ icon, title, description, children, className }: S
         <div className="border-brand/15 grid gap-3 border-t pt-4 text-sm">{children}</div>
       )}
     </aside>
-  );
-}
-
-export function SideTipStep({ number, title, description }: SideTipStepProps) {
-  return (
-    <div className="flex gap-3">
-      <span className="bg-brand/10 text-brand flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold">
-        {number}
-      </span>
-      <div className="min-w-0 space-y-1">
-        <strong className="text-foreground block text-sm leading-5 text-pretty">{title}</strong>
-        <p className="text-muted-foreground text-xs leading-5 text-pretty whitespace-pre-line">
-          {description}
-        </p>
-      </div>
-    </div>
   );
 }

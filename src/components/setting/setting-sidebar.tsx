@@ -24,6 +24,7 @@ import {
   USER_ACCOUNT_PASSWORD_MENU_ITEM,
   USER_ACCOUNT_PRIMARY_MENU_ITEMS,
   USER_ACCOUNT_PROFILE_MENU_ITEM,
+  USER_ACCOUNT_SUBSCRIPTION_MENU_ITEM,
 } from "@/constants/common/user-account-menu";
 import type { UserAccountMenuItem } from "@/constants/common/user-account-menu";
 import { useLogout } from "@/hooks/auth/use-logout";
@@ -49,22 +50,30 @@ export default function SettingSidebar({ isMobile, profile }: Props) {
   const isCanChangePassword = profile?.linked_providers.includes("email") ?? false;
 
   // 프로필 설정은 상단 UserCard가 대신하므로 메뉴에서 제외하고, 성격별 섹션으로 나눕니다.
-  // 활동(팔로잉·후원) / 내 채널(내 채널·채널 관리). 비밀번호 변경·로그아웃은 Footer에 둡니다.
+  // 내 채널(채널·채널 관리)을 먼저, 활동(팔로잉·구독·후원)을 아래에 둡니다. 비밀번호 변경·로그아웃은 Footer.
   const menuGroups: SettingMenuGroup[] = profile
     ? [
         {
-          label: "활동",
-          items: [USER_ACCOUNT_FOLLOWING_MENU_ITEM, USER_ACCOUNT_DONATION_MENU_ITEM],
-        },
-        {
           label: "내 채널",
           items: [createMyChannelMenuItem(profile.id), ...USER_ACCOUNT_PRIMARY_MENU_ITEMS],
+        },
+        {
+          label: "활동",
+          items: [
+            USER_ACCOUNT_FOLLOWING_MENU_ITEM,
+            USER_ACCOUNT_SUBSCRIPTION_MENU_ITEM,
+            USER_ACCOUNT_DONATION_MENU_ITEM,
+          ],
         },
       ]
     : [
         {
           label: "활동",
-          items: [USER_ACCOUNT_FOLLOWING_MENU_ITEM, USER_ACCOUNT_DONATION_MENU_ITEM],
+          items: [
+            USER_ACCOUNT_FOLLOWING_MENU_ITEM,
+            USER_ACCOUNT_SUBSCRIPTION_MENU_ITEM,
+            USER_ACCOUNT_DONATION_MENU_ITEM,
+          ],
         },
       ];
 

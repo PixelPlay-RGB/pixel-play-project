@@ -13,15 +13,7 @@ import ChannelLiveStatusMetricsCard from "@/components/channel/live/channel-live
 import { CHANNEL_LIVE_MEDIA_CONFIG } from "@/constants/channel/channel-live-media";
 import { useChannelLiveOperation } from "@/hooks/channel/use-channel-live-operation";
 import { cn } from "@/lib/utils";
-
-export type ChannelLiveVisibility = "public" | "private" | "unlisted";
-export type ChannelLiveChatScope = "authenticated" | "follower" | "manager";
-
-export interface ChannelLiveState {
-  isBroadcasting: boolean;
-  hasEnded: boolean;
-  visibility: ChannelLiveVisibility;
-}
+import type { ChannelLiveState } from "@/types/channel/channel-live";
 
 interface Props {
   initialSnapshot?: ChannelLiveStudioSnapshot;
@@ -80,7 +72,6 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
     liveState,
     setTagInput,
     setTitle,
-    shouldCaptureAutoThumbnail,
     tagInput,
     tags,
     thumbnail,
@@ -157,7 +148,6 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
                 <ChannelLiveStreamStatusPanel
                   activeBroadcastStartedAt={broadcastStartedAt}
                   onStatusChange={handleStreamStatusChange}
-                  shouldCaptureAutoThumbnail={shouldCaptureAutoThumbnail}
                   streamPath={streamPath}
                   variant="embedded"
                 />

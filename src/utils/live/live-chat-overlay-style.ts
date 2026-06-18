@@ -3,19 +3,15 @@ import {
   LIVE_CHAT_OVERLAY_CREATOR_NICKNAME_COLOR,
   LIVE_CHAT_OVERLAY_NICKNAME_COLOR_PALETTE,
 } from "@/constants/live/live-overlay";
-import type { LiveChatOverlayMessage } from "@/types/live/live-chat-overlay";
+import { hashStringToIndex } from "@/utils/common/hash";
 
-export function getLiveChatOverlayNicknameColor(
-  author: string,
-  role?: LiveChatOverlayMessage["role"],
-) {
+export function getLiveChatOverlayNicknameColor(author: string, role?: "creator" | "donor") {
   if (role === "creator") {
     return LIVE_CHAT_OVERLAY_CREATOR_NICKNAME_COLOR;
   }
 
-  const hash = Array.from(author).reduce((acc, character) => acc + character.charCodeAt(0), 0);
-
+  // 닉네임을 31배 자리가중 해시로 팔레트 전체에 고르게 분산시킨다(공용 hashStringToIndex).
   return LIVE_CHAT_OVERLAY_NICKNAME_COLOR_PALETTE[
-    hash % LIVE_CHAT_OVERLAY_NICKNAME_COLOR_PALETTE.length
+    hashStringToIndex(author, LIVE_CHAT_OVERLAY_NICKNAME_COLOR_PALETTE.length)
   ];
 }

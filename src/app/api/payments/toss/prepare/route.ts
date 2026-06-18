@@ -1,14 +1,10 @@
 // Toss 결제창을 열기 전 충전 주문 정보를 준비하는 API 라우트입니다.
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
-import {
-  WALLET_CHARGE_MAX_AMOUNT,
-  WALLET_CHARGE_MIN_AMOUNT,
-  WALLET_CHARGE_STEP_AMOUNT,
-} from "@/constants/payments/wallet-charge";
 import { createAdminClient } from "@/lib/supabase/admin-client";
 import { createClient } from "@/lib/supabase/server";
 import type { TossPaymentPrepareResponse } from "@/types/payments/toss-payment-api";
 import { isAuthSessionMissingError } from "@/utils/auth/auth-error";
+import { isValidChargeAmount } from "@/utils/payments/wallet-charge-amount";
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 
@@ -99,15 +95,6 @@ async function readChargeAmount(request: Request) {
   }
 
   return NaN;
-}
-
-function isValidChargeAmount(amount: number) {
-  return (
-    Number.isInteger(amount) &&
-    amount >= WALLET_CHARGE_MIN_AMOUNT &&
-    amount <= WALLET_CHARGE_MAX_AMOUNT &&
-    amount % WALLET_CHARGE_STEP_AMOUNT === 0
-  );
 }
 
 function createWalletChargeOrderId() {

@@ -1,0 +1,132 @@
+// 채널 구독자 관리 목록의 활성 카운트와 검색·정렬 값을 계산합니다.
+
+import { getKstDateParts } from "@/utils/common/kst";
+import { isSubscriptionBenefitActive } from "@/utils/subscriptions/user-subscription-status";
+
+export type ChannelSubscriptionStatus = "active" | "expired" | "canceled";
+
+export type ChannelSubscriberSort =
+  | "started_desc"
+  | "started_asc"
+  | "months_desc"
+  | "months_asc"
+  | "nickname_asc";
+
+export interface ChannelSubscriberItem {
+  id: string;
+  subscriberId: string;
+  nickname: string;
+  photoUrl: string | null;
+  startedAt: string;
+  endAt: string;
+  totalMonths: number;
+  status: ChannelSubscriptionStatus;
+}
+
+export interface ChannelSubscriptionSnapshot {
+  creatorId: string;
+  activeCount: number;
+  monthlyNewCount: number;
+  subscribers: ChannelSubscriberItem[];
+  customBadgeMonths: number[];
+  subscriptionBadgeVersion: string | null;
+  subscriptionBadgeImageSources: Record<number, string>;
+}
+
+interface FilterAndSortOptions {
+  query: string;
+  sort: ChannelSubscriberSort;
+}
+
+function compareStartedAtDesc(a: ChannelSubscriberItem, b: ChannelSubscriberItem) {
+  return new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime();
+}
+
+function compareNicknameAsc(a: ChannelSubscriberItem, b: ChannelSubscriberItem) {
+  return a.nickname.localeCompare(b.nickname, "ko-KR");
+}
+
+export function getActiveChannelSubscriberCount(
+  subscribers: readonly ChannelSubscriberItem[],
+  now: Date = new Date(),
+) {
+  return subscribers.filter((subscriber) => isSubscriptionBenefitActive(subscriber, now)).length;
+}
+
+export function getMonthlyNewChannelSubscriberCount(
+  subscribers: readonly ChannelSubscriberItem[],
+  now: Date = new Date(),
+) {
+  const currentMonth = getKstMonthKey(now);
+
+  return subscribers.filter(
+    (subscriber) =>
+      isSubscriptionBenefitActive(subscriber, now) &&
+      getKstMonthKey(new Date(subscriber.startedAt)) === currentMonth,
+  ).length;
+}
+
+export function filterAndSortChannelSubscribers(
+  subscribers: readonly ChannelSubscriberItem[],
+  { query, sort }: FilterAndSortOptions,
+) {
+  const normalizedQuery = query.trim().toLocaleLowerCase("ko-KR");
+  const filtered = normalizedQuery
+    ? subscribers.filter((subscriber) =>
+        subscriber.nickname.toLocaleLowerCase("ko-KR").includes(normalizedQuery),
+      )
+    : [...subscribers];
+
+  return filtered.sort((a, b) => {
+    if (sort === "started_asc") {
+      return -compareStartedAtDesc(a, b) || compareNicknameAsc(a, b);
+    }
+
+    if (sort === "months_desc") {
+      return b.totalMonths - a.totalMonths || compareStartedAtDesc(a, b);
+    }
+
+    if (sort === "months_asc") {
+      return a.totalMonths - b.totalMonths || compareStartedAtDesc(a, b);
+    }
+
+    if (sort === "nickname_asc") {
+      return compareNicknameAsc(a, b) || compareStartedAtDesc(a, b);
+    }
+
+    return compareStartedAtDesc(a, b) || compareNicknameAsc(a, b);
+  });
+}
+
+export function buildChannelSubscriptionSnapshot(
+  subscribers: readonly ChannelSubscriberItem[],
+  now: Date = new Date(),
+  options: {
+    creatorId?: string;
+    customBadgeMonths?: readonly number[];
+    subscriptionBadgeVersion?: string | null;
+    subscriptionBadgeImageSources?: Record<number, string>;
+    summarySubscribers?: readonly ChannelSubscriberItem[];
+    sort?: ChannelSubscriberSort;
+  } = {},
+): ChannelSubscriptionSnapshot {
+  const summarySubscribers = options.summarySubscribers ?? subscribers;
+
+  return {
+    creatorId: options.creatorId ?? "",
+    activeCount: getActiveChannelSubscriberCount(summarySubscribers, now),
+    monthlyNewCount: getMonthlyNewChannelSubscriberCount(summarySubscribers, now),
+    subscribers: filterAndSortChannelSubscribers(subscribers, {
+      query: "",
+      sort: options.sort ?? "started_desc",
+    }),
+    customBadgeMonths: [...(options.customBadgeMonths ?? [])],
+    subscriptionBadgeVersion: options.subscriptionBadgeVersion ?? null,
+    subscriptionBadgeImageSources: { ...(options.subscriptionBadgeImageSources ?? {}) },
+  };
+}
+
+function getKstMonthKey(date: Date) {
+  const { year, month } = getKstDateParts(date);
+  return `${year}-${String(month).padStart(2, "0")}`;
+}

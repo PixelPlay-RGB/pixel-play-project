@@ -52,6 +52,15 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-app-shell: var(--app-shell-background);
+  --color-rank-gold: var(--rank-gold);
+  --color-rank-silver: var(--rank-silver);
+  --color-rank-bronze: var(--rank-bronze);
+
+  /* 마이크로 라벨·뱃지용 폰트 스텝(10px). 임의값 text-[10px]/text-[11px] 반복을 표준 클래스화.
+     line-height는 의도적으로 미정의 — 기존 arbitrary 사용처의 줄높이를 그대로 보존한다. */
+  --text-2xs: 0.625rem;
+
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -82,6 +91,20 @@
   --error-foreground: #ffffff;
   --info: #3b82f6;
   --info-foreground: #ffffff;
+
+  /* 앱 셸 배경 — 나머지 표면색이 oklch 토큰인 것과 결을 맞춘 라이트/다크 분리 변수. */
+  --app-shell-background: #f7faf9;
+
+  /* 후원 랭킹 메달색(금·은·동) — Tailwind yellow-500/slate-400/amber-600 등가. 라이트·다크 공통. */
+  --rank-gold: oklch(0.795 0.184 86.047);
+  --rank-silver: oklch(0.704 0.04 256.788);
+  --rank-bronze: oklch(0.666 0.179 58.318);
+
+  /* GitHub OAuth 버튼 — 외부 브랜드 고정색(GitHub 공식 다크 팔레트). 토큰화/테마화 대상 아님, 변경 금지. */
+  --github-brand-border: #30363d;
+  --github-brand-background: #161b22;
+  --github-brand-foreground: #ffffff;
+  --github-brand-background-hover: #21262d;
 
   --background: oklch(0.97 0 0);
   --foreground: oklch(0.145 0 0);
@@ -130,6 +153,8 @@
   --error-foreground: #ffffff;
   --info: #60a5fa;
   --info-foreground: #000000;
+
+  --app-shell-background: #0d1117;
 
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
@@ -200,7 +225,7 @@
   }
 
   .app-shell-background {
-    background-color: #f7faf9;
+    background-color: var(--app-shell-background);
   }
 
   body.is-overlay-route {
@@ -247,6 +272,18 @@
     min-height: 100dvh;
   }
 
+  /* 클립 에디터(별도 창) — 헤더·푸터만 숨기고 배경은 불투명 유지(투명 오버레이와 다름).
+     마커 클래스 기반 :has()라 SSR 첫 페인트부터 적용된다(JS 클래스 토글의 헤더 깜빡임 없음). */
+  body:has(.clip-editor-root) header.sticky,
+  body:has(.clip-editor-root) footer {
+    display: none !important;
+  }
+
+  body:has(.clip-editor-root) main {
+    height: 100dvh;
+    min-height: 100dvh;
+  }
+
   body:has(.live-popout-root) main {
     height: 100dvh;
     min-height: 100dvh;
@@ -258,7 +295,7 @@
   }
 
   .dark .app-shell-background {
-    background-color: #0d1117;
+    background-color: var(--app-shell-background);
   }
 
   .bg-auth-grid {
@@ -318,20 +355,21 @@
     color: var(--foreground);
   }
 
+  /* color-mix는 파일 전역 컨벤션(oklch)으로 통일 — srgb 혼용 시 hover 톤이 다른 토큰 파생과 어긋난다. */
   .route-accent-hover:hover {
-    border-color: color-mix(in srgb, var(--brand) 34%, transparent) !important;
-    background-color: color-mix(in srgb, var(--brand) 10%, transparent) !important;
-    color: color-mix(in srgb, var(--brand) 72%, black) !important;
+    border-color: color-mix(in oklch, var(--brand) 34%, transparent) !important;
+    background-color: color-mix(in oklch, var(--brand) 10%, transparent) !important;
+    color: color-mix(in oklch, var(--brand) 72%, black) !important;
   }
 
   .dark .route-accent-hover:hover {
-    border-color: color-mix(in srgb, var(--brand) 34%, transparent) !important;
-    background-color: color-mix(in srgb, var(--brand) 18%, transparent) !important;
+    border-color: color-mix(in oklch, var(--brand) 34%, transparent) !important;
+    background-color: color-mix(in oklch, var(--brand) 18%, transparent) !important;
     color: var(--brand) !important;
   }
 
   .route-accent-text-hover:hover {
-    color: color-mix(in srgb, var(--brand) 72%, black);
+    color: color-mix(in oklch, var(--brand) 72%, black);
   }
 
   .route-accent-outline-button {
@@ -380,54 +418,24 @@
     color: var(--route-accent);
   }
 
+  /* 색은 외부 GitHub 브랜드 고정값(:root의 --github-brand-* 참조). 변경 금지. */
   .oauth-github-button {
-    border-color: #30363d;
-    background-color: #161b22;
-    color: #ffffff;
+    border-color: var(--github-brand-border);
+    background-color: var(--github-brand-background);
+    color: var(--github-brand-foreground);
   }
 
   .oauth-github-button:hover {
     border-color: color-mix(in oklch, var(--brand) 40%, transparent);
-    background-color: #21262d;
+    background-color: var(--github-brand-background-hover);
   }
 }
 
-aside.pixelplay-emoji-picker.EmojiPickerReact,
-.pixelplay-emoji-picker.EmojiPickerReact {
-  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
-  --epr-bg-color: var(--popover);
-  --epr-picker-border-color: var(--border);
-  --epr-picker-border-radius: var(--radius-lg);
-  --epr-text-color: var(--muted-foreground);
-  --epr-search-input-bg-color: var(--muted);
-  --epr-search-input-text-color: var(--foreground);
-  --epr-search-input-placeholder-color: var(--muted-foreground);
-  --epr-search-input-bg-color-active: var(--background);
-  --epr-search-border-color: var(--border);
-  --epr-category-label-bg-color: color-mix(in oklch, var(--background) 92%, transparent);
-  --epr-category-icon-active-color: var(--primary);
-  --epr-hover-bg-color: var(--accent);
-  --epr-focus-bg-color: var(--accent);
-  --epr-hover-bg-color-reduced-opacity: color-mix(in oklch, var(--accent) 50%, transparent);
-  --epr-highlight-color: var(--primary);
-  --epr-emoji-hover-color: var(--accent);
-  --epr-emoji-variation-picker-bg-color: var(--popover);
-  --epr-emoji-variation-indicator-color: var(--border);
-  --epr-preview-border-color: var(--border);
-  --epr-preview-text-color: var(--foreground);
-  --epr-skin-tone-picker-menu-color: var(--popover);
-  --epr-skin-tone-outer-border-color: var(--border);
-  --epr-skin-tone-inner-border-color: var(--popover);
-  --epr-dark-bg-color: var(--popover);
-  --epr-dark-picker-border-color: var(--border);
-  --epr-dark-text-color: var(--muted-foreground);
-  --epr-dark-search-input-bg-color: var(--muted);
-  --epr-dark-category-label-bg-color: color-mix(in oklch, var(--background) 88%, transparent);
-  --epr-dark-hover-bg-color: var(--accent);
-  --epr-dark-focus-bg-color: var(--accent);
-  --epr-dark-highlight-color: var(--primary);
-  --epr-dark-emoji-variation-picker-bg-color: var(--popover);
-  --epr-dark-category-icon-active-color: var(--primary);
+/* 이모지 입력기(contentEditable) — 비어 있을 때만 placeholder를 보여준다(.is-empty는 값으로 토글). */
+.rich-emoji-input.is-empty::before {
+  content: attr(data-placeholder);
+  color: var(--muted-foreground);
+  pointer-events: none;
 }
 
 /* 자동완성시 변하는 색 수정 */

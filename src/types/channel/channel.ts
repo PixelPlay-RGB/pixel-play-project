@@ -1,5 +1,17 @@
 // 공개 채널 페이지(치지직형)의 크리에이터 프로필/배너 타입을 정의합니다.
 
+import type { CreatorSubscriptionStatus } from "@/types/live/live";
+import type { ChannelEmoji } from "@/types/channel/channel-emoji";
+
+export interface ChannelProfileSubscription {
+  isSubscribed: boolean;
+  status: CreatorSubscriptionStatus | null;
+  customMonths: number[];
+  version: string | null;
+  imageSourcesByMonth: Record<number, string>;
+  emojis: ChannelEmoji[];
+}
+
 export interface ChannelProfile {
   id: string;
   nickname: string;
@@ -12,6 +24,7 @@ export interface ChannelProfile {
   bio: string | null;
   // 현재 라이브 방송 중인지.
   isLive: boolean;
+  subscription: ChannelProfileSubscription;
 }
 
 // 채널 홈 배너(이미지 + 외부 링크).

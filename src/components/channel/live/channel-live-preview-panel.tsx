@@ -1,8 +1,8 @@
 // 방송 송출 미리보기 영역을 렌더링합니다.
 import ChannelLivePreviewPlayer from "@/components/channel/live/channel-live-preview-player";
-import type { ChannelLiveState } from "@/components/channel/live/channel-live-operation-page";
 import { Card } from "@/components/ui/card";
 import { getChannelLiveHlsUrl } from "@/constants/channel/channel-live-media";
+import type { ChannelLiveState } from "@/types/channel/channel-live";
 import { Radio } from "lucide-react";
 
 interface Props {

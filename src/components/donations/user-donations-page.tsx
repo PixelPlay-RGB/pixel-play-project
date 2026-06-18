@@ -1,9 +1,10 @@
 // 사용자 후원 지갑 페이지의 전체 레이아웃을 구성합니다.
+import { RetryRefreshButton } from "@/components/common/retry-refresh-button";
 import { SettingsCard } from "@/components/common/settings-card";
 import { SettingsPage } from "@/components/common/settings-page";
 import { PaymentResultToast } from "@/components/donations/payment-result-toast";
 import { UserDonationDashboardSection } from "@/components/donations/user-donation-dashboard-section";
-import { WalletChargeDialog } from "@/components/donations/wallet-charge-card";
+import { WalletChargeDialog } from "@/components/donations/wallet-charge-dialog";
 import type { AppMessageCode } from "@/constants/common/app-message-code";
 import type { UserDonationSnapshot } from "@/types/donations/user-donations";
 import { getAppMessage } from "@/utils/common/app-message";
@@ -16,7 +17,7 @@ interface Props {
 }
 
 const USER_DONATIONS_PAGE_HEADER = {
-  kicker: "DONATIONS",
+  kicker: "내 후원",
   title: "후원 지갑",
   description: "방송 후원에 사용할 포인트 잔액과 충전, 후원 내역을 확인합니다.",
 } as const;
@@ -29,7 +30,10 @@ export function UserDonationsPage({ snapshot, errorCode, paymentResultCode }: Pr
       <SettingsPage {...USER_DONATIONS_PAGE_HEADER}>
         {paymentResultCode ? <PaymentResultToast code={paymentResultCode} /> : null}
         <SettingsCard title={message.title}>
-          <p className="text-muted-foreground text-sm">{message.description}</p>
+          <div className="flex flex-col items-start gap-3">
+            <p className="text-muted-foreground text-sm">{message.description}</p>
+            <RetryRefreshButton />
+          </div>
         </SettingsCard>
       </SettingsPage>
     );
@@ -47,13 +51,13 @@ export function UserDonationsPage({ snapshot, errorCode, paymentResultCode }: Pr
 
 function DonationBalanceHero({ snapshot }: { snapshot: UserDonationSnapshot }) {
   return (
-    <section className="from-live via-live/85 to-brand relative isolate min-h-44 overflow-hidden rounded-xl bg-gradient-to-br px-5 py-7 text-white shadow-sm sm:min-h-48 sm:px-7 sm:py-9">
+    <section className="relative isolate min-h-44 overflow-hidden rounded-xl bg-[linear-gradient(100deg,var(--live)_0%,var(--live)_34%,var(--brand)_48%,var(--brand)_100%)] px-5 py-7 text-white shadow-sm sm:min-h-48 sm:px-7 sm:py-9">
       <span
-        className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.12)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.12)_1px,transparent_1px)] [mask-image:linear-gradient(90deg,transparent_0%,rgba(0,0,0,0.08)_18%,rgba(0,0,0,0.72)_58%,black_100%)] bg-[length:32px_32px]"
+        className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.18)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.18)_1px,transparent_1px)] [mask-image:linear-gradient(90deg,transparent_0%,rgba(0,0,0,0.08)_18%,rgba(0,0,0,0.72)_58%,black_100%)] bg-[length:32px_32px]"
         aria-hidden
       />
       <span
-        className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,color-mix(in_srgb,var(--live)_94%,transparent)_0%,color-mix(in_srgb,var(--live)_80%,transparent)_20%,color-mix(in_srgb,var(--live)_42%,transparent)_42%,transparent_70%)]"
+        className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,color-mix(in_srgb,var(--live)_94%,transparent)_0%,color-mix(in_srgb,var(--live)_80%,transparent)_16%,color-mix(in_srgb,var(--live)_42%,transparent)_34%,transparent_56%)]"
         aria-hidden
       />
 
@@ -61,7 +65,7 @@ function DonationBalanceHero({ snapshot }: { snapshot: UserDonationSnapshot }) {
         <div className="min-w-0">
           <div className="flex items-center gap-2 text-xs font-black tracking-wide uppercase">
             <span className="size-2 shrink-0 rotate-45 bg-white" aria-hidden />
-            <span>DONATION POINT</span>
+            <span>보유 포인트</span>
           </div>
           <p className="mt-4 text-5xl leading-none font-black tracking-tight sm:text-6xl">
             {formatPoint(snapshot.summary.balanceAmount)}

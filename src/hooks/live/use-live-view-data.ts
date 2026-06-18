@@ -3,14 +3,23 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { getLiveSubscriptionBadgeAssetsAction } from "@/actions/live/live";
 import { createClient } from "@/lib/supabase/client";
+import {
+  clearLiveSubscriptionBadgeSourceCache,
+  getLiveSubscriptionBadgeSourcesByMonth,
+  preloadLiveSubscriptionBadgeSources,
+} from "@/utils/live/live-subscription-badge";
+import { useLiveBroadcastRealtime } from "@/hooks/live/use-live-broadcast-realtime";
 import { useAuthStore } from "@/stores/auth";
 import { QUERY_KEYS } from "@/constants/common/query-keys";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { toastAppInfo } from "@/utils/common/toast-message";
 import { normalizeLiveViewData } from "@/utils/live/live-view-data";
 import { isUuid } from "@/utils/common/uuid";
+import { useLiveBanEviction } from "@/hooks/live/use-live-ban-eviction";
 import type { LiveWatchData } from "@/types/live/live";
+import { mapChannelEmojiRows, type ChannelEmojiPreviewRow } from "@/utils/channel/channel-emoji";
 
 export function useLiveViewData(creatorId: string) {
   const supabase = useMemo(() => createClient(), []);
@@ -26,8 +35,12 @@ export function useLiveViewData(creatorId: string) {
     queryKey: QUERY_KEYS.live.watch(creatorId, user?.id),
     enabled: !isAuthLoading && isValidCreatorId,
     staleTime: 1000 * 30,
+    // 시청 화면 재진입 시 항상 서버 상태를 다시 확인한다 — 강퇴 캐시(setQueryData로 isBanned=true)가
+    // 해제 후에도 stale 로 남아, 백그라운드 refetch 동안 차단 다이얼로그가 0.5초 깜빡이는 문제를 막는다.
+    // (밴 상태는 입장마다 서버로 확정해야 하므로 always 가 정책적으로도 옳다.)
+    refetchOnMount: "always",
     queryFn: async () => {
-      const [watchResult, countResult] = await Promise.all([
+      const [watchResult, countResult, badgeAssetsResult, emojiResult] = await Promise.all([
         supabase.rpc("get_live_watch", {
           p_creator_id: creatorId,
           ...(user?.id ? { p_viewer_id: user.id } : {}),
@@ -35,89 +48,110 @@ export function useLiveViewData(creatorId: string) {
         supabase.rpc("get_live_watch_count", {
           p_creator_id: creatorId,
         }),
+        getLiveSubscriptionBadgeAssetsAction(creatorId),
+        supabase
+          .from("channel_emoji")
+          .select("id, image_path, name, sort_order")
+          .eq("creator_id", creatorId)
+          .order("sort_order", { ascending: true })
+          .order("created_at", { ascending: true }),
       ]);
 
       if (watchResult.error) {
         console.error("get_live_watch 실패", watchResult.error);
-        return null;
+        // null 반환(=오프라인 확정과 동일) 대신 throw해 TanStack retry를 태우고,
+        // background refetch 실패 시 직전 캐시(라이브 상태)를 보존한다 — 일시 오류가
+        // 시청 화면 오프라인 전환·시청 세션 종료로 오판되는 것을 막는다.
+        throw watchResult.error;
       }
 
       if (countResult.error) {
         console.error("get_live_watch_count 실패", countResult.error);
       }
 
-      return normalizeLiveViewData(watchResult.data, countResult.data);
+      const watchData = normalizeLiveViewData(watchResult.data, countResult.data);
+      if (!watchData) return null;
+
+      const badgeAssets = badgeAssetsResult.success ? badgeAssetsResult.data : null;
+      if (emojiResult.error) {
+        console.error("라이브 구독 이모티콘 조회 실패", emojiResult.error);
+      }
+
+      return {
+        ...watchData,
+        subscriptionBadgeCustomMonths: badgeAssets?.customMonths ?? [],
+        subscriptionBadgeVersion: badgeAssets?.version ?? null,
+        subscriptionBadgeImageSources: getLiveSubscriptionBadgeSourcesByMonth(creatorId, {
+          customMonths: badgeAssets?.customMonths ?? [],
+          availableMonths: badgeAssets?.availableMonths ?? [],
+          version: badgeAssets?.version ?? null,
+        }),
+        subscriptionEmojis: emojiResult.error
+          ? []
+          : mapChannelEmojiRows((emojiResult.data ?? []) as ChannelEmojiPreviewRow[]),
+      };
     },
   });
 
-  const broadcastId = query.data?.broadcast?.id;
+  useEffect(() => {
+    const data = query.data;
+    if (!data?.subscriptionBadgeImageSources) return;
+
+    preloadLiveSubscriptionBadgeSources(Object.values(data.subscriptionBadgeImageSources));
+  }, [query.data]);
 
   useEffect(() => {
-    if (!broadcastId) return;
+    return () => {
+      const watchQueryKey = QUERY_KEYS.live.watch(creatorId, user?.id);
+      queryClient.removeQueries({ queryKey: watchQueryKey, exact: true });
+      clearLiveSubscriptionBadgeSourceCache();
+    };
+  }, [creatorId, queryClient, user?.id]);
 
-    const watchKey = QUERY_KEYS.live.watch(creatorId, user?.id);
+  const broadcastId = query.data?.broadcast?.id;
+  const watchKey = QUERY_KEYS.live.watch(creatorId, user?.id);
 
-    // 방송 종료 처리: broadcast만 null로 비우고 creator는 남겨 종료 화면에서 채널 정보를 보여준다.
-    // 멈춘 경과 시간은 ended_at(payload) − started_at(캐시)로 정확히 계산해 둔다(감지 지연 영향 없음).
-    // 실제로 라이브였다가 종료된 전환일 때만 toast를 띄우고, 중복 이벤트에도 한 번만 뜨도록 플래그로 가드.
-    function handleBroadcastEnded(endedAtIso?: string) {
-      let didEnd = false;
-      let frozenSeconds: number | null = null;
+  // 강퇴/해제 realtime 단독 소유 — 당사자에게만 전달되며, watch 캐시를 통해 메인+팝아웃이 함께 반응한다(#119).
+  useLiveBanEviction({
+    supabase,
+    queryClient,
+    creatorId,
+    viewerId: user?.id ?? null,
+  });
+
+  // 방송 종료 처리: broadcast만 null로 비우고 creator는 남겨 종료 화면에서 채널 정보를 보여준다.
+  // 멈춘 경과 시간은 ended_at(payload) − started_at(캐시)로 정확히 계산해 둔다(감지 지연 영향 없음).
+  // 실제로 라이브였다가 종료된 전환일 때만 toast를 띄우고, 중복 이벤트에도 한 번만 뜨도록 플래그로 가드.
+  function handleBroadcastEnded(endedAtIso?: string) {
+    let didEnd = false;
+    let frozenSeconds: number | null = null;
+    queryClient.setQueryData<LiveWatchData | null>(watchKey, (prev) => {
+      if (!prev?.broadcast) return prev;
+      didEnd = true;
+      const startedMs = new Date(prev.broadcast.startedAt).getTime();
+      const endedMs = endedAtIso ? new Date(endedAtIso).getTime() : Date.now();
+      frozenSeconds = Math.max(0, Math.floor((endedMs - startedMs) / 1000));
+      return { ...prev, broadcast: null };
+    });
+    if (didEnd) {
+      setEndedElapsedSeconds(frozenSeconds);
+      toastAppInfo(APP_MESSAGE_CODE.info.live.broadcastEnded);
+    }
+  }
+
+  // 시청자 수·종료 신호 구독은 미니플레이어와 공유하는 훅으로 분리했다(채널·이벤트 정책은 훅 주석 참고).
+  useLiveBroadcastRealtime(broadcastId, {
+    onViewerCountChange: (count) => {
       queryClient.setQueryData<LiveWatchData | null>(watchKey, (prev) => {
         if (!prev?.broadcast) return prev;
-        didEnd = true;
-        const startedMs = new Date(prev.broadcast.startedAt).getTime();
-        const endedMs = endedAtIso ? new Date(endedAtIso).getTime() : Date.now();
-        frozenSeconds = Math.max(0, Math.floor((endedMs - startedMs) / 1000));
-        return { ...prev, broadcast: null };
+        return {
+          ...prev,
+          broadcast: { ...prev.broadcast, currentViewerCount: count },
+        };
       });
-      if (didEnd) {
-        setEndedElapsedSeconds(frozenSeconds);
-        toastAppInfo(APP_MESSAGE_CODE.info.live.broadcastEnded);
-      }
-    }
-
-    const channel = supabase
-      .channel(`live-broadcast-${broadcastId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "live_broadcast",
-          filter: `id=eq.${broadcastId}`,
-        },
-        (payload) => {
-          if (!payload.new || typeof payload.new !== "object") return;
-          const next = payload.new as Record<string, unknown>;
-
-          // 시청자 수 갱신만 postgres_changes로 받는다.
-          // 종료(ended_at)는 RLS SELECT 정책상(ended_at is null) 종료된 행이 일반 시청자에게
-          // 안 보여 이 UPDATE 이벤트가 전달되지 않으므로, 아래 broadcast 이벤트로 별도 처리한다.
-          const newViewerCount = next.current_viewer_count;
-          if (typeof newViewerCount !== "number") return;
-
-          queryClient.setQueryData<LiveWatchData | null>(watchKey, (prev) => {
-            if (!prev?.broadcast) return prev;
-            return {
-              ...prev,
-              broadcast: { ...prev.broadcast, currentViewerCount: newViewerCount },
-            };
-          });
-        },
-      )
-      // 방송 종료는 DB 트리거(broadcast_live_broadcast_ended)가 realtime.send로 쏘는
-      // public broadcast 이벤트로 받는다 — RLS와 무관하게 모든 시청자에게 즉시 전달된다.
-      .on("broadcast", { event: "broadcast_ended" }, (message) => {
-        const endedAt = (message?.payload as { ended_at?: string } | undefined)?.ended_at;
-        handleBroadcastEnded(endedAt);
-      })
-      .subscribe();
-
-    return () => {
-      void channel.unsubscribe();
-    };
-  }, [broadcastId, creatorId, user?.id, supabase, queryClient]);
+    },
+    onEnded: handleBroadcastEnded,
+  });
 
   // 종료/오프라인 상태에서 같은 크리에이터가 새 방송을 시작하면(INSERT) 다시 불러와 video로 되돌린다.
   // 새 방송 행은 ended_at=null이라 RLS SELECT를 통과해 시청자에게도 INSERT 이벤트가 전달된다.
@@ -151,6 +185,9 @@ export function useLiveViewData(creatorId: string) {
   return {
     data: query.data,
     isLoading: query.isLoading,
+    // 이번 마운트에서 서버 응답을 한 번이라도 받았는지 — stale 캐시(밴 해제 전 상태)만으로
+    // 차단 다이얼로그를 띄우지 않도록, 차단 표시 게이트로 쓴다(refetchOnMount:"always" 와 짝).
+    isWatchSettled: query.isFetchedAfterMount,
     error: query.error,
     refetch: query.refetch,
     endedElapsedSeconds,

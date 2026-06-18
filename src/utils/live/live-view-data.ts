@@ -1,15 +1,44 @@
 // get_live_watch / get_live_watch_count RPC 응답을 시청 화면 도메인 데이터로 정규화합니다.
 
 import { isRecord } from "@/utils/common/json";
-import type { LiveWatchData } from "@/types/live/live";
+import type { LiveWatchData, LiveWatchViewerRelation } from "@/types/live/live";
 
 interface LiveWatchCountResult {
   followerCount: number;
   broadcastCount: number;
 }
 
-type RawLiveWatchData = Omit<LiveWatchData, "creator" | "viewerChatState"> & {
+type RawLiveWatchData = Omit<
+  LiveWatchData,
+  | "creator"
+  | "viewerRelation"
+  | "viewerChatState"
+  | "subscriptionBadgeCustomMonths"
+  | "subscriptionBadgeVersion"
+  | "subscriptionBadgeImageSources"
+  | "subscriptionEmojis"
+> & {
   creator: Omit<LiveWatchData["creator"], "followerCount" | "broadcastCount">;
+  viewerRelation:
+    | (Omit<
+        LiveWatchViewerRelation,
+        | "isSubscribed"
+        | "subscriptionStartedAt"
+        | "subscriptionEndAt"
+        | "subscriptionTotalMonths"
+        | "subscriptionStatus"
+      > &
+        Partial<
+          Pick<
+            LiveWatchViewerRelation,
+            | "isSubscribed"
+            | "subscriptionStartedAt"
+            | "subscriptionEndAt"
+            | "subscriptionTotalMonths"
+            | "subscriptionStatus"
+          >
+        >)
+    | null;
   viewerChatState: Omit<LiveWatchData["viewerChatState"], "chatUnavailableReason"> & {
     blockedReason: LiveWatchData["viewerChatState"]["chatUnavailableReason"];
   };
@@ -45,6 +74,16 @@ export function normalizeLiveViewData(
 
   const count = parseLiveWatchCount(rawCountData);
   const { blockedReason, ...restChatState } = rawWatchData.viewerChatState;
+  const viewerRelation = rawWatchData.viewerRelation
+    ? {
+        ...rawWatchData.viewerRelation,
+        isSubscribed: rawWatchData.viewerRelation.isSubscribed ?? false,
+        subscriptionStartedAt: rawWatchData.viewerRelation.subscriptionStartedAt ?? null,
+        subscriptionEndAt: rawWatchData.viewerRelation.subscriptionEndAt ?? null,
+        subscriptionTotalMonths: rawWatchData.viewerRelation.subscriptionTotalMonths ?? null,
+        subscriptionStatus: rawWatchData.viewerRelation.subscriptionStatus ?? null,
+      }
+    : null;
 
   return {
     ...rawWatchData,
@@ -57,5 +96,10 @@ export function normalizeLiveViewData(
       ...restChatState,
       chatUnavailableReason: blockedReason,
     },
+    viewerRelation,
+    subscriptionBadgeCustomMonths: [],
+    subscriptionBadgeVersion: null,
+    subscriptionBadgeImageSources: {},
+    subscriptionEmojis: [],
   };
 }

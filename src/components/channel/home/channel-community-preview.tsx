@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 
+import CommunityEmptyState from "@/components/community/community-empty-state";
 import CommunityPostCard from "@/components/community/community-post-card";
 import {
   Carousel,
@@ -63,9 +64,7 @@ export function ChannelCommunityPreview({ creatorId, isOwner, result }: Props) {
           />
         </div>
       ) : (
-        <p className="text-muted-foreground border-border/60 bg-card/40 rounded-2xl border py-10 text-center text-sm font-semibold">
-          아직 작성된 글이 없어요.
-        </p>
+        <CommunityEmptyState />
       )}
     </Carousel>
   );

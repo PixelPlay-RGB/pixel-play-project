@@ -11,13 +11,13 @@ import {
   updateChannelLiveSettingsAction,
   uploadChannelLiveThumbnailAction,
 } from "@/actions/channel/live";
+import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
+import { useChannelLiveThumbnail } from "@/hooks/channel/use-channel-live-thumbnail";
 import type {
   ChannelLiveChatScope,
   ChannelLiveState,
   ChannelLiveVisibility,
-} from "@/components/channel/live/channel-live-operation-page";
-import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
-import { useChannelLiveThumbnail } from "@/hooks/channel/use-channel-live-thumbnail";
+} from "@/types/channel/channel-live";
 import type { ChannelLiveStreamStatusResponse } from "@/types/channel/channel-live-stream";
 import { getAppMessage } from "@/utils/common/app-message";
 import { toastAppError, toastAppSuccess } from "@/utils/common/toast-message";
@@ -206,7 +206,6 @@ export function useChannelLiveOperation(initialSnapshot?: ChannelLiveStudioSnaps
     ttsRate,
   ]);
   const isStreamOnline = streamStatus?.state === "online";
-  const shouldCaptureAutoThumbnail = !thumbnailFile && !thumbnailPreviewUrl.trim();
 
   const completeBroadcastEnd = useCallback(() => {
     setBroadcastId(null);
@@ -470,7 +469,6 @@ export function useChannelLiveOperation(initialSnapshot?: ChannelLiveStudioSnaps
     setIsTtsEnabled,
     setTagInput,
     setTitle,
-    shouldCaptureAutoThumbnail,
     slowModeSeconds,
     tagInput,
     tags,

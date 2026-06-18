@@ -8,6 +8,7 @@ import { Heart, MessageSquare } from "lucide-react";
 import { useState } from "react";
 
 import ClampedText from "@/components/common/clamped-text";
+import RichMessageText from "@/components/common/rich-message-text";
 import CommunityActionMenu from "@/components/community/community-action-menu";
 import DeleteConfirmDialog from "@/components/common/delete-confirm-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -57,11 +58,13 @@ export default function CommunityPostCard({ creatorId, creator, post, isOwner }:
         </div>
 
         <div className="mt-3 flex min-h-0 flex-1 gap-3">
+          {/* 본문 미리보기 — 상세 페이지와 동일하게 스티커 토큰을 인라인 이미지로 렌더한다(line-clamp 유지). */}
           <ClampedText
-            text={post.content}
             className="flex-1"
             textClassName="text-foreground/90 line-clamp-3 text-sm leading-relaxed wrap-break-word whitespace-pre-wrap"
-          />
+          >
+            <RichMessageText as="span" text={post.content} />
+          </ClampedText>
           {post.imageUrl && (
             <div className="border-border/60 relative aspect-square shrink-0 self-stretch overflow-hidden rounded-lg border">
               <Image

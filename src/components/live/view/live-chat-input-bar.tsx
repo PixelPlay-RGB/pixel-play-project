@@ -3,8 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { SendHorizontal, Timer, UserRoundPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import ChatEmojiPicker from "@/components/common/chat-emoji-picker";
-import { Input } from "@/components/ui/input";
+import StickerPicker from "@/components/sticker/sticker-picker";
+import RichEmojiInput from "@/components/common/rich-emoji-input";
+import { useChannelStickers } from "@/components/live/chat/channel-sticker-context";
 import {
   Popover,
   PopoverContent,
@@ -23,6 +24,7 @@ import {
   useFollowWaitCountdown,
 } from "@/hooks/live/use-follow-wait-countdown";
 import { cn } from "@/lib/utils";
+import { appendStickerToken } from "@/utils/sticker/sticker-token";
 import type { LiveInteractionNotice, LivePoll, LiveViewerChatState } from "@/types/live/live";
 
 interface Props {
@@ -37,6 +39,9 @@ interface Props {
   walletBalance: number;
   isWalletLoading?: boolean;
   isWalletError?: boolean;
+  // 후원금 충전(TossPayments) — 로그인 유저 id와 결제 후 복귀 경로.
+  customerKey?: string;
+  chargeReturnTo?: string;
   donationEnabled: boolean;
   donationMinAmount: number;
   onLoginPrompt: () => void;
@@ -66,9 +71,6 @@ interface Props {
   slowModeSeconds?: number;
   // 채팅 메뉴의 "채팅 규칙"이 요청하면 입력바 위 규칙 popover를 연다(값이 바뀔 때마다 1회).
   ruleOpenRequestId?: number;
-  // 동기화 최소 높이(px) — 시청 화면에서 separator(상단 보더)를 비디오 하단 라인에 맞춘다.
-  // 화면이 낮아 이 값이 콘텐츠보다 작으면 자연 높이로 버틴다(min-height).
-  minHeightPx?: number | null;
   // 전체화면 오버레이 등에서 사용할 때 popover/dialog 포털 컨테이너를 전체화면 요소로 지정한다(미지정=body).
   portalContainer?: HTMLElement | null;
   // 전체화면 후원 버튼이 후원 popover 열기를 요청한다(LiveDonationPopover로 그대로 전달).
@@ -90,6 +92,8 @@ function getChatPlaceholder({
     // 규칙 미동의는 일반 채팅 placeholder를 유지하고, 클릭하면 동의 popover로 안내한다.
     case "chat_rule_acceptance_required":
       return LIVE_LABEL.chatPlaceholder;
+    case "banned":
+      return LIVE_LABEL.bannedChatPlaceholder;
     case "follower_required":
       return LIVE_LABEL.chatFollowerPlaceholder;
     case "follower_wait_required":
@@ -118,6 +122,8 @@ export function LiveChatInputBar({
   walletBalance,
   isWalletLoading,
   isWalletError,
+  customerKey,
+  chargeReturnTo,
   donationEnabled,
   donationMinAmount,
   onLoginPrompt,
@@ -137,7 +143,6 @@ export function LiveChatInputBar({
   followerWaitSeconds = 0,
   slowModeSeconds = 0,
   ruleOpenRequestId,
-  minHeightPx,
   portalContainer,
   donationOpenRequested,
   onDonationOpenSettled,
@@ -149,6 +154,9 @@ export function LiveChatInputBar({
   // 입력바 컨테이너(좌우 px-3 패딩 포함) 전체를 popover anchor로 삼아, 팝오버 폭(--anchor-width)을
   // 채팅 패널 테두리 안쪽 폭에 꽉 맞춘다(입력칸·버튼행보다 좌우 패딩만큼 더 넓게 테두리까지).
   const inputBarRef = useRef<HTMLDivElement>(null);
+
+  // 채널 이모지 — 본인 채널과 활성 구독 중인 방송인의 채널 이모지만 피커에 노출한다.
+  const { groups: channelGroups, stickers: channelStickers, canUseInPicker } = useChannelStickers();
 
   // 메뉴의 "채팅 규칙" 요청(id 변경)마다 규칙 popover를 연다 — 렌더 중 가드된 setState(조정 패턴).
   const [handledRuleRequestId, setHandledRuleRequestId] = useState(ruleOpenRequestId);
@@ -265,51 +273,47 @@ export function LiveChatInputBar({
   return (
     <div
       ref={inputBarRef}
-      // 입력칸(크게) + 후원·참여 버튼 행(슬림) 2줄 구조 — 패딩·버튼 높이를 줄여 섹션을 최대한
-      // 낮게 유지하고, minHeightPx(칼럼 높이 - 비디오 16:9 높이)가 콘텐츠보다 크면 늘어나
-      // separator(상단 보더)가 비디오 하단 라인과 일직선이 된다(남는 공간은 줄 사이로 분배).
-      style={minHeightPx ? { minHeight: minHeightPx } : undefined}
-      className={cn(
-        "border-border flex flex-col justify-between gap-2 border-t px-3 py-2",
-        className,
-      )}
+      // 입력칸(크게) + 후원·참여 버튼 행(슬림) 2줄 구조 — 패딩·버튼 높이를 줄여 섹션을 낮게
+      // 유지하고, 자연 높이로 채팅 패널 하단에 붙는다(메시지 목록이 위 공간을 모두 채운다).
+      className={cn("border-border flex flex-col gap-2 border-t px-3 py-2", className)}
     >
       {/* 이모지·전송 버튼은 입력 필드 안(오른쪽 trailing)에 넣어 입력칸 좌측을 버튼행과 정렬한다. */}
-      <div className="relative">
-        <Input
+      {/* 테두리는 래퍼가 갖고, 안의 contentEditable이 여러 줄로 늘어난다. 한 줄일 땐 h-11(min) 높이를
+          유지하고, 길어지면 max-h까지 자라며 그 이상은 세로 스크롤한다(치지직식 textarea 결). */}
+      <div
+        className={cn(
+          "border-input relative flex min-h-11 rounded-md border bg-transparent text-sm",
+          // 포커스는 래퍼에서 받는다(focus-within) — 입력은 안의 contentEditable이 갖는다.
+          "focus-within:border-brand focus-within:ring-brand/30 focus-within:ring-2",
+          !isEditable && !isInputDisabled && "bg-muted/70 cursor-pointer",
+          isInputDisabled && "cursor-not-allowed opacity-60",
+        )}
+      >
+        <RichEmojiInput
           value={draftValue}
-          maxLength={LIVE_CHAT_MESSAGE_MAX_LENGTH}
+          onChange={setDraftValue}
+          onSubmit={() => void handleSend()}
+          submitOnEnter
+          allowNewline={false}
           placeholder={placeholder}
+          maxLength={LIVE_CHAT_MESSAGE_MAX_LENGTH}
           readOnly={!isEditable}
           disabled={isInputDisabled}
           onClick={handleInputClick}
-          onChange={(e) => setDraftValue(e.target.value)}
-          onKeyDown={(e) => {
-            // 게이트 상태(로그인/규칙)에선 Enter를 클릭과 동일하게 다뤄, 키보드 사용자도
-            // 마우스 클릭과 똑같이 안내 popover를 열 수 있게 한다(입력수단 동등성).
-            if (!isEditable) {
-              if (e.key === "Enter" && isClickGate) {
-                e.preventDefault();
-                handleInputClick();
-              }
-              return;
-            }
-            if (e.key === "Enter" && !e.nativeEvent.isComposing) {
-              e.preventDefault();
-              void handleSend();
-            }
-          }}
-          aria-label={placeholder}
-          className={cn(
-            "read-only:bg-muted/70 h-11 w-full pr-17 text-sm read-only:cursor-pointer",
-            // 기본 ring(무채색) 대신 브랜드 민트 포커스로 시청 화면의 입력임을 또렷하게 한다.
-            "focus-visible:border-brand focus-visible:ring-brand/30",
-          )}
+          ariaLabel={placeholder}
+          extraStickers={channelStickers}
+          className="max-h-32 w-full min-w-0 overflow-y-auto px-3 py-1.5 pr-17 leading-8 outline-none"
         />
-        <div className="absolute inset-y-0 right-1 flex items-center gap-0.5">
-          <ChatEmojiPicker
-            onEmojiSelect={(emoji) => setDraftValue(draftValue + emoji)}
+        <div className="absolute right-1 bottom-1.5 flex items-center gap-0.5">
+          <StickerPicker
+            onStickerSelect={(token) =>
+              setDraftValue(appendStickerToken(draftValue, token, LIVE_CHAT_MESSAGE_MAX_LENGTH))
+            }
             disabled={!isEditable}
+            channelGroups={canUseInPicker ? channelGroups : undefined}
+            // 팝오버를 입력바 전체 폭에 맞춰 채팅창 위에 띄운다(후원·규칙 popover와 같은 anchor 기준).
+            anchor={() => inputBarRef.current}
+            portalContainer={portalContainer}
           />
           <Button
             type="button"
@@ -417,6 +421,8 @@ export function LiveChatInputBar({
             walletBalance={walletBalance}
             isWalletLoading={isWalletLoading}
             isWalletError={isWalletError}
+            customerKey={customerKey}
+            chargeReturnTo={chargeReturnTo}
             donationEnabled={donationEnabled}
             donationMinAmount={donationMinAmount}
             onLoginPrompt={onLoginPrompt}

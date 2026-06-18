@@ -9,10 +9,10 @@ import { createClient } from "@/lib/supabase/server";
 import { channelBannerInputSchema } from "@/lib/zod/channel-profile";
 import type { ChannelBanner } from "@/types/channel/channel";
 import type { AppActionResult } from "@/types/common/action";
-import type { Json } from "@/types/database.types";
 import { isAuthSessionMissingError } from "@/utils/auth/auth-error";
 import { buildBannerObjectName } from "@/utils/channel/channel-banner";
 import { parseChannelBanners } from "@/utils/channel/channel-parser";
+import { readJsonRecord } from "@/utils/common/json";
 
 const MAX_BANNER_SIZE = 1 * 1024 * 1024; // 1MB
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/bmp"];
@@ -107,10 +107,7 @@ export async function deleteChannelBannerAction(
   }
 
   // RPC는 jsonb { imagePath, banners }를 반환한다. 이중 단언 없이 런타임 형태를 검증한다.
-  const payload =
-    data && typeof data === "object" && !Array.isArray(data)
-      ? (data as Record<string, Json | undefined>)
-      : null;
+  const payload = readJsonRecord(data);
 
   // storage 객체 정리(best-effort). 실패해도 액션은 성공으로 두되 고아 파일 추적을 위해 로깅한다.
   const imagePath = typeof payload?.imagePath === "string" ? payload.imagePath : null;

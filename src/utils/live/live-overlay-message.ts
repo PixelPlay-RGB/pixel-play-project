@@ -3,7 +3,8 @@ import {
   LIVE_OVERLAY_DEFAULT_CREATOR_NAME,
   LIVE_OVERLAY_DEFAULT_VIEWER_NAME,
 } from "@/constants/live/live-overlay";
-import type { Json } from "@/types/database.types";
+import { readJsonObject, readNumber, readString } from "@/utils/common/json";
+import { deriveSenderRoles } from "@/utils/live/live-message";
 import type { LiveMessageRow } from "@/types/live/live";
 import type { LiveChatOverlayItem, LiveChatOverlayMessage } from "@/types/live/live-chat-overlay";
 import type { LiveDonationAlertOverlayData } from "@/types/live/live-donation-alert-overlay";
@@ -26,20 +27,30 @@ export function mapLiveMessageToChatOverlayItem(
       readString(metadata.senderNickname) ??
       options.authorFallback ??
       LIVE_OVERLAY_DEFAULT_VIEWER_NAME;
+    const isCreator = message.sender_id === options.creatorId;
+    const isDonor = metadata.isDonor === true;
+    const isSubscriber = metadata.isSubscriber === true;
 
+    const isHost = message.sender_role === "creator" || message.sender_id === options.creatorId;
     const overlayMessage: LiveChatOverlayMessage = {
       id: message.id,
+      creatorId: options.creatorId,
       kind: "chat",
       author,
       content: message.content,
       createdAt: message.created_at,
-      role:
-        message.sender_id === options.creatorId
-          ? "creator"
-          : metadata.isDonor === true
-            ? "donor"
-            : undefined,
-      tone: message.sender_id === options.creatorId ? "brand" : undefined,
+      // 시청 채팅과 동일 규칙으로 동시 보유 역할을 모두 뱃지로(공용 deriveSenderRoles).
+      roles: deriveSenderRoles({
+        isHost,
+        senderRole: message.sender_role,
+        isDonor: metadata.isDonor === true,
+        isSubscriber: metadata.isSubscriber === true,
+      }),
+      // 구독 N개월 티콘(LiveSubscriptionBadge)용 데이터 — 구독 기능 보존.
+      isSubscriber,
+      subscriptionTotalMonths: readNumber(metadata.subscriptionTotalMonths),
+      role: isCreator ? "creator" : isDonor ? "donor" : isSubscriber ? "subscriber" : undefined,
+      tone: isHost ? "brand" : undefined,
     };
 
     return {
@@ -59,6 +70,7 @@ export function mapLiveMessageToChatOverlayItem(
 
     const overlayMessage: LiveChatOverlayMessage = {
       id: message.id,
+      creatorId: options.creatorId,
       kind: "donation",
       author,
       content: message.content,
@@ -101,22 +113,4 @@ export function mapLiveMessageToDonationAlert(
     message: message.content,
     createdAt: message.created_at,
   };
-}
-
-function readJsonObject(value: Json): Record<string, Json | undefined> {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    return {};
-  }
-
-  return value as Record<string, Json | undefined>;
-}
-
-function readString(value: Json | undefined) {
-  const trimmed = typeof value === "string" ? value.trim() : "";
-
-  return trimmed.length > 0 ? trimmed : null;
-}
-
-function readNumber(value: Json | undefined) {
-  return typeof value === "number" && Number.isFinite(value) ? value : null;
 }

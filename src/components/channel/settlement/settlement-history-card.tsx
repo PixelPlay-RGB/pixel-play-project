@@ -4,8 +4,10 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { ReceiptText } from "lucide-react";
 
 import { getSettlementDonationsAction } from "@/actions/channel/settlement";
+import { EmptyState } from "@/components/common/empty-state";
 import ListPagination from "@/components/common/list-pagination";
 import { QUERY_KEYS } from "@/constants/common/query-keys";
 import { SettingsCard } from "@/components/common/settings-card";
@@ -196,9 +198,10 @@ export function SettlementHistoryCard({ yearlySummary }: Props) {
         </div>
       ) : items.length === 0 ? (
         <div className="ring-foreground/10 rounded-xl ring-1">
-          <p className="text-muted-foreground py-12 text-center text-sm">
-            조건에 맞는 후원 내역이 없어요.
-          </p>
+          <EmptyState
+            icon={<ReceiptText className="size-7" />}
+            title="조건에 맞는 후원 내역이 없어요."
+          />
         </div>
       ) : (
         <div
@@ -210,10 +213,18 @@ export function SettlementHistoryCard({ yearlySummary }: Props) {
           <table className="w-full text-sm">
             <thead className="bg-muted/40">
               <tr>
-                <th className={cn(TH_CLASS, "text-left")}>닉네임</th>
-                <th className={cn(TH_CLASS, "text-right")}>후원일</th>
-                <th className={cn(TH_CLASS, "text-right")}>후원 금액</th>
-                <th className={cn(TH_CLASS, "text-right")}>정산 상태</th>
+                <th scope="col" className={cn(TH_CLASS, "text-left")}>
+                  닉네임
+                </th>
+                <th scope="col" className={cn(TH_CLASS, "text-right")}>
+                  후원일
+                </th>
+                <th scope="col" className={cn(TH_CLASS, "text-right")}>
+                  후원 금액
+                </th>
+                <th scope="col" className={cn(TH_CLASS, "text-right")}>
+                  정산 상태
+                </th>
               </tr>
             </thead>
             <tbody>

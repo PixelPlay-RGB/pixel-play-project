@@ -38,6 +38,12 @@ export const APP_MESSAGE = {
         description: "변경한 프로필 정보가 저장되었습니다.",
       },
     },
+    user: {
+      subscriptionCanceled: {
+        title: "구독 해지 완료",
+        description: "내 구독 목록에 변경 내용이 반영됐습니다.",
+      },
+    },
     oauth: {
       unlinked: {
         title: "연동 해제 완료",
@@ -68,6 +74,14 @@ export const APP_MESSAGE = {
         title: "테스트 후원 전송 완료",
         description: "OBS 후원 알림 화면에서 확인해주세요.",
       },
+      subscriptionBadgeSaved: {
+        title: "구독 배지 저장 완료",
+        description: "채팅에 표시되는 구독 배지가 변경됐어요.",
+      },
+      subscriptionBadgeDeleted: {
+        title: "구독 배지 기본값 적용 완료",
+        description: "커스텀 배지를 제거했어요.",
+      },
       channelProfileSaved: {
         title: "채널 정보 저장 완료",
         description: "변경한 채널 소개와 링크가 적용되었어요.",
@@ -77,6 +91,29 @@ export const APP_MESSAGE = {
       },
       bannerDeleted: {
         title: "배너 삭제 완료",
+      },
+      emojiSaved: {
+        title: "이모지 등록 완료",
+      },
+      emojiUpdated: {
+        title: "이모지 수정 완료",
+      },
+      emojiDeleted: {
+        title: "이모지 삭제 완료",
+      },
+      managerAdded: {
+        title: "매니저 추가 완료",
+      },
+      managerRemoved: {
+        title: "매니저 해제 완료",
+      },
+      viewerBanned: {
+        title: "강퇴 완료",
+        description: "해당 시청자를 채널에서 강퇴했어요.",
+      },
+      viewerUnbanned: {
+        title: "강퇴 해제 완료",
+        description: "다시 채널을 이용할 수 있어요.",
       },
     },
     following: {
@@ -117,6 +154,10 @@ export const APP_MESSAGE = {
       },
     },
     live: {
+      subscribed: {
+        title: "구독 완료",
+        description: "구독자 배지가 채팅에 표시됩니다.",
+      },
       urlCopied: {
         title: "링크 복사 완료",
         description: "방송 링크 복사가 완료되었습니다.",
@@ -124,6 +165,20 @@ export const APP_MESSAGE = {
       voteUnchanged: {
         title: "이미 선택한 항목",
         description: "다른 항목 번호를 입력하면 투표가 변경됩니다.",
+      },
+    },
+    clip: {
+      created: {
+        title: "클립 생성 완료",
+        description: "클립이 준비되었어요.",
+      },
+      urlCopied: {
+        title: "링크 복사 완료",
+        description: "클립 링크 복사가 완료되었습니다.",
+      },
+      deleted: {
+        title: "클립 삭제 완료",
+        description: "클립을 삭제했어요.",
       },
     },
     notification: {
@@ -175,6 +230,10 @@ export const APP_MESSAGE = {
         title: "인증 정보 조회 실패",
         description: "잠시 후 다시 시도해주세요.",
       },
+      authInfoUpdateFailed: {
+        title: "인증 정보 수정 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
       sessionNotFound: {
         title: "인증 정보 없음",
         description: "다시 로그인한 뒤 시도해주세요.",
@@ -210,6 +269,16 @@ export const APP_MESSAGE = {
       oauthSyncFailed: {
         title: "OAuth 동기화 실패",
         description: "소셜 로그인 정보를 동기화하지 못했습니다.",
+      },
+    },
+    user: {
+      subscriptionLoadFailed: {
+        title: "구독 조회 실패",
+        description: "내 구독 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.",
+      },
+      subscriptionCancelFailed: {
+        title: "구독 해지 실패",
+        description: "구독 해지를 처리하지 못했습니다. 잠시 후 다시 시도해주세요.",
       },
     },
     // 라이브 메시지 RPC 에러 매핑(MESSAGE_RPC_ERROR_CODE_MAP)에서 사용.
@@ -256,10 +325,6 @@ export const APP_MESSAGE = {
         title: "충전 실패",
         description: "결제가 완료되지 않았습니다. 다시 충전해 주세요.",
       },
-      chargeCanceled: {
-        title: "충전 취소",
-        description: "결제가 취소되어 후원 지갑에 반영되지 않았습니다.",
-      },
       paymentWindowConfigMissing: {
         title: "결제 키 필요",
         description: "결제 설정이 필요합니다. 관리자에게 문의하거나 잠시 후 다시 시도해주세요.",
@@ -289,6 +354,10 @@ export const APP_MESSAGE = {
       linkBlocked: {
         title: "링크 전송 불가",
         description: "이 방송에서는 링크를 보낼 수 없어요.",
+      },
+      banned: {
+        title: "채팅 불가",
+        description: "강퇴되어 이 채널에서 채팅할 수 없어요.",
       },
     },
     profile: {
@@ -404,6 +473,26 @@ export const APP_MESSAGE = {
         title: "통계 조회 실패",
         description: "다시 로그인하거나 잠시 후 새로고침해주세요.",
       },
+      subscriptionLoadFailed: {
+        title: "구독자 조회 실패",
+        description: "다시 로그인하거나 잠시 후 새로고침해주세요.",
+      },
+      subscriptionBadgeSaveFailed: {
+        title: "구독 배지 저장 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      subscriptionBadgeDeleteFailed: {
+        title: "구독 배지 삭제 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      subscriptionBadgeImageInvalid: {
+        title: "구독 배지 이미지 확인 필요",
+        description: "가로세로 60px인 PNG 파일을 올려주세요.",
+      },
+      subscriptionBadgeImageTooLarge: {
+        title: "구독 배지 용량 초과",
+        description: "1MB 이하의 PNG 파일을 올려주세요.",
+      },
       channelProfileSaveFailed: {
         title: "채널 정보 저장 실패",
         description: "입력값을 확인한 뒤 다시 시도해주세요.",
@@ -423,6 +512,74 @@ export const APP_MESSAGE = {
       bannerLimitReached: {
         title: "배너 개수 초과",
         description: "배너는 최대 5개까지 등록할 수 있어요.",
+      },
+      emojiSaveFailed: {
+        title: "이모지 저장 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      emojiDeleteFailed: {
+        title: "이모지 삭제 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      emojiImageTooLarge: {
+        title: "이미지 용량 초과",
+        description: "5MB 이하의 PNG를 선택해주세요.",
+      },
+      emojiLimitReached: {
+        title: "이모지 개수 초과",
+        description: "이모지는 최대 10개까지 등록할 수 있어요.",
+      },
+      emojiInvalidType: {
+        title: "지원하지 않는 형식",
+        description: "투명 배경 PNG 이미지만 등록할 수 있어요.",
+      },
+      emojiSingleFileOnly: {
+        title: "다중 등록 불가",
+        description: "이모지는 한 번에 하나씩 등록해요.",
+      },
+      managerListLoadFailed: {
+        title: "매니저 목록 조회 실패",
+        description: "다시 로그인하거나 잠시 후 새로고침해주세요.",
+      },
+      managerAddFailed: {
+        title: "매니저 추가 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      managerRemoveFailed: {
+        title: "매니저 해제 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      managerAlreadyExists: {
+        title: "이미 매니저",
+        description: "이미 매니저로 등록된 유저예요.",
+      },
+      managerSelfForbidden: {
+        title: "본인 지정 불가",
+        description: "자신을 매니저로 지정할 수 없어요.",
+      },
+      managerBannedForbidden: {
+        title: "매니저 지정 불가",
+        description: "강퇴한 유저는 매니저로 지정할 수 없어요. 먼저 강퇴를 해제해주세요.",
+      },
+      userSearchFailed: {
+        title: "유저 검색 실패",
+        description: "잠시 후 다시 검색해 주세요.",
+      },
+      viewerBanFailed: {
+        title: "강퇴 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      viewerUnbanFailed: {
+        title: "강퇴 해제 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      viewerBanForbidden: {
+        title: "강퇴 불가",
+        description: "스트리머, 매니저, 본인은 강퇴할 수 없어요.",
+      },
+      viewerBanListLoadFailed: {
+        title: "제재 이력 조회 실패",
+        description: "잠시 후 다시 시도해주세요.",
       },
     },
     following: {
@@ -475,6 +632,14 @@ export const APP_MESSAGE = {
       voteInvalidOption: {
         title: "잘못된 투표 번호",
         description: "유효하지 않은 투표 번호입니다.",
+      },
+      subscriptionFailed: {
+        title: "구독 실패",
+        description: "구독 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+      },
+      subscriptionInsufficientBalance: {
+        title: "포인트 부족",
+        description: "구독에 필요한 포인트가 부족해요. 포인트를 충전한 뒤 다시 시도해주세요.",
       },
     },
     community: {
@@ -529,6 +694,44 @@ export const APP_MESSAGE = {
         description: "잠시 후 다시 시도해주세요.",
       },
     },
+    clip: {
+      createFailed: {
+        title: "클립 생성 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      rateLimited: {
+        title: "클립 생성 제한",
+        description: "클립은 1분에 1개까지 만들 수 있어요.",
+      },
+      channelFull: {
+        title: "클립 보관함 가득 참",
+        description: "이 채널의 클립 보관 한도에 도달했어요.",
+      },
+      tooEarly: {
+        title: "클립 생성 불가",
+        description: "방송 시작 직후에는 클립을 만들 수 없어요. 잠시 후 시도해주세요.",
+      },
+      noBroadcast: {
+        title: "클립 생성 불가",
+        description: "지금은 방송 중이 아니에요.",
+      },
+      generationFailed: {
+        title: "클립 생성 실패",
+        description: "시간이 초과되어 클립을 만들지 못했어요. 다시 시도해주세요.",
+      },
+      loadFailed: {
+        title: "클립 불러오기 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      deleteFailed: {
+        title: "클립 삭제 실패",
+        description: "잠시 후 다시 시도해주세요.",
+      },
+      notFound: {
+        title: "클립을 찾을 수 없어요",
+        description: "이미 삭제되었거나 없는 클립이에요.",
+      },
+    },
     supabase: {
       permissionDenied: {
         title: "권한 없음",
@@ -547,10 +750,20 @@ export const APP_MESSAGE = {
         description: "조금만 기다려주세요. 곧 제공될 예정이에요.",
       },
     },
+    donation: {
+      chargeCanceled: {
+        title: "충전 취소",
+        description: "결제가 취소되어 후원 지갑에 반영되지 않았습니다.",
+      },
+    },
     live: {
       broadcastEnded: {
         title: "방송 종료",
         description: "방송이 종료되었습니다.",
+      },
+      subscriptionPaymentCanceled: {
+        title: "구독 결제 취소",
+        description: "결제가 취소되어 구독이 시작되지 않았습니다.",
       },
     },
   },

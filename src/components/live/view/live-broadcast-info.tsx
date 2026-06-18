@@ -10,7 +10,10 @@ interface Props {
 export function LiveBroadcastInfo({ broadcast }: Props) {
   return (
     <div className="flex min-w-0 flex-col gap-1.5">
-      <h1 className="text-foreground truncate text-base leading-snug font-semibold sm:text-lg">
+      <h1
+        className="text-foreground line-clamp-2 text-base leading-snug font-semibold wrap-break-word sm:text-lg"
+        title={broadcast.title}
+      >
         {broadcast.title}
       </h1>
       {broadcast.tags.length > 0 && (

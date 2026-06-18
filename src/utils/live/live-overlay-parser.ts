@@ -4,8 +4,9 @@ import {
   LIVE_DONATION_ALERT_DEFAULT_VISIBLE_MS,
   LIVE_OVERLAY_DEFAULT_CREATOR_NAME,
 } from "@/constants/live/live-overlay";
+import { readJsonRecord as readObject, readNumber, readString } from "@/utils/common/json";
 import type { Json } from "@/types/database.types";
-import type { LiveBroadcastSummary } from "@/types/live/live";
+import type { LiveBroadcastSummary, LiveSenderRole } from "@/types/live/live";
 import type {
   LiveChatOverlayItem,
   LiveChatOverlayMessage,
@@ -27,7 +28,7 @@ export function parseLiveChatOverlaySnapshot(value: Json): LiveChatOverlaySnapsh
   const broadcast =
     object.broadcast === null ? null : parseLiveChatOverlayBroadcast(object.broadcast);
   const items = readArray(object.items)
-    .map(parseLiveChatOverlayItem)
+    .map((item) => parseLiveChatOverlayItem(item, broadcast?.creatorId))
     .filter((item) => item !== null);
 
   if (object.broadcast !== null && !broadcast) {
@@ -38,6 +39,8 @@ export function parseLiveChatOverlaySnapshot(value: Json): LiveChatOverlaySnapsh
     broadcast,
     donationMessageEnabled: object.donationMessageEnabled === true,
     donationAmountVisible: object.donationAmountVisible !== false,
+    subscriptionBadgeCustomMonths: [],
+    subscriptionBadgeVersion: null,
     items,
   };
 }
@@ -119,14 +122,17 @@ function parseLiveChatOverlayBroadcast(value: Json | undefined): LiveBroadcastSu
   };
 }
 
-function parseLiveChatOverlayItem(value: Json): LiveChatOverlayItem | null {
+function parseLiveChatOverlayItem(
+  value: Json,
+  fallbackCreatorId?: string,
+): LiveChatOverlayItem | null {
   const object = readObject(value);
 
   if (!object || object.type !== "message") {
     return null;
   }
 
-  const message = parseLiveChatOverlayMessage(object.message);
+  const message = parseLiveChatOverlayMessage(object.message, fallbackCreatorId);
 
   return message
     ? {
@@ -136,7 +142,10 @@ function parseLiveChatOverlayItem(value: Json): LiveChatOverlayItem | null {
     : null;
 }
 
-function parseLiveChatOverlayMessage(value: Json | undefined): LiveChatOverlayMessage | null {
+function parseLiveChatOverlayMessage(
+  value: Json | undefined,
+  fallbackCreatorId?: string,
+): LiveChatOverlayMessage | null {
   const object = readObject(value);
 
   if (!object) {
@@ -144,26 +153,45 @@ function parseLiveChatOverlayMessage(value: Json | undefined): LiveChatOverlayMe
   }
 
   const id = readString(object.id);
+  const creatorId = readString(object.creatorId) ?? readString(fallbackCreatorId);
   const author = readString(object.author);
   const content = readText(object.content);
   const createdAt = readString(object.createdAt);
   const kind = object.kind === "donation" ? "donation" : "chat";
   const amount = readNumber(object.amount);
+  const roles = Array.isArray(object.roles)
+    ? object.roles.filter(
+        (value): value is Exclude<LiveSenderRole, "viewer"> =>
+          value === "creator" || value === "manager" || value === "donor" || value === "subscriber",
+      )
+    : undefined;
+  const isSubscriber = object.isSubscriber === true || object.role === "subscriber";
   const role =
-    object.role === "creator" ? "creator" : object.role === "donor" ? "donor" : undefined;
+    object.role === "creator"
+      ? "creator"
+      : object.role === "donor"
+        ? "donor"
+        : object.role === "subscriber"
+          ? "subscriber"
+          : undefined;
+  const subscriptionTotalMonths = readNumber(object.subscriptionTotalMonths);
   const tone = readMessageTone(object.tone);
 
-  if (!id || !author || content === null || !createdAt) {
+  if (!id || !creatorId || !author || content === null || !createdAt) {
     return null;
   }
 
   return {
     id,
+    creatorId,
     kind,
     author,
     content,
     createdAt,
     amount,
+    roles,
+    isSubscriber,
+    subscriptionTotalMonths,
     role,
     tone,
   };
@@ -200,30 +228,12 @@ function parseLiveDonationAlertOverlayData(
   };
 }
 
-function readObject(value: Json | undefined): Record<string, Json | undefined> | null {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    return null;
-  }
-
-  return value as Record<string, Json | undefined>;
-}
-
 function readArray(value: Json | undefined): Json[] {
   return Array.isArray(value) ? value : [];
 }
 
-function readString(value: Json | undefined) {
-  const trimmed = typeof value === "string" ? value.trim() : "";
-
-  return trimmed.length > 0 ? trimmed : null;
-}
-
 function readText(value: Json | undefined) {
   return typeof value === "string" ? value : null;
-}
-
-function readNumber(value: Json | undefined) {
-  return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
 function readPositiveNumber(value: Json | undefined) {

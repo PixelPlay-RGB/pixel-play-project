@@ -1,26 +1,37 @@
 "use client";
 // 라이브 시청 메인 화면 — 비디오, 방송 정보, 채팅 패널을 조합합니다.
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { motion, useReducedMotion } from "motion/react";
 import { Timer, Users } from "lucide-react";
+import { ClipSection } from "@/components/clip/clip-section";
+import { ChannelStickerProvider } from "@/components/live/chat/channel-sticker-context";
+import { LiveChatDataProvider } from "@/components/live/view/live-chat-data-context";
 import { LiveVideoPlayer } from "@/components/live/view/live-video-player";
 import { LiveFullscreenChatOverlay } from "@/components/live/view/live-fullscreen-chat-overlay";
 import { LiveBroadcastInfo } from "@/components/live/view/live-broadcast-info";
 import { LiveStreamerRow } from "@/components/live/view/live-streamer-row";
 import { LiveChatPanel } from "@/components/live/view/live-chat-panel";
 import { LiveEndedScreen } from "@/components/live/view/live-ended-screen";
+import { LiveBannedDialog } from "@/components/live/view/live-banned-dialog";
 import { LiveLoginPromptDialog } from "@/components/live/view/live-login-prompt-dialog";
 import { useIsMobile } from "@/hooks/common/use-mobile";
 import { useLiveBroadcastView } from "@/hooks/live/use-live-broadcast-view";
 import { useLiveFollowAction } from "@/hooks/live/use-live-follow-action";
+import { useLiveSubscribeAction } from "@/hooks/live/use-live-subscribe-action";
 import { useLiveElapsed } from "@/hooks/live/use-live-elapsed";
-import { useLiveViewerPresence } from "@/hooks/live/use-live-viewer-presence";
 import { useMoveToLogin } from "@/hooks/live/use-move-to-login";
 import { cn } from "@/lib/utils";
 import { formatCount } from "@/utils/live/live-chat";
+import { useClipEditorStore } from "@/stores/clip-editor";
 import { useLiveTheaterStore } from "@/stores/live-theater";
+import { useLiveWatchSessionStore } from "@/stores/live-watch-session";
+import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
+import { QUERY_KEYS } from "@/constants/common/query-keys";
 import { LIVE_LABEL } from "@/constants/live/live";
+import { toastAppError, toastAppInfo, toastAppSuccess } from "@/utils/common/toast-message";
 
 interface Props {
   creatorId: string;
@@ -32,17 +43,19 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
   const isMobile = useIsMobile();
   const openChatButtonRef = useRef<HTMLButtonElement>(null);
   const collapseChatButtonRef = useRef<HTMLButtonElement>(null);
-  // 좌측 플레이어 칼럼 실측 — 채팅 입력 섹션 높이를 "칼럼 높이 - 비디오(폭 100%·16:9) 높이"로
-  // 동기화해, 입력 섹션 상단 separator가 비디오 하단 라인과 정확히 일직선이 되게 한다.
-  const playerColumnRef = useRef<HTMLDivElement>(null);
 
   const {
     isLoading,
+    isWatchError,
     broadcast,
     lastBroadcast,
     endedElapsedSeconds,
     creator,
     messages,
+    subscriptionBadgeCustomMonths,
+    subscriptionBadgeVersion,
+    subscriptionBadgeImageSources,
+    subscriptionEmojis,
     loadOlderMessages,
     isLoadingOlderMessages,
     hasMoreChatHistory,
@@ -55,8 +68,10 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     isInteractionNoticesLoading,
     isInteractionNoticesError,
     walletBalance,
+    walletChargeCustomerKey,
     isWalletLoading,
     isWalletError,
+    viewerId,
     donationEnabled,
     donationMinAmount,
     votePoll,
@@ -64,6 +79,10 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     sendDonation,
     isFollowing,
     onFollowToggled,
+    isSubscribed,
+    subscriptionStatus,
+    onSubscribed,
+    onSubscriptionCanceled,
     chatRuleText,
     isLoggedIn,
     isAuthLoading,
@@ -73,7 +92,17 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     refreshChatState,
     followerWaitSeconds,
     slowModeSeconds,
+    isBanned,
+    isWatchSettled,
+    canModerate,
   } = useLiveBroadcastView(creatorId);
+
+  // 닉네임 클릭 팝업(프로필/강퇴) 컨텍스트 — 채팅 패널·전체화면 오버레이로 관통시킨다(#119).
+  // 메시지 목록의 memo 보존을 위해 안정적인 참조가 되도록 useMemo로 묶는다.
+  const profileContext = useMemo(
+    () => ({ creatorId, viewerId, canModerate, broadcastId: broadcast?.id ?? null }),
+    [creatorId, viewerId, canModerate, broadcast?.id],
+  );
   const { handleFollow, isFollowPending } = useLiveFollowAction({
     creatorId,
     isFollowing,
@@ -81,9 +110,75 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     onFollowToggled,
     onUnauthenticated: openLoginPrompt,
   });
+  const {
+    handleSubscribe,
+    handleCancelSubscription,
+    isSubscribePending,
+    isInsufficientBalanceDialogOpen,
+    setIsInsufficientBalanceDialogOpen,
+  } = useLiveSubscribeAction({
+    creatorId,
+    isSubscribed,
+    subscriptionStatus,
+    isLoggedIn,
+    onSubscribed,
+    onSubscriptionCanceled,
+    onUnauthenticated: openLoginPrompt,
+  });
+
+  // LiveChatPanel·LiveFullscreenChatOverlay 두 갈래로 동일하게 prop-drill하던 채팅 데이터/콜백을
+  // 컨텍스트 한 묶음으로 모은다(소스만 props→context, 자식 전달 값/개수는 불변). openLoginPrompt 등이
+  // 매 렌더 새 참조라 memo해도 매 렌더 재생성되므로(기존 unstable prop과 동일 동작) plain 객체로 둔다.
+  const chatData = {
+    messages,
+    subscriptionBadgeCustomMonths,
+    subscriptionBadgeVersion,
+    subscriptionBadgeImageSources,
+    donations,
+    polls,
+    interactionNotices,
+    isPollsLoading,
+    isPollsError,
+    isInteractionNoticesLoading,
+    isInteractionNoticesError,
+    chatState,
+    isLoggedIn,
+    walletBalance,
+    isWalletLoading,
+    isWalletError,
+    customerKey: viewerId ?? undefined,
+    chargeReturnTo: `/live/${creatorId}`,
+    donationEnabled,
+    donationMinAmount,
+    onLoginPrompt: openLoginPrompt,
+    onSendMessage: sendMessage,
+    onVote: votePoll,
+    onJoinDraw: joinDraw,
+    onDonate: sendDonation,
+    chatRuleText,
+    onAcceptChatRule: acceptChatRule,
+    onFollow: handleFollow,
+    isFollowing,
+    isFollowPending,
+    onLoadOlderMessages: loadOlderMessages,
+    isLoadingOlderMessages,
+    hasMoreChatHistory,
+    entryNoticeAnchorId,
+    onRefreshChatState: refreshChatState,
+    followerWaitSeconds,
+    slowModeSeconds,
+    profileContext,
+  };
 
   const [isLoginPromptOpen, setIsLoginPromptOpen] = useState(false);
   const [isDesktopChatCollapsed, setIsDesktopChatCollapsed] = useState(false);
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  // 클립 생성은 별도 라우트(/clip/editor)에서 진행한다 — 가위 클릭 시점의 스냅샷·제목을
+  // store로 넘기고 이동한다(형제 라우트라 prop으로 못 잇는다).
+  const setClipHandoff = useClipEditorStore((state) => state.setHandoff);
   // 와이드(극장) 모드는 전역 사이드바(LiveShell)와 공유해야 해 store에 둔다.
   const isTheater = useLiveTheaterStore((state) => state.isWideMode);
   const toggleTheater = useLiveTheaterStore((state) => state.toggleWideMode);
@@ -103,36 +198,89 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     !!broadcast,
   );
 
-  // 방송을 보는 동안 하트비트를 보내 현재 시청자 수를 집계한다(로그인·익명 모두).
-  useLiveViewerPresence(broadcast?.id);
+  // 시청 중 강퇴(즉시 퇴장) vs 강퇴 상태로 재진입(입장 차단)을 구분하기 위해, 한 번이라도
+  // 강퇴 아닌 상태로 방송을 봤는지 기억한다(렌더 중 가드된 setState — 라치 패턴).
+  const [hasViewedUnbanned, setHasViewedUnbanned] = useState(false);
+  if (!isBanned && !isLoading && creator && !hasViewedUnbanned) {
+    setHasViewedUnbanned(true);
+  }
+  const wasEvicted = isBanned && hasViewedUnbanned;
+  // 강퇴 다이얼로그는 "서버로 확정된 밴"일 때만 띄운다 — 해제 후 재진입 시 stale 캐시의 isBanned=true 가
+  // 백그라운드 refetch 동안 다이얼로그를 깜빡이게 하던 문제를 막는다(#119). 단, 영상/검은 프레임 차단은
+  // raw isBanned 로 즉시 처리해(아래), 강퇴자가 재입장할 때 확정 전 0.5초간 스트림이 노출되는 누출을 막는다.
+  const isConfirmedBanned = isBanned && isWatchSettled;
 
-  // 채팅 입력 섹션의 동기화 높이(px). 송출/종료 프레임이 16:9로 폭을 꽉 채우는 일반 모드에서만 계산하고,
-  // 화면이 낮아 자연 높이보다 작아지면 입력바가 자체 콘텐츠 높이로 버틴다(min-height라 안전).
-  const [chatInputMinHeight, setChatInputMinHeight] = useState<number | null>(null);
-  const hasPlayerFrameForSync = !!creator;
+  // 시청 세션을 루트 미니플레이어 호스트와 공유한다 — 시청자 presence(하트비트)도 호스트가
+  // 세션 기준으로 단독 호출해, 페이지를 떠나도(미니 전환) 퇴장 처리되지 않는다.
+  // 라이브면 최신 스냅샷으로 시작/갱신하고, 종료·오프라인이 확정되면 세션도 끝낸다.
+  // 로딩 중엔 판단을 보류해, 다른 라이브의 미니가 재생 중이면 새 화면 데이터가 올 때까지 유지한다.
+  const startSession = useLiveWatchSessionStore((state) => state.startSession);
+  const endSession = useLiveWatchSessionStore((state) => state.endSession);
+  // 현재 store에 들어있는 세션의 크리에이터 — 오류 시 '이 화면 것'인지 '묵은 다른 방송 것'인지 구분한다.
+  const sessionCreatorId = useLiveWatchSessionStore((state) => state.session?.creatorId);
+  // broadcast 객체는 매 렌더 재생성되므로(map 함수) 원시값만 deps에 두어,
+  // 실제 값이 바뀔 때만 세션을 갱신한다(채팅 수신 등 무관한 렌더마다 재발사 방지).
+  const liveBroadcastId = broadcast?.id;
   useEffect(() => {
-    const column = playerColumnRef.current;
-
-    if (!column || isMobile || isTheater || !hasPlayerFrameForSync) {
-      setChatInputMinHeight(null);
+    if (isAuthLoading || isLoading) return;
+    // 강퇴(밴)되면 세션을 끝내 호스트의 하트비트를 멈춘다 — 시청자 수에서 즉시 빠진다(#119).
+    if (isBanned) {
+      endSession();
       return;
     }
-
-    const sync = () => {
-      const rect = column.getBoundingClientRect();
-      const remaining = Math.round(rect.height - (rect.width * 9) / 16);
-      setChatInputMinHeight(remaining > 0 ? remaining : null);
-    };
-
-    sync();
-    const observer = new ResizeObserver(sync);
-    observer.observe(column);
-
-    return () => observer.disconnect();
-  }, [isMobile, isTheater, hasPlayerFrameForSync]);
+    // 쿼리 오류(재시도 소진)는 '오프라인 확정'이 아니다 — 같은 크리에이터의 일시 장애면 판단을
+    // 보류해 활성 세션(미니 연속성)을 끊지 않는다. 단, store에 남은 세션이 '다른 크리에이터'면
+    // 정리한다: 이 방송 조회가 실패한 채 화면을 떠나면 LiveMiniPlayerHost가 그 이전 방송 PiP를
+    // 되살리기 때문(오프라인 확정 경로와 동일하게 정리). 진짜 오프라인은 쿼리 성공+broadcast 없음.
+    if (isWatchError) {
+      if (sessionCreatorId && sessionCreatorId !== creatorId) endSession();
+      return;
+    }
+    if (!liveBroadcastId) {
+      endSession();
+      return;
+    }
+    startSession({ creatorId, broadcastId: liveBroadcastId, hlsSrc });
+  }, [
+    isAuthLoading,
+    isLoading,
+    isBanned,
+    isWatchError,
+    liveBroadcastId,
+    creatorId,
+    hlsSrc,
+    sessionCreatorId,
+    startSession,
+    endSession,
+  ]);
 
   // 시청 화면을 떠나면 와이드 모드를 해제해, 목록 등 다른 라이브 화면에서 사이드바가 다시 보이게 한다.
   useEffect(() => () => setWideMode(false), [setWideMode]);
+
+  useEffect(() => {
+    const paymentStatus = searchParams.get("subscriptionPaymentStatus");
+
+    if (!paymentStatus) {
+      return;
+    }
+
+    if (paymentStatus === "subscription_succeeded") {
+      toastAppSuccess(APP_MESSAGE_CODE.success.live.subscribed);
+      void queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.channel.subscribedEmojis(viewerId ?? undefined),
+      });
+    } else if (paymentStatus === "subscription_canceled") {
+      toastAppInfo(APP_MESSAGE_CODE.info.live.subscriptionPaymentCanceled);
+    } else {
+      toastAppError(APP_MESSAGE_CODE.error.live.subscriptionFailed);
+    }
+
+    const nextParams = new URLSearchParams(searchParams.toString());
+    nextParams.delete("subscriptionPaymentStatus");
+    const nextQuery = nextParams.toString();
+
+    router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, { scroll: false });
+  }, [pathname, queryClient, router, searchParams, viewerId]);
 
   // 방송이 종료(시청 중 ended 포함)되면 와이드 모드를 풀어, 사이드바와 스트리머 정보 행이 다시 보이게 한다.
   const hasLiveBroadcast = !!broadcast;
@@ -143,6 +291,28 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
   function openLoginPrompt() {
     if (isAuthLoading) return;
     setIsLoginPromptOpen(true);
+  }
+
+  // 클립 버튼: 캡처가 끝나면 핸드오프를 store(localStorage persist)에 넣고 별도 창(팝업)을
+  // 에디터로 보낸다 — 라이브를 보면서 편집할 수 있게. 팝업이 차단됐으면 같은 탭으로 폴백한다.
+  function handleClipReady(payload: {
+    popup: Window | null;
+    snapshotDataUrl: string | null;
+    frames: string[];
+  }) {
+    setClipHandoff({
+      creatorId,
+      snapshotDataUrl: payload.snapshotDataUrl,
+      frames: payload.frames,
+      defaultTitle: broadcast?.title ?? "",
+    });
+
+    const url = `/clip/editor/${creatorId}`;
+    if (payload.popup && !payload.popup.closed) {
+      payload.popup.location.href = url;
+    } else {
+      router.push(url);
+    }
   }
 
   function collapseDesktopChat() {
@@ -167,6 +337,9 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     );
   }
 
+  // 강퇴(밴)된 시청자에겐 시청 화면을 그대로 두고 그 위에 차단 다이얼로그(모달)를 띄운다(아래 LiveBannedDialog).
+  // 모달은 닫기/바깥 클릭이 막혀 있어 시청을 계속할 수 없고, 해제되면 isBanned 가 false 로 돌아와 자동으로 닫힌다.
+
   // 채널 자체가 없는 경우(broadcast·creator 모두 없음)에만 단순 안내로 끝낸다.
   if (!broadcast && !creator) {
     return (
@@ -177,196 +350,165 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
   }
 
   return (
-    <>
+    <ChannelStickerProvider>
       <div
         className={cn("bg-background overflow-hidden", "min-h-app-content", "md:h-full md:min-h-0")}
       >
-        {/* 치지직형 Box 레이아웃: 섹션 사이 여백·라운드 없이 보더로만 구분하고, 텍스트 행에만 자체 패딩을 준다. */}
-        <div className={cn("h-full", "w-full", "md:flex md:flex-row")}>
-          {/* 플레이어는 항상 폭 100%+16:9(유튜브식) — 화면이 낮아 정보 행이 넘치면 이 칼럼만
+        {/* 치지직형 Box 레이아웃: 섹션 사이 여백·라운드 없이 보더로만 구분하고, 텍스트 행에만 자체 패딩을 준다.
+            초고해상도에서도 치지직처럼 비디오가 폭을 꽉 채운다(캡 없음) — 칼럼이 넘치면 세로 스크롤. */}
+        {/* 전체화면 채팅 오버레이(좌측 칼럼)와 우측 채팅 패널 두 갈래가 같은 채팅 데이터를 컨텍스트로 공유한다. */}
+        <LiveChatDataProvider value={chatData}>
+          <div className={cn("h-full", "w-full", "md:flex md:flex-row")}>
+            {/* 플레이어는 항상 폭 100%+16:9(유튜브식) — 화면이 낮아 정보 행이 넘치면 이 칼럼만
               세로 스크롤된다(스크롤바는 숨김, 채팅 패널은 우측 고정 유지). 극장 모드는 스크롤이 없다.
               추후 정보 섹션 아래에 클립 섹션이 들어올 예정이라 칼럼 스크롤 구조를 전제로 한다. */}
-          <div
-            ref={playerColumnRef}
-            className={cn("flex min-w-0 flex-1 flex-col", "no-scrollbar md:overflow-y-auto")}
-          >
-            {/* 일반 모드는 shrink-0 — 칼럼이 넘칠 때 눌리는 대신 스크롤로 넘어가야 한다. */}
-            <div className={cn(isTheater ? "md:min-h-0 md:flex-1" : "md:shrink-0")}>
-              {broadcast ? (
-                <LiveVideoPlayer
-                  broadcast={broadcast}
-                  hlsSrc={hlsSrc}
-                  elapsedText={elapsedText}
-                  isChatCollapsed={isChatCollapsed}
-                  isTheater={isTheater}
-                  onToggleTheater={toggleTheater}
-                  openChatButtonRef={openChatButtonRef}
-                  onOpenChat={expandDesktopChat}
-                  renderFullscreenChat={({
-                    container,
-                    isChatOpen,
-                    onToggleChat,
-                    isDonationRequested,
-                    onDonationSettled,
-                  }) => (
-                    <LiveFullscreenChatOverlay
-                      container={container}
-                      isChatOpen={isChatOpen}
-                      onToggleChat={onToggleChat}
-                      donationOpenRequested={isDonationRequested}
-                      onDonationOpenSettled={onDonationSettled}
-                      messages={messages}
-                      donations={donations}
-                      polls={polls}
-                      interactionNotices={interactionNotices}
-                      isPollsLoading={isPollsLoading}
-                      isPollsError={isPollsError}
-                      isInteractionNoticesLoading={isInteractionNoticesLoading}
-                      isInteractionNoticesError={isInteractionNoticesError}
-                      chatState={chatState}
-                      isLoggedIn={isLoggedIn}
-                      walletBalance={walletBalance}
-                      isWalletLoading={isWalletLoading}
-                      isWalletError={isWalletError}
-                      donationEnabled={donationEnabled}
-                      donationMinAmount={donationMinAmount}
-                      onLoginPrompt={openLoginPrompt}
-                      onSendMessage={sendMessage}
-                      onVote={votePoll}
-                      onJoinDraw={joinDraw}
-                      onDonate={sendDonation}
-                      chatRuleText={chatRuleText}
-                      onAcceptChatRule={acceptChatRule}
-                      onFollow={handleFollow}
-                      isFollowing={isFollowing}
-                      isFollowPending={isFollowPending}
-                      onLoadOlderMessages={loadOlderMessages}
-                      isLoadingOlderMessages={isLoadingOlderMessages}
-                      hasMoreChatHistory={hasMoreChatHistory}
-                      entryNoticeAnchorId={entryNoticeAnchorId}
-                      onRefreshChatState={refreshChatState}
-                      followerWaitSeconds={followerWaitSeconds}
-                      slowModeSeconds={slowModeSeconds}
-                    />
-                  )}
-                />
-              ) : (
-                <LiveEndedScreen creator={creator} />
-              )}
-            </div>
+            <div className={cn("flex min-w-0 flex-1 flex-col", "no-scrollbar md:overflow-y-auto")}>
+              {/* 일반 모드는 shrink-0 — 칼럼이 넘칠 때 눌리는 대신 스크롤로 넘어가야 한다. */}
+              <div className={cn(isTheater ? "md:min-h-0 md:flex-1" : "md:shrink-0")}>
+                {broadcast && !isBanned ? (
+                  <LiveVideoPlayer
+                    broadcast={broadcast}
+                    hlsSrc={hlsSrc}
+                    elapsedText={elapsedText}
+                    isChatCollapsed={isChatCollapsed}
+                    isTheater={isTheater}
+                    onToggleTheater={toggleTheater}
+                    openChatButtonRef={openChatButtonRef}
+                    onOpenChat={expandDesktopChat}
+                    clipLoggedIn={isLoggedIn}
+                    onClipRequireLogin={openLoginPrompt}
+                    onClipReady={handleClipReady}
+                    renderFullscreenChat={({
+                      container,
+                      isChatOpen,
+                      onToggleChat,
+                      isDonationRequested,
+                      onDonationSettled,
+                    }) => (
+                      <LiveFullscreenChatOverlay
+                        container={container}
+                        isChatOpen={isChatOpen}
+                        onToggleChat={onToggleChat}
+                        creatorId={creatorId}
+                        donationOpenRequested={isDonationRequested}
+                        onDonationOpenSettled={onDonationSettled}
+                      />
+                    )}
+                  />
+                ) : isBanned && broadcast ? (
+                  // 강퇴 상태에선 플레이어를 언마운트해 영상/오디오를 즉시 끊고, 같은 16:9 자리에 검은 프레임만
+                  // 남겨 레이아웃(채팅 입력 높이 동기화)을 유지한다. 위에는 LiveBannedDialog 모달이 덮인다.
+                  <div aria-hidden className="aspect-video w-full bg-black" />
+                ) : (
+                  <LiveEndedScreen creator={creator} />
+                )}
+              </div>
 
-            {/*
+              {/*
               방송 정보 행(제목·태그 + 시간·참여자): 라이브 중은 물론, 시청 중 종료된 경우에도
               마지막 라이브 스냅샷(displayBroadcast)으로 그대로 유지한다(시간은 종료 시점에 고정).
               처음부터 종료된 방송 재진입은 스냅샷이 없어 행을 생략한다.
             */}
-            {/*
+              {/*
               영화관 모드 전환 시 정보 영역을 height 애니메이션으로 접어, 비디오가 좌하단으로
               자연스럽게 늘어나는 연출을 만든다(사이드바 collapse와 같은 preset). 모바일은
               영화관 모드 자체가 없으므로 motion height를 적용하지 않는다.
             */}
-            <motion.div
-              className={cn("shrink-0 overflow-hidden", isInfoCollapsed && "pointer-events-none")}
-              aria-hidden={isInfoCollapsed || undefined}
-              inert={isInfoCollapsed || undefined}
-              initial={false}
-              animate={isInfoCollapsed ? { height: 0, opacity: 0 } : { height: "auto", opacity: 1 }}
-              transition={
-                prefersReducedMotion ? { duration: 0 } : { duration: 0.2, ease: "easeOut" }
-              }
-            >
-              {displayBroadcast ? (
-                <div className="flex items-start justify-between gap-3 px-4 pt-4">
-                  <LiveBroadcastInfo broadcast={displayBroadcast} />
-                  <div className="text-muted-foreground flex shrink-0 flex-col items-end gap-1 pt-0.5 text-xs">
-                    <span className="flex items-center gap-1">
-                      <Timer className="size-3.5" />
-                      {elapsedText}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Users className="size-3.5" />
-                      {formatCount(displayBroadcast.viewerCount)}
-                      {LIVE_LABEL.viewers}
-                    </span>
+              <motion.div
+                className={cn("shrink-0 overflow-hidden", isInfoCollapsed && "pointer-events-none")}
+                aria-hidden={isInfoCollapsed || undefined}
+                inert={isInfoCollapsed || undefined}
+                initial={false}
+                animate={
+                  isInfoCollapsed ? { height: 0, opacity: 0 } : { height: "auto", opacity: 1 }
+                }
+                transition={
+                  prefersReducedMotion ? { duration: 0 } : { duration: 0.2, ease: "easeOut" }
+                }
+              >
+                {displayBroadcast ? (
+                  <div className="flex flex-col gap-1.5 px-4 pt-4">
+                    <LiveBroadcastInfo broadcast={displayBroadcast} />
+                    <div className="text-muted-foreground flex items-center gap-3 text-xs">
+                      <span className="flex items-center gap-1">
+                        <Timer className="size-3.5" />
+                        {elapsedText}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Users className="size-3.5" />
+                        {formatCount(displayBroadcast.viewerCount)}
+                        {LIVE_LABEL.viewers}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ) : (
-                // 방송 중이 아니면 제목·시간이 비어 비디오 영역만 길어지므로, 같은 자리에 안내 문구를 채워 높이를 유지한다.
-                <div className="flex min-w-0 flex-col gap-1.5 px-4 pt-4">
-                  <h1 className="text-foreground truncate text-base leading-snug font-semibold sm:text-lg">
-                    {LIVE_LABEL.offlineInfoTitle}
-                  </h1>
-                  <p className="text-muted-foreground text-sm">
-                    {LIVE_LABEL.offlineInfoDescription}
-                  </p>
-                </div>
-              )}
+                ) : (
+                  // 방송 중이 아니면 제목·시간이 비어 비디오 영역만 길어지므로, 같은 자리에 안내 문구를 채워 높이를 유지한다.
+                  <div className="flex min-w-0 flex-col gap-1.5 px-4 pt-4">
+                    <h1 className="text-foreground truncate text-base leading-snug font-semibold sm:text-lg">
+                      {LIVE_LABEL.offlineInfoTitle}
+                    </h1>
+                    <p className="text-muted-foreground text-sm">
+                      {LIVE_LABEL.offlineInfoDescription}
+                    </p>
+                  </div>
+                )}
 
-              {/* 스트리머 정보 행(아바타·이름·팔로워 + 팔로우)은 라이브·종료 모두 동일하게 보여준다. */}
-              {creator ? (
-                // py-3: 정보 영역을 141px로 낮춰(우측 입력바와 동일) FHD에서 비디오가 16:9에 딱 맞게
-                // 들어가도록 한다(149px일 땐 높이가 7px 모자라 좌우에 검은 필러박스가 생겼다).
-                <LiveStreamerRow
-                  creator={creator}
-                  isLive={!!broadcast}
-                  isFollowing={isFollowing}
-                  isPending={isFollowPending}
-                  onFollow={handleFollow}
-                  className="px-4 py-3"
+                {/* 스트리머 정보 행(아바타·이름·팔로워 + 팔로우)은 라이브·종료 모두 동일하게 보여준다. */}
+                {creator ? (
+                  // py-3: 정보 영역을 141px로 낮춰(우측 입력바와 동일) FHD에서 비디오가 16:9에 딱 맞게
+                  // 들어가도록 한다(149px일 땐 높이가 7px 모자라 좌우에 검은 필러박스가 생겼다).
+                  <LiveStreamerRow
+                    creator={creator}
+                    isLive={!!broadcast}
+                    isFollowing={isFollowing}
+                    isSubscribed={isSubscribed}
+                    subscriptionStatus={subscriptionStatus}
+                    isPending={isFollowPending}
+                    isSubscribePending={isSubscribePending}
+                    isInsufficientBalanceDialogOpen={isInsufficientBalanceDialogOpen}
+                    walletChargeCustomerKey={walletChargeCustomerKey}
+                    walletBalance={walletBalance}
+                    isWalletLoading={isWalletLoading}
+                    isWalletError={isWalletError}
+                    subscriptionBadgeCustomMonths={subscriptionBadgeCustomMonths}
+                    subscriptionBadgeVersion={subscriptionBadgeVersion}
+                    subscriptionBadgeImageSources={subscriptionBadgeImageSources}
+                    subscriptionEmojis={subscriptionEmojis}
+                    onFollow={handleFollow}
+                    onSubscribe={handleSubscribe}
+                    onCancelSubscription={handleCancelSubscription}
+                    onInsufficientBalanceDialogOpenChange={setIsInsufficientBalanceDialogOpen}
+                    canModerate={canModerate}
+                    className="px-4 py-3"
+                  />
+                ) : null}
+
+                {/* 이 채널의 클립(#124) — 좌측 칼럼 스크롤 영역에 들어가며, 극장 모드에선 정보
+                  영역과 함께 접힌다. 클립이 없는 채널은 섹션이 스스로 숨는다. */}
+                <ClipSection
+                  creatorId={creatorId}
+                  className="border-border/60 border-t px-4 py-4"
                 />
-              ) : null}
-            </motion.div>
-          </div>
+              </motion.div>
+            </div>
 
-          <aside
-            className={cn(
-              "transition-all duration-200 ease-out",
-              "md:w-88 md:shrink-0 md:overflow-hidden md:opacity-100",
-              isChatCollapsed && "md:w-0 md:opacity-0",
-            )}
-            aria-hidden={isChatCollapsed}
-            inert={isChatCollapsed ? true : undefined}
-          >
-            <LiveChatPanel
-              creatorId={creatorId}
-              messages={messages}
-              donations={donations}
-              polls={polls}
-              isPollsLoading={isPollsLoading}
-              isPollsError={isPollsError}
-              interactionNotices={interactionNotices}
-              isInteractionNoticesLoading={isInteractionNoticesLoading}
-              isInteractionNoticesError={isInteractionNoticesError}
-              chatState={chatState}
-              isLoggedIn={isLoggedIn}
-              walletBalance={walletBalance}
-              isWalletLoading={isWalletLoading}
-              isWalletError={isWalletError}
-              donationEnabled={donationEnabled}
-              donationMinAmount={donationMinAmount}
-              onLoginPrompt={openLoginPrompt}
-              onSendMessage={sendMessage}
-              onVote={votePoll}
-              onJoinDraw={joinDraw}
-              onDonate={sendDonation}
-              chatRuleText={chatRuleText}
-              onAcceptChatRule={acceptChatRule}
-              onFollow={handleFollow}
-              isFollowing={isFollowing}
-              isFollowPending={isFollowPending}
-              onCollapse={broadcast ? collapseDesktopChat : undefined}
-              collapseButtonRef={collapseChatButtonRef}
-              onLoadOlderMessages={loadOlderMessages}
-              isLoadingOlderMessages={isLoadingOlderMessages}
-              hasMoreChatHistory={hasMoreChatHistory}
-              entryNoticeAnchorId={entryNoticeAnchorId}
-              onRefreshChatState={refreshChatState}
-              followerWaitSeconds={followerWaitSeconds}
-              slowModeSeconds={slowModeSeconds}
-              inputMinHeightPx={chatInputMinHeight}
-            />
-          </aside>
-        </div>
+            <aside
+              className={cn(
+                "transition-all duration-200 ease-out",
+                "md:w-88 md:shrink-0 md:overflow-hidden md:opacity-100",
+                isChatCollapsed && "md:w-0 md:opacity-0",
+              )}
+              aria-hidden={isChatCollapsed}
+              inert={isChatCollapsed ? true : undefined}
+            >
+              <LiveChatPanel
+                creatorId={creatorId}
+                onCollapse={broadcast ? collapseDesktopChat : undefined}
+                collapseButtonRef={collapseChatButtonRef}
+              />
+            </aside>
+          </div>
+        </LiveChatDataProvider>
       </div>
 
       <LiveLoginPromptDialog
@@ -374,6 +516,12 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
         onOpenChange={setIsLoginPromptOpen}
         onLogin={moveToLogin}
       />
-    </>
+
+      <LiveBannedDialog
+        open={isConfirmedBanned}
+        wasEvicted={wasEvicted}
+        creatorNickname={creator?.name}
+      />
+    </ChannelStickerProvider>
   );
 }

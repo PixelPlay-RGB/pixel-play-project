@@ -88,9 +88,15 @@ export function useLiveSearchResults(query: string) {
   return {
     trimmedQuery,
     isEmptyQuery: trimmedQuery.length === 0,
-    isError: broadcastSearch.isError || creatorSearch.isError,
-    isLoading: broadcastSearch.isLoading || creatorSearch.isLoading,
-    isEmptyResult: broadcastResults.length === 0 && creatorResults.length === 0,
+    // 한 섹션만 실패/로딩이어도 전체를 가리지 않도록, 두 섹션 모두일 때만 에러·스켈레톤으로 전환한다.
+    isError: broadcastSearch.isError && creatorSearch.isError,
+    isLoading: broadcastSearch.isLoading && creatorSearch.isLoading,
+    // 한 섹션 실패를 "결과 없음"으로 오인하지 않도록, 두 섹션 모두 성공해 0건일 때만 빈 결과로 본다.
+    isEmptyResult:
+      !broadcastSearch.isError &&
+      !creatorSearch.isError &&
+      broadcastResults.length === 0 &&
+      creatorResults.length === 0,
     broadcast: {
       results: broadcastResults,
       totalCount: broadcastResults[0]?.total_count ?? broadcastResults.length,

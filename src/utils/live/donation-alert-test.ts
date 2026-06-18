@@ -34,6 +34,8 @@ export async function sendTestDonationAlert(
     },
   });
   let shouldDelayCleanup = false;
+  // window.setTimeout(브라우저)은 number 핸들을 반환한다(@types/node의 Timeout과 구분).
+  let subscribeTimeoutId: number | undefined;
 
   try {
     const subscribePromise = new Promise<void>((resolve, reject) => {
@@ -47,12 +49,18 @@ export async function sendTestDonationAlert(
     });
 
     const timeoutPromise = new Promise<never>((_, reject) => {
-      window.setTimeout(() => {
+      subscribeTimeoutId = window.setTimeout(() => {
         reject(new Error("테스트 후원 채널 구독 시간이 초과되었습니다."));
       }, TEST_DONATION_CHANNEL_TIMEOUT_MS);
     });
 
-    await Promise.race([subscribePromise, timeoutPromise]);
+    try {
+      await Promise.race([subscribePromise, timeoutPromise]);
+    } finally {
+      if (subscribeTimeoutId !== undefined) {
+        window.clearTimeout(subscribeTimeoutId);
+      }
+    }
 
     const sendStatus = await channel.send({
       type: "broadcast",

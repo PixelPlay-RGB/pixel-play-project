@@ -8,7 +8,9 @@ import { useState } from "react";
 import CommunityActionMenu from "@/components/community/community-action-menu";
 import CommunityCommentLikeButton from "@/components/community/community-comment-like-button";
 import CommunityCommentReplies from "@/components/community/community-comment-replies";
+import ClampedText from "@/components/common/clamped-text";
 import DeleteConfirmDialog from "@/components/common/delete-confirm-dialog";
+import RichMessageText from "@/components/common/rich-message-text";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
@@ -107,7 +109,7 @@ export default function CommunityCommentItem({
         <div className="flex items-start justify-between gap-2">
           <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5">
             {isBest && (
-              <span className="bg-brand text-brand-foreground rounded px-1.5 py-0.5 text-[10px] leading-none font-black">
+              <span className="bg-brand text-brand-foreground text-2xs rounded px-1.5 py-0.5 leading-none font-black">
                 BEST
               </span>
             )}
@@ -171,9 +173,13 @@ export default function CommunityCommentItem({
             </div>
           </div>
         ) : (
-          <p className="text-foreground/90 mt-1 text-sm leading-relaxed wrap-break-word whitespace-pre-wrap">
-            {comment.content}
-          </p>
+          <ClampedText
+            expandable
+            className="mt-1"
+            textClassName="text-foreground/90 line-clamp-5 text-sm leading-relaxed wrap-break-word whitespace-pre-wrap"
+          >
+            <RichMessageText as="span" text={comment.content} />
+          </ClampedText>
         )}
 
         {!isEditing && (
@@ -182,7 +188,8 @@ export default function CommunityCommentItem({
               {!isReply && (
                 <button
                   type="button"
-                  onClick={() => setRepliesOpen((open) => !open)}
+                  // 답글 쓰기는 열기 전용(접기는 "답글 N"으로). 답글이 없을 때만 토글로 닫을 수 있게 한다.
+                  onClick={() => setRepliesOpen((open) => (comment.replyCount > 0 ? true : !open))}
                   className="text-muted-foreground hover:text-foreground inline-flex h-7 items-center text-xs font-semibold"
                 >
                   답글 쓰기

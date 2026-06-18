@@ -1,4 +1,4 @@
-export type Json =
+﻿export type Json =
   | string
   | number
   | boolean
@@ -46,6 +46,162 @@ export type Database = {
           {
             foreignKeyName: "channel_banner_creator_id_fkey"
             columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      channel_emoji: {
+        Row: {
+          created_at: string
+          creator_id: string
+          id: string
+          image_path: string
+          name: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          creator_id: string
+          id?: string
+          image_path: string
+          name: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          creator_id?: string
+          id?: string
+          image_path?: string
+          name?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "channel_emoji_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      channel_manager: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          creator_id: string
+          id: string
+          manager_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          creator_id: string
+          id?: string
+          manager_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          creator_id?: string
+          id?: string
+          manager_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "channel_manager_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channel_manager_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channel_manager_manager_id_fkey"
+            columns: ["manager_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      channel_viewer_ban: {
+        Row: {
+          banned_at: string
+          banned_by: string | null
+          banned_by_nickname: string
+          banned_user_id: string
+          banned_user_nickname: string
+          broadcast_id: string | null
+          creator_id: string
+          id: string
+          unbanned_at: string | null
+          unbanned_by: string | null
+        }
+        Insert: {
+          banned_at?: string
+          banned_by?: string | null
+          banned_by_nickname: string
+          banned_user_id: string
+          banned_user_nickname: string
+          broadcast_id?: string | null
+          creator_id: string
+          id?: string
+          unbanned_at?: string | null
+          unbanned_by?: string | null
+        }
+        Update: {
+          banned_at?: string
+          banned_by?: string | null
+          banned_by_nickname?: string
+          banned_user_id?: string
+          banned_user_nickname?: string
+          broadcast_id?: string | null
+          creator_id?: string
+          id?: string
+          unbanned_at?: string | null
+          unbanned_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "channel_viewer_ban_banned_by_fkey"
+            columns: ["banned_by"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channel_viewer_ban_banned_user_id_fkey"
+            columns: ["banned_user_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channel_viewer_ban_broadcast_id_fkey"
+            columns: ["broadcast_id"]
+            isOneToOne: false
+            referencedRelation: "live_broadcast"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channel_viewer_ban_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channel_viewer_ban_unbanned_by_fkey"
+            columns: ["unbanned_by"]
             isOneToOne: false
             referencedRelation: "user"
             referencedColumns: ["id"]
@@ -449,6 +605,139 @@ export type Database = {
           },
         ]
       }
+      creator_subscription: {
+        Row: {
+          created_at: string
+          creator_id: string
+          end_at: string
+          id: string
+          started_at: string
+          status: Database["public"]["Enums"]["creator_subscription_status"]
+          subscriber_id: string
+          total_months: number
+        }
+        Insert: {
+          created_at?: string
+          creator_id: string
+          end_at: string
+          id?: string
+          started_at?: string
+          status?: Database["public"]["Enums"]["creator_subscription_status"]
+          subscriber_id: string
+          total_months?: number
+        }
+        Update: {
+          created_at?: string
+          creator_id?: string
+          end_at?: string
+          id?: string
+          started_at?: string
+          status?: Database["public"]["Enums"]["creator_subscription_status"]
+          subscriber_id?: string
+          total_months?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_subscription_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_subscription_subscriber_id_fkey"
+            columns: ["subscriber_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      creator_subscription_payment: {
+        Row: {
+          amount: number
+          approved_at: string | null
+          canceled_at: string | null
+          created_at: string
+          creator_id: string
+          failed_at: string | null
+          failure_code: string | null
+          failure_message: string | null
+          id: string
+          idempotency_key: string
+          metadata: Json
+          order_id: string
+          payment_key: string | null
+          payment_status: Database["public"]["Enums"]["creator_subscription_payment_status"]
+          provider: string
+          requested_at: string
+          subscriber_id: string
+          subscription_id: string | null
+        }
+        Insert: {
+          amount: number
+          approved_at?: string | null
+          canceled_at?: string | null
+          created_at?: string
+          creator_id: string
+          failed_at?: string | null
+          failure_code?: string | null
+          failure_message?: string | null
+          id?: string
+          idempotency_key: string
+          metadata?: Json
+          order_id: string
+          payment_key?: string | null
+          payment_status?: Database["public"]["Enums"]["creator_subscription_payment_status"]
+          provider?: string
+          requested_at?: string
+          subscriber_id: string
+          subscription_id?: string | null
+        }
+        Update: {
+          amount?: number
+          approved_at?: string | null
+          canceled_at?: string | null
+          created_at?: string
+          creator_id?: string
+          failed_at?: string | null
+          failure_code?: string | null
+          failure_message?: string | null
+          id?: string
+          idempotency_key?: string
+          metadata?: Json
+          order_id?: string
+          payment_key?: string | null
+          payment_status?: Database["public"]["Enums"]["creator_subscription_payment_status"]
+          provider?: string
+          requested_at?: string
+          subscriber_id?: string
+          subscription_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_subscription_payment_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_subscription_payment_subscriber_id_fkey"
+            columns: ["subscriber_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_subscription_payment_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "creator_subscription"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       donation: {
         Row: {
           amount: number
@@ -569,6 +858,108 @@ export type Database = {
             columns: ["creator_id"]
             isOneToOne: false
             referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      live_clip: {
+        Row: {
+          broadcast_id: string
+          claimed_at: string | null
+          clipper_user_id: string
+          created_at: string
+          creator_id: string
+          crop_x_fraction: number
+          duration_seconds: number
+          end_offset_seconds: number
+          error_reason: string | null
+          id: string
+          status: Database["public"]["Enums"]["live_clip_status"]
+          storage_path: string | null
+          thumbnail_path: string | null
+          title: string
+          view_count: number
+        }
+        Insert: {
+          broadcast_id: string
+          claimed_at?: string | null
+          clipper_user_id: string
+          created_at?: string
+          creator_id: string
+          crop_x_fraction: number
+          duration_seconds: number
+          end_offset_seconds?: number
+          error_reason?: string | null
+          id?: string
+          status?: Database["public"]["Enums"]["live_clip_status"]
+          storage_path?: string | null
+          thumbnail_path?: string | null
+          title: string
+          view_count?: number
+        }
+        Update: {
+          broadcast_id?: string
+          claimed_at?: string | null
+          clipper_user_id?: string
+          created_at?: string
+          creator_id?: string
+          crop_x_fraction?: number
+          duration_seconds?: number
+          end_offset_seconds?: number
+          error_reason?: string | null
+          id?: string
+          status?: Database["public"]["Enums"]["live_clip_status"]
+          storage_path?: string | null
+          thumbnail_path?: string | null
+          title?: string
+          view_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_clip_broadcast_id_fkey"
+            columns: ["broadcast_id"]
+            isOneToOne: false
+            referencedRelation: "live_broadcast"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "live_clip_clipper_user_id_fkey"
+            columns: ["clipper_user_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "live_clip_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "user"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      live_clip_view: {
+        Row: {
+          clip_id: string
+          created_at: string
+          viewer_key: string
+        }
+        Insert: {
+          clip_id: string
+          created_at?: string
+          viewer_key: string
+        }
+        Update: {
+          clip_id?: string
+          created_at?: string
+          viewer_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_clip_view_clip_id_fkey"
+            columns: ["clip_id"]
+            isOneToOne: false
+            referencedRelation: "live_clip"
             referencedColumns: ["id"]
           },
         ]
@@ -1030,8 +1421,30 @@ export type Database = {
         Args: { p_actor_user_id: string; p_creator_id: string }
         Returns: number
       }
+      add_channel_manager: {
+        Args: { p_actor_user_id: string; p_target_user_id: string }
+        Returns: Json
+      }
       anonymous_donor_alias: { Args: { p_donor_id: string }; Returns: string }
+      ban_channel_viewer: {
+        Args: {
+          p_actor_user_id: string
+          p_broadcast_id?: string
+          p_creator_id: string
+          p_target_user_id: string
+        }
+        Returns: Json
+      }
       check_email_exists: { Args: { target_email: string }; Returns: boolean }
+      claim_live_clip_jobs: { Args: { p_limit?: number }; Returns: Json }
+      cancel_creator_subscription: {
+        Args: {
+          p_actor_user_id: string
+          p_creator_id?: string
+          p_subscription_id?: string
+        }
+        Returns: Json
+      }
       community_comment_to_json: {
         Args: { p_comment_id: string; p_viewer_id: string }
         Returns: Json
@@ -1073,6 +1486,17 @@ export type Database = {
         }
         Returns: string
       }
+      create_live_clip: {
+        Args: {
+          p_actor_user_id: string
+          p_creator_id: string
+          p_crop_x_fraction: number
+          p_duration_seconds: number
+          p_end_offset_seconds?: number
+          p_title: string
+        }
+        Returns: Json
+      }
       create_live_poll: {
         Args: {
           p_actor_user_id: string
@@ -1091,6 +1515,10 @@ export type Database = {
         Args: { p_actor_user_id: string; p_banner_id: string }
         Returns: Json
       }
+      delete_channel_emoji: {
+        Args: { p_actor_user_id: string; p_emoji_id: string }
+        Returns: Json
+      }
       delete_community_comment: {
         Args: { p_actor_user_id: string; p_comment_id: string }
         Returns: boolean
@@ -1098,6 +1526,10 @@ export type Database = {
       delete_community_post: {
         Args: { p_actor_user_id: string; p_post_id: string }
         Returns: string
+      }
+      delete_live_clip: {
+        Args: { p_actor_user_id: string; p_clip_id: string }
+        Returns: Json
       }
       delete_notification: {
         Args: { p_actor_user_id: string; p_notification_id: string }
@@ -1126,6 +1558,12 @@ export type Database = {
         Args: { p_actor_user_id: string; p_creator_id: string }
         Returns: undefined
       }
+      get_available_channel_emoji_creator_ids: {
+        Args: never
+        Returns: {
+          creator_id: string
+        }[]
+      }
       get_channel_banners: { Args: { p_creator_id: string }; Returns: Json }
       get_channel_community_posts: {
         Args: {
@@ -1136,12 +1574,23 @@ export type Database = {
         }
         Returns: Json
       }
+      get_channel_emojis: { Args: { p_creator_id: string }; Returns: Json }
       get_channel_live_hero: {
         Args: { p_creator_id: string; p_viewer_id?: string }
         Returns: Json
       }
+      get_channel_managers: { Args: { p_creator_id: string }; Returns: Json }
       get_channel_profile: {
         Args: { p_creator_id: string; p_viewer_id?: string }
+        Returns: Json
+      }
+      get_channel_viewer_bans: {
+        Args: {
+          p_active_only?: boolean
+          p_creator_id: string
+          p_limit?: number
+          p_offset?: number
+        }
         Returns: Json
       }
       get_chat_room_detail: {
@@ -1243,6 +1692,7 @@ export type Database = {
         Args: { p_creator_id: string; p_limit?: number }
         Returns: Json
       }
+      get_live_clip_worker_secret: { Args: never; Returns: string }
       get_live_donation_alert_overlay_snapshot: {
         Args: { p_creator_id: string }
         Returns: Json
@@ -1266,6 +1716,11 @@ export type Database = {
       }
       get_live_popular_keywords: { Args: { p_limit?: number }; Returns: Json }
       get_live_sync_cron_secret: { Args: never; Returns: string }
+      get_live_thumbnail_ingest_secret: { Args: never; Returns: string }
+      get_live_viewer_profile: {
+        Args: { p_creator_id: string; p_target_user_id: string }
+        Returns: Json
+      }
       get_live_watch: {
         Args: { p_creator_id: string; p_viewer_id?: string }
         Returns: Json
@@ -1288,6 +1743,10 @@ export type Database = {
         Args: { p_actor_user_id: string; p_month?: number; p_year?: number }
         Returns: Json
       }
+      increment_live_clip_view_count: {
+        Args: { p_clip_id: string; p_viewer_key: string }
+        Returns: undefined
+      }
       insert_channel_banner: {
         Args: {
           p_actor_user_id: string
@@ -1296,6 +1755,14 @@ export type Database = {
           p_title: string
         }
         Returns: Json
+      }
+      insert_channel_emoji: {
+        Args: { p_actor_user_id: string; p_image_path: string; p_name: string }
+        Returns: Json
+      }
+      is_channel_moderator: {
+        Args: { p_actor_user_id: string; p_creator_id: string }
+        Returns: boolean
       }
       join_chat_room: {
         Args: { p_actor_user_id: string; p_room_id: string }
@@ -1330,14 +1797,27 @@ export type Database = {
         Args: { p_broadcast_id: string }
         Returns: number
       }
+      remove_channel_manager: {
+        Args: { p_actor_user_id: string; p_target_user_id: string }
+        Returns: undefined
+      }
+      renew_due_creator_subscriptions: {
+        Args: { p_limit?: number }
+        Returns: Json
+      }
       reorder_channel_banners: {
         Args: { p_actor_user_id: string; p_banner_ids: string[] }
+        Returns: Json
+      }
+      reorder_channel_emojis: {
+        Args: { p_actor_user_id: string; p_emoji_ids: string[] }
         Returns: Json
       }
       rotate_live_security_token_version: {
         Args: { p_actor_user_id: string; p_token_kind: string }
         Returns: Json
       }
+      search_channel_users: { Args: { p_query: string }; Returns: Json }
       search_chat_rooms: {
         Args: {
           p_limit?: number
@@ -1443,6 +1923,14 @@ export type Database = {
         }
         Returns: Json
       }
+      send_live_message_v4: {
+        Args: {
+          p_actor_user_id: string
+          p_content: string
+          p_creator_id: string
+        }
+        Returns: Json
+      }
       set_community_comment_like: {
         Args: {
           p_actor_user_id: string
@@ -1455,6 +1943,10 @@ export type Database = {
         Args: { p_actor_user_id: string; p_liked: boolean; p_post_id: string }
         Returns: Json
       }
+      set_live_message_cleanbot_status: {
+        Args: { p_message_ids: string[]; p_status: string }
+        Returns: undefined
+      }
       start_live_broadcast: {
         Args: {
           p_actor_user_id: string
@@ -1463,6 +1955,10 @@ export type Database = {
           p_title?: string
         }
         Returns: string
+      }
+      subscribe_creator: {
+        Args: { p_actor_user_id: string; p_creator_id: string; p_idempotency_key?: string }
+        Returns: Json
       }
       sweep_live_viewer_counts: { Args: never; Returns: undefined }
       sync_live_viewer_presence: {
@@ -1477,9 +1973,26 @@ export type Database = {
         }
         Returns: undefined
       }
+      unban_channel_viewer: {
+        Args: {
+          p_actor_user_id: string
+          p_creator_id: string
+          p_target_user_id: string
+        }
+        Returns: undefined
+      }
       unfollow_creator: {
         Args: { p_actor_user_id: string; p_creator_id: string }
         Returns: undefined
+      }
+      update_channel_emoji: {
+        Args: {
+          p_actor_user_id: string
+          p_emoji_id: string
+          p_image_path?: string
+          p_name: string
+        }
+        Returns: Json
       }
       update_channel_profile: {
         Args: { p_actor_user_id: string; p_channel_bio: string }
@@ -1540,8 +2053,15 @@ export type Database = {
       }
     }
     Enums: {
+      creator_subscription_payment_status:
+        | "pending"
+        | "succeeded"
+        | "failed"
+        | "canceled"
+      creator_subscription_status: "active" | "expired" | "canceled"
       gender: "male" | "female" | "none"
       live_chat_scope: "authenticated" | "follower" | "manager"
+      live_clip_status: "pending" | "processing" | "ready" | "failed"
       live_message_type: "chat" | "moderation_notice" | "donation"
       live_sender_role:
         | "creator"
@@ -1552,7 +2072,7 @@ export type Database = {
       message_type: "text" | "system"
       oauth_provider: "google" | "github" | "email"
       wallet_transaction_status: "pending" | "succeeded" | "failed" | "canceled"
-      wallet_transaction_type: "charge" | "donation_spend" | "refund"
+      wallet_transaction_type: "charge" | "donation_spend" | "refund" | "subscription_spend"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1680,14 +2200,22 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      creator_subscription_payment_status: [
+        "pending",
+        "succeeded",
+        "failed",
+        "canceled",
+      ],
+      creator_subscription_status: ["active", "expired", "canceled"],
       gender: ["male", "female", "none"],
       live_chat_scope: ["authenticated", "follower", "manager"],
+      live_clip_status: ["pending", "processing", "ready", "failed"],
       live_message_type: ["chat", "moderation_notice", "donation"],
       live_sender_role: ["creator", "manager", "donor", "subscriber", "viewer"],
       message_type: ["text", "system"],
       oauth_provider: ["google", "github", "email"],
       wallet_transaction_status: ["pending", "succeeded", "failed", "canceled"],
-      wallet_transaction_type: ["charge", "donation_spend", "refund"],
+      wallet_transaction_type: ["charge", "donation_spend", "refund", "subscription_spend"],
     },
   },
 } as const

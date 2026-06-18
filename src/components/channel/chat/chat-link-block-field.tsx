@@ -11,7 +11,7 @@ interface Props {
 
 export function ChatLinkBlockField({ value, disabled, onChange }: Props) {
   return (
-    <SettingFieldRow label="링크 허용" description="외부 URL">
+    <SettingFieldRow label="링크 차단" description="외부 URL">
       <SettingToggleControl
         checked={value}
         checkedLabel="ON"

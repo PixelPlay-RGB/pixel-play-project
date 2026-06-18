@@ -1,6 +1,7 @@
 // 채널 보안 설정 화면의 서버 렌더링 영역을 구성합니다.
 import { SettingsPage } from "@/components/common/settings-page";
-import { SideTipCard, SideTipStep } from "@/components/common/side-tip-card";
+import { SideTipCard } from "@/components/common/side-tip-card";
+import { SideTipStep } from "@/components/common/side-tip-step";
 import { ChannelSecurityControls } from "@/components/channel/security/channel-security-controls";
 import { LoadFailedState } from "@/components/common/load-failed-state";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";

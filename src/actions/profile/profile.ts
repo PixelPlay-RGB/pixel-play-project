@@ -1,7 +1,7 @@
 "use server";
 // 프로필 수정 Server Action을 관리합니다.
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
-import { USER_MEDIA_BUCKET } from "@/constants/common/storage";
+import { PROFILE_IMAGE_MAX_SIZE, USER_MEDIA_BUCKET } from "@/constants/common/storage";
 import type { ActionResponse } from "@/types/common/action";
 import { createClient } from "@/lib/supabase/server";
 import { isAuthSessionMissingError } from "@/utils/auth/auth-error";
@@ -16,9 +16,8 @@ export async function updateProfileAction(formData: FormData): Promise<ActionRes
   let photoUrl = (formData.get("photoUrl") as string | null) || null;
   const shouldDeleteImage = formData.get("shouldDeleteImage") === "true";
 
-  // 🚨 [추가된 로직] 파일 크기 검증 (5MB 제한)
-  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
-  if (file && file.size > MAX_FILE_SIZE) {
+  // 파일 크기 검증 (5MB 제한)
+  if (file && file.size > PROFILE_IMAGE_MAX_SIZE) {
     return {
       success: false,
       code: APP_MESSAGE_CODE.error.profile.imageTooLarge,

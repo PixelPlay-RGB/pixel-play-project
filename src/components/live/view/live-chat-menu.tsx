@@ -2,7 +2,6 @@
 // 채팅 패널 메뉴 — 클린봇 토글, 채팅 규칙 보기, 채팅창 팝업 항목을 제공합니다.
 // 채팅 규칙은 입력바 위 규칙 popover를 그대로 연다(안내 위치·모양을 한 곳으로 통일).
 
-import { useRef } from "react";
 import { ExternalLink, MoreHorizontal, ScrollText, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,8 +32,6 @@ export function LiveChatMenu({
   onPopoutOpen,
   onShowRules,
 }: Props) {
-  const menuTriggerRef = useRef<HTMLButtonElement>(null);
-
   function openChatPopout() {
     const width = LIVE_CHAT_POPOUT_WINDOW.width;
     // 팝업 높이는 화면 가용 높이의 80%로 — 고정 픽셀은 큰 모니터에서 너무 짧게 보인다.
@@ -61,7 +58,6 @@ export function LiveChatMenu({
         <DropdownMenuTrigger
           render={
             <Button
-              ref={menuTriggerRef}
               size="sm"
               variant="ghost"
               aria-label={LIVE_LABEL.chatMenu}

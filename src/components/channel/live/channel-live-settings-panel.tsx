@@ -1,24 +1,14 @@
 "use client";
 // 방송 제목, 태그, 미리보기 이미지와 방송 시작 제어를 렌더링합니다.
 
-import type { ChannelLiveState } from "@/components/channel/live/channel-live-operation-page";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogMedia,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { DestructiveAlertDialog } from "@/components/common/destructive-alert-dialog";
+import { AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import type { ChannelLiveState } from "@/types/channel/channel-live";
 import { CircleStop, Play, Save, Tag, Upload, X } from "lucide-react";
 import { type ChangeEvent, type DragEvent, type ReactNode, useRef, useState } from "react";
 
@@ -259,85 +249,24 @@ export default function ChannelLiveSettingsPanel({
         ) : null}
         <Button
           type="button"
-          variant="outline"
           onClick={onSaveSettings}
           disabled={isSettingsActionPending || !canSaveSettings}
-          className="h-11 rounded-xl px-7 font-bold shadow-sm transition-all active:scale-95"
+          className="bg-brand hover:bg-brand/85 text-brand-foreground h-11 rounded-xl px-7 font-bold shadow-sm transition-all active:scale-95"
         >
           <Save className="size-4" />
           저장
         </Button>
         {liveState.isBroadcasting ? (
-          <AlertDialog
-            open={isEndDialogOpen}
-            onOpenChange={(next) => !isBroadcastActionPending && setIsEndDialogOpen(next)}
+          <Button
+            type="button"
+            variant="destructive"
+            disabled={isBroadcastActionPending}
+            className="h-11 rounded-xl px-7 font-bold shadow-sm transition-all active:scale-95"
+            onClick={() => setIsEndDialogOpen(true)}
           >
-            <AlertDialogTrigger
-              render={
-                <Button
-                  type="button"
-                  variant="destructive"
-                  disabled={isBroadcastActionPending}
-                  className="h-11 rounded-xl px-7 font-bold shadow-sm transition-all active:scale-95"
-                >
-                  <CircleStop className="size-4" />
-                  방송 종료
-                </Button>
-              }
-            />
-            {/* 프로젝트 배너 헤더 Dialog 컨벤션 — 방송 종료는 되돌리기 어려운 액션이라 danger 톤. */}
-            <AlertDialogContent
-              showCloseButton={false}
-              className={cn(
-                "overflow-hidden rounded-2xl p-0 shadow-xl sm:max-w-md",
-                "border-destructive/20 shadow-destructive/10",
-              )}
-            >
-              <AlertDialogHeader
-                className={cn(
-                  "flex items-center gap-4 border-b px-5 pt-5 pb-4 text-left",
-                  "bg-destructive/5 border-destructive/10",
-                )}
-              >
-                <AlertDialogMedia
-                  className={cn(
-                    "mb-0 shrink-0 rounded-xl ring-1",
-                    "bg-destructive/10 text-destructive ring-destructive/20",
-                  )}
-                >
-                  <CircleStop />
-                </AlertDialogMedia>
-                <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-                  <AlertDialogTitle className="text-lg leading-tight font-bold">
-                    방송을 종료할까요?
-                  </AlertDialogTitle>
-                  <AlertDialogDescription className="leading-snug text-pretty">
-                    종료하면 시청자에게 더 이상 라이브가 공개되지 않습니다. OBS Studio에서 송출만
-                    종료해도 잠시 후 자동으로 종료됩니다.
-                  </AlertDialogDescription>
-                </div>
-              </AlertDialogHeader>
-              <AlertDialogFooter className="m-0 flex-row justify-end gap-2 border-0 bg-transparent px-5 pt-4 pb-5">
-                <AlertDialogCancel
-                  disabled={isBroadcastActionPending}
-                  className={cn(
-                    "h-10 min-w-24 rounded-xl px-4 font-semibold",
-                    "border-border bg-background text-foreground hover:bg-muted",
-                  )}
-                >
-                  취소
-                </AlertDialogCancel>
-                <AlertDialogAction
-                  variant="destructive"
-                  disabled={isBroadcastActionPending}
-                  onClick={handleConfirmEndBroadcast}
-                  className="shadow-destructive/10 h-10 min-w-24 rounded-xl px-4 font-bold shadow-sm"
-                >
-                  {isBroadcastActionPending ? <Spinner /> : "방송 종료"}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+            <CircleStop className="size-4" />
+            방송 종료
+          </Button>
         ) : (
           <Button
             type="button"
@@ -350,6 +279,34 @@ export default function ChannelLiveSettingsPanel({
           </Button>
         )}
       </div>
+
+      {/* 프로젝트 배너 헤더 Dialog 컨벤션 — 방송 종료는 되돌리기 어려운 액션이라 danger 톤(공통 셸). */}
+      <DestructiveAlertDialog
+        open={isEndDialogOpen}
+        onOpenChange={(next) => {
+          if (!isBroadcastActionPending) setIsEndDialogOpen(next);
+        }}
+        icon={<CircleStop />}
+        title="방송을 종료할까요?"
+        description="종료하면 시청자에게 더 이상 라이브가 공개되지 않습니다. OBS Studio에서 송출만 종료해도 잠시 후 자동으로 종료됩니다."
+        contentClassName="sm:max-w-md"
+        footerClassName="flex-row gap-2"
+      >
+        <AlertDialogCancel
+          disabled={isBroadcastActionPending}
+          className="border-border bg-background text-foreground hover:bg-muted h-10 min-w-24 rounded-xl px-4 font-semibold"
+        >
+          취소
+        </AlertDialogCancel>
+        <AlertDialogAction
+          variant="destructive"
+          disabled={isBroadcastActionPending}
+          onClick={handleConfirmEndBroadcast}
+          className="shadow-destructive/10 h-10 min-w-24 rounded-xl px-4 font-bold shadow-sm"
+        >
+          {isBroadcastActionPending ? <Spinner /> : "방송 종료"}
+        </AlertDialogAction>
+      </DestructiveAlertDialog>
     </div>
   );
 }

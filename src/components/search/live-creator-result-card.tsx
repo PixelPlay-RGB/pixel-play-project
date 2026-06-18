@@ -2,9 +2,9 @@
 // 라이브 크리에이터 검색 결과 카드를 렌더링합니다.
 import CreatorFollowingButton from "@/components/following/creator-following-button";
 import { Avatar, AvatarBadge, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useCreatorFollowState } from "@/hooks/following/use-creator-follow-state";
 import { useToggleLiveSearchFollowing } from "@/hooks/following/use-toggle-live-search-following";
 import { cn } from "@/lib/utils";
-import { useAuthStore } from "@/stores/auth";
 import type { LiveSearchResult } from "@/types/search/search";
 import { formatNumber } from "@/utils/common/format";
 import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
@@ -16,14 +16,13 @@ interface Props {
 }
 
 export default function LiveCreatorResultCard({ result }: Props) {
-  const currentUserId = useAuthStore((state) => state.user?.id);
   const toggleLiveSearchFollowing = useToggleLiveSearchFollowing();
   const avatarSrc = getAvatarImageSrc(result.creator_photo_url);
   const fallbackText = getAvatarFallbackText(result.creator_nickname, 1);
-  const isOwnChannel = currentUserId === result.creator_id;
-  const isFollowingPending =
-    toggleLiveSearchFollowing.isPending &&
-    toggleLiveSearchFollowing.variables?.creatorId === result.creator_id;
+  const { isOwnChannel, isPending: isFollowingPending } = useCreatorFollowState(
+    result.creator_id,
+    toggleLiveSearchFollowing,
+  );
 
   const handleFollowingClick = () => {
     if (isOwnChannel || isFollowingPending) {
@@ -42,7 +41,7 @@ export default function LiveCreatorResultCard({ result }: Props) {
         "flex min-h-22 flex-col gap-3 rounded-xl border p-3 text-left sm:flex-row sm:items-center",
         "border-border/55 bg-card/80 transition-colors duration-200",
         "dark:border-border/35 dark:bg-card/70",
-        result.is_live && "border-brand/20 bg-brand/4 dark:border-brand/15 dark:bg-brand/6",
+        result.is_live && "border-brand/20 bg-brand/5 dark:border-brand/15 dark:bg-brand/5",
       )}
     >
       <Link

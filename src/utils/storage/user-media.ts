@@ -1,7 +1,8 @@
 // user-media 통합 버킷 storage 유틸. 경로(상대) → public URL, MIME → 확장자.
 import { USER_MEDIA_BUCKET } from "@/constants/common/storage";
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+// env에 trailing slash가 있으면 `${SUPABASE_URL}/storage/...`가 `...//storage`로 깨지므로 정규화한다.
+const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").replace(/\/+$/, "");
 
 // 허용 이미지 MIME → storage 객체 확장자.
 export const USER_MEDIA_IMAGE_EXTENSION: Record<string, string> = {

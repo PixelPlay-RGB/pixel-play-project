@@ -9,7 +9,8 @@ import DonationAlertPreview from "@/components/channel/donation/donation-alert-p
 import DonationTestAlertButton from "@/components/channel/donation/donation-test-alert-button";
 import { HintNote } from "@/components/common/hint-note";
 import { SettingsCard } from "@/components/common/settings-card";
-import { SideTipCard, SideTipStep } from "@/components/common/side-tip-card";
+import { SideTipCard } from "@/components/common/side-tip-card";
+import { SideTipStep } from "@/components/common/side-tip-step";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { DONATION_TEST_ALERT_SAMPLE } from "@/constants/channel/donation";

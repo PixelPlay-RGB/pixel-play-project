@@ -7,21 +7,21 @@ import { useEffect, useRef, useState } from "react";
 
 import { ImagePlus, X } from "lucide-react";
 
-import ChatEmojiPicker from "@/components/common/chat-emoji-picker";
+import { CharacterCounter } from "@/components/common/character-counter";
+import StickerPicker from "@/components/sticker/sticker-picker";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { Textarea } from "@/components/ui/textarea";
+import RichEmojiInput from "@/components/common/rich-emoji-input";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import {
   COMMUNITY_IMAGE_ALLOWED_TYPES,
   COMMUNITY_IMAGE_MAX_SIZE,
   COMMUNITY_POST_CONTENT_MAX,
 } from "@/constants/community/community";
-import { formatNumber } from "@/utils/common/format";
 import { useCreateCommunityPost } from "@/hooks/community/use-create-community-post";
 import { useUpdateCommunityPost } from "@/hooks/community/use-update-community-post";
-import { cn } from "@/lib/utils";
 import { toastAppError } from "@/utils/common/toast-message";
+import { appendStickerToken } from "@/utils/sticker/sticker-token";
 
 interface Props {
   creatorId: string;
@@ -94,8 +94,8 @@ export default function CommunityComposer({
   const trimmedLength = content.trim().length;
   const isSubmittable = trimmedLength > 0 && content.length <= COMMUNITY_POST_CONTENT_MAX;
 
-  const handleEmojiSelect = (emoji: string) => {
-    setContent((prev) => (prev + emoji).slice(0, COMMUNITY_POST_CONTENT_MAX));
+  const handleStickerSelect = (token: string) => {
+    setContent((prev) => appendStickerToken(prev, token, COMMUNITY_POST_CONTENT_MAX));
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -128,13 +128,14 @@ export default function CommunityComposer({
     <form onSubmit={handleSubmit} className="flex flex-col gap-3">
       {/* Textarea + 첨부 이미지 미리보기를 한 박스로 묶어 입력 영역에 포함되게 한다. */}
       <div className="border-border bg-muted/40 focus-within:border-brand/50 focus-within:ring-brand/20 flex flex-col gap-3 rounded-2xl border p-3 transition-colors focus-within:ring-3">
-        <Textarea
+        <RichEmojiInput
           value={content}
-          maxLength={COMMUNITY_POST_CONTENT_MAX}
-          onChange={(event) => setContent(event.target.value)}
+          onChange={setContent}
+          allowNewline
           placeholder="팔로워에게 전할 소식을 남겨보세요."
-          aria-label="게시글 내용"
-          className="min-h-40 resize-none border-0 bg-transparent p-0 text-base leading-relaxed shadow-none focus-visible:ring-0 disabled:bg-transparent md:text-sm dark:bg-transparent dark:disabled:bg-transparent"
+          maxLength={COMMUNITY_POST_CONTENT_MAX}
+          ariaLabel="게시글 내용"
+          className="max-h-96 min-h-40 overflow-y-auto text-base leading-relaxed md:text-sm"
         />
 
         {displayImage && (
@@ -168,7 +169,7 @@ export default function CommunityComposer({
 
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1">
-          <ChatEmojiPicker disabled={isPending} onEmojiSelect={handleEmojiSelect} />
+          <StickerPicker disabled={isPending} onStickerSelect={handleStickerSelect} side="bottom" />
           {!displayImage && (
             <Button
               type="button"
@@ -195,14 +196,7 @@ export default function CommunityComposer({
         </div>
 
         <div className="flex items-center gap-3">
-          <span
-            className={cn(
-              "text-muted-foreground text-xs font-semibold tabular-nums",
-              content.length > COMMUNITY_POST_CONTENT_MAX && "text-destructive",
-            )}
-          >
-            {formatNumber(content.length)} / {formatNumber(COMMUNITY_POST_CONTENT_MAX)}
-          </span>
+          <CharacterCounter current={content.length} max={COMMUNITY_POST_CONTENT_MAX} />
 
           <Button
             type="button"

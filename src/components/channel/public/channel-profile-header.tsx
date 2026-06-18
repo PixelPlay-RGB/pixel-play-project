@@ -4,7 +4,8 @@
 import Link from "next/link";
 import { Settings, UsersRound } from "lucide-react";
 
-import CreatorFollowingButton from "@/components/following/creator-following-button";
+import { ChannelSubscribeAction } from "@/components/channel/public/channel-subscribe-action";
+import CreatorFollowToggle from "@/components/following/creator-follow-toggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { buttonVariants } from "@/components/ui/button";
 import { useToggleChannelFollowing } from "@/hooks/channel/use-toggle-channel-following";
@@ -28,7 +29,7 @@ export default function ChannelProfileHeader({ profile }: Props) {
   const fallbackText = getAvatarFallbackText(profile.nickname, 1);
 
   return (
-    <div className="flex items-center gap-4 py-6 sm:gap-5">
+    <div className="flex flex-wrap items-center gap-4 py-6 sm:flex-nowrap sm:gap-5">
       <Link
         href={`/channel/${profile.id}`}
         aria-label={`${profile.nickname} 채널 홈으로 이동`}
@@ -73,14 +74,17 @@ export default function ChannelProfileHeader({ profile }: Props) {
           채널 설정
         </Link>
       ) : (
-        <CreatorFollowingButton
-          creatorNickname={profile.nickname}
-          isFollowing={isFollowing}
-          isOwnChannel={profile.isOwnChannel}
-          isPending={isPending}
-          onClick={toggle}
-          className="h-9 px-4 text-sm"
-        />
+        <div className="flex w-full shrink-0 items-center justify-end gap-2 sm:w-auto">
+          <ChannelSubscribeAction profile={profile} />
+          <CreatorFollowToggle
+            creatorNickname={profile.nickname}
+            isFollowing={isFollowing}
+            isOwnChannel={profile.isOwnChannel}
+            isPending={isPending}
+            onToggle={toggle}
+            className="h-9 px-4 text-sm"
+          />
+        </div>
       )}
     </div>
   );

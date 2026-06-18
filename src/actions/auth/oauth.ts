@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { completeOAuthProfileSchema } from "@/lib/zod/auth";
 import type { CompleteOAuthProfileInput, LoginProvider, OAuthProvider } from "@/types/auth/auth";
 import { isAuthSessionMissingError } from "@/utils/auth/auth-error";
+import { getAuthProviders } from "@/utils/auth/auth-provider";
 import { revalidatePath } from "next/cache";
 
 export async function completeOAuthProfileAction(
@@ -39,13 +40,14 @@ export async function completeOAuthProfileAction(
   // auth.users.user_metadata에도 display_name 반영 (어드민 대시보드 + 세션 일관성)
   const { error: authError } = await supabase.auth.updateUser({
     data: {
+      display_name: nickname,
       name,
     },
   });
 
   if (authError) {
     console.error("OAuth 프로필 완성 중 인증 정보 업데이트 실패", authError);
-    return { success: false, code: APP_MESSAGE_CODE.error.auth.authInfoLoadFailed };
+    return { success: false, code: APP_MESSAGE_CODE.error.auth.authInfoUpdateFailed };
   }
 
   const nicknameCheck = await checkNicknameExists(nickname);
@@ -58,7 +60,7 @@ export async function completeOAuthProfileAction(
   }
 
   const VALID_PROVIDERS: LoginProvider[] = ["google", "github"];
-  const linkedProviders = ((user.app_metadata?.providers ?? []) as string[]).filter(
+  const linkedProviders = getAuthProviders(user.app_metadata?.providers).filter(
     (p): p is LoginProvider => VALID_PROVIDERS.includes(p as LoginProvider),
   );
 

@@ -7,99 +7,58 @@ import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { LiveChatBody } from "@/components/live/chat/live-chat-body";
 import { LiveChatMenu } from "@/components/live/view/live-chat-menu";
+import { useLiveChatData } from "@/components/live/view/live-chat-data-context";
 import { LIVE_LABEL } from "@/constants/live/live";
-import type {
-  LiveChatMessage,
-  LiveDonation,
-  LiveInteractionNotice,
-  LivePoll,
-  LiveViewerChatState,
-} from "@/types/live/live";
 
 interface Props {
   creatorId: string;
-  messages: LiveChatMessage[];
-  donations: LiveDonation[];
-  polls: LivePoll[];
-  interactionNotices: LiveInteractionNotice[];
-  isPollsLoading?: boolean;
-  isPollsError?: boolean;
-  isInteractionNoticesLoading?: boolean;
-  isInteractionNoticesError?: boolean;
-  chatState: LiveViewerChatState;
-  isLoggedIn: boolean;
-  walletBalance: number;
-  isWalletLoading?: boolean;
-  isWalletError?: boolean;
-  donationEnabled: boolean;
-  donationMinAmount: number;
-  onLoginPrompt: () => void;
-  onSendMessage: (content: string) => Promise<boolean>;
-  onVote?: (pollId: string, optionId: string) => Promise<boolean>;
-  onJoinDraw?: (drawNoticeId: string) => Promise<boolean>;
-  onDonate?: (params: {
-    amount: number;
-    message: string;
-    isAnonymous: boolean;
-    idempotencyKey: string;
-  }) => Promise<boolean>;
-  chatRuleText?: string;
-  onAcceptChatRule?: () => Promise<boolean>;
-  onFollow?: () => void;
-  isFollowing?: boolean;
-  isFollowPending?: boolean;
   onCollapse?: () => void;
   collapseButtonRef?: Ref<HTMLButtonElement>;
-  // 과거 채팅 적재(무한 스크롤)·진입 안내 위치·게이트 설정값 — LiveChatBody로 그대로 전달한다.
-  onLoadOlderMessages?: () => void;
-  isLoadingOlderMessages?: boolean;
-  hasMoreChatHistory?: boolean;
-  entryNoticeAnchorId?: string | null;
-  onRefreshChatState?: () => void;
-  followerWaitSeconds?: number;
-  slowModeSeconds?: number;
-  // 입력 섹션 동기화 높이(px) — separator가 좌측 비디오 하단 라인과 일직선이 되게 한다.
-  inputMinHeightPx?: number | null;
 }
 
-export function LiveChatPanel({
-  creatorId,
-  messages,
-  donations,
-  polls,
-  interactionNotices,
-  isPollsLoading,
-  isPollsError,
-  isInteractionNoticesLoading,
-  isInteractionNoticesError,
-  chatState,
-  isLoggedIn,
-  walletBalance,
-  isWalletLoading,
-  isWalletError,
-  donationEnabled,
-  donationMinAmount,
-  onLoginPrompt,
-  onSendMessage,
-  onVote,
-  onJoinDraw,
-  onDonate,
-  chatRuleText,
-  onAcceptChatRule,
-  onFollow,
-  isFollowing,
-  isFollowPending,
-  onCollapse,
-  collapseButtonRef,
-  onLoadOlderMessages,
-  isLoadingOlderMessages,
-  hasMoreChatHistory,
-  entryNoticeAnchorId,
-  onRefreshChatState,
-  followerWaitSeconds,
-  slowModeSeconds,
-  inputMinHeightPx,
-}: Props) {
+export function LiveChatPanel({ creatorId, onCollapse, collapseButtonRef }: Props) {
+  // 채팅 데이터/콜백은 live-view가 provide하는 컨텍스트에서 읽는다(이전엔 prop-drill).
+  // 본문(LiveChatBody)으로의 전달 값/개수는 그대로 유지하고 소스만 props→context로 바꾼다.
+  const {
+    messages,
+    subscriptionBadgeCustomMonths,
+    subscriptionBadgeVersion,
+    subscriptionBadgeImageSources,
+    donations,
+    polls,
+    interactionNotices,
+    isPollsLoading,
+    isPollsError,
+    isInteractionNoticesLoading,
+    isInteractionNoticesError,
+    chatState,
+    isLoggedIn,
+    walletBalance,
+    isWalletLoading,
+    isWalletError,
+    customerKey,
+    chargeReturnTo,
+    donationEnabled,
+    donationMinAmount,
+    onLoginPrompt,
+    onSendMessage,
+    onVote,
+    onJoinDraw,
+    onDonate,
+    chatRuleText,
+    onAcceptChatRule,
+    onFollow,
+    isFollowing,
+    isFollowPending,
+    onLoadOlderMessages,
+    isLoadingOlderMessages,
+    hasMoreChatHistory,
+    entryNoticeAnchorId,
+    onRefreshChatState,
+    followerWaitSeconds,
+    slowModeSeconds,
+    profileContext,
+  } = useLiveChatData();
   const [cleanbot, setCleanbot] = useState(true);
   const [isPopoutOpen, setIsPopoutOpen] = useState(false);
   // 메뉴의 "채팅 규칙" 클릭마다 증가 — 입력바 위 규칙 popover를 여는 요청 id.
@@ -172,7 +131,11 @@ export function LiveChatPanel({
         </div>
       ) : (
         <LiveChatBody
+          creatorId={creatorId}
           messages={messages}
+          subscriptionBadgeCustomMonths={subscriptionBadgeCustomMonths}
+          subscriptionBadgeVersion={subscriptionBadgeVersion}
+          subscriptionBadgeImageSources={subscriptionBadgeImageSources}
           donations={donations}
           polls={polls}
           interactionNotices={interactionNotices}
@@ -185,6 +148,8 @@ export function LiveChatPanel({
           walletBalance={walletBalance}
           isWalletLoading={isWalletLoading}
           isWalletError={isWalletError}
+          customerKey={customerKey}
+          chargeReturnTo={chargeReturnTo}
           donationEnabled={donationEnabled}
           donationMinAmount={donationMinAmount}
           onLoginPrompt={onLoginPrompt}
@@ -206,7 +171,7 @@ export function LiveChatPanel({
           followerWaitSeconds={followerWaitSeconds}
           slowModeSeconds={slowModeSeconds}
           ruleOpenRequestId={ruleOpenRequestId}
-          inputMinHeightPx={inputMinHeightPx}
+          profileContext={profileContext}
         />
       )}
     </div>

@@ -112,7 +112,8 @@ export function resolveProfileQueryErrorCode(error: unknown): AppMessageCode {
 /**
  * 현재 로그인된 유저의 public.user 프로필을 필수 데이터로 조회.
  * - AuthUser(Zustand)가 준비되면 자동 실행
- * - 5분간 캐싱 → 여러 컴포넌트에서 호출해도 네트워크 1회
+ * - staleTime 5분: 캐시된 데이터는 즉시 제공돼 로딩 깜빡임이 없음
+ * - refetchOnMount "always": 마운트할 때마다 백그라운드 재검증 요청을 보냄(staleTime과 무관)
  * - 프로필 업데이트 후에는 `queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auth.profileAll() })`로 갱신
  */
 export function useUser() {

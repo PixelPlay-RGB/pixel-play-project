@@ -21,17 +21,26 @@ import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { toastAppError, toastAppInfo } from "@/utils/common/toast-message";
 import { LIVE_DONATION_MIN_AMOUNT } from "@/constants/live/live";
 import { parseLiveVoteCommand } from "@/utils/live/live-vote-command";
-import {
-  mapLiveWatchCreator,
-  mapLiveWatchToBroadcast,
-  type LiveBroadcast,
-  type LivePoll,
+import { mapLiveWatchCreator, mapLiveWatchToBroadcast } from "@/utils/live/live-watch-mapper";
+import type {
+  CreatorSubscriptionActionResult,
+  LiveBroadcast,
+  LivePoll,
+  LiveSenderRole,
+  LiveWatchData,
 } from "@/types/live/live";
 
 export function useLiveBroadcastView(creatorId: string) {
   const user = useAuthStore((state) => state.user);
   const queryClient = useQueryClient();
-  const { data: watchData, isLoading, refetch, endedElapsedSeconds } = useLiveViewData(creatorId);
+  const {
+    data: watchData,
+    isLoading,
+    isWatchSettled,
+    error: watchError,
+    refetch,
+    endedElapsedSeconds,
+  } = useLiveViewData(creatorId);
 
   const broadcast = mapLiveWatchToBroadcast(watchData);
   // 방송이 종료/오프라인(broadcast=null)이어도 크리에이터 정보는 남아 종료 화면에서 쓴다.
@@ -39,6 +48,14 @@ export function useLiveBroadcastView(creatorId: string) {
 
   const [optimisticFollowing, setOptimisticFollowing] = useState<boolean | null>(null);
   const isFollowing = optimisticFollowing ?? watchData?.viewerRelation?.isFollowing ?? false;
+  const [optimisticSubscribed, setOptimisticSubscribed] = useState<boolean | null>(null);
+  const isSubscribed = optimisticSubscribed ?? watchData?.viewerRelation?.isSubscribed ?? false;
+  const subscriptionStatus = watchData?.viewerRelation?.subscriptionStatus ?? null;
+
+  // 매니저/강퇴 여부와 강퇴 권한(크리에이터 본인 또는 활성 매니저). 닉네임 팝업·차단 화면 분기에 쓴다(#118/#119).
+  const isManager = watchData?.viewerRelation?.isManager ?? false;
+  const isBanned = watchData?.viewerRelation?.isBanned ?? false;
+  const canModerate = (!!user?.id && user.id === creatorId) || isManager;
 
   // 채팅 규칙 게이트 통과 여부(메뉴 동의 칩 표시용) — 두 신호의 합집합.
   function onFollowToggled() {
@@ -57,6 +74,76 @@ export function useLiveBroadcastView(creatorId: string) {
       });
   }
 
+  function onSubscribed(result: CreatorSubscriptionActionResult) {
+    const next = result.isSubscribed;
+    const watchKey = QUERY_KEYS.live.watch(creatorId, user?.id);
+
+    setOptimisticSubscribed(next);
+    queryClient.setQueryData<LiveWatchData | null>(watchKey, (prev) => {
+      if (!prev?.viewerRelation) return prev;
+
+      return {
+        ...prev,
+        viewerRelation: {
+          ...prev.viewerRelation,
+          isSubscribed: next,
+          subscriptionStartedAt: result.startedAt,
+          subscriptionEndAt: result.endAt,
+          subscriptionTotalMonths: result.totalMonths,
+          subscriptionStatus: result.status,
+        },
+      };
+    });
+    void queryClient.invalidateQueries({
+      queryKey: QUERY_KEYS.donations.walletBalance(user?.id ?? undefined),
+    });
+    void queryClient.invalidateQueries({
+      queryKey: QUERY_KEYS.channel.subscribedEmojis(user?.id ?? undefined),
+    });
+
+    void refetch()
+      .then((refetchResult) => {
+        if ((refetchResult.data?.viewerRelation?.isSubscribed ?? false) !== next) {
+          console.error("구독 상태 refetch 결과가 optimistic 상태와 다름");
+        }
+        setOptimisticSubscribed(null);
+      })
+      .catch((error) => {
+        console.error("subscription state refetch failed", error);
+        setOptimisticSubscribed(null);
+      });
+  }
+
+  function onSubscriptionCanceled() {
+    const watchKey = QUERY_KEYS.live.watch(creatorId, user?.id);
+
+    queryClient.setQueryData<LiveWatchData | null>(watchKey, (prev) => {
+      if (!prev?.viewerRelation) return prev;
+
+      return {
+        ...prev,
+        viewerRelation: {
+          ...prev.viewerRelation,
+          isSubscribed: true,
+          subscriptionStatus: "canceled",
+        },
+      };
+    });
+    void queryClient.invalidateQueries({
+      queryKey: QUERY_KEYS.channel.subscribedEmojis(user?.id ?? undefined),
+    });
+
+    void refetch()
+      .then((refetchResult) => {
+        if (refetchResult.data?.viewerRelation?.subscriptionStatus !== "canceled") {
+          console.error("구독 해지 상태 refetch 결과가 optimistic 상태와 다름");
+        }
+      })
+      .catch((error) => {
+        console.error("subscription cancel state refetch failed", error);
+      });
+  }
+
   // 시청 중 방송이 종료되면 broadcast가 null이 된다(realtime/refetch). 이때도 마지막 방송 정보
   // (제목·태그·참여자 수)와 채팅 메시지를 그대로 보여주기 위해 마지막 라이브 스냅샷을 유지한다.
   // 라이브 동안 의미 있는 필드(참여자 수·제목)가 바뀔 때만 갱신해(렌더 중 가드된 setState)
@@ -71,7 +158,7 @@ export function useLiveBroadcastView(creatorId: string) {
     setLastBroadcast(broadcast);
   }
   // 채팅은 채널 단위 타임라인(#111) — 방송 여부와 무관하게 creator 기준으로 조회·전송한다.
-  const messagesQuery = useLiveMessages(creatorId, user?.id);
+  const messagesQuery = useLiveMessages(creatorId);
   const messages = messagesQuery.messages;
 
   const pollsQuery = useLivePolls(broadcast?.id, user?.id);
@@ -170,6 +257,12 @@ export function useLiveBroadcastView(creatorId: string) {
     try {
       const result = await sendLiveDonationAction({ creatorId, ...params });
       if (result.success) {
+        // 후원 성공 즉시 내 역할 스냅샷을 donor로 승격한다(#120) — 서버는 전송 시점에
+        // 후원 이력을 직접 조회하므로 이미 정확하고, 낙관적 메시지의 뱃지만 이 신호로 따라온다.
+        queryClient.setQueryData<LiveSenderRole>(
+          QUERY_KEYS.live.viewerRole(creatorId, user?.id ?? undefined),
+          "donor",
+        );
         void queryClient.invalidateQueries({
           queryKey: QUERY_KEYS.donations.walletBalance(user?.id ?? undefined),
         });
@@ -190,6 +283,8 @@ export function useLiveBroadcastView(creatorId: string) {
   const chatSession = useLiveChatSession({
     creatorId,
     viewerChatState: watchData?.viewerChatState,
+    viewerIsSubscriber: isSubscribed,
+    viewerSubscriptionTotalMonths: watchData?.viewerRelation?.subscriptionTotalMonths,
     onChatRuleAccepted: refetch,
   });
 
@@ -226,11 +321,19 @@ export function useLiveBroadcastView(creatorId: string) {
 
   return {
     isLoading,
+    // watch 쿼리 오류(재시도 소진) 신호 — 오프라인 확정과 구분해 세션 종료를 보류하는 데 쓴다.
+    isWatchError: Boolean(watchError),
     broadcast,
     // 시청 중 종료 시 정보 행(제목·참여자)에 쓰는 마지막 라이브 스냅샷 + 멈춘 경과 시간.
     lastBroadcast,
     endedElapsedSeconds,
     creator,
+    // 강퇴/매니저 상태 — 차단 화면(isBanned)·닉네임 팝업 강퇴 게이트(canModerate).
+    isBanned,
+    // 서버 응답 확정 여부 — stale 캐시만으로 차단 다이얼로그가 깜빡이지 않게 하는 게이트(#119).
+    isWatchSettled,
+    canModerate,
+    viewerId: user?.id ?? null,
     messages,
     // 과거 채팅 적재(무한 스크롤) — 초기 50건 이후 위로 스크롤 시 50건씩, 누적 300건에서 중단.
     loadOlderMessages: messagesQuery.loadOlderMessages,
@@ -245,15 +348,24 @@ export function useLiveBroadcastView(creatorId: string) {
     isInteractionNoticesLoading: interactionNoticesQuery.isLoading,
     isInteractionNoticesError: Boolean(interactionNoticesQuery.error),
     walletBalance,
+    walletChargeCustomerKey: user?.id ?? null,
     isWalletLoading,
     isWalletError,
     donationEnabled,
     donationMinAmount,
+    subscriptionBadgeCustomMonths: watchData?.subscriptionBadgeCustomMonths ?? [],
+    subscriptionBadgeVersion: watchData?.subscriptionBadgeVersion ?? null,
+    subscriptionBadgeImageSources: watchData?.subscriptionBadgeImageSources ?? {},
+    subscriptionEmojis: watchData?.subscriptionEmojis ?? [],
     votePoll,
     joinDraw,
     sendDonation,
     isFollowing,
     onFollowToggled,
+    isSubscribed,
+    subscriptionStatus,
+    onSubscribed,
+    onSubscriptionCanceled,
     chatRuleText: watchData?.settings.chatRuleText,
     // 팔로워 전용 대기 시간 안내용 설정값(초).
     followerWaitSeconds: watchData?.settings.followerWaitSeconds ?? 0,

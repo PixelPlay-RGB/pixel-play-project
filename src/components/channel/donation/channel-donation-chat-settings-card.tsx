@@ -71,7 +71,7 @@ export function ChannelDonationChatSettingsCard({ control, errors, isSaving }: P
         render={({ field }) => (
           <SettingFieldRow
             label="최소 후원 금액"
-            description="이 금액 이상부터 후원을 받아요."
+            description="이 금액(포인트) 이상부터 후원을 받아요."
             isDimmed={!donationEnabled}
           >
             <div className="flex w-full flex-col gap-1 sm:w-44">

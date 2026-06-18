@@ -1,0 +1,21 @@
+# PixelPlay 라이브 클립 워커 — /etc/systemd/system/pixelplay-live-clip-worker.service
+# 상주 폴러(4초)라 timer 없이 service 단독으로 구동한다(Restart=always).
+# Nice=10: 클립 인코딩이 MediaMTX 송출(t3.small 2 vCPU)보다 우선하지 않게 한다.
+[Unit]
+Description=PixelPlay live clip worker
+Wants=network-online.target
+After=network-online.target docker.service
+
+[Service]
+Type=simple
+User=ubuntu
+# 상주 프로세스의 print가 journalctl에 즉시 보이도록 stdout 버퍼링을 끈다.
+Environment=PYTHONUNBUFFERED=1
+EnvironmentFile=/etc/pixelplay/clip-worker.env
+ExecStart=/usr/bin/python3 /opt/pixelplay/live-clip-worker.py
+Restart=always
+RestartSec=3
+Nice=10
+
+[Install]
+WantedBy=multi-user.target

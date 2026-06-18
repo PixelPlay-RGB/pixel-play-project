@@ -131,7 +131,9 @@ export function useHlsPlayer({
     // 강제 점프/배속으로 실시간까지 끌고 가서 타임라인 시킹(과거 구간 시청)이 불가능해진다.
     // 실시간 복귀는 사용자가 LIVE 버튼(seekToLiveEdge)으로 직접 한다(유튜브 라이브식).
     const hls = new Hls({
-      backBufferLength: 5,
+      // 과거 ~48초를 클라 버퍼에 유지해 클립 필름스트립(지난 ~40초 프레임 캡처)과 과거 시킹이
+      // 재요청 없이 즉시 되게 한다. SourceBuffer는 압축 세그먼트라 메모리 비용은 작다.
+      backBufferLength: 48,
       liveSyncDuration: 1,
       liveSyncMode: "edge",
       lowLatencyMode: true,

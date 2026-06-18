@@ -10,15 +10,9 @@ import { X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { LiveChatBody } from "@/components/live/chat/live-chat-body";
+import { useLiveChatData } from "@/components/live/view/live-chat-data-context";
 import { LIVE_FULLSCREEN_CHAT_PANEL_WIDTH, LIVE_LABEL } from "@/constants/live/live";
 import { cn } from "@/lib/utils";
-import type {
-  LiveChatMessage,
-  LiveDonation,
-  LiveInteractionNotice,
-  LivePoll,
-  LiveViewerChatState,
-} from "@/types/live/live";
 
 interface Props {
   // 전체화면 요소(모달·popover 포털 대상). 미장착 직후엔 null일 수 있다.
@@ -26,44 +20,7 @@ interface Props {
   // 채팅 패널 열림 상태는 LiveVideoPlayer가 소유한다(비디오/컨트롤 폭 축소와 공유해야 하므로).
   isChatOpen: boolean;
   onToggleChat: () => void;
-  messages: LiveChatMessage[];
-  donations: LiveDonation[];
-  polls: LivePoll[];
-  interactionNotices?: LiveInteractionNotice[];
-  isPollsLoading?: boolean;
-  isPollsError?: boolean;
-  isInteractionNoticesLoading?: boolean;
-  isInteractionNoticesError?: boolean;
-  chatState: LiveViewerChatState;
-  isLoggedIn: boolean;
-  walletBalance: number;
-  isWalletLoading?: boolean;
-  isWalletError?: boolean;
-  donationEnabled: boolean;
-  donationMinAmount: number;
-  onLoginPrompt: () => void;
-  onSendMessage: (content: string) => Promise<boolean>;
-  onVote?: (pollId: string, optionId: string) => Promise<boolean>;
-  onJoinDraw?: (drawNoticeId: string) => Promise<boolean>;
-  onDonate: (params: {
-    amount: number;
-    message: string;
-    isAnonymous: boolean;
-    idempotencyKey: string;
-  }) => Promise<boolean>;
-  chatRuleText?: string;
-  onAcceptChatRule?: () => Promise<boolean>;
-  onFollow?: () => void;
-  isFollowing?: boolean;
-  isFollowPending?: boolean;
-  // 과거 채팅 적재(무한 스크롤)·진입 안내 위치 — LiveChatBody로 그대로 전달한다.
-  onLoadOlderMessages?: () => void;
-  isLoadingOlderMessages?: boolean;
-  hasMoreChatHistory?: boolean;
-  entryNoticeAnchorId?: string | null;
-  onRefreshChatState?: () => void;
-  followerWaitSeconds?: number;
-  slowModeSeconds?: number;
+  creatorId: string;
   // 플레이어 우상단 후원 버튼의 후원 popover 열기 요청(채팅 본문 입력바로 전달).
   donationOpenRequested?: boolean;
   onDonationOpenSettled?: (reason: "donated" | "dismissed") => void;
@@ -73,41 +30,52 @@ export function LiveFullscreenChatOverlay({
   container,
   isChatOpen,
   onToggleChat,
-  messages,
-  donations,
-  polls,
-  interactionNotices,
-  isPollsLoading,
-  isPollsError,
-  isInteractionNoticesLoading,
-  isInteractionNoticesError,
-  chatState,
-  isLoggedIn,
-  walletBalance,
-  isWalletLoading,
-  isWalletError,
-  donationEnabled,
-  donationMinAmount,
-  onLoginPrompt,
-  onSendMessage,
-  onVote,
-  onJoinDraw,
-  onDonate,
-  chatRuleText,
-  onAcceptChatRule,
-  onFollow,
-  isFollowing,
-  isFollowPending,
-  onLoadOlderMessages,
-  isLoadingOlderMessages,
-  hasMoreChatHistory,
-  entryNoticeAnchorId,
-  onRefreshChatState,
-  followerWaitSeconds,
-  slowModeSeconds,
+  creatorId,
   donationOpenRequested,
   onDonationOpenSettled,
 }: Props) {
+  // 채팅 데이터/콜백은 live-view가 provide하는 컨텍스트에서 읽는다(이전엔 prop-drill).
+  // 본문(LiveChatBody)으로의 전달 값/개수는 그대로 유지하고 소스만 props→context로 바꾼다.
+  const {
+    messages,
+    subscriptionBadgeCustomMonths,
+    subscriptionBadgeVersion,
+    subscriptionBadgeImageSources,
+    donations,
+    polls,
+    interactionNotices,
+    isPollsLoading,
+    isPollsError,
+    isInteractionNoticesLoading,
+    isInteractionNoticesError,
+    chatState,
+    isLoggedIn,
+    walletBalance,
+    isWalletLoading,
+    isWalletError,
+    customerKey,
+    chargeReturnTo,
+    donationEnabled,
+    donationMinAmount,
+    onLoginPrompt,
+    onSendMessage,
+    onVote,
+    onJoinDraw,
+    onDonate,
+    chatRuleText,
+    onAcceptChatRule,
+    onFollow,
+    isFollowing,
+    isFollowPending,
+    onLoadOlderMessages,
+    isLoadingOlderMessages,
+    hasMoreChatHistory,
+    entryNoticeAnchorId,
+    onRefreshChatState,
+    followerWaitSeconds,
+    slowModeSeconds,
+    profileContext,
+  } = useLiveChatData();
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const prevChatOpenRef = useRef(isChatOpen);
 
@@ -148,7 +116,11 @@ export function LiveFullscreenChatOverlay({
       </div>
 
       <LiveChatBody
+        creatorId={creatorId}
         messages={messages}
+        subscriptionBadgeCustomMonths={subscriptionBadgeCustomMonths}
+        subscriptionBadgeVersion={subscriptionBadgeVersion}
+        subscriptionBadgeImageSources={subscriptionBadgeImageSources}
         donations={donations}
         polls={polls}
         interactionNotices={interactionNotices}
@@ -161,6 +133,8 @@ export function LiveFullscreenChatOverlay({
         walletBalance={walletBalance}
         isWalletLoading={isWalletLoading}
         isWalletError={isWalletError}
+        customerKey={customerKey}
+        chargeReturnTo={chargeReturnTo}
         donationEnabled={donationEnabled}
         donationMinAmount={donationMinAmount}
         onLoginPrompt={onLoginPrompt}
@@ -183,6 +157,7 @@ export function LiveFullscreenChatOverlay({
         portalContainer={container}
         donationOpenRequested={donationOpenRequested}
         onDonationOpenSettled={onDonationOpenSettled}
+        profileContext={profileContext}
       />
     </aside>
   );

@@ -2,9 +2,10 @@
 // 댓글 영역: 헤더(댓글 N + 새로고침 | 정렬) + 입력창 + 목록. 치지직 레이아웃.
 
 import { useQueryClient } from "@tanstack/react-query";
-import { RotateCw } from "lucide-react";
+import { MessageSquare, RotateCw } from "lucide-react";
 import { Fragment, useState } from "react";
 
+import { EmptyState } from "@/components/common/empty-state";
 import ListPagination from "@/components/common/list-pagination";
 import CommunityCommentComposer from "@/components/community/community-comment-composer";
 import CommunityCommentItem from "@/components/community/community-comment-item";
@@ -104,9 +105,10 @@ export default function CommunityCommentList({
       {isPending ? (
         <CommunityCommentListSkeleton />
       ) : isEmpty ? (
-        <p className="text-muted-foreground py-10 text-center text-sm font-semibold">
-          가장 먼저 댓글을 남겨보세요.
-        </p>
+        <EmptyState
+          icon={<MessageSquare className="size-7" />}
+          title="가장 먼저 댓글을 남겨보세요."
+        />
       ) : (
         <>
           <ul className="divide-border/60 divide-y">

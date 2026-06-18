@@ -1,7 +1,7 @@
 "use client";
 // 라이브 상호작용 결과 공지를 기존 live_message metadata에서 조회합니다.
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { QUERY_KEYS } from "@/constants/common/query-keys";
@@ -11,6 +11,11 @@ import {
   type LiveDrawParticipationRow,
 } from "@/utils/live/live-draw-participation";
 import type { Json } from "@/types/database.types";
+import {
+  getLiveRouletteResultDelayMs,
+  LIVE_ROULETTE_SSE_EVENT,
+  type LiveRouletteSsePayload,
+} from "@/utils/live/live-roulette-sse";
 import type {
   LiveInteractionNotice,
   LiveInteractionNoticeStatus,
@@ -22,6 +27,12 @@ interface LiveInteractionNoticeRow {
   created_at: string;
   id: string;
   metadata: Json;
+}
+
+interface RealtimeRouletteNoticeState {
+  broadcastId: string;
+  notice: LiveInteractionNotice;
+  receivedAtMs: number;
 }
 
 const LIVE_INTERACTION_NOTICE_LIMIT = 20;
@@ -50,6 +61,50 @@ function readStringArray(value: Json | undefined): string[] | undefined {
   const items = value.filter((item): item is string => typeof item === "string" && !!item.trim());
 
   return items.length > 0 ? items : undefined;
+}
+
+function readRouletteBroadcastNotice(
+  value: unknown,
+  receivedAtMs: number,
+): LiveInteractionNotice | null {
+  if (!value || typeof value !== "object") return null;
+
+  const payload = value as Partial<LiveRouletteSsePayload>;
+  const id = typeof payload.id === "string" ? payload.id : "";
+  const fallbackCreatedAt = new Date(receivedAtMs).toISOString();
+  const createdAt =
+    typeof payload.createdAt === "string" && Number.isFinite(new Date(payload.createdAt).getTime())
+      ? payload.createdAt
+      : fallbackCreatedAt;
+  const resultLabel = typeof payload.resultLabel === "string" ? payload.resultLabel : "";
+  const status =
+    payload.status === "active" ? "active" : payload.status === "ended" ? "ended" : null;
+  const items = Array.isArray(payload.items)
+    ? payload.items.filter((item): item is string => typeof item === "string" && !!item.trim())
+    : [];
+  const rotationKeyframes = Array.isArray(payload.rotationKeyframes)
+    ? payload.rotationKeyframes.filter((item): item is number => Number.isFinite(item))
+    : [];
+  const durationSeconds =
+    typeof payload.durationSeconds === "number" && Number.isFinite(payload.durationSeconds)
+      ? payload.durationSeconds
+      : undefined;
+
+  if (!id || !resultLabel || !status || items.length < 2) {
+    return null;
+  }
+
+  return {
+    content: resultLabel,
+    createdAt,
+    id,
+    resultLabel,
+    rouletteDurationSeconds: durationSeconds,
+    rouletteItems: items,
+    rouletteRotationKeyframes: rotationKeyframes,
+    status,
+    type: "roulette",
+  };
 }
 
 function mapNoticeRow(row: LiveInteractionNoticeRow): LiveInteractionNotice | null {
@@ -84,6 +139,10 @@ export function useLiveInteractionNotices(
 ) {
   const supabase = useMemo(() => createClient(), []);
   const queryClient = useQueryClient();
+  const [realtimeRouletteNotice, setRealtimeRouletteNotice] =
+    useState<RealtimeRouletteNoticeState | null>(null);
+  const realtimeRouletteNoticeRef = useRef<RealtimeRouletteNoticeState | null>(null);
+  const rouletteResultTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const query = useQuery<LiveInteractionNotice[]>({
     queryKey: QUERY_KEYS.live.interactionNotices(broadcastId ?? undefined, viewerId),
@@ -184,9 +243,91 @@ export function useLiveInteractionNotices(
     };
   }, [broadcastId, viewerId, supabase, queryClient]);
 
+  useEffect(() => {
+    if (!broadcastId) return;
+
+    function clearPendingRouletteResult() {
+      if (!rouletteResultTimeoutRef.current) return;
+
+      clearTimeout(rouletteResultTimeoutRef.current);
+      rouletteResultTimeoutRef.current = null;
+    }
+
+    function commitRealtimeRouletteNotice(nextNotice: RealtimeRouletteNoticeState) {
+      realtimeRouletteNoticeRef.current = nextNotice;
+      setRealtimeRouletteNotice(nextNotice);
+    }
+
+    const eventSource = new EventSource(
+      `/api/live/roulette/${encodeURIComponent(broadcastId)}/stream`,
+    );
+
+    eventSource.addEventListener(LIVE_ROULETTE_SSE_EVENT, (message) => {
+      const eventMessage = message as MessageEvent<string>;
+
+      try {
+        const receivedAtMs = Date.now();
+        const notice = readRouletteBroadcastNotice(JSON.parse(eventMessage.data), receivedAtMs);
+
+        if (!notice) return;
+
+        const currentRealtimeRouletteNotice =
+          realtimeRouletteNoticeRef.current?.broadcastId === broadcastId
+            ? realtimeRouletteNoticeRef.current
+            : null;
+        const delayMs = getLiveRouletteResultDelayMs({
+          activeNotice: currentRealtimeRouletteNotice
+            ? {
+                durationSeconds: currentRealtimeRouletteNotice.notice.rouletteDurationSeconds,
+                id: currentRealtimeRouletteNotice.notice.id,
+                status: currentRealtimeRouletteNotice.notice.status,
+              }
+            : null,
+          activeReceivedAtMs: currentRealtimeRouletteNotice?.receivedAtMs ?? null,
+          nextNotice: { id: notice.id, status: notice.status },
+          nowMs: receivedAtMs,
+        });
+        const nextRealtimeRouletteNotice = { broadcastId, notice, receivedAtMs };
+
+        clearPendingRouletteResult();
+
+        if (delayMs > 0) {
+          rouletteResultTimeoutRef.current = setTimeout(() => {
+            commitRealtimeRouletteNotice(nextRealtimeRouletteNotice);
+            rouletteResultTimeoutRef.current = null;
+          }, delayMs);
+          return;
+        }
+
+        commitRealtimeRouletteNotice(nextRealtimeRouletteNotice);
+      } catch (error) {
+        console.error("라이브 룰렛 SSE 메시지 파싱 실패", error);
+      }
+    });
+
+    return () => {
+      clearPendingRouletteResult();
+      eventSource.close();
+    };
+  }, [broadcastId]);
+
+  const notices = useMemo(() => {
+    const queryNotices = query.data ?? [];
+    const currentRealtimeRoulette = realtimeRouletteNotice;
+    let currentRealtimeRouletteNotice: LiveInteractionNotice | null = null;
+
+    if (currentRealtimeRoulette && currentRealtimeRoulette.broadcastId === broadcastId) {
+      currentRealtimeRouletteNotice = currentRealtimeRoulette.notice;
+    }
+
+    return currentRealtimeRouletteNotice
+      ? [...queryNotices, currentRealtimeRouletteNotice]
+      : queryNotices;
+  }, [broadcastId, query.data, realtimeRouletteNotice]);
+
   return {
     error: query.error,
     isLoading: query.isLoading,
-    notices: query.data ?? [],
+    notices,
   };
 }

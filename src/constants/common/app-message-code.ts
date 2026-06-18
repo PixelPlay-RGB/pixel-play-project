@@ -17,6 +17,9 @@ export const APP_MESSAGE_CODE = {
     profile: {
       updated: "success.profile.updated",
     },
+    user: {
+      subscriptionCanceled: "success.user.subscriptionCanceled",
+    },
     oauth: {
       unlinked: "success.oauth.unlinked",
     },
@@ -27,9 +30,18 @@ export const APP_MESSAGE_CODE = {
       liveSettingsSaved: "success.channel.liveSettingsSaved",
       donationSettingsSaved: "success.channel.donationSettingsSaved",
       donationTestSent: "success.channel.donationTestSent",
+      subscriptionBadgeSaved: "success.channel.subscriptionBadgeSaved",
+      subscriptionBadgeDeleted: "success.channel.subscriptionBadgeDeleted",
       channelProfileSaved: "success.channel.channelProfileSaved",
       bannerSaved: "success.channel.bannerSaved",
       bannerDeleted: "success.channel.bannerDeleted",
+      emojiSaved: "success.channel.emojiSaved",
+      emojiUpdated: "success.channel.emojiUpdated",
+      emojiDeleted: "success.channel.emojiDeleted",
+      managerAdded: "success.channel.managerAdded",
+      managerRemoved: "success.channel.managerRemoved",
+      viewerBanned: "success.channel.viewerBanned",
+      viewerUnbanned: "success.channel.viewerUnbanned",
     },
     following: {
       followed: "success.following.followed",
@@ -47,8 +59,14 @@ export const APP_MESSAGE_CODE = {
       commentUpdated: "success.community.commentUpdated",
     },
     live: {
+      subscribed: "success.live.subscribed",
       urlCopied: "success.live.urlCopied",
       voteUnchanged: "success.live.voteUnchanged",
+    },
+    clip: {
+      created: "success.clip.created",
+      urlCopied: "success.clip.urlCopied",
+      deleted: "success.clip.deleted",
     },
     notification: {
       allDeleted: "success.notification.allDeleted",
@@ -68,6 +86,7 @@ export const APP_MESSAGE_CODE = {
       invalidInput: "error.auth.invalidInput",
       authInfoNotFound: "error.auth.authInfoNotFound",
       authInfoLoadFailed: "error.auth.authInfoLoadFailed",
+      authInfoUpdateFailed: "error.auth.authInfoUpdateFailed",
       sessionNotFound: "error.auth.sessionNotFound",
       passwordChangeFailed: "error.auth.passwordChangeFailed",
       passwordChangedLogoutFailed: "error.auth.passwordChangedLogoutFailed",
@@ -77,6 +96,10 @@ export const APP_MESSAGE_CODE = {
       accountDeleteFailed: "error.auth.accountDeleteFailed",
       oauthInfoLoadFailed: "error.auth.oauthInfoLoadFailed",
       oauthSyncFailed: "error.auth.oauthSyncFailed",
+    },
+    user: {
+      subscriptionLoadFailed: "error.user.subscriptionLoadFailed",
+      subscriptionCancelFailed: "error.user.subscriptionCancelFailed",
     },
     // 라이브 메시지 RPC 에러 매핑(MESSAGE_RPC_ERROR_CODE_MAP)에서 사용.
     chatRoom: {
@@ -95,7 +118,6 @@ export const APP_MESSAGE_CODE = {
       prepareChargeFailed: "error.donation.prepareChargeFailed",
       confirmChargeFailed: "error.donation.confirmChargeFailed",
       chargeFailed: "error.donation.chargeFailed",
-      chargeCanceled: "error.donation.chargeCanceled",
       paymentWindowConfigMissing: "error.donation.paymentWindowConfigMissing",
       paymentWindowLoadFailed: "error.donation.paymentWindowLoadFailed",
     },
@@ -105,6 +127,7 @@ export const APP_MESSAGE_CODE = {
       sendFailed: "error.message.sendFailed",
       slowMode: "error.message.slowMode",
       linkBlocked: "error.message.linkBlocked",
+      banned: "error.message.banned",
     },
     profile: {
       notFound: "error.profile.notFound",
@@ -138,11 +161,33 @@ export const APP_MESSAGE_CODE = {
       securityCopyFailed: "error.channel.securityCopyFailed",
       securityTokenRotateFailed: "error.channel.securityTokenRotateFailed",
       analyticsLoadFailed: "error.channel.analyticsLoadFailed",
+      subscriptionLoadFailed: "error.channel.subscriptionLoadFailed",
+      subscriptionBadgeSaveFailed: "error.channel.subscriptionBadgeSaveFailed",
+      subscriptionBadgeDeleteFailed: "error.channel.subscriptionBadgeDeleteFailed",
+      subscriptionBadgeImageInvalid: "error.channel.subscriptionBadgeImageInvalid",
+      subscriptionBadgeImageTooLarge: "error.channel.subscriptionBadgeImageTooLarge",
       channelProfileSaveFailed: "error.channel.channelProfileSaveFailed",
       bannerSaveFailed: "error.channel.bannerSaveFailed",
       bannerDeleteFailed: "error.channel.bannerDeleteFailed",
       bannerImageTooLarge: "error.channel.bannerImageTooLarge",
       bannerLimitReached: "error.channel.bannerLimitReached",
+      emojiSaveFailed: "error.channel.emojiSaveFailed",
+      emojiDeleteFailed: "error.channel.emojiDeleteFailed",
+      emojiImageTooLarge: "error.channel.emojiImageTooLarge",
+      emojiLimitReached: "error.channel.emojiLimitReached",
+      emojiInvalidType: "error.channel.emojiInvalidType",
+      emojiSingleFileOnly: "error.channel.emojiSingleFileOnly",
+      managerListLoadFailed: "error.channel.managerListLoadFailed",
+      managerAddFailed: "error.channel.managerAddFailed",
+      managerRemoveFailed: "error.channel.managerRemoveFailed",
+      managerAlreadyExists: "error.channel.managerAlreadyExists",
+      managerSelfForbidden: "error.channel.managerSelfForbidden",
+      managerBannedForbidden: "error.channel.managerBannedForbidden",
+      userSearchFailed: "error.channel.userSearchFailed",
+      viewerBanFailed: "error.channel.viewerBanFailed",
+      viewerUnbanFailed: "error.channel.viewerUnbanFailed",
+      viewerBanForbidden: "error.channel.viewerBanForbidden",
+      viewerBanListLoadFailed: "error.channel.viewerBanListLoadFailed",
     },
     following: {
       failed: "error.following.failed",
@@ -159,6 +204,8 @@ export const APP_MESSAGE_CODE = {
       voteFailed: "error.live.voteFailed",
       voteNoActivePoll: "error.live.voteNoActivePoll",
       voteInvalidOption: "error.live.voteInvalidOption",
+      subscriptionFailed: "error.live.subscriptionFailed",
+      subscriptionInsufficientBalance: "error.live.subscriptionInsufficientBalance",
     },
     community: {
       postCreateFailed: "error.community.postCreateFailed",
@@ -176,6 +223,18 @@ export const APP_MESSAGE_CODE = {
       loadFailed: "error.notification.loadFailed",
       deleteFailed: "error.notification.deleteFailed",
     },
+    // 클립 RPC 에러 매핑(CLIP_RPC_ERROR_CODE_MAP)에서 사용.
+    clip: {
+      createFailed: "error.clip.createFailed",
+      rateLimited: "error.clip.rateLimited",
+      channelFull: "error.clip.channelFull",
+      tooEarly: "error.clip.tooEarly",
+      noBroadcast: "error.clip.noBroadcast",
+      generationFailed: "error.clip.generationFailed",
+      loadFailed: "error.clip.loadFailed",
+      deleteFailed: "error.clip.deleteFailed",
+      notFound: "error.clip.notFound",
+    },
     supabase: {
       permissionDenied: "error.supabase.permissionDenied",
       dataNotFound: "error.supabase.dataNotFound",
@@ -185,8 +244,12 @@ export const APP_MESSAGE_CODE = {
     common: {
       featureNotReady: "info.common.featureNotReady",
     },
+    donation: {
+      chargeCanceled: "info.donation.chargeCanceled",
+    },
     live: {
       broadcastEnded: "info.live.broadcastEnded",
+      subscriptionPaymentCanceled: "info.live.subscriptionPaymentCanceled",
     },
   },
 } as const satisfies AppMessageCodeSchema<typeof APP_MESSAGE>;
