@@ -83,14 +83,15 @@ function ChannelLiveStatusMetricsRealtimeCard({ broadcast }: { broadcast: LiveMe
 
 export default function ChannelLiveStatusMetricsCard({ broadcast }: Props) {
   if (!broadcast) {
+    // 방송 전에는 집계값이 없으므로 0 대신 placeholder("—")로 "아직 데이터 없음"을 분명히 한다.
     return (
       <ChannelLiveStatusMetricsFrame
-        items={buildMetricItems({
-          currentViewers: 0,
-          donationAmountTotal: 0,
-          messagesPerMinute: 0,
-          peakViewers: 0,
-        })}
+        items={[
+          { label: "현재 시청자", value: "—" },
+          { label: "최고 시청자", value: "—" },
+          { label: "분당 채팅", value: "—" },
+          { label: "후원 누적", value: "—" },
+        ]}
       />
     );
   }
