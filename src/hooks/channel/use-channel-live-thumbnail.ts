@@ -50,5 +50,3 @@ export function useChannelLiveThumbnail(initialThumbnailUrl: string | null | und
     thumbnailPreviewUrl,
   };
 }
-
-export type ChannelLiveThumbnail = ReturnType<typeof useChannelLiveThumbnail>;

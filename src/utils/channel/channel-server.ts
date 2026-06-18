@@ -4,7 +4,6 @@ import "server-only";
 import { cache } from "react";
 
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
-import { USER_MEDIA_BUCKET } from "@/constants/common/storage";
 import { createAdminClient } from "@/lib/supabase/admin-client";
 import type { AppActionResult } from "@/types/common/action";
 import type { GenericTables } from "@/types/common/supabase.types";
@@ -16,10 +15,7 @@ import {
   type ChannelProfileSubscriptionRow,
 } from "@/utils/channel/channel-profile-subscription";
 import { mapChannelEmojiRows, type ChannelEmojiPreviewRow } from "@/utils/channel/channel-emoji";
-import {
-  LIVE_SUBSCRIPTION_BADGE_STORAGE_LIST_LIMIT,
-  readLiveSubscriptionBadgeAssetInfo,
-} from "@/utils/live/live-subscription-badge";
+import { readChannelSubscriptionBadgeAssetsFromStorage } from "@/utils/channel/channel-subscription-badge-storage";
 
 type CreatorSubscriptionRow = Pick<GenericTables<"creator_subscription">, "status" | "end_at">;
 type AdminClient = ReturnType<typeof createAdminClient>;
@@ -75,7 +71,7 @@ async function readChannelProfileSubscription(
           success: true,
           data: null,
         } satisfies AppActionResult<CreatorSubscriptionRow | null>),
-    readChannelSubscriptionBadgeAssets(supabase, creatorId),
+    readChannelSubscriptionBadgeAssetsFromStorage(supabase, creatorId),
     readChannelSubscriptionEmojis(supabase, creatorId),
   ]);
 
@@ -115,21 +111,6 @@ async function readViewerSubscription(
   }
 
   return { success: true, data: data ?? null };
-}
-
-async function readChannelSubscriptionBadgeAssets(supabase: AdminClient, creatorId: string) {
-  const { data, error } = await supabase.storage
-    .from(USER_MEDIA_BUCKET)
-    .list(`${creatorId}/subscription`, {
-      limit: LIVE_SUBSCRIPTION_BADGE_STORAGE_LIST_LIMIT,
-      sortBy: { column: "name", order: "asc" },
-    });
-
-  if (error) {
-    console.error("채널 프로필 구독 배지 목록 조회 실패", error);
-  }
-
-  return readLiveSubscriptionBadgeAssetInfo(data ?? null);
 }
 
 async function readChannelSubscriptionEmojis(supabase: AdminClient, creatorId: string) {

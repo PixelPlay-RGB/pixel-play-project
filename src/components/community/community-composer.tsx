@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { ImagePlus, X } from "lucide-react";
 
+import { CharacterCounter } from "@/components/common/character-counter";
 import StickerPicker from "@/components/sticker/sticker-picker";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
@@ -17,10 +18,8 @@ import {
   COMMUNITY_IMAGE_MAX_SIZE,
   COMMUNITY_POST_CONTENT_MAX,
 } from "@/constants/community/community";
-import { formatNumber } from "@/utils/common/format";
 import { useCreateCommunityPost } from "@/hooks/community/use-create-community-post";
 import { useUpdateCommunityPost } from "@/hooks/community/use-update-community-post";
-import { cn } from "@/lib/utils";
 import { toastAppError } from "@/utils/common/toast-message";
 import { appendStickerToken } from "@/utils/sticker/sticker-token";
 
@@ -197,14 +196,7 @@ export default function CommunityComposer({
         </div>
 
         <div className="flex items-center gap-3">
-          <span
-            className={cn(
-              "text-muted-foreground text-xs font-semibold tabular-nums",
-              content.length > COMMUNITY_POST_CONTENT_MAX && "text-destructive",
-            )}
-          >
-            {formatNumber(content.length)} / {formatNumber(COMMUNITY_POST_CONTENT_MAX)}
-          </span>
+          <CharacterCounter current={content.length} max={COMMUNITY_POST_CONTENT_MAX} />
 
           <Button
             type="button"

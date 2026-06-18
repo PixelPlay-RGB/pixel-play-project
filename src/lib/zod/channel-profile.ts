@@ -40,5 +40,3 @@ export const channelBannerInputSchema = z.object({
     FORM_MESSAGE.channelProfile.bannerLinkMax(CHANNEL_BANNER_LINK_MAX),
   ),
 });
-
-export type ChannelBannerInput = z.infer<typeof channelBannerInputSchema>;

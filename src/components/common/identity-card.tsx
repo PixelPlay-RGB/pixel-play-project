@@ -35,7 +35,7 @@ export default function IdentityCard({
       className={cn(
         "group/identity relative flex items-center gap-3.5 overflow-hidden rounded-xl border py-4 pr-4 pl-5 transition-all duration-200",
         "border-border/60 bg-card/40",
-        "hover:border-brand/35 hover:bg-brand/[0.06]",
+        "hover:border-brand/35 hover:bg-brand/5",
         className,
       )}
     >
@@ -52,7 +52,7 @@ export default function IdentityCard({
       </Avatar>
 
       <div className="flex min-w-0 flex-col gap-1">
-        <span className="text-brand text-[10px] font-extrabold tracking-wide uppercase">
+        <span className="text-brand text-2xs font-extrabold tracking-wide uppercase">
           {badgeLabel}
         </span>
         <span className="text-foreground truncate text-sm leading-tight font-bold">{title}</span>

@@ -2,7 +2,6 @@
 import type {
   CommunityComment,
   CommunityCommentsResult,
-  CommunityPost,
   CommunityPostDetail,
   CommunityPostsResult,
 } from "@/types/community/community";
@@ -156,24 +155,5 @@ export function removeComment(
     bestComment: isBest ? null : data.bestComment,
     items: data.items.filter((item) => item.id !== commentId),
     totalCount: inItems || isBest ? Math.max(0, data.totalCount - 1) : data.totalCount,
-  };
-}
-
-// 목록 캐시에서 특정 게시글의 본문을 수정 표시와 함께 갱신합니다.
-export function applyPostContent(
-  data: CommunityPostsResult | undefined,
-  postId: string,
-  content: string,
-  modifiedAt: string,
-): CommunityPostsResult | undefined {
-  if (!data) {
-    return data;
-  }
-
-  return {
-    ...data,
-    items: data.items.map((item: CommunityPost) =>
-      item.id === postId ? { ...item, content, modifiedAt } : item,
-    ),
   };
 }

@@ -2,7 +2,6 @@
 import "server-only";
 
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
-import { USER_MEDIA_BUCKET } from "@/constants/common/storage";
 import { createAdminClient } from "@/lib/supabase/admin-client";
 import { createClient } from "@/lib/supabase/server";
 import type { AppActionResult } from "@/types/common/action";
@@ -14,11 +13,8 @@ import {
   type ChannelSubscriptionSnapshot,
 } from "@/utils/channel/channel-subscription";
 import { isAuthSessionMissingError } from "@/utils/auth/auth-error";
-import {
-  getLiveSubscriptionBadgeSourcesByMonth,
-  LIVE_SUBSCRIPTION_BADGE_STORAGE_LIST_LIMIT,
-  readLiveSubscriptionBadgeAssetInfo,
-} from "@/utils/live/live-subscription-badge";
+import { readChannelSubscriptionBadgeAssetsFromStorage } from "@/utils/channel/channel-subscription-badge-storage";
+import { getLiveSubscriptionBadgeSourcesByMonth } from "@/utils/live/live-subscription-badge";
 
 type CreatorSubscriptionRow = Pick<
   GenericTables<"creator_subscription">,
@@ -89,18 +85,7 @@ export async function getChannelSubscriptionSnapshot({
   }
 
   const subscriptionRows = (subscriptions ?? []) as CreatorSubscriptionRow[];
-  const { data: badgeFiles, error: badgeListError } = await supabase.storage
-    .from(USER_MEDIA_BUCKET)
-    .list(`${user.id}/subscription`, {
-      limit: LIVE_SUBSCRIPTION_BADGE_STORAGE_LIST_LIMIT,
-      sortBy: { column: "name", order: "asc" },
-    });
-
-  if (badgeListError) {
-    console.error("구독 배지 목록 조회 실패", badgeListError);
-  }
-
-  const badgeAssetInfo = readLiveSubscriptionBadgeAssetInfo(badgeFiles ?? null);
+  const badgeAssetInfo = await readChannelSubscriptionBadgeAssetsFromStorage(supabase, user.id);
   const subscriptionBadgeImageSources = getLiveSubscriptionBadgeSourcesByMonth(
     user.id,
     badgeAssetInfo,

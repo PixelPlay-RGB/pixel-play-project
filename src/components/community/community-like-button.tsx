@@ -1,13 +1,10 @@
 "use client";
-// 게시글 좋아요 토글 버튼. 본인 글은 좋아요할 수 없습니다.
+// 게시글 좋아요 토글 버튼. 표시·게이팅은 공용 LikeToggleButton에 위임하고, 토글 mutation만 주입한다.
+// 본인 글은 좋아요할 수 없습니다.
 
-import { Heart } from "lucide-react";
-
-import { Button } from "@/components/ui/button";
-import { useViewerId } from "@/hooks/common/use-viewer-id";
+import { LikeToggleButton } from "@/components/community/like-toggle-button";
 import { useToggleCommunityPostLike } from "@/hooks/community/use-toggle-community-post-like";
 import { cn } from "@/lib/utils";
-import { formatNumber } from "@/utils/common/format";
 
 interface Props {
   postId: string;
@@ -28,40 +25,18 @@ export default function CommunityLikeButton({
   likeCount,
   className,
 }: Props) {
-  const currentUserId = useViewerId(viewerId);
   const toggleLike = useToggleCommunityPostLike(postId);
 
-  const isOwn = !!currentUserId && currentUserId === authorId;
-  const isDisabled = !currentUserId || isOwn;
-
-  const handleClick = () => {
-    if (isDisabled || toggleLike.isPending) {
-      return;
-    }
-
-    toggleLike.mutate({ currentLiked: isLiked, currentLikeCount: likeCount });
-  };
-
   return (
-    <Button
-      type="button"
-      size="sm"
-      variant="outline"
-      onClick={handleClick}
-      disabled={isDisabled}
-      aria-pressed={isLiked}
-      aria-label={isLiked ? "좋아요 취소" : "좋아요"}
-      title={isOwn ? "내 글은 좋아요할 수 없어요" : undefined}
-      className={cn(
-        "h-8 rounded-full px-3 text-xs font-bold transition-all active:scale-95",
-        isLiked
-          ? "border-brand/30 bg-brand/10 text-brand hover:bg-brand/15"
-          : "text-muted-foreground hover:text-brand",
-        className,
-      )}
-    >
-      <Heart className={cn("size-3.5", isLiked && "fill-current")} />
-      {formatNumber(likeCount)}
-    </Button>
+    <LikeToggleButton
+      viewerId={viewerId}
+      authorId={authorId}
+      isLiked={isLiked}
+      likeCount={likeCount}
+      isPending={toggleLike.isPending}
+      onToggle={(current) => toggleLike.mutate(current)}
+      ownTitle="내 글은 좋아요할 수 없어요"
+      className={cn("h-8 px-3", className)}
+    />
   );
 }

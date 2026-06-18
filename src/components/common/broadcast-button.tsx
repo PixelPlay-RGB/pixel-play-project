@@ -16,7 +16,7 @@ export default function BroadcastButton() {
         "shadow-sm transition-all duration-200",
         "hover:shadow-live/35 hover:shadow-lg hover:brightness-105",
         "focus-visible:ring-live/40 focus-visible:ring-2 focus-visible:outline-none",
-        "active:scale-[0.97]",
+        "active:scale-95",
       )}
     >
       {/* 모바일: 아이콘만 */}

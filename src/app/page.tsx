@@ -1,5 +1,5 @@
 // 인덱스(홈) = 라이브 목록 페이지를 렌더링합니다.
-import { getLiveHero } from "@/app/live/data";
+import { getLiveHero } from "@/utils/live/live-hero-server";
 import LiveHero from "@/components/live/live-hero";
 import LiveList from "@/components/live/live-list";
 import LiveShell from "@/components/live/live-shell";

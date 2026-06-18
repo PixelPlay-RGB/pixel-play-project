@@ -13,7 +13,8 @@ import { ChannelEmojiPickerPreview } from "@/components/channel/emoji/channel-em
 import DeleteConfirmDialog from "@/components/common/delete-confirm-dialog";
 import { SettingsCard } from "@/components/common/settings-card";
 import { SettingsPage } from "@/components/common/settings-page";
-import { SideTipCard, SideTipStep } from "@/components/common/side-tip-card";
+import { SideTipCard } from "@/components/common/side-tip-card";
+import { SideTipStep } from "@/components/common/side-tip-step";
 import { Button } from "@/components/ui/button";
 import { CHANNEL_EMOJI_LABEL, CHANNEL_EMOJI_MAX } from "@/constants/channel/channel-emoji";
 import { useChannelEmojis } from "@/hooks/channel/use-channel-emojis";

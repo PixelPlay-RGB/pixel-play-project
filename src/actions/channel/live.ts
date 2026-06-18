@@ -22,12 +22,14 @@ import {
   updateChannelLiveSettingsSchema,
   type UpdateChannelLiveSettingsInput,
 } from "@/lib/zod/channel-live";
+import type { ChannelLiveDrawParticipant } from "@/types/channel/live-interaction";
 import type { AppActionResult } from "@/types/common/action";
 import type { Database, Json } from "@/types/database.types";
 import {
   isManualLiveThumbnailFileName,
   LIVE_THUMBNAIL_DIRECTORY,
 } from "@/utils/channel/channel-live-thumbnail";
+import { isRecord, readJsonObject } from "@/utils/common/json";
 import { buildLiveStreamKey } from "@/utils/live/live-security";
 import {
   createServerStampedLiveRouletteSsePayload,
@@ -104,13 +106,6 @@ export interface ChannelLiveChatMessage {
   isCreator: boolean;
 }
 
-export interface ChannelLiveDrawParticipant {
-  firstMessageAt: string;
-  isFollower: boolean;
-  nickname: string;
-  userId: string;
-}
-
 export interface ChannelLiveStudioSettings {
   alertSoundEnabled: boolean;
   alertSoundKey: string;
@@ -137,10 +132,6 @@ export interface ChannelLiveStudioSettings {
   ttsRate: number;
   ttsVoiceUri: string;
   ttsVolume: number;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function isActiveLiveBroadcastNotFoundError(error: unknown) {
@@ -182,12 +173,6 @@ function readStringArray(value: unknown) {
 
 function readRecordArray(value: unknown) {
   return Array.isArray(value) ? value.filter(isRecord) : [];
-}
-
-function readJsonObject(value: Json): Record<string, Json | undefined> {
-  return value && typeof value === "object" && !Array.isArray(value)
-    ? (value as Record<string, Json | undefined>)
-    : {};
 }
 
 function readMetadataString(value: Json | undefined) {

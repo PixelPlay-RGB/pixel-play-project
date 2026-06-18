@@ -146,5 +146,3 @@ export function useChannelEmojis(initialEmojis: ChannelEmoji[]) {
     canAddMore: emojis.length < CHANNEL_EMOJI_MAX,
   };
 }
-
-export type ChannelEmojisController = ReturnType<typeof useChannelEmojis>;

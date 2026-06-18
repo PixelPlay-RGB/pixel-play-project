@@ -18,12 +18,6 @@ export type CompleteOAuthProfileInput = Pick<
   "nickname" | "birth" | "phone" | "gender"
 >;
 
-export interface UpdateProfileForm {
-  nickname: string;
-  file?: File;
-  photoUrl?: string;
-}
-
 export type { LoginFormValues, SignUpFormValues } from "@/lib/zod/auth";
 
 export type AuthenticatedActorResult =

@@ -1,4 +1,5 @@
 // Toss Payments 결제 실패 리다이렉트를 안전한 후원 지갑 상태 메시지로 변환합니다.
+import { readSingleSearchParam } from "@/utils/common/search-params";
 import { buildPaymentReturnRedirect } from "@/utils/payments/payment-return-path";
 import { markTossWalletChargeFailure } from "@/utils/payments/toss-wallet-charge";
 import { redirect } from "next/navigation";
@@ -18,9 +19,9 @@ const TOSS_CANCEL_ERROR_CODES = new Set(["PAY_PROCESS_CANCELED", "PAY_PROCESS_AB
 
 export default async function TossPaymentFailRedirectPage({ searchParams }: Props) {
   const params = await searchParams;
-  const code = readSingleValue(params.code);
-  const message = readSingleValue(params.message);
-  const orderId = readSingleValue(params.orderId);
+  const code = readSingleSearchParam(params.code);
+  const message = readSingleSearchParam(params.message);
+  const orderId = readSingleSearchParam(params.orderId);
   const paymentStatus = TOSS_CANCEL_ERROR_CODES.has(code) ? "charge_canceled" : "charge_failed";
 
   if (code || message) {
@@ -38,8 +39,4 @@ export default async function TossPaymentFailRedirectPage({ searchParams }: Prop
   });
 
   redirect(buildPaymentReturnRedirect(params.returnTo, paymentStatus));
-}
-
-function readSingleValue(value: string | string[] | undefined) {
-  return typeof value === "string" ? value : "";
 }

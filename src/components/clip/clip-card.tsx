@@ -42,7 +42,7 @@ export function ClipCard({
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-black/45" />
 
           {/* 길이 뱃지 — 좌상단(우상단은 메뉴 자리) */}
-          <span className="absolute top-1.5 left-1.5 rounded bg-black/65 px-1.5 py-0.5 font-mono text-[11px] leading-none text-white backdrop-blur-sm">
+          <span className="text-2xs absolute top-1.5 left-1.5 rounded bg-black/65 px-1.5 py-0.5 font-mono leading-none text-white backdrop-blur-sm">
             {formatElapsedTime(clip.durationSeconds)}
           </span>
 
@@ -51,7 +51,7 @@ export function ClipCard({
             <h3 className="truncate text-xs font-semibold text-white drop-shadow-sm">
               {clip.title}
             </h3>
-            <span className="flex items-center gap-1 text-[11px] font-medium text-white/85">
+            <span className="text-2xs flex items-center gap-1 font-medium text-white/85">
               <Eye className="size-3 shrink-0" aria-hidden />
               {formatCount(clip.viewCount)}
             </span>

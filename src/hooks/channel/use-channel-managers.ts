@@ -93,5 +93,3 @@ export function useChannelManagers(creatorId: string, options?: { listEnabled?: 
     isRemoving: removeMutation.isPending,
   };
 }
-
-export type ChannelManagersController = ReturnType<typeof useChannelManagers>;

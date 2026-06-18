@@ -17,9 +17,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { buttonVariants } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { UserProfilePopoverCard } from "@/components/user/user-profile-popover-card";
+import { useCreatorFollowState } from "@/hooks/following/use-creator-follow-state";
 import { useToggleCreatorFollowing } from "@/hooks/following/use-toggle-creator-following";
 import { cn } from "@/lib/utils";
-import { useAuthStore } from "@/stores/auth";
 import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
 
 interface CreatorAvatarPopoverProps {
@@ -57,15 +57,12 @@ export default function CreatorAvatarPopover({
   triggerClassName,
 }: CreatorAvatarPopoverProps) {
   const router = useRouter();
-  const currentUserId = useAuthStore((state) => state.user?.id);
   const toggleCreatorFollowing = useToggleCreatorFollowing();
   const [isUnfollowDialogOpen, setIsUnfollowDialogOpen] = useState(false);
 
   const avatarSrc = getAvatarImageSrc(creatorPhotoUrl);
   const fallbackText = getAvatarFallbackText(creatorNickname);
-  const isOwnChannel = currentUserId === creatorId;
-  const isPending =
-    toggleCreatorFollowing.isPending && toggleCreatorFollowing.variables?.creatorId === creatorId;
+  const { isOwnChannel, isPending } = useCreatorFollowState(creatorId, toggleCreatorFollowing);
 
   const runToggle = (nextFollowing: boolean) => {
     if (isOwnChannel || isPending) return;
@@ -118,7 +115,7 @@ export default function CreatorAvatarPopover({
           </Avatar>
 
           {showLivePill && (
-            <span className="bg-live text-live-foreground ring-card absolute -bottom-1.5 left-1/2 -translate-x-1/2 rounded-full px-1.5 text-[10px] leading-4 font-black tracking-wide ring-2">
+            <span className="bg-live text-live-foreground ring-card text-2xs absolute -bottom-1.5 left-1/2 -translate-x-1/2 rounded-full px-1.5 leading-4 font-black tracking-wide ring-2">
               LIVE
             </span>
           )}

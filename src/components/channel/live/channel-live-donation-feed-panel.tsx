@@ -8,6 +8,7 @@ import type { ChannelLiveRecentDonation } from "@/actions/channel/live";
 import { Button } from "@/components/ui/button";
 import { useChannelLiveDonationFeed } from "@/hooks/channel/use-channel-live-donation-feed";
 import { cn } from "@/lib/utils";
+import { formatPoint } from "@/utils/channel/donation-format";
 import { formatNumber } from "@/utils/common/format";
 
 const DONATION_FEED_PAGE_SIZE = 5;
@@ -44,7 +45,7 @@ export function ChannelLiveDonationFeedPanel({ broadcastId, initialDonations }: 
 
   return (
     <section className="bg-card text-card-foreground flex min-h-0 flex-1 flex-col">
-      <div className="border-border flex h-[57px] shrink-0 items-center justify-between gap-2 border-b px-4">
+      <div className="border-border flex h-[var(--app-header-height)] shrink-0 items-center justify-between gap-2 border-b px-4">
         <h2 className="font-heading text-base leading-snug font-medium">이번 방송 후원</h2>
         {broadcastId && !isEmpty ? (
           <span className="text-muted-foreground text-xs font-semibold">
@@ -78,7 +79,7 @@ export function ChannelLiveDonationFeedPanel({ broadcastId, initialDonations }: 
                     {donation.donorNickname}
                   </span>
                   <span className="text-live min-w-16 text-right font-bold tabular-nums">
-                    {formatNumber(donation.amount)}P
+                    {formatPoint(donation.amount)}
                   </span>
                 </li>
               ))}

@@ -2,13 +2,10 @@
 // 조회하지 않도록 React cache로 감싼다(live/[creatorId] layout의 로더 패턴).
 
 import { cache } from "react";
+
 import { createClient } from "@/lib/supabase/server";
-import {
-  LIVE_CLIP_LIST_COLUMNS,
-  mapLiveClipRowToLiveClip,
-  type LiveClip,
-  type LiveClipRow,
-} from "@/types/clip/clip";
+import type { LiveClip, LiveClipRow } from "@/types/clip/clip";
+import { LIVE_CLIP_LIST_COLUMNS, mapLiveClipRowToLiveClip } from "@/utils/clip/clip-row";
 import { isUuid } from "@/utils/common/uuid";
 
 // anon 서버 클라이언트 + RLS — ready 클립만 조회된다(미완성/실패는 notFound 처리).

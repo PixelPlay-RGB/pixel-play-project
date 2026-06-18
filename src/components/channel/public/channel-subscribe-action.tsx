@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { Star } from "lucide-react";
 
-import { WalletChargeDialog } from "@/components/donations/wallet-charge-card";
+import { WalletChargeDialog } from "@/components/donations/wallet-charge-dialog";
 import { LiveSubscribeDialog } from "@/components/live/view/live-subscribe-dialog";
 import { LiveSubscriptionCancelDialog } from "@/components/live/view/live-subscription-cancel-dialog";
 import { LiveSubscriptionInsufficientBalanceDialog } from "@/components/live/view/live-subscription-insufficient-balance-dialog";
@@ -27,10 +27,9 @@ import {
 
 interface Props {
   profile: ChannelProfile;
-  className?: string;
 }
 
-export function ChannelSubscribeAction({ profile, className }: Props) {
+export function ChannelSubscribeAction({ profile }: Props) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const moveToLogin = useMoveToLogin();
@@ -87,10 +86,8 @@ export function ChannelSubscribeAction({ profile, className }: Props) {
     followerCount: profile.followerCount,
     broadcastCount: 0,
   };
-  const buttonClassName = cn(
-    "h-9 shrink-0 rounded-full px-4 text-sm font-black transition-all active:scale-95",
-    className,
-  );
+  const buttonClassName =
+    "h-9 shrink-0 rounded-full px-4 text-sm font-black transition-all active:scale-95";
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect

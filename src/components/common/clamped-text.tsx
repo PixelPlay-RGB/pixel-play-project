@@ -45,7 +45,7 @@ export default function ClampedText({
     document.fonts?.ready.then(measure).catch(() => {});
 
     return () => observer.disconnect();
-  }, [measure, text]);
+  }, [measure, text, children]);
 
   return (
     <div className={cn("flex min-h-0 min-w-0 flex-col", className)}>

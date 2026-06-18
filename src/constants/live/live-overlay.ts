@@ -3,6 +3,8 @@ import type { LiveChatOverlayItem } from "@/types/live/live-chat-overlay";
 
 // 닉네임 식별용 팔레트 — 어두운 채팅 배경 기준 가독 밝기 대역에서 색상환을 고르게 커버한다.
 // 앞 8색은 기존 색 유지(크리에이터 색 = index 1 고정), 뒤 8색은 색상환 빈 구간을 채운 확장분.
+// 이 hex들은 <canvas>(OBS 오버레이)에 직접 그리는 의도된 하드코딩 — CSS 변수는 캔버스 컨텍스트에서
+// 해석되지 않으므로 토큰화 불가. 색 변경 금지(시각 식별 팔레트 고정).
 export const LIVE_CHAT_OVERLAY_NICKNAME_COLOR_PALETTE = [
   "#d9b04f",
   "#46c6a9",

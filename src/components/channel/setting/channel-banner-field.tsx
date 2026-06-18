@@ -104,7 +104,7 @@ export function ChannelBannerField({ controller }: Props) {
               <span className="flex flex-col items-center gap-1 text-xs font-semibold">
                 <ImagePlus className="size-5" />
                 업로드
-                <span className="text-muted-foreground/70 text-[10px]">300×300</span>
+                <span className="text-muted-foreground/70 text-2xs">300×300</span>
               </span>
             )}
           </button>

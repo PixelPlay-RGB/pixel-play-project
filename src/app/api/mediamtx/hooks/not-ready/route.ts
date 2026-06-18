@@ -1,4 +1,5 @@
 // MediaMTX not-ready hook을 받아 활성 방송을 자동 종료합니다.
+import { timingSafeEqual } from "crypto";
 import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 import { getChannelLiveStreamPath } from "@/constants/channel/channel-live-media";
@@ -110,6 +111,16 @@ async function readPayload(request: NextRequest): Promise<MediaMtxNotReadyPayloa
   };
 }
 
+// 시크릿 비교는 상수시간으로 — 두 utf8 버퍼의 바이트 길이를 먼저 맞춰 timingSafeEqual throw를 막는다.
+function isSecretMatch(requestSecret: string, expectedSecret: string) {
+  const requestBuffer = Buffer.from(requestSecret);
+  const expectedBuffer = Buffer.from(expectedSecret);
+
+  if (requestBuffer.length !== expectedBuffer.length) return false;
+
+  return timingSafeEqual(requestBuffer, expectedBuffer);
+}
+
 function readExpectedSecret() {
   return process.env.MEDIAMTX_HOOK_SECRET?.trim() ?? "";
 }
@@ -180,7 +191,7 @@ async function handleMediaMtxNotReadyHook(request: NextRequest) {
     );
   }
 
-  if (readRequestSecret(request) !== expectedSecret) {
+  if (!isSecretMatch(readRequestSecret(request), expectedSecret)) {
     return NextResponse.json({ ended: false, ok: false, reason: "unauthorized" }, { status: 401 });
   }
 

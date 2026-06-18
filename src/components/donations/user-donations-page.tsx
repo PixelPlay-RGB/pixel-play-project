@@ -3,7 +3,7 @@ import { SettingsCard } from "@/components/common/settings-card";
 import { SettingsPage } from "@/components/common/settings-page";
 import { PaymentResultToast } from "@/components/donations/payment-result-toast";
 import { UserDonationDashboardSection } from "@/components/donations/user-donation-dashboard-section";
-import { WalletChargeDialog } from "@/components/donations/wallet-charge-card";
+import { WalletChargeDialog } from "@/components/donations/wallet-charge-dialog";
 import type { AppMessageCode } from "@/constants/common/app-message-code";
 import type { UserDonationSnapshot } from "@/types/donations/user-donations";
 import { getAppMessage } from "@/utils/common/app-message";

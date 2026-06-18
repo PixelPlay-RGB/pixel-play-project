@@ -108,7 +108,7 @@ export default function CommunityCommentItem({
         <div className="flex items-start justify-between gap-2">
           <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5">
             {isBest && (
-              <span className="bg-brand text-brand-foreground rounded px-1.5 py-0.5 text-[10px] leading-none font-black">
+              <span className="bg-brand text-brand-foreground text-2xs rounded px-1.5 py-0.5 leading-none font-black">
                 BEST
               </span>
             )}

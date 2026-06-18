@@ -1,18 +1,17 @@
 // 후원 금액·날짜 표시용 포맷 헬퍼를 제공합니다.
 
 import { DONATION_SETTLEMENT_FEE_RATE, SETTLEMENT_PAYOUT_DAY } from "@/constants/channel/donation";
-import { formatNumber } from "@/utils/common/format";
 import { addKstMonths, getKstDateParts, KST_TIME_ZONE } from "@/utils/common/kst";
+import { formatPoint } from "@/utils/donations/format";
+
+// formatPoint 단일 진실원천은 utils/donations/format. 채널 도메인 호출부 호환을 위해 재노출한다.
+export { formatPoint };
 
 const FULL_DATE_FORMATTER = new Intl.DateTimeFormat("ko-KR", {
   timeZone: KST_TIME_ZONE,
   month: "long",
   day: "numeric",
 });
-
-export function formatPoint(amount: number): string {
-  return `${formatNumber(amount)}P`;
-}
 
 // 후원 합계에서 수수료를 제외한 정산 금액을 계산합니다.
 export function calcSettlement(donationTotal: number): { fee: number; payable: number } {

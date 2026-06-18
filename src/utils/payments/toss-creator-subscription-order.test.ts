@@ -2,8 +2,8 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 
+import { CREATOR_SUBSCRIPTION_PAYMENT_AMOUNT } from "../../constants/subscriptions/creator-subscription.ts";
 import {
-  CREATOR_SUBSCRIPTION_PAYMENT_AMOUNT,
   createCreatorSubscriptionOrderId,
   createCreatorSubscriptionOrderName,
   isTossCreatorSubscriptionPrepareResponse,

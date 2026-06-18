@@ -14,6 +14,17 @@ export function readJsonObject(value: Json): Record<string, Json | undefined> {
   return value as Record<string, Json | undefined>;
 }
 
+// readJsonObject와 달리 객체가 아니면 null을 돌려줘 "행이 없음/형식 오류"를 호출부에서 구분하게 한다.
+export function readJsonRecord(
+  value: Json | null | undefined,
+): Record<string, Json | undefined> | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+
+  return value as Record<string, Json | undefined>;
+}
+
 export function readString(value: Json | undefined): string | null {
   const trimmed = typeof value === "string" ? value.trim() : "";
 

@@ -4,17 +4,20 @@
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { Check, KeyRound, LucideIcon } from "lucide-react";
+import { KeyRound, LucideIcon } from "lucide-react";
 import { ReactElement, useState } from "react";
 import PasswordChangeForm from "./password-change-form";
 import PasswordVerifyForm from "./password-verify-form";
+import StepBadge from "./step-badge";
 
 interface Props {
   className?: string;
@@ -97,39 +100,13 @@ export default function PasswordDialog({ className, icon, label, trigger }: Prop
               onOpenChange={() => handleOpenChange(false)}
             />
           )}
+          <DialogFooter className="mx-0 mb-0 border-t-0 bg-transparent p-0">
+            <DialogClose render={<Button variant="outline" className="h-11 w-full rounded-xl" />}>
+              취소
+            </DialogClose>
+          </DialogFooter>
         </div>
       </DialogContent>
     </Dialog>
-  );
-}
-
-function StepBadge({
-  active,
-  completed = false,
-  label,
-  className,
-}: {
-  active: boolean;
-  completed?: boolean;
-  label: string;
-  className?: string;
-}) {
-  return (
-    <span
-      className={cn(
-        "flex h-8 items-center justify-center gap-1.5 rounded-lg border text-xs font-bold",
-        active || completed
-          ? "border-brand/30 bg-brand/10 text-brand"
-          : "border-border bg-muted/40 text-muted-foreground",
-        className,
-      )}
-    >
-      {label}
-      {completed && (
-        <span className="bg-brand text-brand-foreground flex size-4 items-center justify-center rounded-full">
-          <Check className="size-3" />
-        </span>
-      )}
-    </span>
   );
 }

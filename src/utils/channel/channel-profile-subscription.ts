@@ -1,12 +1,12 @@
 // 공개 채널 프로필에 표시할 시청자 구독 상태와 배지 정보를 생성합니다.
-import type { ChannelProfileSubscription } from "../../types/channel/channel.ts";
-import type { ChannelEmoji } from "../../types/channel/channel-emoji.ts";
-import type { CreatorSubscriptionStatus } from "../../types/live/live.ts";
+import type { ChannelEmoji } from "@/types/channel/channel-emoji";
+import type { ChannelProfileSubscription } from "@/types/channel/channel";
+import type { CreatorSubscriptionStatus } from "@/types/live/live";
 import {
   getLiveSubscriptionBadgeSourcesByMonth,
   type LiveSubscriptionBadgeAssetInfo,
-} from "../live/live-subscription-badge.ts";
-import { isSubscriptionBenefitActive } from "../subscriptions/user-subscription-status.ts";
+} from "@/utils/live/live-subscription-badge";
+import { isSubscriptionBenefitActive } from "@/utils/subscriptions/user-subscription-status";
 
 export interface ChannelProfileSubscriptionRow {
   status: CreatorSubscriptionStatus;

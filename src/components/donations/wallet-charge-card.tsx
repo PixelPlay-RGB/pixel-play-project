@@ -1,16 +1,7 @@
 "use client";
 // 후원 지갑 충전 결제창을 열기 위한 금액 입력 UI를 제공합니다.
 
-import { SettingsCard } from "@/components/common/settings-card";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
@@ -37,75 +28,15 @@ import {
 } from "@/utils/payments/toss-wallet-charge-client";
 import { CreditCard, Loader2 } from "lucide-react";
 import Script from "next/script";
-import { FormEvent, useEffect, useId, useMemo, useRef, useState, type ReactElement } from "react";
+import { FormEvent, useEffect, useId, useMemo, useRef, useState } from "react";
 
 interface Props {
   customerKey: string;
-  variant?: "card" | "plain";
-}
-
-interface WalletChargeDialogProps {
-  customerKey: string;
-  className?: string;
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
-  trigger?: ReactElement | null;
 }
 
 type PaymentWindowState = "idle" | "initializing" | "ready" | "opening" | "failed";
 
-export function WalletChargeDialog({
-  customerKey,
-  className,
-  open,
-  onOpenChange,
-  trigger,
-}: WalletChargeDialogProps) {
-  const defaultTrigger = (
-    <Button
-      type="button"
-      className={cn(
-        "bg-background text-live hover:bg-background/90 h-10 px-4 font-black shadow-sm",
-        "dark:text-live dark:bg-white dark:hover:bg-white/90",
-        className,
-      )}
-    >
-      <CreditCard className="size-4" />
-      충전하기
-    </Button>
-  );
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      {trigger !== null ? <DialogTrigger render={trigger ?? defaultTrigger} /> : null}
-      <DialogContent
-        className={cn(
-          "overflow-hidden rounded-2xl p-0 shadow-xl sm:max-w-lg",
-          "border-live/20 shadow-live/10 dark:border-live/10",
-        )}
-      >
-        <DialogHeader className="border-live/10 bg-live/5 border-b px-5 pt-5 pb-4">
-          <div className="flex items-center gap-3">
-            <span className="bg-live/10 text-live ring-live/20 flex size-10 shrink-0 items-center justify-center rounded-xl ring-1">
-              <CreditCard className="size-5" />
-            </span>
-            <div className="min-w-0">
-              <DialogTitle className="text-lg font-bold">포인트 충전</DialogTitle>
-              <DialogDescription className="mt-1 leading-relaxed">
-                충전할 포인트를 선택하고 Toss Payments 결제창으로 결제를 진행합니다.
-              </DialogDescription>
-            </div>
-          </div>
-        </DialogHeader>
-        <div className="px-5 pt-1 pb-5">
-          <WalletChargeCard customerKey={customerKey} variant="plain" />
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-export function WalletChargeCard({ customerKey, variant = "card" }: Props) {
+export function WalletChargeCard({ customerKey }: Props) {
   const amountInputId = useId();
   const clientKey = process.env.NEXT_PUBLIC_TOSS_PAYMENTS_CLIENT_KEY;
   const [amount, setAmount] = useState(String(WALLET_CHARGE_DEFAULT_AMOUNT));
@@ -230,7 +161,7 @@ export function WalletChargeCard({ customerKey, variant = "card" }: Props) {
           // 콘솔 에러/실패 상태 대신 안내 토스트만 띄우고 다시 결제할 수 있게 ready로 되돌린다.
           hasRequestedPayment = false;
           if (isTossPaymentCancelError(error)) {
-            toastAppInfo(APP_MESSAGE_CODE.error.donation.chargeCanceled);
+            toastAppInfo(APP_MESSAGE_CODE.info.donation.chargeCanceled);
             setPaymentWindowState("ready");
             return;
           }
@@ -330,19 +261,7 @@ export function WalletChargeCard({ customerKey, variant = "card" }: Props) {
     </>
   );
 
-  if (variant === "plain") {
-    return <div className="flex flex-col gap-4">{content}</div>;
-  }
-
-  return (
-    <SettingsCard
-      title="지갑 충전"
-      description="충전 금액을 선택하거나 직접 입력할 수 있습니다."
-      contentClassName="gap-4"
-    >
-      {content}
-    </SettingsCard>
-  );
+  return <div className="flex flex-col gap-4">{content}</div>;
 }
 
 function queueActiveUpdate(isActive: () => boolean, update: () => void) {

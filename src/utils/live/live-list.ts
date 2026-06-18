@@ -3,9 +3,26 @@
 import { LIVE_THUMBNAIL_FALLBACK_URLS } from "@/constants/live/live-list";
 import type { LiveHeroItem, LiveListItem, LiveListSnapshot } from "@/types/live/live";
 import { formatNumber } from "@/utils/common/format";
+import { hashStringToIndex } from "@/utils/common/hash";
 
 // Supabase 스토리지 호스트는 프로젝트 URL에서 도출해 환경이 바뀌어도 썸네일이 깨지지 않게 한다.
-const SUPABASE_HOSTNAME = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname;
+// env가 비었거나 비URL이면 모듈 로드 시 throw가 나서 이 모듈을 import하는 모든 화면(라이브 목록·Hero·
+// 썸네일·시청자수 포맷)이 동반 폭발하므로, 호스트 도출 실패는 ""로 흘려 폴백 썸네일로만 떨어지게 한다.
+function resolveSupabaseHostname(): string {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+  if (!url) {
+    return "";
+  }
+
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return "";
+  }
+}
+
+const SUPABASE_HOSTNAME = resolveSupabaseHostname();
 const SAFE_THUMBNAIL_HOSTS = new Set([SUPABASE_HOSTNAME, "images.unsplash.com"]);
 
 export const EMPTY_LIVE_LIST_SNAPSHOT: LiveListSnapshot = {
@@ -132,16 +149,6 @@ export function parseLiveListSnapshot(value: unknown): LiveListSnapshot {
   };
 }
 
-function getFallbackThumbnailIndex(seed: string) {
-  let hash = 0;
-
-  for (const char of seed) {
-    hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
-  }
-
-  return hash % LIVE_THUMBNAIL_FALLBACK_URLS.length;
-}
-
 function isSafeThumbnailUrl(value: string) {
   if (value.startsWith("/") && !value.startsWith("//")) {
     return true;
@@ -162,7 +169,9 @@ export function getLiveThumbnailSrc(liveId: string, thumbnailUrl?: string | null
     return trimmedThumbnailUrl;
   }
 
-  return LIVE_THUMBNAIL_FALLBACK_URLS[getFallbackThumbnailIndex(liveId)];
+  return LIVE_THUMBNAIL_FALLBACK_URLS[
+    hashStringToIndex(liveId, LIVE_THUMBNAIL_FALLBACK_URLS.length)
+  ];
 }
 
 export function getLiveTagLabels(tags: string[], limit = 2) {

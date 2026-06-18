@@ -1,5 +1,6 @@
 // 채널 이모지 storage 경로·URL·jsonb 파싱 유틸(배너 패턴 미러).
-import type { ChannelEmoji, ChannelEmojiRow } from "@/types/channel/channel-emoji";
+import type { ChannelEmoji } from "@/types/channel/channel-emoji";
+import type { GenericTables } from "@/types/common/supabase.types";
 import type { Json } from "@/types/database.types";
 import { getUserMediaPublicUrl, pickImageExtension } from "@/utils/storage/user-media";
 
@@ -13,7 +14,7 @@ export function getChannelEmojiSrc(imagePath: string): string {
 }
 
 export type ChannelEmojiPreviewRow = Pick<
-  ChannelEmojiRow,
+  GenericTables<"channel_emoji">,
   "id" | "image_path" | "name" | "sort_order"
 >;
 

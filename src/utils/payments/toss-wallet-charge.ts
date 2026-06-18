@@ -4,11 +4,6 @@ import "server-only";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import type { AppMessageCode } from "@/constants/common/app-message-code";
 import {
-  WALLET_CHARGE_MAX_AMOUNT,
-  WALLET_CHARGE_MIN_AMOUNT,
-  WALLET_CHARGE_STEP_AMOUNT,
-} from "@/constants/payments/wallet-charge";
-import {
   shouldMarkTossConfirmFailed,
   TOSS_CONFIRM_TIMEOUT_MS,
 } from "@/utils/payments/toss-confirm-failure-policy";
@@ -18,6 +13,7 @@ import type { AppActionResult } from "@/types/common/action";
 import type { Database, Json } from "@/types/database.types";
 import type { TossPaymentConfirmResponse } from "@/types/payments/toss-payment-api";
 import { isAuthSessionMissingError } from "@/utils/auth/auth-error";
+import { isValidChargeAmount } from "@/utils/payments/wallet-charge-amount";
 
 type WalletTransactionRow = Database["public"]["Tables"]["wallet_transaction"]["Row"];
 type WalletTransactionStatus = Database["public"]["Enums"]["wallet_transaction_status"];
@@ -459,15 +455,6 @@ async function readJsonResponse(response: Response) {
 function isAbortError(error: unknown) {
   return (
     error instanceof DOMException && (error.name === "AbortError" || error.name === "TimeoutError")
-  );
-}
-
-function isValidChargeAmount(amount: number) {
-  return (
-    Number.isInteger(amount) &&
-    amount >= WALLET_CHARGE_MIN_AMOUNT &&
-    amount <= WALLET_CHARGE_MAX_AMOUNT &&
-    amount % WALLET_CHARGE_STEP_AMOUNT === 0
   );
 }
 

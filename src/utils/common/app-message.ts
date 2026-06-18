@@ -135,10 +135,6 @@ export function getAppMessage(code?: AppMessageCode): AppMessage {
   return domainMessages?.[key] ?? APP_MESSAGE.error.common.unknown;
 }
 
-export function getAppMessageTitle(code?: AppMessageCode): string {
-  return getAppMessage(code).title;
-}
-
 export function resolveSupabaseErrorCode(
   error: unknown,
   fallbackCode: AppMessageCode = APP_MESSAGE_CODE.error.common.unknown,

@@ -7,12 +7,11 @@ import { useMemo } from "react";
 
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
+import { CHANNEL_VIEWER_BAN_PAGE_SIZE } from "@/constants/channel/moderation";
 import { QUERY_KEYS } from "@/constants/common/query-keys";
 import { createClient } from "@/lib/supabase/client";
 import type { ChannelViewerBanList } from "@/types/channel/moderation";
 import { parseChannelViewerBans } from "@/utils/channel/channel-moderation";
-
-export const CHANNEL_VIEWER_BAN_PAGE_SIZE = 20;
 
 export function useChannelViewerBans(creatorId: string, page: number) {
   const supabase = useMemo(() => createClient(), []);

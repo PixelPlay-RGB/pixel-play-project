@@ -8,6 +8,7 @@ import { motion, useReducedMotion } from "motion/react";
 import { Timer, Users } from "lucide-react";
 import { ClipSection } from "@/components/clip/clip-section";
 import { ChannelStickerProvider } from "@/components/live/chat/channel-sticker-context";
+import { LiveChatDataProvider } from "@/components/live/view/live-chat-data-context";
 import { LiveVideoPlayer } from "@/components/live/view/live-video-player";
 import { LiveFullscreenChatOverlay } from "@/components/live/view/live-fullscreen-chat-overlay";
 import { LiveBroadcastInfo } from "@/components/live/view/live-broadcast-info";
@@ -124,6 +125,50 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     onSubscriptionCanceled,
     onUnauthenticated: openLoginPrompt,
   });
+
+  // LiveChatPanel·LiveFullscreenChatOverlay 두 갈래로 동일하게 prop-drill하던 채팅 데이터/콜백을
+  // 컨텍스트 한 묶음으로 모은다(소스만 props→context, 자식 전달 값/개수는 불변). openLoginPrompt 등이
+  // 매 렌더 새 참조라 memo해도 매 렌더 재생성되므로(기존 unstable prop과 동일 동작) plain 객체로 둔다.
+  const chatData = {
+    messages,
+    subscriptionBadgeCustomMonths,
+    subscriptionBadgeVersion,
+    subscriptionBadgeImageSources,
+    donations,
+    polls,
+    interactionNotices,
+    isPollsLoading,
+    isPollsError,
+    isInteractionNoticesLoading,
+    isInteractionNoticesError,
+    chatState,
+    isLoggedIn,
+    walletBalance,
+    isWalletLoading,
+    isWalletError,
+    customerKey: viewerId ?? undefined,
+    chargeReturnTo: `/live/${creatorId}`,
+    donationEnabled,
+    donationMinAmount,
+    onLoginPrompt: openLoginPrompt,
+    onSendMessage: sendMessage,
+    onVote: votePoll,
+    onJoinDraw: joinDraw,
+    onDonate: sendDonation,
+    chatRuleText,
+    onAcceptChatRule: acceptChatRule,
+    onFollow: handleFollow,
+    isFollowing,
+    isFollowPending,
+    onLoadOlderMessages: loadOlderMessages,
+    isLoadingOlderMessages,
+    hasMoreChatHistory,
+    entryNoticeAnchorId,
+    onRefreshChatState: refreshChatState,
+    followerWaitSeconds,
+    slowModeSeconds,
+    profileContext,
+  };
 
   const [isLoginPromptOpen, setIsLoginPromptOpen] = useState(false);
   const [isDesktopChatCollapsed, setIsDesktopChatCollapsed] = useState(false);
@@ -311,227 +356,159 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
       >
         {/* 치지직형 Box 레이아웃: 섹션 사이 여백·라운드 없이 보더로만 구분하고, 텍스트 행에만 자체 패딩을 준다.
             초고해상도에서도 치지직처럼 비디오가 폭을 꽉 채운다(캡 없음) — 칼럼이 넘치면 세로 스크롤. */}
-        <div className={cn("h-full", "w-full", "md:flex md:flex-row")}>
-          {/* 플레이어는 항상 폭 100%+16:9(유튜브식) — 화면이 낮아 정보 행이 넘치면 이 칼럼만
+        {/* 전체화면 채팅 오버레이(좌측 칼럼)와 우측 채팅 패널 두 갈래가 같은 채팅 데이터를 컨텍스트로 공유한다. */}
+        <LiveChatDataProvider value={chatData}>
+          <div className={cn("h-full", "w-full", "md:flex md:flex-row")}>
+            {/* 플레이어는 항상 폭 100%+16:9(유튜브식) — 화면이 낮아 정보 행이 넘치면 이 칼럼만
               세로 스크롤된다(스크롤바는 숨김, 채팅 패널은 우측 고정 유지). 극장 모드는 스크롤이 없다.
               추후 정보 섹션 아래에 클립 섹션이 들어올 예정이라 칼럼 스크롤 구조를 전제로 한다. */}
-          <div className={cn("flex min-w-0 flex-1 flex-col", "no-scrollbar md:overflow-y-auto")}>
-            {/* 일반 모드는 shrink-0 — 칼럼이 넘칠 때 눌리는 대신 스크롤로 넘어가야 한다. */}
-            <div className={cn(isTheater ? "md:min-h-0 md:flex-1" : "md:shrink-0")}>
-              {broadcast && !isBanned ? (
-                <LiveVideoPlayer
-                  broadcast={broadcast}
-                  hlsSrc={hlsSrc}
-                  elapsedText={elapsedText}
-                  isChatCollapsed={isChatCollapsed}
-                  isTheater={isTheater}
-                  onToggleTheater={toggleTheater}
-                  openChatButtonRef={openChatButtonRef}
-                  onOpenChat={expandDesktopChat}
-                  clipLoggedIn={isLoggedIn}
-                  onClipRequireLogin={openLoginPrompt}
-                  onClipReady={handleClipReady}
-                  renderFullscreenChat={({
-                    container,
-                    isChatOpen,
-                    onToggleChat,
-                    isDonationRequested,
-                    onDonationSettled,
-                  }) => (
-                    <LiveFullscreenChatOverlay
-                      container={container}
-                      isChatOpen={isChatOpen}
-                      onToggleChat={onToggleChat}
-                      creatorId={creatorId}
-                      subscriptionBadgeCustomMonths={subscriptionBadgeCustomMonths}
-                      subscriptionBadgeVersion={subscriptionBadgeVersion}
-                      subscriptionBadgeImageSources={subscriptionBadgeImageSources}
-                      donationOpenRequested={isDonationRequested}
-                      onDonationOpenSettled={onDonationSettled}
-                      messages={messages}
-                      donations={donations}
-                      polls={polls}
-                      interactionNotices={interactionNotices}
-                      isPollsLoading={isPollsLoading}
-                      isPollsError={isPollsError}
-                      isInteractionNoticesLoading={isInteractionNoticesLoading}
-                      isInteractionNoticesError={isInteractionNoticesError}
-                      chatState={chatState}
-                      isLoggedIn={isLoggedIn}
-                      walletBalance={walletBalance}
-                      isWalletLoading={isWalletLoading}
-                      isWalletError={isWalletError}
-                      customerKey={viewerId ?? undefined}
-                      chargeReturnTo={`/live/${creatorId}`}
-                      donationEnabled={donationEnabled}
-                      donationMinAmount={donationMinAmount}
-                      onLoginPrompt={openLoginPrompt}
-                      onSendMessage={sendMessage}
-                      onVote={votePoll}
-                      onJoinDraw={joinDraw}
-                      onDonate={sendDonation}
-                      chatRuleText={chatRuleText}
-                      onAcceptChatRule={acceptChatRule}
-                      onFollow={handleFollow}
-                      isFollowing={isFollowing}
-                      isFollowPending={isFollowPending}
-                      onLoadOlderMessages={loadOlderMessages}
-                      isLoadingOlderMessages={isLoadingOlderMessages}
-                      hasMoreChatHistory={hasMoreChatHistory}
-                      entryNoticeAnchorId={entryNoticeAnchorId}
-                      onRefreshChatState={refreshChatState}
-                      followerWaitSeconds={followerWaitSeconds}
-                      slowModeSeconds={slowModeSeconds}
-                      profileContext={profileContext}
-                    />
-                  )}
-                />
-              ) : isBanned && broadcast ? (
-                // 강퇴 상태에선 플레이어를 언마운트해 영상/오디오를 즉시 끊고, 같은 16:9 자리에 검은 프레임만
-                // 남겨 레이아웃(채팅 입력 높이 동기화)을 유지한다. 위에는 LiveBannedDialog 모달이 덮인다.
-                <div aria-hidden className="aspect-video w-full bg-black" />
-              ) : (
-                <LiveEndedScreen creator={creator} />
-              )}
-            </div>
+            <div className={cn("flex min-w-0 flex-1 flex-col", "no-scrollbar md:overflow-y-auto")}>
+              {/* 일반 모드는 shrink-0 — 칼럼이 넘칠 때 눌리는 대신 스크롤로 넘어가야 한다. */}
+              <div className={cn(isTheater ? "md:min-h-0 md:flex-1" : "md:shrink-0")}>
+                {broadcast && !isBanned ? (
+                  <LiveVideoPlayer
+                    broadcast={broadcast}
+                    hlsSrc={hlsSrc}
+                    elapsedText={elapsedText}
+                    isChatCollapsed={isChatCollapsed}
+                    isTheater={isTheater}
+                    onToggleTheater={toggleTheater}
+                    openChatButtonRef={openChatButtonRef}
+                    onOpenChat={expandDesktopChat}
+                    clipLoggedIn={isLoggedIn}
+                    onClipRequireLogin={openLoginPrompt}
+                    onClipReady={handleClipReady}
+                    renderFullscreenChat={({
+                      container,
+                      isChatOpen,
+                      onToggleChat,
+                      isDonationRequested,
+                      onDonationSettled,
+                    }) => (
+                      <LiveFullscreenChatOverlay
+                        container={container}
+                        isChatOpen={isChatOpen}
+                        onToggleChat={onToggleChat}
+                        creatorId={creatorId}
+                        donationOpenRequested={isDonationRequested}
+                        onDonationOpenSettled={onDonationSettled}
+                      />
+                    )}
+                  />
+                ) : isBanned && broadcast ? (
+                  // 강퇴 상태에선 플레이어를 언마운트해 영상/오디오를 즉시 끊고, 같은 16:9 자리에 검은 프레임만
+                  // 남겨 레이아웃(채팅 입력 높이 동기화)을 유지한다. 위에는 LiveBannedDialog 모달이 덮인다.
+                  <div aria-hidden className="aspect-video w-full bg-black" />
+                ) : (
+                  <LiveEndedScreen creator={creator} />
+                )}
+              </div>
 
-            {/*
+              {/*
               방송 정보 행(제목·태그 + 시간·참여자): 라이브 중은 물론, 시청 중 종료된 경우에도
               마지막 라이브 스냅샷(displayBroadcast)으로 그대로 유지한다(시간은 종료 시점에 고정).
               처음부터 종료된 방송 재진입은 스냅샷이 없어 행을 생략한다.
             */}
-            {/*
+              {/*
               영화관 모드 전환 시 정보 영역을 height 애니메이션으로 접어, 비디오가 좌하단으로
               자연스럽게 늘어나는 연출을 만든다(사이드바 collapse와 같은 preset). 모바일은
               영화관 모드 자체가 없으므로 motion height를 적용하지 않는다.
             */}
-            <motion.div
-              className={cn("shrink-0 overflow-hidden", isInfoCollapsed && "pointer-events-none")}
-              aria-hidden={isInfoCollapsed || undefined}
-              inert={isInfoCollapsed || undefined}
-              initial={false}
-              animate={isInfoCollapsed ? { height: 0, opacity: 0 } : { height: "auto", opacity: 1 }}
-              transition={
-                prefersReducedMotion ? { duration: 0 } : { duration: 0.2, ease: "easeOut" }
-              }
-            >
-              {displayBroadcast ? (
-                <div className="flex flex-col gap-1.5 px-4 pt-4">
-                  <LiveBroadcastInfo broadcast={displayBroadcast} />
-                  <div className="text-muted-foreground flex items-center gap-3 text-xs">
-                    <span className="flex items-center gap-1">
-                      <Timer className="size-3.5" />
-                      {elapsedText}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Users className="size-3.5" />
-                      {formatCount(displayBroadcast.viewerCount)}
-                      {LIVE_LABEL.viewers}
-                    </span>
+              <motion.div
+                className={cn("shrink-0 overflow-hidden", isInfoCollapsed && "pointer-events-none")}
+                aria-hidden={isInfoCollapsed || undefined}
+                inert={isInfoCollapsed || undefined}
+                initial={false}
+                animate={
+                  isInfoCollapsed ? { height: 0, opacity: 0 } : { height: "auto", opacity: 1 }
+                }
+                transition={
+                  prefersReducedMotion ? { duration: 0 } : { duration: 0.2, ease: "easeOut" }
+                }
+              >
+                {displayBroadcast ? (
+                  <div className="flex flex-col gap-1.5 px-4 pt-4">
+                    <LiveBroadcastInfo broadcast={displayBroadcast} />
+                    <div className="text-muted-foreground flex items-center gap-3 text-xs">
+                      <span className="flex items-center gap-1">
+                        <Timer className="size-3.5" />
+                        {elapsedText}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Users className="size-3.5" />
+                        {formatCount(displayBroadcast.viewerCount)}
+                        {LIVE_LABEL.viewers}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ) : (
-                // 방송 중이 아니면 제목·시간이 비어 비디오 영역만 길어지므로, 같은 자리에 안내 문구를 채워 높이를 유지한다.
-                <div className="flex min-w-0 flex-col gap-1.5 px-4 pt-4">
-                  <h1 className="text-foreground truncate text-base leading-snug font-semibold sm:text-lg">
-                    {LIVE_LABEL.offlineInfoTitle}
-                  </h1>
-                  <p className="text-muted-foreground text-sm">
-                    {LIVE_LABEL.offlineInfoDescription}
-                  </p>
-                </div>
-              )}
+                ) : (
+                  // 방송 중이 아니면 제목·시간이 비어 비디오 영역만 길어지므로, 같은 자리에 안내 문구를 채워 높이를 유지한다.
+                  <div className="flex min-w-0 flex-col gap-1.5 px-4 pt-4">
+                    <h1 className="text-foreground truncate text-base leading-snug font-semibold sm:text-lg">
+                      {LIVE_LABEL.offlineInfoTitle}
+                    </h1>
+                    <p className="text-muted-foreground text-sm">
+                      {LIVE_LABEL.offlineInfoDescription}
+                    </p>
+                  </div>
+                )}
 
-              {/* 스트리머 정보 행(아바타·이름·팔로워 + 팔로우)은 라이브·종료 모두 동일하게 보여준다. */}
-              {creator ? (
-                // py-3: 정보 영역을 141px로 낮춰(우측 입력바와 동일) FHD에서 비디오가 16:9에 딱 맞게
-                // 들어가도록 한다(149px일 땐 높이가 7px 모자라 좌우에 검은 필러박스가 생겼다).
-                <LiveStreamerRow
-                  creator={creator}
-                  isLive={!!broadcast}
-                  isFollowing={isFollowing}
-                  isSubscribed={isSubscribed}
-                  subscriptionStatus={subscriptionStatus}
-                  isPending={isFollowPending}
-                  isSubscribePending={isSubscribePending}
-                  isInsufficientBalanceDialogOpen={isInsufficientBalanceDialogOpen}
-                  walletChargeCustomerKey={walletChargeCustomerKey}
-                  walletBalance={walletBalance}
-                  isWalletLoading={isWalletLoading}
-                  isWalletError={isWalletError}
-                  subscriptionBadgeCustomMonths={subscriptionBadgeCustomMonths}
-                  subscriptionBadgeVersion={subscriptionBadgeVersion}
-                  subscriptionBadgeImageSources={subscriptionBadgeImageSources}
-                  subscriptionEmojis={subscriptionEmojis}
-                  onFollow={handleFollow}
-                  onSubscribe={handleSubscribe}
-                  onCancelSubscription={handleCancelSubscription}
-                  onInsufficientBalanceDialogOpenChange={setIsInsufficientBalanceDialogOpen}
-                  canModerate={canModerate}
-                  className="px-4 py-3"
-                />
-              ) : null}
+                {/* 스트리머 정보 행(아바타·이름·팔로워 + 팔로우)은 라이브·종료 모두 동일하게 보여준다. */}
+                {creator ? (
+                  // py-3: 정보 영역을 141px로 낮춰(우측 입력바와 동일) FHD에서 비디오가 16:9에 딱 맞게
+                  // 들어가도록 한다(149px일 땐 높이가 7px 모자라 좌우에 검은 필러박스가 생겼다).
+                  <LiveStreamerRow
+                    creator={creator}
+                    isLive={!!broadcast}
+                    isFollowing={isFollowing}
+                    isSubscribed={isSubscribed}
+                    subscriptionStatus={subscriptionStatus}
+                    isPending={isFollowPending}
+                    isSubscribePending={isSubscribePending}
+                    isInsufficientBalanceDialogOpen={isInsufficientBalanceDialogOpen}
+                    walletChargeCustomerKey={walletChargeCustomerKey}
+                    walletBalance={walletBalance}
+                    isWalletLoading={isWalletLoading}
+                    isWalletError={isWalletError}
+                    subscriptionBadgeCustomMonths={subscriptionBadgeCustomMonths}
+                    subscriptionBadgeVersion={subscriptionBadgeVersion}
+                    subscriptionBadgeImageSources={subscriptionBadgeImageSources}
+                    subscriptionEmojis={subscriptionEmojis}
+                    onFollow={handleFollow}
+                    onSubscribe={handleSubscribe}
+                    onCancelSubscription={handleCancelSubscription}
+                    onInsufficientBalanceDialogOpenChange={setIsInsufficientBalanceDialogOpen}
+                    canModerate={canModerate}
+                    className="px-4 py-3"
+                  />
+                ) : null}
 
-              {/* 이 채널의 클립(#124) — 좌측 칼럼 스크롤 영역에 들어가며, 극장 모드에선 정보
+                {/* 이 채널의 클립(#124) — 좌측 칼럼 스크롤 영역에 들어가며, 극장 모드에선 정보
                   영역과 함께 접힌다. 클립이 없는 채널은 섹션이 스스로 숨는다. */}
-              <ClipSection creatorId={creatorId} className="border-border/60 border-t px-4 py-4" />
-            </motion.div>
-          </div>
+                <ClipSection
+                  creatorId={creatorId}
+                  className="border-border/60 border-t px-4 py-4"
+                />
+              </motion.div>
+            </div>
 
-          <aside
-            className={cn(
-              "transition-all duration-200 ease-out",
-              "md:w-88 md:shrink-0 md:overflow-hidden md:opacity-100",
-              isChatCollapsed && "md:w-0 md:opacity-0",
-            )}
-            aria-hidden={isChatCollapsed}
-            inert={isChatCollapsed ? true : undefined}
-          >
-            <LiveChatPanel
-              creatorId={creatorId}
-              messages={messages}
-              subscriptionBadgeCustomMonths={subscriptionBadgeCustomMonths}
-              subscriptionBadgeVersion={subscriptionBadgeVersion}
-              subscriptionBadgeImageSources={subscriptionBadgeImageSources}
-              donations={donations}
-              polls={polls}
-              isPollsLoading={isPollsLoading}
-              isPollsError={isPollsError}
-              interactionNotices={interactionNotices}
-              isInteractionNoticesLoading={isInteractionNoticesLoading}
-              isInteractionNoticesError={isInteractionNoticesError}
-              chatState={chatState}
-              isLoggedIn={isLoggedIn}
-              walletBalance={walletBalance}
-              isWalletLoading={isWalletLoading}
-              isWalletError={isWalletError}
-              customerKey={viewerId ?? undefined}
-              chargeReturnTo={`/live/${creatorId}`}
-              donationEnabled={donationEnabled}
-              donationMinAmount={donationMinAmount}
-              onLoginPrompt={openLoginPrompt}
-              onSendMessage={sendMessage}
-              onVote={votePoll}
-              onJoinDraw={joinDraw}
-              onDonate={sendDonation}
-              chatRuleText={chatRuleText}
-              onAcceptChatRule={acceptChatRule}
-              onFollow={handleFollow}
-              isFollowing={isFollowing}
-              isFollowPending={isFollowPending}
-              onCollapse={broadcast ? collapseDesktopChat : undefined}
-              collapseButtonRef={collapseChatButtonRef}
-              onLoadOlderMessages={loadOlderMessages}
-              isLoadingOlderMessages={isLoadingOlderMessages}
-              hasMoreChatHistory={hasMoreChatHistory}
-              entryNoticeAnchorId={entryNoticeAnchorId}
-              onRefreshChatState={refreshChatState}
-              followerWaitSeconds={followerWaitSeconds}
-              slowModeSeconds={slowModeSeconds}
-              profileContext={profileContext}
-            />
-          </aside>
-        </div>
+            <aside
+              className={cn(
+                "transition-all duration-200 ease-out",
+                "md:w-88 md:shrink-0 md:overflow-hidden md:opacity-100",
+                isChatCollapsed && "md:w-0 md:opacity-0",
+              )}
+              aria-hidden={isChatCollapsed}
+              inert={isChatCollapsed ? true : undefined}
+            >
+              <LiveChatPanel
+                creatorId={creatorId}
+                onCollapse={broadcast ? collapseDesktopChat : undefined}
+                collapseButtonRef={collapseChatButtonRef}
+              />
+            </aside>
+          </div>
+        </LiveChatDataProvider>
       </div>
 
       <LiveLoginPromptDialog

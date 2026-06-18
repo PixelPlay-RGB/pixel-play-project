@@ -35,6 +35,9 @@ export function LiveChatPopout({ creatorId }: Props) {
     polls,
     isPollsLoading,
     isPollsError,
+    interactionNotices,
+    isInteractionNoticesLoading,
+    isInteractionNoticesError,
     isLoggedIn,
     isAuthLoading,
     walletBalance,
@@ -125,6 +128,9 @@ export function LiveChatPopout({ creatorId }: Props) {
           polls={polls}
           isPollsLoading={isPollsLoading}
           isPollsError={isPollsError}
+          interactionNotices={interactionNotices}
+          isInteractionNoticesLoading={isInteractionNoticesLoading}
+          isInteractionNoticesError={isInteractionNoticesError}
           chatState={chatState}
           isLoggedIn={isLoggedIn}
           walletBalance={walletBalance}

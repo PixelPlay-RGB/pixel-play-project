@@ -17,8 +17,6 @@ export const LIVE_LIST_PAGE_SIZE_BY_COLUMN_COUNT = {
   three: 12,
   four: 20,
 } as const;
-export const LIVE_LIST_RECENT_STARTED_MINUTES = 30;
-export const LIVE_LIST_RECENT_CHAT_MINUTES = 5;
 
 export const LIVE_LIST_DEFAULT_FILTER: LiveListFilter = "ALL";
 export const LIVE_LIST_DEFAULT_SORT: LiveListSort = "VIEWER_COUNT_DESC";

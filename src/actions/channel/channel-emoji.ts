@@ -13,18 +13,12 @@ import { createAdminClient } from "@/lib/supabase/admin-client";
 import { createClient } from "@/lib/supabase/server";
 import type { ChannelEmoji } from "@/types/channel/channel-emoji";
 import type { AppActionResult } from "@/types/common/action";
-import type { Json } from "@/types/database.types";
 import { isAuthSessionMissingError } from "@/utils/auth/auth-error";
 import { buildEmojiObjectName, parseChannelEmojis } from "@/utils/channel/channel-emoji";
+import { readJsonRecord } from "@/utils/common/json";
 
 // insert_channel_emoji RPC가 개수 한도(10개) 초과 시 던지는 SQLSTATE.
 const EMOJI_LIMIT_REACHED_PG_CODE = "PX409";
-
-function readPayload(data: Json | null): Record<string, Json | undefined> | null {
-  return data && typeof data === "object" && !Array.isArray(data)
-    ? (data as Record<string, Json | undefined>)
-    : null;
-}
 
 export async function addChannelEmojiAction(
   formData: FormData,
@@ -151,7 +145,7 @@ export async function updateChannelEmojiAction(
   }
 
   // RPC는 { oldImagePath, emojis }를 반환한다. 이미지 교체 시 옛 객체를 정리(best-effort).
-  const payload = readPayload(data);
+  const payload = readJsonRecord(data);
   const oldImagePath = typeof payload?.oldImagePath === "string" ? payload.oldImagePath : null;
   if (oldImagePath) {
     const { error: removeError } = await userClient.storage
@@ -188,7 +182,7 @@ export async function deleteChannelEmojiAction(
     return { success: false, code: APP_MESSAGE_CODE.error.channel.emojiDeleteFailed };
   }
 
-  const payload = readPayload(data);
+  const payload = readJsonRecord(data);
   const imagePath = typeof payload?.imagePath === "string" ? payload.imagePath : null;
   if (imagePath) {
     const userClient = await createClient();

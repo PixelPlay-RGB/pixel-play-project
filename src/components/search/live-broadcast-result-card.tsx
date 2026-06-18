@@ -28,28 +28,13 @@ function getFallbackTone(creatorId: string) {
   return "from-live/35 via-slate-900 to-brand/25 dark:from-live/45 dark:to-brand/20";
 }
 
-function formatLiveDuration(startedAt: string | null) {
-  if (!startedAt) {
-    return "방송 중";
-  }
-
-  const startedTime = new Date(startedAt).getTime();
-  const diffMinutes = Math.max(1, Math.floor((Date.now() - startedTime) / 60000));
-
-  if (diffMinutes < 60) {
-    return `${diffMinutes}분째 방송 중`;
-  }
-
-  const hours = Math.floor(diffMinutes / 60);
-  const minutes = diffMinutes % 60;
-
-  return minutes > 0 ? `${hours}시간 ${minutes}분째 방송 중` : `${hours}시간째 방송 중`;
-}
+// 경과 시간을 Date.now()로 한 번 계산하면 멈춘 시계처럼 보여, 라이브 여부만 단순 표기한다.
+const LIVE_DURATION_LABEL = "방송 중";
 
 export default function LiveBroadcastResultCard({ result }: Props) {
   const avatarSrc = getAvatarImageSrc(result.creator_photo_url);
   const fallbackText = getAvatarFallbackText(result.creator_nickname, 1);
-  const liveDuration = formatLiveDuration(result.started_at);
+  const liveDuration = LIVE_DURATION_LABEL;
   const tagLabels = getLiveSearchTagLabels(result.tags);
 
   return (
@@ -78,10 +63,7 @@ export default function LiveBroadcastResultCard({ result }: Props) {
             alt={`${result.title ?? result.creator_nickname} 방송 썸네일`}
             fill
             sizes="(min-width: 1024px) 160px, 128px"
-            className={cn(
-              "object-cover transition-transform duration-300",
-              "group-hover/thumbnail:scale-105",
-            )}
+            className="object-cover transition-transform duration-300 group-hover/thumbnail:scale-105"
           />
         ) : (
           <>
@@ -89,57 +71,32 @@ export default function LiveBroadcastResultCard({ result }: Props) {
               className={cn("absolute inset-0 bg-linear-to-br", getFallbackTone(result.creator_id))}
             />
             <div className="absolute inset-0 bg-white/5" />
-            <div
-              className={cn(
-                "absolute inset-x-0 bottom-0 h-14",
-                "bg-linear-to-t from-black/70 to-transparent",
-              )}
-            />
-            <div className={cn("relative flex flex-col items-center", "gap-2 text-center")}>
-              <div
-                className={cn(
-                  "flex size-11 items-center justify-center rounded-xl border",
-                  "border-white/10 bg-black/35 shadow-lg shadow-black/20 backdrop-blur",
-                )}
-              >
+            <div className="absolute inset-x-0 bottom-0 h-14 bg-linear-to-t from-black/70 to-transparent" />
+            <div className="relative flex flex-col items-center gap-2 text-center">
+              <div className="flex size-11 items-center justify-center rounded-xl border border-white/10 bg-black/35 shadow-lg shadow-black/20 backdrop-blur">
                 <Radio className="text-live size-5" />
               </div>
-              <span className={cn("text-xs font-black", "tracking-wider text-white/80")}>
-                LIVE SIGNAL
-              </span>
+              <span className="text-xs font-black tracking-wider text-white/80">LIVE SIGNAL</span>
             </div>
           </>
         )}
-        <span
-          className={cn(
-            "bg-live absolute top-2 left-2 inline-flex items-center gap-1.5",
-            "text-live-foreground rounded-md px-2 py-0.5 text-xs font-black shadow-sm",
-          )}
-        >
-          <span className={cn("h-1.5 w-1.5 animate-pulse", "rounded-full bg-white")} />
+        <span className="bg-live text-live-foreground absolute top-2 left-2 inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-black shadow-sm">
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
           LIVE
         </span>
-        <span
-          className={cn(
-            "absolute right-2 bottom-2 inline-flex items-center gap-1 rounded-md",
-            "bg-black/65 px-2 py-0.5 text-xs font-bold text-white shadow-sm backdrop-blur",
-          )}
-        >
+        <span className="absolute right-2 bottom-2 inline-flex items-center gap-1 rounded-md bg-black/65 px-2 py-0.5 text-xs font-bold text-white shadow-sm backdrop-blur">
           <Users className="text-live size-3" />
           {formatNumber(result.current_viewer_count)}
         </span>
       </Link>
 
-      <div className={cn("flex min-w-0 flex-col justify-between", "gap-2.5 p-3.5")}>
+      <div className="flex min-w-0 flex-col justify-between gap-2.5 p-3.5">
         <div className="min-w-0">
           <h3 className="line-clamp-2 text-sm leading-snug font-black">
             <Link
               href={`/live/${result.creator_id}`}
               prefetch={false}
-              className={cn(
-                "text-foreground transition-colors",
-                "hover:text-live focus-visible:ring-ring rounded-sm outline-none focus-visible:ring-3",
-              )}
+              className="text-foreground hover:text-live focus-visible:ring-ring rounded-sm transition-colors outline-none focus-visible:ring-3"
             >
               {result.title ?? "라이브 방송"}
             </Link>
@@ -149,11 +106,11 @@ export default function LiveBroadcastResultCard({ result }: Props) {
               <AvatarImage src={avatarSrc} alt={`${result.creator_nickname}의 프로필 사진`} />
               <AvatarFallback className="text-xs">{fallbackText}</AvatarFallback>
             </Avatar>
-            <p className={cn("text-muted-foreground min-w-0 truncate", "text-xs font-medium")}>
+            <p className="text-muted-foreground min-w-0 truncate text-xs font-medium">
               {result.creator_nickname}
             </p>
-            <span className={cn("bg-muted-foreground/45 size-0.75", "shrink-0 rounded-full")} />
-            <span className={cn("text-muted-foreground shrink-0", "text-xs font-medium")}>
+            <span className="bg-muted-foreground/45 size-0.75 shrink-0 rounded-full" />
+            <span className="text-muted-foreground shrink-0 text-xs font-medium">
               {liveDuration}
             </span>
           </div>

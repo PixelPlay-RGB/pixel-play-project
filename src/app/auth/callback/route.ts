@@ -2,6 +2,7 @@
 import { LINKED_PARAM, LOGIN_PARAM, OAUTH_NEXT_COOKIE } from "@/constants/auth/auth";
 import { createClient } from "@/lib/supabase/server";
 import { LoginProvider } from "@/types/auth/auth";
+import { getAuthProviders } from "@/utils/auth/auth-provider";
 import {
   appendSearchParam,
   createPathWithNext,
@@ -68,7 +69,7 @@ export async function GET(request: NextRequest) {
       }
 
       const VALID_PROVIDERS: LoginProvider[] = ["email", "google", "github"];
-      const authProviders = ((user.app_metadata?.providers ?? []) as string[]).filter(
+      const authProviders = getAuthProviders(user.app_metadata?.providers).filter(
         (p): p is LoginProvider => VALID_PROVIDERS.includes(p as LoginProvider),
       );
       const knownProviders = (existingUser.linked_providers ?? []).filter((p): p is LoginProvider =>

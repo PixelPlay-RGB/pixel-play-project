@@ -6,7 +6,8 @@ import { Controller } from "react-hook-form";
 
 import { SettingsCard } from "@/components/common/settings-card";
 import { SettingsPage } from "@/components/common/settings-page";
-import { SideTipCard, SideTipStep } from "@/components/common/side-tip-card";
+import { SideTipCard } from "@/components/common/side-tip-card";
+import { SideTipStep } from "@/components/common/side-tip-step";
 import { StickySaveBar } from "@/components/common/sticky-save-bar";
 import ProfileAvatarUpload from "@/components/setting/profile/profile-avatar-upload";
 import ProfileProvidersCard from "@/components/setting/profile/profile-providers-card";

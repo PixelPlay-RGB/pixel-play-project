@@ -71,8 +71,3 @@ export const CHANNEL_MENU_GROUPS: ChannelMenuGroup[] = [
     ],
   },
 ];
-
-// 평면 배열(호환용).
-export const CHANNEL_MENU_ITEMS: ChannelMenuItem[] = CHANNEL_MENU_GROUPS.flatMap(
-  (group) => group.items,
-);

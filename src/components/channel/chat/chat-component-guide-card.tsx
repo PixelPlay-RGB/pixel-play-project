@@ -1,6 +1,7 @@
 // 채팅 메시지와 안내 컴포넌트의 분리 원칙을 안내합니다.
 
-import { SideTipCard, SideTipStep } from "@/components/common/side-tip-card";
+import { SideTipCard } from "@/components/common/side-tip-card";
+import { SideTipStep } from "@/components/common/side-tip-step";
 import { MessageSquareText } from "lucide-react";
 
 export function ChatComponentGuideCard() {

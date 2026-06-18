@@ -86,6 +86,7 @@ export const APP_MESSAGE_CODE = {
       invalidInput: "error.auth.invalidInput",
       authInfoNotFound: "error.auth.authInfoNotFound",
       authInfoLoadFailed: "error.auth.authInfoLoadFailed",
+      authInfoUpdateFailed: "error.auth.authInfoUpdateFailed",
       sessionNotFound: "error.auth.sessionNotFound",
       passwordChangeFailed: "error.auth.passwordChangeFailed",
       passwordChangedLogoutFailed: "error.auth.passwordChangedLogoutFailed",
@@ -117,7 +118,6 @@ export const APP_MESSAGE_CODE = {
       prepareChargeFailed: "error.donation.prepareChargeFailed",
       confirmChargeFailed: "error.donation.confirmChargeFailed",
       chargeFailed: "error.donation.chargeFailed",
-      chargeCanceled: "error.donation.chargeCanceled",
       paymentWindowConfigMissing: "error.donation.paymentWindowConfigMissing",
       paymentWindowLoadFailed: "error.donation.paymentWindowLoadFailed",
     },
@@ -243,6 +243,9 @@ export const APP_MESSAGE_CODE = {
   info: {
     common: {
       featureNotReady: "info.common.featureNotReady",
+    },
+    donation: {
+      chargeCanceled: "info.donation.chargeCanceled",
     },
     live: {
       broadcastEnded: "info.live.broadcastEnded",

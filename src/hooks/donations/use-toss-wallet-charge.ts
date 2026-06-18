@@ -164,7 +164,7 @@ export function useTossWalletCharge({
     } catch (error) {
       // 사용자가 결제창/QR을 닫으면 reject — 취소는 실패가 아니므로 안내 토스트만 띄운다.
       if (isTossPaymentCancelError(error)) {
-        toastAppInfo(APP_MESSAGE_CODE.error.donation.chargeCanceled);
+        toastAppInfo(APP_MESSAGE_CODE.info.donation.chargeCanceled);
         return;
       }
       console.error("라이브 후원 충전 실패", error);
