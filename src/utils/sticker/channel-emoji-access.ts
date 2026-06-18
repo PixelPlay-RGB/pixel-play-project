@@ -6,10 +6,12 @@ export interface ChannelEmojiOwner {
 }
 
 export function getMissingChannelEmojiSubscriptionCreatorIds({
+  actorUserId,
   tokenIds,
   emojiOwners,
   subscribedCreatorIds,
 }: {
+  actorUserId?: string;
   tokenIds: readonly string[];
   emojiOwners: readonly ChannelEmojiOwner[];
   subscribedCreatorIds: readonly string[];
@@ -20,6 +22,7 @@ export function getMissingChannelEmojiSubscriptionCreatorIds({
 
   for (const emojiOwner of emojiOwners) {
     if (!tokenIdSet.has(emojiOwner.id)) continue;
+    if (emojiOwner.creatorId === actorUserId) continue;
     if (!subscribedCreatorIdSet.has(emojiOwner.creatorId)) {
       missingCreatorIds.add(emojiOwner.creatorId);
     }

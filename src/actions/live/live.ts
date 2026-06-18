@@ -107,6 +107,7 @@ async function validateChannelEmojiTokenAccess({
   }
 
   const missingCreatorIds = getMissingChannelEmojiSubscriptionCreatorIds({
+    actorUserId,
     tokenIds,
     emojiOwners: (channelEmojiRows ?? []).map((row) => ({
       id: row.id,

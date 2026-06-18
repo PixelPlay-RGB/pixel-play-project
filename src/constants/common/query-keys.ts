@@ -153,8 +153,6 @@ export const QUERY_KEYS = {
       "emoji-by-ids",
       ...(emojiIds ?? []),
     ],
-    profile: (creatorId?: string) =>
-      [...QUERY_KEYS.channel.all, "profile", creatorId].filter((v) => v !== undefined),
     viewerBansAll: () => [...QUERY_KEYS.channel.all, "viewer-bans"],
     viewerBans: (creatorId?: string, page?: number) =>
       [...QUERY_KEYS.channel.viewerBansAll(), creatorId, page].filter((v) => v !== undefined),

@@ -33,3 +33,18 @@ test("getMissingChannelEmojiSubscriptionCreatorIds ignores unknown token ids", (
     [],
   );
 });
+
+test("getMissingChannelEmojiSubscriptionCreatorIds allows actor owned channel emoji tokens", () => {
+  const actorUserId = "11111111-1111-4111-8111-111111111111";
+  const emojiId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+
+  assert.deepEqual(
+    getMissingChannelEmojiSubscriptionCreatorIds({
+      actorUserId,
+      tokenIds: [emojiId],
+      emojiOwners: [{ id: emojiId, creatorId: actorUserId }],
+      subscribedCreatorIds: [],
+    }),
+    [],
+  );
+});

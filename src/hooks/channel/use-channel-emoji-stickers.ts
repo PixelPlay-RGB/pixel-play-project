@@ -1,18 +1,23 @@
 "use client";
-// 채널 이모지를 클라이언트에서 조회해 Sticker[] 형태로 돌려준다(채팅 피커·렌더러 공용).
+// 채널 이모지를 클라이언트에서 조회해 채팅 피커와 렌더러용 데이터로 돌려준다.
 // channel_emoji는 읽기 공개(RLS using true)라 RPC 없이 테이블을 바로 SELECT한다.
 
 import { useQuery } from "@tanstack/react-query";
 
 import { QUERY_KEYS } from "@/constants/common/query-keys";
 import { createClient } from "@/lib/supabase/client";
-import type { Sticker } from "@/types/sticker/sticker";
+import type { ChannelStickerGroup, Sticker } from "@/types/sticker/sticker";
 import { getChannelEmojiSrc } from "@/utils/channel/channel-emoji";
+import { createChannelStickerGroups } from "@/utils/sticker/channel-sticker-groups";
 
 interface ChannelEmojiStickerRow {
   id: string;
   image_path: string;
   name: string;
+}
+
+interface ChannelEmojiStickerWithCreatorRow extends ChannelEmojiStickerRow {
+  creator_id: string;
 }
 
 function toSticker(row: ChannelEmojiStickerRow): Sticker {
@@ -41,7 +46,9 @@ async function fetchChannelEmojiStickers(creatorId: string): Promise<Sticker[]> 
   return (data ?? []).map(toSticker);
 }
 
-async function fetchSubscribedChannelEmojiStickers(userId: string): Promise<Sticker[]> {
+async function fetchAvailableChannelEmojiStickerGroups(
+  userId: string,
+): Promise<ChannelStickerGroup[]> {
   const supabase = createClient();
   const { data: subscriptionRows, error: subscriptionError } = await supabase
     .from("creator_subscription")
@@ -55,13 +62,11 @@ async function fetchSubscribedChannelEmojiStickers(userId: string): Promise<Stic
     throw subscriptionError;
   }
 
-  const creatorIds = [...new Set((subscriptionRows ?? []).map((row) => row.creator_id))];
+  const creatorIds = [
+    ...new Set([userId, ...(subscriptionRows ?? []).map((row) => row.creator_id)]),
+  ];
 
-  if (creatorIds.length === 0) {
-    return [];
-  }
-
-  const { data, error } = await supabase
+  const { data: emojiRows, error: emojiError } = await supabase
     .from("channel_emoji")
     .select("id, image_path, name, sort_order, creator_id")
     .in("creator_id", creatorIds)
@@ -69,12 +74,41 @@ async function fetchSubscribedChannelEmojiStickers(userId: string): Promise<Stic
     .order("sort_order", { ascending: true })
     .order("created_at", { ascending: true });
 
-  if (error) {
-    console.error("구독 채널 이모지 조회 실패", error);
-    throw error;
+  if (emojiError) {
+    console.error("구독 채널 이모지 조회 실패", emojiError);
+    throw emojiError;
   }
 
-  return (data ?? []).map(toSticker);
+  const emojiCreatorIds = [
+    ...new Set((emojiRows ?? []).map((row: ChannelEmojiStickerWithCreatorRow) => row.creator_id)),
+  ];
+
+  if (emojiCreatorIds.length === 0) {
+    return [];
+  }
+
+  const { data: profileRows, error: profileError } = await supabase
+    .from("user")
+    .select("id, nickname, photo_url")
+    .in("id", emojiCreatorIds);
+
+  if (profileError) {
+    console.error("구독 채널 프로필 조회 실패", profileError);
+    throw profileError;
+  }
+
+  return createChannelStickerGroups({
+    creatorIds,
+    profiles: (profileRows ?? []).map((row) => ({
+      id: row.id,
+      nickname: row.nickname,
+      photoUrl: row.photo_url,
+    })),
+    stickers: (emojiRows ?? []).map((row: ChannelEmojiStickerWithCreatorRow) => ({
+      creatorId: row.creator_id,
+      sticker: toSticker(row),
+    })),
+  });
 }
 
 async function fetchChannelEmojiStickersByIds(emojiIds: readonly string[]): Promise<Sticker[]> {
@@ -108,10 +142,10 @@ export function useChannelEmojiStickers(creatorId: string | undefined) {
   });
 }
 
-export function useSubscribedChannelEmojiStickers(userId: string | undefined) {
+export function useAvailableChannelEmojiStickerGroups(userId: string | undefined) {
   return useQuery({
     queryKey: QUERY_KEYS.channel.subscribedEmojis(userId),
-    queryFn: () => fetchSubscribedChannelEmojiStickers(userId as string),
+    queryFn: () => fetchAvailableChannelEmojiStickerGroups(userId as string),
     enabled: Boolean(userId),
     staleTime: 1000 * 60 * 5,
   });
