@@ -41,7 +41,7 @@ export default function LiveCreatorResultCard({ result }: Props) {
         "flex min-h-22 flex-col gap-3 rounded-xl border p-3 text-left sm:flex-row sm:items-center",
         "border-border/55 bg-card/80 transition-colors duration-200",
         "dark:border-border/35 dark:bg-card/70",
-        result.is_live && "border-brand/20 bg-brand/4 dark:border-brand/15 dark:bg-brand/6",
+        result.is_live && "border-brand/20 bg-brand/5 dark:border-brand/15 dark:bg-brand/5",
       )}
     >
       <Link

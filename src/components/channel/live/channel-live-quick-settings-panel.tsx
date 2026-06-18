@@ -118,7 +118,7 @@ export default function ChannelLiveQuickSettingsPanel({
             <Button
               type="button"
               size="sm"
-              variant="outline"
+              className="bg-brand hover:bg-brand/85 text-brand-foreground"
               disabled={isSettingsActionPending || !canSaveSettings}
               onClick={onSaveSettings}
             >

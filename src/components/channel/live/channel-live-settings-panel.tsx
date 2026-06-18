@@ -249,10 +249,9 @@ export default function ChannelLiveSettingsPanel({
         ) : null}
         <Button
           type="button"
-          variant="outline"
           onClick={onSaveSettings}
           disabled={isSettingsActionPending || !canSaveSettings}
-          className="h-11 rounded-xl px-7 font-bold shadow-sm transition-all active:scale-95"
+          className="bg-brand hover:bg-brand/85 text-brand-foreground h-11 rounded-xl px-7 font-bold shadow-sm transition-all active:scale-95"
         >
           <Save className="size-4" />
           저장
