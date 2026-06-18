@@ -13,8 +13,8 @@ export function ChannelSubscriptionBenefitsPageContent({ snapshot }: Props) {
   return (
     <SettingsPage
       kicker="구독 혜택"
-      title="구독 혜택을 관리해요"
-      description="구독자에게 표시되는 구독뱃지와 구독자 전용 이모티콘을 한 곳에서 관리해요."
+      title="구독뱃지를 관리해요"
+      description="구독자에게 표시되는 구독 개월별 뱃지를 등록하고 채팅에서 보이는 모습을 확인해요."
     >
       <ChannelSubscriptionPerkSettings
         creatorId={snapshot.creatorId}
