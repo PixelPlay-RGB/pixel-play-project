@@ -3,7 +3,7 @@
 // 그 아래 채팅 메시지 렌더러·입력바 피커가 prop 드릴 없이 꺼내 쓴다(memo 메시지에도 안전 — context).
 //
 // - stickers: 렌더링용(누가 보냈든 모두가 채널 이모지를 이미지로 본다)
-// - canUseInPicker: 피커에서 보내기 가능 여부. 지금은 크리에이터 본인만(구독자 게이팅은 구독 연동 시).
+// - canUseInPicker: 피커에서 보내기 가능 여부. 크리에이터 본인 또는 활성 구독자에게만 열린다.
 
 import { createContext, useContext, useMemo, type ReactNode } from "react";
 
@@ -32,17 +32,19 @@ const ChannelStickerContext = createContext<ChannelStickerContextValue>({
 
 export function ChannelStickerProvider({
   creatorId,
+  canUseChannelStickers = false,
   children,
 }: {
   // 운영 콘솔 등 creatorId가 아직 없을 수 있는 표면도 안전하게 감싸도록 undefined 허용.
   creatorId: string | undefined;
+  canUseChannelStickers?: boolean;
   children: ReactNode;
 }) {
   const { data: stickers, isLoading } = useChannelEmojiStickers(creatorId);
   const authUser = useAuthStore((state) => state.user);
-  // 지금은 크리에이터 본인만 채널 이모지를 보낼 수 있다(구독자 허용은 구독 연동 시 canUseInPicker에 구독 체크 추가).
-  const canUseInPicker = Boolean(creatorId) && authUser?.id === creatorId;
-  // 채널 탭 표시정보 = 채널 주인(creatorId) 프로필. 본인이든 (향후) 구독자든 채널 이름이 맞다.
+  const canUseInPicker =
+    Boolean(creatorId) && (authUser?.id === creatorId || canUseChannelStickers);
+  // 채널 탭 표시정보 = 채널 주인(creatorId) 프로필. 본인이든 구독자든 채널 이름이 맞다.
   // 채널 탭이 뜰 때(canUseInPicker)만 조회해 비로그인·일반 시청자의 불필요한 쿼리를 막는다.
   const { data: channelProfile } = useChannelProfile(creatorId, canUseInPicker);
 

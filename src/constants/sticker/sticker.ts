@@ -23,10 +23,10 @@ export const STICKER_PX = {
 export const STICKER_LABEL = {
   trigger: "스티커 선택",
   item: (label: string) => `${label} 스티커`,
-  // 피커 아이콘 탭 — 최근 사용(시계) / 기본(PixelPlay) / 내 채널(채널 아바타).
+  // 피커 아이콘 탭 — 최근 사용(시계) / 기본(PixelPlay) / 채널(크리에이터 아바타).
   tabRecent: "최근 사용",
   tabDefault: "기본",
-  tabChannel: "내 채널",
+  tabChannel: "채널",
   // 본문 섹션 헤더(치지직 "최근 사용한 이모티콘"식 — 그리드 위 작은 제목).
   sectionRecent: "최근 사용한 이모지",
   sectionDefault: "기본 이모지",

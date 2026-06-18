@@ -40,6 +40,11 @@ import {
   resolveLiveSubscriptionRpcErrorCode,
 } from "@/utils/live/live-subscription-rpc-error";
 import { signAnonViewerKey, verifyAnonViewerKey } from "@/utils/live/live-security";
+import { extractStickerTokenIds } from "@/utils/sticker/sticker-token";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/types/database.types";
+
+type WriteClient = SupabaseClient<Database>;
 
 // send_live_message_v4의 jsonb 응답({ messageId, moderated })을 앱 타입으로 정규화한다.
 // 금칙어로 가려진 경우 messageId는 null, moderated는 true다.
@@ -55,6 +60,62 @@ function normalizeSendLiveMessageResult(data: unknown): SendLiveMessageResult | 
   if (!moderated && !messageId) return null;
 
   return { messageId: messageId ?? null, moderated };
+}
+
+async function validateChannelEmojiTokenAccess({
+  supabase,
+  actorUserId,
+  creatorId,
+  content,
+}: {
+  supabase: WriteClient;
+  actorUserId: string;
+  creatorId: string;
+  content: string;
+}): Promise<AppActionResult<SendLiveMessageResult>> {
+  if (actorUserId === creatorId) {
+    return { success: true };
+  }
+
+  const tokenIds = extractStickerTokenIds(content).filter(isUuid);
+  if (tokenIds.length === 0) {
+    return { success: true };
+  }
+
+  const { data: channelEmojiRows, error: channelEmojiError } = await supabase
+    .from("channel_emoji")
+    .select("id")
+    .eq("creator_id", creatorId)
+    .in("id", tokenIds);
+
+  if (channelEmojiError) {
+    console.error("채널 이모지 토큰 조회 실패", channelEmojiError);
+    return { success: false, code: APP_MESSAGE_CODE.error.message.sendFailed };
+  }
+
+  if ((channelEmojiRows ?? []).length === 0) {
+    return { success: true };
+  }
+
+  const { data: subscriptionRows, error: subscriptionError } = await supabase
+    .from("creator_subscription")
+    .select("id")
+    .eq("creator_id", creatorId)
+    .eq("subscriber_id", actorUserId)
+    .in("status", ["active", "canceled"])
+    .gt("end_at", new Date().toISOString())
+    .limit(1);
+
+  if (subscriptionError) {
+    console.error("채널 이모지 구독 권한 조회 실패", subscriptionError);
+    return { success: false, code: APP_MESSAGE_CODE.error.message.sendFailed };
+  }
+
+  if ((subscriptionRows ?? []).length === 0) {
+    return { success: false, code: APP_MESSAGE_CODE.error.message.sendForbidden };
+  }
+
+  return { success: true };
 }
 
 const CREATOR_SUBSCRIPTION_STATUSES: readonly CreatorSubscriptionStatus[] = [
@@ -136,6 +197,17 @@ export async function sendLiveMessageAction(
 
   if (!client.success) {
     return client.result;
+  }
+
+  const emojiAccess = await validateChannelEmojiTokenAccess({
+    supabase: client.supabase,
+    actorUserId: actor.userId,
+    creatorId,
+    content: trimmed,
+  });
+
+  if (!emojiAccess.success) {
+    return emojiAccess;
   }
 
   const { data, error } = await client.supabase.rpc("send_live_message_v4", {

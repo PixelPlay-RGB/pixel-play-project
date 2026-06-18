@@ -298,7 +298,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
   }
 
   return (
-    <ChannelStickerProvider creatorId={creatorId}>
+    <ChannelStickerProvider creatorId={creatorId} canUseChannelStickers={isSubscribed}>
       <div
         className={cn("bg-background overflow-hidden", "min-h-app-content", "md:h-full md:min-h-0")}
       >

@@ -155,7 +155,7 @@ export function LiveChatInputBar({
   // 채팅 패널 테두리 안쪽 폭에 꽉 맞춘다(입력칸·버튼행보다 좌우 패딩만큼 더 넓게 테두리까지).
   const inputBarRef = useRef<HTMLDivElement>(null);
 
-  // 채널 이모지 — 피커 "내 채널" 탭. 지금은 크리에이터 본인만 보내기 가능(canUseInPicker).
+  // 채널 이모지 — 피커 채널 탭. 크리에이터 본인 또는 활성 구독자만 보내기 가능(canUseInPicker).
   const {
     stickers: channelStickers,
     isLoading: channelLoading,
