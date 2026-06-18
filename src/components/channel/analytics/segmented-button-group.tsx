@@ -29,9 +29,12 @@ export function SegmentedButtonGroup<T extends string>({
   const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   function focusOption(index: number) {
-    if (!options[index]) return;
-    // 화살표는 포커스만 옮긴다. 선택(onSelect)은 Enter·Space·클릭으로만 확정해,
-    // onSelect가 무거운 동작(URL 네비 등)일 때 화살표 탐색마다 재실행되지 않게 한다.
+    const target = options[index];
+    if (!target) return;
+
+    // radiogroup 표준(WAI-ARIA APG): 화살표 이동 시 포커스와 함께 선택(aria-checked)도 즉시 바꾼다.
+    // onSelect가 무거운 동작(URL 네비 등)이면 디바운스/분리는 호출부에서 처리한다.
+    onSelect(target.value);
     buttonRefs.current[index]?.focus();
   }
 
