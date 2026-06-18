@@ -22,7 +22,7 @@ interface ChannelTab {
 const TABS: ChannelTab[] = [
   { key: "home", label: "홈", path: "", exact: true },
   { key: "community", label: "커뮤니티", path: "/community" },
-  { key: "clips", label: "클립", path: "/clip" },
+  { key: "clip", label: "클립", path: "/clip" },
 ];
 
 const tabClassName = cn(

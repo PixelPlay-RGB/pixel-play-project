@@ -13,7 +13,7 @@ export default function Footer() {
       <div className="flex flex-wrap items-center justify-center gap-3">
         <MemberLinks iconSize={16} />
       </div>
-      <p className="mt-2">© {new Date().getFullYear()} Team RGB. All rights reserved.</p>
+      <p className="mt-2">© {new Date().getFullYear()} Team RGB</p>
     </footer>
   );
 }

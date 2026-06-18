@@ -51,7 +51,7 @@ export const USER_ACCOUNT_PRIMARY_MENU_ITEMS: UserAccountLinkMenuItem[] = [
 export const createMyChannelMenuItem = (userId: string): UserAccountLinkMenuItem => ({
   type: "link",
   id: "myChannel",
-  label: "내 채널",
+  label: "채널",
   href: `/channel/${userId}`,
   icon: Tv,
 });
@@ -75,7 +75,7 @@ export const USER_ACCOUNT_FOLLOWING_MENU_ITEM: UserAccountLinkMenuItem = {
 export const USER_ACCOUNT_SUBSCRIPTION_MENU_ITEM: UserAccountLinkMenuItem = {
   type: "link",
   id: "subscriptions",
-  label: "내 구독",
+  label: "구독",
   href: "/user/subscriptions",
   icon: BadgeCheck,
 };

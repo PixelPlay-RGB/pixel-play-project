@@ -48,7 +48,7 @@ interface Props {
 
 const PAGE_HEADER = {
   kicker: "정기구독",
-  title: "내 구독",
+  title: "구독",
   description: "구독 중인 방송인의 배지와 다음 결제일을 확인합니다.",
 } as const;
 

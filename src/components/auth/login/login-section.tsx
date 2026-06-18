@@ -42,11 +42,11 @@ export default function LoginSection({ next }: Props) {
       />
       {isBusy ? (
         <span aria-disabled className={signupLinkClassName}>
-          회원 가입
+          회원가입
         </span>
       ) : (
         <Link className={signupLinkClassName} href={createPathWithNext("/auth/signup", next)}>
-          회원 가입
+          회원가입
         </Link>
       )}
     </>

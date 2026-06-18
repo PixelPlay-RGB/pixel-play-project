@@ -61,7 +61,7 @@ function DonationBalanceHero({ snapshot }: { snapshot: UserDonationSnapshot }) {
         <div className="min-w-0">
           <div className="flex items-center gap-2 text-xs font-black tracking-wide uppercase">
             <span className="size-2 shrink-0 rotate-45 bg-white" aria-hidden />
-            <span>DONATION POINT</span>
+            <span>보유 포인트</span>
           </div>
           <p className="mt-4 text-5xl leading-none font-black tracking-tight sm:text-6xl">
             {formatPoint(snapshot.summary.balanceAmount)}

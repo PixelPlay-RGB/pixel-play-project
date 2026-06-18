@@ -130,7 +130,7 @@ export function ChannelSubscriptionPerkSettings({
           <SideTipStep
             number="1"
             title="이미지 규격"
-            description={`사이즈: ${CHANNEL_SUBSCRIPTION_BADGE_IMAGE_SIZE}*${CHANNEL_SUBSCRIPTION_BADGE_IMAGE_SIZE}px / 파일크기: ${formatUploadFileSize(
+            description={`사이즈: ${CHANNEL_SUBSCRIPTION_BADGE_IMAGE_SIZE}×${CHANNEL_SUBSCRIPTION_BADGE_IMAGE_SIZE}px / 파일크기: ${formatUploadFileSize(
               CHANNEL_SUBSCRIPTION_BADGE_MAX_FILE_SIZE,
             )} 이내\npng 형식의 이미지 파일\n이미지 파일명: 영문, 숫자로 구성`}
           />

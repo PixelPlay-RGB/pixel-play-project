@@ -4,7 +4,7 @@ import { UserSubscriptionsPage } from "@/components/subscriptions/user-subscript
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "내 구독",
+  title: "구독",
   description: "PixelPlay에서 내가 구독 중인 방송인과 구독 혜택을 확인합니다.",
 };
 

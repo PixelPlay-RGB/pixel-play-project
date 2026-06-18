@@ -47,8 +47,12 @@ export default function UserAccountMenu({ profile }: Props) {
   const avatarSrc = getAvatarImageSrc(profile.photo_url);
   const avatarAlt = `${profile.nickname}의 프로필 사진`;
   // 설정 사이드바와 동일하게 성격별 섹션으로 나눕니다.
-  // 활동(팔로잉·구독·후원) / 내 채널(내 채널·채널 관리). 비밀번호 변경·로그아웃은 하단에 둡니다.
+  // 내 채널(채널·채널 관리)을 먼저, 활동(팔로잉·구독·후원)을 아래에 둡니다. 비밀번호 변경·로그아웃은 하단.
   const menuGroups: AccountMenuGroup[] = [
+    {
+      label: "내 채널",
+      items: [createMyChannelMenuItem(profile.id), ...USER_ACCOUNT_PRIMARY_MENU_ITEMS],
+    },
     {
       label: "활동",
       items: [
@@ -56,10 +60,6 @@ export default function UserAccountMenu({ profile }: Props) {
         USER_ACCOUNT_SUBSCRIPTION_MENU_ITEM,
         USER_ACCOUNT_DONATION_MENU_ITEM,
       ],
-    },
-    {
-      label: "내 채널",
-      items: [createMyChannelMenuItem(profile.id), ...USER_ACCOUNT_PRIMARY_MENU_ITEMS],
     },
   ];
 

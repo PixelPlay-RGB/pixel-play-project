@@ -22,7 +22,7 @@ function isLiveChatScope(value: string): value is LiveChatScope {
 
 export function ChatScopeField({ value, disabled, onChange }: Props) {
   return (
-    <SettingFieldRow label="참여 범위" description="입력 권한">
+    <SettingFieldRow label="채팅 범위" description="입력 권한">
       <RadioGroup
         value={value}
         className="flex w-auto flex-wrap gap-2"
