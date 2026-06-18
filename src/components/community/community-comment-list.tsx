@@ -1,16 +1,17 @@
 "use client";
-// 댓글 영역: 헤더(댓글 N + 새로고침 | 정렬) + 입력창 + 목록 + "댓글 더보기"(무한 로드). 치지직 레이아웃.
+// 댓글 영역: 헤더(댓글 N + 새로고침 | 정렬) + 입력창 + 목록. 치지직 레이아웃.
 
 import { useQueryClient } from "@tanstack/react-query";
-import { ChevronDown, RotateCw } from "lucide-react";
+import { RotateCw } from "lucide-react";
 import { Fragment, useState } from "react";
 
+import ListPagination from "@/components/common/list-pagination";
 import CommunityCommentComposer from "@/components/community/community-comment-composer";
 import CommunityCommentItem from "@/components/community/community-comment-item";
 import { CommunityCommentListSkeleton } from "@/components/community/community-comment-skeleton";
-import { Spinner } from "@/components/ui/spinner";
 import {
   COMMUNITY_COMMENT_DEFAULT_SORT,
+  COMMUNITY_COMMENT_PAGE_SIZE,
   COMMUNITY_COMMENT_SORTS,
 } from "@/constants/community/community";
 import { QUERY_KEYS } from "@/constants/common/query-keys";
@@ -38,12 +39,13 @@ export default function CommunityCommentList({
 }: Props) {
   const queryClient = useQueryClient();
   const [sort, setSort] = useState<CommunityCommentSort>(COMMUNITY_COMMENT_DEFAULT_SORT);
-  const { data, isPending, isFetching, fetchNextPage, hasNextPage, isFetchingNextPage } =
-    useCommunityComments(postId, sort, initialData);
+  const [page, setPage] = useState(1);
+  const { data, isPending, isFetching } = useCommunityComments(postId, page, sort, initialData);
 
   const handleSortChange = (next: CommunityCommentSort) => {
     if (next === sort) return;
     setSort(next);
+    setPage(1);
   };
 
   // 커뮤니티는 실시간 구독이 아니므로 수동 새로고침으로 최신 댓글을 반영합니다.
@@ -53,9 +55,11 @@ export default function CommunityCommentList({
     void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.community.post(postId) });
   };
 
-  // 베스트는 첫 페이지에서만 맨 위 고정, 나머지 페이지의 items를 이어 붙인다.
-  const bestComment = data?.pages[0]?.bestComment ?? null;
-  const items = data?.pages.flatMap((commentPage) => commentPage.items) ?? [];
+  const totalCount = data?.totalCount ?? 0;
+  const totalPages = Math.max(1, Math.ceil(totalCount / COMMUNITY_COMMENT_PAGE_SIZE));
+  // 베스트는 첫 페이지에서만 맨 위 고정.
+  const bestComment = page === 1 ? (data?.bestComment ?? null) : null;
+  const items = data?.items ?? [];
   const isEmpty = !bestComment && items.length === 0;
 
   return (
@@ -129,21 +133,12 @@ export default function CommunityCommentList({
             ))}
           </ul>
 
-          {hasNextPage && (
-            <button
-              type="button"
-              onClick={() => fetchNextPage()}
-              disabled={isFetchingNextPage}
-              className="text-muted-foreground hover:text-foreground hover:bg-muted/40 border-border/60 inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border text-sm font-semibold transition-colors disabled:opacity-60"
-            >
-              {isFetchingNextPage ? (
-                <Spinner className="size-4" />
-              ) : (
-                <ChevronDown className="size-4" />
-              )}
-              댓글 더보기
-            </button>
-          )}
+          <ListPagination
+            currentPage={page}
+            totalPages={totalPages}
+            isFetching={isFetching}
+            onPageChange={setPage}
+          />
         </>
       )}
     </div>
