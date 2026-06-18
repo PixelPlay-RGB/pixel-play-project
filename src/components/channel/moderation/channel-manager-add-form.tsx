@@ -76,6 +76,7 @@ export function ChannelManagerAddForm({ creatorId, existingManagerIds, onAdd, is
       <div className="flex flex-col gap-2 sm:flex-row">
         <Input
           value={query}
+          disabled={isSearching}
           onChange={(event) => setQuery(event.target.value)}
           onKeyDown={(event) => {
             if (event.key === "Enter" && !event.nativeEvent.isComposing) {

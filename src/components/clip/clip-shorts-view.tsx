@@ -248,9 +248,9 @@ export function ClipShortsView({ initialClip, creator, viewerId }: Props) {
                 </span>
               </div>
             ) : null}
-            <p className="line-clamp-2 text-sm font-semibold text-white drop-shadow-sm">
+            <h2 className="line-clamp-2 text-sm font-semibold text-white drop-shadow-sm">
               {currentClip.title}
-            </p>
+            </h2>
             <p className="text-xs text-white/75">
               조회수 {formatCount(currentClip.viewCount)}
               {CLIP_LABEL.viewCountSuffix} · {formatRelativeTime(currentClip.createdAt)}

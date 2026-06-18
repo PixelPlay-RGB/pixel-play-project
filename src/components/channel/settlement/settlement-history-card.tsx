@@ -213,10 +213,18 @@ export function SettlementHistoryCard({ yearlySummary }: Props) {
           <table className="w-full text-sm">
             <thead className="bg-muted/40">
               <tr>
-                <th className={cn(TH_CLASS, "text-left")}>닉네임</th>
-                <th className={cn(TH_CLASS, "text-right")}>후원일</th>
-                <th className={cn(TH_CLASS, "text-right")}>후원 금액</th>
-                <th className={cn(TH_CLASS, "text-right")}>정산 상태</th>
+                <th scope="col" className={cn(TH_CLASS, "text-left")}>
+                  닉네임
+                </th>
+                <th scope="col" className={cn(TH_CLASS, "text-right")}>
+                  후원일
+                </th>
+                <th scope="col" className={cn(TH_CLASS, "text-right")}>
+                  후원 금액
+                </th>
+                <th scope="col" className={cn(TH_CLASS, "text-right")}>
+                  정산 상태
+                </th>
               </tr>
             </thead>
             <tbody>

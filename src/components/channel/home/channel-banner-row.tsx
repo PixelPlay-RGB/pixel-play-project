@@ -22,6 +22,7 @@ export function ChannelBannerRow({ banners }: Props) {
           rel="noopener noreferrer"
           className="group block w-36 shrink-0"
           title={banner.title || undefined}
+          aria-label={`${banner.title || "채널 배너"} (새 탭으로 열림)`}
         >
           {/* 배너 원본은 300×300 권장 — 144px(레티나 2x≈288px)로 표시해 업스케일 없이 선명하게. */}
           <div className="border-border/60 group-hover:border-brand/40 relative aspect-square overflow-hidden rounded-2xl border transition-colors">
