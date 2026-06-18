@@ -24,13 +24,20 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
-import type {
-  UserDonationSnapshot,
-  UserSentDonationItem,
-  UserSubscriptionSpendHistoryItem,
-  UserWalletChargeHistoryItem,
-} from "@/types/donations/user-donations";
+import type { UserDonationSnapshot } from "@/types/donations/user-donations";
+import { formatKstTime } from "@/utils/common/date";
 import { getPageItems } from "@/utils/common/pagination";
+import {
+  buildHistoryItems,
+  buildMonthOptions,
+  buildYearOptions,
+  DONATION_HISTORY_TABS,
+  getSucceededChargeHistories,
+  getSucceededSubscriptionSpendHistories,
+  HISTORY_ITEMS_PER_PAGE,
+  type DonationHistoryItem,
+  type DonationHistoryTab,
+} from "@/utils/donations/donation-history";
 import { formatPoint } from "@/utils/donations/format";
 import { CreditCard, Gift, Inbox } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -42,32 +49,7 @@ interface Props {
   onActiveTabChange: (tab: DonationHistoryTab) => void;
 }
 
-export type DonationHistoryTab = "all" | "charge" | "donation";
-
-type DonationHistoryItem =
-  | {
-      kind: "charge";
-      id: string;
-      title: string;
-      description: string;
-      amount: number;
-      createdAt: string;
-    }
-  | {
-      kind: "donation";
-      id: string;
-      title: string;
-      description: string;
-      amount: number;
-      createdAt: string;
-    };
-
-const DONATION_HISTORY_TABS: Array<{ value: DonationHistoryTab; label: string }> = [
-  { value: "all", label: "전체" },
-  { value: "charge", label: "충전" },
-  { value: "donation", label: "후원" },
-];
-const HISTORY_ITEMS_PER_PAGE = 9;
+export type { DonationHistoryTab };
 
 type HistoryPageState = {
   scopeKey: string;
@@ -446,89 +428,4 @@ function EmptyList({ activeTab }: { activeTab: DonationHistoryTab }) {
       </div>
     </div>
   );
-}
-
-function buildHistoryItems(snapshot: UserDonationSnapshot): DonationHistoryItem[] {
-  const chargeItems = getSucceededChargeHistories(snapshot).map(readChargeHistoryItem);
-  const donationItems = snapshot.sentDonations.map(readSentDonationItem);
-  const subscriptionItems =
-    getSucceededSubscriptionSpendHistories(snapshot).map(readSubscriptionSpendItem);
-
-  return [...chargeItems, ...donationItems, ...subscriptionItems].sort(
-    (left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
-  );
-}
-
-function getSucceededChargeHistories(snapshot: UserDonationSnapshot) {
-  return snapshot.chargeHistories.filter((charge) => charge.status === "succeeded");
-}
-
-function getSucceededSubscriptionSpendHistories(snapshot: UserDonationSnapshot) {
-  return snapshot.subscriptionSpendHistories.filter(
-    (subscription) => subscription.status === "succeeded",
-  );
-}
-
-function buildYearOptions(selectedYear: number) {
-  const currentYear = Number(
-    new Intl.DateTimeFormat("en", {
-      timeZone: "Asia/Seoul",
-      year: "numeric",
-    }).format(new Date()),
-  );
-  const years = Array.from({ length: 5 }, (_, index) => currentYear - index);
-
-  if (!years.includes(selectedYear)) {
-    years.push(selectedYear);
-  }
-
-  return years.sort((left, right) => right - left);
-}
-
-function buildMonthOptions() {
-  return Array.from({ length: 12 }, (_, index) => index + 1);
-}
-
-function readChargeHistoryItem(charge: UserWalletChargeHistoryItem): DonationHistoryItem {
-  return {
-    kind: "charge",
-    id: charge.id,
-    title: "후원금 충전",
-    description: "Toss Payments 승인 완료",
-    amount: charge.amount,
-    createdAt: charge.createdAt,
-  };
-}
-
-function readSentDonationItem(donation: UserSentDonationItem): DonationHistoryItem {
-  return {
-    kind: "donation",
-    id: donation.id,
-    title: `${donation.creatorNickname} 방송 후원`,
-    description: donation.message || "방송 후원을 보냈습니다.",
-    amount: donation.amount,
-    createdAt: donation.createdAt,
-  };
-}
-
-function readSubscriptionSpendItem(
-  subscription: UserSubscriptionSpendHistoryItem,
-): DonationHistoryItem {
-  return {
-    kind: "donation",
-    id: subscription.id,
-    title: `${subscription.creatorNickname} 채널 구독`,
-    description: "정기구독 포인트 결제",
-    amount: subscription.amount,
-    createdAt: subscription.createdAt,
-  };
-}
-
-function formatKstTime(value: string) {
-  return new Intl.DateTimeFormat("ko-KR", {
-    timeZone: "Asia/Seoul",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  }).format(new Date(value));
 }

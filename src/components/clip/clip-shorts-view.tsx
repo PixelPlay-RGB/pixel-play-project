@@ -4,7 +4,7 @@
 // 하단에 크리에이터(아바타=요약 Popover)·제목·생성일 오버레이. 배경은 항상 어두운 극장(라이트
 // 모드 대비) + 엠비언트 ON 시 재생 영상을 저해상도 canvas로 샘플링한 유튜브식 컬러 글로우.
 
-import { useCallback, useEffect, useRef, useState, type ReactNode, type WheelEvent } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { ChevronDown, ChevronUp, Maximize2, Minimize2, Share2 } from "lucide-react";
@@ -12,12 +12,13 @@ import { ChevronDown, ChevronUp, Maximize2, Minimize2, Share2 } from "lucide-rea
 import { ClipAmbientGlow } from "@/components/clip/clip-ambient-glow";
 import { ClipMiniPlayer, type ClipMiniPlayerHandle } from "@/components/clip/clip-mini-player";
 import { ClipMoreMenu } from "@/components/clip/clip-more-menu";
+import { ClipRailButton, RAIL_BUTTON_CLASS } from "@/components/clip/clip-rail-button";
 import { ClipVolumeControl } from "@/components/clip/clip-volume-control";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import CreatorAvatarPopover from "@/components/creator/creator-avatar-popover";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { CLIP_LABEL } from "@/constants/clip/clip";
 import { useClipShorts, type ClipShortsDirection } from "@/hooks/clip/use-clip-shorts";
+import { useClipShortsControls } from "@/hooks/clip/use-clip-shorts-controls";
 import { useFullscreen } from "@/hooks/live/use-fullscreen";
 import { cn } from "@/lib/utils";
 import type { LiveClip } from "@/types/clip/clip";
@@ -49,53 +50,6 @@ const slideVariants = {
   exit: (direction: ClipShortsDirection) => ({ y: direction > 0 ? "-100%" : "100%" }),
 };
 
-// 우측 레일 공용 버튼 스타일 — 크게(size-12), hover는 opacity로 은은하게.
-const RAIL_BUTTON_CLASS =
-  "flex size-12 cursor-pointer items-center justify-center rounded-full text-white opacity-90 backdrop-blur-sm transition-opacity hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-30";
-// ON 상태 — brand 채움 + 부드러운 brand 글로우 링(평면 단색보다 또렷하게).
-const RAIL_ACTIVE_CLASS =
-  "bg-brand text-brand-foreground opacity-100 shadow-lg shadow-brand/40 ring-2 ring-brand/40";
-
-// 레일 버튼 — 툴팁 + 탭 스케일 피드백 + ON 글로우를 공통으로 묶는다.
-function RailButton({
-  label,
-  onClick,
-  disabled,
-  pressed,
-  active,
-  className,
-  children,
-}: {
-  label: string;
-  onClick: () => void;
-  disabled?: boolean;
-  pressed?: boolean;
-  active?: boolean;
-  className?: string;
-  children: ReactNode;
-}) {
-  return (
-    <Tooltip>
-      <TooltipTrigger
-        render={
-          <motion.button
-            type="button"
-            aria-label={label}
-            aria-pressed={pressed}
-            disabled={disabled}
-            whileTap={{ scale: 0.9 }}
-            onClick={onClick}
-            className={cn(RAIL_BUTTON_CLASS, active ? RAIL_ACTIVE_CLASS : "bg-black/40", className)}
-          >
-            {children}
-          </motion.button>
-        }
-      />
-      <TooltipContent side="left">{label}</TooltipContent>
-    </Tooltip>
-  );
-}
-
 export function ClipShortsView({ initialClip, creator, viewerId }: Props) {
   const { currentClip, direction, prevClip, nextClip, goPrev, goNext } = useClipShorts(initialClip);
   const router = useRouter();
@@ -115,61 +69,19 @@ export function ClipShortsView({ initialClip, creator, viewerId }: Props) {
   // 엠비언트 글로우가 현재 재생 중인 영상을 canvas로 샘플링하도록 핸들에서 video를 꺼내준다.
   const getActiveVideo = useCallback(() => playerHandleRef.current?.getVideo() ?? null, []);
 
-  // 단축키 — ↑/↓: 이전/다음, 스페이스·k: 재생/일시정지, m: 음소거, f: 전체화면.
-  useEffect(() => {
-    function onKeyDown(event: KeyboardEvent) {
-      const target = event.target as HTMLElement | null;
-      // 음량 슬라이더(role=slider) 등 자체 키 처리를 하는 컨트롤에 포커스가 있으면 단축키를 막는다
-      // (안 막으면 음량 ↑/↓가 클립 탐색까지 동시에 발동한다).
-      if (target?.closest("input, textarea, select, [contenteditable=true], [role='slider']"))
-        return;
+  // playerHandleRef·setMuted는 안정 참조라 빈 deps로 충분하다 — 컨트롤 훅이 effect를 재등록하는
+  // 조건이 (goPrev·goNext·toggleFullscreen 변화로) 기존과 동일하게 유지된다.
+  const togglePlay = useCallback(() => playerHandleRef.current?.togglePlay(), []);
+  const toggleMute = useCallback(() => setMuted((prev) => !prev), []);
 
-      switch (event.key.toLowerCase()) {
-        case "arrowup":
-          event.preventDefault();
-          goPrev();
-          break;
-        case "arrowdown":
-          event.preventDefault();
-          goNext();
-          break;
-        case " ":
-        case "k":
-          // 버튼에 포커스가 있을 때 스페이스는 그 버튼 클릭이 우선.
-          if (event.key === " " && target?.closest("button, [role='button']")) return;
-          event.preventDefault();
-          playerHandleRef.current?.togglePlay();
-          break;
-        case "m":
-          event.preventDefault();
-          setMuted((prev) => !prev);
-          break;
-        case "f":
-          event.preventDefault();
-          toggleFullscreen();
-          break;
-      }
-    }
-
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [goPrev, goNext, toggleFullscreen]);
-
-  // 마우스 휠로도 탐색한다 — 한 번의 스크롤이 한 칸만 넘어가게 스로틀한다.
-  const lastWheelRef = useRef(0);
-  const handleWheel = useCallback(
-    (event: WheelEvent<HTMLDivElement>) => {
-      if (Math.abs(event.deltaY) < 16) return;
-      if (event.timeStamp - lastWheelRef.current < 450) return;
-      lastWheelRef.current = event.timeStamp;
-      if (event.deltaY > 0) {
-        goNext();
-      } else {
-        goPrev();
-      }
-    },
-    [goNext, goPrev],
-  );
+  // 단축키(↑/↓·스페이스·k·m·f) + 마우스 휠 탐색.
+  const { handleWheel } = useClipShortsControls({
+    goPrev,
+    goNext,
+    togglePlay,
+    toggleMute,
+    toggleFullscreen,
+  });
 
   async function copyClipLink() {
     try {
@@ -216,10 +128,10 @@ export function ClipShortsView({ initialClip, creator, viewerId }: Props) {
 
         {/* 하단 그룹 — 공유·엠비언트·전체화면·이전/다음 */}
         <div className="flex flex-col items-center gap-2.5">
-          <RailButton label={CLIP_LABEL.share} onClick={copyClipLink}>
+          <ClipRailButton label={CLIP_LABEL.share} onClick={copyClipLink}>
             <Share2 className="size-6" aria-hidden />
-          </RailButton>
-          <RailButton
+          </ClipRailButton>
+          <ClipRailButton
             label={isFullscreen ? CLIP_LABEL.exitFullscreen : CLIP_LABEL.fullscreen}
             onClick={toggleFullscreen}
           >
@@ -228,7 +140,7 @@ export function ClipShortsView({ initialClip, creator, viewerId }: Props) {
             ) : (
               <Maximize2 className="size-6" aria-hidden />
             )}
-          </RailButton>
+          </ClipRailButton>
           {/* 더보기(⋮) — 엠비언트 토글 + 삭제. 동작 아이콘 맨 아래(캐러셀 버튼 바로 위). */}
           <ClipMoreMenu
             clip={currentClip}
@@ -240,12 +152,12 @@ export function ClipShortsView({ initialClip, creator, viewerId }: Props) {
             onDeleted={handleClipDeleted}
           />
           <div className="h-1" />
-          <RailButton label={CLIP_LABEL.prevClip} disabled={!prevClip} onClick={goPrev}>
+          <ClipRailButton label={CLIP_LABEL.prevClip} disabled={!prevClip} onClick={goPrev}>
             <ChevronUp className="size-6" aria-hidden />
-          </RailButton>
-          <RailButton label={CLIP_LABEL.nextClip} disabled={!nextClip} onClick={goNext}>
+          </ClipRailButton>
+          <ClipRailButton label={CLIP_LABEL.nextClip} disabled={!nextClip} onClick={goNext}>
             <ChevronDown className="size-6" aria-hidden />
-          </RailButton>
+          </ClipRailButton>
         </div>
       </motion.div>
     );
