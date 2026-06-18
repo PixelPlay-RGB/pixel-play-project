@@ -42,7 +42,7 @@ export default function LiveCard({ item }: LiveCardProps) {
         <div className="absolute inset-0 bg-linear-to-t from-black/55 to-transparent" />
         <LiveBadge className="absolute top-3 left-3" />
         <span
-          className="absolute top-3 right-3 hidden rounded-full bg-black/60 px-2 py-1 text-xs font-semibold text-white backdrop-blur sm:inline-flex"
+          className="absolute top-3 right-3 inline-flex rounded-full bg-black/60 px-2 py-1 text-xs font-semibold text-white backdrop-blur"
           aria-label={`${formatViewerCountLabel(item.currentViewerCount)} 시청 중`}
         >
           {formatViewerCountLabel(item.currentViewerCount)}

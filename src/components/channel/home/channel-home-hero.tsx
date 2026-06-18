@@ -20,7 +20,7 @@ export function ChannelHomeHero({ hero, creatorNickname }: Props) {
         <Radio className="size-5" />
       </span>
       <div className="max-w-120 space-y-2">
-        <h1 className="text-foreground text-2xl font-bold md:text-3xl">
+        <h1 className="text-foreground text-2xl font-bold wrap-break-word md:text-3xl">
           {creatorNickname} 님은 지금 오프라인이에요.
         </h1>
         <p className="text-muted-foreground text-sm leading-relaxed md:text-base">

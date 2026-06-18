@@ -9,6 +9,7 @@ import { ClipEmptyState } from "@/components/clip/clip-empty-state";
 import { ClipMoreMenu } from "@/components/clip/clip-more-menu";
 import { ClipPillGroup } from "@/components/clip/clip-pill-group";
 import { ClipSortSelect } from "@/components/clip/clip-sort-select";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CLIP_CHANNEL_PAGE_SIZE, CLIP_LABEL, CLIP_PERIOD_OPTIONS } from "@/constants/clip/clip";
 import { useChannelClips } from "@/hooks/clip/use-channel-clips";
@@ -78,6 +79,19 @@ export function ClipChannelGrid({ creatorId, viewerId }: Props) {
             period === "all"
               ? "라이브 방송에서 인상적인 순간을 클립으로 남겨보세요."
               : "다른 기간을 선택하면 더 많은 클립을 볼 수 있어요."
+          }
+          action={
+            period === "all" ? undefined : (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => changeFilter({ period: "all" })}
+                className="rounded-full"
+              >
+                전체 기간 보기
+              </Button>
+            )
           }
         />
       ) : (
