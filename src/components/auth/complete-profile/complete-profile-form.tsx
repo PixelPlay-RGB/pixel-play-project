@@ -3,16 +3,11 @@
 
 import AuthInputGroup from "@/components/auth/auth-input-group";
 import CompleteProfileAbandonAlert from "@/components/auth/complete-profile/complete-profile-abandon-alert";
+import { NicknameCheckField } from "@/components/auth/nickname-check-field";
 import SignUpGenderField from "@/components/auth/signup/signup-gender-field";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { FieldError } from "@/components/ui/field";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupButton,
-  InputGroupInput,
-} from "@/components/ui/input-group";
 import { RadioGroup } from "@/components/ui/radio-group";
 import { Spinner } from "@/components/ui/spinner";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
@@ -24,7 +19,7 @@ import { getTodayDateInputValue } from "@/utils/common/date";
 import { formatPhone } from "@/utils/common/format";
 import { toastAppError } from "@/utils/common/toast-message";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CalendarDays, Smartphone, User, UserStar } from "lucide-react";
+import { CalendarDays, Smartphone, User } from "lucide-react";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 
@@ -92,56 +87,19 @@ export default function CompleteProfileForm({ next }: Props) {
           />
           <FieldError errors={[errors.name]} />
         </div>
-        <div className="flex flex-col gap-1">
-          <InputGroup
-            className={cn(
-              "w-full py-5",
-              nicknameStatus === "available" &&
-                "border-brand ring-brand/20 dark:ring-brand/30 ring-3",
-              (nicknameStatus === "taken" || errors.nickname) && "border-destructive",
-            )}
-          >
-            <InputGroupAddon align="inline-start">
-              <UserStar className="text-muted-foreground" />
-            </InputGroupAddon>
-            <InputGroupInput
-              {...register("nickname", {
-                onChange: (e) => {
-                  syncNicknameStatus(e.target.value);
-                },
-              })}
-              type="text"
-              placeholder="닉네임"
-              aria-invalid={!!errors.nickname || nicknameStatus === "taken"}
-              disabled={isBusy}
-            />
-            <InputGroupAddon align="inline-end">
-              <InputGroupButton
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={handleCheckNickname}
-                disabled={isBusy || !!errors.nickname || !dirtyFields.nickname}
-                className="border-brand/40 text-brand hover:bg-brand hover:text-brand-foreground cursor-pointer"
-              >
-                {isCheckingNickname ? (
-                  <Spinner />
-                ) : nicknameStatus === "available" ? (
-                  "사용가능"
-                ) : (
-                  "중복확인"
-                )}
-              </InputGroupButton>
-            </InputGroupAddon>
-          </InputGroup>
-          {nicknameStatus === "available" && (
-            <p className="text-brand text-xs">사용 가능한 닉네임입니다.</p>
-          )}
-          {nicknameStatus === "taken" && (
-            <p className="text-destructive text-xs">이미 사용 중인 닉네임입니다.</p>
-          )}
-          <FieldError errors={[errors.nickname]} />
-        </div>
+        <NicknameCheckField
+          registration={register("nickname", {
+            onChange: (e) => {
+              syncNicknameStatus(e.target.value);
+            },
+          })}
+          nicknameStatus={nicknameStatus}
+          isCheckingNickname={isCheckingNickname}
+          error={errors.nickname}
+          isDirty={!!dirtyFields.nickname}
+          isBusy={isBusy}
+          onCheck={handleCheckNickname}
+        />
 
         <div className="flex flex-col gap-1">
           <AuthInputGroup

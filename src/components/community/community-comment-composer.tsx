@@ -4,6 +4,7 @@
 import { SendHorizontal } from "lucide-react";
 import { useRef, useState } from "react";
 
+import { CharacterCounter } from "@/components/common/character-counter";
 import RichEmojiInput from "@/components/common/rich-emoji-input";
 import StickerPicker from "@/components/sticker/sticker-picker";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -14,7 +15,6 @@ import { useCreateCommunityComment } from "@/hooks/community/use-create-communit
 import { useNullableUser } from "@/hooks/profile/use-profile";
 import { cn } from "@/lib/utils";
 import { useViewerId } from "@/hooks/common/use-viewer-id";
-import { formatNumber } from "@/utils/common/format";
 import { appendStickerToken } from "@/utils/sticker/sticker-token";
 import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
 
@@ -105,14 +105,7 @@ export default function CommunityCommentComposer({
       </div>
 
       <div className="flex items-center justify-between gap-2">
-        <span
-          className={cn(
-            "text-muted-foreground text-xs font-semibold tabular-nums",
-            overLimit && "text-destructive",
-          )}
-        >
-          {formatNumber(content.length)} / {formatNumber(COMMUNITY_COMMENT_CONTENT_MAX)}
-        </span>
+        <CharacterCounter current={content.length} max={COMMUNITY_COMMENT_CONTENT_MAX} />
 
         {/* 이모지 피커를 전송 버튼 옆에 둔다. 위로 열면 입력칸을 가려 아래로 연다. */}
         <div className="flex items-center gap-1">
