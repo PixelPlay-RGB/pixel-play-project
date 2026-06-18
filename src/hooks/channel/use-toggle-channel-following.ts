@@ -5,8 +5,11 @@
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 
-import { followCreatorAction, unfollowCreatorAction } from "@/actions/following/following";
-import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
+import {
+  followToggleErrorCode,
+  followToggleSuccessCode,
+  runFollowToggleAction,
+} from "@/hooks/following/follow-toggle-core";
 import type { AppActionResult } from "@/types/common/action";
 import { toastAppError, toastAppSuccess } from "@/utils/common/toast-message";
 
@@ -30,8 +33,7 @@ export function useToggleChannelFollowing({
   const [followerCount, setFollowerCount] = useState(initialFollowerCount);
 
   const mutation = useMutation<AppActionResult, Error, boolean, FollowSnapshot>({
-    mutationFn: (nextFollowing) =>
-      nextFollowing ? followCreatorAction({ creatorId }) : unfollowCreatorAction({ creatorId }),
+    mutationFn: (nextFollowing) => runFollowToggleAction(creatorId, nextFollowing),
     onMutate: (nextFollowing) => {
       const snapshot: FollowSnapshot = { isFollowing, followerCount };
 
@@ -46,21 +48,11 @@ export function useToggleChannelFollowing({
           setIsFollowing(snapshot.isFollowing);
           setFollowerCount(snapshot.followerCount);
         }
-        toastAppError(
-          result.code ??
-            (nextFollowing
-              ? APP_MESSAGE_CODE.error.following.failed
-              : APP_MESSAGE_CODE.error.following.unfollowFailed),
-        );
+        toastAppError(result.code ?? followToggleErrorCode(nextFollowing));
         return;
       }
 
-      toastAppSuccess(
-        result.code ??
-          (nextFollowing
-            ? APP_MESSAGE_CODE.success.following.followed
-            : APP_MESSAGE_CODE.success.following.unfollowed),
-      );
+      toastAppSuccess(result.code ?? followToggleSuccessCode(nextFollowing));
     },
     onError: (error, nextFollowing, snapshot) => {
       console.error("채널 팔로잉 상태 변경 실패", error);
@@ -68,11 +60,7 @@ export function useToggleChannelFollowing({
         setIsFollowing(snapshot.isFollowing);
         setFollowerCount(snapshot.followerCount);
       }
-      toastAppError(
-        nextFollowing
-          ? APP_MESSAGE_CODE.error.following.failed
-          : APP_MESSAGE_CODE.error.following.unfollowFailed,
-      );
+      toastAppError(followToggleErrorCode(nextFollowing));
     },
   });
 

@@ -8,7 +8,6 @@ import { ArrowRight } from "lucide-react";
 import LoadMoreButton from "@/components/common/load-more-button";
 import LiveSidebarCategoryItem from "@/components/live/live-sidebar-category-item";
 import LiveSidebarChannelItem from "@/components/live/live-sidebar-channel-item";
-import LiveSidebarFollowingChannelItem from "@/components/live/live-sidebar-following-channel-item";
 import LiveSidebarKeywordItem from "@/components/live/live-sidebar-keyword-item";
 import LiveSidebarSection from "@/components/live/live-sidebar-section";
 import {
@@ -130,9 +129,16 @@ export default function LiveSidebar({ isMobile }: LiveSidebarProps) {
                 ) : followingItems.length > 0 ? (
                   <>
                     {followingItems.map((item) => (
-                      <LiveSidebarFollowingChannelItem
+                      <LiveSidebarChannelItem
                         key={`following-${item.creatorId}`}
-                        item={item}
+                        creatorId={item.creatorId}
+                        creatorNickname={item.creatorNickname}
+                        creatorPhotoUrl={item.creatorPhotoUrl}
+                        currentViewerCount={item.currentViewerCount}
+                        isFollowing
+                        isLive={item.isLive}
+                        showLiveRing={item.isLive}
+                        showLiveStatus={item.isLive}
                       />
                     ))}
                     {canFetchMoreFollowing ? (
@@ -176,7 +182,17 @@ export default function LiveSidebar({ isMobile }: LiveSidebarProps) {
               </>
             ) : trendingItems.length > 0 ? (
               trendingItems.map((item) => (
-                <LiveSidebarChannelItem key={`trending-${item.id}`} item={item} />
+                <LiveSidebarChannelItem
+                  key={`trending-${item.id}`}
+                  creatorId={item.creatorId}
+                  creatorNickname={item.creatorNickname}
+                  creatorPhotoUrl={item.creatorPhotoUrl}
+                  currentViewerCount={item.currentViewerCount}
+                  isFollowing={item.isFollowing}
+                  isLive
+                  showLiveRing
+                  showLiveStatus
+                />
               ))
             ) : (
               <p className={SIDEBAR_EMPTY_STATE_CLASS}>아직 뜨는 채널을 찾는 중이에요.</p>
