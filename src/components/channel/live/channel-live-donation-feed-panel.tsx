@@ -45,7 +45,7 @@ export function ChannelLiveDonationFeedPanel({ broadcastId, initialDonations }: 
 
   return (
     <section className="bg-card text-card-foreground flex min-h-0 flex-1 flex-col">
-      <div className="border-border flex h-[57px] shrink-0 items-center justify-between gap-2 border-b px-4">
+      <div className="border-border flex h-[var(--app-header-height)] shrink-0 items-center justify-between gap-2 border-b px-4">
         <h2 className="font-heading text-base leading-snug font-medium">이번 방송 후원</h2>
         {broadcastId && !isEmpty ? (
           <span className="text-muted-foreground text-xs font-semibold">

@@ -16,10 +16,11 @@ interface Props {
 }
 
 // 금·은·동 — 숫자 대신 아이콘으로 순위를 표현하고 세 자리 모두 색감을 준다.
+// 색은 globals.css의 --rank-gold/silver/bronze 토큰(text-rank-* / bg-rank-* / border-rank-*).
 const RANK_META = [
-  { icon: Crown, color: "text-yellow-500", bg: "border-yellow-400/30 bg-yellow-400/10" },
-  { icon: Medal, color: "text-slate-400", bg: "border-slate-400/30 bg-slate-400/10" },
-  { icon: Medal, color: "text-amber-600", bg: "border-amber-600/30 bg-amber-600/10" },
+  { icon: Crown, color: "text-rank-gold", bg: "border-rank-gold/30 bg-rank-gold/10" },
+  { icon: Medal, color: "text-rank-silver", bg: "border-rank-silver/30 bg-rank-silver/10" },
+  { icon: Medal, color: "text-rank-bronze", bg: "border-rank-bronze/30 bg-rank-bronze/10" },
 ] as const;
 
 export function LiveDonationBanner({ donations }: Props) {

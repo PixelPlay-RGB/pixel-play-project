@@ -275,7 +275,7 @@ export function ClipDurationTrimmer({
         </div>
       </div>
 
-      <div className="text-muted-foreground flex justify-between text-[11px]">
+      <div className="text-muted-foreground text-2xs flex justify-between">
         <span>
           {bufferSeconds}
           {CLIP_LABEL.durationUnit} 전

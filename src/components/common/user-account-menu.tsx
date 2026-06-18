@@ -107,7 +107,7 @@ export default function UserAccountMenu({ profile }: Props) {
         <div className="flex flex-col gap-2.5">
           {menuGroups.map((group) => (
             <div key={group.label} className="flex flex-col gap-1">
-              <p className="text-muted-foreground px-2 text-[11px] font-semibold">{group.label}</p>
+              <p className="text-muted-foreground text-2xs px-2 font-semibold">{group.label}</p>
               <div className="flex flex-col gap-1">{group.items.map(renderItem)}</div>
             </div>
           ))}

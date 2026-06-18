@@ -115,7 +115,7 @@ export default function CreatorAvatarPopover({
           </Avatar>
 
           {showLivePill && (
-            <span className="bg-live text-live-foreground ring-card absolute -bottom-1.5 left-1/2 -translate-x-1/2 rounded-full px-1.5 text-[10px] leading-4 font-black tracking-wide ring-2">
+            <span className="bg-live text-live-foreground ring-card text-2xs absolute -bottom-1.5 left-1/2 -translate-x-1/2 rounded-full px-1.5 leading-4 font-black tracking-wide ring-2">
               LIVE
             </span>
           )}

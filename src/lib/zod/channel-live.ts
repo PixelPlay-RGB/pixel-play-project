@@ -3,6 +3,7 @@
 import {
   CHANNEL_CHAT_FOLLOWER_WAIT_OPTIONS,
   CHANNEL_CHAT_FORBIDDEN_WORD_MAX_COUNT,
+  CHANNEL_CHAT_FORBIDDEN_WORD_MAX_LENGTH,
   CHANNEL_CHAT_RULE_MAX_LENGTH,
   CHANNEL_CHAT_SLOW_MODE_OPTIONS,
 } from "@/constants/channel/chat";
@@ -42,9 +43,9 @@ export const updateChannelLiveSettingsSchema = z.object({
   donationAmountVisible: z.boolean(),
   donationEnabled: z.boolean(),
   donationMinAmount: z.number().int().min(1000).max(1000000),
-  // 단어 길이 한도(30)는 채팅 설정 상수(100)와 의도적으로 다르므로 인라인 유지.
+  // 단어 길이·개수 한도는 클라(channel-chat.ts)와 동일 상수에서 파생해 드리프트를 막는다.
   forbiddenWords: z
-    .array(z.string().trim().min(1).max(30))
+    .array(z.string().trim().min(1).max(CHANNEL_CHAT_FORBIDDEN_WORD_MAX_LENGTH))
     .max(CHANNEL_CHAT_FORBIDDEN_WORD_MAX_COUNT),
   defaultTags: z.array(z.string().trim().min(1).max(12)).max(5),
   defaultTitle: z.string().trim().max(100),

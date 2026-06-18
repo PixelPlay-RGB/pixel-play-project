@@ -52,7 +52,7 @@ export default function IdentityCard({
       </Avatar>
 
       <div className="flex min-w-0 flex-col gap-1">
-        <span className="text-brand text-[10px] font-extrabold tracking-wide uppercase">
+        <span className="text-brand text-2xs font-extrabold tracking-wide uppercase">
           {badgeLabel}
         </span>
         <span className="text-foreground truncate text-sm leading-tight font-bold">{title}</span>

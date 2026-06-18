@@ -4,7 +4,9 @@ import type { LiveChatScope } from "@/types/channel/chat";
 
 export const CHANNEL_CHAT_RULE_MAX_LENGTH = 300;
 export const CHANNEL_CHAT_FORBIDDEN_WORD_MAX_COUNT = 100;
-export const CHANNEL_CHAT_FORBIDDEN_WORD_MAX_LENGTH = 100;
+// 서버 검증(src/lib/zod/channel-live.ts의 forbiddenWords .max(30))과 일치시켜 드리프트 제거.
+// 클라가 먼저 차단해 "서버만 거절" UX 불일치를 막는다.
+export const CHANNEL_CHAT_FORBIDDEN_WORD_MAX_LENGTH = 30;
 
 export const CHANNEL_CHAT_DEFAULT_RULE_TEXT =
   "서로를 존중하며 대화해주세요. 반복 도배, 비방, 홍보성 메시지는 제한될 수 있습니다.";
