@@ -100,7 +100,7 @@ export default function CommunityCommentComposer({
           placeholder={placeholder ?? (parentId ? "답글을 입력하세요." : "댓글을 입력하세요.")}
           maxLength={COMMUNITY_COMMENT_CONTENT_MAX}
           ariaLabel={parentId ? "답글 입력" : "댓글 입력"}
-          className="min-h-8 flex-1 text-base leading-relaxed md:text-sm"
+          className="max-h-40 min-h-8 flex-1 overflow-y-auto text-base leading-relaxed md:text-sm"
         />
       </div>
 

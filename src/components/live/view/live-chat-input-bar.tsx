@@ -284,11 +284,11 @@ export function LiveChatInputBar({
       className={cn("border-border flex flex-col gap-2 border-t px-3 py-2", className)}
     >
       {/* 이모지·전송 버튼은 입력 필드 안(오른쪽 trailing)에 넣어 입력칸 좌측을 버튼행과 정렬한다. */}
-      {/* 테두리·고정 높이(h-11)는 래퍼가 갖고, 안의 contentEditable은 자연 높이로 세로 중앙 정렬한다 —
-          이모지(28px)가 들어가도 래퍼 높이가 늘지 않게(입력칸이 안 커지게) 한다. */}
+      {/* 테두리는 래퍼가 갖고, 안의 contentEditable이 여러 줄로 늘어난다. 한 줄일 땐 h-11(min) 높이를
+          유지하고, 길어지면 max-h까지 자라며 그 이상은 세로 스크롤한다(치지직식 textarea 결). */}
       <div
         className={cn(
-          "border-input relative flex h-11 items-center rounded-md border bg-transparent text-sm",
+          "border-input relative flex min-h-11 rounded-md border bg-transparent text-sm",
           // 포커스는 래퍼에서 받는다(focus-within) — 입력은 안의 contentEditable이 갖는다.
           "focus-within:border-brand focus-within:ring-brand/30 focus-within:ring-2",
           !isEditable && !isInputDisabled && "bg-muted/70 cursor-pointer",
@@ -308,9 +308,9 @@ export function LiveChatInputBar({
           onClick={handleInputClick}
           ariaLabel={placeholder}
           extraStickers={channelStickers}
-          className="w-full min-w-0 px-3 pr-17 leading-8 outline-none"
+          className="max-h-32 w-full min-w-0 overflow-y-auto px-3 py-1.5 pr-17 leading-8 outline-none"
         />
-        <div className="absolute inset-y-0 right-1 flex items-center gap-0.5">
+        <div className="absolute right-1 bottom-1.5 flex items-center gap-0.5">
           <StickerPicker
             onStickerSelect={(token) =>
               setDraftValue(appendStickerToken(draftValue, token, LIVE_CHAT_MESSAGE_MAX_LENGTH))

@@ -135,7 +135,7 @@ export default function CommunityComposer({
           placeholder="팔로워에게 전할 소식을 남겨보세요."
           maxLength={COMMUNITY_POST_CONTENT_MAX}
           ariaLabel="게시글 내용"
-          className="min-h-40 text-base leading-relaxed md:text-sm"
+          className="max-h-96 min-h-40 overflow-y-auto text-base leading-relaxed md:text-sm"
         />
 
         {displayImage && (

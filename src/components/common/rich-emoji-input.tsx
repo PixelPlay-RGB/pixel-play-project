@@ -250,7 +250,9 @@ export default function RichEmojiInput({
       className={cn(
         "rich-emoji-input outline-none",
         value === "" && !isComposing && "is-empty",
-        allowNewline ? "wrap-break-word whitespace-pre-wrap" : "overflow-x-auto whitespace-nowrap",
+        // 줄바꿈 허용 여부와 무관하게 항상 줄바꿈 표시(채팅도 한 줄 가로스크롤이 아니라 여러 줄로
+        // 자연스럽게 늘어나 입력 중 글자가 가려지지 않게). Enter=전송은 submitOnEnter가 따로 처리.
+        "wrap-break-word whitespace-pre-wrap",
         className,
       )}
     />
