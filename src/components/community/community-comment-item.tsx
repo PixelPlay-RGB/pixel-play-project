@@ -8,6 +8,7 @@ import { useState } from "react";
 import CommunityActionMenu from "@/components/community/community-action-menu";
 import CommunityCommentLikeButton from "@/components/community/community-comment-like-button";
 import CommunityCommentReplies from "@/components/community/community-comment-replies";
+import ClampedText from "@/components/common/clamped-text";
 import DeleteConfirmDialog from "@/components/common/delete-confirm-dialog";
 import RichMessageText from "@/components/common/rich-message-text";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -172,10 +173,13 @@ export default function CommunityCommentItem({
             </div>
           </div>
         ) : (
-          <RichMessageText
-            text={comment.content}
-            className="text-foreground/90 mt-1 text-sm leading-relaxed wrap-break-word whitespace-pre-wrap"
-          />
+          <ClampedText
+            expandable
+            className="mt-1"
+            textClassName="text-foreground/90 line-clamp-5 text-sm leading-relaxed wrap-break-word whitespace-pre-wrap"
+          >
+            <RichMessageText as="span" text={comment.content} />
+          </ClampedText>
         )}
 
         {!isEditing && (
