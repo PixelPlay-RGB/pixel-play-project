@@ -29,10 +29,9 @@ export function SegmentedButtonGroup<T extends string>({
   const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   function focusOption(index: number) {
-    const target = options[index];
-    if (!target) return;
-
-    onSelect(target.value);
+    if (!options[index]) return;
+    // 화살표는 포커스만 옮긴다. 선택(onSelect)은 Enter·Space·클릭으로만 확정해,
+    // onSelect가 무거운 동작(URL 네비 등)일 때 화살표 탐색마다 재실행되지 않게 한다.
     buttonRefs.current[index]?.focus();
   }
 

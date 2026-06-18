@@ -188,7 +188,8 @@ export default function CommunityCommentItem({
               {!isReply && (
                 <button
                   type="button"
-                  onClick={() => setRepliesOpen((open) => !open)}
+                  // 답글 쓰기는 열기 전용(접기는 "답글 N"으로). 답글이 없을 때만 토글로 닫을 수 있게 한다.
+                  onClick={() => setRepliesOpen((open) => (comment.replyCount > 0 ? true : !open))}
                   className="text-muted-foreground hover:text-foreground inline-flex h-7 items-center text-xs font-semibold"
                 >
                   답글 쓰기

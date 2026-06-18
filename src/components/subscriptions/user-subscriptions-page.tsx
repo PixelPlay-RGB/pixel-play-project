@@ -337,7 +337,7 @@ function UserSubscriptionManagementDialog({
                   </div>
                 </section>
 
-                {subscription.emojis.length > 0 ? (
+                {subscription.isActive && subscription.emojis.length > 0 ? (
                   <section className="border-border flex flex-col gap-3 border-t px-5 py-5">
                     <div className="flex items-center gap-2">
                       <Smile className="text-brand size-4" />
