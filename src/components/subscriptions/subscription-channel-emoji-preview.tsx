@@ -25,12 +25,7 @@ export function SubscriptionChannelEmojiPreview({ emojis, className }: Props) {
   const stickers = emojis.map(toSticker);
 
   return (
-    <div
-      className={cn(
-        "bg-muted/30 grid grid-cols-4 gap-3 rounded-lg px-3 py-3 sm:grid-cols-7",
-        className,
-      )}
-    >
+    <div className={cn("grid grid-cols-4 gap-3 sm:grid-cols-7", className)}>
       {stickers.map((sticker) => (
         <span
           key={sticker.id}
