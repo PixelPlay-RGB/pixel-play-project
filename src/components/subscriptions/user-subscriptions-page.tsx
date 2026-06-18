@@ -4,6 +4,8 @@
 import { useMemo, useState } from "react";
 import { BadgeCheck, Heart, Sparkles, Star, WalletCards } from "lucide-react";
 
+import { EmptyState } from "@/components/common/empty-state";
+import { Note } from "@/components/common/note";
 import { SettingsCard } from "@/components/common/settings-card";
 import { SettingsPage } from "@/components/common/settings-page";
 import { LiveSubscriptionBadge } from "@/components/live/chat/live-subscription-badge";
@@ -44,7 +46,7 @@ interface Props {
 }
 
 const PAGE_HEADER = {
-  kicker: "SUBSCRIPTIONS",
+  kicker: "정기구독",
   title: "내 구독",
   description: "구독 중인 방송인의 배지와 다음 결제일을 확인합니다.",
 } as const;
@@ -385,29 +387,22 @@ function DialogCreatorSummary({ subscription }: { subscription: UserSubscription
 }
 
 function SubscriptionEmptyState({ title }: { title: string }) {
-  return (
-    <div className="border-border bg-muted/20 flex min-h-40 flex-col items-center justify-center gap-3 rounded-xl border border-dashed p-8 text-center">
-      <Sparkles className="text-muted-foreground size-6" />
-      <p className="text-muted-foreground text-sm font-medium">{title}</p>
-    </div>
-  );
+  return <EmptyState icon={<Sparkles className="size-7" />} title={title} />;
 }
 
 function SubscriptionPolicyNotice() {
   return (
-    <section className="text-muted-foreground flex flex-col gap-5 text-sm leading-7">
-      <div>
-        <h2 className="text-foreground mb-2 font-black">채널 구독 청약철회 및 환불 안내</h2>
+    <div className="flex flex-col gap-5">
+      <Note title="채널 구독 청약철회 및 환불 안내">
         <p>본 구독 상품은 구매자가 지정한 채널에 한하여 제공됩니다.</p>
         <p>결제 완료 후 구독 기간이 만료될 때까지 구독 혜택이 제공됩니다.</p>
         <p>결제 연동 이후에는 결제 수단 변경과 구독 해지 정책을 별도로 적용합니다.</p>
-      </div>
-      <div>
-        <h2 className="text-foreground mb-2 font-black">구독 중지 안내</h2>
+      </Note>
+      <Note title="구독 중지 안내">
         <p>구독을 해지해도 이미 결제된 기간이 끝날 때까지 구독 혜택이 유지됩니다.</p>
         <p>해지 예약 중이거나 만료된 구독은 구독 관리에서 다시 시작할 수 있습니다.</p>
-      </div>
-    </section>
+      </Note>
+    </div>
   );
 }
 

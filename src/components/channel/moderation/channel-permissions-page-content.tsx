@@ -4,10 +4,11 @@
 
 import { useMemo } from "react";
 
-import { ShieldCheck, TriangleAlert } from "lucide-react";
+import { ShieldCheck, TriangleAlert, Users } from "lucide-react";
 
 import { ChannelManagerAddForm } from "@/components/channel/moderation/channel-manager-add-form";
 import { ChannelManagerTable } from "@/components/channel/moderation/channel-manager-table";
+import { EmptyState } from "@/components/common/empty-state";
 import { SettingsPage } from "@/components/common/settings-page";
 import { SideTipCard } from "@/components/common/side-tip-card";
 import { SideTipStep } from "@/components/common/side-tip-step";
@@ -64,20 +65,18 @@ export function ChannelPermissionsPageContent({ creator }: Props) {
                 {getAppMessage(APP_MESSAGE_CODE.error.channel.managerListLoadFailed).description}
               </p>
             </div>
+          ) : managers.length === 0 ? (
+            <EmptyState
+              icon={<Users className="size-7" />}
+              title="아직 매니저가 없어요."
+              description="위에서 시청자를 검색해 추가해 보세요."
+            />
           ) : (
-            <div className="flex flex-col gap-3">
-              <ChannelManagerTable
-                creator={creator}
-                managers={managers}
-                onRemove={removeManager}
-                isRemoving={isRemoving}
-              />
-              {managers.length === 0 && (
-                <p className="text-muted-foreground text-center text-sm">
-                  아직 매니저가 없어요. 위에서 시청자를 검색해 추가해 보세요.
-                </p>
-              )}
-            </div>
+            <ChannelManagerTable
+              managers={managers}
+              onRemove={removeManager}
+              isRemoving={isRemoving}
+            />
           )}
         </div>
 

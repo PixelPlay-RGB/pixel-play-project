@@ -197,7 +197,7 @@ function EmojiCountMeta({ count }: { count: number }) {
 function EmptyState({ disabled, onAdd }: { disabled: boolean; onAdd: () => void }) {
   return (
     <div className="border-border/70 flex flex-col items-center gap-3 rounded-xl border border-dashed py-10 text-center">
-      <div className="bg-brand/10 text-brand flex size-12 items-center justify-center rounded-2xl">
+      <div className="bg-muted text-muted-foreground flex size-12 items-center justify-center rounded-2xl">
         <Smile className="size-6" />
       </div>
       <div className="space-y-1">

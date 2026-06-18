@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 export function UserDonationLoadingState() {
   return (
     <SettingsPage
-      kicker="DONATIONS"
+      kicker="내 후원"
       title="후원 지갑"
       description="후원 지갑 정보를 불러오는 중입니다."
     >

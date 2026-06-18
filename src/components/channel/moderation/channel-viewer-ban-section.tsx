@@ -5,9 +5,10 @@
 
 import { useEffect, useState } from "react";
 
-import { TriangleAlert } from "lucide-react";
+import { TriangleAlert, UserX } from "lucide-react";
 
 import { ChannelViewerBanList } from "@/components/channel/moderation/channel-viewer-ban-list";
+import { EmptyState } from "@/components/common/empty-state";
 import ListPagination from "@/components/common/list-pagination";
 import { Spinner } from "@/components/ui/spinner";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
@@ -59,9 +60,7 @@ export function ChannelViewerBanSection({ creatorId, scrollable = false }: Props
 
   if (bans.length === 0) {
     return (
-      <p className="text-muted-foreground rounded-xl border border-dashed p-8 text-center text-sm">
-        현재 강퇴 중인 시청자가 없어요.
-      </p>
+      <EmptyState icon={<UserX className="size-7" />} title="현재 강퇴 중인 시청자가 없어요." />
     );
   }
 

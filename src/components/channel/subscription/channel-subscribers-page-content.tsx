@@ -5,6 +5,7 @@ import { CalendarPlus, Search, UsersRound } from "lucide-react";
 import { useEffect, useRef, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
+import { EmptyState } from "@/components/common/empty-state";
 import { SettingsCard } from "@/components/common/settings-card";
 import { SettingsPage } from "@/components/common/settings-page";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -241,8 +242,8 @@ export function ChannelSubscribersPageContent({ snapshot, query, sort }: Props) 
         </div>
 
         {subscribers.length === 0 ? (
-          <div className="ring-foreground/10 rounded-xl py-12 text-center ring-1">
-            <p className="text-muted-foreground text-sm">{emptyMessage}</p>
+          <div className="ring-foreground/10 rounded-xl ring-1">
+            <EmptyState icon={<UsersRound className="size-7" />} title={emptyMessage} />
           </div>
         ) : (
           <>

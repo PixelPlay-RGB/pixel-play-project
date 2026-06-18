@@ -1,6 +1,8 @@
-// 라이브 검색의 빈 상태와 에러 상태를 렌더링합니다.
-import { cn } from "@/lib/utils";
+// 라이브 검색의 빈 상태를 렌더링합니다(공용 EmptyState·차분한 muted 톤에 위임).
+// tone은 아이콘 선택에만 쓰고, 색 강조는 하지 않는다(빈 상태는 muted 한 가지로 통일).
 import { Radio, Search } from "lucide-react";
+
+import { EmptyState } from "@/components/common/empty-state";
 
 interface Props {
   message: string;
@@ -12,23 +14,8 @@ export default function LiveSearchEmptyState({ message, title, tone = "live" }: 
   const Icon = tone === "live" ? Radio : Search;
 
   return (
-    <div
-      className={cn("flex min-h-120 w-full items-center justify-center", "px-4 py-12 text-center")}
-    >
-      <div className="flex max-w-84 flex-col items-center">
-        <div
-          className={cn(
-            "mb-4 flex h-16 w-16 items-center justify-center rounded-2xl ring-1",
-            tone === "live"
-              ? "bg-live/10 ring-live/20 dark:bg-live/15"
-              : "bg-brand/10 ring-brand/20 dark:bg-brand/15",
-          )}
-        >
-          <Icon className={cn("h-7 w-7", tone === "live" ? "text-live" : "text-brand")} />
-        </div>
-        <h2 className="text-foreground text-base font-bold">{title}</h2>
-        <p className={cn("text-muted-foreground mt-1.5", "text-sm leading-relaxed")}>{message}</p>
-      </div>
+    <div className="flex min-h-120 w-full items-center justify-center">
+      <EmptyState icon={<Icon className="size-7" />} title={title} description={message} />
     </div>
   );
 }

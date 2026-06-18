@@ -1,8 +1,10 @@
 "use client";
 // 수신함 패널: 헤더(알림 + 모두 삭제) + 날짜 그룹(오늘/최근 일주일/이전) 목록 + 더보기 + 개별 삭제.
 import { Fragment, useState } from "react";
+import { BellOff } from "lucide-react";
 
 import DeleteConfirmDialog from "@/components/common/delete-confirm-dialog";
+import { EmptyState } from "@/components/common/empty-state";
 import NotificationItem from "@/components/notification/notification-item";
 import { Spinner } from "@/components/ui/spinner";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
@@ -53,9 +55,11 @@ export default function NotificationInbox({ onNavigate }: { onNavigate: () => vo
 
     if (items.length === 0) {
       return (
-        <p className="text-muted-foreground py-10 text-center text-sm font-semibold">
-          아직 받은 알림이 없어요.
-        </p>
+        <EmptyState
+          icon={<BellOff className="size-7" />}
+          title="아직 받은 알림이 없어요."
+          className="px-4 py-10"
+        />
       );
     }
 

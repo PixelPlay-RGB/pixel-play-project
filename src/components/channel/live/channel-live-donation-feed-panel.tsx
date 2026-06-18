@@ -131,7 +131,7 @@ export function ChannelLiveDonationFeedPanel({ broadcastId, initialDonations }: 
 function DonationFeedEmptyState({ description, title }: { description: string; title: string }) {
   return (
     <div className="flex min-h-52 flex-1 flex-col items-center justify-center px-4 py-8 text-center">
-      <Coins className="text-live mb-2 size-5" />
+      <Coins className="text-muted-foreground mb-2 size-5" />
       <p className="text-foreground text-sm font-bold">{title}</p>
       <p className="text-muted-foreground mt-1 text-xs leading-5">{description}</p>
     </div>

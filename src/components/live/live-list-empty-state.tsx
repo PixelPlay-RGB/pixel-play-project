@@ -14,7 +14,7 @@ export default function LiveListEmptyState({ filter }: LiveListEmptyStateProps) 
 
   return (
     <div className="border-border bg-card flex min-h-72 flex-1 flex-col items-center justify-center rounded-lg border px-5 py-12 text-center">
-      <span className="bg-live/10 text-live flex size-12 items-center justify-center rounded-lg">
+      <span className="bg-muted text-muted-foreground flex size-12 items-center justify-center rounded-lg">
         <Radio className="size-6" />
       </span>
       <h2 className="text-foreground mt-4 text-lg font-bold">{message.title}</h2>

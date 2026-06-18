@@ -16,7 +16,7 @@ interface Props {
 }
 
 const USER_DONATIONS_PAGE_HEADER = {
-  kicker: "DONATIONS",
+  kicker: "내 후원",
   title: "후원 지갑",
   description: "방송 후원에 사용할 포인트 잔액과 충전, 후원 내역을 확인합니다.",
 } as const;
