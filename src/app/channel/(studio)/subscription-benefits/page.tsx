@@ -1,4 +1,4 @@
-// 채널 구독 혜택 관리 페이지를 렌더링합니다.
+// 채널 구독 배지 관리 페이지를 렌더링합니다.
 import { ChannelSubscriptionBenefitsPageContent } from "@/components/channel/subscription/channel-subscription-benefits-page-content";
 import { LoadFailedState } from "@/components/common/load-failed-state";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
