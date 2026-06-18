@@ -5,27 +5,14 @@ import { cn } from "@/lib/utils";
 import type { LiveSearchResult } from "@/types/search/search";
 import { formatNumber } from "@/utils/common/format";
 import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
+import { getLiveThumbnailSrc } from "@/utils/live/live-list";
 import { getLiveSearchTagLabels } from "@/utils/search/live-search";
-import { Radio, Users } from "lucide-react";
+import { Users } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
 interface Props {
   result: LiveSearchResult;
-}
-
-function getFallbackTone(creatorId: string) {
-  const lastCharCode = creatorId.charCodeAt(creatorId.length - 1);
-
-  if (lastCharCode % 3 === 0) {
-    return "from-live/45 via-slate-900 to-slate-950 dark:from-live/55";
-  }
-
-  if (lastCharCode % 3 === 1) {
-    return "from-slate-800 via-live/35 to-slate-950 dark:via-live/45";
-  }
-
-  return "from-live/35 via-slate-900 to-brand/25 dark:from-live/45 dark:to-brand/20";
 }
 
 // 경과 시간을 Date.now()로 한 번 계산하면 멈춘 시계처럼 보여, 라이브 여부만 단순 표기한다.
@@ -57,29 +44,13 @@ export default function LiveBroadcastResultCard({ result }: Props) {
         )}
         aria-label={`${result.title ?? result.creator_nickname} 라이브 보기`}
       >
-        {result.thumbnail_url ? (
-          <Image
-            src={result.thumbnail_url}
-            alt={`${result.title ?? result.creator_nickname} 방송 썸네일`}
-            fill
-            sizes="(min-width: 1024px) 160px, 128px"
-            className="object-cover transition-transform duration-300 group-hover/thumbnail:scale-105"
-          />
-        ) : (
-          <>
-            <div
-              className={cn("absolute inset-0 bg-linear-to-br", getFallbackTone(result.creator_id))}
-            />
-            <div className="absolute inset-0 bg-white/5" />
-            <div className="absolute inset-x-0 bottom-0 h-14 bg-linear-to-t from-black/70 to-transparent" />
-            <div className="relative flex flex-col items-center gap-2 text-center">
-              <div className="flex size-11 items-center justify-center rounded-xl border border-white/10 bg-black/35 shadow-lg shadow-black/20 backdrop-blur">
-                <Radio className="text-live size-5" />
-              </div>
-              <span className="text-xs font-black tracking-wider text-white/80">LIVE SIGNAL</span>
-            </div>
-          </>
-        )}
+        <Image
+          src={getLiveThumbnailSrc(result.broadcast_id ?? result.creator_id, result.thumbnail_url)}
+          alt={`${result.title ?? result.creator_nickname} 방송 썸네일`}
+          fill
+          sizes="(min-width: 1024px) 160px, 128px"
+          className="object-cover transition-transform duration-300 group-hover/thumbnail:scale-105"
+        />
         <span className="bg-live text-live-foreground absolute top-2 left-2 inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-black shadow-sm">
           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
           LIVE
