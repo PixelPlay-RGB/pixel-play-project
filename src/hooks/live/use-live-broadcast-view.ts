@@ -285,6 +285,7 @@ export function useLiveBroadcastView(creatorId: string) {
     viewerChatState: watchData?.viewerChatState,
     viewerIsSubscriber: isSubscribed,
     viewerSubscriptionTotalMonths: watchData?.viewerRelation?.subscriptionTotalMonths,
+    forbiddenWords: watchData?.settings.forbiddenWords,
     onChatRuleAccepted: refetch,
   });
 
