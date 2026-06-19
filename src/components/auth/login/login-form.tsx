@@ -39,6 +39,7 @@ export default function LoginForm({ disabled, isPending, onLogin }: LoginFormPro
     const saved = localStorage.getItem(REMEMBERED_EMAIL_KEY);
     if (saved) {
       setValue("email", saved, { shouldValidate: true });
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setRememberEmail(true);
     }
   }, [setValue]);
