@@ -35,7 +35,9 @@ export function SettingToggleControl({
         checked && "border-brand/40 bg-brand/10 text-brand",
       )}
     >
-      <span>{checked ? checkedLabel : uncheckedLabel}</span>
+      {/* role="switch" + aria-checked가 상태를 전달하므로 ON/OFF 텍스트는 스크린리더에서 숨겨
+          accessible name(ariaLabel)과의 label-content 불일치를 막는다(시각 사용자에겐 그대로 보임). */}
+      <span aria-hidden>{checked ? checkedLabel : uncheckedLabel}</span>
       <span
         className={cn(
           "relative inline-flex h-5 w-9 shrink-0 rounded-full transition-colors",

@@ -38,15 +38,17 @@ export default function FollowingSummaryCard({
 
           return (
             <div key={row.label} className="flex items-center gap-3">
-              <span
-                className={cn(
-                  "flex size-9 shrink-0 items-center justify-center rounded-xl",
-                  row.isLiveAccent ? "bg-live/10 text-live" : "bg-brand/10 text-brand",
-                )}
-              >
-                <Icon className="size-4.5" />
-              </span>
-              <dt className="text-muted-foreground flex-1 text-sm font-medium">{row.label}</dt>
+              <dt className="text-muted-foreground flex flex-1 items-center gap-3 text-sm font-medium">
+                <span
+                  className={cn(
+                    "flex size-9 shrink-0 items-center justify-center rounded-xl",
+                    row.isLiveAccent ? "bg-live/10 text-live" : "bg-brand/10 text-brand",
+                  )}
+                >
+                  <Icon className="size-4.5" />
+                </span>
+                <span className="flex-1">{row.label}</span>
+              </dt>
               <dd
                 className={cn(
                   "text-foreground text-base font-black tabular-nums",

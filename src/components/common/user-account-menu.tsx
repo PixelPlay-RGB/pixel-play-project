@@ -80,7 +80,7 @@ export default function UserAccountMenu({ profile }: Props) {
           "text-foreground text-sm font-bold shadow-sm transition-colors",
           "route-accent-hover dark:bg-card/80",
         )}
-        aria-label="프로필 메뉴 열기"
+        aria-label={`${profile.nickname} 프로필 메뉴 열기`}
       >
         <span className="relative shrink-0">
           <Avatar className="h-7 w-7">

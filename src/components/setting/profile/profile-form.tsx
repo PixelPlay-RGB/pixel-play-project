@@ -213,12 +213,12 @@ export default function ProfileForm() {
 
         <SettingsCard title="계정 정보" description="로그인과 가입에 사용된 정보예요.">
           <div className="flex flex-col gap-2">
-            <Label>이메일</Label>
+            <Label htmlFor="account-email">이메일</Label>
             <InputGroup className="opacity-75">
               <InputGroupAddon align="inline-start">
                 <Mail className="size-4" />
               </InputGroupAddon>
-              <InputGroupInput value={user.email} disabled readOnly />
+              <InputGroupInput id="account-email" value={user.email} disabled readOnly />
               <InputGroupAddon align="inline-end">
                 <Lock className="size-4" />
               </InputGroupAddon>
