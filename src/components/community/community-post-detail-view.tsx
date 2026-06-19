@@ -10,6 +10,7 @@ import { useState } from "react";
 import CommunityActionMenu from "@/components/community/community-action-menu";
 import CommunityCommentList from "@/components/community/community-comment-list";
 import DeleteConfirmDialog from "@/components/common/delete-confirm-dialog";
+import RelativeTime from "@/components/common/relative-time";
 import RichMessageText from "@/components/common/rich-message-text";
 import CommunityLikeButton from "@/components/community/community-like-button";
 import CommunityPostPager from "@/components/community/community-post-pager";
@@ -21,7 +22,6 @@ import type {
   CommunityCommentsResult,
   CommunityPostDetail,
 } from "@/types/community/community";
-import { formatRelativeTime } from "@/utils/common/format";
 import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
 
 interface Props {
@@ -101,7 +101,7 @@ export default function CommunityPostDetailView({
                   {detail.creatorNickname}
                 </Link>
                 <p className="text-muted-foreground text-xs">
-                  {formatRelativeTime(detail.createdAt)}
+                  <RelativeTime iso={detail.createdAt} />
                   {detail.modifiedAt && " · 수정됨"}
                 </p>
               </div>

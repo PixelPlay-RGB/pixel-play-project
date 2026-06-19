@@ -14,6 +14,7 @@ import { ClipMiniPlayer, type ClipMiniPlayerHandle } from "@/components/clip/cli
 import { ClipMoreMenu } from "@/components/clip/clip-more-menu";
 import { ClipRailButton, RAIL_BUTTON_CLASS } from "@/components/clip/clip-rail-button";
 import { ClipVolumeControl } from "@/components/clip/clip-volume-control";
+import RelativeTime from "@/components/common/relative-time";
 import CreatorAvatarPopover from "@/components/creator/creator-avatar-popover";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { CLIP_LABEL } from "@/constants/clip/clip";
@@ -22,7 +23,6 @@ import { useClipShortsControls } from "@/hooks/clip/use-clip-shorts-controls";
 import { useFullscreen } from "@/hooks/live/use-fullscreen";
 import { cn } from "@/lib/utils";
 import type { LiveClip } from "@/types/clip/clip";
-import { formatRelativeTime } from "@/utils/common/format";
 import { formatCount } from "@/utils/live/live-chat";
 import { toastAppError, toastAppSuccess } from "@/utils/common/toast-message";
 
@@ -253,7 +253,7 @@ export function ClipShortsView({ initialClip, creator, viewerId }: Props) {
             </h2>
             <p className="text-xs text-white/75">
               조회수 {formatCount(currentClip.viewCount)}
-              {CLIP_LABEL.viewCountSuffix} · {formatRelativeTime(currentClip.createdAt)}
+              {CLIP_LABEL.viewCountSuffix} · <RelativeTime iso={currentClip.createdAt} />
             </p>
           </div>
 
