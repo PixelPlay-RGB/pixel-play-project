@@ -21,6 +21,10 @@ export interface ChannelSecuritySnapshot {
   streamKeyVersion: number;
   chatOverlayVersion: number;
   donationAlertVersion: number;
+  // 토큰별 마지막 재발급 시각(ISO 문자열). 재발급 이력이 없으면 null.
+  streamKeyRotatedAt: string | null;
+  chatOverlayRotatedAt: string | null;
+  donationAlertRotatedAt: string | null;
 }
 
 export interface ChannelSecurityVersionResult {
@@ -33,6 +37,9 @@ export interface CreatorStudioSnapshotSettings {
   streamKeyVersion?: CreatorStudioSetting["stream_key_version"];
   chatOverlayVersion?: CreatorStudioSetting["chat_overlay_version"];
   donationAlertVersion?: CreatorStudioSetting["donation_alert_version"];
+  streamKeyRotatedAt?: CreatorStudioSetting["stream_key_rotated_at"];
+  chatOverlayRotatedAt?: CreatorStudioSetting["chat_overlay_rotated_at"];
+  donationAlertRotatedAt?: CreatorStudioSetting["donation_alert_rotated_at"];
 }
 
 export interface ChannelSecurityUrlPopupSize {

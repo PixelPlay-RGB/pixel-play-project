@@ -505,6 +505,7 @@ export type Database = {
           alert_volume: number
           channel_bio: string
           chat_donation_message_enabled: boolean
+          chat_overlay_rotated_at: string | null
           chat_overlay_version: number
           chat_rule_text: string
           chat_rule_version: number
@@ -514,6 +515,7 @@ export type Database = {
           default_tags: string[]
           default_title: string
           donation_alert_duration_seconds: number
+          donation_alert_rotated_at: string | null
           donation_alert_version: number
           donation_amount_visible: boolean
           donation_enabled: boolean
@@ -525,6 +527,7 @@ export type Database = {
           settlement_demo: Json
           slow_mode_enabled: boolean
           slow_mode_seconds: number
+          stream_key_rotated_at: string | null
           stream_key_version: number
           tts_enabled: boolean
           tts_rate: number
@@ -537,6 +540,7 @@ export type Database = {
           alert_volume?: number
           channel_bio?: string
           chat_donation_message_enabled?: boolean
+          chat_overlay_rotated_at?: string | null
           chat_overlay_version?: number
           chat_rule_text?: string
           chat_rule_version?: number
@@ -546,6 +550,7 @@ export type Database = {
           default_tags?: string[]
           default_title?: string
           donation_alert_duration_seconds?: number
+          donation_alert_rotated_at?: string | null
           donation_alert_version?: number
           donation_amount_visible?: boolean
           donation_enabled?: boolean
@@ -557,6 +562,7 @@ export type Database = {
           settlement_demo?: Json
           slow_mode_enabled?: boolean
           slow_mode_seconds?: number
+          stream_key_rotated_at?: string | null
           stream_key_version?: number
           tts_enabled?: boolean
           tts_rate?: number
@@ -569,6 +575,7 @@ export type Database = {
           alert_volume?: number
           channel_bio?: string
           chat_donation_message_enabled?: boolean
+          chat_overlay_rotated_at?: string | null
           chat_overlay_version?: number
           chat_rule_text?: string
           chat_rule_version?: number
@@ -578,6 +585,7 @@ export type Database = {
           default_tags?: string[]
           default_title?: string
           donation_alert_duration_seconds?: number
+          donation_alert_rotated_at?: string | null
           donation_alert_version?: number
           donation_amount_visible?: boolean
           donation_enabled?: boolean
@@ -589,6 +597,7 @@ export type Database = {
           settlement_demo?: Json
           slow_mode_enabled?: boolean
           slow_mode_seconds?: number
+          stream_key_rotated_at?: string | null
           stream_key_version?: number
           tts_enabled?: boolean
           tts_rate?: number

@@ -1,6 +1,7 @@
 // 채널 보안 설정의 스트림 URL과 스트림 키 카드를 렌더링합니다.
 import { SecurityActionGroup } from "@/components/channel/security/security-action-group";
 import { SecurityFieldRow } from "@/components/channel/security/security-field-row";
+import { SecurityRotatedAtNote } from "@/components/channel/security/security-rotated-at-note";
 import { StreamKeyReissueDialog } from "@/components/channel/security/stream-key-reissue-dialog";
 import { TutorialDialog } from "@/components/common/tutorial-dialog";
 import { Button } from "@/components/ui/button";
@@ -85,6 +86,7 @@ export function StreamKeyCard({
             />
           }
         />
+        <SecurityRotatedAtNote rotatedAt={snapshot.streamKeyRotatedAt} />
       </CardContent>
     </Card>
   );

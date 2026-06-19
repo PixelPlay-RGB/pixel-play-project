@@ -1,6 +1,7 @@
 // 채널 보안 설정의 OBS 브라우저 소스 URL 카드를 렌더링합니다.
 import { SecurityActionGroup } from "@/components/channel/security/security-action-group";
 import { SecurityFieldRow } from "@/components/channel/security/security-field-row";
+import { SecurityRotatedAtNote } from "@/components/channel/security/security-rotated-at-note";
 import { SecurityTutorialList } from "@/components/channel/security/security-tutorial-list";
 import { UrlTokenReissueDialog } from "@/components/channel/security/url-token-reissue-dialog";
 import { TutorialDialog } from "@/components/common/tutorial-dialog";
@@ -44,6 +45,10 @@ export function ObsUrlCard({
   const Icon = meta.icon;
   const url =
     meta.tokenKind === "chat_overlay" ? snapshot.chatOverlayUrl : snapshot.donationAlertUrl;
+  const rotatedAt =
+    meta.tokenKind === "chat_overlay"
+      ? snapshot.chatOverlayRotatedAt
+      : snapshot.donationAlertRotatedAt;
 
   return (
     <Card className="gap-5 shadow-sm">
@@ -93,6 +98,7 @@ export function ObsUrlCard({
             />
           }
         />
+        <SecurityRotatedAtNote rotatedAt={rotatedAt} />
         <SecurityTutorialList items={meta.tutorialItems} />
       </CardContent>
     </Card>
