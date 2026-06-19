@@ -191,7 +191,7 @@ npm run dev
 - `/channel/live`, `/channel/chat`, `/channel/security`, `/channel/donation`, `/channel/settlement`, `/channel/analytics`를 사이드바 셸로 제공합니다. 스튜디오 경로는 route group `(studio)`로 격리해 공개 채널 페이지와 레이아웃을 분리합니다.
 - 스튜디오 데이터는 `service_role` 전용 `get_creator_studio_snapshot` RPC를 Server Component에서 조회하고, 설정 저장은 `upsert_creator_studio_setting`으로 처리합니다.
 - 채팅 설정(`/channel/chat`)에서는 참여 범위, 팔로워 대기 시간, 슬로우 모드, 링크 차단, 금칙어, 채팅 규칙을 관리합니다.
-- 보안 설정(`/channel/security`)에서는 스트림 키와 OBS 오버레이 URL을 발급·재발급합니다. 재발급은 `rotate_live_security_token_version`으로 키 버전을 올려 처리합니다.
+- 보안 설정(`/channel/security`)에서는 스트림 키와 OBS 오버레이 URL을 발급·재발급합니다. 재발급은 `rotate_live_security_token_version`으로 키 버전을 올리고 마지막 재발급 시각(`*_rotated_at`)을 기록해 각 카드에 표시합니다. 민감한 값을 "보기"로 노출하면 어깨너머·송출 화면 노출을 막기 위해 30초 뒤 자동으로 다시 가려집니다.
 - 후원 설정·대시보드(`/channel/donation`)는 `get_creator_donation_dashboard`로 후원 통계를 조회하고, 최소 후원 금액, OBS 후원 알림(표시 시간·알림음·볼륨), 브라우저 TTS 음성·속도·볼륨, 채팅창 후원 메시지 노출을 설정합니다.
 - 정산(`/channel/settlement`)은 `get_creator_settlement_donations`로 연도·상태·정렬별 정산 상세를, `get_creator_settlement_yearly_summary`로 연도별 총 정산액을 조회합니다.
 - 설정 화면은 공통 컴포넌트(`SettingsPage`, `SettingsCard`, `SideTipCard`, `HintNote`)와 스크롤 시 나타나는 공통 저장 바(`StickySaveBar`)로 구조를 통일했습니다.
