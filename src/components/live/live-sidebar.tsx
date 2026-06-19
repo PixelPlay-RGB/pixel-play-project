@@ -6,6 +6,7 @@ import { useIsFetching } from "@tanstack/react-query";
 import { ArrowRight } from "lucide-react";
 
 import LoadMoreButton from "@/components/common/load-more-button";
+import { SidebarCredits } from "@/components/common/sidebar-credits";
 import LiveSidebarCategoryItem from "@/components/live/live-sidebar-category-item";
 import LiveSidebarChannelItem from "@/components/live/live-sidebar-channel-item";
 import LiveSidebarKeywordItem from "@/components/live/live-sidebar-keyword-item";
@@ -13,6 +14,7 @@ import LiveSidebarSection from "@/components/live/live-sidebar-section";
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -21,6 +23,7 @@ import {
   SidebarMenuSkeleton,
   SidebarSeparator,
 } from "@/components/ui/sidebar";
+import { Separator } from "@/components/ui/separator";
 import { QUERY_KEYS } from "@/constants/common/query-keys";
 import {
   LIVE_LIST_DEFAULT_FILTER,
@@ -217,6 +220,11 @@ export default function LiveSidebar({ isMobile }: LiveSidebarProps) {
           </SidebarMenu>
         </LiveSidebarSection>
       </SidebarContent>
+
+      <SidebarFooter className="gap-0 p-0">
+        <Separator />
+        <SidebarCredits />
+      </SidebarFooter>
     </Sidebar>
   );
 }

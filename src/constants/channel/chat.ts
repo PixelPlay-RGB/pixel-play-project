@@ -22,6 +22,11 @@ export const CHANNEL_CHAT_SCOPE_OPTIONS = [
     label: "팔로워만",
     description: "채널을 팔로우한 시청자에게만 채팅을 열어요.",
   },
+  {
+    value: "manager",
+    label: "매니저만",
+    description: "채널 매니저에게만 채팅을 열어요.",
+  },
 ] as const satisfies ReadonlyArray<{
   value: LiveChatScope;
   label: string;

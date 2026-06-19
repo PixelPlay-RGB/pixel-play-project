@@ -23,6 +23,8 @@ export function LiveMiniPlayerHost() {
   // 별도 창 라우트(OBS 출력·팝아웃)에선 아무것도 안 띄운다.
   if (
     !session ||
+    // 인증 플로우(로그인·회원가입·프로필 완성)에선 미니플레이어를 숨긴다 — 집중 화면이라 PIP가 부적절.
+    pathname.startsWith("/auth/") ||
     LIVE_WATCH_ROUTE_PATTERN.test(pathname) ||
     LIVE_OVERLAY_ROUTE_PATTERN.test(pathname)
   ) {

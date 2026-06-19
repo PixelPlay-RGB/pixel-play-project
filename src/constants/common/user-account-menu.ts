@@ -41,7 +41,7 @@ export const USER_ACCOUNT_PRIMARY_MENU_ITEMS: UserAccountLinkMenuItem[] = [
   {
     type: "link",
     id: "channel",
-    label: "채널 관리",
+    label: "방송 설정",
     href: "/channel/live",
     icon: Radio,
   },
