@@ -50,6 +50,8 @@ interface Props {
   onOpenChat?: () => void;
   // 전체화면일 때 컨테이너 내부에 렌더할 채팅/후원 오버레이. 데이터를 가진 상위(LiveView)가 주입한다.
   renderFullscreenChat?: (ctx: FullscreenChatContext) => ReactNode;
+  // 전체화면 컨테이너 노드를 상위(LiveView)에 노출 — 비로그인 후원 안내 등 모달을 전체화면 안에 포털하기 위해.
+  onFullscreenContainerChange?: (container: HTMLElement | null) => void;
   // 클립 버튼: 로그인 여부(상위 결정) + 비로그인 시 콜백 + 캡처 완료 콜백. 에디터는 별도 창으로
   // 열어 라이브를 보면서 편집하게 한다(팝업은 제스처 동기 시점에 열려야 차단되지 않는다).
   clipLoggedIn?: boolean;
@@ -170,6 +172,7 @@ export function LiveVideoPlayer({
   openChatButtonRef,
   onOpenChat,
   renderFullscreenChat,
+  onFullscreenContainerChange,
   clipLoggedIn,
   onClipRequireLogin,
   onClipReady,
@@ -197,6 +200,11 @@ export function LiveVideoPlayer({
       setIsFsDonationRequested(false);
     }
   }, [isFullscreen]);
+
+  // 전체화면일 때만 컨테이너 노드를 상위에 알린다(해제 시 null) — 상위 Dialog의 포털 대상.
+  useEffect(() => {
+    onFullscreenContainerChange?.(isFullscreen ? containerEl : null);
+  }, [isFullscreen, containerEl, onFullscreenContainerChange]);
 
   // 채팅을 닫으면 우상단 스택의 토글 버튼으로 포커스를 되돌린다(패널 X에 갇힌 포커스 회수).
   // 여는 방향은 오버레이가 패널 X 버튼으로 포커스를 옮긴다. 초기 마운트엔 가로채지 않는다.

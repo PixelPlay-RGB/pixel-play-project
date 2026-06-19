@@ -6,7 +6,7 @@ import { useRef, useState } from "react";
 
 import { CharacterCounter } from "@/components/common/character-counter";
 import RichEmojiInput from "@/components/common/rich-emoji-input";
-import StickerPicker from "@/components/sticker/sticker-picker";
+import CommunityStickerPicker from "@/components/community/community-sticker-picker";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
@@ -109,10 +109,9 @@ export default function CommunityCommentComposer({
 
         {/* 이모지 피커를 전송 버튼 옆에 둔다. 위로 열면 입력칸을 가려 아래로 연다. */}
         <div className="flex items-center gap-1">
-          <StickerPicker
+          <CommunityStickerPicker
             disabled={createComment.isPending}
             onStickerSelect={handleStickerSelect}
-            side="bottom"
           />
           <Button
             type="submit"

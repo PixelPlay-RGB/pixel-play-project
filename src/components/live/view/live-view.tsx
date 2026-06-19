@@ -171,6 +171,8 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
   };
 
   const [isLoginPromptOpen, setIsLoginPromptOpen] = useState(false);
+  // 전체화면 시 비로그인 후원 안내 Dialog를 전체화면 요소 안에 포털하기 위한 컨테이너 노드(해제 시 null=body).
+  const [fullscreenContainer, setFullscreenContainer] = useState<HTMLElement | null>(null);
   const [isDesktopChatCollapsed, setIsDesktopChatCollapsed] = useState(false);
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -378,6 +380,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
                     clipLoggedIn={isLoggedIn}
                     onClipRequireLogin={openLoginPrompt}
                     onClipReady={handleClipReady}
+                    onFullscreenContainerChange={setFullscreenContainer}
                     renderFullscreenChat={({
                       container,
                       isChatOpen,
@@ -515,6 +518,7 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
         open={isLoginPromptOpen}
         onOpenChange={setIsLoginPromptOpen}
         onLogin={moveToLogin}
+        container={fullscreenContainer}
       />
 
       <LiveBannedDialog
