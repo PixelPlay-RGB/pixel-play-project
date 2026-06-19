@@ -137,7 +137,7 @@ export const LIVE_FULLSCREEN_CHAT_INSET = "right-88";
 export const LIVE_DONATION_MIN_AMOUNT = 1000;
 export const LIVE_DONATION_AMOUNTS = [1000, 3000, 5000, 10000, 50000] as const;
 export const LIVE_CHAT_MESSAGE_MAX_LENGTH = 2000;
-export const LIVE_DONATION_MESSAGE_MAX_LENGTH = 300;
+export const LIVE_DONATION_MESSAGE_MAX_LENGTH = 100;
 // 채팅 로딩 정책(#111 확정): 첫 진입 50건 → 위로 스크롤 시 50건씩 과거 적재 → 누적 300건 도달 시 중단.
 // HISTORY_CAP은 낙관적/realtime 추가 시 slice 기준으로도 쓴다(과거 적재분은 새 메시지에 밀려 정리).
 export const LIVE_MESSAGE_INITIAL_LIMIT = 50;
