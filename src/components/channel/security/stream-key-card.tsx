@@ -26,6 +26,7 @@ export function StreamKeyCard({
   disabled,
   isRotating,
   isStreamKeyVisible,
+  streamKeyRevealRemaining,
   onCopy,
   onToggleVisible,
   onRotate,
@@ -34,6 +35,7 @@ export function StreamKeyCard({
   disabled: boolean;
   isRotating: boolean;
   isStreamKeyVisible: boolean;
+  streamKeyRevealRemaining: number;
   onCopy: (value: string) => Promise<void>;
   onToggleVisible: (tokenKind: ChannelSecurityTokenKind) => void;
   onRotate: (tokenKind: ChannelSecurityTokenKind, onSuccess?: () => void) => void;
@@ -80,6 +82,7 @@ export function StreamKeyCard({
             <SecurityActionGroup
               tokenKind="stream_key"
               isVisible={isStreamKeyVisible}
+              revealRemaining={streamKeyRevealRemaining}
               disabled={disabled}
               onToggleVisible={onToggleVisible}
               onCopy={() => onCopy(snapshot.streamKey)}

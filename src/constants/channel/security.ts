@@ -20,11 +20,8 @@ export const CHANNEL_SECURITY_TOKEN_KIND_SET = new Set<ChannelSecurityTokenKind>
 
 // 스트림 키·OBS URL을 "보기"로 노출한 뒤 자동으로 다시 가리기까지의 시간(CSEC-011, 어깨너머 노출 차단).
 // 복사 버튼이 따로 있어 길게 볼 일이 없고, 스트리머가 설정 화면을 켜둔 채 송출할 때 키가 화면에
-// 노출되는 사고를 막기 위해 30초 뒤 자동으로 다시 가린다.
+// 노출되는 사고를 막기 위해 노출 중 남은 시간을 실시간 카운트다운하고 0초가 되면 자동으로 다시 가린다.
 export const SECURITY_REVEAL_DURATION_MS = 30_000;
-
-// "보기"로 노출 중일 때 버튼 옆에 띄우는 자동 마스킹 안내(노출 시간 값과 자동으로 동기화한다).
-export const SECURITY_REVEAL_HINT = `${SECURITY_REVEAL_DURATION_MS / 1000}초 후 자동으로 다시 가려져요`;
 
 export const CHANNEL_SECURITY_ROTATE_SUCCESS_DESCRIPTION = {
   stream_key: "새 스트림 키를 만들었어요. OBS에 다시 붙여 넣어주세요.",

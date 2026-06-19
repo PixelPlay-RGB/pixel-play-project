@@ -1,12 +1,12 @@
 // 채널 보안 값의 보기, 복사, 미리보기 버튼 묶음을 렌더링합니다.
 import { Button } from "@/components/ui/button";
-import { SECURITY_REVEAL_HINT } from "@/constants/channel/security";
 import type { ChannelSecurityTokenKind } from "@/types/channel/security";
 import { Clock, Copy, ExternalLink, Eye, EyeOff } from "lucide-react";
 
 export function SecurityActionGroup({
   tokenKind,
   isVisible,
+  revealRemaining,
   disabled,
   onToggleVisible,
   onCopy,
@@ -14,6 +14,7 @@ export function SecurityActionGroup({
 }: {
   tokenKind: ChannelSecurityTokenKind;
   isVisible: boolean;
+  revealRemaining: number;
   disabled: boolean;
   onToggleVisible: (tokenKind: ChannelSecurityTokenKind) => void;
   onCopy: () => Promise<void>;
@@ -50,11 +51,11 @@ export function SecurityActionGroup({
           </Button>
         )}
       </div>
-      {/* 노출 중일 때만: 어깨너머·송출 화면 노출 방지를 위해 곧 자동으로 가려진다고 안내한다. */}
+      {/* 노출 중일 때만: 남은 시간을 실시간 카운트다운하고 0초가 되면 자동으로 가려진다. */}
       {isVisible && (
-        <p className="text-muted-foreground flex items-center gap-1 text-xs">
+        <p className="text-muted-foreground flex items-center gap-1 text-xs tabular-nums">
           <Clock className="size-3 shrink-0" />
-          {SECURITY_REVEAL_HINT}
+          {revealRemaining}초 후 자동으로 다시 가려져요
         </p>
       )}
     </div>

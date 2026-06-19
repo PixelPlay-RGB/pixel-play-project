@@ -13,24 +13,48 @@ import type {
   ChannelSecurityUrlPopupSize,
 } from "@/types/channel/security";
 import { toastAppError, toastAppSuccess } from "@/utils/common/toast-message";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 
 export function useChannelSecurityControls(initialSnapshot: ChannelSecuritySnapshot) {
   const [snapshot, setSnapshot] = useState(initialSnapshot);
   const [rotatingKind, setRotatingKind] = useState<ChannelSecurityTokenKind | null>(null);
-  const [visibleKinds, setVisibleKinds] = useState<ChannelSecurityTokenKind[]>([]);
+  // 노출 중인 토큰별 자동 마스킹 만료 시각(epoch ms). 키 존재 자체가 "노출 중"을 뜻하며,
+  // 카운트다운 표시와 만료 시 자동 가림(CSEC-011, 어깨너머·송출 노출 차단)에 함께 쓴다.
+  const [revealExpiry, setRevealExpiry] = useState<
+    Partial<Record<ChannelSecurityTokenKind, number>>
+  >({});
+  // 카운트다운(남은 초)을 주기적으로 다시 그리기 위한 틱. 값 자체는 리렌더 트리거 용도로만 쓴다.
+  const [, setRevealTick] = useState(0);
   const [isPending, startTransition] = useTransition();
-  // 노출 후 자동 마스킹 타이머(어깨너머 노출 차단, CSEC-011) — 토큰별로 따로 건다.
-  const hideTimersRef = useRef(new Map<ChannelSecurityTokenKind, ReturnType<typeof setTimeout>>());
 
-  // 언마운트 시 떠 있는 자동 숨김 타이머를 모두 정리한다.
+  const hasRevealCountdown = Object.keys(revealExpiry).length > 0;
+
+  // 노출 중인 토큰이 있는 동안 0.5초마다: 남은 시간 표시를 갱신하고 만료된 토큰은 자동으로 다시 가린다.
+  // setState를 effect 본문이 아니라 타이머 콜백에서 호출해 cascading 렌더를 피한다.
   useEffect(() => {
-    const timers = hideTimersRef.current;
-    return () => {
-      timers.forEach((timer) => clearTimeout(timer));
-      timers.clear();
-    };
-  }, []);
+    if (!hasRevealCountdown) {
+      return;
+    }
+    const intervalId = setInterval(() => {
+      const now = Date.now();
+      setRevealExpiry((current) => {
+        const remaining: Partial<Record<ChannelSecurityTokenKind, number>> = {};
+        let changed = false;
+        for (const key of Object.keys(current) as ChannelSecurityTokenKind[]) {
+          const expiry = current[key];
+          if (expiry !== undefined && expiry > now) {
+            remaining[key] = expiry;
+          } else {
+            // 만료 → remaining에 넣지 않음(= 자동으로 다시 가려짐).
+            changed = true;
+          }
+        }
+        return changed ? remaining : current;
+      });
+      setRevealTick((tick) => tick + 1);
+    }, 500);
+    return () => clearInterval(intervalId);
+  }, [hasRevealCountdown]);
 
   const handleCopy = async (value: string) => {
     try {
@@ -65,25 +89,16 @@ export function useChannelSecurityControls(initialSnapshot: ChannelSecuritySnaps
   };
 
   const handleToggleVisible = (tokenKind: ChannelSecurityTokenKind) => {
-    const timers = hideTimersRef.current;
-    const existing = timers.get(tokenKind);
-    if (existing) {
-      clearTimeout(existing);
-      timers.delete(tokenKind);
-    }
-
-    if (visibleKinds.includes(tokenKind)) {
-      setVisibleKinds((current) => current.filter((item) => item !== tokenKind));
-      return;
-    }
-
-    setVisibleKinds((current) => [...current, tokenKind]);
-    // 보기로 켜면 일정 시간 뒤 자동으로 다시 가린다(복사 버튼이 있어 길게 노출할 필요가 없다).
-    const timer = setTimeout(() => {
-      setVisibleKinds((current) => current.filter((item) => item !== tokenKind));
-      timers.delete(tokenKind);
-    }, SECURITY_REVEAL_DURATION_MS);
-    timers.set(tokenKind, timer);
+    // 노출 중(키 존재)이면 즉시 가리고, 아니면 만료 시각을 찍어 켠다(켜는 순간 카운트다운 시작).
+    setRevealExpiry((current) => {
+      const next = { ...current };
+      if (next[tokenKind] !== undefined) {
+        delete next[tokenKind];
+      } else {
+        next[tokenKind] = Date.now() + SECURITY_REVEAL_DURATION_MS;
+      }
+      return next;
+    });
   };
 
   const handleRotate = (tokenKind: ChannelSecurityTokenKind, onSuccess?: () => void) => {
@@ -113,12 +128,22 @@ export function useChannelSecurityControls(initialSnapshot: ChannelSecuritySnaps
     });
   };
 
+  // 노출 중인 토큰의 자동 마스킹까지 남은 초(올림). 노출 중이 아니면 0.
+  const getRevealRemaining = (tokenKind: ChannelSecurityTokenKind) => {
+    const expiry = revealExpiry[tokenKind];
+    if (expiry === undefined) {
+      return 0;
+    }
+    return Math.max(0, Math.ceil((expiry - Date.now()) / 1000));
+  };
+
   return {
     snapshot,
     rotatingKind,
     isPending,
     isRotating: isPending && rotatingKind !== null,
-    isVisibleKind: (tokenKind: ChannelSecurityTokenKind) => visibleKinds.includes(tokenKind),
+    isVisibleKind: (tokenKind: ChannelSecurityTokenKind) => revealExpiry[tokenKind] !== undefined,
+    getRevealRemaining,
     handleCopy,
     handlePreview,
     handleToggleVisible,

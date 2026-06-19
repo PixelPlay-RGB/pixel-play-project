@@ -27,6 +27,7 @@ export function ObsUrlCard({
   disabled,
   isRotating,
   isUrlVisible,
+  urlRevealRemaining,
   onCopy,
   onPreview,
   onToggleVisible,
@@ -37,6 +38,7 @@ export function ObsUrlCard({
   disabled: boolean;
   isRotating: boolean;
   isUrlVisible: boolean;
+  urlRevealRemaining: number;
   onCopy: (value: string) => Promise<void>;
   onPreview: (url: string) => void;
   onToggleVisible: (tokenKind: ChannelSecurityTokenKind) => void;
@@ -91,6 +93,7 @@ export function ObsUrlCard({
             <SecurityActionGroup
               tokenKind={meta.tokenKind}
               isVisible={isUrlVisible}
+              revealRemaining={urlRevealRemaining}
               disabled={disabled}
               onToggleVisible={onToggleVisible}
               onCopy={() => onCopy(url)}
