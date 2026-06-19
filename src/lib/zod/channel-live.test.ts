@@ -4,7 +4,7 @@ import test from "node:test";
 
 import { createChannelLivePollSchema } from "./channel-live.ts";
 
-test("createChannelLivePollSchema accepts more than five poll options", () => {
+test("createChannelLivePollSchema rejects more than five poll options", () => {
   const result = createChannelLivePollSchema.safeParse({
     broadcastId: "11111111-1111-4111-8111-111111111111",
     endsAt: null,
@@ -12,5 +12,5 @@ test("createChannelLivePollSchema accepts more than five poll options", () => {
     title: "테스트 투표",
   });
 
-  assert.equal(result.success, true);
+  assert.equal(result.success, false);
 });

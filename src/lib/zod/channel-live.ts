@@ -69,7 +69,7 @@ export const getChannelLiveDrawParticipantsSchema = z
 export const createChannelLivePollSchema = z.object({
   broadcastId: z.uuid(),
   endsAt: z.iso.datetime().nullable().optional(),
-  options: z.array(z.string().trim().min(1).max(24)).min(2),
+  options: z.array(z.string().trim().min(1).max(24)).min(2).max(5),
   title: z.string().trim().min(1).max(80),
 });
 

@@ -4,21 +4,21 @@
 export const CHANNEL_EMOJI_MAX = 10;
 export const CHANNEL_EMOJI_NAME_MAX = 20;
 export const CHANNEL_EMOJI_MAX_SIZE = 5 * 1024 * 1024; // 5MB
-export const CHANNEL_EMOJI_ALLOWED_TYPES = ["image/png"];
-export const CHANNEL_EMOJI_ACCEPT = "image/png";
+export const CHANNEL_EMOJI_ALLOWED_TYPES = ["image/png", "image/webp"];
+export const CHANNEL_EMOJI_ACCEPT = "image/png,image/webp";
 
 export const CHANNEL_EMOJI_LABEL = {
   // 페이지 헤더
   kicker: "구독 · 이모지",
   title: "채널 이모지",
   description:
-    "구독자가 채팅에서 쓸 수 있는 우리 채널만의 이모지예요. 투명 배경 PNG로 최대 10개까지 등록할 수 있어요.",
+    "구독자가 채팅에서 쓸 수 있는 우리 채널만의 이모지예요. 투명 배경 PNG·WebP로 최대 10개까지 등록할 수 있어요.",
 
   // 관리 카드(좌측)
   manageTitle: "등록한 이모지",
   manageDescription: "이미지를 끌어 순서를 바꾸고, 연필을 눌러 이미지·이름을 수정할 수 있어요.",
   countUnit: "개",
-  spec: "PNG · 112×112px 권장 · 5MB 이하",
+  spec: "PNG·WebP · 112×112px 권장 · 5MB 이하",
   add: "이모지 추가",
   addShort: "추가",
   dragHint: "이미지를 끌어 순서를 바꿀 수 있어요.",
@@ -46,9 +46,9 @@ export const CHANNEL_EMOJI_LABEL = {
   // 다이얼로그(추가/수정)
   addTitle: "이모지 추가",
   editTitle: "이모지 수정",
-  addDescription: "투명 배경 PNG 이미지를 올리고 짧은 이름을 붙여 주세요.",
+  addDescription: "투명 배경 PNG·WebP 이미지를 올리고 짧은 이름을 붙여 주세요.",
   uploadTitle: "이미지 업로드",
-  uploadHint: "PNG를 끌어다 놓거나 클릭해서 선택해요",
+  uploadHint: "PNG·WebP를 끌어다 놓거나 클릭해서 선택해요",
   changeImage: "이미지 변경",
   inChatPreviewLabel: "채팅에서",
   pickerPreviewLabel: "이모지 목록에서",

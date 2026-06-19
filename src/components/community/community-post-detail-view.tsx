@@ -125,20 +125,23 @@ export default function CommunityPostDetailView({
           />
 
           {detail.imageUrl && (
-            <Image
-              src={detail.imageUrl}
-              alt="첨부 이미지"
-              width={imageDim?.width ?? 1000}
-              height={imageDim?.height ?? 1000}
-              onLoad={(event) =>
-                setImageDim({
-                  width: event.currentTarget.naturalWidth,
-                  height: event.currentTarget.naturalHeight,
-                })
-              }
-              unoptimized
-              className="border-border/60 mt-4 h-auto max-h-128 w-auto max-w-full rounded-xl border"
-            />
+            // 로드 전후 높이를 고정해 본문·댓글이 점프하지 않게 한다(CLS 방지). 비율은 object-contain으로 보존.
+            <div className="border-border/60 bg-muted/20 mt-4 flex h-96 items-center justify-center overflow-hidden rounded-xl border">
+              <Image
+                src={detail.imageUrl}
+                alt="첨부 이미지"
+                width={imageDim?.width ?? 800}
+                height={imageDim?.height ?? 600}
+                onLoad={(event) =>
+                  setImageDim({
+                    width: event.currentTarget.naturalWidth,
+                    height: event.currentTarget.naturalHeight,
+                  })
+                }
+                unoptimized
+                className="h-full w-auto max-w-full object-contain"
+              />
+            </div>
           )}
 
           <div className="mt-4 flex items-center justify-end">

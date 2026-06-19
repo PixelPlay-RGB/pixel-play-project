@@ -154,6 +154,7 @@ export function ChannelLiveVoteToolView({ isPollLoading, tool }: Props) {
               type="button"
               variant="outline"
               className="border-brand text-brand hover:bg-brand/10 hover:text-brand h-11 w-full rounded-xl font-bold"
+              disabled={options.length >= 5}
               onClick={handleAddOption}
             >
               <Plus className="size-3.5" />

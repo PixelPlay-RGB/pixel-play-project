@@ -1,4 +1,3 @@
-"use client";
 // 구독자 전용 채널 이모티콘 미리보기 목록을 렌더링합니다.
 
 import StickerImage from "@/components/sticker/sticker-image";

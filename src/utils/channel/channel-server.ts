@@ -16,6 +16,7 @@ import {
 } from "@/utils/channel/channel-profile-subscription";
 import { mapChannelEmojiRows, type ChannelEmojiPreviewRow } from "@/utils/channel/channel-emoji";
 import { readChannelSubscriptionBadgeAssetsFromStorage } from "@/utils/channel/channel-subscription-badge-storage";
+import { isUuid } from "@/utils/common/uuid";
 
 type CreatorSubscriptionRow = Pick<GenericTables<"creator_subscription">, "status" | "end_at">;
 type AdminClient = ReturnType<typeof createAdminClient>;
@@ -24,6 +25,12 @@ type AdminClient = ReturnType<typeof createAdminClient>;
 export const getChannelProfile = cache(async function getChannelProfile(
   creatorId: string,
 ): Promise<AppActionResult<ChannelProfile>> {
+  // 비-UUID creatorId는 RPC의 uuid 캐스팅에서 22P02로 throw되므로(서버 콘솔 에러),
+  // 쿼리 전에 차단해 notFound로 흘려보낸다. (getLivePlaybackUrl과 동일 가드)
+  if (!isUuid(creatorId)) {
+    return { success: false, code: APP_MESSAGE_CODE.error.common.notFoundPage };
+  }
+
   const viewerId = await resolveViewerId();
   const supabase = createAdminClient();
 

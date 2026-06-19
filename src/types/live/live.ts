@@ -238,6 +238,7 @@ export interface LiveWatchSettings {
   donationEnabled: boolean;
   donationMinAmount: number;
   donationAmountVisible: boolean;
+  forbiddenWords: string[];
 }
 
 export interface LiveWatchViewerRelation {

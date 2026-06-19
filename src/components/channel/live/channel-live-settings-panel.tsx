@@ -98,6 +98,7 @@ export default function ChannelLiveSettingsPanel({
         <Input
           id="channel-live-title"
           value={title}
+          maxLength={100}
           onChange={(event) => onTitleChange(event.target.value)}
           placeholder="방송 제목을 입력하세요"
         />

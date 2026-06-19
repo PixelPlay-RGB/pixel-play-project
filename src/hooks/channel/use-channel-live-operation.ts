@@ -440,6 +440,7 @@ export function useChannelLiveOperation(initialSnapshot?: ChannelLiveStudioSnaps
     chatRuleText,
     chatScope,
     donationFeedBroadcastId,
+    forbiddenWords,
     setChatScope,
     handleAddTag,
     handleEndBroadcast,

@@ -47,7 +47,9 @@ export function useChannelLiveVoteTool(broadcastId: string | null, polls: LivePo
   };
 
   const handleAddOption = () => {
-    setOptions((currentOptions) => [...currentOptions, ""]);
+    setOptions((currentOptions) =>
+      currentOptions.length >= 5 ? currentOptions : [...currentOptions, ""],
+    );
   };
 
   const handleRemoveOption = (index: number) => {
