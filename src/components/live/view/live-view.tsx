@@ -10,6 +10,7 @@ import { ClipSection } from "@/components/clip/clip-section";
 import { ChannelStickerProvider } from "@/components/live/chat/channel-sticker-context";
 import { LiveChatDataProvider } from "@/components/live/view/live-chat-data-context";
 import { LiveVideoPlayer } from "@/components/live/view/live-video-player";
+import { LivePipPlaceholder } from "@/components/live/view/live-pip-placeholder";
 import { LiveFullscreenChatOverlay } from "@/components/live/view/live-fullscreen-chat-overlay";
 import { LiveBroadcastInfo } from "@/components/live/view/live-broadcast-info";
 import { LiveStreamerRow } from "@/components/live/view/live-streamer-row";
@@ -218,6 +219,9 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
   // 로딩 중엔 판단을 보류해, 다른 라이브의 미니가 재생 중이면 새 화면 데이터가 올 때까지 유지한다.
   const startSession = useLiveWatchSessionStore((state) => state.startSession);
   const endSession = useLiveWatchSessionStore((state) => state.endSession);
+  // PIP(미니) 전환 상태 — 시청 페이지에 머문 채 비디오만 미니로 빼고 본문엔 안내를 띄운다.
+  const isPip = useLiveWatchSessionStore((state) => state.isPip);
+  const setPip = useLiveWatchSessionStore((state) => state.setPip);
   // 현재 store에 들어있는 세션의 크리에이터 — 오류 시 '이 화면 것'인지 '묵은 다른 방송 것'인지 구분한다.
   const sessionCreatorId = useLiveWatchSessionStore((state) => state.session?.creatorId);
   // broadcast 객체는 매 렌더 재생성되므로(map 함수) 원시값만 deps에 두어,
@@ -317,6 +321,13 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
     }
   }
 
+  // PIP 진입: 큰 화면(극장)과는 모순이므로 극장 모드를 풀고 미니로 뺀다 — 미니 표시는
+  // 루트 호스트(LiveMiniPlayerHost)가 세션·isPip 기준으로 처리한다.
+  function enterPip() {
+    setWideMode(false);
+    setPip(true);
+  }
+
   function collapseDesktopChat() {
     setIsDesktopChatCollapsed(true);
     requestAnimationFrame(() => {
@@ -368,36 +379,43 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
               {/* 일반 모드는 shrink-0 — 칼럼이 넘칠 때 눌리는 대신 스크롤로 넘어가야 한다. */}
               <div className={cn(isTheater ? "md:min-h-0 md:flex-1" : "md:shrink-0")}>
                 {broadcast && !isBanned ? (
-                  <LiveVideoPlayer
-                    broadcast={broadcast}
-                    hlsSrc={hlsSrc}
-                    elapsedText={elapsedText}
-                    isChatCollapsed={isChatCollapsed}
-                    isTheater={isTheater}
-                    onToggleTheater={toggleTheater}
-                    openChatButtonRef={openChatButtonRef}
-                    onOpenChat={expandDesktopChat}
-                    clipLoggedIn={isLoggedIn}
-                    onClipRequireLogin={openLoginPrompt}
-                    onClipReady={handleClipReady}
-                    onFullscreenContainerChange={setFullscreenContainer}
-                    renderFullscreenChat={({
-                      container,
-                      isChatOpen,
-                      onToggleChat,
-                      isDonationRequested,
-                      onDonationSettled,
-                    }) => (
-                      <LiveFullscreenChatOverlay
-                        container={container}
-                        isChatOpen={isChatOpen}
-                        onToggleChat={onToggleChat}
-                        creatorId={creatorId}
-                        donationOpenRequested={isDonationRequested}
-                        onDonationOpenSettled={onDonationSettled}
-                      />
-                    )}
-                  />
+                  isPip ? (
+                    // PIP로 전환하면 같은 16:9 자리에 안내를 띄운다(레이아웃 유지). 미니플레이어는
+                    // 루트 호스트가 세션·isPip 기준으로 띄우고, '여기서 다시 보기'는 네비 없이 상태만 되돌린다.
+                    <LivePipPlaceholder onReturn={() => setPip(false)} />
+                  ) : (
+                    <LiveVideoPlayer
+                      broadcast={broadcast}
+                      hlsSrc={hlsSrc}
+                      elapsedText={elapsedText}
+                      isChatCollapsed={isChatCollapsed}
+                      isTheater={isTheater}
+                      onToggleTheater={toggleTheater}
+                      openChatButtonRef={openChatButtonRef}
+                      onOpenChat={expandDesktopChat}
+                      clipLoggedIn={isLoggedIn}
+                      onClipRequireLogin={openLoginPrompt}
+                      onClipReady={handleClipReady}
+                      onPipClick={enterPip}
+                      onFullscreenContainerChange={setFullscreenContainer}
+                      renderFullscreenChat={({
+                        container,
+                        isChatOpen,
+                        onToggleChat,
+                        isDonationRequested,
+                        onDonationSettled,
+                      }) => (
+                        <LiveFullscreenChatOverlay
+                          container={container}
+                          isChatOpen={isChatOpen}
+                          onToggleChat={onToggleChat}
+                          creatorId={creatorId}
+                          donationOpenRequested={isDonationRequested}
+                          onDonationOpenSettled={onDonationSettled}
+                        />
+                      )}
+                    />
+                  )
                 ) : isBanned && broadcast ? (
                   // 강퇴 상태에선 플레이어를 언마운트해 영상/오디오를 즉시 끊고, 같은 16:9 자리에 검은 프레임만
                   // 남겨 레이아웃(채팅 입력 높이 동기화)을 유지한다. 위에는 LiveBannedDialog 모달이 덮인다.

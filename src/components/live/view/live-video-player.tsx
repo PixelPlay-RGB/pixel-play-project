@@ -61,6 +61,8 @@ interface Props {
     snapshotDataUrl: string | null;
     frames: string[];
   }) => void;
+  // PIP 전환 — 컨트롤 바로 그대로 전달한다(미니 표시·본문 안내는 상위 LiveView가 처리).
+  onPipClick?: () => void;
 }
 
 // 별도 창 핸드오프(localStorage)로 넘기므로 과대 용량을 막으려 720p로 다운스케일한다.
@@ -176,6 +178,7 @@ export function LiveVideoPlayer({
   clipLoggedIn,
   onClipRequireLogin,
   onClipReady,
+  onPipClick,
 }: Props) {
   const { containerRef, isFullscreen, toggleFullscreen } = useFullscreen<HTMLDivElement>();
   // 전체화면 채팅 패널 열림 상태. 컨트롤 바 폭(채팅이 가리지 않게)과 공유해야 해 여기서 소유한다.
@@ -472,6 +475,7 @@ export function LiveVideoPlayer({
             onClipClick={
               onClipReady && playbackState === "playing" ? () => void handleClipClick() : undefined
             }
+            onPipClick={onPipClick}
           />
         </div>
       ) : null}

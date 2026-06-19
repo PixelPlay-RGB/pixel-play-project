@@ -7,6 +7,7 @@ import {
   Minimize2,
   PanelRightOpen,
   Pause,
+  PictureInPicture2,
   Play,
   RectangleHorizontal,
   Scissors,
@@ -50,6 +51,8 @@ interface Props {
   onSeekToLive: () => void;
   // 클립 생성(#124) — 송출 프레임이 있을 때만 상위에서 핸들러를 내려준다.
   onClipClick?: () => void;
+  // PIP 전환 — 시청 페이지에서만 내려온다(미니플레이어로 빼고 본문엔 안내를 띄운다).
+  onPipClick?: () => void;
 }
 
 export function LivePlayerControlBar({
@@ -75,6 +78,7 @@ export function LivePlayerControlBar({
   isAtLiveEdge,
   onSeekToLive,
   onClipClick,
+  onPipClick,
 }: Props) {
   return (
     <div className="flex items-center gap-2">
@@ -200,6 +204,28 @@ export function LivePlayerControlBar({
               <PanelRightOpen className="size-6" />
             </TooltipTrigger>
             <TooltipContent>{LIVE_LABEL.chatExpand}</TooltipContent>
+          </Tooltip>
+        ) : null}
+
+        {/* PIP: 미니플레이어로 빼고 본문 자리엔 안내를 띄운다 — 시청 페이지에서만 내려온다.
+            전체화면과 같은 '창 모드' 계열이라 바로 옆에 둔다. */}
+        {onPipClick ? (
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  aria-label={LIVE_LABEL.playerPip}
+                  className={LIVE_PLAYER_ICON_BUTTON_CLASS}
+                  onClick={onPipClick}
+                />
+              }
+            >
+              <PictureInPicture2 className="size-6" />
+            </TooltipTrigger>
+            <TooltipContent>{LIVE_LABEL.playerPip}</TooltipContent>
           </Tooltip>
         ) : null}
 

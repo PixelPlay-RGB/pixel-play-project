@@ -3,9 +3,9 @@
 // 본문 더블클릭·우상단 복귀 버튼=시청 화면 복귀(세션 유지), X=시청 종료(presence 퇴장), 종료 신호=자동 닫기+토스트.
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useRef, type PointerEvent as ReactPointerEvent } from "react";
-import { Pause, Play, SquareArrowOutUpRight, X } from "lucide-react";
+import { GripHorizontal, Pause, Play, SquareArrowOutUpRight, X } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion } from "motion/react";
 
@@ -20,7 +20,7 @@ import { useHlsPlayer } from "@/hooks/live/use-hls-player";
 import { useLiveBroadcastRealtime } from "@/hooks/live/use-live-broadcast-realtime";
 import { useLivePlayerControls } from "@/hooks/live/use-live-player-controls";
 import { cn } from "@/lib/utils";
-import type { LiveWatchSession } from "@/stores/live-watch-session";
+import { useLiveWatchSessionStore, type LiveWatchSession } from "@/stores/live-watch-session";
 import { toastAppInfo } from "@/utils/common/toast-message";
 
 interface Props {
@@ -39,6 +39,9 @@ const CONTROL_INTERACTIVITY_CLASS =
 
 export function LiveMiniPlayer({ session, onClose }: Props) {
   const router = useRouter();
+  const pathname = usePathname();
+  const setPip = useLiveWatchSessionStore((state) => state.setPip);
+  const isPip = useLiveWatchSessionStore((state) => state.isPip);
   const queryClient = useQueryClient();
   const rootRef = useRef<HTMLDivElement>(null);
   // 드래그(motion/react, sticky-save-bar와 동일 패턴) 이동을 뷰포트 안으로 가두는 제약 컨테이너.
@@ -63,6 +66,18 @@ export function LiveMiniPlayer({ session, onClose }: Props) {
     onClose();
   }
 
+  // 시청 화면 복귀(본문 더블클릭 경로) — 같은 시청 페이지에서 PIP를 켠 경우엔 네비 없이 인라인으로
+  // 즉시 되돌리고(미니가 언마운트되므로 포커스를 본문으로 회수), 다른 라우터에 있을 땐 시청 페이지로
+  // 이동한다(watch 캐시 보존으로 빠르게 뜬다).
+  function handleReturn() {
+    setPip(false);
+    if (pathname === watchHref) {
+      recoverFocusBeforeClose();
+      return;
+    }
+    router.push(watchHref);
+  }
+
   // 컨트롤(버튼·음량 슬라이더)에서 시작한 포인터는 패널 드래그를 시작시키지 않는다 — 이벤트가
   // motion 드래그 리스너가 달린 루트로 버블되기 전에 차단한다(버튼 클릭·슬라이더 조작 자체는 유지).
   function stopDragFromControls(event: ReactPointerEvent) {
@@ -76,9 +91,12 @@ export function LiveMiniPlayer({ session, onClose }: Props) {
     enabled: !!session.hlsSrc,
   });
 
-  // 미니 표시 중엔 시청 화면(use-live-view-data)이 언마운트라 여기서 방송 채널을 구독한다(상호 배타 — 중복 구독 없음).
+  // 미니 표시 중엔 시청 화면(use-live-view-data)이 언마운트라 여기서 방송 채널을 구독한다.
   // verifyOnFirstJoin: 시청→미니 핸드오프 갭(이전 구독 해제~새 구독 사이)에 종료된 방송을 첫 조인에서 잡는다.
-  useLiveBroadcastRealtime(session.broadcastId, {
+  // 단, PIP(시청 페이지에 머문 채 미니)일 땐 시청 화면이 살아 있어 같은 broadcast 채널을 이미 구독 중이다 —
+  // 같은 채널명 이중 구독은 Supabase Realtime에서 에러이므로, PIP일 땐 구독을 양보한다(broadcastId=null →
+  // 스킵). 그때의 종료 처리·토스트는 시청 화면(use-live-view-data) 쪽이 담당한다.
+  useLiveBroadcastRealtime(isPip ? null : session.broadcastId, {
     verifyOnFirstJoin: true,
     onEnded: () => {
       // 시청 화면이 언마운트 상태라 watch 캐시가 '라이브'인 채 남는다 — staleTime 안에 재진입하면
@@ -103,14 +121,60 @@ export function LiveMiniPlayer({ session, onClose }: Props) {
         dragMomentum={false}
         dragElastic={0}
         whileDrag={{ cursor: "grabbing" }}
+        // 우하단에서 톡 떠오르는 등장 애니메이션. reduced-motion이면 motion이 자동으로 즉시 처리한다.
+        initial={{ opacity: 0, scale: 0.92, y: 24 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ type: "spring", stiffness: 360, damping: 28 }}
         className={cn(
           // bottom-24: 우하단 모서리에 뜨는 토스트(sonner)·하단 중앙의 설정 저장 바(StickySaveBar,
           // bottom-6+높이 약 58px)의 출현 영역 위로 올려, 모든 폭에서 겹치지 않게 한다.
-          "group pointer-events-auto absolute right-4 bottom-24 w-80 overflow-hidden bg-black shadow-lg",
+          // 윈도우 창처럼 라운드+테두리+그림자로 띄운다.
+          "group pointer-events-auto absolute right-4 bottom-24 w-80 overflow-hidden rounded-xl border border-white/10 bg-black shadow-2xl",
           "md:w-96",
           "cursor-grab active:cursor-grabbing",
         )}
       >
+        {/* 뚜껑(윈도우 타이틀바) — hover/포커스 시 위에서 열린다. 좌측 드래그 핸들, 우측 복귀·닫기.
+            영상 프레임 바깥(위)에 두어 "창을 연" 느낌을 준다. 터치 기기(hover 없음)는 항상 펼친다. */}
+        <div className="flex max-h-0 items-center justify-between overflow-hidden bg-black/95 transition-[max-height] duration-200 group-focus-within:max-h-12 group-hover:max-h-12 pointer-coarse:max-h-12">
+          <span className="flex items-center gap-1.5 px-2.5 text-white/40">
+            <GripHorizontal className="size-4" />
+            <span className="text-xs font-semibold tracking-wide">{LIVE_LABEL.miniPlayer}</span>
+          </span>
+          {/* onPointerDown stopPropagation: 버튼에서 시작한 포인터는 패널 드래그를 시작시키지 않는다. */}
+          <div onPointerDown={stopDragFromControls} className="flex gap-0.5 p-1">
+            <Button
+              size="icon"
+              variant="ghost"
+              nativeButton={false}
+              render={<Link href={watchHref} />}
+              aria-label={LIVE_LABEL.miniPlayerReturn}
+              className={LIVE_PLAYER_ICON_BUTTON_CLASS}
+              onClick={(event) => {
+                setPip(false);
+                // 같은 시청 페이지에서 PIP를 켰으면 네비 없이 인라인으로 즉시 복원한다(미니 언마운트 →
+                // 포커스 회수). 다른 라우터면 Link가 watch로 이동(prefetch + watch 캐시 보존으로 빠르게).
+                if (pathname === watchHref) {
+                  event.preventDefault();
+                  recoverFocusBeforeClose();
+                }
+              }}
+            >
+              <SquareArrowOutUpRight className="size-4" />
+            </Button>
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              aria-label={LIVE_LABEL.miniPlayerClose}
+              className={LIVE_PLAYER_ICON_BUTTON_CLASS}
+              onClick={handleClose}
+            >
+              <X className="size-4" />
+            </Button>
+          </div>
+        </div>
+
         {/* video+대기 오버레이는 메인(live-video-player)과 동일 마크업이지만, 그쪽은 전체화면 채팅
             인셋 래퍼와 결합돼 있어 의도적으로 추출하지 않는다(attach 정책은 useHlsPlayer로 공유). */}
         <div className="relative aspect-video">
@@ -125,50 +189,8 @@ export function LiveMiniPlayer({ session, onClose }: Props) {
 
           {/* 본문 = 드래그 표면 + 더블클릭 시 시청 화면 복귀(세션 유지 — presence 무중단). 단일 클릭은
             드래그 의도와 충돌하므로 내비하지 않는다. 커서(grab)는 루트에서 상속. 접근성 이름·탭 스톱·
-            단일클릭 복귀는 우상단 복귀 버튼이 담당한다. */}
-          <div
-            aria-hidden
-            onDoubleClick={() => router.push(watchHref)}
-            className="absolute inset-0"
-          />
-
-          {/* hover/포커스 시 상단 그라데이션: 우상단 복귀(시청 화면으로) + 닫기(X = 의도된 퇴장, 시청자 수 -1) */}
-          <div
-            className={cn(
-              "pointer-events-none absolute inset-x-0 top-0",
-              "flex justify-end gap-0.5 p-1.5 pb-8",
-              "bg-linear-to-b from-black/60 to-transparent",
-              OVERLAY_VISIBILITY_CLASS,
-            )}
-          >
-            {/* 클릭 수신은 이 컨트롤 그룹 div 한 곳에서만 토글한다 — 버튼마다 부착하면 새 컨트롤 추가 시 누락된다.
-              onPointerDown stopPropagation: 이 그룹에서 시작한 포인터는 패널 드래그를 시작시키지 않는다. */}
-            <div
-              onPointerDown={stopDragFromControls}
-              className={cn("flex gap-0.5", CONTROL_INTERACTIVITY_CLASS)}
-            >
-              <Button
-                size="icon"
-                variant="ghost"
-                nativeButton={false}
-                render={<Link href={watchHref} />}
-                aria-label={LIVE_LABEL.miniPlayerReturn}
-                className={LIVE_PLAYER_ICON_BUTTON_CLASS}
-              >
-                <SquareArrowOutUpRight className="size-5" />
-              </Button>
-              <Button
-                type="button"
-                size="icon"
-                variant="ghost"
-                aria-label={LIVE_LABEL.miniPlayerClose}
-                className={LIVE_PLAYER_ICON_BUTTON_CLASS}
-                onClick={handleClose}
-              >
-                <X className="size-5" />
-              </Button>
-            </div>
-          </div>
+            단일클릭 복귀는 뚜껑의 복귀 버튼이 담당한다. */}
+          <div aria-hidden onDoubleClick={handleReturn} className="absolute inset-0" />
 
           {/* hover/포커스 시 하단 그라데이션: 좌하단 재생·음량 컨트롤 + 점멸 LIVE(메인 컨트롤 바와 공유) */}
           <div
