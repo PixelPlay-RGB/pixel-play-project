@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { X } from "lucide-react";
 
+import RelativeTime from "@/components/common/relative-time";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import type { AppNotification } from "@/types/notification/notification";
-import { formatRelativeTime } from "@/utils/common/format";
 import { stickerTokensToText } from "@/utils/sticker/sticker-token";
 import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
 
@@ -43,7 +43,7 @@ export default function NotificationItem({ notification, onNavigate, onDelete }:
             </p>
           )}
           <p className="text-muted-foreground/70 mt-0.5 text-xs">
-            {formatRelativeTime(notification.createdAt)}
+            <RelativeTime iso={notification.createdAt} />
           </p>
         </div>
       </Link>

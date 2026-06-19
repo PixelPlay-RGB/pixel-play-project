@@ -10,6 +10,7 @@ import CommunityCommentLikeButton from "@/components/community/community-comment
 import CommunityCommentReplies from "@/components/community/community-comment-replies";
 import ClampedText from "@/components/common/clamped-text";
 import DeleteConfirmDialog from "@/components/common/delete-confirm-dialog";
+import RelativeTime from "@/components/common/relative-time";
 import RichMessageText from "@/components/common/rich-message-text";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -21,7 +22,7 @@ import { useUpdateCommunityComment } from "@/hooks/community/use-update-communit
 import { useViewerId } from "@/hooks/common/use-viewer-id";
 import { cn } from "@/lib/utils";
 import type { CommunityComment } from "@/types/community/community";
-import { formatNumber, formatRelativeTime } from "@/utils/common/format";
+import { formatNumber } from "@/utils/common/format";
 import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
 
 interface Props {
@@ -120,7 +121,7 @@ export default function CommunityCommentItem({
               {comment.authorNickname}
             </Link>
             <span className="text-muted-foreground shrink-0 text-xs">
-              {formatRelativeTime(comment.createdAt)}
+              <RelativeTime iso={comment.createdAt} />
               {comment.modifiedAt && " · 수정됨"}
             </span>
           </div>

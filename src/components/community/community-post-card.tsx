@@ -8,13 +8,14 @@ import { Heart, MessageSquare } from "lucide-react";
 import { useState } from "react";
 
 import ClampedText from "@/components/common/clamped-text";
+import RelativeTime from "@/components/common/relative-time";
 import RichMessageText from "@/components/common/rich-message-text";
 import CommunityActionMenu from "@/components/community/community-action-menu";
 import DeleteConfirmDialog from "@/components/common/delete-confirm-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useDeleteCommunityPost } from "@/hooks/community/use-delete-community-post";
 import type { CommunityCreator, CommunityPost } from "@/types/community/community";
-import { formatNumber, formatRelativeTime } from "@/utils/common/format";
+import { formatNumber } from "@/utils/common/format";
 import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
 
 interface Props {
@@ -51,7 +52,7 @@ export default function CommunityPostCard({ creatorId, creator, post, isOwner }:
           <div className="min-w-0">
             <p className="text-foreground truncate text-sm font-bold">{creator.nickname}</p>
             <p className="text-muted-foreground text-xs">
-              {formatRelativeTime(post.createdAt)}
+              <RelativeTime iso={post.createdAt} />
               {post.modifiedAt && " · 수정됨"}
             </p>
           </div>
