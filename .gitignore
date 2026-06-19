@@ -56,8 +56,8 @@ next-env.d.ts
 checklist.md
 context-notes.md
 
-# Local docs
-/docs/**/*.md
+# Local docs (코드리뷰·스펙 산출물 — 로컬 전용, 루트 정리)
+/docs/
 
 # Supabase CLI local state
 supabase/.temp/
