@@ -59,6 +59,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
     broadcastStartedAt,
     chatRuleText,
     donationFeedBroadcastId,
+    forbiddenWords,
     handleAddTag,
     handleEndBroadcast,
     handleRemoveTag,
@@ -66,6 +67,7 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
     handleStartBroadcast,
     handleStreamStatusChange,
     isBroadcastActionPending,
+    isLinkBlocked,
     isSettingsActionPending,
     isSettingsDirty,
     isStreamOnline,
@@ -179,7 +181,12 @@ export default function ChannelLiveOperationPage({ initialSnapshot }: Props) {
 
         <div className="border-border min-w-0 xl:h-full xl:min-h-0 xl:border-x">
           {/* 채팅은 채널 단위 타임라인(#111) — 방송 시작·종료에도 리마운트 없이 이어진다. */}
-          <ChannelLiveChatPanel creatorId={creatorId} chatRuleText={chatRuleText} />
+          <ChannelLiveChatPanel
+            creatorId={creatorId}
+            chatRuleText={chatRuleText}
+            forbiddenWords={forbiddenWords}
+            linkBlocked={isLinkBlocked}
+          />
         </div>
 
         <div className="min-w-0 xl:h-full xl:min-h-0 xl:overflow-y-auto">

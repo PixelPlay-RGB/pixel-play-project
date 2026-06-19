@@ -27,6 +27,14 @@ export function matchesForbiddenWord(content: string, forbiddenWords: readonly s
   });
 }
 
+// 링크 차단(link_blocked) 선검사 — 서버 send_live_message_v4의 `v_content ~* '(https?://|www\.)'`와
+// 동일 정규식. 전송 직전 client가 막아 차단 대상 원문의 깜빡임을 없앤다(서버 PX422는 방어선으로 유지).
+const BLOCKED_LINK_PATTERN = /https?:\/\/|www\./i;
+
+export function containsBlockedLink(content: string): boolean {
+  return BLOCKED_LINK_PATTERN.test(content);
+}
+
 // 메시지 리스트에 새 메시지를 추가하고 최대 보관 건수(LIVE_MESSAGE_HISTORY_CAP)로 자른다.
 // 위로 적재한 과거 채팅도 새 메시지가 쌓이면 캡에 밀려 자연스럽게 정리된다.
 export function appendLiveMessage(

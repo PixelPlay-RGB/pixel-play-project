@@ -20,6 +20,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 interface Props {
   creatorId?: string;
   chatRuleText?: string;
+  // 운영(크리에이터 본인) 채팅도 시청 화면과 동일하게 금칙어·링크 원문 깜빡임을 막는다(GAP-017).
+  forbiddenWords?: string[];
+  linkBlocked?: boolean;
 }
 
 // 운영(스튜디오) 화면은 크리에이터 본인 — 시청 화면과 동일하게 입력을 막지 않는다.
@@ -31,7 +34,12 @@ const STUDIO_CHAT_STATE: LiveViewerChatState = {
   remainingSlowModeSeconds: 0,
 };
 
-export default function ChannelLiveChatPanel({ creatorId, chatRuleText }: Props) {
+export default function ChannelLiveChatPanel({
+  creatorId,
+  chatRuleText,
+  forbiddenWords,
+  linkBlocked,
+}: Props) {
   const [cleanbot, setCleanbot] = useState(true);
   const [isPopoutOpen, setIsPopoutOpen] = useState(false);
   // 메뉴의 "채팅 규칙" 클릭마다 증가 — 입력바 위 규칙 popover를 여는 요청 id.
@@ -59,6 +67,8 @@ export default function ChannelLiveChatPanel({ creatorId, chatRuleText }: Props)
   const { isLoggedIn, sendMessage } = useLiveChatSession({
     creatorId: creatorId ?? "",
     viewerChatState: chatState,
+    forbiddenWords,
+    linkBlocked,
   });
 
   // 닉네임 클릭 팝업(프로필/강퇴) — 운영 콘솔은 크리에이터 본인 화면이라 본인이면 강퇴 권한자다.

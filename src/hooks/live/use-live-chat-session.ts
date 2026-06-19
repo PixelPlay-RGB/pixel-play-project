@@ -8,7 +8,11 @@ import { QUERY_KEYS } from "@/constants/common/query-keys";
 import { LIVE_CHAT_MESSAGE_MAX_LENGTH, LIVE_LABEL } from "@/constants/live/live";
 import { useNullableUser } from "@/hooks/profile/use-profile";
 import { useAuthStore } from "@/stores/auth";
-import { appendLiveMessage, matchesForbiddenWord } from "@/utils/live/live-chat";
+import {
+  appendLiveMessage,
+  containsBlockedLink,
+  matchesForbiddenWord,
+} from "@/utils/live/live-chat";
 import { toastAppError } from "@/utils/common/toast-message";
 import type { LiveChatMessage, LiveSenderRole, LiveViewerChatState } from "@/types/live/live";
 
@@ -19,6 +23,8 @@ interface UseLiveChatSessionParams {
   viewerSubscriptionTotalMonths?: number | null;
   // 크리에이터 지정 금칙어 — 전송 직전 선검사로 원문 깜빡임을 막는다(서버와 동일 매칭).
   forbiddenWords?: string[];
+  // 링크 차단 설정 — true면 전송 직전 링크 포함 메시지를 선검사로 막는다(서버 PX422와 동일).
+  linkBlocked?: boolean;
   onChatRuleAccepted?: () => Promise<unknown>;
 }
 
@@ -35,6 +41,7 @@ export function useLiveChatSession({
   viewerIsSubscriber = false,
   viewerSubscriptionTotalMonths,
   forbiddenWords = [],
+  linkBlocked = false,
   onChatRuleAccepted,
 }: UseLiveChatSessionParams) {
   const user = useAuthStore((state) => state.user);
@@ -75,6 +82,13 @@ export function useLiveChatSession({
     // 막아 원문이 한 프레임도 노출되지 않게 한다. forbiddenWords 미전달 시엔 아래 서버 moderated가 방어한다.
     if (matchesForbiddenWord(trimmed, forbiddenWords)) {
       appendBannedWordNotice();
+      return false;
+    }
+
+    // 링크 차단 선검사(GAP-017) — 서버 PX422와 동일 정규식으로 optimistic 전에 막아 원문 깜빡임을
+    // 없앤다. 차단은 안내 메시지가 아니라 토스트(서버 raise와 동일 표면). 서버 검사는 방어선으로 유지.
+    if (linkBlocked && containsBlockedLink(trimmed)) {
+      toastAppError(APP_MESSAGE_CODE.error.message.linkBlocked);
       return false;
     }
 
