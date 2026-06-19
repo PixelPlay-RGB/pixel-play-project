@@ -47,6 +47,7 @@ export const LIVE_LABEL = {
   donationRankingExpand: "후원 랭킹 펼치기",
   emptyWeeklyDonation: "이번 주 첫 번째 팬이 되어보세요!",
   chatLoginPlaceholder: "로그인 후 채팅할 수 있습니다.",
+  chatOfflinePlaceholder: "방송이 시작되면 채팅할 수 있어요.",
   chatPlaceholder: "채팅을 입력해보세요!",
   chatSend: "채팅 전송",
   loginRequired: "로그인이 필요합니다.",

@@ -224,7 +224,7 @@ export const APP_MESSAGE = {
       },
       authInfoNotFound: {
         title: "인증 정보 없음",
-        description: "다시 로그인한 뒤 시도해주세요.",
+        description: "로그인 후 다시 시도해주세요.",
       },
       authInfoLoadFailed: {
         title: "인증 정보 조회 실패",
