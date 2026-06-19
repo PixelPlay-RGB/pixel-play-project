@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -745,6 +745,7 @@ export type Database = {
           created_at: string
           creator_id: string
           donor_id: string
+          donor_nickname: string | null
           id: string
           is_anonymous: boolean
           message: string
@@ -756,6 +757,7 @@ export type Database = {
           created_at?: string
           creator_id: string
           donor_id: string
+          donor_nickname?: string | null
           id?: string
           is_anonymous?: boolean
           message?: string
@@ -767,6 +769,7 @@ export type Database = {
           created_at?: string
           creator_id?: string
           donor_id?: string
+          donor_nickname?: string | null
           id?: string
           is_anonymous?: boolean
           message?: string
@@ -1435,8 +1438,6 @@ export type Database = {
         }
         Returns: Json
       }
-      check_email_exists: { Args: { target_email: string }; Returns: boolean }
-      claim_live_clip_jobs: { Args: { p_limit?: number }; Returns: Json }
       cancel_creator_subscription: {
         Args: {
           p_actor_user_id: string
@@ -1445,6 +1446,8 @@ export type Database = {
         }
         Returns: Json
       }
+      check_email_exists: { Args: { target_email: string }; Returns: boolean }
+      claim_live_clip_jobs: { Args: { p_limit?: number }; Returns: Json }
       community_comment_to_json: {
         Args: { p_comment_id: string; p_viewer_id: string }
         Returns: Json
@@ -1957,7 +1960,11 @@ export type Database = {
         Returns: string
       }
       subscribe_creator: {
-        Args: { p_actor_user_id: string; p_creator_id: string; p_idempotency_key?: string }
+        Args: {
+          p_actor_user_id: string
+          p_creator_id: string
+          p_idempotency_key?: string
+        }
         Returns: Json
       }
       sweep_live_viewer_counts: { Args: never; Returns: undefined }
@@ -2072,7 +2079,11 @@ export type Database = {
       message_type: "text" | "system"
       oauth_provider: "google" | "github" | "email"
       wallet_transaction_status: "pending" | "succeeded" | "failed" | "canceled"
-      wallet_transaction_type: "charge" | "donation_spend" | "refund" | "subscription_spend"
+      wallet_transaction_type:
+        | "charge"
+        | "donation_spend"
+        | "refund"
+        | "subscription_spend"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2215,7 +2226,12 @@ export const Constants = {
       message_type: ["text", "system"],
       oauth_provider: ["google", "github", "email"],
       wallet_transaction_status: ["pending", "succeeded", "failed", "canceled"],
-      wallet_transaction_type: ["charge", "donation_spend", "refund", "subscription_spend"],
+      wallet_transaction_type: [
+        "charge",
+        "donation_spend",
+        "refund",
+        "subscription_spend",
+      ],
     },
   },
 } as const

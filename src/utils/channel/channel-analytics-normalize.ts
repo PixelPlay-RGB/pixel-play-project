@@ -50,9 +50,8 @@ export function normalizeDonationRow(
     return null;
   }
 
-  // 표시 닉네임은 전송 시 박힌 metadata.donorNickname(익명은 alias). donor_id는 노출하지 않는다.
-  const metadata = readObject(row.metadata);
-  const actorName = metadata ? (readText(metadata.donorNickname) ?? undefined) : undefined;
+  // 표시 닉네임은 donation 행에 박힌 donor_nickname(익명은 alias). donor_id는 노출하지 않는다.
+  const actorName = readText(row.donor_nickname) ?? undefined;
 
   return { id, type: "donation", at, amount, actorName };
 }
