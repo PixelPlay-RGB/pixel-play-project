@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     url: "/",
     images: [
       {
-        url: "/og-home.webp",
+        url: "/og",
         width: 1200,
         height: 630,
         alt: "PixelPlay 메인 썸네일",
@@ -51,7 +51,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "PixelPlay - RGB",
     description: "화면의 최소 단위인 픽셀을 즐긴다! 실시간 채팅과 라이브를 즐겨보세요.",
-    images: ["/og-home.webp"],
+    images: ["/og"],
   },
 };
 
