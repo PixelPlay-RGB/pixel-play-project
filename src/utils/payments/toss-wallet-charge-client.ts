@@ -24,6 +24,25 @@ export function isTossPaymentCancelError(error: unknown): boolean {
   return typeof code === "string" && TOSS_PAYMENT_CANCEL_CODES.has(code);
 }
 
+// 결제 후 카드사 앱으로 리다이렉트될 수 있는 기기(모바일·태블릿)인지 판단한다(PAY-013).
+// 이런 기기에서 iframe+Promise 방식을 쓰면 카드사 앱으로 전환된 뒤 Promise가 resolve되지 않아
+// 결제창이 멈춘다. 화면 폭(useIsMobile)으로 판단하면 가로 태블릿(≥768px)이 PC로 잡혀 멈추므로,
+// userAgent와 멀티터치로 기기를 판단해 successUrl/failUrl 리다이렉트로 폴백한다.
+export function prefersRedirectPayment(): boolean {
+  if (typeof navigator === "undefined") {
+    return false;
+  }
+  const ua = navigator.userAgent;
+  if (/Android|iPhone|iPod|iPad|Mobile/i.test(ua)) {
+    return true;
+  }
+  // iPadOS 13+는 데스크탑 Safari(Macintosh)로 위장하지만 멀티터치가 있어 이로 구분한다.
+  if (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1) {
+    return true;
+  }
+  return false;
+}
+
 export async function prepareTossWalletCharge(amount: number): Promise<TossPaymentPrepareResponse> {
   const response = await fetch("/api/payments/toss/prepare", {
     method: "POST",
