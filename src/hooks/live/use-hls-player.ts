@@ -253,6 +253,33 @@ export function useHlsPlayer({
     return () => clearInterval(intervalId);
   }, [videoRef, enabled, getLiveEdgePosition, getLiveTimelineRange]);
 
+  // 백그라운드 복귀 시 라이브 따라잡기 — 탭이 숨겨지면(다른 탭·최소화) 브라우저가 미디어를 throttle해
+  // 라이브가 멈추거나 한참 뒤처져, 돌아왔을 때 "송출이 멈춘 것처럼" 보이고 LIVE 표시도 꺼진다.
+  // 백그라운드로 갈 때 재생 중이었다면, 돌아왔을 때 자동으로 라이브 엣지로 점프해 재생을 잇는다
+  // (사용자가 일부러 일시정지했거나 과거 구간을 보던 중이면 건드리지 않는다).
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !enabled) return;
+
+    let wasPlayingBeforeHidden = false;
+    const handleVisibility = () => {
+      if (document.visibilityState === "hidden") {
+        wasPlayingBeforeHidden = !video.paused;
+        return;
+      }
+      if (!wasPlayingBeforeHidden) return;
+      const edge = getLiveEdgePosition(video);
+      if (edge !== null && edge - video.currentTime > LIVE_EDGE_BEHIND_THRESHOLD_S) {
+        video.currentTime = edge;
+      }
+      void video.play().catch(() => {});
+      setIsAtLiveEdge(true);
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
+  }, [videoRef, enabled, getLiveEdgePosition]);
+
   // 실시간 지점으로 점프하고 재생을 재개한다(폴링을 기다리지 않고 상태도 즉시 반영).
   const seekToLiveEdge = useCallback(() => {
     const video = videoRef.current;
