@@ -183,6 +183,7 @@ export default function ChannelLiveSettingsPanel({
               id="channel-live-thumbnail"
               type="file"
               accept="image/*"
+              aria-label="미리보기 이미지 업로드"
               onChange={handleThumbnailInputChange}
             />
             <div

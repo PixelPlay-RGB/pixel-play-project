@@ -120,7 +120,7 @@ export default function ProfileAvatarUpload({
       </div>
 
       <div className="min-w-0 flex-1 text-left">
-        <h3 className="mb-1 text-sm font-semibold">프로필 사진</h3>
+        <h2 className="mb-1 text-sm font-semibold">프로필 사진</h2>
         <p className="text-muted-foreground mb-4 text-xs leading-relaxed">
           드래그해서 올리거나 이미지를 클릭하세요.
           <br className="hidden sm:block" />
