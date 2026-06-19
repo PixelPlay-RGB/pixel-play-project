@@ -7,10 +7,10 @@ import {
   Minimize2,
   PanelRightOpen,
   Pause,
-  PictureInPicture2,
   Play,
   RectangleHorizontal,
   Scissors,
+  SquareArrowOutUpRight,
   Users,
 } from "lucide-react";
 
@@ -134,6 +134,28 @@ export function LivePlayerControlBar({
       </span>
 
       <div className="ml-auto flex items-center gap-1">
+        {/* PIP: 미니로 빼고 본문엔 안내를 띄운다(시청 페이지 전용). 미니 복귀 아이콘과 동일하게 맞추고
+            우측 그룹 가장 왼쪽(극장 모드보다 앞)에 둔다. */}
+        {onPipClick ? (
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  aria-label={LIVE_LABEL.playerPip}
+                  className={LIVE_PLAYER_ICON_BUTTON_CLASS}
+                  onClick={onPipClick}
+                />
+              }
+            >
+              <SquareArrowOutUpRight className="size-6" />
+            </TooltipTrigger>
+            <TooltipContent>{LIVE_LABEL.playerPip}</TooltipContent>
+          </Tooltip>
+        ) : null}
+
         {onClipClick ? (
           <Tooltip>
             <TooltipTrigger
@@ -204,28 +226,6 @@ export function LivePlayerControlBar({
               <PanelRightOpen className="size-6" />
             </TooltipTrigger>
             <TooltipContent>{LIVE_LABEL.chatExpand}</TooltipContent>
-          </Tooltip>
-        ) : null}
-
-        {/* PIP: 미니플레이어로 빼고 본문 자리엔 안내를 띄운다 — 시청 페이지에서만 내려온다.
-            전체화면과 같은 '창 모드' 계열이라 바로 옆에 둔다. */}
-        {onPipClick ? (
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="ghost"
-                  aria-label={LIVE_LABEL.playerPip}
-                  className={LIVE_PLAYER_ICON_BUTTON_CLASS}
-                  onClick={onPipClick}
-                />
-              }
-            >
-              <PictureInPicture2 className="size-6" />
-            </TooltipTrigger>
-            <TooltipContent>{LIVE_LABEL.playerPip}</TooltipContent>
           </Tooltip>
         ) : null}
 

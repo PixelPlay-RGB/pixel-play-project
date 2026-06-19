@@ -71,9 +71,11 @@ export default function RootLayout({
           <RouteAccentProvider>
             <RouteOverlayChromeController />
             <LiveDataRouteRefresher />
-            <LiveMiniPlayerHost />
             <Toaster />
             <Header />
+            {/* 미니플레이어는 Header 뒤에 둬 같은 z-50에서도 Header 위에 뜬다(드래그로 헤더에 안 가림).
+                Dialog 등 모달은 body 포털로 더 나중 렌더되어 미니 위를 덮는다(모달 우선 유지). */}
+            <LiveMiniPlayerHost />
             <AuthToastHandler />
             {/* tabIndex=-1: 미니플레이어 닫기 등 플로팅 UI가 사라질 때 포커스를 회수하는 본문 랜드마크. */}
             <main tabIndex={-1} className="flex flex-1 flex-col">

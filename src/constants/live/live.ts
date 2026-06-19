@@ -106,9 +106,8 @@ export const LIVE_LABEL = {
   miniPlayerClose: "미니플레이어 닫기",
   // PIP(미니플레이어) 전환 버튼 — 시청 페이지에서 명시적으로 띄운다.
   playerPip: "PIP로 보기",
-  // 시청 페이지 비디오 자리에 남기는 안내(미니로 보는 중).
-  pipActiveTitle: "PIP로 시청 중",
-  pipActiveDescription: "작은 창으로 방송을 계속 보고 있어요.",
+  // 시청 페이지 비디오 자리에 남기는 안내(제목만 — 설명 없이 간결하게).
+  pipActiveTitle: "PIP 모드로 보고 있어요.",
   pipReturnInline: "여기서 다시 보기",
 } as const;
 

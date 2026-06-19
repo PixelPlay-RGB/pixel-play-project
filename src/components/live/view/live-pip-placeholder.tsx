@@ -18,10 +18,7 @@ export function LivePipPlaceholder({ onReturn }: Props) {
       <div className="bg-background/70 text-muted-foreground flex size-14 items-center justify-center rounded-full">
         <PictureInPicture2 className="size-7" />
       </div>
-      <div className="space-y-1">
-        <p className="text-foreground text-sm font-semibold">{LIVE_LABEL.pipActiveTitle}</p>
-        <p className="text-muted-foreground text-xs">{LIVE_LABEL.pipActiveDescription}</p>
-      </div>
+      <p className="text-foreground text-sm font-semibold">{LIVE_LABEL.pipActiveTitle}</p>
       <Button type="button" size="sm" variant="secondary" onClick={onReturn}>
         {LIVE_LABEL.pipReturnInline}
       </Button>
