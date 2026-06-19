@@ -1,9 +1,11 @@
 // 라이브 메시지 row를 OBS 오버레이 표시 데이터로 변환합니다.
+import { LIVE_LABEL } from "@/constants/live/live";
 import {
   LIVE_OVERLAY_DEFAULT_CREATOR_NAME,
   LIVE_OVERLAY_DEFAULT_VIEWER_NAME,
 } from "@/constants/live/live-overlay";
 import { readJsonObject, readNumber, readString } from "@/utils/common/json";
+import { containsSeedProfanity } from "@/utils/live/live-chat";
 import { deriveSenderRoles } from "@/utils/live/live-message";
 import type { LiveMessageRow } from "@/types/live/live";
 import type { LiveChatOverlayItem, LiveChatOverlayMessage } from "@/types/live/live-chat-overlay";
@@ -31,13 +33,20 @@ export function mapLiveMessageToChatOverlayItem(
     const isDonor = metadata.isDonor === true;
     const isSubscriber = metadata.isSubscriber === true;
 
+    // OBS 채팅 오버레이도 시청 채팅과 동일하게 클린봇 비속어를 가린다(원문 노출 방지) — 서버 LLM
+    // 판정(cleanbotStatus)을 우선하고, 판정 전엔 클라 시드 사전으로 명백한 욕설을 즉시 가린다.
+    const cleanbotStatus = readString(metadata.cleanbotStatus);
+    const isCleanbotFlagged =
+      cleanbotStatus === "flagged" ||
+      (cleanbotStatus === null && containsSeedProfanity(message.content));
+
     const isHost = message.sender_role === "creator" || message.sender_id === options.creatorId;
     const overlayMessage: LiveChatOverlayMessage = {
       id: message.id,
       creatorId: options.creatorId,
       kind: "chat",
       author,
-      content: message.content,
+      content: isCleanbotFlagged ? LIVE_LABEL.cleanbotHidden : message.content,
       createdAt: message.created_at,
       // 시청 채팅과 동일 규칙으로 동시 보유 역할을 모두 뱃지로(공용 deriveSenderRoles).
       roles: deriveSenderRoles({

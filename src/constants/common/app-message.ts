@@ -531,7 +531,7 @@ export const APP_MESSAGE = {
       },
       emojiInvalidType: {
         title: "지원하지 않는 형식",
-        description: "투명 배경 PNG 이미지만 등록할 수 있어요.",
+        description: "투명 배경 PNG·WebP 이미지만 등록할 수 있어요.",
       },
       emojiSingleFileOnly: {
         title: "다중 등록 불가",

@@ -35,9 +35,9 @@ export const CHANNEL_EMOJI_LABEL = {
   // 사이드 팁
   tipTitle: "이모지를 등록하기 전에 확인해요",
   tipDescription:
-    "투명 배경 PNG로 우리 채널만의 이모지를 만들 수 있어요.\n구독자는 채팅에서 이 이모지를 골라 쓸 수 있어요.",
-  tipStep1Title: "투명 배경 PNG로 준비해요",
-  tipStep1Desc: "배경이 비치는 정사각형 PNG가 채팅에서 가장 깔끔하게 보여요.",
+    "투명 배경 PNG·WebP로 우리 채널만의 이모지를 만들 수 있어요.\n구독자는 채팅에서 이 이모지를 골라 쓸 수 있어요.",
+  tipStep1Title: "투명 배경 PNG·WebP로 준비해요",
+  tipStep1Desc: "배경이 비치는 정사각형 PNG·WebP가 채팅에서 가장 깔끔하게 보여요.",
   tipStep2Title: "최대 10개까지 등록해요",
   tipStep2Desc: "자주 쓰는 표정·반응 위주로 골라 담으면 구독자가 더 즐겨 써요.",
   tipStep3Title: "구독자 전용으로 제공돼요",

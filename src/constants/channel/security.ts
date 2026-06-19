@@ -18,6 +18,10 @@ export const CHANNEL_SECURITY_TOKEN_KIND_SET = new Set<ChannelSecurityTokenKind>
   "donation_alert",
 ]);
 
+// 스트림 키·OBS URL을 "보기"로 노출한 뒤 자동으로 다시 가리기까지의 시간(CSEC-011, 어깨너머 노출 차단).
+// 복사 버튼이 따로 있어 길게 노출할 필요가 없으므로 보안상 짧게 둔다(값 확정 필요 — 스펙 본문 1분 모순).
+export const SECURITY_REVEAL_DURATION_MS = 30_000;
+
 export const CHANNEL_SECURITY_ROTATE_SUCCESS_DESCRIPTION = {
   stream_key: "새 스트림 키를 만들었어요. OBS에 다시 붙여 넣어주세요.",
   chat_overlay: "새 채팅창 주소를 만들었어요. OBS에 다시 붙여 넣어주세요.",
