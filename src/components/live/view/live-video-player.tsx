@@ -363,7 +363,9 @@ export function LiveVideoPlayer({
         // 좌측 칼럼이 세로 스크롤된다(LiveView). 높이를 캡하면 영상 좌우에 검은 띠가 생긴다.
         isTheater ? "aspect-video md:aspect-auto md:h-full" : "aspect-video",
         // 몰입 모드(극장·전체화면)에서 컨트롤이 숨겨지면 커서도 함께 숨겨 몰입감을 준다.
-        isImmersive && !controlsVisible && "cursor-none",
+        // 단, 전체화면 채팅 패널이 열렸으면(후원 popover 등 상호작용) 커서를 숨기지 않는다 —
+        // cursor-none이 포털된 popover까지 상속돼 마우스가 사라지는 것을 막는다.
+        isImmersive && !controlsVisible && !isFsChatOpen && "cursor-none",
       )}
     >
       {hlsSrc ? (

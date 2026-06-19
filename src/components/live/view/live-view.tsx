@@ -296,6 +296,11 @@ export function LiveView({ creatorId, hlsSrc }: Props) {
 
   function openLoginPrompt() {
     if (isAuthLoading) return;
+    // 전체화면 중이면 빠져나온 뒤 안내한다 — 전체화면 안에선 cursor-none·포털 위치 때문에
+    // 로그인 안내 Dialog가 보이지 않아(마우스 포인터도 숨겨짐), 일반 화면에서 또렷이 띄운다.
+    if (document.fullscreenElement) {
+      void document.exitFullscreen().catch(() => {});
+    }
     setIsLoginPromptOpen(true);
   }
 
