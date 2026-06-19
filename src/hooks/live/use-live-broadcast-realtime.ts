@@ -1,7 +1,8 @@
 "use client";
 // 라이브 방송 한 건의 realtime 채널(live-broadcast-{id})을 구독해
 // 시청자 수 갱신과 방송 종료 신호를 콜백으로 전달합니다.
-// 시청 화면(use-live-view-data)과 미니플레이어가 공유한다 — 둘은 상호 배타로 렌더되어 중복 구독이 없다.
+// 시청 화면(use-live-view-data)과 미니플레이어가 공유한다 — 보통은 상호 배타로 렌더되어 중복이 없고,
+// 둘이 함께 뜨는 PIP에선 미니가 broadcastId=null로 구독을 양보해 같은 채널 이중 구독(Realtime 에러)을 피한다.
 
 import { useEffect, useMemo, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";

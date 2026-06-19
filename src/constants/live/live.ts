@@ -47,6 +47,7 @@ export const LIVE_LABEL = {
   donationRankingExpand: "후원 랭킹 펼치기",
   emptyWeeklyDonation: "이번 주 첫 번째 팬이 되어보세요!",
   chatLoginPlaceholder: "로그인 후 채팅할 수 있습니다.",
+  chatOfflinePlaceholder: "방송이 시작되면 채팅할 수 있어요.",
   chatPlaceholder: "채팅을 입력해보세요!",
   chatSend: "채팅 전송",
   loginRequired: "로그인이 필요합니다.",
@@ -103,6 +104,11 @@ export const LIVE_LABEL = {
   miniPlayer: "라이브 미니플레이어",
   miniPlayerReturn: "시청 화면으로 돌아가기",
   miniPlayerClose: "미니플레이어 닫기",
+  // PIP(미니플레이어) 전환 버튼 — 시청 페이지에서 명시적으로 띄운다.
+  playerPip: "PIP로 보기",
+  // 시청 페이지 비디오 자리에 남기는 안내(제목만 — 설명 없이 간결하게).
+  pipActiveTitle: "PIP 모드로 보고 있어요.",
+  pipReturnInline: "여기서 다시 보기",
 } as const;
 
 // OBS 출력·채팅 팝아웃 등 별도 창 전용 라우트 — 앱 공통 크롬과 미니플레이어를 모두 숨긴다.

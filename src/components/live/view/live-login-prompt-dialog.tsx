@@ -17,12 +17,15 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onLogin: () => void;
+  // 전체화면 요소 안에서 열릴 때 그 노드를 포털 대상으로 받는다(미지정 시 기본 body라 전체화면 밖에 렌더돼 안 보임).
+  container?: HTMLElement | null;
 }
 
-export function LiveLoginPromptDialog({ open, onOpenChange, onLogin }: Props) {
+export function LiveLoginPromptDialog({ open, onOpenChange, onLogin, container }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
+        container={container ?? undefined}
         showCloseButton={false}
         className={cn(
           "overflow-hidden rounded-2xl p-0 shadow-xl sm:max-w-md",

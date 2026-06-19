@@ -23,7 +23,10 @@ export default function LiveCard({ item }: LiveCardProps) {
   const liveHref = `/live/${item.creatorId}`;
 
   return (
-    <article className="min-w-0">
+    // GAP-008: 오프스크린 카드의 레이아웃·페인트를 건너뛰어(브라우저 네이티브 렌더 가상화) 목록이
+    // 길어져도 스크롤 비용을 낮춘다. JS 그리드 가상화와 달리 반응형 cols 레이아웃을 그대로 둔다.
+    // contain-intrinsic-size: 첫 렌더 전 높이 추정값(렌더 후엔 auto가 실제 크기를 기억해 스크롤 안정).
+    <article className="min-w-0 [contain-intrinsic-size:auto_320px] [content-visibility:auto]">
       <Link
         href={liveHref}
         className={cn(

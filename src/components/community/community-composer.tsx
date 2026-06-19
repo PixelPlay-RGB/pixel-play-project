@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import { ImagePlus, X } from "lucide-react";
 
 import { CharacterCounter } from "@/components/common/character-counter";
-import StickerPicker from "@/components/sticker/sticker-picker";
+import CommunityStickerPicker from "@/components/community/community-sticker-picker";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import RichEmojiInput from "@/components/common/rich-emoji-input";
@@ -169,7 +169,7 @@ export default function CommunityComposer({
 
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1">
-          <StickerPicker disabled={isPending} onStickerSelect={handleStickerSelect} side="bottom" />
+          <CommunityStickerPicker disabled={isPending} onStickerSelect={handleStickerSelect} />
           {!displayImage && (
             <Button
               type="button"

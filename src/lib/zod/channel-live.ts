@@ -48,7 +48,7 @@ export const updateChannelLiveSettingsSchema = z.object({
     .array(z.string().trim().min(1).max(CHANNEL_CHAT_FORBIDDEN_WORD_MAX_LENGTH))
     .max(CHANNEL_CHAT_FORBIDDEN_WORD_MAX_COUNT),
   defaultTags: z.array(z.string().trim().min(1).max(12)).max(5),
-  defaultTitle: z.string().trim().max(100),
+  defaultTitle: z.string().trim().min(1).max(100),
   followerWaitSeconds: followerWaitSecondsSchema,
   linkBlocked: z.boolean(),
   slowModeEnabled: z.boolean(),

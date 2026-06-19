@@ -101,6 +101,9 @@ function getChatPlaceholder({
       return LIVE_LABEL.chatWaitPlaceholder;
     case "manager_only":
       return LIVE_LABEL.chatManagerOnlyPlaceholder;
+    case "live_offline":
+      // 오프라인 채널(채팅 미개방)에선 로그인 상태여도 "로그인 후 채팅"이 아니라 방송 대기 안내를 보여준다.
+      return LIVE_LABEL.chatOfflinePlaceholder;
     default:
       return LIVE_LABEL.chatLoginPlaceholder;
   }
@@ -304,7 +307,7 @@ export function LiveChatInputBar({
           extraStickers={channelStickers}
           className="max-h-32 w-full min-w-0 overflow-y-auto px-3 py-1.5 pr-17 leading-8 outline-none"
         />
-        <div className="absolute right-1 bottom-1.5 flex items-center gap-0.5">
+        <div className="absolute right-1 bottom-1 flex items-center gap-0.5">
           <StickerPicker
             onStickerSelect={(token) =>
               setDraftValue(appendStickerToken(draftValue, token, LIVE_CHAT_MESSAGE_MAX_LENGTH))

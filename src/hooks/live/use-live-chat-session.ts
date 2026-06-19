@@ -160,6 +160,11 @@ export function useLiveChatSession({
       if (!result.success || !result.data) {
         removeOptimistic();
         toastAppError(result.code ?? APP_MESSAGE_CODE.error.message.sendFailed);
+        // GAP-022: 방송 중 채팅 설정(슬로우·팔로워 대기·scope) 변경이 진행 세션에 안 잡혀 거부됐을 수
+        // 있다. 최신 게이트로 watch를 갱신해, 새로고침 없이 입력바 안내·다음 시도가 정확해지게 한다.
+        void queryClient.invalidateQueries({
+          queryKey: QUERY_KEYS.live.watch(creatorId, user?.id),
+        });
         return false;
       }
 

@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -505,6 +505,7 @@ export type Database = {
           alert_volume: number
           channel_bio: string
           chat_donation_message_enabled: boolean
+          chat_overlay_rotated_at: string | null
           chat_overlay_version: number
           chat_rule_text: string
           chat_rule_version: number
@@ -514,6 +515,7 @@ export type Database = {
           default_tags: string[]
           default_title: string
           donation_alert_duration_seconds: number
+          donation_alert_rotated_at: string | null
           donation_alert_version: number
           donation_amount_visible: boolean
           donation_enabled: boolean
@@ -525,6 +527,7 @@ export type Database = {
           settlement_demo: Json
           slow_mode_enabled: boolean
           slow_mode_seconds: number
+          stream_key_rotated_at: string | null
           stream_key_version: number
           tts_enabled: boolean
           tts_rate: number
@@ -537,6 +540,7 @@ export type Database = {
           alert_volume?: number
           channel_bio?: string
           chat_donation_message_enabled?: boolean
+          chat_overlay_rotated_at?: string | null
           chat_overlay_version?: number
           chat_rule_text?: string
           chat_rule_version?: number
@@ -546,6 +550,7 @@ export type Database = {
           default_tags?: string[]
           default_title?: string
           donation_alert_duration_seconds?: number
+          donation_alert_rotated_at?: string | null
           donation_alert_version?: number
           donation_amount_visible?: boolean
           donation_enabled?: boolean
@@ -557,6 +562,7 @@ export type Database = {
           settlement_demo?: Json
           slow_mode_enabled?: boolean
           slow_mode_seconds?: number
+          stream_key_rotated_at?: string | null
           stream_key_version?: number
           tts_enabled?: boolean
           tts_rate?: number
@@ -569,6 +575,7 @@ export type Database = {
           alert_volume?: number
           channel_bio?: string
           chat_donation_message_enabled?: boolean
+          chat_overlay_rotated_at?: string | null
           chat_overlay_version?: number
           chat_rule_text?: string
           chat_rule_version?: number
@@ -578,6 +585,7 @@ export type Database = {
           default_tags?: string[]
           default_title?: string
           donation_alert_duration_seconds?: number
+          donation_alert_rotated_at?: string | null
           donation_alert_version?: number
           donation_amount_visible?: boolean
           donation_enabled?: boolean
@@ -589,6 +597,7 @@ export type Database = {
           settlement_demo?: Json
           slow_mode_enabled?: boolean
           slow_mode_seconds?: number
+          stream_key_rotated_at?: string | null
           stream_key_version?: number
           tts_enabled?: boolean
           tts_rate?: number
@@ -745,6 +754,7 @@ export type Database = {
           created_at: string
           creator_id: string
           donor_id: string
+          donor_nickname: string | null
           id: string
           is_anonymous: boolean
           message: string
@@ -756,6 +766,7 @@ export type Database = {
           created_at?: string
           creator_id: string
           donor_id: string
+          donor_nickname?: string | null
           id?: string
           is_anonymous?: boolean
           message?: string
@@ -767,6 +778,7 @@ export type Database = {
           created_at?: string
           creator_id?: string
           donor_id?: string
+          donor_nickname?: string | null
           id?: string
           is_anonymous?: boolean
           message?: string
@@ -1435,8 +1447,6 @@ export type Database = {
         }
         Returns: Json
       }
-      check_email_exists: { Args: { target_email: string }; Returns: boolean }
-      claim_live_clip_jobs: { Args: { p_limit?: number }; Returns: Json }
       cancel_creator_subscription: {
         Args: {
           p_actor_user_id: string
@@ -1445,6 +1455,8 @@ export type Database = {
         }
         Returns: Json
       }
+      check_email_exists: { Args: { target_email: string }; Returns: boolean }
+      claim_live_clip_jobs: { Args: { p_limit?: number }; Returns: Json }
       community_comment_to_json: {
         Args: { p_comment_id: string; p_viewer_id: string }
         Returns: Json
@@ -1957,7 +1969,11 @@ export type Database = {
         Returns: string
       }
       subscribe_creator: {
-        Args: { p_actor_user_id: string; p_creator_id: string; p_idempotency_key?: string }
+        Args: {
+          p_actor_user_id: string
+          p_creator_id: string
+          p_idempotency_key?: string
+        }
         Returns: Json
       }
       sweep_live_viewer_counts: { Args: never; Returns: undefined }
@@ -2072,7 +2088,11 @@ export type Database = {
       message_type: "text" | "system"
       oauth_provider: "google" | "github" | "email"
       wallet_transaction_status: "pending" | "succeeded" | "failed" | "canceled"
-      wallet_transaction_type: "charge" | "donation_spend" | "refund" | "subscription_spend"
+      wallet_transaction_type:
+        | "charge"
+        | "donation_spend"
+        | "refund"
+        | "subscription_spend"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2215,7 +2235,12 @@ export const Constants = {
       message_type: ["text", "system"],
       oauth_provider: ["google", "github", "email"],
       wallet_transaction_status: ["pending", "succeeded", "failed", "canceled"],
-      wallet_transaction_type: ["charge", "donation_spend", "refund", "subscription_spend"],
+      wallet_transaction_type: [
+        "charge",
+        "donation_spend",
+        "refund",
+        "subscription_spend",
+      ],
     },
   },
 } as const

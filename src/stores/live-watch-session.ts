@@ -14,16 +14,23 @@ export interface LiveWatchSession {
 
 interface LiveWatchSessionState {
   session: LiveWatchSession | null;
+  // 시청 페이지에서 명시적으로 PIP(미니)로 전환한 상태. 페이지에 머물러도 미니를 띄우고
+  // 원래 비디오 자리엔 안내를 표시한다(페이지 이탈 자동 미니 파생과 달리 사용자가 켠다).
+  isPip: boolean;
   startSession: (session: LiveWatchSession) => void;
   endSession: () => void;
+  setPip: (isPip: boolean) => void;
 }
 
 export const useLiveWatchSessionStore = create<LiveWatchSessionState>()(
   devtools(
     (set) => ({
       session: null,
+      isPip: false,
       startSession: (session) => set({ session }, false, "liveWatchSession/startSession"),
-      endSession: () => set({ session: null }, false, "liveWatchSession/endSession"),
+      // 세션이 끝나면 PIP 상태도 함께 끈다 — 다음 세션이 PIP인 채로 부활하지 않게.
+      endSession: () => set({ session: null, isPip: false }, false, "liveWatchSession/endSession"),
+      setPip: (isPip) => set({ isPip }, false, "liveWatchSession/setPip"),
     }),
     {
       name: "LiveWatchSessionStore",

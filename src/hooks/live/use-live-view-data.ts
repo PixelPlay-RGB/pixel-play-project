@@ -12,6 +12,7 @@ import {
 } from "@/utils/live/live-subscription-badge";
 import { useLiveBroadcastRealtime } from "@/hooks/live/use-live-broadcast-realtime";
 import { useAuthStore } from "@/stores/auth";
+import { useLiveWatchSessionStore } from "@/stores/live-watch-session";
 import { QUERY_KEYS } from "@/constants/common/query-keys";
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { toastAppInfo } from "@/utils/common/toast-message";
@@ -102,6 +103,11 @@ export function useLiveViewData(creatorId: string) {
 
   useEffect(() => {
     return () => {
+      // 시청 세션이 이 채널로 살아있으면(미니/PIP로 계속 시청 중) watch 캐시를 보존한다 —
+      // '돌아가기'로 재진입할 때 stale 캐시로 즉시 복원하고 백그라운드(refetchOnMount:"always")로만
+      // 갱신해, 라우터가 다른 곳에서 복귀해도 빈 로딩 없이 빠르게 뜬다. 세션이 끝났으면(X·종료·
+      // 완전 이탈) 기존대로 제거해 강퇴 캐시 잔존 등을 막는다.
+      if (useLiveWatchSessionStore.getState().session?.creatorId === creatorId) return;
       const watchQueryKey = QUERY_KEYS.live.watch(creatorId, user?.id);
       queryClient.removeQueries({ queryKey: watchQueryKey, exact: true });
       clearLiveSubscriptionBadgeSourceCache();

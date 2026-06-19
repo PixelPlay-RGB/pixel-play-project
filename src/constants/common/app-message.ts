@@ -224,7 +224,7 @@ export const APP_MESSAGE = {
       },
       authInfoNotFound: {
         title: "인증 정보 없음",
-        description: "다시 로그인한 뒤 시도해주세요.",
+        description: "로그인 후 다시 시도해주세요.",
       },
       authInfoLoadFailed: {
         title: "인증 정보 조회 실패",
@@ -531,7 +531,7 @@ export const APP_MESSAGE = {
       },
       emojiInvalidType: {
         title: "지원하지 않는 형식",
-        description: "투명 배경 PNG 이미지만 등록할 수 있어요.",
+        description: "투명 배경 PNG·WebP 이미지만 등록할 수 있어요.",
       },
       emojiSingleFileOnly: {
         title: "다중 등록 불가",

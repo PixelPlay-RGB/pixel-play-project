@@ -10,6 +10,7 @@ import {
   Play,
   RectangleHorizontal,
   Scissors,
+  SquareArrowOutUpRight,
   Users,
 } from "lucide-react";
 
@@ -50,6 +51,8 @@ interface Props {
   onSeekToLive: () => void;
   // 클립 생성(#124) — 송출 프레임이 있을 때만 상위에서 핸들러를 내려준다.
   onClipClick?: () => void;
+  // PIP 전환 — 시청 페이지에서만 내려온다(미니플레이어로 빼고 본문엔 안내를 띄운다).
+  onPipClick?: () => void;
 }
 
 export function LivePlayerControlBar({
@@ -75,6 +78,7 @@ export function LivePlayerControlBar({
   isAtLiveEdge,
   onSeekToLive,
   onClipClick,
+  onPipClick,
 }: Props) {
   return (
     <div className="flex items-center gap-2">
@@ -130,6 +134,28 @@ export function LivePlayerControlBar({
       </span>
 
       <div className="ml-auto flex items-center gap-1">
+        {/* PIP: 미니로 빼고 본문엔 안내를 띄운다(시청 페이지 전용). 미니 복귀 아이콘과 동일하게 맞추고
+            우측 그룹 가장 왼쪽(극장 모드보다 앞)에 둔다. */}
+        {onPipClick ? (
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  aria-label={LIVE_LABEL.playerPip}
+                  className={LIVE_PLAYER_ICON_BUTTON_CLASS}
+                  onClick={onPipClick}
+                />
+              }
+            >
+              <SquareArrowOutUpRight className="size-6" />
+            </TooltipTrigger>
+            <TooltipContent>{LIVE_LABEL.playerPip}</TooltipContent>
+          </Tooltip>
+        ) : null}
+
         {onClipClick ? (
           <Tooltip>
             <TooltipTrigger

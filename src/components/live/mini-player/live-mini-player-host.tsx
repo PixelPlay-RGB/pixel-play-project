@@ -15,15 +15,21 @@ export function LiveMiniPlayerHost() {
   const pathname = usePathname();
   const session = useLiveWatchSessionStore((state) => state.session);
   const endSession = useLiveWatchSessionStore((state) => state.endSession);
+  // 사용자가 시청 페이지에서 명시적으로 켠 PIP — 켜져 있으면 시청 페이지에서도 미니를 띄운다.
+  const isPip = useLiveWatchSessionStore((state) => state.isPip);
 
   useLiveViewerPresence(session?.broadcastId);
 
   // 표시 여부는 순수 파생 — 시청 페이지(어느 크리에이터든 — LiveView가 세션을 인수/종료하므로,
   // 시청 간 전환 로딩 중 직전 방송 미니가 잠깐 떠 HLS가 이중 기동하는 것 방지)와
   // 별도 창 라우트(OBS 출력·팝아웃)에선 아무것도 안 띄운다.
+  // 단, 시청 페이지여도 사용자가 PIP를 켰으면(isPip) 미니로 띄운다 — 인라인 비디오는 안내로
+  // 교체돼 있어(LivePipPlaceholder) 이중 기동이 아니다(한쪽만 <video>를 가진다).
   if (
     !session ||
-    LIVE_WATCH_ROUTE_PATTERN.test(pathname) ||
+    // 인증 플로우(로그인·회원가입·프로필 완성)에선 미니플레이어를 숨긴다 — 집중 화면이라 PIP가 부적절.
+    pathname.startsWith("/auth/") ||
+    (LIVE_WATCH_ROUTE_PATTERN.test(pathname) && !isPip) ||
     LIVE_OVERLAY_ROUTE_PATTERN.test(pathname)
   ) {
     return null;

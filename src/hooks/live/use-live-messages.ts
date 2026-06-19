@@ -17,6 +17,7 @@ import {
   type LiveMessageRow,
 } from "@/utils/live/live-message";
 import { appendLiveMessage } from "@/utils/live/live-chat";
+import { isUuid } from "@/utils/common/uuid";
 import type { LiveChatMessage } from "@/types/live/live";
 
 // 닉네임·후원 금액은 metadata에 스냅샷으로 들어 있어 join이 필요 없다(Realtime payload와 동일 경로).
@@ -28,7 +29,9 @@ const EMPTY_LIVE_MESSAGES: LiveChatMessage[] = [];
 export function useLiveMessages(creatorId: string | null | undefined) {
   const supabase = useMemo(() => createClient(), []);
   const queryClient = useQueryClient();
-  const enabled = !!creatorId;
+  // 비-UUID creatorId는 REST 필터(creator_id=eq.{값})에서 400을 반복시켜 콘솔이 폭주하므로
+  // 쿼리 자체를 막는다(WATCH-013). send 액션은 이미 isUuid 가드가 있다.
+  const enabled = !!creatorId && isUuid(creatorId);
   // 과거 적재(무한 스크롤) 상태. 누적이 HISTORY_CAP에 닿거나 더 줄 게 없으면 멈춘다(치지직식).
   const [isLoadingOlder, setIsLoadingOlder] = useState(false);
   const [hasMoreHistory, setHasMoreHistory] = useState(true);

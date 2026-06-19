@@ -24,8 +24,13 @@ export function buildChannelSecuritySnapshot(
     chatOverlay: readVersion(settings.chatOverlayVersion),
     donationAlert: readVersion(settings.donationAlertVersion),
   };
+  const rotatedAt = {
+    streamKey: readRotatedAt(settings.streamKeyRotatedAt),
+    chatOverlay: readRotatedAt(settings.chatOverlayRotatedAt),
+    donationAlert: readRotatedAt(settings.donationAlertRotatedAt),
+  };
 
-  return buildSnapshotFromVersions(creatorId, versions);
+  return buildSnapshotFromVersions(creatorId, versions, rotatedAt);
 }
 
 export function buildChannelSecurityVersionResult(
@@ -60,6 +65,11 @@ function buildSnapshotFromVersions(
     chatOverlay: number;
     donationAlert: number;
   },
+  rotatedAt: {
+    streamKey: string | null;
+    chatOverlay: string | null;
+    donationAlert: string | null;
+  },
 ): ChannelSecuritySnapshot {
   const baseUrl = resolvePublicBaseUrl();
   const streamKey = buildLiveStreamKey(creatorId, versions.streamKey);
@@ -81,6 +91,9 @@ function buildSnapshotFromVersions(
     streamKeyVersion: versions.streamKey,
     chatOverlayVersion: versions.chatOverlay,
     donationAlertVersion: versions.donationAlert,
+    streamKeyRotatedAt: rotatedAt.streamKey,
+    chatOverlayRotatedAt: rotatedAt.chatOverlay,
+    donationAlertRotatedAt: rotatedAt.donationAlert,
   };
 }
 
@@ -100,6 +113,11 @@ function readVersion(version?: number): number {
   return typeof version === "number" && Number.isInteger(version) && version > 0
     ? version
     : LIVE_SECURITY_DEFAULT_TOKEN_VERSION;
+}
+
+// timestamptz(ISO 문자열) 또는 null/undefined를 표시용 문자열로 정규화한다(재발급 이력 없으면 null).
+function readRotatedAt(value?: string | null): string | null {
+  return typeof value === "string" && value.length > 0 ? value : null;
 }
 
 function readStrictVersion(value: Json | undefined) {

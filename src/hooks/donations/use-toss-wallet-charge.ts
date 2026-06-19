@@ -13,7 +13,6 @@ import { useQueryClient } from "@tanstack/react-query";
 
 import { APP_MESSAGE_CODE } from "@/constants/common/app-message-code";
 import { QUERY_KEYS } from "@/constants/common/query-keys";
-import { useIsMobile } from "@/hooks/common/use-mobile";
 import type {
   TossPaymentsPaymentWindow,
   TossPaymentsWidgets,
@@ -23,6 +22,7 @@ import { loadTossPayments } from "@/utils/payments/toss-sdk";
 import {
   isTossPaymentCancelError,
   isValidChargeAmount,
+  prefersRedirectPayment,
   prepareTossWalletCharge,
 } from "@/utils/payments/toss-wallet-charge-client";
 
@@ -46,7 +46,6 @@ export function useTossWalletCharge({
   onChargeSettled,
 }: UseTossWalletChargeParams) {
   const clientKey = process.env.NEXT_PUBLIC_TOSS_PAYMENTS_CLIENT_KEY;
-  const isMobile = useIsMobile();
   const queryClient = useQueryClient();
   const [isCharging, setIsCharging] = useState(false);
   const paymentWindowRef = useRef<TossPaymentsPaymentWindow | null>(null);
@@ -117,8 +116,8 @@ export function useTossWalletCharge({
   async function confirmCharge(widgets: TossPaymentsWidgets, prepared: PreparedCharge) {
     setIsCharging(true);
     try {
-      if (isMobile) {
-        // 모바일: 카드사 앱으로 리다이렉트되어 Promise를 받을 수 없으므로 successUrl/failUrl로 복귀한다.
+      if (prefersRedirectPayment()) {
+        // 모바일·태블릿: 카드사 앱으로 리다이렉트되어 Promise를 받을 수 없으므로 successUrl/failUrl로 복귀한다(PAY-013).
         const returnToQuery = returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : "";
         await widgets.requestPayment({
           orderId: prepared.orderId,

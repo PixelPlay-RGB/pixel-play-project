@@ -50,6 +50,8 @@ interface Props {
   onOpenChat?: () => void;
   // 전체화면일 때 컨테이너 내부에 렌더할 채팅/후원 오버레이. 데이터를 가진 상위(LiveView)가 주입한다.
   renderFullscreenChat?: (ctx: FullscreenChatContext) => ReactNode;
+  // 전체화면 컨테이너 노드를 상위(LiveView)에 노출 — 비로그인 후원 안내 등 모달을 전체화면 안에 포털하기 위해.
+  onFullscreenContainerChange?: (container: HTMLElement | null) => void;
   // 클립 버튼: 로그인 여부(상위 결정) + 비로그인 시 콜백 + 캡처 완료 콜백. 에디터는 별도 창으로
   // 열어 라이브를 보면서 편집하게 한다(팝업은 제스처 동기 시점에 열려야 차단되지 않는다).
   clipLoggedIn?: boolean;
@@ -59,6 +61,8 @@ interface Props {
     snapshotDataUrl: string | null;
     frames: string[];
   }) => void;
+  // PIP 전환 — 컨트롤 바로 그대로 전달한다(미니 표시·본문 안내는 상위 LiveView가 처리).
+  onPipClick?: () => void;
 }
 
 // 별도 창 핸드오프(localStorage)로 넘기므로 과대 용량을 막으려 720p로 다운스케일한다.
@@ -170,9 +174,11 @@ export function LiveVideoPlayer({
   openChatButtonRef,
   onOpenChat,
   renderFullscreenChat,
+  onFullscreenContainerChange,
   clipLoggedIn,
   onClipRequireLogin,
   onClipReady,
+  onPipClick,
 }: Props) {
   const { containerRef, isFullscreen, toggleFullscreen } = useFullscreen<HTMLDivElement>();
   // 전체화면 채팅 패널 열림 상태. 컨트롤 바 폭(채팅이 가리지 않게)과 공유해야 해 여기서 소유한다.
@@ -197,6 +203,11 @@ export function LiveVideoPlayer({
       setIsFsDonationRequested(false);
     }
   }, [isFullscreen]);
+
+  // 전체화면일 때만 컨테이너 노드를 상위에 알린다(해제 시 null) — 상위 Dialog의 포털 대상.
+  useEffect(() => {
+    onFullscreenContainerChange?.(isFullscreen ? containerEl : null);
+  }, [isFullscreen, containerEl, onFullscreenContainerChange]);
 
   // 채팅을 닫으면 우상단 스택의 토글 버튼으로 포커스를 되돌린다(패널 X에 갇힌 포커스 회수).
   // 여는 방향은 오버레이가 패널 X 버튼으로 포커스를 옮긴다. 초기 마운트엔 가로채지 않는다.
@@ -352,7 +363,9 @@ export function LiveVideoPlayer({
         // 좌측 칼럼이 세로 스크롤된다(LiveView). 높이를 캡하면 영상 좌우에 검은 띠가 생긴다.
         isTheater ? "aspect-video md:aspect-auto md:h-full" : "aspect-video",
         // 몰입 모드(극장·전체화면)에서 컨트롤이 숨겨지면 커서도 함께 숨겨 몰입감을 준다.
-        isImmersive && !controlsVisible && "cursor-none",
+        // 단, 전체화면 채팅 패널이 열렸으면(후원 popover 등 상호작용) 커서를 숨기지 않는다 —
+        // cursor-none이 포털된 popover까지 상속돼 마우스가 사라지는 것을 막는다.
+        isImmersive && !controlsVisible && !isFsChatOpen && "cursor-none",
       )}
     >
       {hlsSrc ? (
@@ -464,6 +477,7 @@ export function LiveVideoPlayer({
             onClipClick={
               onClipReady && playbackState === "playing" ? () => void handleClipClick() : undefined
             }
+            onPipClick={onPipClick}
           />
         </div>
       ) : null}

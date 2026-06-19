@@ -18,6 +18,7 @@ export function ChannelSecurityControls({ initialSnapshot }: Props) {
     isPending,
     isRotating,
     isVisibleKind,
+    getRevealRemaining,
     handleCopy,
     handlePreview,
     handleToggleVisible,
@@ -31,6 +32,7 @@ export function ChannelSecurityControls({ initialSnapshot }: Props) {
         disabled={isRotating}
         isRotating={rotatingKind === "stream_key" && isPending}
         isStreamKeyVisible={isVisibleKind("stream_key")}
+        streamKeyRevealRemaining={getRevealRemaining("stream_key")}
         onCopy={handleCopy}
         onToggleVisible={handleToggleVisible}
         onRotate={handleRotate}
@@ -43,6 +45,7 @@ export function ChannelSecurityControls({ initialSnapshot }: Props) {
           disabled={isRotating}
           isRotating={rotatingKind === meta.tokenKind && isPending}
           isUrlVisible={isVisibleKind(meta.tokenKind)}
+          urlRevealRemaining={getRevealRemaining(meta.tokenKind)}
           onCopy={handleCopy}
           onPreview={(url) => handlePreview(url, meta.popup)}
           onToggleVisible={handleToggleVisible}
