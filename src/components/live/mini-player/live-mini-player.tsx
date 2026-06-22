@@ -4,7 +4,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useRef, type PointerEvent as ReactPointerEvent } from "react";
+import { useCallback, useRef } from "react";
 import { GripHorizontal, Pause, Play, SquareArrowOutUpRight, X } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion } from "motion/react";
@@ -78,11 +78,16 @@ export function LiveMiniPlayer({ session, onClose }: Props) {
     router.push(watchHref);
   }
 
-  // 컨트롤(버튼·음량 슬라이더)에서 시작한 포인터는 패널 드래그를 시작시키지 않는다 — 이벤트가
-  // motion 드래그 리스너가 달린 루트로 버블되기 전에 차단한다(버튼 클릭·슬라이더 조작 자체는 유지).
-  function stopDragFromControls(event: ReactPointerEvent) {
-    event.stopPropagation();
-  }
+  // motion 드래그는 루트 motion.div의 native pointerdown 리스너로 시작한다. React 합성 onPointerDown의
+  // stopPropagation은 이벤트 위임 탓에 그 native 리스너보다 늦게 실행돼 드래그를 못 막으므로, 컨트롤
+  // 영역에 native 리스너를 콜백 ref로 직접 달아 버블이 루트에 닿기 전에 끊는다(콜백 ref는 React 19의
+  // cleanup 반환 사용). 버튼 클릭·슬라이더 조작은 target 단계에서 이미 받으므로 그대로 동작한다.
+  const blockDragFromControls = useCallback((node: HTMLDivElement | null) => {
+    if (!node) return;
+    const stop = (event: PointerEvent) => event.stopPropagation();
+    node.addEventListener("pointerdown", stop);
+    return () => node.removeEventListener("pointerdown", stop);
+  }, []);
 
   // 메인 플레이어와 동일한 attach 정책 재사용. hlsSrc 미비(null)면 세션은 유지하고 대기 오버레이만 띄운다.
   const { playbackState } = useHlsPlayer({
@@ -141,8 +146,8 @@ export function LiveMiniPlayer({ session, onClose }: Props) {
             <GripHorizontal className="size-4" />
             <span className="text-xs font-semibold tracking-wide">{LIVE_LABEL.miniPlayer}</span>
           </span>
-          {/* onPointerDown stopPropagation: 버튼에서 시작한 포인터는 패널 드래그를 시작시키지 않는다. */}
-          <div onPointerDown={stopDragFromControls} className="flex gap-0.5 p-1">
+          {/* 콜백 ref(native pointerdown stop): 버튼에서 시작한 포인터는 패널 드래그를 시작시키지 않는다. */}
+          <div ref={blockDragFromControls} className="flex gap-0.5 p-1">
             <Button
               size="icon"
               variant="ghost"
@@ -202,9 +207,9 @@ export function LiveMiniPlayer({ session, onClose }: Props) {
             )}
           >
             {/* 클릭 수신은 이 컨트롤 그룹 div 한 곳에서만 토글한다 — 버튼마다 부착하면 새 컨트롤 추가 시 누락된다.
-              onPointerDown stopPropagation: 재생/음량 슬라이더 조작이 패널 드래그로 오인되지 않게 한다. */}
+              콜백 ref(native pointerdown stop): 재생/음량 슬라이더 조작이 패널 드래그로 오인되지 않게 한다. */}
             <div
-              onPointerDown={stopDragFromControls}
+              ref={blockDragFromControls}
               className={cn("flex items-center gap-1", CONTROL_INTERACTIVITY_CLASS)}
             >
               <Button
