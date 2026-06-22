@@ -12,11 +12,12 @@ export interface ChannelManagerItem {
   createdAt: string;
 }
 
-// search_channel_users 의 후보 — 닉네임/UUID 정확일치로 찾은 유저.
+// search_channel_users 의 후보 — 닉네임 또는 이메일 정확일치로 찾은 유저.
 export interface ChannelUserCandidate {
   userId: string;
   nickname: string;
   photoUrl: string | null;
+  email: string | null;
 }
 
 // 권한 화면 목록 맨 위에 고정하는 스트리머 본인(크리에이터) 식별 정보.

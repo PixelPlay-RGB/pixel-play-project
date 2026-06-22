@@ -2,7 +2,7 @@
 // 댓글/대댓글 작성 입력창. 텍스트영역 + 하단 한 줄(이모지·글자수·등록). 로그인 유저만 작성.
 
 import { SendHorizontal } from "lucide-react";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import { CharacterCounter } from "@/components/common/character-counter";
 import RichEmojiInput from "@/components/common/rich-emoji-input";
@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { COMMUNITY_COMMENT_CONTENT_MAX } from "@/constants/community/community";
+import { useAvailableChannelEmojiStickerGroups } from "@/hooks/channel/use-channel-emoji-stickers";
 import { useCreateCommunityComment } from "@/hooks/community/use-create-community-comment";
 import { useNullableUser } from "@/hooks/profile/use-profile";
 import { cn } from "@/lib/utils";
@@ -42,6 +43,14 @@ export default function CommunityCommentComposer({
   const [content, setContent] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
   const createComment = useCreateCommunityComment(postId);
+  // 작성 중에도 구독 채널 이모티콘 토큰을 이미지로 그리도록, 사용할 수 있는 채널 이모지를 입력기에 넘긴다.
+  const { data: channelEmojiGroups } = useAvailableChannelEmojiStickerGroups(
+    currentUserId ?? undefined,
+  );
+  const channelStickers = useMemo(
+    () => (channelEmojiGroups ?? []).flatMap((group) => group.stickers),
+    [channelEmojiGroups],
+  );
 
   if (!currentUserId) {
     return (
@@ -100,6 +109,7 @@ export default function CommunityCommentComposer({
           placeholder={placeholder ?? (parentId ? "답글을 입력하세요." : "댓글을 입력하세요.")}
           maxLength={COMMUNITY_COMMENT_CONTENT_MAX}
           ariaLabel={parentId ? "답글 입력" : "댓글 입력"}
+          extraStickers={channelStickers}
           className="max-h-40 min-h-8 flex-1 overflow-y-auto text-base leading-relaxed md:text-sm"
         />
       </div>

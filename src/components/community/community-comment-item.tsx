@@ -11,7 +11,7 @@ import CommunityCommentReplies from "@/components/community/community-comment-re
 import ClampedText from "@/components/common/clamped-text";
 import DeleteConfirmDialog from "@/components/common/delete-confirm-dialog";
 import RelativeTime from "@/components/common/relative-time";
-import RichMessageText from "@/components/common/rich-message-text";
+import ChannelEmojiText from "@/components/common/channel-emoji-text";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
@@ -179,7 +179,7 @@ export default function CommunityCommentItem({
             className="mt-1"
             textClassName="text-foreground/90 line-clamp-5 text-sm leading-relaxed wrap-break-word whitespace-pre-wrap"
           >
-            <RichMessageText as="span" text={comment.content} />
+            <ChannelEmojiText as="span" text={comment.content} />
           </ClampedText>
         )}
 

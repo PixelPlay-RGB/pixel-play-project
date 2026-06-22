@@ -11,7 +11,7 @@ import CommunityActionMenu from "@/components/community/community-action-menu";
 import CommunityCommentList from "@/components/community/community-comment-list";
 import DeleteConfirmDialog from "@/components/common/delete-confirm-dialog";
 import RelativeTime from "@/components/common/relative-time";
-import RichMessageText from "@/components/common/rich-message-text";
+import ChannelEmojiText from "@/components/common/channel-emoji-text";
 import CommunityLikeButton from "@/components/community/community-like-button";
 import CommunityPostPager from "@/components/community/community-post-pager";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -118,7 +118,7 @@ export default function CommunityPostDetailView({
             )}
           </div>
 
-          <RichMessageText
+          <ChannelEmojiText
             linkify
             text={detail.content}
             className="text-foreground mt-3 text-sm leading-relaxed wrap-break-word whitespace-pre-wrap"

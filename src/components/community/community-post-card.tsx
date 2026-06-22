@@ -9,7 +9,7 @@ import { useState } from "react";
 
 import ClampedText from "@/components/common/clamped-text";
 import RelativeTime from "@/components/common/relative-time";
-import RichMessageText from "@/components/common/rich-message-text";
+import ChannelEmojiText from "@/components/common/channel-emoji-text";
 import CommunityActionMenu from "@/components/community/community-action-menu";
 import DeleteConfirmDialog from "@/components/common/delete-confirm-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -64,7 +64,7 @@ export default function CommunityPostCard({ creatorId, creator, post, isOwner }:
             className="flex-1"
             textClassName="text-foreground/90 line-clamp-3 text-sm leading-relaxed wrap-break-word whitespace-pre-wrap"
           >
-            <RichMessageText as="span" text={post.content} />
+            <ChannelEmojiText as="span" text={post.content} />
           </ClampedText>
           {post.imageUrl && (
             <div className="border-border/60 relative aspect-square shrink-0 self-stretch overflow-hidden rounded-lg border">

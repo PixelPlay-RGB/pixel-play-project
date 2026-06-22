@@ -14,7 +14,6 @@ import LiveSidebarSection from "@/components/live/live-sidebar-section";
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -23,7 +22,6 @@ import {
   SidebarMenuSkeleton,
   SidebarSeparator,
 } from "@/components/ui/sidebar";
-import { Separator } from "@/components/ui/separator";
 import { QUERY_KEYS } from "@/constants/common/query-keys";
 import {
   LIVE_LIST_DEFAULT_FILTER,
@@ -219,12 +217,10 @@ export default function LiveSidebar({ isMobile }: LiveSidebarProps) {
             )}
           </SidebarMenu>
         </LiveSidebarSection>
-      </SidebarContent>
 
-      <SidebarFooter className="gap-0 p-0">
-        <Separator />
+        <SidebarSeparator />
         <SidebarCredits />
-      </SidebarFooter>
+      </SidebarContent>
     </Sidebar>
   );
 }
