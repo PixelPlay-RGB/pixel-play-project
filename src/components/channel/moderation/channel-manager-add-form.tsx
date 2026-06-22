@@ -69,7 +69,7 @@ export function ChannelManagerAddForm({ creatorId, existingManagerIds, onAdd, is
       <div className="flex flex-col gap-1">
         <h2 className="text-foreground font-semibold">매니저 추가</h2>
         <p className="text-muted-foreground text-sm">
-          닉네임 또는 유저 ID를 정확히 입력해 검색한 뒤 매니저로 추가하세요.
+          매니저로 추가할 사용자를 이메일 또는 닉네임으로 정확히 검색하세요.
         </p>
       </div>
 
@@ -84,7 +84,7 @@ export function ChannelManagerAddForm({ creatorId, existingManagerIds, onAdd, is
               void handleSearch();
             }
           }}
-          placeholder="닉네임 또는 유저 ID"
+          placeholder="이메일 또는 닉네임"
           aria-label="매니저 검색"
         />
         <Button
@@ -101,7 +101,7 @@ export function ChannelManagerAddForm({ creatorId, existingManagerIds, onAdd, is
       {candidates !== null &&
         (candidates.length === 0 ? (
           <p className="text-muted-foreground py-2 text-center text-sm">
-            검색 결과가 없어요. 닉네임 또는 유저 ID를 다시 확인해 주세요.
+            검색 결과가 없어요. 이메일 또는 닉네임을 정확히 입력했는지 확인해 주세요.
           </p>
         ) : (
           <ul className="flex flex-col gap-2">
@@ -121,9 +121,9 @@ export function ChannelManagerAddForm({ creatorId, existingManagerIds, onAdd, is
                   </Avatar>
                   <div className="min-w-0 flex-1">
                     <p className="text-foreground truncate font-medium">{candidate.nickname}</p>
-                    <p className="text-muted-foreground truncate font-mono text-xs">
-                      {candidate.userId}
-                    </p>
+                    {candidate.email ? (
+                      <p className="text-muted-foreground truncate text-xs">{candidate.email}</p>
+                    ) : null}
                   </div>
                   {isSelf ? (
                     <span className="text-muted-foreground shrink-0 text-xs">본인</span>

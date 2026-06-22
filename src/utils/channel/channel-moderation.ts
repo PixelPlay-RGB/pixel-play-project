@@ -89,6 +89,7 @@ export function parseChannelUserCandidates(value: Json): ChannelUserCandidate[] 
         userId,
         nickname,
         photoUrl: readString(object.photoUrl),
+        email: readString(object.email),
       } satisfies ChannelUserCandidate;
     })
     .filter((item): item is ChannelUserCandidate => item !== null);
