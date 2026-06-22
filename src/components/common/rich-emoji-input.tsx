@@ -95,6 +95,14 @@ function insertTextAtCaret(root: HTMLElement, text: string) {
   }
 }
 
+// contentEditable은 줄 끝(trailing) 개행을 한 줄로 그리지 않는다 — DOM 끝에 filler <br>을 둬 마지막
+// 개행까지 보이게 한다(readValue가 <br>은 값에서 무시하므로 저장 값 정합엔 영향이 없다). 중복은 막는다.
+function ensureTrailingFiller(root: HTMLElement) {
+  if (!(root.lastChild instanceof HTMLBRElement)) {
+    root.appendChild(document.createElement("br"));
+  }
+}
+
 // 현재 선택 영역이 차지하는 "값" 길이(스티커 토큰 포함) — 삽입/붙여넣기 시 교체될 분량을 maxLength
 // 계산에서 빼는 데 쓴다. cloneContents를 readValue로 다시 읽어 토큰(img→:pp-id:)까지 정확히 센다.
 function getSelectionValueLength(root: HTMLElement): number {
@@ -194,6 +202,7 @@ export default function RichEmojiInput({
     if (!root) return;
     event.preventDefault();
     insertTextAtCaret(root, "\n");
+    ensureTrailingFiller(root);
     emit();
   }
 
@@ -216,6 +225,7 @@ export default function RichEmojiInput({
     } else {
       insertTextAtCaret(root, normalized);
     }
+    ensureTrailingFiller(root);
     emit();
   }
 
