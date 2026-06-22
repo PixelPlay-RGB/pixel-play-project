@@ -3,7 +3,7 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { ImagePlus, X } from "lucide-react";
 
@@ -18,8 +18,10 @@ import {
   COMMUNITY_IMAGE_MAX_SIZE,
   COMMUNITY_POST_CONTENT_MAX,
 } from "@/constants/community/community";
+import { useAvailableChannelEmojiStickerGroups } from "@/hooks/channel/use-channel-emoji-stickers";
 import { useCreateCommunityPost } from "@/hooks/community/use-create-community-post";
 import { useUpdateCommunityPost } from "@/hooks/community/use-update-community-post";
+import { useAuthStore } from "@/stores/auth";
 import { toastAppError } from "@/utils/common/toast-message";
 import { appendStickerToken } from "@/utils/sticker/sticker-token";
 
@@ -42,6 +44,14 @@ export default function CommunityComposer({
   const isEdit = Boolean(postId);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [content, setContent] = useState(initialContent);
+
+  // 작성 중에도 구독 채널 이모티콘 토큰을 이미지로 그리도록, 사용할 수 있는 채널 이모지를 입력기에 넘긴다.
+  const authUser = useAuthStore((state) => state.user);
+  const { data: channelEmojiGroups } = useAvailableChannelEmojiStickerGroups(authUser?.id);
+  const channelStickers = useMemo(
+    () => (channelEmojiGroups ?? []).flatMap((group) => group.stickers),
+    [channelEmojiGroups],
+  );
 
   // 이미지 상태: 새로 선택한 파일(+blob 미리보기) / 기존 이미지 제거 여부.
   const [newFile, setNewFile] = useState<File | null>(null);
@@ -135,6 +145,7 @@ export default function CommunityComposer({
           placeholder="팔로워에게 전할 소식을 남겨보세요."
           maxLength={COMMUNITY_POST_CONTENT_MAX}
           ariaLabel="게시글 내용"
+          extraStickers={channelStickers}
           className="max-h-96 min-h-40 overflow-y-auto text-base leading-relaxed md:text-sm"
         />
 
