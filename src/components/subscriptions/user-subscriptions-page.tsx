@@ -9,6 +9,8 @@ import { Note } from "@/components/common/note";
 import { RetryRefreshButton } from "@/components/common/retry-refresh-button";
 import { SettingsCard } from "@/components/common/settings-card";
 import { SettingsPage } from "@/components/common/settings-page";
+import { SideTipCard } from "@/components/common/side-tip-card";
+import { SideTipStep } from "@/components/common/side-tip-step";
 import { LiveSubscriptionBadge } from "@/components/live/chat/live-subscription-badge";
 import { SubscriptionChannelEmojiPreview } from "@/components/subscriptions/subscription-channel-emoji-preview";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -99,26 +101,34 @@ export function UserSubscriptionsPage({ snapshot, errorCode }: Props) {
 
   return (
     <SettingsPage {...PAGE_HEADER}>
-      <SettingsCard contentClassName="gap-6">
-        <Tabs value={tab} onValueChange={(value) => setTab(value as UserSubscriptionTab)}>
-          <TabsList className="grid w-full grid-cols-2 sm:w-fit">
-            {TAB_ITEMS.map((item) => (
-              <TabsTrigger key={item.value} value={item.value} className="min-w-0 px-2 sm:px-4">
-                <span className="truncate">{item.label}</span>
-                <span className="text-xs tabular-nums">{getTabCount(snapshot, item.value)}</span>
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
+      <div className="flex flex-col gap-5 xl:flex-row xl:items-start">
+        <div className="flex min-w-0 flex-1 flex-col gap-5">
+          <SettingsCard contentClassName="gap-6">
+            <Tabs value={tab} onValueChange={(value) => setTab(value as UserSubscriptionTab)}>
+              <TabsList className="grid w-full grid-cols-2 sm:w-fit">
+                {TAB_ITEMS.map((item) => (
+                  <TabsTrigger key={item.value} value={item.value} className="min-w-0 px-2 sm:px-4">
+                    <span className="truncate">{item.label}</span>
+                    <span className="text-xs tabular-nums">
+                      {getTabCount(snapshot, item.value)}
+                    </span>
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
 
-        <SubscriptionList
-          tab={tab}
-          items={currentItems}
-          onManage={(subscription) => setSelectedSubscription(subscription)}
-        />
-      </SettingsCard>
+            <SubscriptionList
+              tab={tab}
+              items={currentItems}
+              onManage={(subscription) => setSelectedSubscription(subscription)}
+            />
+          </SettingsCard>
 
-      <SubscriptionPolicyNotice />
+          <SubscriptionPolicyNotice />
+        </div>
+
+        <SubscriptionSideTip />
+      </div>
 
       <UserSubscriptionManagementDialog
         subscription={selectedSubscription}
@@ -403,6 +413,32 @@ function DialogCreatorSummary({ subscription }: { subscription: UserSubscription
 
 function SubscriptionEmptyState({ title }: { title: string }) {
   return <EmptyState icon={<Sparkles className="size-7" />} title={title} />;
+}
+
+function SubscriptionSideTip() {
+  return (
+    <SideTipCard
+      icon={<Sparkles className="size-5" />}
+      title="구독하면 이런 혜택이 있어요"
+      description={`후원 지갑 포인트로 매월 정기 구독하고,\n구독자 전용 혜택을 받아보세요.`}
+    >
+      <SideTipStep
+        number="1"
+        title="구독자 전용 배지"
+        description="구독 기간에 맞는 전용 배지가 채팅에 표시돼요."
+      />
+      <SideTipStep
+        number="2"
+        title="구독자 전용 이모티콘"
+        description="구독한 채널의 전용 이모티콘을 채팅과 커뮤니티에서 쓸 수 있어요."
+      />
+      <SideTipStep
+        number="3"
+        title="포인트로 간편 결제"
+        description="매월 후원 지갑 포인트에서 자동으로 결제돼요."
+      />
+    </SideTipCard>
+  );
 }
 
 function SubscriptionPolicyNotice() {
