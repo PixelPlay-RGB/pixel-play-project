@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { X } from "lucide-react";
 
+import ChannelEmojiText from "@/components/common/channel-emoji-text";
 import RelativeTime from "@/components/common/relative-time";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import type { AppNotification } from "@/types/notification/notification";
-import { stickerTokensToText } from "@/utils/sticker/sticker-token";
 import { getAvatarFallbackText, getAvatarImageSrc } from "@/utils/profile/avatar";
 
 interface Props {
@@ -38,9 +38,12 @@ export default function NotificationItem({ notification, onNavigate, onDelete }:
         <div className="min-w-0 flex-1">
           <p className="text-foreground truncate text-sm font-bold">{notification.title}</p>
           {notification.body && (
-            <p className="text-muted-foreground line-clamp-1 text-xs">
-              {stickerTokensToText(notification.body)}
-            </p>
+            <ChannelEmojiText
+              as="p"
+              text={notification.body}
+              className="text-muted-foreground line-clamp-1 text-xs"
+              stickerPx={16}
+            />
           )}
           <p className="text-muted-foreground/70 mt-0.5 text-xs">
             <RelativeTime iso={notification.createdAt} />

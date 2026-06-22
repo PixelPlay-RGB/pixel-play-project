@@ -14,9 +14,11 @@ interface Props {
   className?: string;
   // http(s) 링크 자동 연결 — 게시글 본문만 true.
   linkify?: boolean;
+  // 인라인 스티커 픽셀 크기 — 알림 미리보기처럼 작은 텍스트에선 줄여서 넘긴다.
+  stickerPx?: number;
 }
 
-export default function ChannelEmojiText({ text, as, className, linkify }: Props) {
+export default function ChannelEmojiText({ text, as, className, linkify, stickerPx }: Props) {
   const emojiIds = extractStickerTokenIds(text);
   const { data: stickers } = useChannelEmojiStickersByIds(emojiIds);
 
@@ -26,6 +28,7 @@ export default function ChannelEmojiText({ text, as, className, linkify }: Props
       as={as}
       className={className}
       linkify={linkify}
+      stickerPx={stickerPx}
       extraStickers={stickers}
     />
   );
