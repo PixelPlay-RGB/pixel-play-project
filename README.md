@@ -2,7 +2,7 @@
 
 실시간 채팅과 라이브 스트리밍을 함께 제공하는 웹 애플리케이션입니다.
 
-Next.js 16 App Router, React 19, Supabase Auth/Postgres/Realtime, TanStack Query, Zustand를 중심으로 공개 랜딩, 라이브 목록·시청·검색, 라이브 투표·후원 랭킹, OBS 오버레이, 채팅방 목록·상세·검색, 메시지, 참여자 관리, 크리에이터 채널 관리(채팅·보안·후원·정산·라이브), 공개 채널 홈·커뮤니티(게시판)·배너, 팔로잉, 포인트 충전과 후원, 프로필 설정 기능을 제공합니다.
+Next.js 16 App Router, React 19, Supabase Auth/Postgres/Realtime, TanStack Query, Zustand를 중심으로 공개 랜딩, 라이브 목록·시청·검색, 라이브 투표·후원·클립, OBS 오버레이, 크리에이터 채널 관리(채팅·보안·후원·정산·라이브·구독자·매니저), 공개 채널 홈·커뮤니티(게시판)·배너, 팔로잉·구독·알림, 포인트 후원, 프로필 설정 기능을 제공합니다. (중간발표 단계의 채팅방(chat room)·메시지 기능은 라이브 스트리밍으로 대체되며 deprecated되어 라우트가 노출되지 않습니다. DB 테이블·RPC만 호환을 위해 잔존합니다.)
 
 쓰기 작업은 Server Action에서 인증 사용자를 확인한 뒤 Supabase `service_role` 경계로 RPC를 호출하는 방식으로 통일되어 있습니다. 읽기는 RPC의 실행 권한에 따라, `authenticated`에 열린 RPC는 브라우저 client + TanStack Query로, `service_role` 전용 RPC(크리에이터 스튜디오·OBS 오버레이 등)는 Server Component(SSR)에서 조회합니다. 클라이언트 컴포넌트는 TanStack Query mutation hook으로 pending 상태와 후처리를 관리합니다.
 
@@ -113,24 +113,27 @@ npm run dev
 
 ## 라우터 구조
 
-| 라우트                                                                          | 접근       | 설명                                                                                                                |
-| ------------------------------------------------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------- |
-| `/`                                                                             | 공개       | 라이브 목록(홈). 필터·정렬·사이드바(팔로잉·트렌딩·키워드)                                                           |
-| `/live`                                                                         | 공개       | 구 목록 경로. `/`로 redirect                                                                                        |
-| `/live/search?query=`                                                           | 공개       | 라이브 검색 결과                                                                                                    |
-| `/live/[creatorId]`                                                             | 공개       | 라이브 시청 화면                                                                                                    |
-| `/live/[creatorId]/chat[/overlayKey]`                                           | 공개(읽기) | OBS 채팅 오버레이                                                                                                   |
-| `/live/[creatorId]/alerts/donation[/overlayKey]`                                | 공개(읽기) | OBS 후원 알림 오버레이                                                                                              |
-| `/chat`                                                                         | 보호       | 채팅방 목록                                                                                                         |
-| `/chat/room/[roomId]`                                                           | 혼합       | 채팅방 상세(비로그인은 공유 preview, 로그인은 상세)                                                                 |
-| `/chat/search?query=`                                                           | 보호       | 채팅방 검색 결과                                                                                                    |
-| `/channel/{live,chat,security,donation,settlement,analytics,emoji,permissions}` | 보호       | 크리에이터 채널 관리(스튜디오). 구독 메뉴의 채널 이모지(`/channel/emoji`), 매니저 관리(`/channel/permissions`) 포함 |
-| `/channel/[creatorId]`                                                          | 공개       | 공개 채널 홈. 라이브 Hero, 배너, 커뮤니티 미리보기                                                                  |
-| `/channel/[creatorId]/community[/[postId]\|/write]`                             | 혼합       | 채널 커뮤니티(게시판) 목록·상세·작성                                                                                |
-| `/channel/[creatorId]/setting`                                                  | 보호       | 채널 공개 프로필·소개·배너 관리(본인만)                                                                             |
-| `/user` → `/user/profile`                                                       | 보호       | 프로필 설정                                                                                                         |
-| `/user/following`                                                               | 보호       | 팔로잉한 채널 목록                                                                                                  |
-| `/user/donations`                                                               | 보호       | 후원 내역과 포인트 충전                                                                                             |
+| 라우트                                                                                      | 접근       | 설명                                                                                                                                         |
+| ------------------------------------------------------------------------------------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/`                                                                                         | 공개       | 라이브 목록(홈). 필터·정렬·사이드바(팔로잉·트렌딩·키워드)                                                                                    |
+| `/live`                                                                                     | 공개       | 구 목록 경로. `/`로 redirect                                                                                                                 |
+| `/live/search?query=`                                                                       | 공개       | 라이브 검색 결과                                                                                                                             |
+| `/live/[creatorId]`                                                                         | 공개       | 라이브 시청 화면                                                                                                                             |
+| `/live/[creatorId]/chat[/overlayKey]`                                                       | 공개(읽기) | OBS 채팅 오버레이                                                                                                                            |
+| `/live/[creatorId]/alerts/donation[/overlayKey]`                                            | 공개(읽기) | OBS 후원 알림 오버레이                                                                                                                       |
+| `/chat`                                                                                     | 보호       | 채팅방 목록                                                                                                                                  |
+| `/chat/room/[roomId]`                                                                       | 혼합       | 채팅방 상세(비로그인은 공유 preview, 로그인은 상세)                                                                                          |
+| `/chat/search?query=`                                                                       | 보호       | 채팅방 검색 결과                                                                                                                             |
+| `/channel/{live,chat,security,donation,settlement,analytics,subscribers,emoji,permissions}` | 보호       | 크리에이터 채널 관리(스튜디오). 구독자 관리(`/channel/subscribers`), 채널 이모지(`/channel/emoji`), 매니저 관리(`/channel/permissions`) 포함 |
+| `/channel/[creatorId]`                                                                      | 공개       | 공개 채널 홈. 라이브 Hero, 배너, 커뮤니티 미리보기                                                                                           |
+| `/channel/[creatorId]/community[/[postId]\|/write]`                                         | 혼합       | 채널 커뮤니티(게시판) 목록·상세·작성                                                                                                         |
+| `/channel/[creatorId]/setting`                                                              | 보호       | 채널 공개 프로필·소개·배너 관리(본인만)                                                                                                      |
+| `/user` → `/user/profile`                                                                   | 보호       | 프로필 설정                                                                                                                                  |
+| `/user/following`                                                                           | 보호       | 팔로잉한 채널 목록                                                                                                                           |
+| `/user/donations`                                                                           | 보호       | 후원 내역과 포인트 충전                                                                                                                      |
+| `/user/subscriptions`                                                                       | 보호       | 내 구독 목록과 혜택                                                                                                                          |
+| `/clip/[clipId]`                                                                            | 공개       | 라이브 클립 디테일(쇼츠 뷰어)                                                                                                                |
+| `/clip/editor/[creatorId]`                                                                  | 보호       | 라이브 클립 편집 팝업(크롭·트림)                                                                                                             |
 
 - 보호 라우트는 비로그인 접근 시 `/auth/login?next=<현재경로>`로 이동하고, 로그인 성공 후 원래 경로로 돌아갑니다.
 - `/live`, `/channel/*`, `/user/*`는 사이드바 셸 레이아웃을 사용하며 공용 Footer 대신 사이드바 하단 크레딧을 표시합니다.
@@ -170,6 +173,7 @@ npm run dev
 - 시청 화면에서 진행 중인 투표에 참여할 수 있고(`vote_live_poll`, 같은 항목을 다시 누르면 무효표, 다른 항목은 선택 변경), 이번 주 후원 랭킹(`get_live_donation_ranking`)을 후원자 단위 합산으로 표시합니다. 익명 후원은 `donor_id` 해시 기반 동물 의사 닉네임("익명의 너구리")으로 표기해 신원을 노출하지 않습니다.
 - 라이브 채팅 전송은 `send_live_message_v4`로 처리하며, 금칙어·링크는 client가 전송 직전 서버와 동일 규칙으로 선검사해 원문이 한 프레임도 노출되지 않게 하고, 서버는 금칙어 매칭 시 메시지를 어디에도 저장하지 않고(Realtime 전파 0) 작성자 본인에게만 차단 안내를 돌려줍니다.
 - 시청 채팅은 방장(Crown)·후원자(Heart) 역할 마크(brand→live 그라디언트, 시청 채팅과 OBS 오버레이가 공용 컴포넌트 공유)와 닉네임별 해시 컬러를 표시하고, 클린봇(비속어 필터) 토글·첫 진입 필터링 안내·이번 주 후원 랭킹 접기(아코디언) UI를 제공합니다.
+- 시청 중 다른 페이지로 이동하면 우하단 PIP 미니플레이어(`live-mini-player`)로 재생이 이어지고, 시청 페이지로 돌아오면 인라인 플레이어로 복귀합니다(루트 레이아웃에 영속 마운트, 라이트/다크·로그인 상태 분기).
 
 ### 라이브 클립
 
@@ -192,9 +196,12 @@ npm run dev
 - 스튜디오 데이터는 `service_role` 전용 `get_creator_studio_snapshot` RPC를 Server Component에서 조회하고, 설정 저장은 `upsert_creator_studio_setting`으로 처리합니다.
 - 채팅 설정(`/channel/chat`)에서는 참여 범위, 팔로워 대기 시간, 슬로우 모드, 링크 차단, 금칙어, 채팅 규칙을 관리합니다.
 - 보안 설정(`/channel/security`)에서는 스트림 키와 OBS 오버레이 URL을 발급·재발급합니다. 재발급은 `rotate_live_security_token_version`으로 키 버전을 올리고 마지막 재발급 시각(`*_rotated_at`)을 기록해 각 카드에 표시합니다. 민감한 값을 "보기"로 노출하면 어깨너머·송출 화면 노출을 막기 위해 30초 뒤 자동으로 다시 가려집니다.
-- 후원 설정·대시보드(`/channel/donation`)는 `get_creator_donation_dashboard`로 후원 통계를 조회하고, 최소 후원 금액, OBS 후원 알림(표시 시간·알림음·볼륨), 브라우저 TTS 음성·속도·볼륨, 채팅창 후원 메시지 노출을 설정합니다.
+- 후원 설정·대시보드(`/channel/donation`)는 `get_creator_donation_dashboard`로 후원 통계를 조회하고, 최소 후원 금액, OBS 후원 알림(표시 시간·알림음·볼륨), 후원 TTS 음성·속도·볼륨, 채팅창 후원 메시지 노출을 설정합니다. TTS는 Web Speech(OS 음성 엔진)가 OBS 브라우저 소스에서 무음이라, 서버 `/api/tts`(Google Cloud Text-to-Speech)에서 mp3로 합성해 효과음과 같은 `<audio>` 경로로 재생합니다.
 - 정산(`/channel/settlement`)은 `get_creator_settlement_donations`로 연도·상태·정렬별 정산 상세를, `get_creator_settlement_yearly_summary`로 연도별 총 정산액을 조회합니다.
 - 설정 화면은 공통 컴포넌트(`SettingsPage`, `SettingsCard`, `SideTipCard`, `HintNote`)와 스크롤 시 나타나는 공통 저장 바(`StickySaveBar`)로 구조를 통일했습니다.
+- 매니저 관리(`/channel/permissions`)에서 이메일·닉네임으로 사용자를 검색해(`search_channel_users`) 매니저를 추가(`add_channel_manager`)·해제(`remove_channel_manager`)합니다. 매니저는 채팅 운영 권한을 가집니다(`is_channel_moderator`).
+- 라이브 시청 채팅에서 크리에이터·매니저는 시청자를 강퇴/밴(`ban_channel_viewer`)할 수 있고, 밴 목록 조회·해제(`get_channel_viewer_bans`, `unban_channel_viewer`)를 제공합니다. 밴된 시청자는 Realtime으로 입력이 잠깁니다.
+- 구독자 관리(`/channel/subscribers`)에서 크리에이터가 채널 구독자를 조회합니다.
 
 ### 공개 채널 홈
 
@@ -212,7 +219,7 @@ npm run dev
 
 - 크리에이터는 스튜디오 구독 메뉴의 `/channel/emoji`에서 구독자용 채널 이모지를 등록·관리합니다. 투명 배경 PNG·WebP로 최대 10개까지, 파일 드래그 앤 드롭/클릭 업로드(다중 파일·PNG/WebP 외·5MB 초과는 거부), 연필로 이미지·이름 수정, 드래그 핸들로 순서 변경, 삭제를 지원합니다. 등록 화면은 좌측 관리 리스트 + 구독자 미리보기, 우측 사용 팁(`SideTipCard`)의 2단 구조입니다.
 - 메시지 본문은 `:pp-<id>:` 토큰으로 저장·전송하고, 채팅·OBS 채팅 오버레이·게시글·댓글에서 인라인 이미지로 렌더합니다. 기본 스티커 10종은 정적 에셋(`public/stickers/`), 채널 이모지는 `channel_emoji` 행(id=UUID)이며 토큰이 미등록이면 평문으로 안전하게 남습니다. 입력은 contentEditable 리치 입력기(`RichEmojiInput`)가 토큰을 이미지로 그리되 한글 IME 조합을 보존합니다.
-- 채팅 이모지 피커는 `기본 / 내 채널` 탭으로 나뉩니다. 채널 이모지는 공개 RLS라 모든 시청자가 렌더는 보지만, **보내기는 현재 크리에이터 본인만** 가능합니다(구독자 게이팅은 구독 시스템 연동 시 추가). 렌더용 채널 이모지는 LiveView·운영 콘솔·팝아웃·OBS 오버레이에 `ChannelStickerProvider`(또는 공개 조회)로 주입합니다.
+- 채팅 이모지 피커는 `기본 / 내 채널` 탭으로 나뉩니다. 채널 이모지는 공개 RLS라 모든 시청자가 렌더는 보지만, **보내기는 해당 채널 구독자(와 크리에이터 본인)만** 가능합니다 — 클라이언트는 `get_available_channel_emoji_creator_ids`로 사용 가능한 채널을 판정하고, 서버(`send_live_message_v4`)가 전송 시 구독 여부를 재검증합니다. 렌더용 채널 이모지는 LiveView·운영 콘솔·팝아웃·OBS 오버레이에 `ChannelStickerProvider`(또는 공개 조회)로 주입합니다.
 - 등록·조회는 `get_channel_emojis`, `insert/update/delete/reorder_channel_emoji` RPC + `service_role` 경계로 처리하고, 이미지는 storage RLS를 지키도록 user-context client로 `user-media` 버킷(`{user.id}/emoji/{uuid}.png`)에 업로드하며, 추가는 advisory lock·개수 가드로 동시성을, 순서 변경은 desired-state 검증으로 무결성을 막습니다.
 
 ### 커뮤니티 (게시판)
@@ -229,12 +236,24 @@ npm run dev
 - `followCreatorAction`, `unfollowCreatorAction`이 `follow_creator`, `unfollow_creator` RPC를 호출하고, 팔로잉 목록은 사이드바용 `get_following_channel_list`와 페이지용 `get_following_channel_page`(필터·페이지네이션)로 조회합니다.
 - `/user/following`은 팔로잉한 채널을 필터·번호형 페이지네이션으로 보여줍니다.
 
+### 알림
+
+- 헤더 종 아이콘에서 인앱 알림 수신함(드롭다운)을 제공합니다. 팔로우한 채널의 **방송 시작**과 **새 커뮤니티 게시글**을 알림으로 받습니다.
+- 알림 생성은 트리거 기반 fan-out입니다 — `live_broadcast`·`community_post` INSERT 시 트리거가 `emit_follower_notification`(`notify_followers_on_live_start`·`notify_followers_on_community_post`)으로 팔로워에게 best-effort 적재하고, 수신자는 본인 `notification` 행의 Realtime INSERT를 구독해 종 배지를 즉시 갱신합니다.
+- 수신함을 열면 `mark_notifications_seen`으로 읽음 처리(방문 기준)하고, 개별 삭제(`delete_notification`)·모두 삭제(`delete_all_notifications`)와 무한 스크롤을 지원합니다. 알림 본문의 채널 이모지 토큰도 이미지로 렌더합니다.
+
 ### 포인트 충전과 후원
 
 - 사용자는 포인트 지갑(`wallet_account`)으로 라이브에서 후원하며, 포인트 충전(Toss Payments)은 후속 구현 예정입니다.
 - 충전용 Toss 연동 라우트(`/api/payments/toss/{prepare,confirm,webhook}`)는 현재 스캐폴드(501 Not Implemented) 상태이며, 승인 시 잔액 반영은 `confirm_wallet_charge` RPC(구현됨)로 처리할 예정입니다.
 - 후원 전송은 `send_live_donation` RPC가 지갑 차감과 후원 기록, 라이브 후원 메시지 생성을 단일 트랜잭션으로 멱등 처리합니다.
 - `/user/donations`에서 후원 내역과 충전 진입을 함께 보여주며, `get_user_donation_snapshot`으로 데이터를 조회합니다.
+
+### 구독
+
+- 시청자는 크리에이터를 구독해 구독자 전용 혜택(배지·채널 이모지 사용)을 받습니다. 구독은 후원 지갑 포인트로 결제하며, 관계는 `creator_subscription`(상태·시작/만료), 결제 내역은 `creator_subscription_payment`에 기록합니다.
+- 구독/해지는 `subscribe_creator`, `cancel_creator_subscription` RPC로, 만료 도래 구독 갱신은 `renew_due_creator_subscriptions`로 처리합니다. `/user/subscriptions`에서 본인 구독 목록·혜택을, `/channel/subscribers`(스튜디오)에서 크리에이터가 구독자를 조회합니다.
+- 구독자 게이팅은 채널 이모지 전송 권한에 반영됩니다(`get_available_channel_emoji_creator_ids` + 서버 재검증). Toss 정기결제 연동 라우트(`/api/payments/toss/subscription/*`)는 현재 스캐폴드 상태입니다.
 
 ### 라우터와 공개 화면
 
@@ -250,6 +269,8 @@ npm run dev
 - 메인 페이지와 채팅방 상세 페이지는 Open Graph와 Twitter large image metadata를 제공합니다. 공유 썸네일은 `public/og-home.webp`, `public/og-chat-room.webp` 정적 에셋을 사용합니다.
 - 비로그인 채팅방 preview는 `get_public_chat_room_metadata` RPC로 title과 description만 조회합니다. 메시지, 멤버, unread, presence는 공개하지 않습니다.
 - Lighthouse(데스크톱, 주요 4개 페이지) 접근성 100 · SEO 100 · 베스트 프랙티스 96~100 · CLS 0.01 수준을 유지합니다.
+
+> **⚠️ deprecated** — 아래 채팅방(chat room) 4개 섹션은 중간발표 단계의 채팅 서비스 기능입니다. 현재 라이브 스트리밍 플랫폼에서는 라우트(`/chat`, `/chat/room/[roomId]`, `/chat/search`)와 화면(`app/chat`, `components/chat-room`)이 제거되어 노출되지 않으며, 테이블(`chat_room`·`chat_room_member`·`message`)·RPC·트리거만 호환을 위해 남아 있습니다.
 
 ### 채팅방 목록
 
@@ -288,17 +309,17 @@ npm run dev
 
 ```text
 src/
-├── actions/               # Server Actions (auth, channel, chat-room, common, community, donations, following, live, message, profile)
+├── actions/               # Server Actions (auth, channel, clip, common, community, donations, following, live, notification, profile, user)
 ├── app/                   # Next.js App Router
-│   ├── api/               # Route Handler (auth/withdraw, payments/toss, channel/live/stream-status)
+│   ├── api/               # Route Handler (auth/withdraw, payments/toss, tts, channel/live/stream-status)
 │   ├── auth/              # 로그인, 회원가입, OAuth callback, 프로필 완성
-│   ├── channel/           # (studio) 스튜디오(live, chat, security, donation, settlement, analytics)
-│   │                      #   + [creatorId] 공개 채널(홈, community, setting)
-│   ├── chat/              # 채팅방 목록, 상세, 검색
-│   ├── live/              # 라이브 목록, 시청, 검색, OBS 오버레이
-│   └── user/              # 프로필, 팔로잉, 후원
-├── components/            # 도메인별 UI (auth, channel, chat-room, chat-room-list, common,
-│                          #   community, creator, donations, following, live, preview, search, setting, ui)
+│   ├── channel/           # (studio) 스튜디오(live, chat, security, donation, settlement, analytics, subscribers, subscription-benefits, viewers, emoji, permissions)
+│   │                      #   + [creatorId] 공개 채널(홈, community, clip, setting)
+│   ├── clip/              # 라이브 클립 디테일([clipId]) · 편집 팝업(editor)
+│   ├── live/              # 라이브 목록, 시청, 검색, OBS 오버레이, 구독 결제
+│   └── user/              # 프로필, 팔로잉, 후원, 구독
+├── components/            # 도메인별 UI (auth, channel, clip, common, community, creator, donations,
+│                          #   following, live, notification, search, setting, sticker, subscriptions, ui, user)
 ├── constants/             # 도메인별 상수와 Query Key Factory
 ├── hooks/                 # 도메인별 custom hooks (조회/뮤테이션/UI 로직)
 ├── lib/
@@ -320,27 +341,35 @@ src/
 
 ### 테이블
 
-| 테이블                        | 설명                                                           |
-| ----------------------------- | -------------------------------------------------------------- |
-| `user`                        | 서비스 유저 프로필. Supabase Auth user id와 동일한 `id`를 사용 |
-| `chat_room`                   | 채팅방 메타데이터, 정원, 현재 참여자 수                        |
-| `chat_room_member`            | 채팅방 참여 상태, 강퇴 여부, 마지막 입장·읽음 시각             |
-| `message`                     | 채팅 메시지와 시스템 메시지                                    |
-| `creator_studio_setting`      | 크리에이터 채널 설정(채팅·보안 key 버전·후원·알림 등)          |
-| `live_broadcast`              | 라이브 방송과 시청자·채팅·후원 통계                            |
-| `live_message`                | 라이브 채팅·후원·운영 알림 메시지                              |
-| `live_poll`, `live_poll_vote` | 라이브 투표와 투표 기록                                        |
-| `donation`                    | 후원 기록(금액, 후원자, 익명 여부, 지갑 거래 연결)             |
-| `wallet_account`              | 사용자 포인트 지갑 잔액                                        |
-| `wallet_transaction`          | 충전·후원·환불 등 지갑 거래 내역                               |
-| `viewer_creator_relation`     | 팔로잉 관계와 채팅 규칙 동의 버전                              |
-| `community_post`              | 채널 커뮤니티 게시글(내용, 이미지, 좋아요·댓글 수)             |
-| `community_comment`           | 커뮤니티 댓글·1단계 대댓글(`parent_id`, 좋아요 수)             |
-| `community_post_like`         | 게시글 좋아요                                                  |
-| `community_comment_like`      | 댓글 좋아요                                                    |
-| `channel_banner`              | 채널 홈 배너(이미지·제목·링크·정렬 순서)                       |
-| `channel_emoji`               | 채널 구독자용 이모지(이미지 경로·이름·정렬 순서, 채널당 ≤10)   |
-| `creator_follow_event`        | 크리에이터 통계용 팔로우/언팔로우 상호작용 이벤트 로그         |
+| 테이블                         | 설명                                                                       |
+| ------------------------------ | -------------------------------------------------------------------------- |
+| `user`                         | 서비스 유저 프로필. Supabase Auth user id와 동일한 `id`를 사용             |
+| `chat_room`                    | 채팅방 메타데이터, 정원, 현재 참여자 수                                    |
+| `chat_room_member`             | 채팅방 참여 상태, 강퇴 여부, 마지막 입장·읽음 시각                         |
+| `message`                      | 채팅 메시지와 시스템 메시지                                                |
+| `creator_studio_setting`       | 크리에이터 채널 설정(채팅·보안 key 버전·후원·알림 등)                      |
+| `live_broadcast`               | 라이브 방송과 시청자·채팅·후원 통계                                        |
+| `live_message`                 | 라이브 채팅·후원·운영 알림 메시지                                          |
+| `live_poll`, `live_poll_vote`  | 라이브 투표와 투표 기록                                                    |
+| `donation`                     | 후원 기록(금액, 후원자, 익명 여부, 지갑 거래 연결)                         |
+| `wallet_account`               | 사용자 포인트 지갑 잔액                                                    |
+| `wallet_transaction`           | 충전·후원·환불 등 지갑 거래 내역                                           |
+| `viewer_creator_relation`      | 팔로잉 관계와 채팅 규칙 동의 버전                                          |
+| `community_post`               | 채널 커뮤니티 게시글(내용, 이미지, 좋아요·댓글 수)                         |
+| `community_comment`            | 커뮤니티 댓글·1단계 대댓글(`parent_id`, 좋아요 수)                         |
+| `community_post_like`          | 게시글 좋아요                                                              |
+| `community_comment_like`       | 댓글 좋아요                                                                |
+| `channel_banner`               | 채널 홈 배너(이미지·제목·링크·정렬 순서)                                   |
+| `channel_emoji`                | 채널 구독자용 이모지(이미지 경로·이름·정렬 순서, 채널당 ≤10)               |
+| `creator_follow_event`         | 크리에이터 통계용 팔로우/언팔로우 상호작용 이벤트 로그                     |
+| `creator_subscription`         | 크리에이터 구독(구독자·상태·시작/만료)                                     |
+| `creator_subscription_payment` | 구독 결제 내역(지갑 포인트 차감)                                           |
+| `channel_manager`              | 채널 매니저(운영 권한) 등록                                                |
+| `channel_viewer_ban`           | 채널 시청자 강퇴·밴 기록                                                   |
+| `live_clip`                    | 라이브 클립(세로형, 상태·크롭·길이·조회수)                                 |
+| `live_clip_view`               | 클립 조회 dedup 기록(뷰어별 1회)                                           |
+| `live_viewer_heartbeat`        | 라이브 시청자 presence 하트비트(시청자 수 집계)                            |
+| `notification`                 | 인앱 알림(수신자·종류·링크·읽음 시각). 팔로우 채널 방송 시작·새 글 fan-out |
 
 ### Enum
 
@@ -361,7 +390,7 @@ src/
 | 인증/프로필   | `check_email_exists`                                                                                                                                                                                                                                                                                                                                                   |
 | 채팅방        | `create_chat_room`, `get_chat_room_list`, `get_chat_room_detail`, `get_public_chat_room_metadata`, `join_chat_room`, `leave_chat_room`, `mark_room_read`, `kick_chat_room_member`, `transfer_chat_room_owner`, `search_chat_rooms`                                                                                                                                     |
 | 메시지        | `send_chat_message`                                                                                                                                                                                                                                                                                                                                                    |
-| 라이브        | `get_landing_snapshot`, `get_live_hero`, `get_live_list`, `get_live_popular_keywords`, `search_live_results`, `get_live_watch`, `get_live_watch_count`, `start_live_broadcast`, `end_live_broadcast`, `send_live_message`, `send_live_message_v2`, `send_live_message_v3`, `send_live_donation_v2`, `get_live_donation_ranking`, `accept_live_chat_rule`               |
+| 라이브        | `get_live_hero`, `get_live_list`, `get_live_popular_keywords`, `search_live_results`, `get_live_watch`, `get_live_watch_count`, `get_live_viewer_profile`, `start_live_broadcast`, `end_live_broadcast`, `send_live_message_v4`(현행 전송), `send_live_donation_v2`, `send_live_interaction_notice`, `get_live_donation_ranking`, `accept_live_chat_rule`              |
 | 클립          | `create_live_clip`(생성 검증·rate limit·채널 상한·윈도우 오프셋), `increment_live_clip_view_count`(뷰어별 1회 dedup), `claim_live_clip_jobs`(워커 클레임 + 만료 정리), `delete_live_clip`(채널 주인·제작자만 삭제) · `service_role` 전용                                                                                                                               |
 | 오버레이      | `get_live_chat_overlay_snapshot`, `get_live_donation_alert_overlay_snapshot`                                                                                                                                                                                                                                                                                           |
 | 투표          | `create_live_poll`, `end_live_poll`, `vote_live_poll`                                                                                                                                                                                                                                                                                                                  |
@@ -372,7 +401,10 @@ src/
 | 채널 이모지   | `get_channel_emojis`, `insert_channel_emoji`, `update_channel_emoji`, `delete_channel_emoji`, `reorder_channel_emojis` (`service_role` 전용 · advisory lock·개수 가드·desired-state reorder)                                                                                                                                                                           |
 | 커뮤니티      | `get_channel_community_posts`, `get_community_post`, `get_community_adjacent_posts`, `get_community_comments`, `get_community_comment_replies`, `create_community_post`, `update_community_post`, `delete_community_post`, `create_community_comment`, `update_community_comment`, `delete_community_comment`, `set_community_post_like`, `set_community_comment_like` |
 | 팔로잉        | `follow_creator`, `unfollow_creator`, `get_following_channel_list`, `get_following_channel_page`                                                                                                                                                                                                                                                                       |
-| 후원/지갑     | `send_live_donation`, `confirm_wallet_charge`, `get_user_donation_snapshot`                                                                                                                                                                                                                                                                                            |
+| 후원/지갑     | `send_live_donation`, `send_live_donation_v2`, `confirm_wallet_charge`, `get_user_donation_snapshot`, `get_user_donation_snapshot_v2`                                                                                                                                                                                                                                  |
+| 구독          | `subscribe_creator`, `cancel_creator_subscription`, `renew_due_creator_subscriptions`, `get_available_channel_emoji_creator_ids`(구독자 이모지 게이팅) · `service_role` 전용                                                                                                                                                                                           |
+| 매니저/밴     | `add_channel_manager`, `remove_channel_manager`, `get_channel_managers`, `is_channel_moderator`, `ban_channel_viewer`, `unban_channel_viewer`, `get_channel_viewer_bans`, `search_channel_users`                                                                                                                                                                       |
+| 알림          | `mark_notifications_seen`, `delete_notification`, `delete_all_notifications`, `emit_follower_notification`, `notify_followers_on_live_start`, `notify_followers_on_community_post`                                                                                                                                                                                     |
 
 쓰기 RPC는 클라이언트에서 직접 호출하지 않고 Server Action이 인증 사용자 id를 확인한 뒤 `service_role` 경계로 호출합니다. 읽기 RPC는 실행 권한에 따라 브라우저 client(TanStack Query) 또는 Server Component(SSR)에서 호출합니다. read 전략 기준은 `.agents/supabase-convention/SKILLS.md` 4장을 따릅니다.
 
@@ -405,6 +437,8 @@ src/
 | `community_comment_like_count_trigger`                    | 댓글 좋아요 INSERT·DELETE 시 댓글 좋아요 수를 갱신                                                  |
 | `community_comment_validate_parent_trigger`               | 대댓글 부모를 검증해 1단계 대댓글로 평탄화                                                          |
 | `trg_log_creator_follow_event`                            | `viewer_creator_relation.followed_at` 전이를 follow/unfollow 이벤트로 `creator_follow_event`에 적재 |
+| `notify_followers_on_live_start`                          | 방송 시작(`live_broadcast` INSERT) 시 팔로워에게 알림 fan-out                                       |
+| `notify_followers_on_community_post`                      | 새 커뮤니티 게시글 INSERT 시 팔로워에게 알림 fan-out                                                |
 | `broadcast_live_broadcast_ended`                          | `live_broadcast.ended_at` 세팅 시 시청 화면에 `broadcast_ended` Realtime 이벤트 전송                |
 | `set_*_modified_at`                                       | 각 테이블의 `modified_at` 타임스탬프 자동 갱신                                                      |
 
@@ -467,5 +501,6 @@ npm run db:types
 - 강퇴 상태는 현재 유저의 `chat_room_member.is_banned` 변경을 감지해 UI에 반영합니다.
 - 라이브 OBS 오버레이는 `live_message` INSERT 이벤트로 채팅·후원 알림을 실시간 반영합니다.
 - 크리에이터 통계 화면은 `creator_follow_event` INSERT 이벤트로 팔로우/언팔로우 상호작용 로그를 폴링 없이 즉시 반영합니다.
+- 인앱 알림은 수신자 본인 `notification` 행의 INSERT 이벤트로 종 배지·수신함을 즉시 갱신하고, 라이브 클립은 제작자 본인 클립 행의 UPDATE 이벤트로 완료 토스트를 띄웁니다.
 - Presence는 채팅방 접속 상태 표시 전용으로 사용하며, 권한 판단이나 DB 저장에는 사용하지 않습니다.
 - Broadcast는 채팅방 typing indicator 표시 전용으로 사용하고 DB에는 저장하지 않습니다.
